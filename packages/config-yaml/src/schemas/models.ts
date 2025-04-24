@@ -61,13 +61,6 @@ export const chatOptionsSchema = z.object({
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 
-/** Prompt templates use Handlebars syntax */
-const promptTemplatesSchema = z.object({
-  apply: z.string().optional(),
-  edit: z.string().optional(),
-});
-export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
-
 const templateSchema = z.enum([
   "llama2",
   "alpaca",
@@ -87,7 +80,14 @@ const templateSchema = z.enum([
   "granite",
   "llama3",
 ]);
-export type Template = z.infer<typeof templateSchema>;
+
+/** Prompt templates use Handlebars syntax */
+const promptTemplatesSchema = z.object({
+  apply: z.string().optional(),
+  chat: templateSchema.optional(),
+  edit: z.string().optional(),
+});
+export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
 const baseModelFields = {
   name: z.string(),
@@ -101,7 +101,6 @@ const baseModelFields = {
   embedOptions: embedOptionsSchema.optional(),
   chatOptions: chatOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
-  template: templateSchema.optional(),
   useLegacyCompletionsEndpoint: z.boolean().optional(),
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
