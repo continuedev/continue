@@ -81,7 +81,6 @@ data class IdeSettings(
     val remoteConfigServerUrl: String?,
     val remoteConfigSyncPeriod: Int,
     val userToken: String,
-    val enableControlServerBeta: Boolean,
     val pauseCodebaseIndexOnStart: Boolean,
     val continueTestEnvironment: String
 )

@@ -32,6 +32,7 @@ import type {
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -50,6 +51,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
+  "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
@@ -210,4 +212,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { item: ContextItemWithId; selectedModelTitle: string | undefined },
     boolean,
   ];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
+  "process/markAsBackgrounded": [{ toolCallId: string }, void];
+  "process/isBackgrounded": [{ toolCallId: string }, boolean];
 };
