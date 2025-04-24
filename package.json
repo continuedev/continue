@@ -19,7 +19,7 @@
     "@continuedev/config-yaml": "^1.0.78",
     "@continuedev/hub": "^0.0.6",
     "@continuedev/openai-adapters": "^1.0.18",
-    "@continuedev/sdk": "^0.0.1",
+    "@continuedev/sdk": "^0.0.2",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@workos-inc/node": "^7.45.0",
     "axios": "^1.8.4",
