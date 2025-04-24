@@ -1,0 +1,43 @@
+{
+  "name": "@continuedev/cli",
+  "version": "0.0.7",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "bin": {
+    "continue-cli": "dist/index.js"
+  },
+  "scripts": {
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "author": "Continue Dev, Inc.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@continuedev/config-yaml": "^1.0.78",
+    "@continuedev/hub": "^0.0.6",
+    "@continuedev/openai-adapters": "^1.0.18",
+    "@continuedev/sdk": "^0.0.1",
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "@workos-inc/node": "^7.45.0",
+    "axios": "^1.8.4",
+    "chalk": "^5.4.1",
+    "diff": "^7.0.0",
+    "dotenv": "^16.4.0",
+    "open": "^10.1.0",
+    "readline-sync": "^1.4.10",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/diff": "^7.0.2",
+    "@types/jest": "^29.5.14",
+    "@types/readline-sync": "^1.4.8",
+    "@types/uuid": "^9.0.8",
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.3",
+    "ts-node": "^10.9.2"
+  }
+}
