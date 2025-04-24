@@ -209,7 +209,3 @@ export function RulesSection() {
     </div>
   );
 }
-
-export function RulesSectionToolTip() {
-  return "rules";
-}
