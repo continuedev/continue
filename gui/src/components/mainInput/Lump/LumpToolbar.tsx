@@ -101,7 +101,9 @@ export function LumpToolbar() {
   if (toolCallState?.status === "generated") {
     return (
       <Container>
-        <GeneratingIndicator />
+        <div>
+          <span className="hidden italic text-gray-400 sm:flex">Tool call</span>
+        </div>
 
         <div className="flex gap-2 pb-0.5">
           <StopButton

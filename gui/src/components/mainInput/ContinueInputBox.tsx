@@ -5,7 +5,7 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import ContextItemsPeek from "./belowMainInput/ContextItemsPeek";
+import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
