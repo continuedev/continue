@@ -1,9 +1,10 @@
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
 
 export interface CommandLineArgs {
   isHeadless: boolean;
   assistantPath: string;
+  prompt?: string; // Optional prompt argument
 }
 
 /**
@@ -12,11 +13,11 @@ export interface CommandLineArgs {
  */
 export function parseArgs(): CommandLineArgs {
   const args = process.argv.slice(2);
-  
+
   // Default values
   const result: CommandLineArgs = {
     isHeadless: false,
-    assistantPath: path.join(os.homedir(), ".continue", "config.yaml")
+    assistantPath: path.join(os.homedir(), ".continue", "config.yaml"),
   };
 
   // Parse flags
@@ -24,10 +25,27 @@ export function parseArgs(): CommandLineArgs {
     result.isHeadless = true;
   }
 
-  // Get assistant path or slug (first non-flag argument)
-  const nonFlagArgs = args.filter(arg => !arg.startsWith("--"));
+  // Get assistant path from --assistant flag
+  const assistantIndex = args.indexOf("--assistant");
+  if (assistantIndex !== -1 && assistantIndex + 1 < args.length) {
+    result.assistantPath = args[assistantIndex + 1];
+  }
+
+  // Find the last argument that's not a flag or a flag value
+  const nonFlagArgs = args.filter((arg, index) => {
+    // Skip flags (starting with --)
+    if (arg.startsWith("--")) return false;
+
+    // Skip flag values
+    const prevArg = index > 0 ? args[index - 1] : "";
+    if (prevArg === "--assistant") return false;
+
+    return true;
+  });
+
+  // If there are any non-flag arguments, use the last one as the prompt
   if (nonFlagArgs.length > 0) {
-    result.assistantPath = nonFlagArgs[0];
+    result.prompt = nonFlagArgs[nonFlagArgs.length - 1];
   }
 
   return result;

@@ -57,9 +57,20 @@ async function chat() {
     chatHistory.push({ role: "system", content: systemMessage });
   }
 
+  let isFirstMessage = true;
   while (true) {
+    // When in headless mode, don't ask for user input
+    if (!isFirstMessage && args.prompt && args.isHeadless) {
+      break;
+    }
+
     // Get user input
-    let userInput = readlineSync.question(`\n${chalk.bold.green("You:")} `);
+    let userInput =
+      isFirstMessage && args.prompt
+        ? args.prompt
+        : readlineSync.question(`\n${chalk.bold.green("You:")} `);
+
+    isFirstMessage = false;
 
     // Handle slash commands
     const commandResult = handleSlashCommands(userInput, assistant);
@@ -81,7 +92,9 @@ async function chat() {
     chatHistory.push({ role: "user", content: userInput });
 
     // Get AI response with potential tool usage
-    console.log(`\n${chalk.bold.blue("Assistant:")}`);
+    if (!args.isHeadless) {
+      console.log(`\n${chalk.bold.blue("Assistant:")}`);
+    }
 
     try {
       await streamChatResponse(chatHistory, assistant);
@@ -90,6 +103,7 @@ async function chat() {
       console.log(
         chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
       );
+    } finally {
     }
   }
 }
