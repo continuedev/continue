@@ -10,6 +10,8 @@ import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import { setupStore } from "../../redux/store";
 import { SetupListeners } from "../../App";
 import { act } from "@testing-library/react";
+import { LumpProvider } from "../../components/mainInput/Lump/LumpContext";
+import { MainEditorProvider } from "../../components/mainInput/TipTapEditor";
 // As a basic setup, import your same slice reducers
 
 // This type interface extends the default options for render from RTL, as well
@@ -19,10 +21,19 @@ type ExtendedRenderOptions = Omit<RenderOptions, "queries"> & {
   routerProps?: RouterProps;
 };
 
-export function renderWithProviders(
+function setupMocks() {
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+}
+
+export async function renderWithProviders(
   ui: React.ReactElement,
   extendedRenderOptions: ExtendedRenderOptions = {},
 ) {
+  setupMocks();
   const ideMessenger = new MockIdeMessenger();
 
   const {
@@ -41,8 +52,12 @@ export function renderWithProviders(
       <IdeMessengerProvider messenger={ideMessenger}>
         <Provider store={store}>
           <AuthProvider>
-            {children}
-            <SetupListeners />
+            <MainEditorProvider>
+              <LumpProvider>
+                {children}
+                <SetupListeners />
+              </LumpProvider>
+            </MainEditorProvider>
           </AuthProvider>
         </Provider>
       </IdeMessengerProvider>
@@ -50,7 +65,7 @@ export function renderWithProviders(
   );
 
   let rendered: RenderResult;
-  act(() => {
+  await act(async () => {
     rendered = render(ui, { wrapper: Wrapper, ...renderOptions });
   });
 
