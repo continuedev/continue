@@ -49,7 +49,7 @@ export const ArgsItems = ({ args, isShowing }: ArgsItemsProps) => {
   return (
     <div className="ml-7 mt-1">
       {args.map(([key, value]) => (
-        <div key={key} className="flex gap-2 py-0.5">
+        <div key={key} className="flex flex-row items-center gap-2 py-0.5">
           <span className="text-lightgray">{key}:</span>
           <code className="line-clamp-1">{value.toString()}</code>
         </div>
