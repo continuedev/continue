@@ -1,0 +1,29 @@
+name: Continue CLI Review
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-continue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Continue CLI
+        run: npm install -g @continuedev/cli
+
+      - name: Run Continue CLI
+        run: npx continue-cli
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
