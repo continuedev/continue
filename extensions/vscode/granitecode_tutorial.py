@@ -37,4 +37,4 @@ def sorting_algorithm(x):
 # Basic assertion for sorting_algorithm...
 
 
-# ——————————————————      Learn more at https://granite.code.dev/    ————————————————————————————————————————————— #
+# ——————————————————      Learn more at https://granitecode.ai/    ————————————————————————————————————————————— #
