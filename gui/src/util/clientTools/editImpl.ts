@@ -30,7 +30,7 @@ export const editToolImpl: ClientToolImpl = async (
     extras.dispatch(
       updateApplyState({
         streamId: extras.streamId,
-        status: "closed",
+        status: "done",
         toolCallId,
         numDiffs: 0,
         filepath: args.filepath,

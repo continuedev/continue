@@ -47,7 +47,18 @@ export function ApplyActions(props: ApplyActionsProps) {
     </button>
   );
 
+  console.log(props.applyState);
+
   switch (props.applyState ? props.applyState.status : null) {
+    case "not-started":
+      return (
+        <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">
+          <span className="text-lightgray inline-flex w-min items-center gap-2 text-center text-xs">
+            Pending
+            <Spinner />
+          </span>
+        </div>
+      );
     case "streaming":
       return (
         <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">
@@ -84,17 +95,14 @@ export function ApplyActions(props: ApplyActionsProps) {
         </div>
       );
     case "closed":
-      if (!hasRejected && props.applyState?.numDiffs === 0) {
-        if (showApplied) {
+      if (isSuccessful) {
+        if (showApplied || props.disableManualApply) {
           return (
             <span className="flex select-none items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
               <span className="max-sm:hidden">Applied</span>
               <CheckIcon className="h-3.5 w-3.5 hover:brightness-125 sm:px-1" />
             </span>
           );
-        }
-        if (props.disableManualApply) {
-          return null;
         }
         return applyButton("Reapply");
       }

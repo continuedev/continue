@@ -217,7 +217,12 @@ export function StepContainerPreToolbar({
       });
     }
   }
-
+  console.log(
+    isLoadingFileExists,
+    fileExists,
+    relativeFilepath,
+    isGeneratingCodeBlock,
+  );
   const renderActionButtons = () => {
     if (isTerminalCodeBlock(language, codeBlockContent)) {
       return <RunInTerminalButton command={codeBlockContent} />;

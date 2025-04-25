@@ -7,9 +7,11 @@ import { RunTerminalCommand } from "./RunTerminalCommand";
 function FunctionSpecificToolCallDiv({
   toolCall,
   toolCallState,
+  historyIndex,
 }: {
   toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
+  historyIndex: number;
 }) {
   const args = toolCallState.parsedArgs;
 
@@ -19,6 +21,7 @@ function FunctionSpecificToolCallDiv({
         <CreateFile
           relativeFilepath={args.filepath}
           fileContents={args.contents}
+          historyIndex={historyIndex}
         />
       );
     case BuiltInToolNames.EditExistingFile:
@@ -27,6 +30,7 @@ function FunctionSpecificToolCallDiv({
           relativeFilePath={args.filepath}
           newContents={args.new_contents}
           toolCallId={toolCall.id}
+          historyIndex={historyIndex}
         />
       );
     case BuiltInToolNames.RunTerminalCommand:

@@ -1216,6 +1216,7 @@ export type EditStatus =
   | "done";
 
 export type ApplyStateStatus =
+  | "not-started" // Apply state created but not necessarily streaming
   | "streaming" // Changes are being applied to the file
   | "done" // All changes have been applied, awaiting user to accept/reject
   | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"

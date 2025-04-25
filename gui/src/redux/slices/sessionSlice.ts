@@ -355,7 +355,7 @@ export const sessionSlice = createSlice({
               if (
                 !(
                   toolCallDelta.id &&
-                  toolCallDelta.function?.arguments &&
+                  toolCallDelta.function?.arguments !== undefined &&
                   toolCallDelta.function?.name &&
                   toolCallDelta.type
                 )
@@ -779,6 +779,16 @@ export const selectApplyStateByStreamId = createSelector(
   ],
   (states, streamId) => {
     return states.find((state) => state.streamId === streamId);
+  },
+);
+
+export const selectApplyStateByToolCallId = createSelector(
+  [
+    (state: RootState) => state.session.codeBlockApplyStates.states,
+    (state: RootState, toolCallId?: string) => toolCallId,
+  ],
+  (states, toolCallId) => {
+    return states.find((state) => state.toolCallId === toolCallId);
   },
 );
 

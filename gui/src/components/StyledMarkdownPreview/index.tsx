@@ -126,7 +126,7 @@ interface StyledMarkdownPreviewProps {
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
   disableManualApply?: boolean;
-  singleCodeblockStreamId?: string;
+  forceStreamId?: string;
   expandCodeblocks?: boolean;
 }
 
@@ -195,7 +195,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
   const isLastItem = useMemo(() => {
-    return props.itemIndex && props.itemIndex === history.length - 1;
+    return props.itemIndex === history.length - 1;
   }, [history.length, props.itemIndex]);
   const isLastItemRef = useUpdatingRef(isLastItem);
 
@@ -207,15 +207,15 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   );
 
   useEffect(() => {
-    if (props.singleCodeblockStreamId) {
+    if (props.forceStreamId) {
       codeblockState.current = [
         {
-          streamId: props.singleCodeblockStreamId,
+          streamId: props.forceStreamId,
           isGenerating: false,
         },
       ];
     }
-  }, [props.singleCodeblockStreamId]);
+  }, [props.forceStreamId]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -317,13 +317,15 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           if (codeblockState.current[codeBlockIndex] === undefined) {
             codeblockState.current[codeBlockIndex] = {
-              streamId: uuidv4(),
+              streamId: props.forceStreamId ?? uuidv4(),
               isGenerating: isGeneratingCodeBlock,
             };
           } else {
             codeblockState.current[codeBlockIndex].isGenerating =
               isGeneratingCodeBlock;
           }
+
+          console.log(props.forceStreamId);
 
           return (
             <StepContainerPreToolbar
@@ -381,7 +383,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
     <StyledMarkdown
-      contentEditable='false'
+      contentEditable="false"
       fontSize={getFontSize()}
       whiteSpace={codeWrapState}
       bgColor={props.useParentBackgroundColor ? "" : vscBackground}
