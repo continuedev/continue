@@ -64,7 +64,8 @@ function InputToolbar(props: InputToolbarProps) {
     props.disabled ||
     isEditModeAndNoCodeToEdit ||
     toolCallState?.status === "generated" ||
-    currentToolCallApplyState?.status !== "closed";
+    (currentToolCallApplyState &&
+      currentToolCallApplyState.status !== "closed");
 
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
