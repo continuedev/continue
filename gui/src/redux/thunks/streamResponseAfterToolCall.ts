@@ -69,7 +69,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           [...updatedHistory],
           selectedChatModel?.baseChatSystemMessage,
           state.config.config.rules,
-          selectedChatModel.model,
         );
 
         unwrapResult(await dispatch(streamNormalInput({ messages })));
