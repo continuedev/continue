@@ -73,7 +73,8 @@ kotlin { jvmToolchain(17) }
 // https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
     pluginName = properties("pluginName")
-    version = properties("platformVersion")
+//    version = properties("platformVersion")
+    version = "2023.2"
     type = properties("platformType")
 
     // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.

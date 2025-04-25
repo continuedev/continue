@@ -17,8 +17,9 @@
     <idea-version since-build="223.7571.182"/>
 
     <extensions defaultExtensionNs="com.intellij">
-        <editorFactoryListener
-                implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteEditorListener"/>
+        <inline.completion.provider
+                id="com.github.continuedev.continueintellijextension.HelloWorld"
+                implementation="com.github.continuedev.continueintellijextension.autocomplete.HelloWorldInlineCompletionProvider"/>
         <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.svg"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
@@ -26,16 +27,11 @@
         <projectService
                 id="DiffStreamService"
                 serviceImplementation="com.github.continuedev.continueintellijextension.editor.DiffStreamService"/>
-        <projectService
-                id="AutocompleteLookupListener"
-                serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteLookupListener"/>
         <statusBarWidgetFactory
                 implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteSpinnerWidgetFactory"
                 id="AutocompleteSpinnerWidget"/>
         <notificationGroup id="Continue"
                            displayType="BALLOON"/>
-        <actionPromoter order="last"
-                        implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -164,27 +160,6 @@
                                first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
             <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
-        </action>
-
-        <action id="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
-                class="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
-                text="Accept Autocomplete Suggestion" description="Accept Autocomplete Suggestion">
-            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
-        </action>
-
-        <action id="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
-                class="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
-                text="Cancel Autocomplete Suggestion" description="Cancel Autocomplete Suggestion">
-            <keyboard-shortcut keymap="$default" first-keystroke="ESCAPE"/>
-        </action>
-
-        <action id="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
-                class="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
-                text="Partial Accept Autocomplete Suggestion"
-                description="Partial Accept Autocomplete Suggestion">
-            <keyboard-shortcut first-keystroke="control alt RIGHT" keymap="$default"/>
-            <keyboard-shortcut first-keystroke="alt meta RIGHT" keymap="Mac OS X"/>
         </action>
     </actions>
 </idea-plugin>

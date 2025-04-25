@@ -39,6 +39,7 @@ import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.ide.ui.LafManagerListener
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.VirtualFile
 
 fun showTutorial(project: Project) {
@@ -83,15 +84,7 @@ private fun getTutorialFileName(): String {
     }
 }
 
-class ContinuePluginStartupActivity : StartupActivity, DumbAware {
-
-    override fun runActivity(project: Project) {
-        removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
-        removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
-        removeShortcutFromAction(getPlatformSpecificKeyStroke("I"))
-        initializePlugin(project)
-    }
-
+class ContinuePluginStartupActivity : ProjectActivity, DumbAware {
     private fun getPlatformSpecificKeyStroke(key: String): String {
         val osName = System.getProperty("os.name").toLowerCase()
         val modifier = if (osName.contains("mac")) "meta" else "control"
@@ -279,5 +272,12 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)
             continuePluginService.coreMessengerManager = coreMessengerManager
         }
+    }
+
+    override suspend fun execute(project: Project) {
+        removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
+        removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
+        removeShortcutFromAction(getPlatformSpecificKeyStroke("I"))
+        initializePlugin(project)
     }
 }
