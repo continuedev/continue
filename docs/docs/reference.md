@@ -167,7 +167,7 @@ The `models` section defines the language models used in your configuration. Mod
 - `apiBase`: Can be used to override the default API base that is specified per model
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
-- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chatTemplate`,  [`edit`](./customize/model-roles/edit.mdx#prompt-templating) and [`apply`](./customize/model-roles/apply.mdx#prompt-templating) and [autocomplete](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a valid template name, such as `llama3` or `anthropic`.
+- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chatTemplate`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [`apply`](./customize/model-roles/apply.mdx#prompt-templating) and [`autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   - `baseSystemMessage`: Can be used to override the default system prompt.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
