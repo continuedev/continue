@@ -56,7 +56,7 @@ function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
     return {
       source: "rules-block",
       rule: rule.rule,
-      if: rule.if,
+      globs: rule.globs,
       name: rule.name,
     };
   }

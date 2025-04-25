@@ -1507,7 +1507,7 @@ export interface RuleWithSource {
     | "rules-block"
     | "json-systemMessage"
     | ".continuerules";
-  if?: string;
+  globs?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;
