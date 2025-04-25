@@ -23,6 +23,7 @@
   "scripts": {
     "test": "jest",
     "build": "node build.js",
+    "rebuild": "node build.js --esbuild-only",
     "build:darwin-x64": "node build.js --os darwin-x64"
   },
   "license": "Apache-2.0",

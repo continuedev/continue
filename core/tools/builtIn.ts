@@ -9,6 +9,7 @@ export enum BuiltInToolNames {
   SearchWeb = "builtin_search_web",
   ViewDiff = "builtin_view_diff",
   LSTool = "builtin_ls",
+  CreateRuleBlock = "builtin_create_rule_block",
 
   // excluded from allTools for now
   ViewRepoMap = "builtin_view_repo_map",
@@ -16,3 +17,5 @@ export enum BuiltInToolNames {
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";
+
+export const CLIENT_TOOLS = [BuiltInToolNames.EditExistingFile];

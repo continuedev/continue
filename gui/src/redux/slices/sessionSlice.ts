@@ -29,7 +29,7 @@ import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
-import { findCurrentToolCall } from "../util";
+import { findCurrentToolCall, findToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -624,37 +624,100 @@ export const sessionSlice = createSlice({
     clearCodeToEdit: (state) => {
       state.codeToEdit = [];
     },
-    // Related to currentToolCallState
-    setToolGenerated: (state) => {
-      const toolCallState = findCurrentToolCall(state.history);
-      if (!toolCallState) return;
-
-      toolCallState.status = "generated";
+    // TOOL CALL STATE
+    setToolGenerated: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+      }>,
+    ) => {
+      const toolCallState = findToolCall(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.status = "generated";
+      }
     },
-    setToolCallOutput: (state, action: PayloadAction<ContextItem[]>) => {
-      const toolCallState = findCurrentToolCall(state.history);
-      if (!toolCallState) return;
-
-      toolCallState.output = action.payload;
+    updateToolCallOutput: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+        contextItems: ContextItem[];
+      }>,
+    ) => {
+      const toolCallState = findToolCall(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.output = action.payload.contextItems;
+      }
     },
-    cancelToolCall: (state) => {
-      const toolCallState = findCurrentToolCall(state.history);
-      if (!toolCallState) return;
-
-      toolCallState.status = "canceled";
+    cancelToolCall: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+      }>,
+    ) => {
+      if (action.payload.toolCallId === state.activeToolStreamId?.[1]) {
+        state.activeToolStreamId = undefined;
+      }
+      const toolCallState = findToolCall(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.status = "canceled";
+      }
     },
-    acceptToolCall: (state) => {
-      state.activeToolStreamId = undefined;
-      const toolCallState = findCurrentToolCall(state.history);
-      if (!toolCallState) return;
-
-      toolCallState.status = "done";
+    errorToolCall: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+      }>,
+    ) => {
+      if (action.payload.toolCallId === state.activeToolStreamId?.[1]) {
+        state.activeToolStreamId = undefined;
+      }
+      const toolCallState = findToolCall(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.status = "errored";
+      }
     },
-    setCalling: (state) => {
-      const toolCallState = findCurrentToolCall(state.history);
-      if (!toolCallState) return;
-
-      toolCallState.status = "calling";
+    acceptToolCall: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+      }>,
+    ) => {
+      if (action.payload.toolCallId === state.activeToolStreamId?.[1]) {
+        state.activeToolStreamId = undefined;
+      }
+      const toolCallState = findToolCall(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.status = "done";
+      }
+    },
+    setToolCallCalling: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+      }>,
+    ) => {
+      const toolCallState = findToolCall(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.status = "calling";
+      }
     },
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
@@ -704,9 +767,6 @@ export const sessionSlice = createSlice({
     },
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
-    },
-    selectUseTools: (state) => {
-      return state.mode === "agent";
     },
   },
   extraReducers: (builder) => {
@@ -768,11 +828,12 @@ export const {
   clearCodeToEdit,
   addCodeToEdit,
   removeCodeToEdit,
-  setCalling,
+  setToolCallCalling,
   cancelToolCall,
+  errorToolCall,
   acceptToolCall,
   setToolGenerated,
-  setToolCallOutput,
+  updateToolCallOutput,
   setMode,
   setAllSessionMetadata,
   addSessionMetadata,
@@ -788,7 +849,6 @@ export const {
   selectCurrentMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
-  selectUseTools,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

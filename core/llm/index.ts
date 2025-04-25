@@ -1,4 +1,4 @@
-import { ModelRole, Rule } from "@continuedev/config-yaml";
+import { ModelRole } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -40,7 +40,6 @@ import {
   modelSupportsImages,
 } from "./autodetect.js";
 import {
-  CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
   DEFAULT_CONTEXT_LENGTH,
   DEFAULT_MAX_BATCH_SIZE,
@@ -126,7 +125,6 @@ export abstract class BaseLLM implements ILLM {
   model: string;
 
   title?: string;
-  systemMessage?: string;
   baseChatSystemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
@@ -149,7 +147,6 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
-  rules?: Rule[];
 
   deployment?: string;
   apiVersion?: string;
@@ -195,7 +192,6 @@ export abstract class BaseLLM implements ILLM {
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this.systemMessage = options.systemMessage;
     this.baseChatSystemMessage = options.baseChatSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
@@ -250,7 +246,6 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
     this.roles = options.roles;
-    this.rules = options.rules;
 
     this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
@@ -285,75 +280,16 @@ export abstract class BaseLLM implements ILLM {
     return Promise.resolve([]);
   }
 
-  private _compileChatMessages(
-    options: CompletionOptions,
-    messages: ChatMessage[],
-    functions?: any[],
-  ) {
-    let contextLength = this.contextLength;
-    if (
-      options.model !== this.model &&
-      options.model in CONTEXT_LENGTH_FOR_MODEL
-    ) {
-      contextLength =
-        CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
-    }
-
-    return compileChatMessages({
-      modelName: options.model,
-      msgs: messages,
-      contextLength,
-      maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-      supportsImages: this.supportsImages(),
-      prompt: undefined,
-      functions,
-      systemMessage: this.systemMessage,
-      rules: this.rules ?? [],
-    });
-  }
-
   private _templatePromptLikeMessages(prompt: string): string {
     if (!this.templateMessages) {
       return prompt;
     }
 
+    // NOTE system message no longer supported here
+
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
-    const systemMessage = this.systemMessage;
-    if (systemMessage) {
-      msgs.unshift({ role: "system", content: systemMessage });
-    }
-
     return this.templateMessages(msgs);
-  }
-
-  private _compilePromptForLog(
-    prompt: string,
-    completionOptions: CompletionOptions,
-  ): string {
-    const completionOptionsLog = JSON.stringify(
-      {
-        contextLength: this.contextLength,
-        ...completionOptions,
-      },
-      null,
-      2,
-    );
-
-    let requestOptionsLog = "";
-    if (this.requestOptions) {
-      requestOptionsLog = JSON.stringify(this.requestOptions, null, 2);
-    }
-
-    return (
-      "##### Completion options #####\n" +
-      completionOptionsLog +
-      (requestOptionsLog
-        ? "\n\n##### Request options #####\n" + requestOptionsLog
-        : "") +
-      "\n\n##### Prompt #####\n" +
-      prompt
-    );
   }
 
   private _logEnd(
@@ -920,7 +856,14 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = this._compileChatMessages(completionOptions, _messages);
+    const messages = compileChatMessages({
+      modelName: completionOptions.model,
+      msgs: _messages,
+      contextLength: this.contextLength,
+      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+      supportsImages: this.supportsImages(),
+      tools: options.tools,
+    });
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)

@@ -9,6 +9,12 @@ export const OpenAi: ModelProvider = {
       maxCompletionTokens: 4096,
     },
     {
+      model: "gpt-3.5-turbo-0613",
+      displayName: "GPT-3.5 Turbo",
+      contextLength: 16385,
+      maxCompletionTokens: 4096,
+    },
+    {
       model: "gpt-3.5-turbo-16k",
       displayName: "GPT-3.5 Turbo 16K",
       contextLength: 16384,

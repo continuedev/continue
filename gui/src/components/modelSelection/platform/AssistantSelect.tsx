@@ -34,7 +34,6 @@ import { ProfileDescription } from "core/config/ConfigHandler";
 import { useNavigate } from "react-router-dom";
 import { vscCommandCenterInactiveBorder } from "../..";
 import { ROUTES } from "../../../util/navigation";
-import { ToolTip } from "../../gui/Tooltip";
 import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
@@ -53,6 +52,7 @@ const AssistantSelectOption = ({
   const tinyFont = useFontSize(-4);
 
   const navigate = useNavigate();
+  const { setSelectedSection } = useLump();
 
   const hasFatalErrors = useMemo(() => {
     return !!profile.errors?.find((error) => error.fatal);
@@ -78,7 +78,8 @@ const AssistantSelectOption = ({
 
   function handleClickError() {
     if (profile.id === "local") {
-      navigate(ROUTES.CONFIG_ERROR);
+      navigate(ROUTES.HOME);
+      setSelectedSection("error");
     } else {
       ideMessenger.post("config/openProfile", { profileId: profile.id });
     }
@@ -111,42 +112,35 @@ const AssistantSelectOption = ({
             </span>
           </div>
           <div className="flex flex-row items-center gap-1">
-            {!profile.errors?.length ? (
-              isLocalProfile(profile) ? (
-                <Cog6ToothIcon
-                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleConfigure();
-                  }}
-                />
-              ) : (
-                <ArrowTopRightOnSquareIcon
-                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleConfigure();
-                  }}
-                />
-              )
+            {profile.errors && profile.errors?.length > 0 && (
+              <ExclamationTriangleIcon
+                data-tooltip-id={`${profile.id}-errors-tooltip`}
+                className="h-3 w-3 flex-shrink-0 cursor-pointer text-red-500"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleClickError();
+                }}
+              />
+            )}
+            {isLocalProfile(profile) ? (
+              <Cog6ToothIcon
+                className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleConfigure();
+                }}
+              />
             ) : (
-              <>
-                <ExclamationTriangleIcon
-                  data-tooltip-id={`${profile.id}-errors-tooltip`}
-                  className="h-3 w-3 flex-shrink-0 cursor-pointer text-red-500"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleClickError();
-                  }}
-                />
-                <ToolTip id={`${profile.id}-errors-tooltip`}>
-                  <div className="font-semibold">Errors</div>
-                  {JSON.stringify(profile.errors, null, 2)}
-                </ToolTip>
-              </>
+              <ArrowTopRightOnSquareIcon
+                className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleConfigure();
+                }}
+              />
             )}
           </div>
         </div>

@@ -21,11 +21,11 @@ async function collectDiffs(
 ): Promise<{ ourDiffs: DiffLine[]; myersDiffs: any }> {
   const ourDiffs: DiffLine[] = [];
 
-  for (const diffLine of (await deterministicApplyLazyEdit(
+  for (const diffLine of (await deterministicApplyLazyEdit({
     oldFile,
-    newFile,
+    newLazyFile: newFile,
     filename,
-  )) ?? []) {
+  })) ?? []) {
     ourDiffs.push(diffLine);
   }
 
