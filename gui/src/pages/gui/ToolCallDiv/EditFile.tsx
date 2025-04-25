@@ -11,7 +11,7 @@ type EditToolCallProps = {
 };
 
 export function EditFile(props: EditToolCallProps) {
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.newContents ?? ""}\n\`\`\``;
+  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes ?? ""}\n\`\`\``;
 
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const states = useAppSelector((store) => store.session.codeBlockApplyStates);
