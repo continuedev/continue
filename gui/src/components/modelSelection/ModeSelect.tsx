@@ -43,7 +43,7 @@ function ModeSelect() {
   const mode = useAppSelector(selectCurrentMode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const currentSession = useAppSelector((state) => state.session);
-  const [newChatSessionInitialized, setNewChatSessionInitialized] = useState(false);
+  const [newSessionInitialized, setNewSessionInitialized] = useState(false);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
 
   const jetbrains = useMemo(() => {
@@ -87,12 +87,12 @@ function ModeSelect() {
   }, [dispatch, mode, jetbrains]);
 
   useWebviewListener("newSession", async () => {
-    setNewChatSessionInitialized(true);
+    setNewSessionInitialized(true);
   });
 
   useEffect(() => {
     if (currentSession.history.length > 0) {
-      setNewChatSessionInitialized(false);
+      setNewSessionInitialized(false);
     }
   }, [currentSession.history]);
 
@@ -104,8 +104,8 @@ function ModeSelect() {
           return;
         }
         dispatch(setMode(newMode));
-        if (newMode === "edit" || newChatSessionInitialized) {
-          // generate a new session for edit mode and if user opened a new chat explicitly
+        if (newMode === "edit" || newSessionInitialized) {
+          // generate a new session for edit mode and if user opened a new session explicitly
           await dispatch(
             saveCurrentSession({
               generateTitle: false,
