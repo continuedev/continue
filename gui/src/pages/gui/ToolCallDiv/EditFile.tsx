@@ -6,7 +6,7 @@ import { useAppSelector } from "../../../redux/hooks";
 
 type EditToolCallProps = {
   relativeFilePath: string;
-  newContents: string;
+  changes: string;
   toolCallId?: string;
 };
 

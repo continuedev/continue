@@ -25,7 +25,7 @@ function FunctionSpecificToolCallDiv({
       return (
         <EditFile
           relativeFilePath={args.filepath}
-          newContents={args.changes}
+          changes={args.changes}
           toolCallId={toolCall.id}
         />
       );
