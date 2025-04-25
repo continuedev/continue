@@ -19,7 +19,7 @@ export const editToolImpl: ClientToolImpl = async (
   }
   const apply = await extras.ideMessenger.request("applyToFile", {
     streamId: extras.activeToolStreamId,
-    text: args.new_contents,
+    text: args.changes,
     toolCallId,
     filepath: firstUriMatch,
   });
