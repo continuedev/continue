@@ -23,6 +23,13 @@ interface AuthConfig {
  * Loads the authentication configuration from disk
  */
 export function loadAuthConfig(): AuthConfig {
+  // If CONTINUE_API_KEY environment variable exists, use that instead
+  if (process.env.CONTINUE_API_KEY) {
+    return {
+      accessToken: process.env.CONTINUE_API_KEY,
+    };
+  }
+
   try {
     if (fs.existsSync(AUTH_CONFIG_PATH)) {
       return JSON.parse(fs.readFileSync(AUTH_CONFIG_PATH, "utf8"));
@@ -37,6 +44,11 @@ export function loadAuthConfig(): AuthConfig {
  * Saves the authentication configuration to disk
  */
 export function saveAuthConfig(config: AuthConfig): void {
+  // If using CONTINUE_API_KEY environment variable, don't save anything
+  if (process.env.CONTINUE_API_KEY) {
+    return;
+  }
+
   try {
     // Make sure the directory exists
     const dir = path.dirname(AUTH_CONFIG_PATH);
@@ -54,6 +66,11 @@ export function saveAuthConfig(config: AuthConfig): void {
  * Checks if the user is authenticated and the token is valid
  */
 export function isAuthenticated(): boolean {
+  // If CONTINUE_API_KEY environment variable exists, user is authenticated
+  if (process.env.CONTINUE_API_KEY) {
+    return true;
+  }
+
   const config = loadAuthConfig();
 
   if (!config.userId || !config.accessToken) {
@@ -97,13 +114,15 @@ function getAuthUrlForTokenPage(useOnboarding: boolean = false): string {
   const params = {
     response_type: "code",
     client_id: env.workOsClientId,
-    redirect_uri: `${env.appUrl}tokens/${useOnboarding ? "onboarding-" : ""}callback`,
+    redirect_uri: `${env.appUrl}tokens/${
+      useOnboarding ? "onboarding-" : ""
+    }callback`,
     state: uuidv4(),
     provider: "authkit",
   };
 
   Object.keys(params).forEach((key) =>
-    url.searchParams.append(key, params[key as keyof typeof params]),
+    url.searchParams.append(key, params[key as keyof typeof params])
   );
 
   return url.toString();
@@ -137,7 +156,7 @@ async function refreshToken(refreshToken: string): Promise<AuthConfig> {
   } catch (error: any) {
     console.error(
       chalk.red("Token refresh error:"),
-      error.response?.data?.message || error.message || error,
+      error.response?.data?.message || error.message || error
     );
     throw error;
   }
@@ -147,8 +166,18 @@ async function refreshToken(refreshToken: string): Promise<AuthConfig> {
  * Authenticates using the Continue web flow
  */
 export async function login(
-  useOnboarding: boolean = false,
+  useOnboarding: boolean = false
 ): Promise<AuthConfig> {
+  // If CONTINUE_API_KEY environment variable exists, use that instead
+  if (process.env.CONTINUE_API_KEY) {
+    console.log(
+      chalk.green("Using CONTINUE_API_KEY from environment variables")
+    );
+    return {
+      accessToken: process.env.CONTINUE_API_KEY,
+    };
+  }
+
   try {
     console.log(chalk.cyan("\nStarting authentication with Continue..."));
 
@@ -173,7 +202,7 @@ export async function login(
   } catch (error: any) {
     console.error(
       chalk.red("Authentication error:"),
-      error.response?.data?.message || error.message || error,
+      error.response?.data?.message || error.message || error
     );
     throw error;
   }
@@ -183,6 +212,15 @@ export async function login(
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {
+  if (process.env.CONTINUE_API_KEY) {
+    console.log(
+      chalk.yellow(
+        "Using CONTINUE_API_KEY from environment variables, nothing to log out"
+      )
+    );
+    return;
+  }
+
   if (fs.existsSync(AUTH_CONFIG_PATH)) {
     fs.unlinkSync(AUTH_CONFIG_PATH);
     console.log(chalk.green("Successfully logged out"));
