@@ -63,7 +63,10 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
       } = await callClientTool(toolCallState.toolCall, {
         dispatch,
         ideMessenger: extra.ideMessenger,
-        activeToolStreamId: state.session.activeToolStreamId?.[0],
+        streamId: state.session.codeBlockApplyStates.states.find(
+          (state) =>
+            state.toolCallId && state.toolCallId === toolCallState.toolCallId,
+        )?.streamId,
       });
       output = clientToolOuput;
       errorMessage = clientToolError;

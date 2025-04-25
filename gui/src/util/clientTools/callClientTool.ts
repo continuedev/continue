@@ -7,7 +7,7 @@ import { editToolImpl } from "./editImpl";
 export interface ClientToolExtras {
   dispatch: AppThunkDispatch;
   ideMessenger: IIdeMessenger;
-  activeToolStreamId?: string;
+  streamId?: string;
 }
 
 export interface ClientToolOutput {
