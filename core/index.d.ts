@@ -1,4 +1,8 @@
-import { DataDestination, ModelRole, PromptTemplates } from "@continuedev/config-yaml";
+import {
+  DataDestination,
+  ModelRole,
+  PromptTemplates,
+} from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
@@ -1502,7 +1506,7 @@ export interface RuleWithSource {
     | "rules-block"
     | "json-systemMessage"
     | ".continuerules";
-  if?: string;
+  globs?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;

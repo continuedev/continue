@@ -117,7 +117,6 @@ export async function* streamDiffLines({
         ) as UserChatMessage | ToolResultChatMessage | undefined);
 
   const systemMessage = getSystemMessageWithRules({
-    currentModel: llm.model,
     rules,
     userMessage: lastUserMessage,
     baseSystemMessage: undefined,
