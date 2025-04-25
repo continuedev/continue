@@ -192,6 +192,7 @@ class IntelliJIDE(
 
     override suspend fun writeFile(path: String, contents: String) {
         val file = File(URI(path))
+        file.parentFile?.mkdirs()
         file.writeText(contents)
     }
 
@@ -207,7 +208,13 @@ class IntelliJIDE(
     }
 
     override suspend fun openFile(path: String) {
-        val file = LocalFileSystem.getInstance().findFileByPath(URI(path).path)
+        // Convert URI path to absolute file path
+        val filePath = File(URI(path)).absolutePath
+        // Find the file using the absolute path
+        val file = withContext(Dispatchers.IO) {
+            LocalFileSystem.getInstance().refreshAndFindFileByPath(filePath)
+        }
+
         file?.let {
             ApplicationManager.getApplication().invokeLater {
                 FileEditorManager.getInstance(project).openFile(it, true)
