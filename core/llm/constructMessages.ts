@@ -12,7 +12,7 @@ import { isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
-  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L8";
+  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
@@ -58,14 +58,10 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   of changes unless the user specifically asks for code only.
 </important_rules>`;
 
-const CANCELED_TOOL_CALL_MESSAGE =
-  "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
-
 export function constructMessages(
   history: ChatHistoryItem[],
   baseChatSystemMessage: string | undefined,
   rules: RuleWithSource[],
-  modelName: string,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
@@ -107,8 +103,8 @@ export function constructMessages(
     baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules,
     userMessage: lastUserMsg,
-    currentModel: modelName,
   });
+
   if (systemMessage.trim()) {
     msgs.unshift({
       role: "system",
