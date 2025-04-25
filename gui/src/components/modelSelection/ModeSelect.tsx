@@ -8,9 +8,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { lightGray } from "..";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
@@ -41,6 +42,8 @@ function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector(selectCurrentMode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
+  const currentSession = useAppSelector((state) => state.session);
+  const [newChatSessionInitialized, setNewChatSessionInitialized] = useState(false);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
 
   const jetbrains = useMemo(() => {
@@ -83,6 +86,16 @@ function ModeSelect() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [dispatch, mode, jetbrains]);
 
+  useWebviewListener("newSession", async () => {
+    setNewChatSessionInitialized(true);
+  });
+
+  useEffect(() => {
+    if (currentSession.history.length > 0) {
+      setNewChatSessionInitialized(false);
+    }
+  }, [currentSession.history]);
+
   return (
     <Listbox
       value={mode}
@@ -91,7 +104,8 @@ function ModeSelect() {
           return;
         }
         dispatch(setMode(newMode));
-        if (newMode === "edit") {
+        if (newMode === "edit" || newChatSessionInitialized) {
+          // generate a new session for edit mode and if user opened a new chat explicitly
           await dispatch(
             saveCurrentSession({
               generateTitle: false,
@@ -99,6 +113,7 @@ function ModeSelect() {
             }),
           );
         } else if (mode === "edit") {
+          // load last session if the previous mode was edit
           await dispatch(
             loadLastSession({
               saveCurrentSession: false,
