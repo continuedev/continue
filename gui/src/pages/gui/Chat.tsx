@@ -48,7 +48,7 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
-import { isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
@@ -130,14 +130,15 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const jetbrains = isJetBrains();
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
     const listener = (e: any) => {
       if (
-        e.key === "Backspace" &&
-        isMetaEquivalentKeyPressed(e) &&
-        !e.shiftKey
+        e.key === "Backspace" && jetbrains
+          ? e.altKey
+          : isMetaEquivalentKeyPressed(e) && !e.shiftKey
       ) {
         dispatch(cancelStream());
       }
@@ -339,8 +340,8 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? null : // /> //   toolCallId={item.message.toolCallId} //   contextItems={item.contextItems} // <ToolOutput
-              item.message.role === "assistant" &&
+              ) : item.message.role === "tool" ? null : item.message.role === // /> //   toolCallId={item.message.toolCallId} //   contextItems={item.contextItems} // <ToolOutput
+                  "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
