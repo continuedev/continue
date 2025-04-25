@@ -78,7 +78,6 @@ const sidebars = {
     {
       type: "category",
       label: "Model providers",
-      collapsed: false,
       link: {
         slug: "/customize/model-providers",
         type: "generated-index",

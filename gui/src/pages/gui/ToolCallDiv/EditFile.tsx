@@ -11,13 +11,13 @@ import {
 
 type EditToolCallProps = {
   relativeFilePath: string;
-  newContents: string;
+  changes: string;
   toolCallId?: string;
   historyIndex: number;
 };
 
 export function EditFile(props: EditToolCallProps) {
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.newContents ?? ""}\n\`\`\``;
+  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes ?? ""}\n\`\`\``;
 
   const dispatch = useAppDispatch();
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
