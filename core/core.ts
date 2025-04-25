@@ -26,7 +26,10 @@ import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
-import { isProcessBackgrounded, markProcessAsBackgrounded } from "./util/processTerminalBackgroundStates";
+import {
+  isProcessBackgrounded,
+  markProcessAsBackgrounded,
+} from "./util/processTerminalBackgroundStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
@@ -50,7 +53,7 @@ import {
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
-import { MCPManagerSingleton } from "./context/mcp";
+import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
@@ -278,7 +281,6 @@ export class Core {
       }
     });
 
-    // Special
     on("abort", (msg) => {
       this.abortedMessageIds.add(msg.messageId);
     });
@@ -307,12 +309,14 @@ export class Core {
       historyManager.save(msg.data);
     });
 
-    // Dev data
+    on("history/clear", (msg) => {
+      historyManager.clearAll();
+    });
+
     on("devdata/log", async (msg) => {
       void DataLogger.getInstance().logDevData(msg.data);
     });
 
-    // Edit config
     on("config/addModel", (msg) => {
       const model = msg.data.model;
       addModel(model, msg.data.role);
@@ -405,15 +409,20 @@ export class Core {
         return [];
       }
 
-      const items = await config.contextProviders
-        ?.find((provider) => provider.description.title === msg.data.title)
-        ?.loadSubmenuItems({
-          config,
-          ide: this.ide,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-        });
-      return items || [];
+      try {
+        const items = await config.contextProviders
+          ?.find((provider) => provider.description.title === msg.data.title)
+          ?.loadSubmenuItems({
+            config,
+            ide: this.ide,
+            fetch: (url, init) =>
+              fetchwithRequestOptions(url, init, config.requestOptions),
+          });
+        return items || [];
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
     });
 
     on("context/getContextItems", this.getContextItems.bind(this));
@@ -467,7 +476,7 @@ export class Core {
       );
       return completion;
     });
-    on("llm/listModels", this.handleListModels);
+    on("llm/listModels", this.handleListModels.bind(this));
 
     // Provide messenger to utils so they can interact with GUI + state
     TTS.messenger = this.messenger;
@@ -644,6 +653,9 @@ export class Core {
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
+      this.messenger.send("sessionUpdate", {
+        sessionInfo: msg.data.sessionInfo,
+      });
       await this.configHandler.updateControlPlaneSessionInfo(
         msg.data.sessionInfo,
       );
@@ -659,7 +671,7 @@ export class Core {
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
       try {
-        const ignore = shouldIgnore(filepath, this.ide);
+        const ignore = await shouldIgnore(filepath, this.ide);
         if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
@@ -670,7 +682,7 @@ export class Core {
       }
     });
 
-    on("tools/call", async ({ data: { toolCall, selectedModelTitle }, messageId }) => {
+    on("tools/call", async ({ data: { toolCall } }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
         throw new Error("Config not loaded");
@@ -690,36 +702,24 @@ export class Core {
 
       // Define a callback for streaming output updates
       const onPartialOutput = (params: {
-        toolCallId: string,
+        toolCallId: string;
         contextItems: ContextItem[];
       }) => {
         this.messenger.send("toolCallPartialOutput", params);
       };
 
-      const contextItems = await callTool(
+      return await callTool(tool, toolCall.function.arguments, {
+        ide: this.ide,
+        llm: config.selectedModelByRole.chat,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
         tool,
-        JSON.parse(toolCall.function.arguments || "{}"),
-        {
-          ide: this.ide,
-          llm: config.selectedModelByRole.chat,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-          tool,
-          toolCallId: toolCall.id,
-          onPartialOutput,
-        },
-      );
-
-      if (tool.faviconUrl) {
-        contextItems.forEach((item) => {
-          item.icon = tool.faviconUrl;
-        });
-      }
-
-      return { contextItems };
+        toolCallId: toolCall.id,
+        onPartialOutput,
+      });
     });
 
-    on("isItemTooBig", async ({ data: { item, selectedModelTitle } }) => {
+    on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
     });
 
@@ -728,11 +728,13 @@ export class Core {
       markProcessAsBackgrounded(toolCallId);
     });
 
-    on("process/isBackgrounded", async ({ data: { toolCallId }, messageId }) => {
-      const isBackgrounded = isProcessBackgrounded(toolCallId);
-      return isBackgrounded; // Return true to indicate the message was handled successfully
-    });
-
+    on(
+      "process/isBackgrounded",
+      async ({ data: { toolCallId }, messageId }) => {
+        const isBackgrounded = isProcessBackgrounded(toolCallId);
+        return isBackgrounded; // Return true to indicate the message was handled successfully
+      },
+    );
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -821,7 +823,8 @@ export class Core {
         if (
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
-          uri.endsWith(SYSTEM_PROMPT_DOT_FILE)
+          uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
+          (uri.includes(".continue") && uri.endsWith(".yaml"))
         ) {
           await this.configHandler.reloadConfig();
         } else if (
@@ -915,7 +918,6 @@ export class Core {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
-      selectedModelTitle: string;
     }>,
   ) => {
     const { config } = await this.configHandler.loadConfig();

@@ -32,6 +32,7 @@ import type {
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -50,6 +51,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
+  "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
@@ -99,7 +101,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
-      selectedModelTitle: string;
     },
     ContextItemWithId[],
   ];
@@ -154,7 +155,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "chatDescriber/describe": [
     {
-      selectedModelTitle: string;
       text: string;
     },
     string | undefined,
@@ -201,14 +201,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
-    { toolCall: ToolCall; selectedModelTitle: string },
-    { contextItems: ContextItem[] },
+    { toolCall: ToolCall },
+    { contextItems: ContextItem[]; errorMessage?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
-  isItemTooBig: [
-    { item: ContextItemWithId; selectedModelTitle: string | undefined },
-    boolean,
+  isItemTooBig: [{ item: ContextItemWithId }, boolean];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];

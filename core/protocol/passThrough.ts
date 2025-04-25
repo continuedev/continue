@@ -14,6 +14,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "history/delete",
     "history/load",
     "history/save",
+    "history/clear",
     "devdata/log",
     "config/addModel",
     "config/newPromptFile",
@@ -79,6 +80,7 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "setTTSActive",
     "getWebviewHistoryLength",
     "getCurrentSessionId",
+    "sessionUpdate",
     "didCloseFiles",
     "toolCallPartialOutput",
   ];

@@ -4,6 +4,7 @@ import { dataSchema } from "./data/index.js";
 import { modelSchema, partialModelSchema } from "./models.js";
 
 export const contextSchema = z.object({
+  name: z.string().optional(),
   provider: z.string(),
   params: z.any().optional(),
 });

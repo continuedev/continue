@@ -32,7 +32,7 @@ Assistants can either explicitly define blocks - see [Properties](#properties) b
 
 ### Using Blocks
 
-Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization.
+Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from https://hub.continue.dev.
 
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
 
@@ -167,7 +167,7 @@ The `models` section defines the language models used in your configuration. Mod
 - `apiBase`: Can be used to override the default API base that is specified per model
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
-- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chatTemplate`,  [`edit`](./customize/model-roles/edit.mdx#prompt-templating) and [`apply`](./customize/model-roles/apply.mdx#prompt-templating). The `chatTemplate` property must be a valid template name, such as `llama3` or `anthropic`.
+- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chatTemplate`,  [`edit`](./customize/model-roles/edit.mdx#prompt-templating) and [`apply`](./customize/model-roles/apply.mdx#prompt-templating) and [autocomplete](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   - `baseSystemMessage`: Can be used to override the default system prompt.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
@@ -237,7 +237,8 @@ More information about usage/params for each context provider can be found [here
 
 **Properties:**
 
-- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
+- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`)
+- `name`: Optional name for the provider
 - `params`: Optional parameters to configure the context provider's behavior.
 
 **Example:**
@@ -251,6 +252,10 @@ context:
       nFinal: 10
   - provider: docs
   - provider: diff
+  - provider: http
+    name: Context Server 1
+    params:
+      url: "https://api.example.com/server1"
   - provider: folder
   - provider: terminal
 ```

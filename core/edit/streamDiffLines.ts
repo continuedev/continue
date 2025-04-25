@@ -4,6 +4,7 @@ import {
   ILLM,
   Prediction,
   RuleWithSource,
+  ToolResultChatMessage,
   UserChatMessage,
 } from "../";
 import {
@@ -104,15 +105,16 @@ export async function* streamDiffLines({
 
   // Rules will be included with edit prompt
   // If any rules are present this will result in using chat instead of legacy completion
-  const lastUserMessage: UserChatMessage | undefined =
+  const lastUserMessage =
     typeof prompt === "string"
-      ? {
+      ? ({
           role: "user",
           content: prompt,
-        }
-      : (findLast(prompt, (msg) => msg.role === "user") as
-          | UserChatMessage
-          | undefined);
+        } as UserChatMessage)
+      : (findLast(
+          prompt,
+          (msg) => msg.role === "user" || msg.role === "tool",
+        ) as UserChatMessage | ToolResultChatMessage | undefined);
 
   const systemMessage = getSystemMessageWithRules({
     currentModel: llm.model,
@@ -123,11 +125,13 @@ export async function* streamDiffLines({
 
   if (systemMessage) {
     if (typeof prompt === "string") {
+      // Removed system prompt because it was causing it to be used for Apply
+      // We should bring it back only for Edit
       prompt = [
-        {
-          role: "system",
-          content: systemMessage,
-        },
+        // {
+        //   role: "system",
+        //   content: systemMessage,
+        // },
         {
           role: "user",
           content: prompt,
@@ -138,10 +142,10 @@ export async function* streamDiffLines({
       if (curSysMsg) {
         curSysMsg.content = systemMessage + "\n\n" + curSysMsg.content;
       } else {
-        prompt.unshift({
-          role: "system",
-          content: systemMessage,
-        });
+        // prompt.unshift({
+        //   role: "system",
+        //   content: systemMessage,
+        // });
       }
     }
   }

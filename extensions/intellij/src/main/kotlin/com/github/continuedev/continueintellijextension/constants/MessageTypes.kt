@@ -68,6 +68,7 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
+            "sessionUpdate",
             "didCloseFiles",
             "toolCallPartialOutput",
         )
@@ -80,6 +81,7 @@ class MessageTypes {
             "history/delete",
             "history/load",
             "history/save",
+            "history/clear",
             "devdata/log",
             "config/addModel",
             "config/newPromptFile",

@@ -5,58 +5,27 @@
 # - Debug -> Extension
 set -e
 
-# Set the correct Node version at the start of the script
-setup_node_version() {
-  # Get required node version from .node-version or .nvmrc
-  if [ -f .node-version ]; then
-    required_node_version=$(cat .node-version)
-  elif [ -f .nvmrc ]; then
+# Check if node version matches .nvmrc
+if [ -f .nvmrc ]; then
     required_node_version=$(cat .nvmrc)
-  else
-    echo "No .node-version or .nvmrc file found. Skipping Node.js version check."
-    return
-  fi
+    current_node_version=$(node -v)
+    
+    # Remove 'v' prefix from versions for comparison
+    required_version=${required_node_version#v}
+    current_version=${current_node_version#v}
 
-  # Remove 'v' prefix if present
-  required_version=${required_node_version#v}
-
-  # Try fnm first
-  if command -v fnm &> /dev/null; then
-    echo "📦 Using fnm to set Node.js version to $required_version..."
-    # Capture output to avoid duplicate messages
-    eval "$(fnm env --use-on-cd)" &> /dev/null
-    fnm use "$required_version" &> /dev/null || fnm use &> /dev/null
-  # Then try nvm
-  elif command -v nvm &> /dev/null || [ -s "$NVM_DIR/nvm.sh" ]; then
-    echo "📦 Using nvm to set Node.js version to $required_version..."
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # Load nvm
-    nvm use "$required_version" &> /dev/null || nvm use &> /dev/null
-  # Fall back to version check only
-  else
-    echo "Neither fnm nor nvm found. Proceeding with current Node.js version."
-  fi
-
-  # Verify the current Node.js version after our attempt to set it
-  current_node_version=$(node -v)
-  current_version=${current_node_version#v}
-
-  if [ "$required_version" != "$current_version" ]; then
-    echo "⚠️  Warning: Your Node.js version ($current_node_version) does not match the required version (v$required_version)"
-    echo "Even after attempting to use version managers, the correct version couldn't be activated."
-    if [ -t 0 ]; then
-      read -p "Press Enter to continue with installation anyway..."
-    else
-      echo "Continuing with installation anyway..."
+    if [ "$required_version" != "$current_version" ]; then
+        echo "⚠️  Warning: Your Node.js version ($current_node_version) does not match the required version ($required_node_version)"
+        echo "Please consider switching to the correct version using: nvm use"
+        
+        if [ -t 0 ]; then
+            read -p "Press Enter to continue with installation anyway..."
+        else
+            echo "Continuing with installation anyway..."
+        fi
+        echo
     fi
-    echo
-  else
-    echo "✅ Using Node.js $current_node_version as required."
-  fi
-}
-
-# Run the node version setup
-setup_node_version
+fi
 
 echo "Installing root-level dependencies..."
 npm install

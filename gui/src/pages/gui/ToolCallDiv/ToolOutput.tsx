@@ -1,9 +1,12 @@
 import { ContextItemWithId } from "core";
+import { ComponentType } from "react";
 import ContextItemsPeek from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 
 interface ToolOutputProps {
   contextItems: ContextItemWithId[];
   toolCallId: string;
+  icon?: ComponentType;
+  title?: JSX.Element | string;
 }
 
 function ToolOutput(props: ToolOutputProps) {
@@ -15,6 +18,9 @@ function ToolOutput(props: ToolOutputProps) {
   return (
     <div>
       <ContextItemsPeek
+        showWhenNoResults={true}
+        title={props.title}
+        icon={props.icon}
         isCurrentContextPeek={false}
         contextItems={props.contextItems}
       />
