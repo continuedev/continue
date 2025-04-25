@@ -47,15 +47,12 @@ export function ApplyActions(props: ApplyActionsProps) {
     </button>
   );
 
-  console.log(props.applyState);
-
   switch (props.applyState ? props.applyState.status : null) {
     case "not-started":
       return (
         <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">
           <span className="text-lightgray inline-flex w-min items-center gap-2 text-center text-xs">
             Pending
-            <Spinner />
           </span>
         </div>
       );

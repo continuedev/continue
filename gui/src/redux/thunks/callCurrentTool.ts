@@ -67,6 +67,7 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
           (state) =>
             state.toolCallId && state.toolCallId === toolCallState.toolCallId,
         )?.streamId,
+        getState,
       });
       output = clientToolOuput;
       errorMessage = clientToolError;

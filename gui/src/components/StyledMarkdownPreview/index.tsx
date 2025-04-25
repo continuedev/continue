@@ -199,23 +199,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [history.length, props.itemIndex]);
   const isLastItemRef = useUpdatingRef(isLastItem);
 
-  const isStreaming = useAppSelector((store) => store.session.isStreaming);
-  const isStreamingRef = useUpdatingRef(isStreaming);
-
-  const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
-    [],
-  );
-
+  const codeblockStreamIds = useRef<string[]>([]);
   useEffect(() => {
     if (props.forceStreamId) {
-      codeblockState.current = [
-        {
-          streamId: props.forceStreamId,
-          isGenerating: false,
-        },
-      ];
+      codeblockStreamIds.current = [props.forceStreamId];
     }
-  }, [props.forceStreamId]);
+  }, [props.forceStreamId, codeblockStreamIds]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -310,22 +299,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
-          const isGeneratingCodeBlock =
-            preChildProps["data-islastcodeblock"] &&
-            isLastItemRef.current &&
-            isStreamingRef.current;
+          const isFinalCodeblock =
+            preChildProps["data-islastcodeblock"] && isLastItemRef.current;
 
-          if (codeblockState.current[codeBlockIndex] === undefined) {
-            codeblockState.current[codeBlockIndex] = {
-              streamId: props.forceStreamId ?? uuidv4(),
-              isGenerating: isGeneratingCodeBlock,
-            };
-          } else {
-            codeblockState.current[codeBlockIndex].isGenerating =
-              isGeneratingCodeBlock;
+          if (codeblockStreamIds.current[codeBlockIndex] === undefined) {
+            codeblockStreamIds.current[codeBlockIndex] =
+              props.forceStreamId ?? uuidv4();
           }
-
-          console.log(props.forceStreamId);
 
           return (
             <StepContainerPreToolbar
@@ -333,11 +313,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               codeBlockIndex={codeBlockIndex}
               language={language}
               relativeFilepath={relativeFilePath}
-              isGeneratingCodeBlock={isGeneratingCodeBlock}
+              isFinalCodeblock={isFinalCodeblock}
               range={range}
-              codeBlockStreamId={
-                codeblockState.current[codeBlockIndex].streamId
-              }
+              codeBlockStreamId={codeblockStreamIds.current[codeBlockIndex]}
               expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
             >

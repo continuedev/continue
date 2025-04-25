@@ -40,8 +40,6 @@ export function EditFile(props: EditToolCallProps) {
     return null;
   }
 
-  console.log("APPLY STATE", applyState);
-
   return (
     <>
       <StyledMarkdownPreview

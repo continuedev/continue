@@ -1,10 +1,11 @@
 import { ContextItem, ToolCall } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { IIdeMessenger } from "../../context/IdeMessenger";
-import { AppThunkDispatch } from "../../redux/store";
+import { AppThunkDispatch, RootState } from "../../redux/store";
 import { editToolImpl } from "./editImpl";
 
 export interface ClientToolExtras {
+  getState: () => RootState;
   dispatch: AppThunkDispatch;
   ideMessenger: IIdeMessenger;
   streamId?: string;
