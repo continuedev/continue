@@ -12,3 +12,30 @@ In Continue, autocomplete models are used to display inline [Autocomplete](../..
 ## Recommended Autocomplete models
 
 Visit the [Autocomplete Deep Dive](../deep-dives/autocomplete.mdx) for recommended models and more details.
+
+## Prompt templating
+
+You can customize the prompt template used when autocomplete happens by setting the `promptTemplates.autocomplete` property in your model configuration. Continue uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
+
+Available variables for the apply template:
+
+- `{{{prefix}}}` - the code before your cursor
+- `{{{suffix}}}` - the code after your cursor
+- `{{{filename}}}` - the name of the file your cursor currently is
+- `{{{reponame}}}` - the name of the folder where the codebase is
+- `{{{language}}}` - the name of the programming language in full (ex. Typescript)
+
+Example:
+
+```yaml
+models:
+  - name: My Custom Autocomplete Template
+    provider: ollama
+    model: qwen2.5-coder:1.5b
+    promptTemplates:
+      autocomplete: |
+        `
+        globalThis.importantFunc = importantFunc
+        <|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>
+        `
+```

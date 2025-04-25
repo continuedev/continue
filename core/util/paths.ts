@@ -13,8 +13,16 @@ import Types from "../config/types";
 
 dotenv.config();
 
-const CONTINUE_GLOBAL_DIR =
-  process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
+const CONTINUE_GLOBAL_DIR = (() => {
+  const configPath = process.env.CONTINUE_GLOBAL_DIR;
+  if (configPath) {
+    // Convert relative path to absolute paths based on current working directory
+    return path.isAbsolute(configPath)
+      ? configPath
+      : path.resolve(process.cwd(), configPath);
+  }
+  return path.join(os.homedir(), ".continue");
+})();
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
 //   return config;
@@ -376,12 +384,16 @@ export function getPromptLogsPath(): string {
   return path.join(getLogsDirPath(), "prompt.log");
 }
 
+export function getGlobalFolderWithName(name: string): string {
+  return path.join(getContinueGlobalPath(), name);
+}
+
 export function getGlobalPromptsPath(): string {
-  return path.join(getContinueGlobalPath(), "prompts");
+  return getGlobalFolderWithName("prompts");
 }
 
 export function getGlobalAssistantsPath(): string {
-  return path.join(getContinueGlobalPath(), "assistants");
+  return getGlobalFolderWithName("assistants");
 }
 
 export function readAllGlobalPromptFiles(

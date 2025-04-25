@@ -5,10 +5,15 @@ import { AnimatedEllipsis } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
-import { callTool } from "../../../redux/thunks/callTool";
+import { callCurrentTool } from "../../../redux/thunks/callCurrentTool";
+import { cancelCurrentToolCall } from "../../../redux/thunks/cancelCurrentToolCall";
 import { cancelStream } from "../../../redux/thunks/cancelStream";
-import { cancelTool } from "../../../redux/thunks/cancelTool";
-import { getFontSize, getMetaKeyLabel } from "../../../util";
+import {
+  getAltKeyLabel,
+  getFontSize,
+  getMetaKeyLabel,
+  isJetBrains,
+} from "../../../util";
 import { EnterButton } from "../InputToolbar/EnterButton";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 
@@ -40,21 +45,23 @@ export function LumpToolbar() {
   const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const jetbrains = isJetBrains();
 
   const toolCallState = useSelector(selectCurrentToolCall);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (toolCallState?.status === "generated") {
       const metaKey = event.metaKey || event.ctrlKey;
+      const altKey = event.altKey;
 
       if (metaKey && event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
-        dispatch(callTool());
-      } else if (metaKey && event.key === "Backspace") {
+        dispatch(callCurrentTool());
+      } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
-        dispatch(cancelTool());
+        dispatch(cancelCurrentToolCall());
       }
     }
   };
@@ -92,7 +99,8 @@ export function LumpToolbar() {
             dispatch(cancelStream());
           }}
         >
-          {getMetaKeyLabel()} ⌫ Cancel
+          {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
+          {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
         </StopButton>
       </Container>
     );
@@ -106,15 +114,16 @@ export function LumpToolbar() {
         <div className="flex gap-2 pb-0.5">
           <StopButton
             className="text-gray-400"
-            onClick={() => dispatch(cancelTool())}
+            onClick={() => dispatch(cancelCurrentToolCall())}
             data-testid="reject-tool-call-button"
           >
-            {getMetaKeyLabel()} ⌫ Cancel
+            {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
+            {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
           </StopButton>
           <EnterButton
             isPrimary={true}
             className="text-gray-400"
-            onClick={() => dispatch(callTool())}
+            onClick={() => dispatch(callCurrentTool())}
             data-testid="accept-tool-call-button"
           >
             {getMetaKeyLabel()} ⏎ Continue
