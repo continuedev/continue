@@ -2,6 +2,9 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 
 import { SerializedContinueConfig } from "../..";
 
+/*
+TODO this is not functional
+*/
 export function convertConfigJsonToConfigYaml(
   configJson: SerializedContinueConfig,
 ): AssistantUnrolled {

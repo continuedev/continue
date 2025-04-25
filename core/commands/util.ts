@@ -34,13 +34,18 @@ export function ctxItemToRifWithContents(
 ): RangeInFileWithContents {
   let startLine = 0;
   let endLine = 0;
+  let adjustLines = linesOffByOne ? 1 : 0;
 
   const nameSplit = item.name.split("(");
 
   if (nameSplit.length > 1) {
     const lines = nameSplit[1].split(")")[0].split("-");
-    startLine = Number.parseInt(lines[0], 10) - (linesOffByOne ? 1 : 0);
-    endLine = Number.parseInt(lines[1], 10) - (linesOffByOne ? 1 : 0);
+    startLine = Number.parseInt(lines[0], 10);
+    if (startLine === 0) {
+      adjustLines = 0; // safety to make sure doesn't go negative
+    }
+    startLine -= adjustLines;
+    endLine = Number.parseInt(lines[1], 10) - adjustLines;
   }
 
   const rif: RangeInFileWithContents = {

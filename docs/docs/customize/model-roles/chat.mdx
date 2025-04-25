@@ -10,7 +10,7 @@ import Tabs from "@theme/Tabs";
 
 A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
 
-In Continue, these models are used for [Chat](../../chat/how-to-use-it.md) and [Actions](../../actions/how-to-use-it.md). The selected chat model will also be used for [Edit](../../edit/how-to-use-it.md) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
+In Continue, these models are used for normal [Chat](../../chat/how-to-use-it.md) and [VS Code actions](../deep-dives/vscode-actions.md). The selected chat model will also be used for [Edit](../../edit/how-to-use-it.md) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
 
 ## Recommended Chat models
 
@@ -18,7 +18,7 @@ In Continue, these models are used for [Chat](../../chat/how-to-use-it.md) and [
 
 For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.
 
-### Claude Sonnet 3.5 from Anthropic
+### Claude Sonnet 3.7 from Anthropic
 
 Our current top recommendation is Claude 3.7 Sonnet from [Anthropic](../model-providers/top-level/anthropic.mdx).
 
@@ -51,117 +51,66 @@ Our current top recommendation is Claude 3.7 Sonnet from [Anthropic](../model-pr
   </TabItem>
 </Tabs>
 
-### Llama 3.1 405B from Meta
+### Gemma from Google DeepMind
 
-If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your best option right now. You will need to decide if you use it through a SaaS model provider (e.g. [Together](../model-providers/more/together.mdx) or [Groq](../model-providers/more/groq.mdx)) or self-host it (e.g. using [vLLM](../model-providers//more/vllm.mdx) or [Ollama](../model-providers/top-level/ollama.mdx)).
+If you prefer to use an open-weight model, then the Gemma family of Models from Google DeepMind is a good choice. You will need to decide if you use it through a SaaS model provider, e.g. [Together](../model-providers/more/together.mdx), or self-host it, e.g. [Ollama](../model-providers/top-level/ollama.mdx).
 
 <Tabs groupId="config-example">
-  {/* HUB_TODO nonexistent blocks */}
-  {/* <TabItem value="hub" label="Hub">
+  <TabItem value="hub" label="Hub">
     <Tabs groupId="providers">
-        <TabItem value="Together">
-        Add the [Together Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
-        </TabItem>
-         <TabItem value="Groq">
-        Add the [Groq Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
-        </TabItem>
-        <TabItem value="vLLM">
-        Add the [vLLM Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
-        </TabItem>
         <TabItem value="Ollama">
-        Add the [Ollama Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        Add the [Ollama Gemma 3 27B block](https://hub.continue.dev/ollama/gemma3-27b) from the hub
+        </TabItem>
+        <TabItem value="Together">
+        Add the [Together Gemma 2 27B Instruct block](https://hub.continue.dev/togetherai/gemma-2-instruct-27b) from the hub
         </TabItem>
     </Tabs>
-  </TabItem> */}
+  </TabItem>
   <TabItem value="yaml" label="YAML">
     <Tabs groupId="providers">
-        <TabItem value="Together">
-        ```yaml title="config.yaml"
-        models:
-          - name: "Llama 3.1 405B"
-            provider: "together"
-            model: "llama3.1-405b"
-            apiKey: <YOUR_TOGETHER_API_KEY>
-        ```
-        </TabItem>
-        <TabItem value="Groq">
-        ```yaml title="config.yaml"
-        models:
-          - name: "Llama 3.1 405B"
-            provider: "groq"
-            model: "llama3.1-405b"
-            apiKey: <YOUR_GROQ_API_KEY>
-        ```
-        </TabItem>
-        <TabItem value="vLLM">
-        ```yaml title="config.yaml"
-        models:
-          - name: "Llama 3.1 405B"
-            provider: "vllm"
-            model: "llama3.1-405b"
-        ```
-        </TabItem>
         <TabItem value="Ollama">
         ```yaml title="config.yaml"
         models:
-          - name: "Llama 3.1 405B"
+          - name: "Gemma 3 27B"
             provider: "ollama"
-            model: "llama3.1:405b"
+            model: "gemma3:27b"
+        ```
+        </TabItem>
+        <TabItem value="Together">
+        ```yaml title="config.yaml"
+        models:
+          - name: "Gemma 3 27B"
+            provider: "together"
+            model: "google/gemma-2-27b-it"
+            apiKey: <YOUR_TOGETHER_API_KEY>
         ```
         </TabItem>
     </Tabs>
   </TabItem>
   <TabItem value="json" label="JSON">
     <Tabs groupId="providers">
-        <TabItem value="Together">
-        ```json title="config.json"
-        {
-          "models": [
-            {
-              "title": "Llama 3.1 405B",
-              "provider": "together",
-              "model": "llama3.1-405b",
-              "apiKey": "<YOUR_TOGETHER_API_KEY>"
-            }
-          ]
-        }
-        ```
-        </TabItem>
-        <TabItem value="Groq">
-        ```json title="config.json"
-        {
-          "models": [
-            {
-              "title": "Llama 3.1 405B",
-              "provider": "groq",
-              "model": "llama3.1-405b",
-              "apiKey": "<YOUR_GROQ_API_KEY>"
-            }
-          ]
-        }
-        ```
-        </TabItem>
-        <TabItem value="vLLM">
-        ```json title="config.json"
-        {
-          "models": [
-            {
-              "title": "Llama 3.1 405B",
-              "provider": "vllm",
-              "model": "llama3.1-405b"
-            }
-          ]
-        }
-        ```
-        </TabItem>
         <TabItem value="Ollama">
         ```json title="config.json"
         {
           "models": [
             {
-              "title": "Llama 3.1 405B",
+              "title": "Gemma 3 27B",
               "provider": "ollama",
-              "model": "llama3.1:405b"
+              "model": "gemma3:27b"
+            }
+          ]
+        }
+        ```
+        </TabItem>
+        <TabItem value="Together">
+        ```json title="config.json"
+        {
+          "models": [
+            {
+              "title": "Gemma 3 27B",
+              "provider": "together",
+              "model": "google/gemma-2-27b-it",
+              "apiKey": "<YOUR_TOGETHER_API_KEY>"
             }
           ]
         }
@@ -308,6 +257,14 @@ If your local machine can run an 8B parameter model, then we recommend running L
           model: llama3.1:8b
       ```
       </TabItem>
+      <TabItem value="Msty">
+      ```yaml title="config.yaml"
+      models:
+        - name: Llama 3.1 8B
+          provider: msty
+          model: llama3.1:8b
+      ```
+      </TabItem>
     </Tabs>
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -332,6 +289,19 @@ If your local machine can run an 8B parameter model, then we recommend running L
           {
             "title": "Llama 3.1 8B",
             "provider": "lmstudio",
+            "model": "llama3.1-8b"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+      <TabItem value="Msty">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "Llama 3.1 8B",
+            "provider": "msty",
             "model": "llama3.1-8b"
           }
         ]
@@ -376,6 +346,14 @@ If your local machine can run a 16B parameter model, then we recommend running D
             model: deepseek-coder-v2:16b
         ```
         </TabItem>
+        <TabItem value="Msty">
+        ```yaml title="config.yaml"
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: msty
+            model: deepseek-coder-v2:16b
+        ```
+        </TabItem>
     </Tabs>
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -401,6 +379,19 @@ If your local machine can run a 16B parameter model, then we recommend running D
           {
             "title": "DeepSeek Coder 2 16B",
             "provider": "lmstudio",
+            "model": "deepseek-coder-v2:16b"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+      <TabItem value="Msty">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "DeepSeek Coder 2 16B",
+            "provider": "msty",
             "model": "deepseek-coder-v2:16b"
           }
         ]

@@ -887,6 +887,48 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
+  gemini20FlashLite: {
+    title: "Gemini 2.0 Flash Lite",
+    description:
+      "A more efficient version of Gemini 2.0 Flash optimized for faster responses and lower resource usage.",
+    params: {
+      title: "Gemini 2.0 Flash Lite",
+      model: "gemini-2.0-flash-lite",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini20FlashImageGeneration: {
+    title: "Gemini 2.0 Flash Image Generation",
+    description:
+      "A version of Gemini 2.0 Flash optimized for image generation capabilities.",
+    params: {
+      title: "Gemini 2.0 Flash Image Generation",
+      model: "gemini-2.0-flash-exp-image-generation",
+      contextLength: 32_768,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini25ProExp: {
+    title: "Gemini 2.5 Pro Experimental",
+    description:
+      "Experimental version of Gemini 2.5 Pro with enhanced capabilities and larger output limits.",
+    params: {
+      title: "Gemini 2.5 Pro Experimental",
+      model: "gemini-2.5-pro-exp-03-25",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
   gemini25Pro: {
     title: "Gemini 2.5 Pro",
     description:
@@ -894,7 +936,7 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Gemini 2.5 Pro",
       model: "gemini-2.5-pro",
-      contextLength: 1_000_000,
+      contextLength: 1_048_576,
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",

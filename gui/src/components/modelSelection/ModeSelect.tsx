@@ -12,7 +12,7 @@ import { useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { lightGray } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
   cycleMode,
   selectCurrentMode,
@@ -40,7 +40,7 @@ const ShortcutText = styled.span`
 function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector(selectCurrentMode);
-  const selectedModel = useAppSelector(selectDefaultModel);
+  const selectedModel = useAppSelector(selectSelectedChatModel);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
 
   const jetbrains = useMemo(() => {
@@ -63,10 +63,13 @@ function ModeSelect() {
 
   // Switch to chat mode if agent mode is selected but not supported
   useEffect(() => {
+    if (!selectedModel) {
+      return;
+    }
     if (mode === "agent" && !agentModeSupported) {
       dispatch(setMode("chat"));
     }
-  }, [mode, agentModeSupported, dispatch]);
+  }, [mode, agentModeSupported, dispatch, selectedModel]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

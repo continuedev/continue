@@ -44,11 +44,11 @@
 
 ![edit](docs/static/img/edit.gif)
 
-## Actions
+## Agent
 
-[Actions](https://continue.dev/docs/actions/how-to-use-it) are shortcuts for common use cases
+[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
 
-![actions](docs/static/img/actions.gif)
+![agent](docs/static/img/agent.gif)
 
 </div>
 
@@ -58,7 +58,7 @@ Learn about how to install and use Continue in the docs [here](https://continue.
 
 ## Contributing
 
-Check out the [contribution ideas board](https://github.com/orgs/continuedev/projects/2), read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and join [#contribute on Discord](https://discord.gg/vapESyrFmJ)
+Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
 
 ## License
 

@@ -1,11 +1,16 @@
 import { SecretLocation, SecretResult, SecretType } from "./SecretResult.js";
-import { FQSN, FullSlug, PackageSlug, packageSlugsEqual } from "./slugs.js";
+import {
+  FQSN,
+  PackageIdentifier,
+  PackageSlug,
+  packageSlugsEqual,
+} from "./slugs.js";
 
 /**
  * A registry stores the content of packages
  */
 export interface Registry {
-  getContent(fullSlug: FullSlug): Promise<string>;
+  getContent(fullSlug: PackageIdentifier): Promise<string>;
 }
 export type SecretNamesMap = Map<FQSN, string>;
 

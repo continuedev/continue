@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="IDE Logs" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="mkdir -p ./extensions/.continue-debug/logs &amp;&amp; touch ./extensions/.continue-debug/logs/prompt.log &amp;&amp; tail -f ./extensions/intellij/build/idea-sandbox/system/log/idea.log" />
+    <option name="SCRIPT_TEXT" value="mkdir -p ./extensions/intellij/build/idea-sandbox/system/log &amp;&amp; touch ./extensions/intellij/build/idea-sandbox/system/log/idea.log &amp;&amp; tail -f ./extensions/intellij/build/idea-sandbox/system/log/idea.log" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="mkdir -p ./extensions/.continue-debug/logs &amp;&amp; touch ./extensions/.continue-debug/logs/prompt.log &amp;&amp; tail -f ./extensions/.continue-debug/logs/prompt.log" />
     <option name="SCRIPT_OPTIONS" value="" />

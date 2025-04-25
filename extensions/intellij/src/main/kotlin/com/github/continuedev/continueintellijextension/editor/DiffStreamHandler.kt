@@ -27,14 +27,15 @@ class DiffStreamHandler(
     private val startLine: Int,
     private val endLine: Int,
     private val onClose: () -> Unit,
-    private val onFinish: () -> Unit
+    private val onFinish: () -> Unit,
+    private val streamId: String?,
+    private val toolCallId: String?
 ) {
     private data class CurLineState(
         var index: Int, var highlighter: RangeHighlighter? = null, var diffBlock: VerticalDiffBlock? = null
     )
 
     private var curLine = CurLineState(startLine)
-
     private var isRunning: Boolean = false
     private var hasAcceptedOrRejectedBlock: Boolean = false
 
@@ -48,8 +49,26 @@ class DiffStreamHandler(
         initUnfinishedRangeHighlights()
     }
 
+    private fun sendUpdate(status: String) {
+        if(this.streamId == null) {
+            return
+        }
+        val virtualFile = getVirtualFile()
+        val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
+        continuePluginService.sendToWebview("updateApplyState", mapOf(
+            "numDiffs" to this.diffBlocks.size,
+            "streamId" to this.streamId,
+            "status" to status,
+            "fileContent" to "not implemented",
+            "toolCallId" to this.toolCallId,
+            "filepath" to virtualFile?.url
+        ))
+    }
+
     fun acceptAll() {
-        editor.markupModel.removeAllHighlighters()
+        editor.markupModel.removeAllHighlighters();
+        sendUpdate("closed")
+
         resetState()
     }
 
@@ -62,6 +81,7 @@ class DiffStreamHandler(
         } else {
             undoChanges()
         }
+        sendUpdate("closed")
 
         resetState()
     }
@@ -70,6 +90,7 @@ class DiffStreamHandler(
         input: String, prefix: String, highlighted: String, suffix: String, modelTitle: String
     ) {
         isRunning = true
+        this.sendUpdate("streaming")
 
         val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
         val virtualFile = getVirtualFile()
@@ -83,6 +104,7 @@ class DiffStreamHandler(
 
             if (response["done"] as? Boolean == true) {
                 handleFinishedResponse()
+                sendUpdate(if (diffBlocks.isEmpty()) "closed"  else "done")
                 return@request
             }
 
@@ -133,7 +155,10 @@ class DiffStreamHandler(
         }
 
         if (diffBlocks.isEmpty()) {
+            sendUpdate("closed")
             onClose()
+        } else {
+            sendUpdate("done")
         }
     }
 
@@ -144,6 +169,7 @@ class DiffStreamHandler(
         )
 
         diffBlocks.add(diffBlock)
+        sendUpdate("streaming")
 
         return diffBlock
     }
@@ -234,6 +260,7 @@ class DiffStreamHandler(
                     undoManager.undo(fileEditor)
                 }
             }
+            sendUpdate("done")
         }
     }
 

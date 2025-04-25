@@ -70,7 +70,7 @@ To add a single documentation site, we recommend using the **Add Documentation**
 
 In the **Add Documentation** Form, enter a `Title` and `Start URL` for the site.
 
-- `Title`: The name of the documentation site, used for identification in the UI
+- `Title`: The name of the documentation site, used for identification in the UI.
 - `Start URL`: The URL where the indexing process should begin.
 
 Indexing will begin upon submission. Progress can be viewed in the form or later in the `@docs indexes` section of the `More` page.
@@ -154,9 +154,9 @@ As with [@Codebase context provider configuration](./codebase#configuration), yo
   </TabItem>
 </Tabs>
 
-### Github
+### GitHub
 
-The Github API rate limits public requests to 60 per hour. If you want to reliably index Github repos, you can add a github token to your config file:
+The GitHub API rate limits public requests to 60 per hour. If you want to reliably index GitHub repos, you can add a github token to your config file:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -215,12 +215,15 @@ If your documentation is private, you can skip the default crawler and use a loc
   </TabItem>
 </Tabs>
 
-The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../settings.md) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler.
+:::info
+Chromium crawling has been deprecated
+{/* The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../deep-dives/settings.md) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler. */}
+:::
 
 Further notes:
 
 - If the site is only locally accessible, the default crawler will fail anyways and fall back to the local crawler. `useLocalCrawling` is especially useful if the URL itself is confidential.
-- For Github Repos this has no effect because only the Github Crawler will be used, and if the repo is private it can only be accessed with a priveleged Github token anyways.
+- For GitHub Repos this has no effect because only the GitHub Crawler will be used, and if the repo is private it can only be accessed with a priveleged GitHub token anyways.
 
 ## Managing your docs indexes
 
@@ -234,6 +237,7 @@ You can view indexing statuses and manage your documentation sites from the `@do
 ![More Page @docs indexes section](/img/docs-indexes.png)
 
 You can also view the overall status of currently indexing docs from a hideable progress bar at the bottom of the chat page
+
 ![Documentation indexing peek](/img/docs-indexing-peek.png)
 
 You can also use the following IDE command to force a re-index of all docs: `Continue: Docs Force Re-Index`.
@@ -324,7 +328,7 @@ The following configuration example includes:
 - Examples of both public and private documentation sources
 - A custom embeddings provider
 - A reranker model available, with reranking parameters customized
-- A Github token to enable Github crawling
+- A GitHub token to enable GitHub crawling
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -401,4 +405,4 @@ The following configuration example includes:
   </TabItem>
 </Tabs>
 
-This could also involve enabling Chromium as a backup for local documentation the [User Settings Page](../settings.md).
+{/* This could also involve enabling Chromium as a backup for local documentation the [User Settings Page](../deep-dives/settings.md). */}

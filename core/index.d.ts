@@ -1,6 +1,12 @@
-import { DataDestination, ModelRole } from "@continuedev/config-yaml";
+import {
+  DataDestination,
+  ModelRole,
+  PromptTemplates,
+} from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -75,38 +81,18 @@ export type PromptTemplateFunction = (
 
 export type PromptTemplate = string | PromptTemplateFunction;
 
-export interface ILLM extends LLMOptions {
+type RequiredLLMOptions =
+  | "uniqueId"
+  | "contextLength"
+  | "embeddingId"
+  | "maxEmbeddingChunkSize"
+  | "maxEmbeddingBatchSize"
+  | "completionOptions";
+
+export interface ILLM
+  extends Omit<LLMOptions, RequiredLLMOptions>,
+    Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
-
-  uniqueId: string;
-  model: string;
-
-  title?: string;
-  systemMessage?: string;
-  contextLength: number;
-  maxStopWords?: number;
-  completionOptions: CompletionOptions;
-  requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, PromptTemplate>;
-  templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
-  llmRequestHook?: (model: string, prompt: string) => any;
-  apiKey?: string;
-  apiBase?: string;
-  cacheBehavior?: CacheBehavior;
-  capabilities?: ModelCapability;
-  roles?: ModelRole[];
-
-  deployment?: string;
-  apiVersion?: string;
-  apiType?: string;
-  region?: string;
-  projectId?: string;
-
-  // Embedding options
-  embeddingId: string;
-  maxEmbeddingChunkSize: number;
-  maxEmbeddingBatchSize: number;
 
   complete(
     prompt: string,
@@ -161,6 +147,8 @@ export interface ILLM extends LLMOptions {
     otherData: Record<string, string>,
     canPutWordsInModelsMouth?: boolean,
   ): string | ChatMessage[];
+
+  getConfigurationStatus(): LLMConfigurationStatuses;
 }
 
 export interface ModelInstaller {
@@ -411,6 +399,7 @@ export interface ContextItem {
   icon?: string;
   uri?: ContextItemUri;
   hidden?: boolean;
+  status?: string;
 }
 
 export interface ContextItemWithId extends ContextItem {
@@ -443,6 +432,7 @@ export type ToolStatus =
   | "generating"
   | "generated"
   | "calling"
+  | "errored"
   | "done"
   | "canceled";
 
@@ -482,20 +472,108 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
 export type ToastType = "info" | "error" | "warning";
 
+export interface LLMInteractionBase {
+  interactionId: string;
+  timestamp: number;
+}
+
+export interface LLMInteractionStartChat extends LLMInteractionBase {
+  kind: "startChat";
+  messages: ChatMessage[];
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionStartComplete extends LLMInteractionBase {
+  kind: "startComplete";
+  prompt: string;
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionStartFim extends LLMInteractionBase {
+  kind: "startFim";
+  prefix: string;
+  suffix: string;
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionChunk extends LLMInteractionBase {
+  kind: "chunk";
+  chunk: string;
+}
+
+export interface LLMInteractionMessage extends LLMInteractionBase {
+  kind: "message";
+  message: ChatMessage;
+}
+
+export interface LLMInteractionEnd extends LLMInteractionBase {
+  promptTokens: number;
+  generatedTokens: number;
+  thinkingTokens: number;
+}
+
+export interface LLMInteractionSuccess extends LLMInteractionEnd {
+  kind: "success";
+}
+
+export interface LLMInteractionCancel extends LLMInteractionEnd {
+  kind: "cancel";
+}
+
+export interface LLMInteractionError extends LLMInteractionEnd {
+  kind: "error";
+  name: string;
+  message: string;
+}
+
+export type LLMInteractionItem =
+  | LLMInteractionStartChat
+  | LLMInteractionStartComplete
+  | LLMInteractionStartFim
+  | LLMInteractionChunk
+  | LLMInteractionMessage
+  | LLMInteractionSuccess
+  | LLMInteractionCancel
+  | LLMInteractionError;
+
+// When we log a LLM interaction, we want to add the interactionId and timestamp
+// in the logger code, so we need a type that omits these members from *each*
+// member of the union. This can be done by using the distributive behavior of
+// conditional types in Typescript.
+//
+// www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+// https://stackoverflow.com/questions/57103834/typescript-omit-a-property-from-all-interfaces-in-a-union-but-keep-the-union-s
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+export type LLMInteractionItemDetails = DistributiveOmit<
+  LLMInteractionItem,
+  "interactionId" | "timestamp"
+>;
+
+export interface ILLMInteractionLog {
+  logItem(item: LLMInteractionItemDetails): void;
+}
+
+export interface ILLMLogger {
+  createInteractionLog(): ILLMInteractionLog;
+}
+
 export interface LLMOptions {
   model: string;
 
   title?: string;
   uniqueId?: string;
-  systemMessage?: string;
+  baseChatSystemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, PromptTemplate>;
+  promptTemplates?: Partial<Record<keyof PromptTemplates, PromptTemplate>>;
   templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
+  logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
 
@@ -627,7 +705,6 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
-  enableControlServerBeta: boolean;
   continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
 }
@@ -708,6 +785,8 @@ export interface IDE {
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;
+
+  getFileResults(pattern: string): Promise<string[]>;
 
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
@@ -891,6 +970,11 @@ export interface ToolExtras {
   llm: ILLM;
   fetch: FetchFunction;
   tool: Tool;
+  toolCallId?: string;
+  onPartialOutput?: (params: {
+    toolCallId: string;
+    contextItems: ContextItem[];
+  }) => void;
 }
 
 export interface Tool {
@@ -903,8 +987,11 @@ export interface Tool {
   };
 
   displayTitle: string;
-  wouldLikeTo: string;
+  wouldLikeTo?: string;
+  isCurrently?: string;
+  hasAlready?: string;
   readonly: boolean;
+  isInstant?: boolean;
   uri?: string;
   faviconUrl?: string;
   group: string;
@@ -950,9 +1037,8 @@ export interface ModelDescription {
   model: string;
   apiKey?: string;
 
-  // continueProperties
-  apiKeyLocation?: string;
   apiBase?: string;
+  apiKeyLocation?: string;
   orgScopeId?: string | null;
 
   onPremProxyUrl?: string | null;
@@ -961,15 +1047,16 @@ export interface ModelDescription {
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
-  systemMessage?: string;
+  baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
+  configurationStatus?: LLMConfigurationStatuses;
 }
 
-export interface EmbedOptions {
+export interface JSONEmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
@@ -990,7 +1077,7 @@ export interface EmbedOptions {
   projectId?: string;
 }
 
-export interface EmbeddingsProviderDescription extends EmbedOptions {
+export interface EmbeddingsProviderDescription extends JSONEmbedOptions {
   provider: string;
 }
 
@@ -1139,6 +1226,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  toolCallId?: string;
 }
 
 export interface RangeInFileWithContents {
@@ -1213,11 +1301,39 @@ export interface AnalyticsConfig {
   clientKey?: string;
 }
 
+export interface JSONModelDescription {
+  title: string;
+  provider: string;
+  model: string;
+  apiKey?: string;
+  apiBase?: string;
+
+  contextLength?: number;
+  maxStopWords?: number;
+  template?: TemplateType;
+  completionOptions?: BaseCompletionOptions;
+  systemMessage?: string;
+  requestOptions?: RequestOptions;
+  cacheBehavior?: CacheBehavior;
+
+  region?: string;
+  profile?: string;
+  modelArn?: string;
+  apiType?: "openai" | "azure";
+  apiVersion?: string;
+  deployment?: string;
+  projectId?: string;
+  accountId?: string;
+  aiGatewaySlug?: string;
+  useLegacyCompletionsEndpoint?: boolean;
+  deploymentId?: string;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
+  models: JSONModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1228,7 +1344,7 @@ export interface SerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
-  tabAutocompleteModel?: ModelDescription | ModelDescription[];
+  tabAutocompleteModel?: JSONModelDescription | JSONModelDescription[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
@@ -1248,11 +1364,11 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
-  /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
+  /** Each entry in this array will originally be a JSONModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
    * Continue will do the rest of the work to construct prompt templates, handle context items, prune context, etc.
    */
-  models: (CustomLLM | ModelDescription)[];
+  models: (CustomLLM | JSONModelDescription)[];
   /** A system message to be followed by all of your models */
   systemMessage?: string;
   /** The default completion options for all models */
@@ -1276,8 +1392,8 @@ export interface Config {
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
     | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+    | JSONModelDescription
+    | (CustomLLM | JSONModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1294,8 +1410,7 @@ export interface Config {
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ILLM[];
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
   slashCommands: SlashCommand[];
@@ -1310,7 +1425,7 @@ export interface ContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: string[];
+  rules: RuleWithSource[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1318,8 +1433,7 @@ export interface ContinueConfig {
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
   slashCommands: SlashCommandDescription[];
@@ -1333,7 +1447,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: string[];
+  rules: RuleWithSource[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
@@ -1380,4 +1494,20 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+  waitForCompletion?: boolean;
+}
+
+export interface RuleWithSource {
+  name?: string;
+  slug?: string;
+  source:
+    | "default"
+    | "model-chat-options"
+    | "rules-block"
+    | "json-systemMessage"
+    | ".continuerules";
+  globs?: string | string[];
+  rule: string;
+  description?: string;
+  ruleFile?: string;
 }

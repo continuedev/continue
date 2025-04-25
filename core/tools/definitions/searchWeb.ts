@@ -6,6 +6,8 @@ export const searchWebTool: Tool = {
   type: "function",
   displayTitle: "Search Web",
   wouldLikeTo: 'search the web for "{{{ query }}}"',
+  isCurrently: 'searching the web for "{{{ query }}}"',
+  hasAlready: 'searched the web for "{{{ query }}}"',
   readonly: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
