@@ -5,6 +5,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   ModelRole,
+  PackageIdentifier,
 } from "@continuedev/config-yaml";
 
 import {
@@ -17,7 +18,7 @@ import {
   Tool,
 } from "../../";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
-import { MCPManagerSingleton } from "../../context/mcp";
+import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
@@ -29,25 +30,37 @@ import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
+import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
-import { PlatformConfigMetadata } from "./PlatformProfileLoader";
+export default async function doLoadConfig(options: {
+  ide: IDE;
+  ideSettingsPromise: Promise<IdeSettings>;
+  controlPlaneClient: ControlPlaneClient;
+  llmLogger: ILLMLogger;
+  overrideConfigJson?: SerializedContinueConfig;
+  overrideConfigYaml?: AssistantUnrolled;
+  profileId: string;
+  overrideConfigYamlByPath?: string;
+  orgScopeId: string | null;
+  packageIdentifier: PackageIdentifier;
+}): Promise<ConfigResult<ContinueConfig>> {
+  const {
+    ide,
+    ideSettingsPromise,
+    controlPlaneClient,
+    llmLogger,
+    overrideConfigJson,
+    overrideConfigYaml,
+    profileId,
+    overrideConfigYamlByPath,
+    orgScopeId,
+    packageIdentifier,
+  } = options;
 
-export default async function doLoadConfig(
-  ide: IDE,
-  ideSettingsPromise: Promise<IdeSettings>,
-  controlPlaneClient: ControlPlaneClient,
-  llmLogger: ILLMLogger,
-  overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  profileId: string,
-  overrideConfigYamlByPath: string | undefined,
-  orgScopeId: string | null,
-): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
@@ -70,19 +83,18 @@ export default async function doLoadConfig(
   let configLoadInterrupted = false;
 
   if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
-    const result = await loadContinueConfigFromYaml(
+    const result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
       overrideConfigYaml,
-      platformConfigMetadata,
       controlPlaneClient,
-      configYamlPath,
       orgScopeId,
-    );
+      packageIdentifier,
+      workOsAccessToken,
+    });
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
@@ -109,6 +121,12 @@ export default async function doLoadConfig(
   // TODO using config result but result with non-fatal errors is an antipattern?
   // Remove ability have undefined errors, just have an array
   errors = [...(errors ?? [])];
+
+  // Add rules from .continuerules files
+  const { rules, errors: continueRulesErrors } =
+    await getWorkspaceContinueRuleDotFiles(ide);
+  newConfig.rules.unshift(...rules);
+  errors.push(...continueRulesErrors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
@@ -219,13 +237,13 @@ export default async function doLoadConfig(
   };
 
   if (newConfig.analytics) {
-    await TeamAnalytics.setup(
-      newConfig.analytics,
-      uniqueId,
-      ideInfo.extensionVersion,
-      controlPlaneClient,
-      controlPlaneProxyInfo,
-    );
+    // await TeamAnalytics.setup(
+    //   newConfig.analytics,
+    //   uniqueId,
+    //   ideInfo.extensionVersion,
+    //   controlPlaneClient,
+    //   controlPlaneProxyInfo,
+    // );
   } else {
     await TeamAnalytics.shutdown();
   }
@@ -258,7 +276,7 @@ async function injectControlPlaneProxyInfo(
     }
   });
 
-  config.models.forEach((model) => {
+  config.modelsByRole.chat.forEach((model) => {
     if (model.providerName === "continue-proxy") {
       (model as ContinueProxy).controlPlaneProxyInfo = info;
     }

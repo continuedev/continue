@@ -32,7 +32,7 @@ Assistants can either explicitly define blocks - see [Properties](#properties) b
 
 ### Using Blocks
 
-Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization.
+Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from https://hub.continue.dev.
 
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
 
@@ -48,6 +48,28 @@ models:
   - model: deepseek-reasoner # an explicit model block
     provider: ollama
 ```
+
+### Local Blocks
+
+It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
+
+Place your YAML files in the following folders:
+
+Assistants:
+
+- `.continue/assistants` - for assistants
+
+Blocks:
+
+- `.continue/rules` - for rules
+- `.continue/models` - for models
+- `.continue/prompts` - for prompts
+- `.continue/context` - for context providers
+- `.continue/docs` - for docs
+- `.continue/data` - for data
+- `.continue/mcpServers` - for MCP Servers
+
+You can find many examples of each of these block types on the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
 ### Inputs
 
@@ -142,17 +164,16 @@ The `models` section defines the language models used in your configuration. Mod
 - `name` (**required**): A unique name to identify the model within your configuration.
 - `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 - `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
+- `apiBase`: Can be used to override the default API base that is specified per model
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [`apply`](./customize/model-roles/apply.mdx#prompt-templating) and [autocomplete](./customize/model-roles/autocomplete.md#prompt-templating)
+- `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
+  - `baseSystemMessage`: Can be used to override the default system prompt.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
-
   - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
   - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
-
 - `defaultCompletionOptions`: Default completion options for model settings.
-
-  **Properties:**
-
   - `contextLength`: Maximum context length of the model, typically in tokens.
   - `maxTokens`: Maximum number of tokens to generate in a completion.
   - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
@@ -160,11 +181,7 @@ The `models` section defines the language models used in your configuration. Mod
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
   - `n`: Number of completions to generate.
-
 - `requestOptions`: HTTP request options specific to the model.
-
-  **Properties:**
-
   - `timeout`: Timeout for each request to the language model.
   - `verifySsl`: Whether to verify SSL certificates for requests.
   - `caBundlePath`: Path to a custom CA bundle for HTTP requests.
@@ -177,7 +194,7 @@ The `models` section defines the language models used in your configuration. Mod
     - `key`: Path to the client certificate key file.
     - `passphrase`: Optional passphrase for the client certificate key file.
 
-#### Example:
+#### Example
 
 ```yaml title="config.yaml"
 models:
@@ -220,7 +237,8 @@ More information about usage/params for each context provider can be found [here
 
 **Properties:**
 
-- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
+- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`)
+- `name`: Optional name for the provider
 - `params`: Optional parameters to configure the context provider's behavior.
 
 **Example:**
@@ -234,6 +252,10 @@ context:
       nFinal: 10
   - provider: docs
   - provider: diff
+  - provider: http
+    name: Context Server 1
+    params:
+      url: "https://api.example.com/server1"
   - provider: folder
   - provider: terminal
 ```
@@ -242,7 +264,13 @@ context:
 
 ### `rules`
 
-List of rules that the LLM should follow. These are inserted into the system message for all chat requests.
+List of rules that the LLM should follow. These are concatenated into the system message for all [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Agent](./agent/how-to-use-it.md) requests. See the [rules deep dive](./customize/deep-dives/rules.md) for details.
+
+Explicit rules can either be simple text or an object with the following properties:
+
+- `name` (**required**): A display name/title for the rule
+- `rule` (**required**): The text content of the rule
+<!-- `if` -->
 
 Example
 
@@ -250,9 +278,11 @@ Example
 rules:
   - uses: myprofile/my-mood-setter
     with:
-      MOOD: happy
+      TONE: concise
   - Always annotate Python functions with their parameter and return types
   - Always write Google style docstrings for functions and classes
+  - name: Server-side components
+    rule: When writing Next.js React components, use server-side components where possible instead of client components.
 ```
 
 ---

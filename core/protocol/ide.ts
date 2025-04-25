@@ -99,12 +99,9 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     ControlPlaneSessionInfo | undefined,
   ];
   logoutOfControlPlane: [undefined, void];
+  closeSidebar: [undefined, void];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {
   didChangeActiveTextEditor: [{ filepath: string }, void];
-  didChangeControlPlaneSessionInfo: [
-    { sessionInfo: ControlPlaneSessionInfo | undefined },
-    void,
-  ];
 };

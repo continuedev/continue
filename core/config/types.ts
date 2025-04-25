@@ -403,6 +403,7 @@ declare global {
     | "generated"
     | "calling"
     | "done"
+    | "errored"
     | "canceled";
   
   // Will exist only on "assistant" messages with tool calls
@@ -658,7 +659,6 @@ declare global {
     remoteConfigServerUrl: string | undefined;
     remoteConfigSyncPeriod: number;
     userToken: string;
-    enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
   }
   
@@ -958,7 +958,7 @@ declare global {
     cacheBehavior?: CacheBehavior;
   }
   
-  export interface EmbedOptions {
+  export interface JSONEmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;

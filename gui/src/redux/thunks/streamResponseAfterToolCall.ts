@@ -1,37 +1,43 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, ContextItem } from "core";
+import { ChatMessage } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   addContextItemsAtIndex,
   setActive,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { findToolCall } from "../util";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
 
 export const streamResponseAfterToolCall = createAsyncThunk<
   void,
-  {
-    toolCallId: string;
-    toolOutput: ContextItem[];
-  },
+  { toolCallId: string },
   ThunkApiType
 >(
   "chat/streamAfterToolCall",
-  async ({ toolCallId, toolOutput }, { dispatch, getState }) => {
+  async ({ toolCallId }, { dispatch, getState }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
         const initialHistory = state.session.history;
-        const defaultModel = selectDefaultModel(state);
+        const selectedChatModel = selectSelectedChatModel(state);
 
-        if (!defaultModel) {
+        if (!selectedChatModel) {
           throw new Error("No model selected");
         }
+
+        const toolCallState = findToolCall(state.session.history, toolCallId);
+
+        if (!toolCallState) {
+          throw new Error("Tool call not found");
+        }
+
+        const toolOutput = toolCallState.output ?? [];
 
         resetStateForNewMessage();
 
@@ -59,7 +65,13 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         dispatch(setActive());
 
         const updatedHistory = getState().session.history;
-        const messages = constructMessages([...updatedHistory]);
+        const messages = constructMessages(
+          [...updatedHistory],
+          selectedChatModel?.baseChatSystemMessage,
+          state.config.config.rules,
+          selectedChatModel.model,
+        );
+
         unwrapResult(await dispatch(streamNormalInput({ messages })));
       }),
     );

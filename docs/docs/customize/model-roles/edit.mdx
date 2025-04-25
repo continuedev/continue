@@ -29,8 +29,8 @@ In Continue, you can add `edit` to a model's roles to specify that it can be use
   Set the `experimental.modelRoles.inlineEdit` property in `config.json`.
   ```json title="config.json"
   {
-      "models": {
-          "name": "Claude 3.5 Sonnet",
+    "models": {
+      "name": "Claude 3.5 Sonnet",
       "provider": "anthropic",
       "model": "claude-3-5-sonnet-latest",
       "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
@@ -46,3 +46,37 @@ In Continue, you can add `edit` to a model's roles to specify that it can be use
 </Tabs>
 
 Explore edit models in [the hub](https://hub.continue.dev/explore/models?roles=edit). Generally, our recommendations for Edit overlap with recommendations for Chat.
+
+## Prompt templating
+
+You can customize the prompt template used for editing code by setting the `promptTemplates.edit` property in your model configuration. Continue uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
+
+Available variables for the edit template:
+
+- `{{{userInput}}}` - The user's edit request/instruction
+- `{{{language}}}` - The programming language of the code
+- `{{{codeToEdit}}}` - The code that's being edited
+- `{{{prefix}}}` - Content before the edit area
+- `{{{suffix}}}` - Content after the edit area
+- `{{{supportsCompletions}}}` - Whether the model supports completions API
+- `{{{supportsPrefill}}}` - Whether the model supports prefill capability
+
+Example:
+
+```yaml
+models:
+  - name: My Custom Edit Template
+    provider: openai
+    model: gpt-4o
+    promptTemplates:
+      edit: |
+        `Here is the code before editing:
+        \`\`\`{{{language}}}
+        {{{codeToEdit}}}
+        \`\`\`
+
+        Here is the edit requested:
+        "{{{userInput}}}"
+
+        Here is the code after editing:`
+```

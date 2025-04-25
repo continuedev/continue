@@ -21,7 +21,7 @@ import { useInputHistory } from "../../../../hooks/useInputHistory";
 import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
-import { selectDefaultModel } from "../../../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   selectHasCodeToEdit,
@@ -30,7 +30,7 @@ import {
 import { AppDispatch } from "../../../../redux/store";
 import { exitEditMode } from "../../../../redux/thunks";
 import { loadLastSession } from "../../../../redux/thunks/session";
-import { getFontSize } from "../../../../util";
+import { getFontSize, isJetBrains } from "../../../../util";
 import * as ContinueExtensions from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import { handleImageFile } from "./imageUtils";
@@ -83,7 +83,7 @@ export function createEditorConfig(options: {
   const posthog = usePostHog();
 
   const { getSubmenuContextItems } = useSubmenuContextProviders();
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);
@@ -267,6 +267,12 @@ export function createEditorConfig(options: {
               return false;
             },
             Escape: () => {
+              // In JetBrains, this is how we close the sidebar when the input box is focused
+              if (isJetBrains()) {
+                ideMessenger.post("closeSidebar", undefined);
+                return true;
+              }
+
               if (inDropdownRef.current || !isInEditModeRef.current) {
                 ideMessenger.post("focusEditor", undefined);
                 return true;

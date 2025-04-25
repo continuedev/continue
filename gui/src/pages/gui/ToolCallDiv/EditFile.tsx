@@ -1,7 +1,7 @@
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { useMemo } from "react";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
-import AcceptRejectAllButtons from "../../../components/StepContainer/AcceptRejectAllButtons";
+import AcceptRejectAllButtons from "../../../components/AcceptRejectAllButtons";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 import { useAppSelector } from "../../../redux/hooks";
 
 type EditToolCallProps = {
@@ -29,9 +29,9 @@ export function EditFile(props: EditToolCallProps) {
   return (
     <>
       <StyledMarkdownPreview
-        isRenderingInStepContainer={true}
+        isRenderingInStepContainer
+        disableManualApply
         source={src}
-        disableManualApply={true}
         singleCodeblockStreamId={applyState?.streamId}
         expandCodeblocks={false}
       />

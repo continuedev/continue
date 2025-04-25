@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
-import { EXTENSION_NAME, getControlPlaneEnvSync } from "core/control-plane/env";
+import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -16,7 +16,6 @@ import {
   ProgressLocation,
   Uri,
   window,
-  workspace,
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
@@ -25,13 +24,7 @@ import { UriEventHandler } from "./uriHandler";
 
 const AUTH_NAME = "Continue";
 
-const enableControlServerBeta = workspace
-  .getConfiguration(EXTENSION_NAME)
-  .get<boolean>("enableContinueForTeams", false);
-const controlPlaneEnv = getControlPlaneEnvSync(
-  true ? "production" : "none",
-  enableControlServerBeta,
-);
+const controlPlaneEnv = getControlPlaneEnvSync(true ? "production" : "none");
 
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
 

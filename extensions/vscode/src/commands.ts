@@ -12,7 +12,10 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
+import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
+import { isModelInstaller } from "core/llm";
+import { startLocalOllama } from "core/util/ollamaHelper";
 import { getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
@@ -29,7 +32,6 @@ import {
 } from "./autocomplete/statusBar";
 import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
-
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
@@ -37,9 +39,6 @@ import { Battery } from "./util/battery";
 import { getMetaKeyLabel } from "./util/util";
 import { VsCodeIde } from "./VsCodeIde";
 
-import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
-import { isModelInstaller } from "core/llm";
-import { startLocalOllama } from "core/util/ollamaHelper";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -364,23 +363,23 @@ const getCommandsMap: (
       throw new Error("Config not loaded");
     }
 
-    const modelTitle =
-      config.selectedModelByRole.edit?.title ??
-      (await sidebar.webviewProtocol.request(
-        "getDefaultModelTitle",
-        undefined,
-      ));
+    const llm =
+      config.selectedModelByRole.edit ?? config.selectedModelByRole.chat;
+
+    if (!llm) {
+      throw new Error("No edit or chat model selected");
+    }
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
-    await verticalDiffManager.streamEdit(
-      config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
-      modelTitle,
-      undefined,
+    await verticalDiffManager.streamEdit({
+      input:
+        config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
+      llm,
       onlyOneInsertion,
-      undefined,
       range,
-    );
+      rules: config.rules,
+    });
   }
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
@@ -577,7 +576,7 @@ const getCommandsMap: (
       const range =
         args?.range ?? new vscode.Range(startFromCharZero, endAtCharLast);
 
-      editDecorationManager.setDecoration(editor, range);
+      editDecorationManager.addDecorations(editor, [range]);
 
       const rangeInFileWithContents = getRangeInFileWithContents(true, range);
 
@@ -906,7 +905,7 @@ const getCommandsMap: (
 
       quickPick.items = [
         {
-          label: "$(question) Open help center",
+          label: "$(gear) Open settings",
         },
         {
           label: "$(comment) Open chat",
@@ -961,7 +960,10 @@ const getCommandsMap: (
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
           vscode.commands.executeCommand("continue.toggleFullScreen");
+        } else if (selectedOption === "$(gear) Open settings") {
+          vscode.commands.executeCommand("continue.navigateTo", "/config");
         }
+
         quickPick.dispose();
       });
       quickPick.show();

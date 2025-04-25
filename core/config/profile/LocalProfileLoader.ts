@@ -55,18 +55,20 @@ export default class LocalProfileLoader implements IProfileLoader {
   description: ProfileDescription;
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    const result = await doLoadConfig(
-      this.ide,
-      this.ideSettingsPromise,
-      this.controlPlaneClient,
-      this.llmLogger,
-      undefined,
-      undefined,
-      undefined,
-      this.description.id,
-      this.overrideAssistantFile?.path,
-      null,
-    );
+    const result = await doLoadConfig({
+      ide: this.ide,
+      ideSettingsPromise: this.ideSettingsPromise,
+      controlPlaneClient: this.controlPlaneClient,
+      llmLogger: this.llmLogger,
+      profileId: this.description.id,
+      overrideConfigYamlByPath: this.overrideAssistantFile?.path,
+      orgScopeId: null,
+      packageIdentifier: {
+        uriType: "file",
+        filePath:
+          this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
+      },
+    });
 
     this.description.errors = result.errors;
 

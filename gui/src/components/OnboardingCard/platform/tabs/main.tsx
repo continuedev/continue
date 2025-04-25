@@ -96,7 +96,7 @@ export default function MainTab({
         </ButtonSubtext>
       ) : (
         <ButtonSubtext onClick={onRemainLocal}>
-          <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
+          <div className="flex cursor-pointer items-center justify-center gap-1 hover:brightness-125">
             <span>Or, remain local</span>
             <ChevronRightIcon className="h-3 w-3" />
           </div>

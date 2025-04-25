@@ -5,7 +5,6 @@ import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProvide
 import { VscThemeProvider } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
 import ConfigPage from "./pages/config";
-import ConfigErrorPage from "./pages/config-error";
 import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
 import History from "./pages/history";
@@ -35,10 +34,6 @@ const router = createMemoryRouter([
         element: <Stats />,
       },
       {
-        path: ROUTES.CONFIG_ERROR,
-        element: <ConfigErrorPage />,
-      },
-      {
         path: ROUTES.CONFIG,
         element: <ConfigPage />,
       },
@@ -50,7 +45,7 @@ const router = createMemoryRouter([
   Prevents entire app from rerendering continuously with useSetup in App
   TODO - look into a more redux-esque way to do this
 */
-function SetupListeners() {
+export function SetupListeners() {
   useSetup();
   return <></>;
 }

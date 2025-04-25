@@ -759,19 +759,11 @@ class VsCodeIde implements IDE {
         60,
       ),
       userToken: settings.get<string>("userToken", ""),
-      enableControlServerBeta: settings.get<boolean>(
-        "enableContinueForTeams",
-        false,
-      ),
       continueTestEnvironment: "production",
       pauseCodebaseIndexOnStart: settings.get<boolean>(
         "pauseCodebaseIndexOnStart",
         false,
       ),
-      // settings.get<boolean>(
-      //   "enableControlServerBeta",
-      //   false,
-      // ),
     };
     return ideSettings;
   }

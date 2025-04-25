@@ -9,7 +9,6 @@ import {
 } from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";
-import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 const AUTODETECT = "AUTODETECT";
 
@@ -32,14 +31,12 @@ async function modelConfigToBaseLLM({
   uniqueId,
   ideSettings,
   llmLogger,
-  platformConfigMetadata,
   config,
 }: {
   model: ModelConfig;
   uniqueId: string;
   ideSettings: IdeSettings;
   llmLogger: ILLMLogger;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
   config: ContinueConfig;
 }): Promise<BaseLLM | undefined> {
   const cls = getModelClass(model);
@@ -63,9 +60,8 @@ async function modelConfigToBaseLLM({
     logger: llmLogger,
     uniqueId,
     title: model.name,
-    systemMessage: config.systemMessage,
-    rules: config.rules,
     promptTemplates: model.promptTemplates,
+    baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
       uploadImage: model.capabilities?.includes("image_input"),
@@ -148,7 +144,6 @@ async function autodetectModels({
   uniqueId,
   ideSettings,
   llmLogger,
-  platformConfigMetadata,
   config,
 }: {
   llm: BaseLLM;
@@ -157,7 +152,6 @@ async function autodetectModels({
   uniqueId: string;
   ideSettings: IdeSettings;
   llmLogger: ILLMLogger;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
   try {
@@ -178,7 +172,6 @@ async function autodetectModels({
           uniqueId,
           ideSettings,
           llmLogger,
-          platformConfigMetadata,
           config,
         });
       }),
@@ -196,7 +189,6 @@ export async function llmsFromModelConfig({
   uniqueId,
   ideSettings,
   llmLogger,
-  platformConfigMetadata,
   config,
 }: {
   model: ModelConfig;
@@ -204,7 +196,6 @@ export async function llmsFromModelConfig({
   uniqueId: string;
   ideSettings: IdeSettings;
   llmLogger: ILLMLogger;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
   const baseLlm = await modelConfigToBaseLLM({
@@ -212,7 +203,6 @@ export async function llmsFromModelConfig({
     uniqueId,
     ideSettings,
     llmLogger,
-    platformConfigMetadata,
     config,
   });
   if (!baseLlm) {
@@ -227,7 +217,6 @@ export async function llmsFromModelConfig({
       uniqueId,
       ideSettings,
       llmLogger,
-      platformConfigMetadata,
       config,
     });
     return models;

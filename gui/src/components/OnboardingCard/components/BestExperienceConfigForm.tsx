@@ -1,11 +1,12 @@
 import { CubeIcon } from "@heroicons/react/24/outline";
 import { FormEventHandler, useContext, useState } from "react";
-import { useDispatch } from "react-redux";
 import { Button, Input, InputSubtext, lightGray } from "../..";
+import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import { setDefaultModel } from "../../../redux/slices/configSlice";
+import { useAppDispatch } from "../../../redux/hooks";
+import { updateSelectedModelByRole } from "../../../redux/thunks";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 
 const { anthropic, mistral } = providers;
@@ -25,7 +26,8 @@ interface BestExperienceConfigFormProps {
 function BestExperienceConfigForm({
   onComplete,
 }: BestExperienceConfigFormProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const { selectedProfile } = useAuth();
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -61,7 +63,14 @@ function BestExperienceConfigForm({
       model: repoMapConfig,
       role: "repoMapFileSelection",
     });
-    dispatch(setDefaultModel({ title: chatModelConfig.title, force: true }));
+
+    dispatch(
+      updateSelectedModelByRole({
+        selectedProfile,
+        role: "chat",
+        modelTitle: chatModelConfig.title,
+      }),
+    );
 
     if (!!autocompleteApiKey) {
       await ideMessenger.request("addAutocompleteModel", {

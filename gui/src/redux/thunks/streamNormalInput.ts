@@ -3,16 +3,16 @@ import { ChatMessage } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
   selectUseTools,
   setToolGenerated,
-  streamUpdate
+  streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { callTool } from "./callTool";
+import { callCurrentTool } from "./callCurrentTool";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -29,15 +29,16 @@ export const streamNormalInput = createAsyncThunk<
   ) => {
     // Gather state
     const state = getState();
-    const defaultModel = selectDefaultModel(state);
+    const selectedChatModel = selectSelectedChatModel(state);
+
     const toolSettings = state.ui.toolSettings;
     const toolGroupSettings = state.ui.toolGroupSettings;
     const streamAborter = state.session.streamAborter;
     const useTools = selectUseTools(state);
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       throw new Error("Default model not defined");
     }
-    const includeTools = useTools && modelSupportsTools(defaultModel);
+    const includeTools = useTools && modelSupportsTools(selectedChatModel);
 
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(
@@ -51,7 +52,7 @@ export const streamNormalInput = createAsyncThunk<
               ),
             }
           : {},
-        title: defaultModel.title,
+        title: selectedChatModel.title,
         messages,
         legacySlashCommandData,
       },
@@ -81,8 +82,8 @@ export const streamNormalInput = createAsyncThunk<
             data: {
               prompt: next.value.prompt,
               completion: next.value.completion,
-              modelProvider: defaultModel.provider,
-              modelTitle: defaultModel.title,
+              modelProvider: selectedChatModel.provider,
+              modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
             },
           });
@@ -93,8 +94,8 @@ export const streamNormalInput = createAsyncThunk<
         //     data: {
         //       prompt: next.value.prompt,
         //       completion: next.value.completion,
-        //       modelProvider: defaultModel.provider,
-        //       modelTitle: defaultModel.title,
+        //       modelProvider: selectedChatModel.provider,
+        //       modelTitle: selectedChatModel.title,
         //     },
         //   });
         // }
@@ -106,13 +107,17 @@ export const streamNormalInput = createAsyncThunk<
     // If it's a tool call that is automatically accepted, we should call it
     const toolCallState = selectCurrentToolCall(getState());
     if (toolCallState) {
-      dispatch(setToolGenerated());
+      dispatch(
+        setToolGenerated({
+          toolCallId: toolCallState.toolCallId,
+        }),
+      );
 
       if (
         toolSettings[toolCallState.toolCall.function.name] ===
         "allowedWithoutPermission"
       ) {
-        const response = await dispatch(callTool());
+        const response = await dispatch(callCurrentTool());
         unwrapResult(response);
       }
     }

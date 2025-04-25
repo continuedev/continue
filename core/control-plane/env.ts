@@ -21,16 +21,6 @@ const WORKOS_CLIENT_ID_STAGING = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ";
 const WORKOS_ENV_ID_PRODUCTION = "continue";
 const WORKOS_ENV_ID_STAGING = "continue-staging";
 
-export const PRODUCTION_ENV: ControlPlaneEnv = {
-  DEFAULT_CONTROL_PLANE_PROXY_URL:
-    "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/",
-  CONTROL_PLANE_URL:
-    "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/",
-  AUTH_TYPE: WORKOS_ENV_ID_PRODUCTION,
-  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_PRODUCTION,
-  APP_URL: "https://app.continue.dev/",
-};
-
 const PRODUCTION_HUB_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api.continue.dev/",
   CONTROL_PLANE_URL: "https://api.continue.dev/",
@@ -71,15 +61,11 @@ export async function getControlPlaneEnv(
   ideSettingsPromise: Promise<IdeSettings>,
 ): Promise<ControlPlaneEnv> {
   const ideSettings = await ideSettingsPromise;
-  return getControlPlaneEnvSync(
-    ideSettings.continueTestEnvironment,
-    ideSettings.enableControlServerBeta,
-  );
+  return getControlPlaneEnvSync(ideSettings.continueTestEnvironment);
 }
 
 export function getControlPlaneEnvSync(
   ideTestEnvironment: IdeSettings["continueTestEnvironment"],
-  enableControlServerBeta: IdeSettings["enableControlServerBeta"],
 ): ControlPlaneEnv {
   // Note .local overrides .staging
   if (fs.existsSync(getLocalEnvironmentDotFilePath())) {
@@ -88,10 +74,6 @@ export function getControlPlaneEnvSync(
 
   if (fs.existsSync(getStagingEnvironmentDotFilePath())) {
     return STAGING_ENV;
-  }
-
-  if (enableControlServerBeta === true) {
-    return PRODUCTION_ENV;
   }
 
   const env =
@@ -109,17 +91,12 @@ export function getControlPlaneEnvSync(
       ? STAGING_ENV
       : env === "test"
         ? TEST_ENV
-        : env === "hub"
-          ? PRODUCTION_HUB_ENV
-          : PRODUCTION_ENV;
+        : PRODUCTION_HUB_ENV;
 }
 
 export async function useHub(
   ideSettingsPromise: Promise<IdeSettings>,
 ): Promise<boolean> {
   const ideSettings = await ideSettingsPromise;
-  if (ideSettings.enableControlServerBeta) {
-    return false;
-  }
   return ideSettings.continueTestEnvironment !== "none";
 }

@@ -9,6 +9,7 @@ export const lsTool: Tool = {
   isCurrently: "listing files and folders in {{{ dirPath }}}",
   hasAlready: "listed files and folders in {{{ dirPath }}}",
   readonly: true,
+  isInstant: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.LSTool,
