@@ -2,7 +2,7 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { useAppSelector } from "../../../../redux/hooks";
+import { useAppSelector } from "../../../../../redux/hooks";
 
 export function ErrorSection() {
   const configError = useAppSelector((state) => state.config.configError);
