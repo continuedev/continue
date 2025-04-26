@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Tool } from "./types.js";
 
+// List files in a directory
 export const listFilesTool: Tool = {
   name: "list_files",
   description: "List files in a directory",
@@ -33,7 +34,9 @@ export const listFilesTool: Tool = {
 
       return `Files in ${args.dirpath}:\n${fileDetails.join("\n")}`;
     } catch (error) {
-      return `Error listing files: ${error instanceof Error ? error.message : String(error)}`;
+      return `Error listing files: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
     }
   },
 };
