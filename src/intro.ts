@@ -18,9 +18,10 @@ export async function loadAssistant(
     return await hub.loadAssistant(filepathOrSlug);
   }
 
-  console.log("Loading assistant from file");
   const content = fs.readFileSync(filepathOrSlug, "utf-8");
+  console.log("Loading assistant from file");
   const assistant = await hub.loadAssistantFromContent(content);
+  console.log("loaded: ", assistant.name);
   return assistant;
 }
 

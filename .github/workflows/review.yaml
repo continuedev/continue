@@ -19,17 +19,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - name: Install Continue CLI
-        run: npm install -g @continuedev/cli
-
-      - name: Print the version of the CLI
-        run: npm list -g @continuedev/cli && npm list -g @continuedev/hub
-
-      - name: ls
-        run: ls -la
+      - name: Build Continue CLI from source
+        run: |
+          npm ci
+          npm run build
 
       - name: Run Continue CLI
-        # run: npx continue-cli --assistant ./.continue/assistants/main.yaml --headless "/whoami"
-        run: npx continue-cli --assistant ./.continue/assistants/main.yaml --headless "Please review the last changes to this codebase and provide some feedback. Then, if the changes had problems that indicate they should not be merged into production, then please call the 'exit' tool to fail the GitHub Action."
+        run: npm run start -- --assistant $GITHUB_WORKSPACE/.continue/assistants/main.yaml --headless "Please review the last changes to this codebase and provide some feedback. Then, if the changes had problems that indicate they should not be merged into production, then please call the 'exit' tool to fail the GitHub Action."
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
