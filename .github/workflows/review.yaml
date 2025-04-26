@@ -15,10 +15,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
 
       - name: Install Continue CLI
         run: npm install -g @continuedev/cli
