@@ -26,7 +26,7 @@ jobs:
         run: npm list -g @continuedev/cli && npm list -g @continuedev/hub
 
       - name: Run Continue CLI
-        run: npx continue-cli --assistant continuedev/continue-code-review-assistant --headless "/whoami"
-        # run: npx continue-cli --assistant continuedev/continue-code-review-assistant --headless "Please review the last changes to this codebase and provide some feedback. Then, if the changes had problems that indicate they should not be merged into production, then please call the 'exit' tool to fail the GitHub Action."
+        # run: npx continue-cli --assistant ./.continue/assistants/main.yaml --headless "/whoami"
+        run: npx continue-cli --assistant ./.continue/assistants/main.yaml --headless "Please review the last changes to this codebase and provide some feedback. Then, if the changes had problems that indicate they should not be merged into production, then please call the 'exit' tool to fail the GitHub Action."
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
