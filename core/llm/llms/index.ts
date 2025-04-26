@@ -20,6 +20,7 @@ import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
+import Databricks from "./Databricks";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
@@ -94,6 +95,7 @@ export const LLMClasses = [
   ContinueProxy,
   Cloudflare,
   Deepseek,
+  Databricks,
   Docker,
   Msty,
   Azure,

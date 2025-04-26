@@ -87,6 +87,22 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
+  // Databricks Claude 3.7 Sonnet model definition
+  {
+      id: "databricks-claude-3-7-sonnet",
+      name: "Claude 3.7 Sonnet (Databricks)",
+      description: "Anthropic's latest Claude model hosted on Databricks",
+      provider: "Databricks", // Must match the provider title in providers.ts
+      contextLength: 200000,  // Context length for Claude 3.7 Sonnet
+      requestConfig: {
+          model: "databricks-claude-3-7-sonnet", // Model identifier
+          temperature: 0.7,   // Default temperature
+          maxTokens: 4096,    // Default maximum tokens
+      },
+      category: "cloud",      // Categorized as a cloud model
+      isAvailable: true,      // Show as available
+      isRecommended: true,    // Mark as recommended
+  }
   llama318BChat: {
     title: "Llama 3.1 8B",
     description: "A model from Meta, fine-tuned for chat",
