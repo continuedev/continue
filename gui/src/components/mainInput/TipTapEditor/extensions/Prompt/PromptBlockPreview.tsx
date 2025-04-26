@@ -41,8 +41,12 @@ export const PromptBlockPreview = ({
         itemId={item.id.itemId}
         onDelete={handleDelete}
         onTitleClick={handleTitleClick}
+        noContent={!item.content}
       >
-        <div className="whitespace-pre-wrap px-3 py-1 text-xs">
+        <div
+          className="whitespace-pre-wrap px-3 py-1 text-xs"
+          contentEditable={false}
+        >
           {item.content}
         </div>
       </ExpandableToolbarPreview>

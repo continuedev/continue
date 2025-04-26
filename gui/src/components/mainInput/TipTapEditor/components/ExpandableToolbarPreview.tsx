@@ -88,6 +88,7 @@ interface ExpandableToolbarPreviewProps {
   isSelected?: boolean;
   /** Content to display in the preview */
   children: React.ReactNode;
+  noContent: boolean;
 }
 
 /**
@@ -134,7 +135,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
-      setContentDims(prevValue => ({
+      setContentDims((prevValue) => ({
         width: contentRef.current?.scrollWidth ?? prevValue.width,
         height: contentRef.current?.scrollHeight ?? prevValue.height,
       }));
@@ -156,6 +157,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
         props.isSelected ? vscBadgeBackground : vscCommandCenterInactiveBorder
       }
       className="find-widget-skip !my-0"
+      contentEditable={false}
     >
       <div
         className="border-b-vsc-commandCenter-inactiveBorder m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid px-[5px] py-1.5 hover:opacity-90"
@@ -180,11 +182,12 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
         </div>
         <div className="flex items-center gap-1">
           <HeaderButtonWithToolTip text={hidden ? "Show" : "Hide"}>
-            {hidden ? (
-              <EyeIcon className="h-2.5 w-2.5" />
-            ) : (
-              <EyeSlashIcon className="h-2.5 w-2.5" />
-            )}
+            {!props.noContent &&
+              (hidden ? (
+                <EyeIcon className="h-2.5 w-2.5" />
+              ) : (
+                <EyeSlashIcon className="h-2.5 w-2.5" />
+              ))}
           </HeaderButtonWithToolTip>
           {props.onDelete && (
             <HeaderButtonWithToolTip
@@ -200,7 +203,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
         </div>
       </div>
 
-      {!hidden && (
+      {!hidden && !props.noContent && (
         <ContentContainer expanded={isExpanded}>
           <ScrollableContent
             ref={contentRef}

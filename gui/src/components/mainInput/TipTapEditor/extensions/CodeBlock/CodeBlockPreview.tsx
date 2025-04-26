@@ -66,6 +66,7 @@ export const CodeBlockPreview = ({
         onDelete={() => deleteNode()}
         borderColor={selected ? vscBadgeBackground : undefined}
         onTitleClick={handleTitleClick}
+        noContent={!content}
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(item.name)} ${item.description}\n${content}\n${fence}`}
