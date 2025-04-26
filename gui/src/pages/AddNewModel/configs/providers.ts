@@ -108,7 +108,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       ...completionParamsInputsConfigs
     ],
     packages: [
-      models.databricksClaudeSonnet // モデルを参照（models.tsで先に定義する必要がある）
+      models.databricksClaudeSonnet
     ],
     apiKeyUrl: "https://cloud.databricks.com/"
   },
