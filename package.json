@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/cli",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,7 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-yaml": "^1.0.78",
+    "@continuedev/config-yam": "^1.0.78",
     "@continuedev/hub": "^0.0.6",
     "@continuedev/openai-adapters": "^1.0.18",
     "@continuedev/sdk": "^0.0.2",
