@@ -26,7 +26,7 @@ jobs:
         run: npm list -g @continuedev/cli && npm list -g @continuedev/hub
 
       - name: ls
-        run: ls la
+        run: ls -la
 
       - name: Run Continue CLI
         # run: npx continue-cli --assistant ./.continue/assistants/main.yaml --headless "/whoami"
