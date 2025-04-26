@@ -8,14 +8,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
 import { useContext, useMemo } from "react";
-import { ToolTip } from "../../components/gui/Tooltip";
-import EditBlockButton from "../../components/mainInput/Lump/EditBlockButton";
-import { ExploreBlocksButton } from "../../components/mainInput/Lump/sections/ExploreBlocksButton";
-import { useAuth } from "../../context/Auth";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { updateConfig } from "../../redux/slices/configSlice";
-import { fontSize } from "../../util";
+import { useAuth } from "../../../../../context/Auth";
+import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
+import { updateConfig } from "../../../../../redux/slices/configSlice";
+import { fontSize } from "../../../../../util";
+import { ToolTip } from "../../../../gui/Tooltip";
+import EditBlockButton from "../../EditBlockButton";
+import { ExploreBlocksButton } from "../ExploreBlocksButton";
 
 interface MCPServerStatusProps {
   server: MCPServerStatus;
@@ -154,7 +154,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   );
 }
 
-function MCPServersPreview() {
+function MCPSection() {
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
@@ -186,4 +186,4 @@ function MCPServersPreview() {
   );
 }
 
-export default MCPServersPreview;
+export default MCPSection;

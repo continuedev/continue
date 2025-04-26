@@ -140,6 +140,14 @@
             <override-text place="GoToAction" text="Continue Config"/>
         </action>
 
+        <action id="continue.openLogs"
+                class="com.github.continuedev.continueintellijextension.actions.OpenLogsAction"
+                icon="AllIcons.General.ShowInfos"
+                text="Open Logs"
+                description="Open Continue Logs">
+            <override-text place="GoToAction" text="Open Continue Logs"/>
+        </action>
+
         <group id="ContinueSidebarActionsGroup">
             <reference ref="continue.newContinueSession"/>
             <reference ref="continue.viewHistory"/>

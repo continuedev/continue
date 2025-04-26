@@ -1,15 +1,14 @@
 name: PR checks
 
+# PR Checks run on all PRs to the main branch and must pass before merging.
 on:
   pull_request:
     branches:
       - main
-      - staging
 
   push:
     branches:
       - main
-      - staging
 
 jobs:
   install-root:
@@ -417,6 +416,30 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_FOUNDRY_API_KEY: ${{ secrets.AZURE_FOUNDRY_API_KEY }}
 
+  package-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Install dependencies
+        run: |
+          cd packages/config-yaml
+          npm ci
+
+      - name: Run config-yaml tests
+        run: |
+          cd packages/config-yaml
+          npm test
+
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
     needs: [install-root, install-vscode, install-config-yaml]
@@ -553,7 +576,7 @@ jobs:
           path: extensions/vscode/e2e/storage
 
   vscode-e2e-tests:
-    name: ${{ matrix.test_file }} (${{ matrix.command }})
+    name: ${{ matrix.test_file || 'unknown' }} (${{ matrix.command }})
     needs:
       [
         vscode-download-e2e-dependencies,
@@ -653,6 +676,27 @@ jobs:
         with:
           name: e2e-failure-screenshots
           path: extensions/vscode/e2e/storage/screenshots
+
+      - name: Sanitize test file name
+        id: sanitize_filename
+        if: always()
+        run: |
+          FILENAME="${{ matrix.test_file }}"
+          SANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion
+          echo "sanitized_test_file=${SANITIZED_FILENAME}" >> $GITHUB_OUTPUT
+
+      - name: Find e2e log file
+        if: always()
+        run: |
+          echo "Searching for e2e.log file..."
+          find $GITHUB_WORKSPACE -name "e2e.log" -type f
+
+      - name: Upload e2e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+          path: extensions/vscode/e2e.log
 
   gui-tests:
     needs: [install-gui, install-core, install-config-yaml]
@@ -822,6 +866,7 @@ jobs:
       - install-vscode
       - vscode-checks
       - core-tests
+      - package-tests
       - vscode-get-test-file-matrix
       - vscode-package-extension
       - vscode-download-e2e-dependencies

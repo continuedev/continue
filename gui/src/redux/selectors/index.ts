@@ -47,7 +47,5 @@ export const selectUseActiveFile = createSelector(
   (defaultContext) => defaultContext?.includes("activeFile" as any),
 );
 
-export const selectUseHub = createSelector(
-  [(state: RootState) => state.config.config.usePlatform],
-  (usePlatform) => usePlatform,
-);
+export const selectUseHub = (state: RootState) =>
+  state.config.config.usePlatform;

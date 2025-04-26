@@ -58,7 +58,6 @@ export const gatherContext = createAsyncThunk<
         defaultContextProviders,
         availableSlashCommands: state.config.config.slashCommands,
         dispatch,
-        selectedModelTitle: selectedChatModel.title,
       });
 
     // Automatically use currently open file
@@ -72,7 +71,6 @@ export const gatherContext = createAsyncThunk<
           query: "non-mention-usage",
           fullInput: "",
           selectedCode: [],
-          selectedModelTitle: selectedChatModel.title,
         },
       );
       if (currentFileResponse.status === "success") {

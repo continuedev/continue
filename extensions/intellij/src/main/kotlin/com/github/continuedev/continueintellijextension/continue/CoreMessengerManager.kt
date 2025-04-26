@@ -57,7 +57,8 @@ class CoreMessengerManager(
     }
 
     private fun setupCoreMessenger(continueCorePath: String) {
-        coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
+        try {
+            coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
 
         coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
             val allowAnonymousTelemetry = response.castNestedOrNull<Boolean>("content", "result", "config", "allowAnonymousTelemetry")
@@ -68,12 +69,18 @@ class CoreMessengerManager(
             }
         }
 
-        // On exit, use exponential backoff to create another CoreMessenger
-        coreMessenger?.onDidExit {
-            lastBackoffInterval *= 2
-            println("CoreMessenger exited, retrying in $lastBackoffInterval seconds")
-            Thread.sleep((lastBackoffInterval * 1000).toLong())
-            setupCoreMessenger(continueCorePath)
+            // On exit, use exponential backoff to create another CoreMessenger
+            coreMessenger?.onDidExit {
+                lastBackoffInterval *= 2
+                println("CoreMessenger exited, retrying in $lastBackoffInterval seconds")
+                Thread.sleep((lastBackoffInterval * 1000).toLong())
+                setupCoreMessenger(continueCorePath)
+            }
+        } catch (err: Throwable) {
+            val telemetryService = service<TelemetryService>()
+            telemetryService.capture("jetbrains_core_start_error", mapOf("error" to err))
+
+            err.printStackTrace()
         }
     }
 }

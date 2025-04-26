@@ -40,7 +40,6 @@ import {
   modelSupportsImages,
 } from "./autodetect.js";
 import {
-  CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
   DEFAULT_CONTEXT_LENGTH,
   DEFAULT_MAX_BATCH_SIZE,
@@ -279,28 +278,6 @@ export abstract class BaseLLM implements ILLM {
 
   listModels(): Promise<string[]> {
     return Promise.resolve([]);
-  }
-
-  private _compileChatMessages(
-    options: CompletionOptions,
-    messages: ChatMessage[],
-  ) {
-    let contextLength = this.contextLength;
-    if (
-      options.model !== this.model &&
-      options.model in CONTEXT_LENGTH_FOR_MODEL
-    ) {
-      contextLength =
-        CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
-    }
-
-    return compileChatMessages({
-      modelName: options.model,
-      msgs: messages,
-      contextLength,
-      maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-      supportsImages: this.supportsImages(),
-    });
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
@@ -879,7 +856,14 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = this._compileChatMessages(completionOptions, _messages);
+    const messages = compileChatMessages({
+      modelName: completionOptions.model,
+      msgs: _messages,
+      contextLength: this.contextLength,
+      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+      supportsImages: this.supportsImages(),
+      tools: options.tools,
+    });
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)
