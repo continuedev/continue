@@ -1,3 +1,14 @@
+/*
+ * Databricks.ts — Continue LLM adapter for Databricks Model Serving
+ * Copyright (c) 2025
+ *
+ * Required configuration:
+ *   - API Token: Personal Access Token (PAT)
+ *   - Base URL: Workspace URL (e.g., https://adb-xxxx.azuredatabricks.net)
+ *
+ * This class extends the OpenAI base class to access Databricks Serving Endpoints
+ * via Streaming Chat Completions (SSE).
+ */
 import OpenAI from "./OpenAI";
 import {
   ChatMessage,
@@ -47,9 +58,18 @@ export default class Databricks extends OpenAI {
     } catch (error) {
       console.error("Error reading Databricks config.yaml:", error);
     }
-    // If config.yaml did not yield results, throw error
+    // If config.yaml did not yield results, fall back to environment variables
+    const pat = process.env.DATABRICKS_TOKEN;
+    const base = process.env.YOUR_DATABRICKS_URL;
+    if (pat && base) {
+      return {
+        apiKey: pat,
+        endpoint: base,
+      };
+    }
+    // If neither config.yaml nor environment variables worked, throw error
     throw new Error(
-      "Databricks connection information not found. Please configure 'apiKey' and 'endpoint' for the model in .continue/config.yaml."
+      "Databricks connection information not found. Please configure 'apiKey' and 'apiBase' for the model in .continue/config.yaml."
     );
   }
 
@@ -64,7 +84,7 @@ export default class Databricks extends OpenAI {
     // Validate that apiKey and endpoint are present
     if (!config.apiKey || !config.endpoint) {
       throw new Error(
-        "Databricks connection information not found. Please configure 'apiKey' and 'endpoint' for the model in .continue/config.yaml."
+        "Databricks connection information not found. Please configure 'apiKey' and 'apiBase' for the model in .continue/config.yaml."
       );
     }
     // Merge loaded credentials into options (allow overrides via opts)
@@ -81,11 +101,12 @@ export default class Databricks extends OpenAI {
 
   /**
    * Generate the full URL for invoking the serving endpoint.
-   * Example: https://adb-xxx.azuredatabricks.net/serving-endpoints/my-model/invocations
+   * For config compatibility, returns the apiBase directly since it already contains
+   * the full path including /serving-endpoints/{model}/invocations
    * @returns The invocation URL as a string.
    */
   private getInvocationUrl(): string {
-    return `${this.apiBase}/serving-endpoints/${this.model}/invocations`;
+    return `${this.apiBase}`;
   }
 
   /**
