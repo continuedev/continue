@@ -23,7 +23,7 @@ jobs:
         run: npm install -g @continuedev/cli
 
       - name: Print the version of the CLI
-        run: npm list -g @continuedev/cli
+        run: npm list -g @continuedev/cli && npm list -g @continuedev/hub
 
       - name: Run Continue CLI
         run: npx continue-cli --assistant continuedev/continue-code-review-assistant --headless "Please review the last changes to this codebase and provide some feedback. Then, if the changes had problems that indicate they should not be merged into production, then please call the 'exit' tool to fail the GitHub Action."
