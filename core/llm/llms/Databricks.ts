@@ -1,22 +1,3 @@
-/*
- * Databricks.ts — Continue LLM adapter for Databricks Model Serving
- *
- * This class extends the OpenAI base class to access Databricks Model Serving
- * endpoints. It loads the API key and endpoint URL from the user's
- * .continue/config.yaml (in their home directory) or from environment variables.
- * The configuration file should include an entry under "models" for provider "databricks".
- * Example YAML entry:
- *   models:
- *     - name: My Databricks Model
- *       provider: databricks
- *       model: my-model-1
- *       apiKey: YOUR_API_KEY
- *       endpoint: https://your-databricks-workspace-url
- *
- * If the endpoint is missing from the config, the code will attempt to fall back
- * to environment variables (DATABRICKS_ENDPOINT or DATABRICKS_URL). If no endpoint
- * is found, an error is thrown. All comments are in English.
- */
 import OpenAI from "./OpenAI";
 import {
   ChatMessage,
@@ -35,8 +16,6 @@ export default class Databricks extends OpenAI {
   /**
    * Load Databricks model configuration from .continue/config.yaml.
    * Looks for a model entry matching the given modelName with provider 'databricks'.
-   * If found, returns an object with apiKey and endpoint (URL). Otherwise, falls back
-   * to environment variables.
    * @param modelName The model identifier to match in the config.
    * @returns Object containing apiKey and endpoint (may be undefined if not found).
    */
@@ -55,21 +34,9 @@ export default class Databricks extends OpenAI {
               m.provider === "databricks" &&
               m.model === modelName
           );
-          if (modelConfig && typeof modelConfig.apiKey === "string") {
-            // Use endpoint if provided, else fallback to URL if any
-            let endpointUrl: string | undefined;
-            if (typeof modelConfig.endpoint === "string") {
-              endpointUrl = modelConfig.endpoint;
-            } else if (typeof modelConfig.url === "string") {
-              endpointUrl = modelConfig.url;
-            }
-            // If endpoint is not present in config, try environment fallback
-            if (!endpointUrl) {
-              const envEndpoint = process.env.DATABRICKS_ENDPOINT || process.env.DATABRICKS_URL;
-              if (typeof envEndpoint === "string") {
-                endpointUrl = envEndpoint;
-              }
-            }
+          if (modelConfig && typeof modelConfig.apiKey === "string" && typeof modelConfig.apiBase === "string") {
+            // Use endpoint if provided
+            const endpointUrl = modelConfig.apiBase;
             return {
               apiKey: modelConfig.apiKey,
               endpoint: endpointUrl,
@@ -79,15 +46,11 @@ export default class Databricks extends OpenAI {
       }
     } catch (error) {
       console.error("Error reading Databricks config.yaml:", error);
-      // Proceed to fallback to environment variables
     }
-    // Fallback to environment variables if config.yaml did not yield results
-    const envApiKey = process.env.DATABRICKS_API_KEY || process.env.DATABRICKS_TOKEN;
-    const envEndpoint = process.env.DATABRICKS_ENDPOINT || process.env.DATABRICKS_URL;
-    return {
-      apiKey: envApiKey,
-      endpoint: envEndpoint,
-    };
+    // If config.yaml did not yield results, throw error
+    throw new Error(
+      "Databricks connection information not found. Please configure 'apiKey' and 'endpoint' for the model in .continue/config.yaml."
+    );
   }
 
   constructor(opts: LLMOptions) {
@@ -96,12 +59,12 @@ export default class Databricks extends OpenAI {
     if (!modelName) {
       throw new Error("No model specified for Databricks. Please include a model name in the options.");
     }
-    // Load configuration for this model from YAML or environment
+    // Load configuration for this model from YAML
     const config = Databricks.loadConfigFromYaml(modelName);
     // Validate that apiKey and endpoint are present
     if (!config.apiKey || !config.endpoint) {
       throw new Error(
-        "Databricks connection information not found. Please configure 'apiKey' and 'endpoint' for the model in .continue/config.yaml or set the DATABRICKS_API_KEY and DATABRICKS_ENDPOINT environment variables."
+        "Databricks connection information not found. Please configure 'apiKey' and 'endpoint' for the model in .continue/config.yaml."
       );
     }
     // Merge loaded credentials into options (allow overrides via opts)
