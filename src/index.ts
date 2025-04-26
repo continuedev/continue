@@ -35,7 +35,7 @@ async function chat() {
 
   const hub = new ContinueHubClient({
     apiKey: authConfig.accessToken,
-    currentUserSlug: "e2e",
+    currentUserSlug: "nate",
     orgScopeId: null,
     apiBase: env.apiBase,
   });

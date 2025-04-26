@@ -11,6 +11,7 @@ export async function loadAssistant(
   hub: ContinueHubClient,
   filepathOrSlug: string
 ): Promise<AssistantUnrolled> {
+  console.log("Loading assistant ", filepathOrSlug)
   if (!fs.existsSync(filepathOrSlug)) {
     // Assume it's a slug
     return await hub.loadAssistant(filepathOrSlug);
