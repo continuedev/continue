@@ -83,42 +83,34 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://platform.openai.com/account/api-keys",
   },
-  // Databricks provider definition
-  {
-      title: "Databricks",
-      description: "Connect to models hosted on Databricks serving endpoints",
-      longDescription: "Access Claude 3.7 Sonnet models hosted on Databricks serving endpoints with your credentials.",
-      icon: "databricks.png", // Place this icon in gui/public/logos/
-      fields: [
-          {
-              name: "endpoint",
-              label: "Serving Endpoint URL",
-              required: true,
-              placeholder: "https://adb-*/serving-endpoints/databricks-claude-3-7-sonnet/invocations",
-              type: "text",
-              // Get value from environment variable (not committed to repository)
-              defaultValue: process.env.DATABRICKS_CLAUDE_3_7_SONNET_URL || ""
-          },
-          {
-              name: "apiKey",
-              label: "Databricks Access Token",
-              required: true,
-              placeholder: "********",
-              type: "password", // Mask the value for security
-              // Get value from environment variable (not committed to repository)
-              defaultValue: process.env.DATABRICKS_TOKEN || ""
-          }
-      ],
-      // Configuration for the DatabricksLLM implementation
-      modelConfig: {
-          default: {
-              llmType: "DatabricksLLM", // Must match the class name in Databricks.ts
-              config: {
-                  // Base configuration (actual values will be retrieved from environment)
-                  useEndpoint: true
-              }
-          }
-      }
+  databricks: {
+    title: "Databricks",
+    provider: "databricks",
+    description: "Connect to models hosted on Databricks serving endpoints",
+    longDescription: "Access Claude 3.7 Sonnet models hosted on Databricks serving endpoints with your credentials.",
+    icon: "databricks.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "endpoint",
+        label: "Serving Endpoint URL",
+        required: true,
+        placeholder: "https://adb-*.*.*/serving-endpoints/databricks-claude-3-7-sonnet/invocations"
+      },
+      {
+        inputType: "password",
+        key: "apiKey",
+        label: "Databricks Access Token",
+        required: true,
+        placeholder: "********"
+      },
+      ...completionParamsInputsConfigs
+    ],
+    packages: [
+      models.databricksClaudeSonnet // モデルを参照（models.tsで先に定義する必要がある）
+    ],
+    apiKeyUrl: "https://cloud.databricks.com/"
   },
   anthropic: {
     title: "Anthropic",
