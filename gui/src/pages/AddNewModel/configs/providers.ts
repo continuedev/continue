@@ -93,24 +93,22 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     collectInputFor: [
       {
         inputType: "text",
-        key: "endpoint",
+        key: "apiBase", // Change from 'endpoint' to 'apiBase'
         label: "Serving Endpoint URL",
         required: true,
-        placeholder: "https://adb-*.*.*/serving-endpoints/databricks-claude-3-7-sonnet/invocations"
+        placeholder: "https://adb-*.*.*/serving-endpoints/databricks-claude-3-7-sonnet/invocations",
       },
       {
         inputType: "password",
         key: "apiKey",
         label: "Databricks Access Token",
         required: true,
-        placeholder: "********"
+        placeholder: "********",
       },
       ...completionParamsInputsConfigs
-    ],
-    packages: [
-      models.databricksClaudeSonnet
-    ],
-    apiKeyUrl: "https://cloud.databricks.com/"
+     ],
+    packages: [models.databricksClaudeSonnet],
+    apiKeyUrl: "https://cloud.databricks.com/",
   },
   anthropic: {
     title: "Anthropic",
