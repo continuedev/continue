@@ -1,5 +1,4 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
-import { updateApplyState } from "../../redux/slices/sessionSlice";
 import { ClientToolImpl } from "./callClientTool";
 
 export const editToolImpl: ClientToolImpl = async (
@@ -7,7 +6,7 @@ export const editToolImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  if (!extras.activeToolStreamId) {
+  if (!extras.streamId) {
     throw new Error("Invalid apply state");
   }
   const firstUriMatch = await resolveRelativePathInDir(
@@ -18,7 +17,7 @@ export const editToolImpl: ClientToolImpl = async (
     throw new Error(`${args.filepath} does not exist`);
   }
   const apply = await extras.ideMessenger.request("applyToFile", {
-    streamId: extras.activeToolStreamId,
+    streamId: extras.streamId,
     text: args.changes,
     toolCallId,
     filepath: firstUriMatch,
@@ -26,17 +25,7 @@ export const editToolImpl: ClientToolImpl = async (
   if (apply.status === "error") {
     throw new Error(apply.error);
   }
-  if (extras.activeToolStreamId) {
-    extras.dispatch(
-      updateApplyState({
-        streamId: extras.activeToolStreamId,
-        status: "closed",
-        toolCallId,
-        numDiffs: 0,
-        filepath: args.filepath,
-      }),
-    );
-  }
+
   return {
     respondImmediately: false,
     output: undefined, // No immediate output.
