@@ -11,12 +11,14 @@ export async function loadAssistant(
   hub: ContinueHubClient,
   filepathOrSlug: string
 ): Promise<AssistantUnrolled> {
-  console.log("Loading assistant ", filepathOrSlug)
+  console.log("Loading assistant ", filepathOrSlug);
   if (!fs.existsSync(filepathOrSlug)) {
     // Assume it's a slug
+    console.log("Loading assistant from slug");
     return await hub.loadAssistant(filepathOrSlug);
   }
 
+  console.log("Loading assistant from file");
   const content = fs.readFileSync(filepathOrSlug, "utf-8");
   const assistant = await hub.loadAssistantFromContent(content);
   return assistant;
