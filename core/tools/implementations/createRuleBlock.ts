@@ -19,7 +19,6 @@ export const createRuleBlockImpl: ToolImpl = async (
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
 
-  // Build the rule object
   const ruleObject = {
     name: args.name,
     rule: args.rule,
@@ -30,13 +29,9 @@ export const createRuleBlockImpl: ToolImpl = async (
     name: args.name,
     version: "0.0.1",
     schema: "v1",
-    rules: [
-      // Add the rule object instead of a simple string
-      ruleObject,
-    ],
+    rules: [ruleObject],
   };
 
-  // Convert the rule block to YAML
   const ruleYaml = YAML.stringify(ruleBlock);
 
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
