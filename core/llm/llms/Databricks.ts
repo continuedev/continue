@@ -157,6 +157,28 @@ export default class Databricks extends OpenAI {
   }
 
   /**
+   * Override the header generation to add Accept header for streaming
+   * @returns Headers object with auth and content type headers
+   */
+  protected _getHeaders(): { "Content-Type": string; Authorization: string; "api-key": string; } {
+    const headers = super._getHeaders();
+    
+    // ヘッダーを型安全にカスタマイズするため、any型にキャスト
+    const customHeaders = headers as any;
+    
+    // ストリーミングのためのヘッダーを追加
+    customHeaders["Accept"] = "text/event-stream";
+    
+    // Content-Typeが未設定の場合は追加（元のヘッダーオブジェクトには含まれているはず）
+    if (!customHeaders["Content-Type"]) {
+      customHeaders["Content-Type"] = "application/json";
+    }
+    
+    console.log("送信ヘッダー:", customHeaders);
+    return headers;
+  }
+
+  /**
    * Convert CompletionOptions to Databricks API parameters.
    * @param options CompletionOptions to convert
    * @returns Converted parameters for Databricks API
@@ -177,7 +199,7 @@ export default class Databricks extends OpenAI {
     
     // ストリーミングが失敗した場合、この変数をfalseに設定してください
     // 問題解決のためのデバッグ変数
-    const enableStreaming = true;
+    const enableStreaming = false; // ストリーミングを無効にして非同期モードでテスト
     
     // Build parameters object - removing thinking parameter as it may not be directly supported
     const finalOptions = {
@@ -345,14 +367,24 @@ export default class Databricks extends OpenAI {
     console.log("Sending request to:", invocationUrl);
     
     try {
-      const res = await this.fetch(invocationUrl, {
+      // タイムアウト設定を追加
+      const fetchOptions = {
         method: "POST",
         headers: this._getHeaders(),
         body: JSON.stringify(body),
         signal,
-      });
+        timeout: 300000 // 5分のタイムアウト
+      };
+      
+      // fetchオプションに明示的にタイムアウトを追加できない場合はこの行を削除
+      const timeoutOption = (fetchOptions as any).timeout;
+      console.log("タイムアウト設定:", timeoutOption ? `${timeoutOption}ms` : "未設定");
+      
+      const res = await this.fetch(invocationUrl, fetchOptions);
       
       console.log("Response status:", res.status);
+      console.log("レスポンスヘッダー:", Object.fromEntries([...res.headers.entries()]));
+      console.log("コンテンツタイプ:", res.headers.get("content-type"));
       
       // Check for HTTP errors or missing body
       if (!res.ok || !res.body) {
@@ -376,21 +408,45 @@ export default class Databricks extends OpenAI {
             };
           } else if (jsonResponse.content) {
             // 直接コンテンツ形式
-            yield {
-              role: "assistant",
-              content: jsonResponse.content
-            };
+            const contentValue = jsonResponse.content;
+            if (typeof contentValue === "string") {
+              yield {
+                role: "assistant",
+                content: contentValue
+              };
+            } else if (Array.isArray(contentValue)) {
+              // 配列形式のコンテンツ（Anthropic形式など）
+              const textContent = contentValue.find(item => item.type === "text")?.text || 
+                                 (contentValue[0] && contentValue[0].text) || 
+                                 JSON.stringify(contentValue);
+              yield {
+                role: "assistant",
+                content: textContent
+              };
+            } else {
+              // オブジェクト形式（未知の形式）
+              yield {
+                role: "assistant",
+                content: "複雑なレスポンス形式: " + JSON.stringify(contentValue)
+              };
+            }
           } else if (jsonResponse.completion) {
             // Anthropic互換形式
             yield {
               role: "assistant",
               content: jsonResponse.completion
             };
+          } else if (jsonResponse.message?.content) {
+            // 別の形式のOpenAI互換
+            yield {
+              role: "assistant",
+              content: jsonResponse.message.content
+            };
           } else {
             console.log("未知のレスポンス形式:", jsonResponse);
             yield {
               role: "assistant",
-              content: "Response format not recognized"
+              content: "Response format not recognized: " + JSON.stringify(jsonResponse)
             };
           }
         } catch (e) {
@@ -566,9 +622,20 @@ export default class Databricks extends OpenAI {
             break;
           }
           
+          // チャンクのバイナリデータをログ（型付けの問題を修正）
+          console.log("受信したチャンク（バイト）:", value ? 
+            Array.from(new Uint8Array(value as ArrayBuffer)).map((b: number) => b.toString(16)).join(' ') : 
+            'null');
+          
           const decodedChunk = decoder.decode(value as Uint8Array, { stream: true });
           rawBuffer += decodedChunk; // 全てのデータを記録
-          console.log("受信したチャンク:", decodedChunk);
+          console.log("受信したチャンク（テキスト）:", decodedChunk);
+          
+          // チャンクが空でないことを確認
+          if (!decodedChunk || decodedChunk.trim() === "") {
+            console.log("空のチャンクを受信しました");
+            continue;
+          }
           
           const { done: end, messages } = parseSSE(decodedChunk);
           for (const m of messages) {
@@ -601,9 +668,18 @@ export default class Databricks extends OpenAI {
       try {
         for await (const chunk of res.body as any) {
           try {
+            // チャンクの生データをログ（オブジェクトそのものを出力）
+            console.log("受信したチャンク（バイト）:", typeof chunk === 'object' ? '(バイナリデータ)' : chunk);
+            
             const decodedChunk = decoder.decode(chunk as Buffer, { stream: true });
             rawBuffer += decodedChunk; // 全てのデータを記録
-            console.log("受信したチャンク:", decodedChunk);
+            console.log("受信したチャンク（テキスト）:", decodedChunk);
+            
+            // チャンクが空でないことを確認
+            if (!decodedChunk || decodedChunk.trim() === "") {
+              console.log("空のチャンクを受信しました");
+              continue;
+            }
             
             const { done, messages } = parseSSE(decodedChunk);
             for (const m of messages) {
