@@ -22,7 +22,7 @@ Rules can be added to an Assistant on the Continue Hub. Explore available rules 
 :::info Automatically create local rule blocks
 When in Agent mode, you can simply prompt the agent to create a rule for you.
 
-For example, you can say "Create a rule for this", and a rule will be created for you in `~/.continue/rules` based on your conversation.
+For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::
 
 ### Syntax
