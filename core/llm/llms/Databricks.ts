@@ -175,6 +175,10 @@ export default class Databricks extends OpenAI {
       stream: options.stream
     });
     
+    // ストリーミングが失敗した場合、この変数をfalseに設定してください
+    // 問題解決のためのデバッグ変数
+    const enableStreaming = true;
+    
     // Build parameters object - removing thinking parameter as it may not be directly supported
     const finalOptions = {
       model: options.model || this.modelConfig?.model,
@@ -185,8 +189,23 @@ export default class Databricks extends OpenAI {
       presence_penalty: options.presencePenalty ?? this.modelConfig?.defaultCompletionOptions?.presencePenalty ?? 0,
       frequency_penalty: options.frequencyPenalty ?? this.modelConfig?.defaultCompletionOptions?.frequencyPenalty ?? 0,
       stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
-      stream: options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true
+      stream: enableStreaming && (options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true)
     };
+    
+    // 思考モードの設定がある場合、Databricksの思考パラメータを追加
+    if (options.reasoning || (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled")) {
+      const budgetTokens = options.reasoningBudgetTokens || 
+        this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
+        4000;
+      
+      // Databricksの思考パラメータを追加
+      // extra_body形式または直接オブジェクトにプロパティとして追加
+      (finalOptions as any).thinking = {
+        type: "enabled",
+        budget_tokens: budgetTokens
+      };
+      console.log("Added thinking parameter with budget:", budgetTokens);
+    }
     
     // Log the final parameters being sent
     console.log("Final API parameters:", JSON.stringify(finalOptions, null, 2));
@@ -311,8 +330,8 @@ export default class Databricks extends OpenAI {
       system: enhancedSystemMessage
     };
     
-    // Enable streaming
-    body.stream = true;
+    // ストリーミングが明示的に無効化されていない限り有効にする
+    body.stream = body.stream !== false;
     
     // Log the final request body (sanitized for security)
     const sanitizedBody = { ...body };
@@ -340,57 +359,195 @@ export default class Databricks extends OpenAI {
         console.error("HTTP error response:", res.status, res.statusText);
         throw new Error(`HTTP ${res.status}`);
       }
+
+      // ストリーミングが無効の場合、1回のレスポンスを返す
+      if (body.stream === false) {
+        console.log("Non-streaming mode, processing single response");
+        const jsonResponse = await res.json();
+        console.log("Received complete response:", JSON.stringify(jsonResponse, null, 2));
+        
+        try {
+          // さまざまな形式を処理
+          if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
+            // OpenAI形式
+            yield {
+              role: "assistant",
+              content: jsonResponse.choices[0].message.content
+            };
+          } else if (jsonResponse.content) {
+            // 直接コンテンツ形式
+            yield {
+              role: "assistant",
+              content: jsonResponse.content
+            };
+          } else if (jsonResponse.completion) {
+            // Anthropic互換形式
+            yield {
+              role: "assistant",
+              content: jsonResponse.completion
+            };
+          } else {
+            console.log("未知のレスポンス形式:", jsonResponse);
+            yield {
+              role: "assistant",
+              content: "Response format not recognized"
+            };
+          }
+        } catch (e) {
+          console.error("レスポンス処理エラー:", e);
+          throw e;
+        }
+        return;
+      }
       
       const decoder = new TextDecoder();
       let buffer = "";
+      let rawBuffer = ""; // すべてのレスポンスデータを記録
       
       /**
-       * Parse the received buffer into SSE lines and extract messages.
-       * @param str A string chunk of SSE data.
-       * @returns Object with 'done' flag and array of ChatMessages.
+       * 受信したバッファをSSEラインに解析してメッセージを抽出します。
+       * @param str SSEデータの文字列チャンク。
+       * @returns 'done'フラグとChatMessagesの配列を含むオブジェクト。
        */
       const parseSSE = (
         str: string,
       ): { done: boolean; messages: ChatMessage[] } => {
         buffer += str;
         const out: ChatMessage[] = [];
+        
+        // バッファ全体がJSON形式かどうかを確認
+        if (buffer.trim() && !buffer.includes("\n")) {
+          try {
+            const trimmedBuffer = buffer.trim();
+            // データプレフィックスを削除
+            const jsonStr = trimmedBuffer.startsWith("data:") ? 
+                         trimmedBuffer.slice(trimmedBuffer.indexOf("{")) : 
+                         trimmedBuffer;
+            
+            console.log("単一JSONの解析を試行:", jsonStr);
+            const json = JSON.parse(jsonStr);
+            console.log("単一JSONを解析:", json);
+            
+            // 異なる形式のレスポンスを処理
+            if (json.choices && json.choices[0]?.message?.content) {
+              // OpenAI形式の完全なレスポンス
+              console.log("OpenAI形式の完全なレスポンスを検出");
+              out.push({
+                role: "assistant",
+                content: json.choices[0].message.content
+              });
+              buffer = "";
+              return { done: true, messages: out };
+            }
+          } catch (e) {
+            console.log("単一JSON解析エラー、行解析に切り替え:", e);
+          }
+        }
+        
         let idx: number;
         // Process each line in the buffer
         while ((idx = buffer.indexOf("\n")) !== -1) {
           const line = buffer.slice(0, idx).trim();
           buffer = buffer.slice(idx + 1);
-          if (!line.startsWith("data:")) continue;
-          const data = line.slice(5).trim();
+          
+          console.log("処理中の行:", line);
+          
+          // 空行をスキップ
+          if (!line) continue;
+          
+          // "data:"プレフィックスを確認
+          if (!line.startsWith("data:") && !line.startsWith("data: ")) {
+            console.log("data:プレフィックスのない行をスキップ:", line);
+            continue;
+          }
+          
+          // プレフィックスを削除してデータを取得
+          const data = line.startsWith("data: ") ? line.slice(6).trim() : line.slice(5).trim();
+          
+          // [DONE]マーカーを確認
           if (data === "[DONE]") {
             console.log("Received [DONE] marker");
             return { done: true, messages: out };
           }
+          
           try {
             // Parse JSON and convert to chat message delta
             const json = JSON.parse(data);
             console.log("Received SSE data:", JSON.stringify(json, null, 2));
             
-            // Check for thinking output if enabled
-            if (json.thinking) {
-              console.log("Received thinking output");
+            // 複数の形式をサポート
+            
+            // 1. 思考出力がある場合
+            if (json.thinking || (json.content && json.content[0]?.type === "reasoning")) {
+              console.log("思考出力を検出");
+              let thinkingContent = json.thinking;
+              
+              // Databricks形式の思考出力を処理
+              if (json.content && json.content[0]?.type === "reasoning") {
+                thinkingContent = json.content[0].summary[0]?.text || "";
+              }
+              
               out.push({
                 role: "thinking",
-                content: json.thinking
+                content: thinkingContent
               });
-              continue;
             }
-            
-            // Handle normal response delta
-            const delta = fromChatCompletionChunk(json);
-            if (delta?.content) {
+            // 2. Anthropic形式のデルタ
+            else if (json.type === "content_block_delta" && json.delta?.text) {
+              console.log("Anthropic形式のデルタを検出");
               out.push({
                 role: "assistant",
-                content: delta.content
+                content: json.delta.text
               });
             }
+            // 3. OpenAI形式のデルタ
+            else if (json.choices && json.choices[0]?.delta?.content) {
+              console.log("OpenAI形式のデルタを検出");
+              out.push({
+                role: "assistant",
+                content: json.choices[0].delta.content
+              });
+            }
+            // 4. 直接content形式
+            else if (json.content && typeof json.content === "string") {
+              console.log("直接content形式を検出");
+              out.push({
+                role: "assistant",
+                content: json.content
+              });
+            }
+            // 5. コンテンツ配列を持つ形式
+            else if (json.content && Array.isArray(json.content) && json.content[0]?.text) {
+              console.log("コンテンツ配列形式を検出");
+              out.push({
+                role: "assistant",
+                content: json.content[0].text
+              });
+            }
+            // 6. 直接テキスト形式
+            else if (json.text) {
+              console.log("直接テキスト形式を検出");
+              out.push({
+                role: "assistant",
+                content: json.text
+              });
+            }
+            // 7. OpenAI形式のチャンク
+            else {
+              const delta = fromChatCompletionChunk(json);
+              if (delta?.content) {
+                console.log("OpenAI形式のチャンクからコンテンツを抽出");
+                out.push({
+                  role: "assistant",
+                  content: delta.content
+                });
+              } else {
+                console.log("不明なJSON形式:", json);
+              }
+            }
           } catch (e) {
-            // Ignore parse errors and wait for more data
-            console.log("JSON parse error in SSE stream:", e);
+            // JSONの解析エラーをログに記録
+            console.log("SSEストリームでJSON解析エラー:", e);
           }
         }
         return { done: false, messages: out };
@@ -404,17 +561,36 @@ export default class Databricks extends OpenAI {
         const reader = (res.body as any).getReader();
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
-          const { done: end, messages } = parseSSE(
-            decoder.decode(value as Uint8Array, { stream: true }),
-          );
+          if (done) {
+            console.log("ストリーム読み取り完了");
+            break;
+          }
+          
+          const decodedChunk = decoder.decode(value as Uint8Array, { stream: true });
+          rawBuffer += decodedChunk; // 全てのデータを記録
+          console.log("受信したチャンク:", decodedChunk);
+          
+          const { done: end, messages } = parseSSE(decodedChunk);
           for (const m of messages) {
             yield m;
           }
           if (end) {
+            console.log("ストリーム終了マーカーを検出");
             return;
           }
         }
+        
+        // ストリーム終了後にバッファに残っているものを処理
+        if (buffer.trim()) {
+          console.log("残りのバッファを処理:", buffer);
+          const { messages } = parseSSE("");
+          for (const m of messages) {
+            yield m;
+          }
+        }
+        
+        // 全レスポンスの記録
+        console.log("完全な受信データ:", rawBuffer);
         return;
       }
       
@@ -422,15 +598,64 @@ export default class Databricks extends OpenAI {
        * Node.js Readable stream (Node 16 and below)
        */
       console.log("Using Node.js Readable stream");
-      for await (const chunk of res.body as any) {
-        const { done, messages } = parseSSE(
-          decoder.decode(chunk as Buffer, { stream: true }),
-        );
-        for (const m of messages) {
-          yield m;
+      try {
+        for await (const chunk of res.body as any) {
+          try {
+            const decodedChunk = decoder.decode(chunk as Buffer, { stream: true });
+            rawBuffer += decodedChunk; // 全てのデータを記録
+            console.log("受信したチャンク:", decodedChunk);
+            
+            const { done, messages } = parseSSE(decodedChunk);
+            for (const m of messages) {
+              yield m;
+            }
+            if (done) {
+              console.log("ストリーム終了マーカーを検出");
+              return;
+            }
+          } catch (e) {
+            console.error("チャンク処理中のエラー:", e);
+          }
         }
-        if (done) {
-          return;
+        
+        // ストリーム終了後にバッファに残っているものを処理
+        if (buffer.trim()) {
+          console.log("残りのバッファを処理:", buffer);
+          const { messages } = parseSSE("");
+          for (const m of messages) {
+            yield m;
+          }
+        }
+        
+        // 全レスポンスの記録
+        console.log("完全な受信データ:", rawBuffer);
+      } catch (streamError) {
+        console.error("ストリーム読み取り中のエラー:", streamError);
+        
+        // エラーが発生した場合でも、受信したデータを処理
+        console.log("エラー発生後に受信データを処理:", rawBuffer);
+        
+        // レスポンス全体をJSONとして解析を試みる
+        try {
+          const jsonResponse = JSON.parse(rawBuffer);
+          console.log("レスポンス全体をJSONとして解析:", jsonResponse);
+          
+          if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
+            yield {
+              role: "assistant",
+              content: jsonResponse.choices[0].message.content
+            };
+          } else if (jsonResponse.content) {
+            yield {
+              role: "assistant",
+              content: typeof jsonResponse.content === "string" ? 
+                jsonResponse.content : 
+                JSON.stringify(jsonResponse.content)
+            };
+          }
+        } catch (parseError) {
+          console.error("最終解析の試みに失敗:", parseError);
+          throw streamError; // 元のエラーを再スロー
         }
       }
     } catch (error) {
