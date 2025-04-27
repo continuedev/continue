@@ -198,7 +198,7 @@ export default class Databricks extends OpenAI {
       max_tokens: options.maxTokens ?? this.modelConfig?.defaultCompletionOptions?.maxTokens ?? 4096,
       presence_penalty: options.presencePenalty ?? this.modelConfig?.defaultCompletionOptions?.presencePenalty ?? 0,
       frequency_penalty: options.frequencyPenalty ?? this.modelConfig?.defaultCompletionOptions?.frequencyPenalty ?? 0,
-      stop_sequences: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
+      stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
       stream: options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true,
       thinking: thinkingConfig,
     };
