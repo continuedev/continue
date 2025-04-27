@@ -1,10 +1,18 @@
-import * as fs from "fs";
-import * as yaml from "js-yaml";
-import * as os from "os";
-import * as path from "path";
+import OpenAI from "./OpenAI";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index";
 import { fromChatCompletionChunk } from "../openaiTypeConverters";
-import OpenAI from "./OpenAI";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
+import * as yaml from "js-yaml";
+
+// CompletionOptions 型の拡張（thinkingを追加）
+interface ExtendedCompletionOptions extends CompletionOptions {
+  thinking?: {
+    type: string;
+    budget_tokens?: number;
+  };
+}
 
 export default class Databricks extends OpenAI {
   static providerName = "databricks";
@@ -43,7 +51,7 @@ export default class Databricks extends OpenAI {
     opts = {
       ...opts,
       apiKey: opts.apiKey ?? config.apiKey,
-      apiBase: opts.apiBase ?? config.apiBase,
+      apiBase: opts.apiBase ?? config.apiBase ?? "",  // Ensure apiBase is always a string
       completionOptions: {
         ...config.defaultCompletionOptions,
         ...opts.completionOptions,
@@ -54,25 +62,30 @@ export default class Databricks extends OpenAI {
   }
 
   private getInvocationUrl(): string {
-    return this.apiBase;
+    // Ensure apiBase is defined and does not contain trailing slashes
+    const url = (this.apiBase ?? "").replace(/\/+$/, "");
+    console.log("Databricks adapter using URL:", url);
+    return url;
   }
 
   protected async *_streamChat(
     msgs: ChatMessage[],
     signal: AbortSignal,
-    options: CompletionOptions
+    options: ExtendedCompletionOptions  // Updated to ExtendedCompletionOptions
   ): AsyncGenerator<ChatMessage> {
     const body: any = this._convertArgs(options, msgs);
     body.stream = true;
 
-    // Include thinking and budget_tokens if available
-    const thinking = options.thinking;
-    if (thinking && thinking.type === "enabled") {
+    // Safely access thinking properties using optional chaining
+    if (options?.thinking?.type === "enabled") {
       body.thinking = {
         type: "enabled",
-        budget_tokens: thinking.budget_tokens,
+        budget_tokens: options?.thinking?.budget_tokens,
       };
     }
+
+    // Debug log the request body before sending it
+    console.log("Sending request body:", JSON.stringify(body, null, 2));
 
     const invocationUrl = this.getInvocationUrl();
     try {
