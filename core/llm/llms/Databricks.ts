@@ -175,21 +175,7 @@ export default class Databricks extends OpenAI {
       stream: options.stream
     });
     
-    // Determine thinking mode configuration
-    let thinkingConfig = undefined;
-    if (options.reasoning) {
-      thinkingConfig = {
-        type: "enabled",
-        budget_tokens: options.reasoningBudgetTokens || 4000
-      };
-      console.log("Enabling thinking mode with config:", thinkingConfig);
-    } else if (this.modelConfig?.defaultCompletionOptions?.thinking) {
-      // Use thinking mode from config if available
-      thinkingConfig = this.modelConfig.defaultCompletionOptions.thinking;
-      console.log("Using thinking config from config.yaml:", thinkingConfig);
-    }
-    
-    // Build parameters object
+    // Build parameters object - removing thinking parameter as it may not be directly supported
     const finalOptions = {
       model: options.model || this.modelConfig?.model,
       temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
@@ -199,8 +185,7 @@ export default class Databricks extends OpenAI {
       presence_penalty: options.presencePenalty ?? this.modelConfig?.defaultCompletionOptions?.presencePenalty ?? 0,
       frequency_penalty: options.frequencyPenalty ?? this.modelConfig?.defaultCompletionOptions?.frequencyPenalty ?? 0,
       stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
-      stream: options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true,
-      thinking: thinkingConfig,
+      stream: options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true
     };
     
     // Log the final parameters being sent
@@ -266,6 +251,39 @@ export default class Databricks extends OpenAI {
   }
 
   /**
+   * Create a system message that enables thinking mode if requested.
+   * Based on the Anthropic implementation approach.
+   * @param options CompletionOptions
+   * @param originalSystemMessage Original system message if any
+   * @returns Enhanced system message with thinking instructions
+   */
+  private createEnhancedSystemMessage(
+    options: CompletionOptions, 
+    originalSystemMessage?: string
+  ): string {
+    // Start with the original system message
+    let systemMessage = originalSystemMessage || "";
+    
+    // Determine if thinking mode should be enabled
+    const enableThinking = options.reasoning || 
+      (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
+    
+    // Add thinking instructions if enabled
+    if (enableThinking) {
+      const budgetTokens = options.reasoningBudgetTokens || 
+        this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
+        4000;
+      
+      const thinkingInstructions = `\n\nI'd like you to solve this problem step-by-step, showing your reasoning process clearly. Take your time to think through this thoroughly before giving your final answer. Use up to ${budgetTokens} tokens to explore different approaches and ensure your solution is correct.`;
+      
+      systemMessage += thinkingInstructions;
+      console.log("Enabled thinking mode with budget:", budgetTokens);
+    }
+    
+    return systemMessage;
+  }
+
+  /**
    * Read Databricks streaming chat completion (SSE) and yield ChatMessages.
    * Converts the SSE data into OpenAI-style chat deltas.
    * @param msgs Initial chat history messages to send.
@@ -281,13 +299,16 @@ export default class Databricks extends OpenAI {
     
     // Convert messages and extract system message
     const convertedMessages = this.convertMessages(msgs);
-    const systemMessage = this.extractSystemMessage(msgs);
+    const originalSystemMessage = this.extractSystemMessage(msgs);
+    
+    // Create enhanced system message with thinking instructions if needed
+    const enhancedSystemMessage = this.createEnhancedSystemMessage(options, originalSystemMessage);
     
     // Build request body
     const body = {
       ...this.convertArgs(options),
       messages: convertedMessages,
-      system: systemMessage
+      system: enhancedSystemMessage
     };
     
     // Enable streaming
