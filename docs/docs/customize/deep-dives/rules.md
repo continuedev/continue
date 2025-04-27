@@ -1,5 +1,5 @@
 ---
-description: Learn how to customize the system prompt with a `.continuerules` file
+description: Rules are used to provide instructions to the model for Chat, Edit, and Agent requests.
 keywords: [rules, .continuerules, system, prompt, message]
 ---
 
