@@ -191,25 +191,20 @@ export default class Databricks extends OpenAI {
       maxTokens: options.maxTokens,
       reasoning: options.reasoning,
       reasoningBudgetTokens: options.reasoningBudgetTokens,
-      presencePenalty: options.presencePenalty,
-      frequencyPenalty: options.frequencyPenalty,
-      stop: options.stop,
-      stream: options.stream
+      stop: options.stream
     });
     
     // ストリーミングが失敗した場合、この変数をfalseに設定してください
     // 問題解決のためのデバッグ変数
     const enableStreaming = false; // ストリーミングを無効にして非同期モードでテスト
     
-    // Build parameters object - removing thinking parameter as it may not be directly supported
+    // Build parameters object - removing presence_penalty and frequency_penalty as they are not supported
     const finalOptions = {
       model: options.model || this.modelConfig?.model,
       temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
       top_p: options.topP ?? this.modelConfig?.defaultCompletionOptions?.topP ?? 0.95,
       top_k: options.topK ?? this.modelConfig?.defaultCompletionOptions?.topK ?? 100,
       max_tokens: options.maxTokens ?? this.modelConfig?.defaultCompletionOptions?.maxTokens ?? 4096,
-      presence_penalty: options.presencePenalty ?? this.modelConfig?.defaultCompletionOptions?.presencePenalty ?? 0,
-      frequency_penalty: options.frequencyPenalty ?? this.modelConfig?.defaultCompletionOptions?.frequencyPenalty ?? 0,
       stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
       stream: enableStreaming && (options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true)
     };
