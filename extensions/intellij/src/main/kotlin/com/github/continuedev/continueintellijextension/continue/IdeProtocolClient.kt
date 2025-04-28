@@ -432,6 +432,25 @@ class IdeProtocolClient(
                         }
                     }
 
+                    "acceptDiff" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            AcceptDiffParams::class.java
+                        )
+                        val filepath = params.filepath;
+
+                        acceptOrRejectDiff(filepath, true)
+                    }
+
+                    "rejectDiff" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            RejectDiffParams::class.java
+                        )
+                        val filepath = params.filepath;
+                        acceptOrRejectDiff(filepath, false)
+                    }
+
                     "applyToFile" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
@@ -646,6 +665,29 @@ class IdeProtocolClient(
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
         continuePluginService.sendToWebview("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
+    }
+
+    fun acceptOrRejectDiff(filepath: String, accepted: Boolean) {
+        val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
+
+        if (virtualFile != null) {
+            ApplicationManager.getApplication().invokeAndWait {
+                val openedEditor =
+                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
+                if (openedEditor != null) {
+                    val editor: Editor? = FileEditorManager.getInstance(project).selectedTextEditor
+
+                    if (editor != null) {
+                        val diffStreamService = project.service<DiffStreamService>()
+                        if (accepted) {
+                            diffStreamService.accept(editor)
+                        } else {
+                            diffStreamService.reject(editor)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun deleteAtIndex(index: Int) {

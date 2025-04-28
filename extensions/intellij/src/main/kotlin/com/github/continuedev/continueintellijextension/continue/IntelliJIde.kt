@@ -42,7 +42,7 @@ class IntelliJIDE(
     private val project: Project,
     private val continuePluginService: ContinuePluginService,
 
-) : IDE {
+    ) : IDE {
 
     private val gitService = GitService(project, continuePluginService)
 
@@ -57,6 +57,19 @@ class IntelliJIDE(
         val os = getOS()
         ripgrep =
             Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + if (os == OS.WINDOWS) ".exe" else "").toString()
+
+        // Make ripgrep executable if on Unix-like systems
+        try {
+            if (os == OS.LINUX || os == OS.MAC) {
+                val file = File(ripgrep)
+                if (!file.canExecute()) {
+                    file.setExecutable(true)
+                }
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
     }
 
     /**
@@ -179,6 +192,7 @@ class IntelliJIDE(
 
     override suspend fun writeFile(path: String, contents: String) {
         val file = File(URI(path))
+        file.parentFile?.mkdirs()
         file.writeText(contents)
     }
 
@@ -194,7 +208,13 @@ class IntelliJIDE(
     }
 
     override suspend fun openFile(path: String) {
-        val file = LocalFileSystem.getInstance().findFileByPath(URI(path).path)
+        // Convert URI path to absolute file path
+        val filePath = File(URI(path)).absolutePath
+        // Find the file using the absolute path
+        val file = withContext(Dispatchers.IO) {
+            LocalFileSystem.getInstance().refreshAndFindFileByPath(filePath)
+        }
+
         file?.let {
             ApplicationManager.getApplication().invokeLater {
                 FileEditorManager.getInstance(project).openFile(it, true)
@@ -311,7 +331,7 @@ class IntelliJIDE(
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             val command = GeneralCommandLine(
-                ripgrep, 
+                ripgrep,
                 "--files",
                 "--iglob",
                 pattern,
@@ -320,37 +340,37 @@ class IntelliJIDE(
                 "--ignore-file",
                 ".gitignore",
             )
-    
+
             command.setWorkDirectory(project.basePath)
             val results = ExecUtil.execAndGetOutput(command).stdout
             return results.split("\n")
         } else {
-             throw NotImplementedError("Ripgrep not supported, this workspace is remote")
+            throw NotImplementedError("Ripgrep not supported, this workspace is remote")
 
-             // Leaving in here for ideas
-             //            val projectBasePath = project.basePath ?: return emptyList()
-             //            val scope = GlobalSearchScope.projectScope(project)
-             //
-             //            // Get all ignore patterns from .continueignore files
-             //            val ignorePatterns = mutableSetOf<String>()
-             //            VirtualFileManager.getInstance().findFileByUrl("file://$projectBasePath")?.let { root ->
-             //                VfsUtil.collectChildrenRecursively(root).forEach { file ->
-             //                    if (file.name == ".continueignore") {
-             //                        file.inputStream.bufferedReader().useLines { lines ->
-             //                            ignorePatterns.addAll(lines.filter { it.isNotBlank() && !it.startsWith("#") })
-             //                        }
-             //                    }
-             //                }
-             //            }
-             //
-             //            return FilenameIndex.getAllFilesByExt(project, "*", scope)
-             //                .filter { file ->
-             //                    val relativePath = file.path.removePrefix("$projectBasePath/")
-             //                    // Check if file matches pattern and isn't ignored
-             //                    PatternUtil.(relativePath, pattern) &&
-             //                    !ignorePatterns.any { PatternUtil.matchesGlob(relativePath, it) }
-             //                }
-             //                .map { it.path.removePrefix("$projectBasePath/") }
+            // Leaving in here for ideas
+            //            val projectBasePath = project.basePath ?: return emptyList()
+            //            val scope = GlobalSearchScope.projectScope(project)
+            //
+            //            // Get all ignore patterns from .continueignore files
+            //            val ignorePatterns = mutableSetOf<String>()
+            //            VirtualFileManager.getInstance().findFileByUrl("file://$projectBasePath")?.let { root ->
+            //                VfsUtil.collectChildrenRecursively(root).forEach { file ->
+            //                    if (file.name == ".continueignore") {
+            //                        file.inputStream.bufferedReader().useLines { lines ->
+            //                            ignorePatterns.addAll(lines.filter { it.isNotBlank() && !it.startsWith("#") })
+            //                        }
+            //                    }
+            //                }
+            //            }
+            //
+            //            return FilenameIndex.getAllFilesByExt(project, "*", scope)
+            //                .filter { file ->
+            //                    val relativePath = file.path.removePrefix("$projectBasePath/")
+            //                    // Check if file matches pattern and isn't ignored
+            //                    PatternUtil.(relativePath, pattern) &&
+            //                    !ignorePatterns.any { PatternUtil.matchesGlob(relativePath, it) }
+            //                }
+            //                .map { it.path.removePrefix("$projectBasePath/") }
         }
     }
 
@@ -358,20 +378,20 @@ class IntelliJIDE(
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             val command = GeneralCommandLine(
-                ripgrep, 
-                "-i", 
+                ripgrep,
+                "-i",
                 "--ignore-file",
                 ".continueignore",
                 "--ignore-file",
-                ".gitignore", 
-                "-C", 
-                "2", 
-                "--heading", 
-                "-e", 
-                query, 
+                ".gitignore",
+                "-C",
+                "2",
+                "--heading",
+                "-e",
+                query,
                 "."
             )
-    
+
             command.setWorkDirectory(project.basePath)
             return ExecUtil.execAndGetOutput(command).stdout
         } else {
@@ -415,7 +435,7 @@ class IntelliJIDE(
             //        return searchResults.toString()
         }
     }
-     
+
 
     override suspend fun subprocess(command: String, cwd: String?): List<Any> {
         val commandList = command.split(" ")

@@ -264,3 +264,14 @@ export class IdeMessenger implements IIdeMessenger {
 export const IdeMessengerContext = createContext<IIdeMessenger>(
   new IdeMessenger(),
 );
+
+export const IdeMessengerProvider: React.FC<{
+  children: React.ReactNode;
+  messenger?: IIdeMessenger;
+}> = ({ children, messenger = new IdeMessenger() }) => {
+  return (
+    <IdeMessengerContext.Provider value={messenger}>
+      {children}
+    </IdeMessengerContext.Provider>
+  );
+};

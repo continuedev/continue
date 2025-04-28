@@ -10,6 +10,7 @@ import {
   setSelectedProfile,
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
 import {
   selectSelectedChatModel,
   setConfigResult,
@@ -49,7 +50,6 @@ function useSetup() {
         organizations,
         selectedOrgId,
       } = result;
-
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
@@ -253,41 +253,39 @@ function useSetup() {
     dispatch(updateIndexingStatus(data));
   });
 
-  const activeToolStreamId = useAppSelector(
-    (store) => store.session.activeToolStreamId,
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
   );
   useWebviewListener(
     "updateApplyState",
     async (state) => {
       dispatch(updateApplyState(state));
-      const lastHistoryMsg = history.at(-1);
-      const [streamId, toolCallId] = activeToolStreamId ?? [];
+
+      // Handle apply status updates that are associated with current tool call
       if (
-        toolCallId &&
         state.status === "closed" &&
-        lastHistoryMsg?.toolCallState?.toolCallId === toolCallId
+        currentToolCallApplyState &&
+        currentToolCallApplyState.streamId === state.streamId
       ) {
-        if (state.streamId === streamId) {
-          // const output: ContextItem = {
-          //   name: "Edit tool output",
-          //   content: "Completed edit",
-          //   description: "",
-          // };
-          dispatch(
-            acceptToolCall({
-              toolCallId,
-            }),
-          );
-          // dispatch(setToolCallOutput([]));
-          dispatch(
-            streamResponseAfterToolCall({
-              toolCallId,
-            }),
-          );
-        }
+        // const output: ContextItem = {
+        //   name: "Edit tool output",
+        //   content: "Completed edit",
+        //   description: "",
+        // };
+        dispatch(
+          acceptToolCall({
+            toolCallId: currentToolCallApplyState.toolCallId!,
+          }),
+        );
+        // dispatch(setToolCallOutput([]));
+        dispatch(
+          streamResponseAfterToolCall({
+            toolCallId: currentToolCallApplyState.toolCallId!,
+          }),
+        );
       }
     },
-    [activeToolStreamId, history],
+    [currentToolCallApplyState, history],
   );
 }
 

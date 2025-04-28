@@ -4,7 +4,10 @@ import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import {
+  selectCurrentToolCall,
+  selectCurrentToolCallApplyState,
+} from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
@@ -53,15 +56,16 @@ function InputToolbar(props: InputToolbarProps) {
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-  const activeToolCallStreamId = useAppSelector(
-    (store) => store.session.activeToolStreamId,
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
   );
 
   const isEnterDisabled =
     props.disabled ||
     isEditModeAndNoCodeToEdit ||
     toolCallState?.status === "generated" ||
-    !!activeToolCallStreamId;
+    (currentToolCallApplyState &&
+      currentToolCallApplyState.status !== "closed");
 
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
