@@ -31,7 +31,17 @@ export interface AutocompleteTemplate {
         snippets: AutocompleteSnippet[],
         workspaceUris: string[],
       ) => string);
-  completionOptions?: Partial<CompletionOptions>;
+  completionOptions?:
+    | Partial<CompletionOptions>
+    | ((
+        prefix: string,
+        suffix: string,
+        filepath: string,
+        reponame: string,
+        language: string,
+        snippets: AutocompleteSnippet[],
+        workspaceUris: string[],
+      ) => Partial<CompletionOptions>);
 }
 
 // https://huggingface.co/stabilityai/stable-code-3b
