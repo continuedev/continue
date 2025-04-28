@@ -198,10 +198,13 @@ export default class Databricks extends OpenAI {
     // 問題解決のためのデバッグ変数
     const enableStreaming = false; // ストリーミングを無効にして非同期モードでテスト
     
-    // Determine thinking budget
+    // Determine thinking budget and if thinking is enabled
     const thinkingBudget = options.reasoningBudgetTokens || 
                           this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
                           4000;
+    
+    const isThinkingEnabled = options.reasoning || 
+                              (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
     
     // Ensure max_tokens is greater than thinking budget
     const maxTokens = Math.max(
@@ -209,22 +212,27 @@ export default class Databricks extends OpenAI {
       thinkingBudget + 1000 // Add buffer to ensure it's greater than thinking budget
     );
     
-    // Build parameters object - removing presence_penalty and frequency_penalty as they are not supported
-    const finalOptions = {
+    // Build parameters object with conditional parameters based on thinking mode
+    const finalOptions: any = {
       model: options.model || this.modelConfig?.model,
       temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
-      top_p: options.topP ?? this.modelConfig?.defaultCompletionOptions?.topP ?? 0.95,
-      top_k: options.topK ?? this.modelConfig?.defaultCompletionOptions?.topK ?? 100,
       max_tokens: maxTokens,
       stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
       stream: enableStreaming && (options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true)
     };
     
+    // Only add top_k and top_p if thinking is not enabled
+    if (!isThinkingEnabled) {
+      finalOptions.top_k = options.topK ?? this.modelConfig?.defaultCompletionOptions?.topK ?? 100;
+      finalOptions.top_p = options.topP ?? this.modelConfig?.defaultCompletionOptions?.topP ?? 0.95;
+    } else {
+      console.log("Omitting top_k and top_p parameters because thinking is enabled");
+    }
+    
     // 思考モードの設定がある場合、Databricksの思考パラメータを追加
-    if (options.reasoning || (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled")) {
+    if (isThinkingEnabled) {
       // Databricksの思考パラメータを追加
-      // extra_body形式または直接オブジェクトにプロパティとして追加
-      (finalOptions as any).thinking = {
+      finalOptions.thinking = {
         type: "enabled",
         budget_tokens: thinkingBudget
       };
