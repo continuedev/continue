@@ -25,8 +25,8 @@ import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/gui/Spinner";
 import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
+import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCall";
-import { SimpleToolCallUI } from "./ToolOutput";
 
 interface ToolCallDivProps {
   toolCall: ToolCallDelta;
@@ -80,7 +80,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
   if (icon) {
     return (
-      <div className="ml-4 mt-2">
+      <div className="ml-4 mt-2 flex">
         <SimpleToolCallUI
           tool={tool}
           toolCallState={props.toolCallState}

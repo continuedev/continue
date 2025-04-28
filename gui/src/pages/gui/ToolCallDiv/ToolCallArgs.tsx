@@ -1,3 +1,4 @@
+import { CodeBracketIcon } from "@heroicons/react/24/outline";
 import { useMemo } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
 
@@ -24,9 +25,10 @@ export const ArgsToggleIcon = ({
           e.stopPropagation();
           setIsShowing(!isShowing);
         }}
-        className={`hover:bg-vsc-input-background select-none px-1 py-0.5 hover:opacity-80 ${isShowing ? "bg-vsc-input-background" : "bg-transparent"}`}
+        className={`cursor-pointer select-none rounded-sm px-1 py-0.5 hover:bg-gray-400/40 hover:opacity-80 ${isShowing ? "bg-gray-400/40" : "bg-transparent"}`}
       >
-        {`{}`}
+        <CodeBracketIcon className="h-3 w-3 flex-shrink-0" />
+        {/* {`{}`} */}
       </div>
       <ToolTip id={argsTooltipId}>
         {isShowing ? "Hide args" : "Show args"}
