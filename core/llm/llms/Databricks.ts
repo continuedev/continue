@@ -155,7 +155,7 @@ export default class Databricks extends OpenAI {
               if (!modelConfig.defaultCompletionOptions.thinking) {
                 modelConfig.defaultCompletionOptions.thinking = {
                   type: "auto",  // auto, enabled, disabled
-                  budget_tokens: 4000
+                  budget_tokens: 16000  // デフォルト値を16000に更新
                 };
               }
               
@@ -165,7 +165,7 @@ export default class Databricks extends OpenAI {
               }
               
               if (!modelConfig.defaultCompletionOptions.thinking.budget_tokens) {
-                modelConfig.defaultCompletionOptions.thinking.budget_tokens = 4000;
+                modelConfig.defaultCompletionOptions.thinking.budget_tokens = 16000;  // デフォルト値を16000に更新
               }
               
               console.log("Claude 3.7 Sonnet設定:", {
@@ -240,7 +240,7 @@ export default class Databricks extends OpenAI {
       // 思考モードの設定
       if (!options.thinking) {
         console.warn("警告: Claude 3.7には思考モード設定が推奨されます、デフォルト値を使用します");
-        options.thinking = { type: "auto", budget_tokens: 4000 };
+        options.thinking = { type: "auto", budget_tokens: 16000 };  // デフォルト値を16000に更新
       } else {
         if (!["auto", "enabled", "disabled"].includes(options.thinking.type)) {
           console.warn(`警告: 無効な思考モードタイプ "${options.thinking.type}", "auto"に設定します`);
@@ -248,8 +248,8 @@ export default class Databricks extends OpenAI {
         }
         
         if (typeof options.thinking.budget_tokens !== "number" || options.thinking.budget_tokens < 0) {
-          console.warn(`警告: 無効な思考トークン予算 "${options.thinking.budget_tokens}", 4000に設定します`);
-          options.thinking.budget_tokens = 4000;
+          console.warn(`警告: 無効な思考トークン予算 "${options.thinking.budget_tokens}", 16000に設定します`);
+          options.thinking.budget_tokens = 16000;  // デフォルト値を16000に更新
         }
       }
       
@@ -261,11 +261,11 @@ export default class Databricks extends OpenAI {
       
       // タイムアウト設定の検証
       if (options.timeout === undefined) {
-        console.warn("警告: timeout設定が未定義です、300000msに設定します");
-        options.timeout = 300000;
+        console.warn("警告: timeout設定が未定義です、600000msに設定します");  // タイムアウト値を修正
+        options.timeout = 600000;  // 10分に設定
       } else if (typeof options.timeout !== "number" || options.timeout < 0) {
-        console.warn(`警告: 無効なタイムアウト値 "${options.timeout}", 300000msに設定します`);
-        options.timeout = 300000;
+        console.warn(`警告: 無効なタイムアウト値 "${options.timeout}", 600000msに設定します`);
+        options.timeout = 600000;  // タイムアウト値を修正
       }
     }
   }
@@ -457,7 +457,10 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
           if (typeof obj === 'string') {
             objString = obj;
           } else {
-            const stringified = JSON.stringify(obj, (key, value) => {
+            // セキュリティのためセンシティブ情報の検出と処理を追加
+            const sanitizedObj = this.sanitizeObjectForLogs(obj);
+            
+            const stringified = JSON.stringify(sanitizedObj, (key, value) => {
               if (typeof value === 'string' && value.length > 2000) {
                 return value.substring(0, 2000) + '... [切り詰め]';
               }
@@ -477,6 +480,50 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     }
   }
 
+  // ログ出力前にセンシティブ情報をサニタイズするための新しいメソッド
+  private sanitizeObjectForLogs(obj: any): any {
+    if (!obj) return obj;
+    
+    const sanitized = { ...obj };
+    
+    // 再帰的に処理する関数
+    const sanitizeRecursive = (object: any): any => {
+      if (!object || typeof object !== 'object') return object;
+      
+      const result = Array.isArray(object) ? [...object] : { ...object };
+      
+      for (const key in result) {
+        // センシティブなキーを検出
+        if (['apiKey', 'api_key', 'apibase', 'api_base', 'password', 'token', 'secret', 'authorization', 'auth'].includes(key.toLowerCase())) {
+          if (typeof result[key] === 'string' && result[key].length > 0) {
+            result[key] = '[REDACTED]';
+          }
+        } 
+        // URL検出とサニタイズ
+        else if (key.toLowerCase().includes('url') && typeof result[key] === 'string') {
+          // URLのドメイン部分のみを保持し、パスとクエリパラメータを隠す
+          try {
+            const urlValue = result[key];
+            if (urlValue.startsWith('http')) {
+              const urlObj = new URL(urlValue);
+              result[key] = `${urlObj.protocol}//${urlObj.host}/[REDACTED_PATH]`;
+            }
+          } catch (e) {
+            // URLパースに失敗した場合は元の値を使用
+          }
+        }
+        // 再帰的に処理
+        else if (typeof result[key] === 'object' && result[key] !== null) {
+          result[key] = sanitizeRecursive(result[key]);
+        }
+      }
+      
+      return result;
+    };
+    
+    return sanitizeRecursive(sanitized);
+  }
+
   private getTimeoutFromConfig(): number {
     const timeout = this.modelConfig?.defaultCompletionOptions?.timeout;
     if (typeof timeout === 'number' && timeout > 0) {
@@ -484,15 +531,27 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       return timeout;
     }
     
-    this.writeDebugLog("デフォルトのタイムアウト設定を使用します", { timeout: 300000 }, "basic");
-    return 300000;
+    this.writeDebugLog("デフォルトのタイムアウト設定を使用します", { timeout: 600000 }, "basic");
+    return 600000; // デフォルト値を10分に更新
   }
 
   private getInvocationUrl(): string {
     const url = (this.apiBase ?? "").replace(/\/+$/, "");
-    console.log("Databricks adapter using URL:", url);
-    this.writeDebugLog("Databricks adapter using URL:", url, "basic");
+    
+    // URLの安全な表現を作成（ログ用）
+    const safeUrl = this.sanitizeUrlForLogs(url);
+    
+    console.log("Databricks adapter using URL:", safeUrl);
+    this.writeDebugLog("Databricks adapter using URL:", safeUrl, "basic");
     return url;
+  }
+
+  // ログ用にURLを安全化する新しいメソッド
+  private sanitizeUrlForLogs(url: string): any {
+    if (!url) return '';
+    
+    // センシティブ情報を含む可能性のあるURLをインデックス付き文字配列に変換
+    return Array.from(url).map((c, i) => ({ [i]: c }));
   }
 
   protected _getHeaders(): { "Content-Type": string; Authorization: string; "api-key": string; } {
@@ -506,9 +565,18 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       customHeaders["Content-Type"] = "application/json";
     }
     
-    console.log("送信ヘッダー:", customHeaders);
-    this.writeDebugLog("送信ヘッダー:", customHeaders, "detailed");
-    console.log("arg1 =", customHeaders);
+    // ヘッダーのサニタイズ版をログに記録
+    const sanitizedHeaders = { ...customHeaders };
+    if (sanitizedHeaders["Authorization"]) {
+      sanitizedHeaders["Authorization"] = "[REDACTED]";
+    }
+    if (sanitizedHeaders["api-key"]) {
+      sanitizedHeaders["api-key"] = "[REDACTED]";
+    }
+    
+    console.log("送信ヘッダー:", sanitizedHeaders);
+    this.writeDebugLog("送信ヘッダー:", sanitizedHeaders, "detailed");
+    
     return headers;
   }
 
@@ -563,7 +631,7 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
                             (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
     const thinkingBudget = options.reasoningBudgetTokens || 
                           this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
-                          4000;
+                          16000; // デフォルト値を16000に更新
     
     if (isThinkingEnabled) {
       this.writeDebugLog("思考モード有効", { 
@@ -709,7 +777,7 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       // Claude 3.7以外のモデルの場合は従来通りシステムメッセージに指示を追加
       const budgetTokens = options.reasoningBudgetTokens || 
         this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
-        4000;
+        16000; // デフォルト値を16000に更新
       
       const thinkingInstructions = `\n\nI'd like you to solve this problem step-by-step, showing your reasoning process clearly. Take your time to think through this thoroughly before giving your final answer. Use up to ${budgetTokens} tokens to explore different approaches and ensure your solution is correct.`;
       
@@ -739,8 +807,17 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
 
   // バッファからコンテンツを回復するためのヘルパーメソッド
   private tryRecoverContentFromBuffer(buffer: string): string | null {
-    // バッファから有効なJSONを抽出する試み
+    // UTF-8文字を適切に処理するための追加処理
     try {
+      // 無効なUTF-8シーケンスを適切に処理
+      buffer = buffer.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\x00-\x7F]/g, match => {
+        try {
+          return match;
+        } catch (e) {
+          return ''; // 無効なシーケンスを空文字に置換
+        }
+      });
+    
       // JSONオブジェクトのパターンを検索
       const jsonPattern = /{[\s\S]*?}/g;
       const jsonMatches = buffer.match(jsonPattern);
@@ -798,6 +875,26 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     }
   }
 
+  // チャンク処理のための新しいヘルパーメソッド
+  private processChunk(chunk: Uint8Array | Buffer): string {
+    try {
+      // より堅牢なデコードオプションを追加
+      const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
+      return decoder.decode(chunk, { stream: true });
+    } catch (e) {
+      console.error("チャンクデコードエラー:", e);
+      this.writeDebugLog("チャンクデコードエラー", { 
+        error: (e as Error).message, 
+        chunkSize: chunk.length || 0
+      }, "basic");
+      
+      // 破損したチャンク用のフォールバックデコード
+      return Array.from(new Uint8Array(chunk as any))
+        .map(b => String.fromCharCode(b))
+        .join('');
+    }
+  }
+
   protected async *_streamChat(
     msgs: ChatMessage[],
     signal: AbortSignal,
@@ -807,7 +904,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     this.writeDebugLog("_streamChat called", { 
       messagesCount: msgs.length,
       options: JSON.stringify({
-        temperature: options.temperature,
         maxTokens: options.maxTokens,
         reasoning: options.reasoning,
         reasoningBudgetTokens: options.reasoningBudgetTokens,
@@ -840,13 +936,13 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     }
     console.log("Sending request with body:", JSON.stringify(sanitizedBody, null, 2));
     this.writeDebugLog("Sending request", { 
-      url: this.getInvocationUrl(),
+      url: this.sanitizeUrlForLogs(this.getInvocationUrl()),
       body: sanitizedBody,
       streamEnabled: body.stream
     }, "basic");
     
     const invocationUrl = this.getInvocationUrl();
-    console.log("Sending request to:", invocationUrl);
+    console.log("Sending request to:", this.sanitizeUrlForLogs(invocationUrl));
     
     try {
       const timeout = this.getTimeoutFromConfig();
@@ -970,7 +1066,8 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
         return;
       }
       
-      const decoder = new TextDecoder();
+      // 日本語を含む多言語対応のデコーダを作成
+      const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
       let buffer = "";
       let rawBuffer = "";
       let thinkingContent = "";
@@ -1107,7 +1204,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
             this.writeDebugLog("Parsed SSE JSON data", {
               dataType: typeof json,
               hasThinking: !!(json.thinking || (json.content && json.content[0]?.type === "reasoning")),
-              messageType: json.type,
               complete: json.done === true || json.choices?.[0]?.finish_reason === "stop"
             }, "detailed");
             
@@ -1281,14 +1377,16 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               Array.from(new Uint8Array(value as ArrayBuffer)).map((b: number) => b.toString(16)).join(' ') : 
               'null');
             this.writeDebugLog(`[${elapsedSec}s] チャンク#${chunkCount}受信`, { 
-              sizeBytes: chunkSize
+              type: typeof value,
+              isBuffer: Buffer && Buffer.isBuffer ? Buffer.isBuffer(value) : false,
+              size: chunkSize
             }, "detailed");
             
-            const decodedChunk = decoder.decode(value as Uint8Array, { stream: true });
+            // 新しいProcessChunkメソッドを使用してより堅牢なデコードを行う
+            const decodedChunk = this.processChunk(value as Uint8Array);
             rawBuffer += decodedChunk;
             console.log(`[${elapsedSec}s] 受信したチャンク（テキスト）:`, decodedChunk);
             this.writeDebugLog(`チャンク#${chunkCount}デコード`, { 
-              text: decodedChunk,
               length: decodedChunk.length
             }, "verbose");
             
@@ -1361,7 +1459,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
         if (buffer.trim()) {
           console.log("残りのバッファを処理:", buffer);
           this.writeDebugLog("残りのバッファを処理", { 
-            buffer: buffer.substring(0, 200) + "...",
             length: buffer.length
           }, "detailed");
           const { messages } = parseSSE("");
@@ -1383,7 +1480,7 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
           }, "basic");
         }
         
-        console.log("完全な受信データ:", rawBuffer);
+        console.log("完全な受信データサイズ:", rawBuffer.length);
         this.writeDebugLog("完全な受信データサイズ", { 
           bytes: rawBuffer.length,
           approximateTokens: Math.round(rawBuffer.length / 4)
@@ -1426,11 +1523,11 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               size: chunk.length || 0
             }, "detailed");
             
-            const decodedChunk = decoder.decode(chunk as Buffer, { stream: true });
+            // 新しいProcessChunkメソッドを使用してより堅牢なデコードを行う
+            const decodedChunk = this.processChunk(chunk as Buffer);
             rawBuffer += decodedChunk;
             console.log(`[${elapsedSec}s] 受信したチャンク（テキスト）:`, decodedChunk);
             this.writeDebugLog(`チャンク#${chunkCount}デコード`, { 
-              text: decodedChunk,
               length: decodedChunk.length
             }, "verbose");
             
@@ -1501,9 +1598,8 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
         }
         
         if (buffer.trim()) {
-          console.log("残りのバッファを処理:", buffer);
+          console.log("残りのバッファを処理:", buffer.length);
           this.writeDebugLog("残りのバッファを処理", { 
-            buffer: buffer.substring(0, 200) + "...",
             length: buffer.length
           }, "detailed");
           const { messages } = parseSSE("");
@@ -1525,7 +1621,7 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
           }, "basic");
         }
         
-        console.log("完全な受信データ:", rawBuffer);
+        console.log("完全な受信データサイズ:", rawBuffer.length);
         this.writeDebugLog("完全な受信データサイズ", { 
           bytes: rawBuffer.length, 
           approximateTokens: Math.round(rawBuffer.length / 4)
