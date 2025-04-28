@@ -25,6 +25,7 @@ import * as yaml from "js-yaml";
 export default class Databricks extends OpenAI {
   static providerName = "databricks";
   private modelConfig: any = null;
+  private globalConfig: any = null;
 
   /**
    * Load Databricks model configuration from .continue/config.yaml.
@@ -45,6 +46,10 @@ export default class Databricks extends OpenAI {
         console.log("Config file exists, reading content");
         const fileContents = fs.readFileSync(configPath, "utf8");
         const parsed = yaml.load(fileContents) as any;
+        
+        // Keep a reference to the complete config for global settings
+        const globalConfig = parsed;
+        
         if (parsed && typeof parsed === "object" && Array.isArray(parsed.models)) {
           console.log(`Found ${parsed.models.length} models in config`);
           
@@ -66,8 +71,8 @@ export default class Databricks extends OpenAI {
             });
             
             if (modelConfig && typeof modelConfig.apiKey === "string" && typeof modelConfig.apiBase === "string") {
-              // Return the complete model configuration
-              return modelConfig;
+              // Return the complete model configuration with global config
+              return { modelConfig, globalConfig };
             }
           } else {
             console.log(`No model with name '${modelName}' and provider 'databricks' found in config`);
@@ -87,8 +92,11 @@ export default class Databricks extends OpenAI {
     if (pat && base) {
       console.log("Found environment variables, using them instead");
       return {
-        apiKey: pat,
-        apiBase: base,
+        modelConfig: {
+          apiKey: pat,
+          apiBase: base,
+        },
+        globalConfig: null
       };
     }
     
@@ -110,7 +118,7 @@ export default class Databricks extends OpenAI {
     
     // Load complete configuration for this model from YAML
     console.log("Loading config for model:", modelName);
-    const modelConfig = Databricks.loadConfigFromYaml(modelName);
+    const { modelConfig, globalConfig } = Databricks.loadConfigFromYaml(modelName);
     console.log("Loaded config:", { 
       apiKeyExists: !!modelConfig.apiKey, 
       endpoint: modelConfig.apiBase,
@@ -142,6 +150,7 @@ export default class Databricks extends OpenAI {
     // Store model config for later use in parameter conversion
     // This must be done after the super() call
     this.modelConfig = modelConfig;
+    this.globalConfig = globalConfig;
   }
 
   /**
@@ -175,7 +184,30 @@ export default class Databricks extends OpenAI {
     }
     
     console.log("送信ヘッダー:", customHeaders);
+    console.log("arg1 =", customHeaders);
     return headers;
+  }
+
+  /**
+   * Get the streaming setting from global config or model config
+   * @returns Boolean indicating whether streaming should be enabled
+   */
+  private getEnableStreamingFromConfig(): boolean {
+    // まずモデル固有の設定を確認
+    if (this.modelConfig?.defaultCompletionOptions?.stream !== undefined) {
+      console.log("Model-specific stream setting found:", this.modelConfig.defaultCompletionOptions.stream);
+      return this.modelConfig.defaultCompletionOptions.stream;
+    }
+    
+    // グローバル設定を確認（存在する場合）
+    if (this.globalConfig?.stream !== undefined) {
+      console.log("Global stream setting found:", this.globalConfig.stream);
+      return this.globalConfig.stream;
+    }
+    
+    // 両方とも存在しない場合はデフォルトでtrueを返す
+    console.log("No stream setting found in config, using default: true");
+    return true;
   }
 
   /**
@@ -194,9 +226,9 @@ export default class Databricks extends OpenAI {
       stop: options.stream
     });
     
-    // ストリーミングが失敗した場合、この変数をfalseに設定してください
-    // 問題解決のためのデバッグ変数
-    const enableStreaming = false; // ストリーミングを無効にして非同期モードでテスト
+    // 設定ファイルからストリーミングモードの設定を取得
+    const enableStreaming = this.getEnableStreamingFromConfig();
+    console.log("ストリーミングモード:", enableStreaming ? "有効" : "無効", "(設定ファイルから読み込み)");
     
     // Determine thinking budget and if thinking is enabled
     const thinkingBudget = options.reasoningBudgetTokens || 
@@ -218,7 +250,7 @@ export default class Databricks extends OpenAI {
       temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
       max_tokens: maxTokens,
       stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
-      stream: enableStreaming && (options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true)
+      stream: enableStreaming && (options.stream ?? true)
     };
     
     // Only add top_k and top_p if thinking is not enabled
@@ -363,8 +395,9 @@ export default class Databricks extends OpenAI {
       system: enhancedSystemMessage
     };
     
-    // ストリーミングが明示的に無効化されていない限り有効にする
-    body.stream = body.stream !== false;
+    // 設定ファイルからストリーミング設定を取得し、明示的に無効化されていない限り有効にする
+    const enableStreaming = this.getEnableStreamingFromConfig();
+    body.stream = enableStreaming && (body.stream !== false);
     
     // Log the final request body (sanitized for security)
     const sanitizedBody = { ...body };
@@ -470,6 +503,7 @@ export default class Databricks extends OpenAI {
       const decoder = new TextDecoder();
       let buffer = "";
       let rawBuffer = ""; // すべてのレスポンスデータを記録
+      let thinkingContent = ""; // 思考出力を蓄積するための変数
       
       /**
        * 受信したバッファをSSEラインに解析してメッセージを抽出します。
@@ -547,17 +581,29 @@ export default class Databricks extends OpenAI {
             // 1. 思考出力がある場合
             if (json.thinking || (json.content && json.content[0]?.type === "reasoning")) {
               console.log("思考出力を検出");
-              let thinkingContent = json.thinking;
+              let newThinkingContent = "";
               
               // Databricks形式の思考出力を処理
-              if (json.content && json.content[0]?.type === "reasoning") {
-                thinkingContent = json.content[0].summary[0]?.text || "";
+              if (json.thinking) {
+                newThinkingContent = json.thinking;
+              } else if (json.content && json.content[0]?.type === "reasoning") {
+                newThinkingContent = json.content[0].summary[0]?.text || "";
               }
               
-              out.push({
-                role: "thinking",
-                content: thinkingContent
-              });
+              // 思考コンテンツを追加して書式化したログを出力
+              if (newThinkingContent) {
+                thinkingContent += newThinkingContent;
+                
+                // 思考出力を強調表示（デバッグ用）
+                console.log("\n==== THINKING OUTPUT ====");
+                console.log(newThinkingContent);
+                console.log("========================\n");
+                
+                out.push({
+                  role: "thinking",
+                  content: newThinkingContent
+                });
+              }
             }
             // 2. Anthropic形式のデルタ
             else if (json.type === "content_block_delta" && json.delta?.text) {
@@ -626,6 +672,10 @@ export default class Databricks extends OpenAI {
       if (typeof (res.body as any).getReader === "function") {
         console.log("Using WHATWG streams reader");
         const reader = (res.body as any).getReader();
+        
+        // タイムスタンプを記録（思考モードの経過時間計測用）
+        const startTime = Date.now();
+        
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -633,14 +683,17 @@ export default class Databricks extends OpenAI {
             break;
           }
           
+          // タイムスタンプとの差分を計算（経過秒数）
+          const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
+          
           // チャンクのバイナリデータをログ（型付けの問題を修正）
-          console.log("受信したチャンク（バイト）:", value ? 
+          console.log(`[${elapsedSec}s] 受信したチャンク（バイト）:`, value ? 
             Array.from(new Uint8Array(value as ArrayBuffer)).map((b: number) => b.toString(16)).join(' ') : 
             'null');
           
           const decodedChunk = decoder.decode(value as Uint8Array, { stream: true });
           rawBuffer += decodedChunk; // 全てのデータを記録
-          console.log("受信したチャンク（テキスト）:", decodedChunk);
+          console.log(`[${elapsedSec}s] 受信したチャンク（テキスト）:`, decodedChunk);
           
           // チャンクが空でないことを確認
           if (!decodedChunk || decodedChunk.trim() === "") {
@@ -667,6 +720,14 @@ export default class Databricks extends OpenAI {
           }
         }
         
+        // 思考プロセスの要約を表示
+        if (thinkingContent) {
+          console.log("\n======= THINKING PROCESS SUMMARY =======");
+          console.log("思考モードで生成された内容の合計トークン数（概算）:", Math.round(thinkingContent.length / 4));
+          console.log("処理時間:", ((Date.now() - startTime) / 1000).toFixed(2), "秒");
+          console.log("======================================\n");
+        }
+        
         // 全レスポンスの記録
         console.log("完全な受信データ:", rawBuffer);
         return;
@@ -676,15 +737,22 @@ export default class Databricks extends OpenAI {
        * Node.js Readable stream (Node 16 and below)
        */
       console.log("Using Node.js Readable stream");
+      
+      // タイムスタンプを記録（思考モードの経過時間計測用）
+      const startTime = Date.now();
+      
       try {
         for await (const chunk of res.body as any) {
           try {
+            // タイムスタンプとの差分を計算（経過秒数）
+            const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
+            
             // チャンクの生データをログ（オブジェクトそのものを出力）
-            console.log("受信したチャンク（バイト）:", typeof chunk === 'object' ? '(バイナリデータ)' : chunk);
+            console.log(`[${elapsedSec}s] 受信したチャンク（バイト）:`, typeof chunk === 'object' ? '(バイナリデータ)' : chunk);
             
             const decodedChunk = decoder.decode(chunk as Buffer, { stream: true });
             rawBuffer += decodedChunk; // 全てのデータを記録
-            console.log("受信したチャンク（テキスト）:", decodedChunk);
+            console.log(`[${elapsedSec}s] 受信したチャンク（テキスト）:`, decodedChunk);
             
             // チャンクが空でないことを確認
             if (!decodedChunk || decodedChunk.trim() === "") {
@@ -712,6 +780,14 @@ export default class Databricks extends OpenAI {
           for (const m of messages) {
             yield m;
           }
+        }
+        
+        // 思考プロセスの要約を表示
+        if (thinkingContent) {
+          console.log("\n======= THINKING PROCESS SUMMARY =======");
+          console.log("思考モードで生成された内容の合計トークン数（概算）:", Math.round(thinkingContent.length / 4));
+          console.log("処理時間:", ((Date.now() - startTime) / 1000).toFixed(2), "秒");
+          console.log("======================================\n");
         }
         
         // 全レスポンスの記録
