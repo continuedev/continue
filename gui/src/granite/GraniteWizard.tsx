@@ -354,7 +354,6 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
             <VSCodeButton variant="secondary" onClick={cancelDownload}>
               Cancel
             </VSCodeButton>
-            not here
             <ProgressBlock progress={ollamaInstallationProgress} />
           </div>
         )}
