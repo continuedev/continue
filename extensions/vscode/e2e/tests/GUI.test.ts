@@ -400,6 +400,8 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, llmResponse),
       );
 
+      await new Promise(resolve=>setTimeout(resolve, 500));
+
       const viewportHeight = await driver.executeScript(
         "return window.innerHeight",
       );
