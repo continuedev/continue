@@ -209,7 +209,7 @@ describe("CodebaseIndexer", () => {
     expect(files.every((file) => !file.endsWith("main.rs"))).toBe(true);
   });
 
-  test("should successfully re-index after clearing index", async () => {
+  test("should successfully re-index after clearing index", async () => {  
     const beforeClearingIndexes = await getAllIndexedFiles();
     expect(beforeClearingIndexes.length).toBeGreaterThan(0);
 
@@ -226,14 +226,16 @@ describe("CodebaseIndexer", () => {
     expect(reIndexes.length).toBe(beforeClearingIndexes.length);
   });
 
-  test.skip('should successfully re-index even if the database was blocked', async () => {
+  test('should successfully re-index even if the database was blocked', async () => {
     const beforeClearingIndexes = await getAllIndexedFiles();
     expect(beforeClearingIndexes.length).toBeGreaterThan(0);
 
     const db = await SqliteDb.get()
-    // await db.exec("BEGIN EXCLUSIVE TRANSACTION;")
-    const result = await db.get('SELECT 1')
-    console.log('result=>', result)
+    
+    // force a lock on the database
+    await db.exec("BEGIN EXCLUSIVE TRANSACTION;")
+    await db.get('SELECT 1')
+    
     await codebaseIndexer.clearIndexes()
 
     const afterClearingIndexes = await getAllIndexedFiles();

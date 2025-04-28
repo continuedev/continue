@@ -24,9 +24,11 @@ export function tagToString(tag: IndexTag): string {
 
 export class SqliteDb {
   static db: DatabaseConnection | null = null;
+  static closeRetries = 0;
 
   private static async createTables(db: DatabaseConnection) {
     await db.exec("PRAGMA journal_mode=WAL;");
+    await db.exec("PRAGMA busy_timeout=5000;");
 
     await db.exec(
       `CREATE TABLE IF NOT EXISTS tag_catalog (
@@ -89,7 +91,7 @@ export class SqliteDb {
     }
 
     SqliteDb.indexSqlitePath = getIndexSqlitePath();
-    console.log('debug2 sqlite path', getIndexSqlitePath())
+
     SqliteDb.db = await open({
       filename: SqliteDb.indexSqlitePath,
       driver: sqlite3.Database,
@@ -106,15 +108,24 @@ export class SqliteDb {
     if (!SqliteDb.db) {
       return;
     }
-    await SqliteDb.db.exec('BEGIN EXCLUSIVE;');
-    
+
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await SqliteDb.db.close();
+
       SqliteDb.db = null;
+      SqliteDb.closeRetries = 0;
     } catch (error) {
-      console.error("Error closing SqliteDb database connection:", error);
-      throw error;
+      if (SqliteDb.closeRetries < 3) {
+        console.log(
+          `Error closing SqliteDb database connection... Retrying (${SqliteDb.closeRetries + 1} / 3)`,
+        );
+        SqliteDb.closeRetries = SqliteDb.closeRetries + 1;
+        await SqliteDb.close();
+      } else {
+        console.error("Error closing", error);
+        throw error;
+      }
     }
   }
 }
