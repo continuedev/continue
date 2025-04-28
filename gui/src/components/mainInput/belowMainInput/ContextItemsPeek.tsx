@@ -18,14 +18,15 @@ interface ContextItemsPeekProps {
   isCurrentContextPeek: boolean;
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
   title?: JSX.Element | string;
-  showWhenNoResults?: boolean;
 }
 
 interface ContextItemsPeekItemProps {
   contextItem: ContextItemWithId;
 }
 
-function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
+export function ContextItemsPeekItem({
+  contextItem,
+}: ContextItemsPeekItemProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const isUrl = contextItem.uri?.type === "url";
 
@@ -150,12 +151,11 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   );
 }
 
-function ContextItemsPeek({
+export function ContextItemsPeek({
   contextItems,
   isCurrentContextPeek,
   icon,
   title,
-  showWhenNoResults,
 }: ContextItemsPeekProps) {
   const ctxItems = useMemo(() => {
     return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
@@ -165,11 +165,7 @@ function ContextItemsPeek({
 
   const indicateIsGathering = isCurrentContextPeek && isGatheringContext;
 
-  if (
-    !showWhenNoResults &&
-    (!ctxItems || ctxItems.length === 0) &&
-    !indicateIsGathering
-  ) {
+  if ((!ctxItems || ctxItems.length === 0) && !indicateIsGathering) {
     return null;
   }
 
@@ -198,5 +194,3 @@ function ContextItemsPeek({
     </ToggleDiv>
   );
 }
-
-export default ContextItemsPeek;
