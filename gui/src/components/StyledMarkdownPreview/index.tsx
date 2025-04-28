@@ -221,7 +221,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
         visit(tree, "code", (node: any) => {
           if (!node.lang) {
-            node.lang = "javascript";
+            node.lang = "";
           } else if (node.lang.includes(".")) {
             node.lang = node.lang.split(".").slice(-1)[0];
           }
