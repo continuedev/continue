@@ -5,11 +5,12 @@ import {
   DEFAULT_IGNORE_FILETYPES,
 } from "../indexing/ignore";
 import { walkDir } from "../indexing/walkDir";
-import { getGlobalAssistantsPath } from "../util/paths";
+import { getGlobalFolderWithName } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 import { joinPathsToUri } from "../util/uri";
 
-export const ASSISTANTS_FOLDER = ".continue/assistants";
+export const ASSISTANTS = "assistants";
+export const ASSISTANTS_FOLDER = `.continue/${ASSISTANTS}`;
 
 export function isLocalAssistantFile(uri: string): boolean {
   if (!uri.endsWith(".yaml") && !uri.endsWith(".yml")) {
@@ -20,7 +21,7 @@ export function isLocalAssistantFile(uri: string): boolean {
   return normalizedUri.includes(`/${ASSISTANTS_FOLDER}/`);
 }
 
-export async function getAssistantFilesFromDir(
+export async function listYamlFilesInDir(
   ide: IDE,
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
@@ -53,21 +54,56 @@ export async function getAssistantFilesFromDir(
   }
 }
 
-export async function getAllAssistantFiles(
+export interface LoadAssistantFilesOptions {
+  includeGlobal: boolean;
+  includeWorkspace: boolean;
+}
+
+export function getDotContinueSubDirs(
   ide: IDE,
+  options: LoadAssistantFilesOptions,
+  workspaceDirs: string[],
+  subDirName: string,
+): string[] {
+  let fullDirs: string[] = [];
+
+  // Workspace .continue/<subDirName>
+  if (options.includeWorkspace) {
+    fullDirs = workspaceDirs.map((dir) =>
+      joinPathsToUri(dir, ".continue", subDirName),
+    );
+  }
+
+  // ~/.continue/<subDirName>
+  if (options.includeGlobal) {
+    fullDirs.push(localPathToUri(getGlobalFolderWithName(subDirName)));
+  }
+
+  return fullDirs;
+}
+
+/**
+ * This method searches in both ~/.continue and workspace .continue
+ * for all YAML files in the specified subdirctory, for example .continue/assistants or .continue/prompts
+ */
+export async function getAllDotContinueYamlFiles(
+  ide: IDE,
+  options: LoadAssistantFilesOptions,
+  subDirName: string,
 ): Promise<{ path: string; content: string }[]> {
   const workspaceDirs = await ide.getWorkspaceDirs();
-  let assistantFiles: { path: string; content: string }[] = [];
 
-  let dirsToCheck = [ASSISTANTS_FOLDER];
-  const fullDirs = workspaceDirs
-    .map((dir) => dirsToCheck.map((d) => joinPathsToUri(dir, d)))
-    .flat();
+  // Get all directories to check for assistant files
+  const fullDirs = getDotContinueSubDirs(
+    ide,
+    options,
+    workspaceDirs,
+    subDirName,
+  );
 
-  fullDirs.push(localPathToUri(getGlobalAssistantsPath()));
-
-  assistantFiles = (
-    await Promise.all(fullDirs.map((dir) => getAssistantFilesFromDir(ide, dir)))
+  // Get all assistant files from the directories
+  const assistantFiles = (
+    await Promise.all(fullDirs.map((dir) => listYamlFilesInDir(ide, dir)))
   ).flat();
 
   return await Promise.all(

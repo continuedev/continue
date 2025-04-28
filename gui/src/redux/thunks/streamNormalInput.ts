@@ -1,13 +1,13 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage } from "core";
+import { ChatMessage, LLMFullCompletionOptions } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
+import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
-  selectUseTools,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
@@ -31,27 +31,24 @@ export const streamNormalInput = createAsyncThunk<
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
-    const toolSettings = state.ui.toolSettings;
-    const toolGroupSettings = state.ui.toolGroupSettings;
     const streamAborter = state.session.streamAborter;
-    const useTools = selectUseTools(state);
     if (!selectedChatModel) {
       throw new Error("Default model not defined");
     }
-    const includeTools = useTools && modelSupportsTools(selectedChatModel);
+
+    let completionOptions: LLMFullCompletionOptions = {};
+    const activeTools = selectActiveTools(state);
+    const toolsSupported = modelSupportsTools(selectedChatModel);
+    if (toolsSupported && activeTools.length > 0) {
+      completionOptions = {
+        tools: activeTools,
+      };
+    }
 
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(
       {
-        completionOptions: includeTools
-          ? {
-              tools: state.config.config.tools.filter(
-                (tool) =>
-                  toolSettings[tool.function.name] !== "disabled" &&
-                  toolGroupSettings[tool.group] !== "exclude",
-              ),
-            }
-          : {},
+        completionOptions,
         title: selectedChatModel.title,
         messages,
         legacySlashCommandData,
@@ -105,7 +102,9 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // If it's a tool call that is automatically accepted, we should call it
-    const toolCallState = selectCurrentToolCall(getState());
+    const newState = getState();
+    const toolSettings = newState.ui.toolSettings;
+    const toolCallState = selectCurrentToolCall(newState);
     if (toolCallState) {
       dispatch(
         setToolGenerated({

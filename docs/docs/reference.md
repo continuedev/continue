@@ -32,7 +32,7 @@ Assistants can either explicitly define blocks - see [Properties](#properties) b
 
 ### Using Blocks
 
-Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from https://hub.continue.dev.
+Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
 
@@ -270,19 +270,25 @@ Explicit rules can either be simple text or an object with the following propert
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule
-<!-- `if` -->
-
-Example
+- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
 ```yaml title="config.yaml"
 rules:
+  - Always annotate Python functions with their parameter and return types
+
+  - name: TypeScript best practices
+    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
+    globs: "**/*.{ts,tsx}"
+
+  - name: TypeScript test patterns
+    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
+    globs:
+      - "src/**/*.test.ts"
+      - "tests/**/*.ts"
+
   - uses: myprofile/my-mood-setter
     with:
       TONE: concise
-  - Always annotate Python functions with their parameter and return types
-  - Always write Google style docstrings for functions and classes
-  - name: Server-side components
-    rule: When writing Next.js React components, use server-side components where possible instead of client components.
 ```
 
 ---

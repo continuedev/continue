@@ -32,6 +32,7 @@ interface ToolCallDivProps {
   toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
   output?: ContextItemWithId[];
+  historyIndex: number;
 }
 
 const toolCallIcons: Record<string, ComponentType> = {
@@ -101,6 +102,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       <FunctionSpecificToolCallDiv
         toolCall={props.toolCall}
         toolCallState={props.toolCallState}
+        historyIndex={props.historyIndex}
       />
     </ToolCallDisplay>
   );

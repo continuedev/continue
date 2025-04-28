@@ -21,7 +21,6 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -54,7 +53,6 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
-  activeToolStreamId?: [string, string];
   newestToolbarPreviewForInput: Record<string, string>;
 };
 
@@ -357,7 +355,7 @@ export const sessionSlice = createSlice({
               if (
                 !(
                   toolCallDelta.id &&
-                  toolCallDelta.function?.arguments &&
+                  toolCallDelta.function?.arguments !== undefined &&
                   toolCallDelta.function?.name &&
                   toolCallDelta.type
                 )
@@ -368,19 +366,6 @@ export const sessionSlice = createSlice({
                 );
               }
 
-              if (
-                toolCallDelta.id &&
-                toolCallDelta.function?.name ===
-                  BuiltInToolNames.EditExistingFile
-              ) {
-                const streamId = uuidv4();
-                state.codeBlockApplyStates.states.push({
-                  streamId,
-                  toolCallId: toolCallDelta.id,
-                  status: "streaming",
-                });
-                state.activeToolStreamId = [streamId, toolCallDelta.id];
-              }
               historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
             }
             state.history.push(historyItem);
@@ -660,9 +645,6 @@ export const sessionSlice = createSlice({
         toolCallId: string;
       }>,
     ) => {
-      if (action.payload.toolCallId === state.activeToolStreamId?.[1]) {
-        state.activeToolStreamId = undefined;
-      }
       const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
@@ -677,9 +659,6 @@ export const sessionSlice = createSlice({
         toolCallId: string;
       }>,
     ) => {
-      if (action.payload.toolCallId === state.activeToolStreamId?.[1]) {
-        state.activeToolStreamId = undefined;
-      }
       const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
@@ -694,9 +673,6 @@ export const sessionSlice = createSlice({
         toolCallId: string;
       }>,
     ) => {
-      if (action.payload.toolCallId === state.activeToolStreamId?.[1]) {
-        state.activeToolStreamId = undefined;
-      }
       const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
@@ -768,9 +744,6 @@ export const sessionSlice = createSlice({
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
     },
-    selectUseTools: (state) => {
-      return state.mode === "agent";
-    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -803,6 +776,16 @@ export const selectApplyStateByStreamId = createSelector(
   ],
   (states, streamId) => {
     return states.find((state) => state.streamId === streamId);
+  },
+);
+
+export const selectApplyStateByToolCallId = createSelector(
+  [
+    (state: RootState) => state.session.codeBlockApplyStates.states,
+    (state: RootState, toolCallId?: string) => toolCallId,
+  ],
+  (states, toolCallId) => {
+    return states.find((state) => state.toolCallId === toolCallId);
   },
 );
 
@@ -852,7 +835,6 @@ export const {
   selectCurrentMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
-  selectUseTools,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;
