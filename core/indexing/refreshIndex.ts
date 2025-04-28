@@ -116,9 +116,9 @@ export class SqliteDb {
       SqliteDb.db = null;
       SqliteDb.closeRetries = 0;
     } catch (error) {
-      if (SqliteDb.closeRetries < 3) {
+      if (SqliteDb.closeRetries < 10) {
         console.log(
-          `Error closing SqliteDb database connection... Retrying (${SqliteDb.closeRetries + 1} / 3)`,
+          `Error closing SqliteDb database connection... Retrying (${SqliteDb.closeRetries + 1}/3)`,
         );
         SqliteDb.closeRetries = SqliteDb.closeRetries + 1;
         await SqliteDb.close();
