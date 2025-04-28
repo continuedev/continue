@@ -22,6 +22,11 @@ import * as path from "path";
 import * as os from "os";
 import * as yaml from "js-yaml";
 
+// AssistantChatMessage型の拡張定義
+interface AssistantChatMessage extends ChatMessage {
+  finish_reason?: string; // オプショナルプロパティ
+}
+
 // デバッグログレベルの定義
 enum LogLevel {
   NONE = 0,
@@ -711,7 +716,8 @@ export default class Databricks extends OpenAI {
             }, "basic");
             yield {
               role: "assistant",
-              content: jsonResponse.choices[0].message.content
+              content: jsonResponse.choices[0].message.content,
+              finish_reason: jsonResponse.choices[0].finish_reason || "stop"
             };
           } else if (jsonResponse.content) {
             // 直接コンテンツ形式
@@ -723,7 +729,8 @@ export default class Databricks extends OpenAI {
             if (typeof contentValue === "string") {
               yield {
                 role: "assistant",
-                content: contentValue
+                content: contentValue,
+                finish_reason: "stop"
               };
             } else if (Array.isArray(contentValue)) {
               // 配列形式のコンテンツ（Anthropic形式など）
@@ -732,13 +739,15 @@ export default class Databricks extends OpenAI {
                                  JSON.stringify(contentValue);
               yield {
                 role: "assistant",
-                content: textContent
+                content: textContent,
+                finish_reason: "stop"
               };
             } else {
               // オブジェクト形式（未知の形式）
               yield {
                 role: "assistant",
-                content: "複雑なレスポンス形式: " + JSON.stringify(contentValue)
+                content: "複雑なレスポンス形式: " + JSON.stringify(contentValue),
+                finish_reason: "stop"
               };
             }
           } else if (jsonResponse.completion) {
@@ -748,7 +757,8 @@ export default class Databricks extends OpenAI {
             }, "basic");
             yield {
               role: "assistant",
-              content: jsonResponse.completion
+              content: jsonResponse.completion,
+              finish_reason: jsonResponse.stop_reason || "stop"
             };
           } else if (jsonResponse.message?.content) {
             // 別の形式のOpenAI互換
@@ -757,14 +767,16 @@ export default class Databricks extends OpenAI {
             }, "basic");
             yield {
               role: "assistant",
-              content: jsonResponse.message.content
+              content: jsonResponse.message.content,
+              finish_reason: "stop"
             };
           } else {
             console.log("未知のレスポンス形式:", jsonResponse);
             this.writeDebugLog("未知のレスポンス形式", jsonResponse, "basic");
             yield {
               role: "assistant",
-              content: "Response format not recognized: " + JSON.stringify(jsonResponse)
+              content: "Response format not recognized: " + JSON.stringify(jsonResponse),
+              finish_reason: "stop"
             };
           }
         } catch (e) {
@@ -828,7 +840,8 @@ export default class Databricks extends OpenAI {
               }, "basic");
               out.push({
                 role: "assistant",
-                content: json.choices[0].message.content
+                content: json.choices[0].message.content,
+                finish_reason: json.choices[0].finish_reason || "stop"
               });
               buffer = "";
               return { done: true, messages: out };
@@ -921,7 +934,8 @@ export default class Databricks extends OpenAI {
                 
                 out.push({
                   role: "thinking",
-                  content: newThinkingContent
+                  content: newThinkingContent,
+                  finish_reason: undefined
                 });
               }
             }
@@ -933,7 +947,8 @@ export default class Databricks extends OpenAI {
               }, "detailed");
               out.push({
                 role: "assistant",
-                content: json.delta.text
+                content: json.delta.text,
+                finish_reason: undefined
               });
             }
             // 3. OpenAI形式のデルタ
@@ -944,7 +959,8 @@ export default class Databricks extends OpenAI {
               }, "detailed");
               out.push({
                 role: "assistant",
-                content: json.choices[0].delta.content
+                content: json.choices[0].delta.content,
+                finish_reason: json.choices[0].finish_reason
               });
             }
             // 4. 直接content形式
@@ -955,7 +971,8 @@ export default class Databricks extends OpenAI {
               }, "detailed");
               out.push({
                 role: "assistant",
-                content: json.content
+                content: json.content,
+                finish_reason: json.finish_reason
               });
             }
             // 5. コンテンツ配列を持つ形式
@@ -966,7 +983,8 @@ export default class Databricks extends OpenAI {
               }, "detailed");
               out.push({
                 role: "assistant",
-                content: json.content[0].text
+                content: json.content[0].text,
+                finish_reason: json.finish_reason
               });
             }
             // 6. 直接テキスト形式
@@ -977,7 +995,8 @@ export default class Databricks extends OpenAI {
               }, "detailed");
               out.push({
                 role: "assistant",
-                content: json.text
+                content: json.text,
+                finish_reason: json.finish_reason
               });
             }
             // 7. OpenAI形式のチャンク
@@ -990,7 +1009,8 @@ export default class Databricks extends OpenAI {
                 }, "detailed");
                 out.push({
                   role: "assistant",
-                  content: delta.content
+                  content: delta.content,
+                  finish_reason: json.choices?.[0]?.finish_reason
                 });
               } else {
                 console.log("不明なJSON形式:", json);
@@ -1080,9 +1100,10 @@ export default class Databricks extends OpenAI {
           }, "basic");
           
           for (const m of messages) {
-            this.writeDebugLog("メッセージ生成", { 
+            this.writeDebugLog("UIにメッセージを送信", { 
               role: m.role,
-              contentLength: typeof m.content === 'string' ? m.content.length : 'not-string'
+              contentLength: typeof m.content === 'string' ? m.content.length : 'not-string',
+              finished: end // 終了フラグを含める
             }, "basic");
             yield m;
           }
@@ -1090,6 +1111,14 @@ export default class Databricks extends OpenAI {
           if (end) {
             console.log("ストリーム終了マーカーを検出");
             this.writeDebugLog("ストリーム終了マーカーを検出 - ループを終了します", undefined, "basic");
+            
+            // 明示的に空のメッセージを送信してUIに完了を通知
+            yield {
+              role: "assistant",
+              content: "",
+              finish_reason: "stop"  // 追加：明示的に終了理由を設定
+            } as AssistantChatMessage;
+            
             return;
           }
         }
@@ -1191,9 +1220,10 @@ export default class Databricks extends OpenAI {
             }, "basic");
             
             for (const m of messages) {
-              this.writeDebugLog("メッセージ生成", { 
+              this.writeDebugLog("UIにメッセージを送信", { 
                 role: m.role,
-                contentLength: typeof m.content === 'string' ? m.content.length : 'not-string'
+                contentLength: typeof m.content === 'string' ? m.content.length : 'not-string',
+                finished: done // 終了フラグを含める
               }, "basic");
               yield m;
             }
@@ -1201,6 +1231,14 @@ export default class Databricks extends OpenAI {
             if (done) {
               console.log("ストリーム終了マーカーを検出");
               this.writeDebugLog("ストリーム終了マーカーを検出 - ループを終了します", undefined, "basic");
+              
+              // 明示的に空のメッセージを送信してUIに完了を通知
+              yield {
+                role: "assistant",
+                content: "",
+                finish_reason: "stop"  // 追加：明示的に終了理由を設定
+              } as AssistantChatMessage;
+              
               return;
             }
           } catch (e) {
@@ -1267,15 +1305,17 @@ export default class Databricks extends OpenAI {
           if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
             yield {
               role: "assistant",
-              content: jsonResponse.choices[0].message.content
-            };
+              content: jsonResponse.choices[0].message.content,
+              finish_reason: jsonResponse.choices[0].finish_reason || "stop"
+            } as AssistantChatMessage;
           } else if (jsonResponse.content) {
             yield {
               role: "assistant",
               content: typeof jsonResponse.content === "string" ? 
                 jsonResponse.content : 
-                JSON.stringify(jsonResponse.content)
-            };
+                JSON.stringify(jsonResponse.content),
+              finish_reason: "stop"
+            } as AssistantChatMessage;
           }
         } catch (parseError) {
           console.error("最終解析の試みに失敗:", parseError);
