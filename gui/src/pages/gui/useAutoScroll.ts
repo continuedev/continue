@@ -9,17 +9,6 @@ export const useAutoScroll = (
   useEffect(() => {
     if (history.length) {
       setUserHasScrolled(false);
-      if (ref.current) {
-        // smooth scroll to the bottom of the chat
-        ref.current.style.scrollBehavior = "smooth";
-        ref.current.scrollTop = ref.current.scrollHeight;
-        
-        // use 100 ms delay to scroll to restore the scroll and wait for the chat to be scrolled
-        const timer = setTimeout(() => { 
-          ref.current!.style.scrollBehavior = "auto";
-          clearTimeout(timer);
-        }, 100); 
-      }
     }
   }, [history.length]);
 
