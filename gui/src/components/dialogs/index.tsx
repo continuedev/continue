@@ -6,7 +6,6 @@ import {
   CloseButton,
   VSC_BACKGROUND_VAR,
   defaultBorderRadius,
-  lightGray,
   parseColorForHex,
   vscBackground,
   vscForeground,
@@ -38,7 +37,7 @@ const DialogContainer = styled.div`
   border-radius: ${defaultBorderRadius};
   display: flex;
   flex-direction: column;
-  border: 1px solid ${lightGray};
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   word-wrap: break-word;
 `;
 
