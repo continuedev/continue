@@ -31,8 +31,9 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // Once we have the properties to determine if  `rules-block` is
-  // local vs hub, we can then implement this
+  // Once we have the properties to determine if the `rules-block` is
+  // local vs hub, and what the file URI to that block is,
+  // we can then implement this
   const isLocalRulesBlock = rule.source === "rules-block" && false;
 
   const handleOpen = async () => {
@@ -108,7 +109,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
           <div className="flex flex-row items-start gap-1">
             {isLocalRulesBlock ? (
               <PublishBlockButton
-                blockFilepath={rule.ruleFile}
+                blockFilepath={rule.ruleFile ?? ""}
                 blockType="rules"
               />
             ) : null}
