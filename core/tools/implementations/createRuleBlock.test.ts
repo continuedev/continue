@@ -61,7 +61,7 @@ describe("createRuleBlockImpl", () => {
     // Verify the YAML structure with globs
     const yamlContent = mockIde.writeFile.mock.calls[0][1];
     const parsedYaml = YAML.parse(yamlContent);
-\    expect(parsedYaml.rules[0]).toEqual({
+    expect(parsedYaml.rules[0]).toEqual({
       name: "TypeScript Rule",
       rule: "Use interfaces for object shapes",
       globs: "**/*.{ts,tsx}",
