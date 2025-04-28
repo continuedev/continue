@@ -8,6 +8,7 @@ export const globSearchTool: Tool = {
   isCurrently: 'finding file matches for "{{{ pattern }}}"',
   hasAlready: 'retreived file matches for "{{{ pattern }}}"',
   readonly: true,
+  isInstant: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.FileGlobSearch,

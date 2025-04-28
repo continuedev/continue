@@ -28,7 +28,7 @@ interface AuthContextType {
   login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
-  refreshProfiles: () => void;
+  refreshProfiles: () => Promise<void>;
   organizations: OrganizationDescription[];
 }
 
@@ -85,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               setOrganizations(orgs.filter((org) => org.id === "personal")),
             );
             dispatch(setSelectedOrgId("personal"));
+            setSession(undefined);
           }}
           onCancel={() => {
             dispatch(setDialogMessage(undefined));
@@ -109,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useWebviewListener(
-    "didChangeControlPlaneSessionInfo",
+    "sessionUpdate",
     async (data) => {
       setSession(data.sessionInfo);
     },

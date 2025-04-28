@@ -30,13 +30,17 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
-import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import {
+  selectCurrentToolCall,
+  selectCurrentToolCallApplyState,
+} from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
   newSession,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
+  updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
@@ -47,7 +51,7 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
-import { isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
@@ -57,8 +61,6 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
-import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
-import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { useAutoScroll } from "./useAutoScroll";
 
 const StepsDiv = styled.div`
@@ -131,14 +133,15 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const jetbrains = isJetBrains();
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
     const listener = (e: any) => {
       if (
-        e.key === "Backspace" &&
-        isMetaEquivalentKeyPressed(e) &&
-        !e.shiftKey
+        e.key === "Backspace" && jetbrains
+          ? e.altKey
+          : isMetaEquivalentKeyPressed(e) && !e.shiftKey
       ) {
         dispatch(cancelStream());
       }
@@ -152,6 +155,10 @@ export function Chat() {
 
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
+  );
+
   const sendInput = useCallback(
     (
       editorState: JSONContent,
@@ -162,6 +169,14 @@ export function Chat() {
       if (toolCallState?.status === "generated") {
         return console.error(
           "Cannot submit message while awaiting tool confirmation",
+        );
+      }
+      if (
+        currentToolCallApplyState &&
+        currentToolCallApplyState.status !== "closed"
+      ) {
+        return console.error(
+          "Cannot submit message while awaiting tool call apply",
         );
       }
       if (selectedChatModel?.provider === "free-trial") {
@@ -247,7 +262,6 @@ export function Chat() {
       defaultContextProviders: [],
       availableSlashCommands: [],
       dispatch,
-      selectedModelTitle: selectedChatModel.title,
     });
 
     const prompt = [
@@ -270,6 +284,21 @@ export function Chat() {
       mainTextInputRef.current?.focus?.();
     },
     [mainTextInputRef],
+  );
+
+  // Handle partial tool call output for streaming updates
+  useWebviewListener(
+    "toolCallPartialOutput",
+    async (data) => {
+      // Update tool call output in Redux store
+      dispatch(
+        updateToolCallOutput({
+          toolCallId: data.toolCallId,
+          contextItems: data.contextItems,
+        }),
+      );
+    },
+    [dispatch],
   );
 
   const isLastUserInput = useCallback(
@@ -326,12 +355,8 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? (
-                <ToolOutput
-                  contextItems={item.contextItems}
-                  toolCallId={item.message.toolCallId}
-                />
-              ) : item.message.role === "assistant" &&
+              ) : item.message.role === "tool" ? null : item.message.role === // /> //   toolCallId={item.message.toolCallId} //   contextItems={item.contextItems} // <ToolOutput
+                  "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
@@ -341,6 +366,8 @@ export function Chat() {
                         <ToolCallDiv
                           toolCallState={item.toolCallState!}
                           toolCall={toolCall}
+                          output={history[index + 1]?.contextItems}
+                          historyIndex={index}
                         />
                       </div>
                     );
@@ -394,8 +421,6 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        {toolCallState?.status === "generated" && <ToolCallButtons />}
-
         {isInEditMode && history.length === 0 && <CodeToEditCard />}
 
         {isInEditMode && history.length > 0 ? null : (

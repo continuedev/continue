@@ -1,5 +1,6 @@
 import { ConfigResult } from "@continuedev/config-yaml";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
+import { ControlPlaneSessionInfo } from "../control-plane/client.js";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
@@ -40,4 +41,6 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   getWebviewHistoryLength: [undefined, number];
   getCurrentSessionId: [undefined, string];
   "jetbrains/setColors": [Record<string, string>, void];
+  sessionUpdate: [{ sessionInfo: ControlPlaneSessionInfo | undefined }, void];
+  toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
 };

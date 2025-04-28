@@ -28,6 +28,7 @@ import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
+import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import Inception from "./Inception";
 import Kindo from "./Kindo";
@@ -57,6 +58,7 @@ import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
+import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 
@@ -74,6 +76,7 @@ export const LLMClasses = [
   Together,
   Novita,
   HuggingFaceTGI,
+  HuggingFaceTEIEmbeddingsProvider,
   HuggingFaceInferenceAPI,
   Kindo,
   LlamaCpp,
@@ -110,6 +113,7 @@ export const LLMClasses = [
   Scaleway,
   Relace,
   Inception,
+  Voyage,
 ];
 
 export async function llmFromDescription(

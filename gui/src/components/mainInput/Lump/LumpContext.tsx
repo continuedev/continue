@@ -37,6 +37,8 @@ export function LumpProvider({ children }: LumpProviderProps) {
   const [isToolbarExpanded, setIsToolbarExpanded] = useState(true);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
+  const configError = useAppSelector((store) => store.config.configError);
+
   // Handle keyboard escape
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -70,6 +72,13 @@ export function LumpProvider({ children }: LumpProviderProps) {
       return () => clearTimeout(timeout);
     }
   }, [selectedSection]);
+
+  // Don't allow selection error section if there are no errors
+  useEffect(() => {
+    if (selectedSection === "error" && !configError) {
+      setSelectedSection(null);
+    }
+  }, [selectedSection, configError]);
 
   // Reset when streaming starts
   useEffect(() => {

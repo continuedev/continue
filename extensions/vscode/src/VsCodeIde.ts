@@ -764,10 +764,6 @@ class VsCodeIde implements IDE {
         "pauseCodebaseIndexOnStart",
         false,
       ),
-      // settings.get<boolean>(
-      //   "enableControlServerBeta",
-      //   false,
-      // ),
     };
     return ideSettings;
   }

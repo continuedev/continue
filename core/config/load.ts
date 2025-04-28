@@ -36,7 +36,7 @@ import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index";
-import { MCPManagerSingleton } from "../context/mcp";
+import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
@@ -486,7 +486,7 @@ async function intermediateToFinalConfig({
       const cls = LLMClasses.find((c) => c.providerName === name);
       if (cls) {
         const llmOptions: LLMOptions = {
-          model: params?.model,
+          model: params?.model ?? "UNSPECIFIED",
           ...params,
         };
         return new cls(llmOptions);

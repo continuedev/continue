@@ -3,7 +3,6 @@ node_modules/
 out/
 .vscode-test/
 data/
-src/.buildTimestamp.ts
 src/client
 .continue
 
@@ -26,5 +25,5 @@ e2e/test-continue/*
 !e2e/test-continue/config.json
 e2e/test-continue-yaml/*
 !e2e/test-continue-yaml/config.yaml
-
 config-yaml-schema.json
+src/.buildTimestamp.ts

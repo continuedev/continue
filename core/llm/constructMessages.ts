@@ -3,15 +3,16 @@ import {
   ChatMessage,
   RuleWithSource,
   TextMessagePart,
+  ToolResultChatMessage,
   UserChatMessage,
 } from "../";
 import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
-import { messageIsEmpty } from "./messages";
+import { isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
-  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L8";
+  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
@@ -20,9 +21,9 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 
   When addressing code modification requests, present a concise code snippet that
   emphasizes only the necessary changes and uses abbreviated placeholders for
-  unmodified sections. For instance:
+  unmodified sections. For example:
 
-  \`\`\`typescript /path/to/file
+  \`\`\`language /path/to/file
   // ... rest of code here ...
 
   {{ modified code here }}
@@ -34,6 +35,22 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   // ... rest of code here ...
   \`\`\`
 
+  In existing files, you should always restate the function or class that the snippet belongs to:
+
+  \`\`\`language /path/to/file
+  // ... rest of code here ...
+  
+  function exampleFunction() {
+    // ... rest of code here ...
+    
+    {{ modified code here }}
+    
+    // ... rest of code here ...
+  }
+  
+  // ... rest of code here ...
+  \`\`\`
+
   Since users have access to their complete file, they prefer reading only the
   relevant modifications. It's perfectly acceptable to omit unmodified portions
   at the beginning, middle, or end of files using these "lazy" comments. Only
@@ -41,14 +58,10 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   of changes unless the user specifically asks for code only.
 </important_rules>`;
 
-const CANCELED_TOOL_CALL_MESSAGE =
-  "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
-
 export function constructMessages(
   history: ChatHistoryItem[],
   baseChatSystemMessage: string | undefined,
   rules: RuleWithSource[],
-  modelName: string,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
@@ -76,41 +89,27 @@ export function constructMessages(
         ...historyItem.message,
         content,
       });
-    } else if (historyItem.toolCallState?.status === "canceled") {
-      // Canceled tool call
-      msgs.push({
-        ...historyItem.message,
-        content: CANCELED_TOOL_CALL_MESSAGE,
-      });
     } else {
       msgs.push(historyItem.message);
     }
   }
 
-  const userMessage = findLast(msgs, (msg) => msg.role === "user") as
+  const lastUserMsg = findLast(msgs, isUserOrToolMsg) as
     | UserChatMessage
+    | ToolResultChatMessage
     | undefined;
+
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules,
-    userMessage,
-    currentModel: modelName,
+    userMessage: lastUserMsg,
   });
+
   if (systemMessage.trim()) {
     msgs.unshift({
       role: "system",
       content: systemMessage,
     });
-  }
-
-  // We dispatch an empty assistant chat message to the history on submission. Don't send it
-  const lastMessage = msgs.at(-1);
-  if (
-    lastMessage &&
-    lastMessage.role === "assistant" &&
-    messageIsEmpty(lastMessage)
-  ) {
-    msgs.pop();
   }
 
   // Remove the "id" from all of the messages
