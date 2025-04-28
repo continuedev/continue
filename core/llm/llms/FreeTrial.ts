@@ -20,7 +20,10 @@ class FreeTrial extends BaseLLM {
   private ghAuthToken: string | undefined = undefined;
 
   constructor(options: LLMOptions) {
-    super(options);
+    super({
+      ...options,
+      model: "rerank-2",
+    });
     this.embeddingId = `${this.constructor.name}::${this.model}`;
   }
 
