@@ -1,4 +1,5 @@
 import { longestCommonSubsequence } from "../../util/lcs.js";
+import { SourceFragment } from "../../util/SourceFragment.js";
 import { lineIsRepeated } from "../filtering/streamTransforms/lineStream.js";
 
 import type { ILLM } from "../../index.js";
@@ -103,22 +104,29 @@ export function postprocessCompletion({
     }
   }
 
+  // Granite tends to leak parts of the prefix into the completion result, and
+  // in some cases runs past the suffix. This code truncates the completion at
+  // the suffix and also removes redundant bits of the prefix from the
+  // completion.
   if (llm.model.includes("mercury") || llm.model.includes("granite")) {
-    // Granite tends to repeat the start of the line in the completion output
-    let prefixEnd = prefix.split("\n").pop();
-    if (prefixEnd) {
-      if (completion.startsWith(prefixEnd)) {
-        completion = completion.slice(prefixEnd.length);
-      } else {
-        const trimmedPrefix = prefixEnd.trim();
-        const lastWord = trimmedPrefix.split(/\s+/).pop();
-        if (lastWord && completion.startsWith(lastWord)) {
-          completion = completion.slice(lastWord.length);
-        } else if (completion.startsWith(trimmedPrefix)) {
-          completion = completion.slice(trimmedPrefix.length);
-        }
-      }
-    }
+    const prefixFragment = new SourceFragment(prefix);
+    const suffixFragment = new SourceFragment(suffix);
+    const completionFragment = new SourceFragment(completion);
+
+    const truncatedCompletion = completionFragment.getAsTruncatedFragment({
+      suffix: suffixFragment,
+      ignoreWhitespace: true
+    });
+
+    const remainingCompletion = prefixFragment.getRemainingCompletion(
+      truncatedCompletion,
+      { ignoreWhitespace: true, },
+    );
+
+    if (remainingCompletion)
+      completion = remainingCompletion.getAsText();
+    else
+      completion = truncatedCompletion.getAsText();
   }
 
   // // If completion starts with multiple whitespaces, but the cursor is at the end of the line
