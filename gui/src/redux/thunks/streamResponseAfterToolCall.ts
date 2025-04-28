@@ -65,9 +65,10 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         dispatch(setActive());
 
         const updatedHistory = getState().session.history;
+        const messageMode = getState().session.mode
         const messages = constructMessages(
           [...updatedHistory],
-          selectedChatModel?.baseChatSystemMessage,
+          messageMode === 'agent' ? selectedChatModel?.baseAgentSystemMessage : selectedChatModel?.baseChatSystemMessage,
           state.config.config.rules,
         );
 

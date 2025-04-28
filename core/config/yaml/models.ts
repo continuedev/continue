@@ -61,6 +61,7 @@ async function modelConfigToBaseLLM({
     uniqueId,
     title: model.name,
     promptTemplates: model.promptTemplates,
+    baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage,
     baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),

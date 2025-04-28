@@ -183,7 +183,7 @@ export function RulesSection() {
     // Add a displayed rule for the base system chat message when in chat mode
     if (mode === "chat" || mode === "agent") {
       const baseMessage =
-        config.selectedModelByRole.chat?.baseChatSystemMessage;
+        mode === 'agent' ? config.selectedModelByRole?.chat?.baseAgentSystemMessage :  config.selectedModelByRole.chat?.baseChatSystemMessage;
       if (baseMessage) {
         rules.unshift({
           rule: baseMessage,

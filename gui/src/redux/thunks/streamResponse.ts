@@ -85,9 +85,10 @@ export const streamResponseThunk = createAsyncThunk<
 
         // Construct messages from updated history
         const updatedHistory = getState().session.history;
+        const messageMode = getState().session.mode
         const messages = constructMessages(
           [...updatedHistory],
-          selectedChatModel?.baseChatSystemMessage,
+          messageMode === 'agent' ? selectedChatModel?.baseAgentSystemMessage : selectedChatModel?.baseChatSystemMessage,
           state.config.config.rules,
         );
 
