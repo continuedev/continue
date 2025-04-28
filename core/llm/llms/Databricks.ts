@@ -198,30 +198,38 @@ export default class Databricks extends OpenAI {
     // 問題解決のためのデバッグ変数
     const enableStreaming = false; // ストリーミングを無効にして非同期モードでテスト
     
+    // Determine thinking budget
+    const thinkingBudget = options.reasoningBudgetTokens || 
+                          this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
+                          4000;
+    
+    // Ensure max_tokens is greater than thinking budget
+    const maxTokens = Math.max(
+      options.maxTokens ?? this.modelConfig?.defaultCompletionOptions?.maxTokens ?? 4096,
+      thinkingBudget + 1000 // Add buffer to ensure it's greater than thinking budget
+    );
+    
     // Build parameters object - removing presence_penalty and frequency_penalty as they are not supported
     const finalOptions = {
       model: options.model || this.modelConfig?.model,
       temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
       top_p: options.topP ?? this.modelConfig?.defaultCompletionOptions?.topP ?? 0.95,
       top_k: options.topK ?? this.modelConfig?.defaultCompletionOptions?.topK ?? 100,
-      max_tokens: options.maxTokens ?? this.modelConfig?.defaultCompletionOptions?.maxTokens ?? 4096,
+      max_tokens: maxTokens,
       stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? [],
       stream: enableStreaming && (options.stream ?? this.modelConfig?.defaultCompletionOptions?.stream ?? true)
     };
     
     // 思考モードの設定がある場合、Databricksの思考パラメータを追加
     if (options.reasoning || (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled")) {
-      const budgetTokens = options.reasoningBudgetTokens || 
-        this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
-        4000;
-      
       // Databricksの思考パラメータを追加
       // extra_body形式または直接オブジェクトにプロパティとして追加
       (finalOptions as any).thinking = {
         type: "enabled",
-        budget_tokens: budgetTokens
+        budget_tokens: thinkingBudget
       };
-      console.log("Added thinking parameter with budget:", budgetTokens);
+      console.log("Added thinking parameter with budget:", thinkingBudget);
+      console.log("Ensured max_tokens is greater than thinking budget:", maxTokens);
     }
     
     // Log the final parameters being sent
