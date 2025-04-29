@@ -57,6 +57,7 @@ import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
+import { LLMError } from "./llm";
 import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -671,7 +672,7 @@ export class Core {
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
       try {
-        const ignore = shouldIgnore(filepath, this.ide);
+        const ignore = await shouldIgnore(filepath, this.ide);
         if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
@@ -682,59 +683,44 @@ export class Core {
       }
     });
 
-    on(
-      "tools/call",
-      async ({ data: { toolCall, selectedModelTitle }, messageId }) => {
-        const { config } = await this.configHandler.loadConfig();
-        if (!config) {
-          throw new Error("Config not loaded");
-        }
+    on("tools/call", async ({ data: { toolCall } }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
 
-        const tool = config.tools.find(
-          (t) => t.function.name === toolCall.function.name,
-        );
+      const tool = config.tools.find(
+        (t) => t.function.name === toolCall.function.name,
+      );
 
-        if (!tool) {
-          throw new Error(`Tool ${toolCall.function.name} not found`);
-        }
+      if (!tool) {
+        throw new Error(`Tool ${toolCall.function.name} not found`);
+      }
 
-        if (!config.selectedModelByRole.chat) {
-          throw new Error("No chat model selected");
-        }
+      if (!config.selectedModelByRole.chat) {
+        throw new Error("No chat model selected");
+      }
 
-        // Define a callback for streaming output updates
-        const onPartialOutput = (params: {
-          toolCallId: string;
-          contextItems: ContextItem[];
-        }) => {
-          this.messenger.send("toolCallPartialOutput", params);
-        };
+      // Define a callback for streaming output updates
+      const onPartialOutput = (params: {
+        toolCallId: string;
+        contextItems: ContextItem[];
+      }) => {
+        this.messenger.send("toolCallPartialOutput", params);
+      };
 
-        const contextItems = await callTool(
-          tool,
-          JSON.parse(toolCall.function.arguments || "{}"),
-          {
-            ide: this.ide,
-            llm: config.selectedModelByRole.chat,
-            fetch: (url, init) =>
-              fetchwithRequestOptions(url, init, config.requestOptions),
-            tool,
-            toolCallId: toolCall.id,
-            onPartialOutput,
-          },
-        );
+      return await callTool(tool, toolCall.function.arguments, {
+        ide: this.ide,
+        llm: config.selectedModelByRole.chat,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
+        tool,
+        toolCallId: toolCall.id,
+        onPartialOutput,
+      });
+    });
 
-        if (tool.faviconUrl) {
-          contextItems.forEach((item) => {
-            item.icon = tool.faviconUrl;
-          });
-        }
-
-        return { contextItems };
-      },
-    );
-
-    on("isItemTooBig", async ({ data: { item, selectedModelTitle } }) => {
+    on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
     });
 
@@ -754,19 +740,16 @@ export class Core {
 
   private async isItemTooBig(item: ContextItemWithId) {
     const { config } = await this.configHandler.loadConfig();
-
     if (!config) {
       return false;
     }
-
-    const llm = (await this.configHandler.loadConfig()).config
-      ?.selectedModelByRole.chat;
-
+    
+    const llm = config?.selectedModelByRole.chat;
     if (!llm) {
       throw new Error("No chat model selected");
     }
 
-    const tokens = countTokens(item.content);
+    const tokens = countTokens(item.content, llm.model);
 
     if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
       return true;
@@ -838,7 +821,8 @@ export class Core {
         if (
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
-          uri.endsWith(SYSTEM_PROMPT_DOT_FILE)
+          uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
+          (uri.includes(".continue") && uri.endsWith(".yaml"))
         ) {
           await this.configHandler.reloadConfig();
         } else if (
@@ -932,7 +916,6 @@ export class Core {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
-      selectedModelTitle: string;
     }>,
   ) => {
     const { config } = await this.configHandler.loadConfig();
@@ -1050,25 +1033,23 @@ export class Core {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
-    for await (const update of (await this.codebaseIndexerPromise).refreshDirs(
-      paths,
-      this.indexingCancellationController.signal,
-    )) {
-      let updateToSend = { ...update };
-      // TODO reconsider this status overwrite?
-      // original goal was to not concern users with edge noncritical errors
-      if (update.status === "failed") {
-        updateToSend.status = "done";
-        updateToSend.desc = "Indexing complete";
-        updateToSend.progress = 1.0;
-      }
+    try {
+      for await (const update of (await this.codebaseIndexerPromise).refreshDirs(
+        paths,
+        this.indexingCancellationController.signal,
+      )) {
+        let updateToSend = { ...update };
 
-      void this.messenger.request("indexProgress", updateToSend);
-      this.codebaseIndexingState = updateToSend;
+        void this.messenger.request("indexProgress", updateToSend);
+        this.codebaseIndexingState = updateToSend;
 
-      if (update.status === "failed") {
-        void this.sendIndexingErrorTelemetry(update);
+        if (update.status === "failed") {
+          void this.sendIndexingErrorTelemetry(update);
+        }
       }
+    } catch (e: any) {
+      console.log(`Failed refreshing codebase index directories : ${e}`);
+      this.handleIndexingError(e);
     }
 
     this.messenger.send("refreshSubmenuItems", {
@@ -1086,22 +1067,22 @@ export class Core {
       return;
     }
     this.indexingCancellationController = new AbortController();
-    for await (const update of (await this.codebaseIndexerPromise).refreshFiles(
-      files,
-    )) {
-      let updateToSend = { ...update };
-      if (update.status === "failed") {
-        updateToSend.status = "done";
-        updateToSend.desc = "Indexing complete";
-        updateToSend.progress = 1.0;
-      }
+    try{
+      for await (const update of (await this.codebaseIndexerPromise).refreshFiles(
+        files,
+      )) {
+        let updateToSend = { ...update };
 
-      void this.messenger.request("indexProgress", updateToSend);
-      this.codebaseIndexingState = updateToSend;
+        void this.messenger.request("indexProgress", updateToSend);
+        this.codebaseIndexingState = updateToSend;
 
-      if (update.status === "failed") {
-        void this.sendIndexingErrorTelemetry(update);
+        if (update.status === "failed") {
+          void this.sendIndexingErrorTelemetry(update);
+        }
       }
+    } catch (e: any) {
+      console.log(`Failed refreshing codebase index files : ${e}`);
+      this.handleIndexingError(e);
     }
 
     this.messenger.send("refreshSubmenuItems", {
@@ -1111,4 +1092,19 @@ export class Core {
   }
 
   // private
+  handleIndexingError(e: any) {
+      if (e instanceof LLMError) {
+        // Need to report this specific error to the IDE for special handling
+        this.messenger.request("reportError", e);
+      }
+      // broadcast indexing error
+      let updateToSend: IndexingProgressUpdate = {
+        progress: 0,
+        status: "failed",
+        desc: e.message,
+      };
+      void this.messenger.request("indexProgress", updateToSend);
+      this.codebaseIndexingState = updateToSend;
+      void this.sendIndexingErrorTelemetry(updateToSend);
+  }
 }

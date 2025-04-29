@@ -1,4 +1,8 @@
-import { DataDestination, ModelRole, PromptTemplates } from "@continuedev/config-yaml";
+import {
+  DataDestination,
+  ModelRole,
+  PromptTemplates,
+} from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
@@ -153,6 +157,10 @@ export interface ModelInstaller {
     signal: AbortSignal,
     progressReporter?: (task: string, increment: number, total: number) => void,
   ): Promise<any>;
+
+  isInstallingModel(
+    modelName: string
+  ): Promise<boolean>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -428,6 +436,7 @@ export type ToolStatus =
   | "generating"
   | "generated"
   | "calling"
+  | "errored"
   | "done"
   | "canceled";
 
@@ -1211,6 +1220,7 @@ export type EditStatus =
   | "done";
 
 export type ApplyStateStatus =
+  | "not-started" // Apply state created but not necessarily streaming
   | "streaming" // Changes are being applied to the file
   | "done" // All changes have been applied, awaiting user to accept/reject
   | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
@@ -1501,7 +1511,7 @@ export interface RuleWithSource {
     | "rules-block"
     | "json-systemMessage"
     | ".continuerules";
-  if?: string;
+  globs?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;

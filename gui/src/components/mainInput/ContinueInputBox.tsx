@@ -5,7 +5,7 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import ContextItemsPeek from "./belowMainInput/ContextItemsPeek";
+import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
@@ -100,7 +100,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   const historyKey = props.isEditMode ? "edit" : "chat";
   const placeholder = props.isEditMode
-    ? "Describe how to modify the code - use '#' to add files"
+    ? "Describe changes, '#' to add files"
     : undefined;
 
   const toolbarOptions: ToolbarOptions = props.isEditMode
@@ -114,7 +114,10 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     : {};
 
   return (
-    <div className={`${props.hidden ? "hidden" : ""}`}>
+    <div
+      className={`${props.hidden ? "hidden" : ""}`}
+      data-testid="continue-input-box"
+    >
       <div className={`relative flex flex-col px-2`}>
         {props.isMainInput && <Lump />}
         <GradientBorder

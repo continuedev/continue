@@ -108,7 +108,7 @@ const ModelRoleSelector = ({
               style={{ borderRadius: defaultBorderRadius }}
               className="min-w-40"
             >
-              {models.map((option, idx) => {
+              {[...models].sort((a,b)=>a.title.localeCompare(b.title)).map((option, idx) => {
                 const showMissingApiKeyMsg =
                   option.configurationStatus ===
                   LLMConfigurationStatuses.MISSING_API_KEY;

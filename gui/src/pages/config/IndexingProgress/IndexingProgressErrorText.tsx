@@ -31,7 +31,7 @@ function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
   }
 
   return (
-    <div className="flex items-center gap-2 italic">
+    <div className="flex items-center gap-2 italic text-red-600">
       <XCircleIcon className="h-4 w-4" />
       <span className="leading-relaxed">{update.desc}</span>
     </div>

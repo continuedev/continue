@@ -95,6 +95,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "pixtral",
   "llama3.2",
   "llama-3.2",
+  "llama4"
 ];
 
 function modelSupportsTools(modelDescription: ModelDescription) {
@@ -175,7 +176,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("pplx") ||
     lower.includes("gemini") ||
     lower.includes("grok") ||
-    lower.includes("moonshot")
+    lower.includes("moonshot") ||
+    lower.includes("mercury")
   ) {
     return undefined;
   }

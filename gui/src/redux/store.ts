@@ -1,4 +1,9 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import {
+  combineReducers,
+  configureStore,
+  ThunkDispatch,
+  UnknownAction,
+} from "@reduxjs/toolkit";
 import { createLogger } from "redux-logger";
 import {
   createMigrate,
@@ -107,7 +112,9 @@ const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
   rootReducer,
 );
 
-export function setupStore() {
+export function setupStore(options: { ideMessenger?: IIdeMessenger }) {
+  const ideMessenger = options.ideMessenger ?? new IdeMessenger();
+
   const logger = createLogger({
     // Customize logger options if needed
     collapsed: true, // Collapse console groups by default
@@ -124,7 +131,7 @@ export function setupStore() {
         serializableCheck: false,
         thunk: {
           extraArgument: {
-            ideMessenger: new IdeMessenger(),
+            ideMessenger,
           },
         },
       }),
@@ -133,12 +140,20 @@ export function setupStore() {
   });
 }
 
+export type ThunkExtrasType = { ideMessenger: IIdeMessenger };
+
 export type ThunkApiType = {
   state: RootState;
-  extra: { ideMessenger: IIdeMessenger };
+  extra: ThunkExtrasType;
 };
 
-export const store = setupStore();
+export type AppThunkDispatch = ThunkDispatch<
+  RootState,
+  ThunkExtrasType,
+  UnknownAction
+>;
+
+export const store = setupStore({});
 
 export type RootState = ReturnType<typeof rootReducer>;
 

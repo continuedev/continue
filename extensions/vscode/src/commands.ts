@@ -576,7 +576,7 @@ const getCommandsMap: (
       const range =
         args?.range ?? new vscode.Range(startFromCharZero, endAtCharLast);
 
-      editDecorationManager.setDecoration(editor, range);
+      editDecorationManager.addDecorations(editor, [range]);
 
       const rangeInFileWithContents = getRangeInFileWithContents(true, range);
 
@@ -795,7 +795,7 @@ const getCommandsMap: (
       vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.openConfigPage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/config", true);
+      vscode.commands.executeCommand("continue.navigateTo", "/config", false);
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,

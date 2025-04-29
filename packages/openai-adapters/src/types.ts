@@ -103,6 +103,11 @@ export const JinaConfigSchema = OpenAIConfigSchema.extend({
 });
 export type JinaConfig = z.infer<typeof JinaConfigSchema>;
 
+export const InceptionConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("inception"),
+});
+export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
+
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
@@ -114,5 +119,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   AnthropicConfigSchema,
   JinaConfigSchema,
   MockConfigSchema,
+  InceptionConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

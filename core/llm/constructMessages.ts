@@ -3,16 +3,17 @@ import {
   ChatMessage,
   RuleWithSource,
   TextMessagePart,
+  ToolResultChatMessage,
   UserChatMessage,
 } from "../";
 import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
-import { messageIsEmpty } from "./messages";
+import { isUserOrToolMsg } from "./messages";
 import { filterEnabledRules } from "./rules/filterEnabledRules";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
-  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L8";
+  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
@@ -58,9 +59,6 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   of changes unless the user specifically asks for code only.
 </important_rules>`;
 
-const CANCELED_TOOL_CALL_MESSAGE =
-  "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
-
 export function constructMessages(
   history: ChatHistoryItem[],
   baseChatSystemMessage: string | undefined,
@@ -94,19 +92,14 @@ export function constructMessages(
         ...historyItem.message,
         content,
       });
-    } else if (historyItem.toolCallState?.status === "canceled") {
-      // Canceled tool call
-      msgs.push({
-        ...historyItem.message,
-        content: CANCELED_TOOL_CALL_MESSAGE,
-      });
     } else {
       msgs.push(historyItem.message);
     }
   }
 
-  const userMessage = findLast(msgs, (msg) => msg.role === "user") as
+  const lastUserMsg = findLast(msgs, isUserOrToolMsg) as
     | UserChatMessage
+    | ToolResultChatMessage
     | undefined;
 
   // Get the current state - either from the parameter or from the store
@@ -117,24 +110,15 @@ export function constructMessages(
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules: enabledRulesFiltered,
-    userMessage,
+    userMessage: lastUserMsg,
     currentModel: modelName,
   });
+
   if (systemMessage.trim()) {
     msgs.unshift({
       role: "system",
       content: systemMessage,
     });
-  }
-
-  // We dispatch an empty assistant chat message to the history on submission. Don't send it
-  const lastMessage = msgs.at(-1);
-  if (
-    lastMessage &&
-    lastMessage.role === "assistant" &&
-    messageIsEmpty(lastMessage)
-  ) {
-    msgs.pop();
   }
 
   // Remove the "id" from all of the messages

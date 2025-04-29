@@ -143,6 +143,36 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("mistral", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["mistral"];
+
+    it("should return true for supported models", () => {
+      expect(supportsFn("mistral-large-latest")).toBe(true);
+      expect(supportsFn("mistral-small-latest")).toBe(true);
+      expect(supportsFn("codestral-latest")).toBe(true);
+      expect(supportsFn("ministral-8b-latest")).toBe(true);
+      expect(supportsFn("ministral-3b-latest")).toBe(true);
+      expect(supportsFn("pixtral-12b-2409")).toBe(true);
+      expect(supportsFn("pixtral-large-latest")).toBe(true);
+      expect(supportsFn("open-mistral-nemo")).toBe(true);
+    });
+
+    it("should return false for other unsupported models", () => {
+      expect(supportsFn("mistral-saba-latest")).toBe(false);
+      expect(supportsFn("mistral-embed")).toBe(false);
+      expect(supportsFn("mistral-moderation-latest")).toBe(false);
+      expect(supportsFn("mistral-ocr-latest")).toBe(false);
+      expect(supportsFn("open-codestral-mamba")).toBe(false);
+    });
+
+    it("should handle case insensitivity", () => {
+      expect(supportsFn("MISTRAL-LARGE-LATEST")).toBe(true);
+      expect(supportsFn("CODESTRAL-LATEST")).toBe(true);
+      expect(supportsFn("MINISTRAL-8B-LATEST")).toBe(true);
+      expect(supportsFn("PIXTRAL-12B-2409")).toBe(true);
+    });
+  });
+
   describe("ollama", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["ollama"];
 

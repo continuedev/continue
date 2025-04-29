@@ -10,6 +10,7 @@ import {
   GlobeAltIcon,
   MagnifyingGlassIcon,
   MapIcon,
+  PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -24,13 +25,14 @@ import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/gui/Spinner";
 import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
-import { getToolCallStatusMessage, ToolCallDisplay } from "./ToolCall";
-import ToolOutput from "./ToolOutput";
+import { SimpleToolCallUI } from "./SimpleToolCallUI";
+import { ToolCallDisplay } from "./ToolCall";
 
 interface ToolCallDivProps {
   toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
   output?: ContextItemWithId[];
+  historyIndex: number;
 }
 
 const toolCallIcons: Record<string, ComponentType> = {
@@ -43,23 +45,28 @@ const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.ViewDiff]: CodeBracketIcon,
   [BuiltInToolNames.ViewRepoMap]: MapIcon,
   [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
+  [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
+  // EditExistingFile = "builtin_edit_existing_file",
+  // CreateNewFile = "builtin_create_new_file",
+  // RunTerminalCommand = "builtin_run_terminal_command",
 };
 
-export function ToolCallDiv(props: ToolCallDivProps) {
-  function getIcon(state: ToolStatus) {
-    switch (state) {
-      case "generating":
-      case "calling":
-        return <Spinner />;
-      case "generated":
-        return <ArrowRightIcon color={vscButtonBackground} />;
-      case "done":
-        return <CheckIcon className="text-green-500" />;
-      case "canceled":
-        return <XMarkIcon className="text-red-500" />;
-    }
+function getStatusIcon(state: ToolStatus) {
+  switch (state) {
+    case "generating":
+    case "calling":
+      return <Spinner />;
+    case "generated":
+      return <ArrowRightIcon color={vscButtonBackground} />;
+    case "done":
+      return <CheckIcon className="text-green-500" />;
+    case "canceled":
+    case "errored":
+      return <XMarkIcon className="text-red-500" />;
   }
+}
 
+export function ToolCallDiv(props: ToolCallDivProps) {
   const availableTools = useAppSelector((state) => state.config.config.tools);
   const tool = useMemo(() => {
     return availableTools.find(
@@ -67,23 +74,20 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     );
   }, [availableTools, props.toolCall]);
 
-  const statusMessage = useMemo(() => {
-    return getToolCallStatusMessage(tool, props.toolCallState);
-  }, [props.toolCallState, tool]);
-
   const icon =
     props.toolCall.function?.name &&
-    toolCallIcons[props.toolCall.function?.name];
-  if (icon && props.toolCall.id) {
+    toolCallIcons[props.toolCall.function.name];
+
+  if (icon) {
     return (
-      <div className="ml-4 mt-2">
-        <ToolOutput
-          title={statusMessage}
+      <div className="ml-4 mt-2 flex">
+        <SimpleToolCallUI
+          tool={tool}
+          toolCallState={props.toolCallState}
           icon={
             props.toolCallState.status === "generated" ? ArrowRightIcon : icon
           }
           contextItems={props.output ?? []}
-          toolCallId={props.toolCall.id}
         />
       </div>
     );
@@ -91,13 +95,14 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
   return (
     <ToolCallDisplay
-      icon={getIcon(props.toolCallState.status)}
-      toolCall={props.toolCall}
+      icon={getStatusIcon(props.toolCallState.status)}
+      tool={tool}
       toolCallState={props.toolCallState}
     >
       <FunctionSpecificToolCallDiv
         toolCall={props.toolCall}
         toolCallState={props.toolCallState}
+        historyIndex={props.historyIndex}
       />
     </ToolCallDisplay>
   );
