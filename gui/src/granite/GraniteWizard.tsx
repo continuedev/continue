@@ -455,21 +455,21 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
   const modelOptions: ModelOption[] = [
     {
       key: "large",
-      name: "Large",
-      description: `For machines with ${recommendedMemoryThreshold}GB of ${
+      name: "Large - 8 billion parameters",
+      description: `For machines with ${recommendedMemoryThreshold}\u{200A}GB of ${
         systemInfo && isHighEndApple(systemInfo.gpus)
           ? "system memory"
           : "video memory and a high-performance GPU"
-      }`,
+      }.`,
     },
     {
       key: "small",
-      name: "Small",
-      description: `For machines with less than ${recommendedMemoryThreshold}GB of ${
+      name: "Small - 2 billion parameters",
+      description: `For machines with less than ${recommendedMemoryThreshold}\u{200A}GB of ${
         systemInfo && isHighEndApple(systemInfo.gpus)
           ? "system memory"
           : "video memory and a lower-performance GPU"
-      }`,
+      }. Small models have limited capabilities and are intended for testing only.`,
     },
   ];
 
@@ -478,8 +478,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
       {props.isActive && (
         <div className="mt-4">
           <p className="text-sm text-[--vscode-editor-foreground]">
-            Select which model you want to use. You can change this preference
-            in the settings.
+            Select your preferred model size. You can change this preference in the settings.
           </p>
           <RadioGroup
             value={selectedModel}
@@ -519,11 +518,6 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
                             Not recommended for your machine
                           </p>
                         )}
-                        {option.key === "small" && selectedModel === "small" && (
-                          <p className="text-sm leading-normal text-[--vscode-errorForeground]">
-                            Limited capabilities, for experimentation only
-                          </p>
-                        )}
                       </div>
                     </div>
                   )}
@@ -544,7 +538,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
                 }
                 variant="primary"
               >
-                Download
+                Download Model
               </VSCodeButton>
             )}
             {modelInstallationStatus === "complete" && (
@@ -606,7 +600,7 @@ const StartLocalAIStep: React.FC<StepProps> = (props) => {
       {props.isActive && (
         <div className="mt-4">
           <p className="text-sm text-[--vscode-editor-foreground]">
-            Granite.Code is ready to be used
+            Granite.Code is ready to be used. Try the tutorial to get started.
           </p>
           <VSCodeButton className="mt-4" onClick={handleShowTutorial}>
             Open Tutorial
@@ -821,7 +815,7 @@ const WizardContent: React.FC = () => {
 
   const steps = [
     { component: OllamaInstallStep, title: "Download and install Ollama" },
-    { component: ModelSelectionStep, title: "Download a Granite model" },
+    { component: ModelSelectionStep, title: "Download Granite model" },
     { component: StartLocalAIStep, title: "Start using local AI" },
   ];
 
@@ -833,13 +827,10 @@ const WizardContent: React.FC = () => {
           {/* Left panel with text and steps */}
           <div className="max-w-[600px] flex-1">
             <h2 className="mb-2 text-3xl font-normal text-[--vscode-foreground]">
-              Granite.Code
-            </h2>
-            <h2 className="mb-1 text-2xl font-light text-[--vscode-foreground]">
-              Local AI setup
+              Granite.Code Setup
             </h2>
             <p className="mb-8 text-[--vscode-descriptionForeground]">
-              Follow these simple steps to start using local AI.
+              Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance. For a good experience, 10&#x200A;GB of video memory and a high-performance GPU are required.
             </p>
 
             <div className="space-y-[1px]">
