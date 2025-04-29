@@ -37,11 +37,23 @@ export class AnthropicApi implements BaseLlmApi {
       stop = [oaiBody.stop];
     }
 
+    const systemMessage = oaiBody.messages.find(
+      (msg) => msg.role === "system",
+    )?.content;
+
     const anthropicBody = {
       messages: this._convertMessages(
         oaiBody.messages.filter((msg) => msg.role !== "system"),
       ),
-      system: oaiBody.messages.find((msg) => msg.role === "system")?.content,
+      system: systemMessage
+        ? [
+            {
+              type: "text",
+              text: systemMessage,
+              cache_control: { type: "ephemeral" },
+            },
+          ]
+        : systemMessage,
       top_p: oaiBody.top_p,
       temperature: oaiBody.temperature,
       max_tokens: oaiBody.max_tokens ?? 4096, // max_tokens is required

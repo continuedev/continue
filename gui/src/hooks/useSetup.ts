@@ -10,6 +10,7 @@ import {
   setSelectedProfile,
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
 import {
   selectSelectedChatModel,
   setConfigResult,
@@ -18,12 +19,11 @@ import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   acceptToolCall,
   addContextItemsAtIndex,
-  setInactive,
-  setToolCallOutput,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { streamResponseAfterToolCall } from "../redux/thunks";
+import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
@@ -50,7 +50,6 @@ function useSetup() {
         organizations,
         selectedOrgId,
       } = result;
-
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
@@ -139,7 +138,7 @@ function useSetup() {
   // ON LOAD
   useEffect(() => {
     // Override persisted state
-    dispatch(setInactive());
+    dispatch(cancelStream());
 
     const jetbrains = isJetBrains();
     for (const colorVar of VSC_THEME_COLOR_VARS) {
@@ -224,7 +223,7 @@ function useSetup() {
   );
 
   useWebviewListener("setInactive", async () => {
-    dispatch(setInactive());
+    dispatch(cancelStream());
   });
 
   useWebviewListener("setTTSActive", async (status) => {
@@ -254,34 +253,39 @@ function useSetup() {
     dispatch(updateIndexingStatus(data));
   });
 
-  const activeToolStreamId = useAppSelector(
-    (store) => store.session.activeToolStreamId,
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
   );
   useWebviewListener(
     "updateApplyState",
     async (state) => {
       dispatch(updateApplyState(state));
+
+      // Handle apply status updates that are associated with current tool call
       if (
-        activeToolStreamId &&
-        state.streamId === activeToolStreamId[0] &&
-        state.status === "closed"
+        state.status === "closed" &&
+        currentToolCallApplyState &&
+        currentToolCallApplyState.streamId === state.streamId
       ) {
         // const output: ContextItem = {
         //   name: "Edit tool output",
         //   content: "Completed edit",
         //   description: "",
         // };
-        dispatch(acceptToolCall());
-        dispatch(setToolCallOutput([]));
+        dispatch(
+          acceptToolCall({
+            toolCallId: currentToolCallApplyState.toolCallId!,
+          }),
+        );
+        // dispatch(setToolCallOutput([]));
         dispatch(
           streamResponseAfterToolCall({
-            toolCallId: activeToolStreamId[1],
-            toolOutput: [],
+            toolCallId: currentToolCallApplyState.toolCallId!,
           }),
         );
       }
     },
-    [activeToolStreamId],
+    [currentToolCallApplyState, history],
   );
 }
 

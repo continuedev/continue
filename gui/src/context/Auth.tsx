@@ -28,7 +28,7 @@ interface AuthContextType {
   login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
-  refreshProfiles: () => void;
+  refreshProfiles: () => Promise<void>;
   organizations: OrganizationDescription[];
 }
 

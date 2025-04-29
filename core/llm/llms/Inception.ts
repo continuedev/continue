@@ -18,13 +18,12 @@ import OpenAI from "./OpenAI.js";
 class Inception extends OpenAI {
   static providerName = "inception";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://copenhagen.api.inceptionlabs.ai/v1/",
-    model: "mercury-editor-small-experimental",
+    apiBase: "https://api.inceptionlabs.ai/v1/",
+    model: "mercury-coder-small",
     completionOptions: {
       temperature: 0.0,
-      maxTokens: 150,
       presencePenalty: 1.5,
-      stop: ["\n\n", "\n \n", "<|endoftext|>"],
+      stop: ["<|endoftext|>"],
       model: "mercury-editor-small-experimental", // Added model to fix TypeScript error
     },
   };
@@ -45,13 +44,13 @@ class Inception extends OpenAI {
       body: JSON.stringify({
         model: options.model,
         prompt: prefix,
-        suffix,
-        max_tokens: options.maxTokens,
+        suffix: suffix.trim() === "" ? "<|endoftext|>" : suffix,
+        max_tokens: options.maxTokens ?? 150, // Only want this for /fim, not chat
         temperature: options.temperature,
         top_p: options.topP,
         frequency_penalty: options.frequencyPenalty,
         presence_penalty: options.presencePenalty,
-        stop: options.stop,
+        stop: [...(options.stop ?? []), "\n\n", "\n \n"],
         stream: true,
       }),
       headers: {
@@ -62,6 +61,9 @@ class Inception extends OpenAI {
       signal,
     });
     for await (const chunk of streamSse(resp)) {
+      if (!chunk.choices[0]) {
+        continue;
+      }
       yield chunk.choices[0].text;
     }
   }

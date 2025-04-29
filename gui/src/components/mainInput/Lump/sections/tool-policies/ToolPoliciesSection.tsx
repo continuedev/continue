@@ -59,7 +59,7 @@ export const ToolPoliciesSection = () => {
               size={10}
             />
           </div>
-          <div className="relative flex flex-col p-1">
+          <div className={`relative flex flex-col p-1`}>
             {tools.map((tool) => (
               <ToolPolicyItem
                 key={tool.uri + tool.function.name}
@@ -68,9 +68,6 @@ export const ToolPoliciesSection = () => {
                 excluded={toolGroupSettings[groupName] === "exclude"}
               />
             ))}
-            {toolGroupSettings[groupName] === "exclude" && (
-              <div className="absolute right-0 top-0 h-full w-full cursor-not-allowed"></div>
-            )}
           </div>
         </div>
       ))}
