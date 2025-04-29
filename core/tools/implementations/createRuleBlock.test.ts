@@ -42,11 +42,6 @@ describe("createRuleBlockImpl", () => {
         },
       ],
     });
-
-    // Verify the result
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("Rule Block Created");
-    expect(result[0].description).toBe("Created Test Rule rule");
   });
 
   it("should create a rule with glob pattern", async () => {

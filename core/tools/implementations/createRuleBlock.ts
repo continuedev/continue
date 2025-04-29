@@ -47,7 +47,7 @@ export const createRuleBlockImpl: ToolImpl = async (
 
   return [
     {
-      name: `New Rule Block`,
+      name: "New Rule Block",
       description: "", // No description throws an error in the GUI
       uri: {
         type: "file",
