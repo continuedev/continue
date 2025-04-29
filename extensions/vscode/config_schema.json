@@ -227,6 +227,7 @@
             "function-network",
             "scaleway",
             "relace",
+            "ovhcloud",
             "morph"
           ],
           "markdownEnumDescriptions": [
@@ -275,6 +276,7 @@
             "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings.",
             "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/).",
             "### Relace\n Relace provides a fast apply model. To get started, obtain an API key from [here](https://app.relace.ai/settings/api-keys).",
+            "### OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR. To get started, create an API key on the OVHcloud [AI Endpoints website](https://endpoints.ai.cloud.ovh.net/). For more information, including pricing, visit the OVHcloud [AI Endpoints product page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/).",
             "### Morph\nMorph provides a fast apply model. To get started, obtain an API key from [here](https://morphllm.com/dashboard)."
           ],
           "type": "string"
@@ -510,7 +512,8 @@
                   "nebius",
                   "xAI",
                   "kindo",
-                  "scaleway"
+                  "scaleway",
+                  "ovhcloud"
                 ]
               }
             },
@@ -1389,6 +1392,42 @@
                 ],
                 "markdownDescription": "Select a pre-defined option, or find the exact model string from Scaleway [here](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/).",
                 "x-intellij-html-description": "Select a pre-defined option, or find the exact model string from Scaleway <a href='https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/'>here</a>."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["ovhcloud"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.3-70b",
+                      "qwen2.5-coder-32b",
+                      "codestral-mamba-latest",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "mistral-nemo",
+                      "DeepSeek-R1-Distill-Llama-70B"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find the exact model string from OVHcloud [AI Endpoints catalog](https://endpoints.ai.cloud.ovh.net/catalog).",
+                "x-intellij-html-description": "Select a pre-defined option, or find the exact model string from OVHcloud <a href='https://endpoints.ai.cloud.ovh.net/catalog'>AI Endpoints catalog</a>."
               }
             }
           }
@@ -2779,7 +2818,8 @@
                 "lmstudio",
                 "siliconflow",
                 "function-network",
-                "scaleway"
+                "scaleway",
+                "ovhcloud"
               ]
             },
             "model": {
