@@ -72,6 +72,10 @@
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
           "type": "integer"
         },
+        "numGpu": {
+          "title": "Ollama num_gpu",
+          "description": "Override the number of gpu layers used when loading the model"
+        },
         "reasoning": {
           "title": "Reasoning",
           "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ models",
