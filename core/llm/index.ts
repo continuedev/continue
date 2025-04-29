@@ -71,7 +71,11 @@ export class LLMError extends Error {
 }
 
 export function isModelInstaller(provider: any): provider is ModelInstaller {
-  return provider && typeof provider.installModel === "function" && typeof provider.isInstallingModel === "function";;
+  return (
+    provider &&
+    typeof provider.installModel === "function" &&
+    typeof provider.isInstallingModel === "function"
+  );
 }
 
 type InteractionStatus = "in_progress" | "success" | "error" | "cancelled";
@@ -816,8 +820,8 @@ export abstract class BaseLLM implements ILLM {
     options: LLMFullCompletionOptions = {},
   ) {
     let completion = "";
-    for await (const chunk of this.streamChat(messages, signal, options)) {
-      completion += chunk.content;
+    for await (const message of this.streamChat(messages, signal, options)) {
+      completion += renderChatMessage(message);
     }
     return { role: "assistant" as const, content: completion };
   }

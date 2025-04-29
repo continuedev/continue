@@ -1,7 +1,11 @@
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
-type MockMessage = ChatMessage | "REPEAT_LAST_MSG" | "REPEAT_SYSTEM_MSG";
+type MockMessage =
+  | ChatMessage
+  | "REPEAT_LAST_MSG"
+  | "REPEAT_SYSTEM_MSG"
+  | "ERROR";
 
 class MockLLM extends BaseLLM {
   public completion: string = "Test Completion";
@@ -49,6 +53,8 @@ class MockLLM extends BaseLLM {
                   messages.find((m) => m.role === "system")?.content || "",
               };
               break;
+            case "ERROR":
+              throw new Error("Intentional error");
             default:
               yield message;
           }
