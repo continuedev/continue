@@ -68,7 +68,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     const cleanedTokens = [...tokens].join(" ");
     const trigrams = nlp.string.ngram(cleanedTokens, 3);
 
-    return trigrams;
+    return trigrams.map(this.escapeFtsQueryString);
   }
 
   private escapeFtsQueryString(query: string): string {
@@ -84,9 +84,8 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       return [];
     }
 
-    const tokensRaw = this.getCleanedTrigrams(args.query).join(" OR ");
-    const tokens = this.escapeFtsQueryString(tokensRaw);
-
+    const tokens = this.getCleanedTrigrams(args.query).join(" OR ");
+    
     return await this.ftsIndex.retrieve({
       n,
       text: tokens,

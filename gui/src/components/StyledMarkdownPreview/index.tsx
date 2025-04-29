@@ -126,7 +126,7 @@ interface StyledMarkdownPreviewProps {
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
   disableManualApply?: boolean;
-  singleCodeblockStreamId?: string;
+  forceStreamId?: string;
   expandCodeblocks?: boolean;
 }
 
@@ -195,27 +195,16 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
   const isLastItem = useMemo(() => {
-    return props.itemIndex && props.itemIndex === history.length - 1;
+    return props.itemIndex === history.length - 1;
   }, [history.length, props.itemIndex]);
   const isLastItemRef = useUpdatingRef(isLastItem);
 
-  const isStreaming = useAppSelector((store) => store.session.isStreaming);
-  const isStreamingRef = useUpdatingRef(isStreaming);
-
-  const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
-    [],
-  );
-
+  const codeblockStreamIds = useRef<string[]>([]);
   useEffect(() => {
-    if (props.singleCodeblockStreamId) {
-      codeblockState.current = [
-        {
-          streamId: props.singleCodeblockStreamId,
-          isGenerating: false,
-        },
-      ];
+    if (props.forceStreamId) {
+      codeblockStreamIds.current = [props.forceStreamId];
     }
-  }, [props.singleCodeblockStreamId]);
+  }, [props.forceStreamId, codeblockStreamIds]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -232,7 +221,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
         visit(tree, "code", (node: any) => {
           if (!node.lang) {
-            node.lang = "javascript";
+            node.lang = "";
           } else if (node.lang.includes(".")) {
             node.lang = node.lang.split(".").slice(-1)[0];
           }
@@ -307,19 +296,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
-          const isGeneratingCodeBlock =
-            preChildProps["data-islastcodeblock"] &&
-            isLastItemRef.current &&
-            isStreamingRef.current;
+          const isFinalCodeblock =
+            preChildProps["data-islastcodeblock"] && isLastItemRef.current;
 
-          if (codeblockState.current[codeBlockIndex] === undefined) {
-            codeblockState.current[codeBlockIndex] = {
-              streamId: uuidv4(),
-              isGenerating: isGeneratingCodeBlock,
-            };
-          } else {
-            codeblockState.current[codeBlockIndex].isGenerating =
-              isGeneratingCodeBlock;
+          if (codeblockStreamIds.current[codeBlockIndex] === undefined) {
+            codeblockStreamIds.current[codeBlockIndex] =
+              props.forceStreamId ?? uuidv4();
           }
 
           return (
@@ -328,11 +310,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               codeBlockIndex={codeBlockIndex}
               language={language}
               relativeFilepath={relativeFilePath}
-              isGeneratingCodeBlock={isGeneratingCodeBlock}
+              isFinalCodeblock={isFinalCodeblock}
               range={range}
-              codeBlockStreamId={
-                codeblockState.current[codeBlockIndex].streamId
-              }
+              codeBlockStreamId={codeblockStreamIds.current[codeBlockIndex]}
               expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
             >
