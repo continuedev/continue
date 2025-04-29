@@ -8,33 +8,44 @@ keywords: [config, yaml, configuration, customize, customization]
 
 ## Introduction
 
-Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from [the Hub](https://hub.continue.dev/explore/assistants) or locally
+Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded
+from [the Hub](https://hub.continue.dev/explore/assistants) or locally
 
-- [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to the extension
+- [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to
+  the extension
 - Locally
-  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
+  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`.
+    The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
   - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the **[Migration Guide](./yaml-migration.md)**.
+Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the \* \*[Migration Guide](./yaml-migration.md)\*\*.
 :::
 
 An assistant is made up of:
 
 1. **Top level properties**, which specify the `name`, `version`, and `config.yaml` `schema` for the assistant
-2. **Block lists**, which are composable arrays of coding assistant building blocks available to the assistant, such as models, docs, and context providers.
+2. **Block lists**, which are composable arrays of coding assistant building blocks available to the assistant, such as
+   models, docs, and context providers.
 
-A block is a single standalone building block of a coding assistants, e.g., one model or one documentation source. In `config.yaml` syntax, a block consists of the same top-level properties as assistants (`name`, `version`, and `schema`), but only has **ONE** item under whichever block type it is.
+A block is a single standalone building block of a coding assistants, e.g., one model or one documentation source. In
+`config.yaml` syntax, a block consists of the same top-level properties as assistants (`name`, `version`, and `schema`),
+but only has **ONE** item under whichever block type it is.
 
 Examples of blocks and assistants can be found on the [Continue hub](https://hub.continue.dev/explore/assistants).
 
-Assistants can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
+Assistants can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing
+hub blocks.
 
 ### Using Blocks
 
-Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from [https://hub.continue.dev](https://hub.continue.dev).
+Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner
+can be a user or organization (For example, if you want to use
+the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks
+are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 
-Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
+Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other
+`uses` clauses or explicit blocks of that type.
 
 :::info
 Note that local assistants cannot use blocks that require organization-level secrets.
@@ -51,7 +62,9 @@ models:
 
 ### Local Blocks
 
-It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
+It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of
+your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home
+directory at `~/.continue` (these will automatically be applied globally).
 
 Place your YAML files in the following folders:
 
@@ -69,11 +82,13 @@ Blocks:
 - `.continue/data` - for data
 - `.continue/mcpServers` - for MCP Servers
 
-You can find many examples of each of these block types on the [Continue Explore Page](https://hub.continue.dev/explore/models)
+You can find many examples of each of these block types on
+the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
 ### Inputs
 
-Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
+Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use
+mustache templating as follows:
 
 ```yaml title="Block config.yaml"
 name: myprofile/custom-model
@@ -157,7 +172,8 @@ The `schema` property specifies the schema version used for the `config.yaml`, e
 
 ### `models`
 
-The `models` section defines the language models used in your configuration. Models are used for functionalities such as chat, editing, and summarizing.
+The `models` section defines the language models used in your configuration. Models are used for functionalities such as
+chat, editing, and summarizing.
 
 **Properties:**
 
@@ -165,9 +181,16 @@ The `models` section defines the language models used in your configuration. Mod
 - `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 - `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
 - `apiBase`: Can be used to override the default API base that is specified per model
-- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
-- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
-- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chatTemplate`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [`apply`](./customize/model-roles/apply.mdx#prompt-templating) and [`autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a valid template name, such as `llama3` or `anthropic`.
+- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`,
+  `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is
+  not currently used.
+- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on
+  provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
+  `chat`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [
+  `apply`](./customize/model-roles/apply.mdx#prompt-templating) and [
+  `autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a
+  valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   - `baseSystemMessage`: Can be used to override the default system prompt.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
@@ -233,7 +256,8 @@ models:
 
 ### `context`
 
-The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
+The `context` section defines context providers, which supply additional information or context to the language models.
+Each context provider can be configured with specific parameters.
 
 More information about usage/params for each context provider can be found [here](/customize/context-providers.mdx)
 
@@ -266,13 +290,17 @@ context:
 
 ### `rules`
 
-List of rules that the LLM should follow. These are concatenated into the system message for all [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Agent](./agent/how-to-use-it.md) requests. See the [rules deep dive](./customize/deep-dives/rules.md) for details.
+List of rules that the LLM should follow. These are concatenated into the system message for
+all [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Agent](./agent/how-to-use-it.md) requests.
+See the [rules deep dive](./customize/deep-dives/rules.md) for details.
 
 Explicit rules can either be simple text or an object with the following properties:
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule
-- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
+- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This
+  can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g.,
+  `["src/**/*.ts", "tests/**/*.ts"]`).
 
 ```yaml title="config.yaml"
 rules:
@@ -297,7 +325,8 @@ rules:
 
 ### `prompts`
 
-A list of custom prompts that can be invoked from the chat window. Each prompt has a name, description, and the actual prompt text.
+A list of custom prompts that can be invoked from the chat window. Each prompt has a name, description, and the actual
+prompt text.
 
 ```yaml title="config.yaml"
 prompts:
@@ -320,7 +349,9 @@ List of documentation sites to index.
 
 - `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
+
 <!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+
 - `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
 - `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
@@ -340,7 +371,8 @@ docs:
 
 <!-- TODO is this correct? -->
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider.
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify
+prompts, context, and tool use. Continue supports any MCP server with the MCP context provider.
 
 **Properties:**
 
@@ -373,7 +405,8 @@ Destinations to which [development data](./customize/deep-dives/development-data
   - a file URL to a directory in which events will be dumpted to `.jsonl` files
 - `schema` (**required**): the schema version of the JSON blobs to be sent
 - `events`: an array of event names to include. Defaults to all events if not specified.
-- `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file contents, prompts, and completions. Defaults to `all`
+- `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file
+  contents, prompts, and completions. Defaults to `all`
 - `apiKey`: api key to be sent with request (Bearer header)
 - `requestOptions`: Options for event POST requests. Same format as [model requestOptions](#models).
 

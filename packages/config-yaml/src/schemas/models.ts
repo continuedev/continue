@@ -55,7 +55,7 @@ export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 export const cacheBehaviorSchema = z.object({
   cacheSystemMessage: z.boolean().optional(),
   cacheConversation: z.boolean().optional(),
-})
+});
 export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
 
 export const embedOptionsSchema = z.object({
@@ -92,9 +92,9 @@ const templateSchema = z.enum([
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
-  chatTemplate: templateSchema.optional(),
+  chat: templateSchema.optional(),
   edit: z.string().optional(),
-  autocomplete: z.string().optional()
+  autocomplete: z.string().optional(),
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 

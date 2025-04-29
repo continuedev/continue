@@ -10,7 +10,7 @@ import fetch, { RequestInit, Response } from "node-fetch";
 
 const { http, https } = (followRedirects as any).default;
 
-export function fetchwithRequestOptions(
+export async function fetchwithRequestOptions(
   url_: URL | string,
   init?: RequestInit,
   requestOptions?: RequestOptions,
@@ -107,12 +107,19 @@ export function fetchwithRequestOptions(
   }
 
   // fetch the request with the provided options
-  const resp = fetch(url, {
+  const resp = await fetch(url, {
     ...init,
     body: updatedBody ?? init?.body,
     headers: headers,
     agent: agent,
   });
+
+  if (!resp.ok) {
+    const requestId = resp.headers.get("x-request-id");
+    if (requestId) {
+      console.log(`Request ID: ${requestId}, Status: ${resp.status}`);
+    }
+  }
 
   return resp;
 }
