@@ -144,4 +144,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  deepseek: (model) => {
+    if(model !== "deepseek-reasoner") {
+      return true;
+    }
+  }
 };
