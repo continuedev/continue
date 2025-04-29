@@ -1,6 +1,11 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
-import { MCPOptions, MCPServerStatus } from "../..";
+import {
+  MCPOptions,
+  MCPServerStatus,
+  StdioOptions,
+  TransportOptions,
+} from "../..";
 import MCPConnection from "./MCPConnection";
 
 export class MCPManagerSingleton {
@@ -48,7 +53,17 @@ export class MCPManagerSingleton {
 
     // Remove any connections that are no longer in config
     Array.from(this.connections.entries()).forEach(([id, connection]) => {
-      if (!servers.find((s) => s.id === id)) {
+      if (
+        !servers.find(
+          // Refresh the connection if TransportOptions changed
+          (s) =>
+            s.id === id &&
+            this.compareTransportOptions(
+              connection.options.transport,
+              s.transport,
+            ),
+        )
+      ) {
         refresh = true;
         connection.abortController.abort();
         void connection.client.close();
@@ -61,6 +76,12 @@ export class MCPManagerSingleton {
       if (!this.connections.has(server.id)) {
         refresh = true;
         this.connections.set(server.id, new MCPConnection(server));
+      } else {
+        const conn = this.connections.get(server.id);
+        if (conn) {
+          // We need to update it. Some attributes may have changed, such as name, faviconUrl, etc.
+          conn.options = server;
+        }
       }
     });
 
@@ -68,6 +89,37 @@ export class MCPManagerSingleton {
     if (refresh) {
       void this.refreshConnections(forceRefresh);
     }
+  }
+
+  private compareTransportOptions(
+    a: TransportOptions,
+    b: TransportOptions,
+  ): boolean {
+    if (a.type !== b.type) {
+      return false;
+    }
+    if (a.type === "stdio" && b.type === "stdio") {
+      return (
+        a.command === b.command &&
+        JSON.stringify(a.args) === JSON.stringify(b.args) &&
+        this.compareEnv(a, b)
+      );
+    } else if (a.type !== "stdio" && b.type !== "stdio") {
+      return a.url === b.url;
+    }
+    return false;
+  }
+
+  private compareEnv(a: StdioOptions, b: StdioOptions): boolean {
+    const aEnv = a.env ?? {};
+    const bEnv = b.env ?? {};
+    const aKeys = Object.keys(aEnv);
+    const bKeys = Object.keys(bEnv);
+
+    return (
+      aKeys.length === bKeys.length &&
+      aKeys.every((key) => aEnv[key] === bEnv[key])
+    );
   }
 
   async refreshConnection(serverId: string) {
