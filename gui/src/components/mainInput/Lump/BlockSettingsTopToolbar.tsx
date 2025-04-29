@@ -75,6 +75,7 @@ function BlockSettingsToolbarIcon(
 
   const id = `block-settings-toolbar-icon-${props.sectionId}`;
   return (
+
     <>
       <HoverItem
         px={0}
@@ -122,6 +123,7 @@ function BlockSettingsToolbarIcon(
             </span>
           </div>
         </div>
+
       </HoverItem>
       <ToolTip delayShow={700} id={id}>
         {props.tooltip}
@@ -160,9 +162,7 @@ export function BlockSettingsTopToolbar() {
           <BlockSettingsToolbarIcon
             className="-ml-1.5"
             icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-            tooltip={
-              isToolbarExpanded ? "Collapse sections" : "Expand sections"
-            }
+            tooltip={isToolbarExpanded ? "Collapse Toolbar" : "Expand Toolbar"}
             title=""
             isSelected={false}
             onClick={handleEllipsisClick}
@@ -190,8 +190,13 @@ export function BlockSettingsTopToolbar() {
           </div>
         </div>
       </div>
-      <div className="flex">
-        <AssistantSelect />
+      <div className="flex gap-0.5">
+        <HoverItem data-tooltip-id="assistant-select-tooltip">
+          <AssistantSelect />
+          <ToolTip id="assistant-select-tooltip" place="top">
+            Select Assistant
+          </ToolTip>
+        </HoverItem>
       </div>
     </div>
   );
