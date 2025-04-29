@@ -22,6 +22,7 @@ import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { handleLLMError } from "../util/errorHandling";
 import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
@@ -237,11 +238,11 @@ export class VsCodeMessenger {
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
-        return await this.inProcessMessenger.externalRequest(
-          messageType,
-          msg.data,
-          msg.messageId,
-        );
+          return await this.inProcessMessenger.externalRequest(
+            messageType,
+            msg.data,
+            msg.messageId,
+          );
       });
     });
 
@@ -409,6 +410,10 @@ export class VsCodeMessenger {
 
     this.onWebviewOrCore("getUniqueId", async (msg) => {
       return await ide.getUniqueId();
+    });
+
+    this.onWebviewOrCore("reportError", async (msg) => {
+      handleLLMError(msg.data);
     });
   }
 }

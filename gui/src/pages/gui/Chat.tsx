@@ -30,7 +30,10 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
-import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import {
+  selectCurrentToolCall,
+  selectCurrentToolCallApplyState,
+} from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
@@ -152,6 +155,10 @@ export function Chat() {
 
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
+  );
+
   const sendInput = useCallback(
     (
       editorState: JSONContent,
@@ -162,6 +169,14 @@ export function Chat() {
       if (toolCallState?.status === "generated") {
         return console.error(
           "Cannot submit message while awaiting tool confirmation",
+        );
+      }
+      if (
+        currentToolCallApplyState &&
+        currentToolCallApplyState.status !== "closed"
+      ) {
+        return console.error(
+          "Cannot submit message while awaiting tool call apply",
         );
       }
       if (selectedChatModel?.provider === "free-trial") {
@@ -352,6 +367,7 @@ export function Chat() {
                           toolCallState={item.toolCallState!}
                           toolCall={toolCall}
                           output={history[index + 1]?.contextItems}
+                          historyIndex={index}
                         />
                       </div>
                     );

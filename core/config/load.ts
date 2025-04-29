@@ -486,7 +486,7 @@ async function intermediateToFinalConfig({
       const cls = LLMClasses.find((c) => c.providerName === name);
       if (cls) {
         const llmOptions: LLMOptions = {
-          model: params?.model,
+          model: params?.model ?? "UNSPECIFIED",
           ...params,
         };
         return new cls(llmOptions);
