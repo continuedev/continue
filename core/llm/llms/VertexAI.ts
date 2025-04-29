@@ -64,8 +64,8 @@ class VertexAI extends BaseLLM {
 
   async fetch(url: RequestInfo | URL, init?: RequestInit) {
     const client = await this.clientPromise;
-    const { token } = await client.getAccessToken();
-    if (!token) {
+    const result = await client?.getAccessToken();
+    if (!result?.token) {
       throw new Error(
         "Could not get an access token. Set up your Google Application Default Credentials.",
       );
@@ -74,7 +74,7 @@ class VertexAI extends BaseLLM {
       ...init,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${result.token}`,
         ...init?.headers,
       },
     });
@@ -374,8 +374,8 @@ class VertexAI extends BaseLLM {
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
     const client = await this.clientPromise;
-    const { token } = await client.getAccessToken();
-    if (!token) {
+    const result = await client?.getAccessToken();
+    if (!result?.token) {
       throw new Error(
         "Could not get an access token. Set up your Google Application Default Credentials.",
       );
@@ -390,7 +390,7 @@ class VertexAI extends BaseLLM {
         }),
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${result.token}`,
         },
       },
     );
