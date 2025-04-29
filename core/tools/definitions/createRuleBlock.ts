@@ -13,9 +13,7 @@ export const createRuleBlock: Tool = {
   function: {
     name: BuiltInToolNames.CreateRuleBlock,
     description:
-      "Creates a persistent rule that applies to all future conversations. " +
-      "Use for establishing ongoing code standards or preferences (e.g. 'use named exports', 'follow Google docstrings'). " +
-      "Not for one-time instructions. Rules are stored as YAML in `.continue/rules`.",
+      "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently.",
     parameters: {
       type: "object",
       required: ["name", "rule"],

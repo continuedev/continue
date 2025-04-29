@@ -10,6 +10,7 @@ import {
   GlobeAltIcon,
   MagnifyingGlassIcon,
   MapIcon,
+  PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -44,6 +45,7 @@ const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.ViewDiff]: CodeBracketIcon,
   [BuiltInToolNames.ViewRepoMap]: MapIcon,
   [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
+  [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
 };
 
 export function ToolCallDiv(props: ToolCallDivProps) {

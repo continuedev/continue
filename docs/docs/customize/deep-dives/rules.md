@@ -20,7 +20,7 @@ To form the system message, rules are joined with new lines, in the order they a
 Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
 
 :::info Automatically create local rule blocks
-When in Agent mode, you can simply prompt the agent to create a rule for you.
+When in Agent mode, you can simply prompt the agent to create a rule for you using the `builtin_create_rule_block` tool if enabled.
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::

@@ -47,9 +47,13 @@ export const createRuleBlockImpl: ToolImpl = async (
 
   return [
     {
-      name: "Rule Block Created",
-      description: `Created ${args.name} rule`,
-      content: ruleYaml,
+      name: `New Rule Block`,
+      description: "", // No description throws an error in the GUI
+      uri: {
+        type: "file",
+        value: rulesDirUri,
+      },
+      content: "Rule created successfully",
     },
   ];
 };
