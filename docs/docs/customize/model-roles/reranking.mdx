@@ -154,3 +154,47 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
     ```
     </TabItem>
 </Tabs>
+
+### Llama.cpp
+
+Llama.cpp now supports reranking models, allowing you to run rerankers locally. This is useful for environments where you need privacy or can't use cloud-based reranking services.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: BGE reranker model
+      provider: llama.cpp
+      model: bge-reranker-v2-m3-q8_0
+      apiBase: http://127.0.0.1:8012/
+      roles:
+        - rerank
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "llama.cpp",
+      "params": {
+        "model": "bge-reranker-v2-m3-q8_0",
+        "apiBase": "http://127.0.0.1:8012/"
+      }
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+To use llama.cpp as a reranker, you need to:
+
+1. Download a compatible reranker model in GGUF format (e.g., `bge-reranker-v2-m3-q8_0.gguf`)
+2. Start the llama.cpp server with reranking enabled:
+
+```sh
+llama-server -m ./bge-reranker-v2-m3-q8_0.gguf -c 65536 -np 8 -b 8192 -ub 8192 -fa --host 127.0.0.1 --port 8012 -lv 1 --reranking --pooling rank
+```
+
+Key parameters:
+- `--reranking`: Enable reranking mode
+- `--pooling rank`: Use the rank pooling strategy (required for rerankers)
