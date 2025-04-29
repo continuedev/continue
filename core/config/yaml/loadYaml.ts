@@ -1,29 +1,31 @@
-import fs from "node:fs";
-
 import {
   AssistantUnrolled,
+  BLOCK_TYPES,
   ConfigResult,
   ConfigValidationError,
-  FQSN,
   isAssistantUnrolledNonNullable,
+  MCPServer,
   ModelRole,
-  PlatformClient,
+  PackageIdentifier,
   RegistryClient,
-  SecretResult,
-  unrollAssistantFromContent,
+  Rule,
+  unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
+import { dirname } from "node:path";
 
 import {
   ContinueConfig,
+  ExperimentalMCPOptions,
   IContextProvider,
   IDE,
   IdeInfo,
   IdeSettings,
   ILLMLogger,
+  RuleWithSource,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
-import { MCPManagerSingleton } from "../../context/mcp";
+import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
@@ -35,60 +37,108 @@ import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandF
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { allTools } from "../../tools";
 import { GlobalContext } from "../../util/GlobalContext";
-import { getConfigYamlPath } from "../../util/paths";
-import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
-import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { logger } from "../../util/logger";
+import { getCleanUriPath } from "../../util/uri";
+import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
+import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
 
-export class LocalPlatformClient implements PlatformClient {
-  constructor(
-    private orgScopeId: string | null,
-    private readonly client: ControlPlaneClient,
-  ) {}
-
-  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
-    if (fqsns.length === 0) {
-      return [];
-    }
-
-    const response = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
-    return response;
+function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
+  if (typeof rule === "string") {
+    return {
+      rule: rule,
+      source: "rules-block",
+    };
+  } else {
+    return {
+      source: "rules-block",
+      rule: rule.rule,
+      globs: rule.globs,
+      name: rule.name,
+    };
   }
 }
 
-async function loadConfigYaml(
-  rawYaml: string,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  controlPlaneClient: ControlPlaneClient,
-  orgScopeId: string | null,
-  ideSettings: IdeSettings,
-): Promise<ConfigResult<AssistantUnrolled>> {
+function convertYamlMcpToContinueMcp(
+  server: MCPServer,
+): ExperimentalMCPOptions {
+  return {
+    transport: {
+      type: "stdio",
+      command: server.command,
+      args: server.args ?? [],
+      env: server.env,
+    },
+  };
+}
+
+async function loadConfigYaml(options: {
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  controlPlaneClient: ControlPlaneClient;
+  orgScopeId: string | null;
+  ideSettings: IdeSettings;
+  ide: IDE;
+  packageIdentifier: PackageIdentifier;
+}): Promise<ConfigResult<AssistantUnrolled>> {
+  const {
+    overrideConfigYaml,
+    controlPlaneClient,
+    orgScopeId,
+    ideSettings,
+    ide,
+    packageIdentifier,
+  } = options;
+
+  // Add local .continue blocks
+  const allLocalBlocks: PackageIdentifier[] = [];
+  for (const blockType of BLOCK_TYPES) {
+    const localBlocks = await getAllDotContinueYamlFiles(
+      ide,
+      { includeGlobal: true, includeWorkspace: true },
+      blockType,
+    );
+    allLocalBlocks.push(
+      ...localBlocks.map((b) => ({
+        uriType: "file" as const,
+        filePath: b.path,
+      })),
+    );
+  }
+
+  const rootPath =
+    packageIdentifier.uriType === "file"
+      ? dirname(getCleanUriPath(packageIdentifier.filePath))
+      : undefined;
+
+  logger.info(
+    `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
+  );
+
   let config =
     overrideConfigYaml ??
     // This is how we allow use of blocks locally
-    (await unrollAssistantFromContent(
-      {
-        ownerSlug: "",
-        packageSlug: "",
-        versionSlug: "",
-      },
-      rawYaml,
-      new RegistryClient(
-        await controlPlaneClient.getAccessToken(),
-        getControlPlaneEnvSync(
-          ideSettings.continueTestEnvironment,
-          ideSettings.enableControlServerBeta,
-        ).CONTROL_PLANE_URL,
-      ),
+    (await unrollAssistant(
+      packageIdentifier,
+      new RegistryClient({
+        accessToken: await controlPlaneClient.getAccessToken(),
+        apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
+          .CONTROL_PLANE_URL,
+        rootPath,
+      }),
       {
         currentUserSlug: "",
         onPremProxyUrl: null,
         orgScopeId,
-        platformClient: new LocalPlatformClient(orgScopeId, controlPlaneClient),
+        platformClient: new LocalPlatformClient(
+          orgScopeId,
+          controlPlaneClient,
+          ide,
+        ),
         renderSecrets: true,
+        injectBlocks: allLocalBlocks,
       },
     ));
 
@@ -117,32 +167,33 @@ async function loadConfigYaml(
   };
 }
 
-async function configYamlToContinueConfig({
-  config,
-  ide,
-  ideSettings,
-  ideInfo,
-  uniqueId,
-  llmLogger,
-  platformConfigMetadata,
-  allowFreeTrial = true,
-}: {
+async function configYamlToContinueConfig(options: {
   config: AssistantUnrolled;
   ide: IDE;
   ideSettings: IdeSettings;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
-  allowFreeTrial: boolean;
+  workOsAccessToken: string | undefined;
+  allowFreeTrial?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+  let {
+    config,
+    ide,
+    ideSettings,
+    ideInfo,
+    uniqueId,
+    llmLogger,
+    allowFreeTrial,
+  } = options;
+  allowFreeTrial = allowFreeTrial ?? true;
+
   const localErrors: ConfigValidationError[] = [];
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
     tools: [...allTools],
     mcpServerStatuses: [],
-    systemMessage: config.rules?.join("\n"),
     contextProviders: [],
     modelsByRole: {
       chat: [],
@@ -162,6 +213,7 @@ async function configYamlToContinueConfig({
       rerank: null,
       summarize: null,
     },
+    rules: [],
   };
 
   // Right now, if there are any missing packages in the config, then we will just throw an error
@@ -177,8 +229,11 @@ async function configYamlToContinueConfig({
     };
   }
 
+  for (const rule of config.rules ?? []) {
+    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+  }
+
   continueConfig.data = config.data;
-  continueConfig.rules = config.rules;
   continueConfig.docs = config.docs?.map((doc) => ({
     title: doc.name,
     startUrl: doc.startUrl,
@@ -186,21 +241,16 @@ async function configYamlToContinueConfig({
     faviconUrl: doc.faviconUrl,
   }));
   continueConfig.experimental = {
-    modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
-      transport: {
-        type: "stdio",
-        command: mcpServer.command,
-        args: mcpServer.args ?? [],
-        env: mcpServer.env,
-      },
-    })),
+    modelContextProtocolServers: config.mcpServers?.map(
+      convertYamlMcpToContinueMcp,
+    ),
   };
 
   // Prompt files -
   try {
     const promptFiles = await getAllPromptFiles(ide, undefined, true);
 
-    for (const file of promptFiles) {
+    promptFiles.forEach((file) => {
       try {
         const slashCommand = slashCommandFromPromptFileV1(
           file.path,
@@ -215,7 +265,7 @@ async function configYamlToContinueConfig({
           message: `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`,
         });
       }
-    }
+    });
   } catch (e) {
     localErrors.push({
       fatal: false,
@@ -236,9 +286,9 @@ async function configYamlToContinueConfig({
   });
 
   // Models
-  const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
+  const defaultModelRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
+    model.roles = model.roles ?? defaultModelRoles; // Default to all 4 chat-esque roles if not specified
     try {
       const llms = await llmsFromModelConfig({
         model,
@@ -246,7 +296,6 @@ async function configYamlToContinueConfig({
         uniqueId,
         ideSettings,
         llmLogger,
-        platformConfigMetadata,
         config: continueConfig,
       });
 
@@ -366,7 +415,10 @@ async function configYamlToContinueConfig({
         }
         return undefined;
       }
-      const instance: IContextProvider = new cls(context.params ?? {});
+      const instance: IContextProvider = new cls({
+        name: context.name,
+        ...context.params,
+      });
       return instance;
     })
     .filter((p) => !!p) ?? []) as IContextProvider[];
@@ -399,46 +451,39 @@ async function configYamlToContinueConfig({
   return { config: continueConfig, errors: localErrors };
 }
 
-export async function loadContinueConfigFromYaml({
-  ide,
-  ideSettings,
-  ideInfo,
-  uniqueId,
-  llmLogger,
-  // workOsAccessToken,
-  overrideConfigYaml,
-  platformConfigMetadata,
-  controlPlaneClient,
-  configYamlPath,
-  orgScopeId,
-}: {
+export async function loadContinueConfigFromYaml(options: {
   ide: IDE;
   ideSettings: IdeSettings;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  // workOsAccessToken: string | undefined;
+  workOsAccessToken: string | undefined;
   overrideConfigYaml: AssistantUnrolled | undefined;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
   controlPlaneClient: ControlPlaneClient;
-  configYamlPath: string | undefined;
   orgScopeId: string | null;
+  packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<ContinueConfig>> {
-  const rawYaml =
-    overrideConfigYaml === undefined
-      ? fs.readFileSync(
-          configYamlPath ?? getConfigYamlPath(ideInfo.ideType),
-          "utf-8",
-        )
-      : "";
+  const {
+    ide,
+    ideSettings,
+    ideInfo,
+    uniqueId,
+    llmLogger,
+    workOsAccessToken,
+    overrideConfigYaml,
+    controlPlaneClient,
+    orgScopeId,
+    packageIdentifier,
+  } = options;
 
-  const configYamlResult = await loadConfigYaml(
-    rawYaml,
+  const configYamlResult = await loadConfigYaml({
     overrideConfigYaml,
     controlPlaneClient,
     orgScopeId,
     ideSettings,
-  );
+    ide,
+    packageIdentifier,
+  });
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
     return {
@@ -456,25 +501,8 @@ export async function loadContinueConfigFromYaml({
       ideInfo,
       uniqueId,
       llmLogger,
-      platformConfigMetadata,
-      allowFreeTrial: true,
+      workOsAccessToken,
     });
-
-  try {
-    const systemPromptDotFile = await getSystemPromptDotFile(ide);
-    if (systemPromptDotFile) {
-      if (continueConfig.systemMessage) {
-        continueConfig.systemMessage += "\n\n" + systemPromptDotFile;
-      } else {
-        continueConfig.systemMessage = systemPromptDotFile;
-      }
-    }
-  } catch (e) {
-    localErrors.push({
-      fatal: false,
-      message: `Failed to load system prompt dot file: ${e instanceof Error ? e.message : e}`,
-    });
-  }
 
   // Apply shared config
   // TODO: override several of these values with user/org shared config

@@ -1,3 +1,4 @@
+import { BlockType } from "@continuedev/config-yaml";
 import {
   ArrowTopRightOnSquareIcon,
   PlusIcon,
@@ -7,12 +8,7 @@ import { GhostButton } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../../redux/hooks";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../../../redux/slices/uiSlice";
 import { fontSize } from "../../../../util";
-import AddDocsDialog from "../../../dialogs/AddDocsDialog";
 
 export function ExploreBlocksButton(props: { blockType: string }) {
   const { selectedProfile } = useAuth();
@@ -30,16 +26,19 @@ export function ExploreBlocksButton(props: { blockType: string }) {
 
   const handleClick = () => {
     if (isLocal) {
-      switch (props.blockType) {
-        case "docs":
-          dispatch(setShowDialog(true));
-          dispatch(setDialogMessage(<AddDocsDialog />));
-          break;
-        default:
-          ideMessenger.request("config/openProfile", {
-            profileId: selectedProfile.id,
-          });
-      }
+      ideMessenger.request("config/addLocalWorkspaceBlock", {
+        blockType: props.blockType as BlockType,
+      });
+      // switch (props.blockType) {
+      //   case "docs":
+      //     dispatch(setShowDialog(true));
+      //     dispatch(setDialogMessage(<AddDocsDialog />));
+      //     break;
+      //   default:
+      //     ideMessenger.request("config/openProfile", {
+      //       profileId: selectedProfile.id,
+      //     });
+      // }
     } else {
       ideMessenger.request("controlPlane/openUrl", {
         path: `new?type=block&blockType=${props.blockType}`,

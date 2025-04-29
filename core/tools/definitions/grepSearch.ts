@@ -8,6 +8,7 @@ export const grepSearchTool: Tool = {
   isCurrently: 'getting search results for "{{{ query }}}"',
   hasAlready: 'retrieved search results for "{{{ query }}}"',
   readonly: true,
+  isInstant: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.GrepSearch,

@@ -51,7 +51,7 @@ export function toChatMessage(
         type: toolCall.type!,
         function: {
           name: toolCall.function?.name!,
-          arguments: toolCall.function?.arguments!,
+          arguments: toolCall.function?.arguments! || "{}",
         },
       }));
     }

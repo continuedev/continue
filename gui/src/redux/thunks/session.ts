@@ -180,7 +180,6 @@ export const saveCurrentSession = createAsyncThunk<
               "chatDescriber/describe",
               {
                 text: assistantResponse,
-                selectedModelTitle: selectedChatModel.title,
               },
             );
             if (result.status === "success" && result.content) {

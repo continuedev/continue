@@ -41,4 +41,16 @@ describe("Test myers diff function", () => {
       { type: "same", line: "C" },
     ]);
   });
+
+  test("should ignore single-line whitespace-only differences", () => {
+    const linesA = "A\n    B\nC\n";
+    const linesB = "A\nB\nC";
+
+    const diffLines = myersDiff(linesA, linesB);
+    expect(diffLines).toEqual([
+      { type: "same", line: "A" },
+      { type: "same", line: "    B" },
+      { type: "same", line: "C" },
+    ]);
+  });
 });

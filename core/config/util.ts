@@ -1,14 +1,16 @@
 import fs from "fs";
 import os from "os";
 
+import { ModelConfig } from "@continuedev/config-yaml";
 import {
   ContinueConfig,
   ExperimentalModelRoles,
   IDE,
   ILLM,
-  ModelDescription,
+  JSONModelDescription,
   PromptTemplate,
 } from "../";
+import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../llm/constructMessages";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigFile } from "../util/paths";
 
@@ -23,16 +25,21 @@ function stringify(obj: any, indentation?: number): string {
 }
 
 export function addModel(
-  model: ModelDescription,
+  model: JSONModelDescription,
   role?: keyof ExperimentalModelRoles,
 ) {
   editConfigFile(
     (config) => {
-      if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
+      if (config.models?.some((m) => stringify(m) === stringify(model))) {
         return config;
       }
-      if (config.models?.some((m: any) => m?.title === model.title)) {
-        model.title = `${model.title} (1)`;
+
+      const numMatches = config.models?.reduce(
+        (prev, curr) => (curr.title.startsWith(model.title) ? prev + 1 : prev),
+        0,
+      );
+      if (numMatches !== 0) {
+        model.title = `${model.title} (${numMatches})`;
       }
 
       config.models.push(model);
@@ -51,22 +58,34 @@ export function addModel(
       return config;
     },
     (config) => {
-      if (config.models?.some((m: any) => m?.title === model.title)) {
-        model.title = `${model.title} (1)`;
+      const numMatches = config.models?.reduce(
+        (prev, curr) =>
+          "name" in curr && curr.name.startsWith(model.title) ? prev + 1 : prev,
+        0,
+      );
+      if (numMatches !== 0) {
+        model.title = `${model.title} (${numMatches})`;
       }
 
       if (!config.models) {
         config.models = [];
       }
 
-      config.models.push({
+      const desc: ModelConfig = {
         name: model.title,
         provider: model.provider,
         model: model.model,
         apiKey: model.apiKey,
         apiBase: model.apiBase,
         defaultCompletionOptions: model.completionOptions,
-      });
+      };
+      if (model.systemMessage) {
+        desc.chatOptions = {
+          baseSystemMessage:
+            DEFAULT_CHAT_SYSTEM_MESSAGE + "\n\n" + model.systemMessage,
+        };
+      }
+      config.models.push(desc);
       return config;
     },
   );

@@ -22,6 +22,7 @@ import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { handleLLMError } from "../util/errorHandling";
 import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
@@ -195,6 +196,10 @@ export class VsCodeMessenger {
       const configHandler = await configHandlerPromise;
       const { config } = await configHandler.loadConfig();
 
+      if (!config) {
+        throw new Error("Edit: Failed to load config");
+      }
+
       const model =
         config?.selectedModelByRole.edit ?? config?.selectedModelByRole.chat;
 
@@ -202,17 +207,16 @@ export class VsCodeMessenger {
         throw new Error("No Edit or Chat model selected");
       }
 
-      const fileAfterEdit = await verticalDiffManager.streamEdit(
-        stripImages(prompt),
-        model,
-        "edit",
-        undefined,
-        undefined,
-        new vscode.Range(
+      const fileAfterEdit = await verticalDiffManager.streamEdit({
+        input: stripImages(prompt),
+        llm: model,
+        streamId: "edit",
+        range: new vscode.Range(
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
-      );
+        rules: config.rules,
+      });
 
       void this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
@@ -234,11 +238,11 @@ export class VsCodeMessenger {
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
-        return await this.inProcessMessenger.externalRequest(
-          messageType,
-          msg.data,
-          msg.messageId,
-        );
+          return await this.inProcessMessenger.externalRequest(
+            messageType,
+            msg.data,
+            msg.messageId,
+          );
       });
     });
 
@@ -406,6 +410,10 @@ export class VsCodeMessenger {
 
     this.onWebviewOrCore("getUniqueId", async (msg) => {
       return await ide.getUniqueId();
+    });
+
+    this.onWebviewOrCore("reportError", async (msg) => {
+      handleLLMError(msg.data);
     });
   }
 }

@@ -1,26 +1,40 @@
 import { getMarkdownLanguageTagForFile } from "core/util";
-import { useMemo } from "react";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
-import AcceptRejectAllButtons from "../../../components/StepContainer/AcceptRejectAllButtons";
-import { useAppSelector } from "../../../redux/hooks";
+import { useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
+import AcceptRejectAllButtons from "../../../components/AcceptRejectAllButtons";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import {
+  selectApplyStateByToolCallId,
+  updateApplyState,
+} from "../../../redux/slices/sessionSlice";
 
 type EditToolCallProps = {
   relativeFilePath: string;
-  newContents: string;
+  changes: string;
   toolCallId?: string;
+  historyIndex: number;
 };
 
 export function EditFile(props: EditToolCallProps) {
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.newContents ?? ""}\n\`\`\``;
+  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes ?? ""}\n\`\`\``;
 
+  const dispatch = useAppDispatch();
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const states = useAppSelector((store) => store.session.codeBlockApplyStates);
-
-  const applyState = useMemo(() => {
-    return states.states.find(
-      (state) => state.toolCallId && state.toolCallId === props.toolCallId,
-    );
-  }, [states, props.toolCallId]);
+  const applyState = useAppSelector((state) =>
+    selectApplyStateByToolCallId(state, props.toolCallId),
+  );
+  useEffect(() => {
+    if (!applyState) {
+      dispatch(
+        updateApplyState({
+          streamId: uuidv4(),
+          toolCallId: props.toolCallId,
+          status: "not-started",
+        }),
+      );
+    }
+  }, [applyState, props.toolCallId]);
 
   if (!props.relativeFilePath) {
     return null;
@@ -32,8 +46,9 @@ export function EditFile(props: EditToolCallProps) {
         isRenderingInStepContainer
         disableManualApply
         source={src}
-        singleCodeblockStreamId={applyState?.streamId}
+        forceStreamId={applyState?.streamId}
         expandCodeblocks={false}
+        itemIndex={props.historyIndex}
       />
       {/* TODO better indicator of generation at bottom */}
       {/* {isStreaming && applyState?.status === "streaming" && (

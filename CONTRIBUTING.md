@@ -20,10 +20,12 @@
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
     - [Our Git Workflow](#our-git-workflow)
-    - [Testing](#testing)
+    - [Development workflow](#development-workflow)
     - [Formatting](#formatting)
-    - [Writing Slash Commands](#writing-slash-commands)
-    - [Writing Context Providers](#writing-context-providers)
+    - [Testing](#testing)
+    - [Review Process](#review-process)
+    - [Getting help](#getting-help)
+  - [Contribtuing new LLM Providers/Models](#contribtuing-new-llm-providersmodels)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
   - [📐 Continue Architecture](#-continue-architecture)
@@ -94,11 +96,13 @@ This will start a local server and you can see the documentation rendered in you
 
 ## 🧑‍💻 Contributing Code
 
+We welcome contributions from developers of all experience levels - from first-time contributors to seasoned open source maintainers. While we aim to maintain high standards for reliability and maintainability, our goal is to keep the process as welcoming and straightforward as possible.
+
 ### Environment Setup
 
 #### Pre-requisites
 
-You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+You should have Node.js version 20.19.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
 
 ```bash
 nvm use
@@ -145,45 +149,35 @@ See [`intellij/CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the 
 
 We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the `main` branch titled `v0.9.x-vscode`, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will create a new release titled `v0.8.x-vscode`, triggering a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow is well explained by <http://releaseflow.org>.
 
+### Development workflow
+
+- Open a new issue or comment on an existing one before writing code. This ensures your proposed changes are aligned with the project direction.
+- Keep changes focused. Multiple unrelated fixes should be opened as separate PRs
+- Write or update tests for new functionality
+- Update relevant documentation in the `docs` folder
+- Open a PR against the `main` branch. Make sure to fill in the PR template
+
+### Formatting
+
+Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install the Prettier extension in VS Code and enable "Format on Save" in your settings.
+
 ### Testing
 
 We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on each pull request. If your PR causes one of these tests to fail, we will ask that you to resolve the issue before we merge.
 
 When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
 
-### Formatting
+### Review Process
 
-Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install the Prettier extension in VS Code and enable "Format on Save" in your settings.
+- **Initial Review** - A maintainer will be assigned as primary reviewer
+- **Feedback Loop** - The reviewer may request changes. We value your work, but also want to ensure the code is maintainable and follows our patterns.
+- **Approval & Merge** - Once the PR is approved, it will be merged into the `main` branch.
 
-### Writing Slash Commands
+### Getting help
 
-The slash command interface, defined in [core/index.d.ts](./core/index.d.ts), requires you to define a `name` (the text that will be typed to invoke the command), a `description` (the text that will be shown in the slash command menu), and a `run` function that will be called when the command is invoked. The `run` function is an async generator that yields the content to be displayed in the chat. The `run` function is passed a `ContinueSDK` object that can be used to interact with the IDE, call the LLM, and see the chat history, among a few other utilities.
+Join [#contribute on Discord](https://discord.gg/vapESyrFmJ) to engage with maintainers and other contributors.
 
-```ts
-export interface SlashCommand {
-  name: string;
-  description: string;
-  params?: { [key: string]: any };
-  run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
-}
-```
-
-There are many example of slash commands in [core/commands/slash](./core/commands/slash) that we recommend borrowing from. Once you've created your new `SlashCommand` in this folder, also be sure to complete the following:
-
-- Add your command to the array in [core/commands/slash/index.ts](./core/commands/slash/index.ts)
-- Add your command to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what commands are available for your provider when they are editing `config.json`. If there are any parameters that your command accepts, you should also follow existing examples in adding them to the JSON Schema.
-
-### Writing Context Providers
-
-A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The `IContextProvider` interface is defined in [`core/index.d.ts`](./core/index.d.ts), but all built-in context providers extend [`BaseContextProvider`](./core/context/index.ts).
-
-Before defining your context provider, determine which "type" you want to create. The `"query"` type will show a small text input when selected, giving the user the chance to enter something like a Google search query for the [`GoogleContextProvider`](./core/context/providers/GoogleContextProvider.ts). The `"submenu"` type will open up a submenu of items that can be searched through and selected. Examples are the [`GitHubIssuesContextProvider`](./core/context/providers/GitHubIssuesContextProvider.ts) and the [`DocsContextProvider`](./core/context/providers/DocsContextProvider.ts). The `"normal"` type will just immediately add the context item. Examples include the [`DiffContextProvider`](./core/context/providers/DiffContextProvider.ts) and the [`OpenFilesContextProvider`](./core/context/providers/OpenFilesContextProvider.ts).
-
-After you've written your context provider, make sure to complete the following:
-
-- Add it to the array of context providers in [core/context/providers/index.ts](./core/context/providers/index.ts)
-- Add it to the `ContextProviderName` type in [core/index.d.ts](./core/index.d.ts)
-- Add it to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). If there are any parameters that your context provider accepts, you should also follow existing examples in adding them to the JSON Schema.
+## Contribtuing new LLM Providers/Models
 
 ### Adding an LLM Provider
 

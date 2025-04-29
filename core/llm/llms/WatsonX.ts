@@ -1,4 +1,9 @@
-import { ChatMessage, Chunk, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  Chunk,
+  CompletionOptions,
+  LLMOptions,
+} from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -139,24 +144,24 @@ class WatsonX extends BaseLLM {
   }
 
   protected async updateWatsonxToken() {
-        var now = new Date().getTime() / 1000;
-        if (
-          watsonxToken === undefined ||
-          now > watsonxToken.expiration ||
-          watsonxToken.token === undefined
-        ) {
-          watsonxToken = await this.getBearerToken();
-        } else {
-          console.log(
-            `Reusing token (expires in ${
-              (watsonxToken.expiration - now) / 60
-            } mins)`,
-          );
-        }
-        if (watsonxToken.token === undefined) {
-          throw new Error("Something went wrong. Check your credentials, please.");
-        }
+    var now = new Date().getTime() / 1000;
+    if (
+      watsonxToken === undefined ||
+      now > watsonxToken.expiration ||
+      watsonxToken.token === undefined
+    ) {
+      watsonxToken = await this.getBearerToken();
+    } else {
+      console.log(
+        `Reusing token (expires in ${
+          (watsonxToken.expiration - now) / 60
+        } mins)`,
+      );
     }
+    if (watsonxToken.token === undefined) {
+      throw new Error("Something went wrong. Check your credentials, please.");
+    }
+  }
 
   protected async _complete(
     prompt: string,
@@ -312,64 +317,60 @@ class WatsonX extends BaseLLM {
     return embeddings.map((e: any) => e.embedding);
   }
 
-
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-      if (!query || !chunks.length) {
-        throw new Error("Query and chunks must not be empty");
-      }
-      try {
-        await this.updateWatsonxToken();
-        
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `${
-            watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-          } ${watsonxToken.token}`,
-        };
-    
-        const payload: any = {
-          inputs: chunks.map((chunk) => ({ text: chunk.content })),
-          query: query,
-          parameters: {
-            truncate_input_tokens: 500,
-            return_options: {
-                top_n: chunks.length
-            },
+    if (!query || !chunks.length) {
+      throw new Error("Query and chunks must not be empty");
+    }
+    try {
+      await this.updateWatsonxToken();
+
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `${
+          watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+        } ${watsonxToken.token}`,
+      };
+
+      const payload: any = {
+        inputs: chunks.map((chunk) => ({ text: chunk.content })),
+        query: query,
+        parameters: {
+          truncate_input_tokens: 500,
+          return_options: {
+            top_n: chunks.length,
           },
-          model_id: this.model,
-          project_id: this.projectId,
-        };
+        },
+        model_id: this.model,
+        project_id: this.projectId,
+      };
 
-        const resp = await this.fetch(
-          new URL(
-            `${this.apiBase}/ml/v1/text/rerank?version=${this.apiVersion}`,
-          ),
-          {
-            method: "POST",
-            headers: headers,
-            body: JSON.stringify(payload),
-          },
-        );
+      const resp = await this.fetch(
+        new URL(`${this.apiBase}/ml/v1/text/rerank?version=${this.apiVersion}`),
+        {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(payload),
+        },
+      );
 
-        if (!resp.ok) {
-          throw new Error(`Failed to rerank chunks: ${await resp.text()}`);
-        }
-        const data = await resp.json();
-        const ranking = data.results;
-
-        if (!ranking) {
-          throw new Error("Empty response received from Watsonx");
-        }
-
-        // Sort results by index to maintain original order
-        return ranking
-          .sort((a: any, b: any) => a.index - b.index)
-          .map((result: any) => result.score);
-
-      } catch (error) {
-        console.error("Error in WatsonxReranker.rerank:", error);
-        throw error;
+      if (!resp.ok) {
+        throw new Error(`Failed to rerank chunks: ${await resp.text()}`);
       }
+      const data = await resp.json();
+      const ranking = data.results;
+
+      if (!ranking) {
+        throw new Error("Empty response received from Watsonx");
+      }
+
+      // Sort results by index to maintain original order
+      return ranking
+        .sort((a: any, b: any) => a.index - b.index)
+        .map((result: any) => result.score);
+    } catch (error) {
+      console.error("Error in WatsonxReranker.rerank:", error);
+      throw error;
+    }
   }
 }
 
