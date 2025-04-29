@@ -5,6 +5,7 @@ import {
   ConverseStreamCommandOutput,
   InvokeModelCommand,
   Message,
+  ToolConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
@@ -294,6 +295,7 @@ class Bedrock extends BaseLLM {
       !!systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const enablePromptCaching =
       shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation;
+    const shouldCacheToolsConfig = this.cacheBehavior?.cacheToolsConfig;
 
     // Add header for prompt caching
     if (enablePromptCaching) {
@@ -305,28 +307,34 @@ class Bedrock extends BaseLLM {
 
     const supportsTools =
       PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
+
+    let toolConfig = supportsTools && options.tools
+    ? {
+        tools: options.tools.map((tool) => ({
+          toolSpec: {
+            name: tool.function.name,
+            description: tool.function.description,
+            inputSchema: {
+              json: tool.function.parameters,
+            },
+          },
+        })),
+      } as ToolConfiguration
+    : undefined;
+
+    if (toolConfig?.tools && shouldCacheToolsConfig) {
+      toolConfig.tools.push({ cachePoint: { type: "default" } });
+    }
+
     return {
       modelId: options.model,
-      messages: convertedMessages,
       system: systemMessage
         ? shouldCacheSystemMessage
           ? [{ text: systemMessage }, { cachePoint: { type: "default" } }]
           : [{ text: systemMessage }]
         : undefined,
-      toolConfig:
-        supportsTools && options.tools
-          ? {
-              tools: options.tools.map((tool) => ({
-                toolSpec: {
-                  name: tool.function.name,
-                  description: tool.function.description,
-                  inputSchema: {
-                    json: tool.function.parameters,
-                  },
-                },
-              })),
-            }
-          : undefined,
+      toolConfig: toolConfig,
+      messages: convertedMessages,
       inferenceConfig: {
         maxTokens: options.maxTokens,
         temperature: options.temperature,
