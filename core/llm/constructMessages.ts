@@ -111,7 +111,6 @@ export function constructMessages(
     baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules: enabledRulesFiltered,
     userMessage: lastUserMsg,
-    currentModel: modelName,
   });
 
   if (systemMessage.trim()) {
