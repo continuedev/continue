@@ -354,15 +354,15 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
 
         {currentStatus !== WizardStatus.downloadingOllama && serverButton}
 
-        {currentStatus === WizardStatus.downloadingOllama && (
-          <div className="mt-4 flex items-center gap-2">
-            <VSCodeButton variant="secondary" onClick={cancelDownload}>
-              Cancel
-            </VSCodeButton>
-            <ProgressBlock progress={ollamaInstallationProgress} />
-          </div>
-        )}
-
+        {currentStatus === WizardStatus.downloadingOllama &&
+          installationModes[0]?.id !== "script" && (
+            <div className="mt-4 flex items-center gap-2">
+              <VSCodeButton variant="secondary" onClick={cancelDownload}>
+                Cancel
+              </VSCodeButton>
+              <ProgressBlock progress={ollamaInstallationProgress} />
+            </div>
+          )}
         {!isDevspaces && installationModes.length > 0 && (
           <p className="text-sm text-[--vscode-editor-foreground]">
             If you prefer, you can also{" "}
