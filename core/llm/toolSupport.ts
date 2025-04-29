@@ -137,7 +137,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   sambanova: (model) => {
     // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
     if (
-      model.toLowerCase().startsWith("meta-llama-3")
+      model.toLowerCase().startsWith("meta-llama-3") ||
+      model.toLowerCase().includes("llama-4") ||
+      model.toLowerCase().includes("deepseek")
     ) {
       return true;
     }

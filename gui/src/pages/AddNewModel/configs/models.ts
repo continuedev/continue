@@ -1579,13 +1579,37 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["siliconflow"],
     isOpenSource: true,
   },
+  llama4Scout: {
+    title: "Llama 4 Scout Instruct",
+    description: "A model from Meta, fine-tuned for chat",
+    params: {
+      title: "Llama 4 Scout Instruct",
+      model: "Llama-4-Scout-17B-16E-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama4Maverick: {
+    title: "Llama 4 Maverick Instruct",
+    description: "A model from Meta, fine-tuned for chat",
+    params: {
+      title: "Llama 4 Maverick Instruct",
+      model: "Llama-4-Maverick-17B-128E-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
   llama3370BInstruct: {
     title: "Llama 3.3 70B Instruct",
     description: "A model from Meta, fine-tuned for chat",
     params: {
       title: "Llama 3.3 70B instruct",
       model: "Meta-Llama-3.3-70B-Instruct",
-      contextLength: 16_000,
+      contextLength: 128_000,
     },
     icon: "meta.png",
     providerOptions: ["sambanova"],
@@ -1604,19 +1628,6 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
-  llama3170BInstruct: {
-    title: "Llama3.1 70B",
-    description: "A model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama 3.1 70B Instruct",
-      model: "Meta-Llama-3.1-70B-Instruct",
-      contextLength: 128_000,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
   llama31405BInstruct: {
     title: "Llama3.1 405B",
     description: "A model from Meta, fine-tuned for chat",
@@ -1627,19 +1638,6 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 16_000,
     },
     icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  llama31Tulu3405B: {
-    title: "Llama3.1 Tulu 3405B",
-    description: "A model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama 3.1 Tulu 3 405B",
-      model: "Llama-3.1-Tulu-3-405B",
-      contextLength: 16_000,
-    },
-    icon: "allenai.png",
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
@@ -1669,65 +1667,13 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
-  llama3211BInstruct: {
-    title: "Llama3.2 11B",
-    description: "A model from Meta, fine-tuned for multimodal chat with images",
-    refUrl: "",
-    params: {
-      title: "Llama 3.2 11B Vision Instruct",
-      model: "Llama-3.2-11B-Vision-Instruct",
-      contextLength: 4096,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  llama3290BInstruct: {
-    title: "Llama3.2 90B",
-    description: "A model from Meta, fine-tuned for multimodal chat with images",
-    refUrl: "",
-    params: {
-      title: "Llama 3.2 90B Vision Instruct",
-      model: "Llama-3.2-90B-Vision-Instruct",
-      contextLength: 4096,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  qwen25Coder32BInstruct: {
-    title: "Qwen 2.5 Coder 32B",
+  qwq32B: {
+    title: "QwQ 32B",
     description:
-      "Qwen 2.5 coder is an auto-regressive language model that uses an optimized transformer architecture, fine-tuned for coding tasks.",
+      "QwQ-32B is Qwen's latest experimental research model, focusing on improving AI reasoning capabilities.",
     params: {
-      title: "Qwen2.5 Coder 32B Instruct",
-      model: "Qwen2.5-Coder-32B-Instruct",
-      contextLength: 16_000,
-    },
-    icon: "qwen.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  qwen2572BInstruct: {
-    title: "Qwen 2.5 72B",
-    description:
-      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
-    params: {
-      title: "Qwen2.5 72B Instruct",
-      model: "Qwen2.5-72B-Instruct",
-      contextLength: 16_000,
-    },
-    icon: "qwen.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  qwq32BPreview: {
-    title: "QwQ 32B Preview",
-    description:
-      "QwQ-32B-Preview is Qwen's latest experimental research model, focusing on improving AI reasoning capabilities.",
-    params: {
-      title: "QwQ 32B Preview",
-      model: "QwQ-32B-Preview",
+      title: "QwQ 32B",
+      model: "QwQ-32B",
       contextLength: 16_000,
     },
     icon: "qwen.png",
@@ -1754,6 +1700,19 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "DeepSeek R1",
       model: "DeepSeek-R1",
+      contextLength: 8192,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  deepseekV3: {
+    title: "DeepSeek V3",
+    description:
+      "DeekSeek V3 reasoning model from DeepSeek",
+    params: {
+      title: "DeepSeek V3",
+      model: "DeepSeek-V3-0324",
       contextLength: 8192,
     },
     icon: "deepseek.png",

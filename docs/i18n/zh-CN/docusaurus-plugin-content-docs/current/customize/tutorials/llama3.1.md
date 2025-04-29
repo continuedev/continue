@@ -95,7 +95,7 @@ Replicate 让使用 API 托管和运行开源 AI 变得简单。
 
 SambaNova Cloud 提供 Llama3.1 70B/405B 服务的世界记录。
 
-1. 创建账号 [在这里](https://cloud.sambanova.ai/)
+1. 创建账号 [在这里](http://cloud.sambanova.ai?utm_source=continue&utm_medium=external&utm_campaign=cloud_signup)
 2. 复制你的 API key
 3. 更新你的 Continue 配置文件像这样：
 
