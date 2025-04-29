@@ -382,6 +382,7 @@ const getCommandsMap: (
       range,
     );
   }
+
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
       processDiff(
@@ -950,7 +951,7 @@ const getCommandsMap: (
           if (core.configHandler.currentProfile?.profileDescription.id) {
             core.invoke("config/updateSelectedModel", {
               profileId:
-                core.configHandler.currentProfile?.profileDescription.id,
+              core.configHandler.currentProfile?.profileDescription.id,
               role: "autocomplete",
               title: selectedOption,
             });
@@ -1129,7 +1130,7 @@ export function registerAllCommands(
     //Non-critical error, it needs to be intercepted and not prevent the extension from starting
     console.log("Error registering CopyBufferService: ", e);
     Telemetry.capture(
-      "vscode_extension_activation_error",
+      "vscode_extension_copy_buffer_failure",
       {
         stack: extractMinimalStackTraceInfo(e.stack),
         message: e.message,
@@ -1137,13 +1138,5 @@ export function registerAllCommands(
       false,
       true,
     );
-    vscode.window.showWarningMessage(
-      "Failed to override 'editor.action.clipboardCopyAction'. Continue will not have access to the clipboard.",
-      "View Logs",
-    ).then((selection) => {
-      if (selection === "View Logs") {
-        vscode.commands.executeCommand("continue.viewLogs");
-      }
-    });
   }
 }
