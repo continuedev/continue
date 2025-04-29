@@ -157,11 +157,11 @@ const mercuryMultifileFimTemplate: AutocompleteTemplate = {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
         return [
-          `<|file_sep|>${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n${prefix}`,
+          `<|file_sep|>${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n<|fim_prefix|>${prefix}`,
           suffix,
         ];
       }
-      return [prefix, suffix];
+      return [`<|fim_prefix|>${prefix}`, suffix];
     }
 
     const relativePaths = getShortestUniqueRelativeUriPaths(
