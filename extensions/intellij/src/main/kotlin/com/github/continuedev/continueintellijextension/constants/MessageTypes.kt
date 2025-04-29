@@ -23,6 +23,7 @@ class MessageTypes {
             "getCurrentFile",
             "getPinnedFiles",
             "getSearchResults",
+            "getFileResults",
             "getProblems",
             "subprocess",
             "getBranch",
@@ -59,18 +60,17 @@ class MessageTypes {
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
             "configUpdate",
-            "getDefaultModelTitle",
             "indexProgress", // Codebase
             "indexing/statusUpdate", // Docs, etc.
             "addContextItem",
             "refreshSubmenuItems",
             "isContinueInputFocused",
-            "didChangeAvailableProfiles",
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
+            "sessionUpdate",
             "didCloseFiles",
-            "didSelectOrganization"
+            "toolCallPartialOutput",
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -81,13 +81,14 @@ class MessageTypes {
             "history/delete",
             "history/load",
             "history/save",
+            "history/clear",
             "devdata/log",
             "config/addModel",
             "config/newPromptFile",
             "config/ideSettingsUpdate",
+            "config/addLocalWorkspaceBlock",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
-            "config/listProfiles",
             "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
@@ -128,8 +129,9 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
-            "controlPlane/listOrganizations"
-
+            "isItemTooBig",
+            "process/markAsBackgrounded",
+            "process/isBackgrounded",
         )
     }
 }

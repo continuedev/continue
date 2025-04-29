@@ -12,6 +12,33 @@ export const Gemini: ModelProvider = {
       recommendedFor: ["chat"]
     },
     {
+      model: "gemini-2.0-flash-lite",
+      displayName: "Gemini 2.0 Flash Lite",
+      contextLength: 1048576,
+      maxCompletionTokens: 8192,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.0-flash-lite/i,
+      recommendedFor: ["chat"]
+    },
+    {
+      model: "gemini-2.0-flash-exp-image-generation",
+      displayName: "Gemini 2.0 Flash Image Generation",
+      contextLength: 32768,
+      maxCompletionTokens: 8192,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.0-flash-exp-image-generation/i,
+      recommendedFor: ["chat"]
+    },
+    {
+      model: "gemini-2.5-pro-exp-03-25",
+      displayName: "Gemini 2.5 Pro Exp",
+      contextLength: 1048576,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.5-pro-exp-03-25/i,
+      recommendedFor: ["chat"]
+    },
+    {
       model: "gemini-1.5-flash",
       displayName: "Gemini 1.5 Flash",
       contextLength: 1048576,

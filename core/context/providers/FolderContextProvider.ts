@@ -35,7 +35,7 @@ class FolderContextProvider extends BaseContextProvider {
     const folders = await walkDirs(
       args.ide,
       {
-        onlyDirs: true,
+        include: "dirs",
         source: "load submenu items - folder",
       },
       workspaceDirs,

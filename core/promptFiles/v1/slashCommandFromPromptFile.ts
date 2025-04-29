@@ -2,6 +2,7 @@ import { ContinueSDK, SlashCommand } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { getLastNPathParts } from "../../util/uri";
 import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
+import { renderPromptFileV2 } from "../v2/renderPromptFile";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
@@ -63,17 +64,36 @@ export function slashCommandFromPromptFileV1(
     description,
     prompt,
     run: async function* (context) {
-      const originalSystemMessage = context.llm.systemMessage;
-      context.llm.systemMessage = systemMessage;
-
       const userInput = extractUserInput(context.input, name);
-      const renderedPrompt = await renderPromptV1(prompt, context, userInput);
+      const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
+        config: context.config,
+        fullInput: userInput,
+        embeddingsProvider: context.config.modelsByRole.embed[0],
+        reranker: context.config.modelsByRole.rerank[0],
+        llm: context.llm,
+        ide: context.ide,
+        selectedCode: context.selectedCode,
+        fetch: context.fetch,
+      });
+
       const messages = replaceSlashCommandWithPromptInChatHistory(
         context.history,
         name,
         renderedPrompt,
         systemMessage,
       );
+
+      if (systemMessage) {
+        const currentSystemMsg = messages.find((msg) => msg.role === "system");
+        if (currentSystemMsg) {
+          currentSystemMsg.content = systemMessage;
+        } else {
+          messages.unshift({
+            role: "system",
+            content: systemMessage,
+          });
+        }
+      }
 
       for await (const chunk of context.llm.streamChat(
         messages,
@@ -82,8 +102,6 @@ export function slashCommandFromPromptFileV1(
       )) {
         yield renderChatMessage(chunk);
       }
-
-      context.llm.systemMessage = originalSystemMessage;
     },
   };
 }

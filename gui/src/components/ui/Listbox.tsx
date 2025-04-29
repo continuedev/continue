@@ -46,14 +46,14 @@ const ListboxOptions = React.forwardRef<HTMLUListElement, ListboxOptionsProps>(
         anchor={"bottom start"}
         {...props}
         className={cn(
-          "bg-vsc-input-background flex flex-col overflow-auto px-0 shadow-md",
+          "bg-vsc-input-background flex w-max min-w-[160px] max-w-[400px] flex-col overflow-auto px-0 shadow-md",
           props.className,
         )}
         style={{
           border: `1px solid ${vscCommandCenterInactiveBorder}`,
           fontSize,
           borderRadius: defaultBorderRadius,
-          zIndex: 1000,
+          zIndex: 200000,
           ...props.style,
         }}
       />

@@ -31,6 +31,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  azure: (model) => {
+    if (
+      model.toLowerCase().startsWith("gpt-4") ||
+      model.toLowerCase().startsWith("o3")
+    ) return true;
+    return false;
+  },
   openai: (model) => {
     // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
     if (
@@ -72,6 +79,18 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  mistral: (model) => {
+    // https://docs.mistral.ai/capabilities/function_calling/
+    return !model.toLowerCase().includes("mamba") &&
+    [
+      "codestral",
+      "mistral-large",
+      "mistral-small",
+      "pixtral",
+      "ministral",
+      "mistral-nemo"
+    ].some((part) => model.toLowerCase().includes(part));
+  },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
     let modelName = "";
@@ -82,7 +101,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     } else {
       modelName = model;
     }
-    
+
     if (
       ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
         (part) => modelName.toLowerCase().includes(part),
@@ -92,6 +111,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     }
     if (
       [
+        "cogito",
         "llama3.3",
         "qwq",
         "llama3.2",
@@ -117,7 +137,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   sambanova: (model) => {
     // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
     if (
-      model.toLowerCase().startsWith("meta-llama-3")
+      model.toLowerCase().startsWith("meta-llama-3") ||
+      model.toLowerCase().includes("llama-4") ||
+      model.toLowerCase().includes("deepseek")
     ) {
       return true;
     }

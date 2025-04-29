@@ -102,7 +102,12 @@ class OpenAI extends BaseLLM {
   }
 
   protected supportsPrediction(model: string): boolean {
-    const SUPPORTED_MODELS = ["gpt-4o-mini", "gpt-4o", "mistral-large"];
+    const SUPPORTED_MODELS = [
+      "gpt-4o-mini",
+      "gpt-4o",
+      "mistral-large",
+      "Fast-Apply",
+    ];
     return SUPPORTED_MODELS.some((m) => model.includes(m));
   }
 
@@ -288,7 +293,10 @@ class OpenAI extends BaseLLM {
       // To ensure schema adherence: https://platform.openai.com/docs/guides/function-calling#parallel-function-calling-and-structured-outputs
       // In practice, setting this to true and asking for multiple tool calls
       // leads to "arguments" being something like '{"file": "test.ts"}{"file": "test.js"}'
-      body.parallel_tool_calls = false;
+      // o3 does not support this
+      if (!body.model.startsWith("o3")) {
+        body.parallel_tool_calls = false;
+      }
     }
 
     return body;

@@ -3,6 +3,7 @@ import {
   ChevronUpDownIcon,
 } from "@heroicons/react/24/outline";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
+import { useContext } from "react";
 import {
   Listbox,
   ListboxButton,
@@ -10,30 +11,39 @@ import {
   ListboxOptions,
 } from "../../components/ui/Listbox";
 import { useAuth } from "../../context/Auth";
-import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { selectOrgThunk } from "../../redux";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import {
+  selectCurrentOrg,
+  setSelectedOrgId,
+} from "../../redux/slices/profiles/slice";
 
-export function ScopeSelect() {
-  const { organizations, selectedOrganization } = useAuth();
+interface ScopeSelectProps {
+  onSelect?: () => void;
+}
+export function ScopeSelect({ onSelect }: ScopeSelectProps) {
+  const { organizations } = useAuth();
+  const ideMessenger = useContext(IdeMessengerContext);
   const selectedOrgId = useAppSelector(
-    (state) => state.organizations.selectedOrganizationId,
+    (state) => state.profiles.selectedOrganizationId,
   );
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const dispatch = useAppDispatch();
 
-  const handleChange = (newValue: string | null) => {
-    dispatch(selectOrgThunk(newValue));
+  const handleChange = (newValue: string) => {
+    // optimisitic update
+    dispatch(setSelectedOrgId(newValue));
+    ideMessenger.post("didChangeSelectedOrg", {
+      id: newValue,
+    });
+    onSelect?.();
   };
-
-  useWebviewListener("didSelectOrganization", async (data) => {
-    handleChange(data.orgId);
-  });
 
   const CurScopeEntityFallBackIcon = selectedOrgId
     ? BuildingOfficeIcon
     : UserCircleIcon;
 
-  const selectedDisplay = selectedOrganization ?? {
+  const selectedDisplay = currentOrg ?? {
     name: "Personal",
     iconUrl: null,
   };
@@ -68,17 +78,6 @@ export function ScopeSelect() {
               </div>
             </ListboxOption>
           ))}
-
-          {!!organizations.length && (
-            <div className="bg-lightgray mx-1 my-1 h-px" />
-          )}
-
-          <ListboxOption value={null}>
-            <div className="flex items-center gap-2">
-              <UserCircleIcon className="h-5 w-5" />
-              <span>Personal</span>
-            </div>
-          </ListboxOption>
         </ListboxOptions>
       </div>
     </Listbox>

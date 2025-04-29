@@ -1,13 +1,17 @@
 {
   "name": "@continuedev/config-yaml",
-  "version": "1.0.67",
+  "version": "1.0.87",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "bin": {
+    "@continuedev/config-yaml": "./dist/cli.js"
+  },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsc"
+    "build": "tsc",
+    "generate-schema": "tsc && node dist/scripts/generateJsonSchema.js"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
@@ -18,9 +22,11 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
+    "@types/node": "^20.0.0",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.3",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "zod-to-json-schema": "^3.24.5"
   }
 }

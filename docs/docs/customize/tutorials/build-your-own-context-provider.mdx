@@ -47,10 +47,20 @@ Continue can retrieve context from a custom HTTP server that you create and serv
 
 Then, create a server that responds to requests as are made from [HttpContextProvider.ts](https://github.com/continuedev/continue/blob/main/core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](https://github.com/continuedev/continue/blob/main/core/context/providers/context_provider_server.py) for an example that uses FastAPI.
 
-The `"options"` property can be used to send additional parameters to your endpoint, which will be included in the request body.
+The `"options"` property can be used to send additional parameters to your endpoint. The full request body has the following shape:
+
+```typescript
+{
+  query: string;
+  fullInput: string;
+  options: Record<string, JsonValue>;
+
+  workspacePath?: string; // Only provided if the server is local.
+}
+```
 
 :::info
-The following methods for creating custom context providers are deprecated. We recommend using HTTP context providers, [MCP Servers](../context-providers.mdx#model-context-protocol), and [Prompt files](../deep-dives/prompt-files.md) where possible.
+The following methods for creating custom context providers are deprecated. We recommend using HTTP context providers, [MCP Servers](../context-providers.mdx#model-context-protocol), and [Prompts](../deep-dives/prompts.md) where possible.
 :::
 
 ## Using CustomContextProvider

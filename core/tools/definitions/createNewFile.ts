@@ -9,6 +9,7 @@ export const createNewFileTool: Tool = {
   hasAlready: "created a new file at {{{ filepath }}}",
   group: BUILT_IN_GROUP_NAME,
   readonly: false,
+  isInstant: true,
   function: {
     name: BuiltInToolNames.CreateNewFile,
     description:

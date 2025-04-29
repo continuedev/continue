@@ -71,6 +71,16 @@
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
           "type": "integer"
+        },
+        "reasoning": {
+          "title": "Reasoning",
+          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ models",
+          "type": "boolean"
+        },
+        "reasoningBudgetTokens": {
+          "title": "Reasoning Budget Tokens",
+          "description": "Set budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models",
+          "type": "integer"
         }
       }
     },
@@ -217,7 +227,8 @@
             "function-network",
             "scaleway",
             "relace",
-            "ovhcloud"
+            "ovhcloud",
+            "morph"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -251,7 +262,7 @@
             "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
-            "### SambaNova\n SambaNova provides fast inference of open-source language models with zero data retention. To get started, obtain an API key in [SambaNova Cloud](https://cloud.sambanova.ai/apis).",
+            "### SambaNova\n SambaNova provides fast inference of open-source language models with zero data retention. To get started, obtain an API key in [SambaNova Cloud](https://cloud.sambanova.ai/apis?utm_source=continue&utm_medium=external&utm_campaign=cloud_signup ).",
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
@@ -265,7 +276,8 @@
             "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings.",
             "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/).",
             "### Relace\n Relace provides a fast apply model. To get started, obtain an API key from [here](https://app.relace.ai/settings/api-keys).",
-            "### OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR. To get started, create an API key on the OVHcloud [AI Endpoints website](https://endpoints.ai.cloud.ovh.net/). For more information, including pricing, visit the OVHcloud [AI Endpoints product page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/)."
+            "### OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR. To get started, create an API key on the OVHcloud [AI Endpoints website](https://endpoints.ai.cloud.ovh.net/). For more information, including pricing, visit the OVHcloud [AI Endpoints product page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/).",
+            "### Morph\nMorph provides a fast apply model. To get started, obtain an API key from [here](https://morphllm.com/dashboard)."
           ],
           "type": "string"
         },
@@ -959,7 +971,11 @@
                   "gemini-2.0-flash",
                   "gemini-2.0-flash-thinking-exp-01-21",
                   "gemini-2.0-pro-exp-02-05",
-                  "gemini-2.0-flash-lite-preview-02-05"
+                  "gemini-2.0-flash-lite-preview-02-05",
+                  "gemini-2.0-flash-lite",
+                  "gemini-2.0-flash-exp-image-generation",
+                  "gemini-2.5-pro-exp-03-25",
+                  "gemini-2.5-pro-latest"
                 ]
               }
             }
@@ -1601,6 +1617,7 @@
                       "gemini-pro",
                       "gemini-1.5-pro-latest",
                       "gemini-1.5-pro",
+                      "gemini-2.5-pro",
                       "gemini-1.5-flash-latest",
                       "gemini-1.5-flash",
                       "mistral-tiny",
@@ -1687,20 +1704,17 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "Qwen2.5-Coder-32B-Instruct",
+                      "Llama-4-Scout-17B-16E-Instruct",
+                      "Llama-4-Maverick-17B-128E-Instruct",
                       "Meta-Llama-3.3-70B-Instruct",
                       "Meta-Llama-3.1-8B-Instruct",
-                      "Meta-Llama-3.1-70B-Instruct",
                       "Meta-Llama-3.1-405B-Instruct",
-                      "Llama-3.1-Tulu-3-405B",
                       "Meta-Llama-3.2-1B-Instruct",
                       "Meta-Llama-3.2-3B-Instruct",
-                      "Llama-3.2-11B-Vision-Instruct",
-                      "Llama-3.2-90B-Vision-Instruct",
-                      "Qwen2.5-72B-Instruct",
-                      "QwQ-32B-Preview",
+                      "QwQ-32B",
                       "DeepSeek-R1-Distill-Llama-70B",
-                      "DeepSeek-R1"
+                      "DeepSeek-R1",
+                      "DeepSeek-V3-0324"
                     ]
                   },
                   {
@@ -2691,7 +2705,7 @@
         },
         "systemMessage": {
           "title": "System Message",
-          "description": "A system message that will always be followed by the LLM",
+          "description": "A system message that will always be followed by the LLM for Chat and Edit requests",
           "type": "string"
         },
         "completionOptions": {
@@ -2926,7 +2940,8 @@
                 "watsonx",
                 "llm",
                 "free-trial",
-                "huggingface-tei"
+                "huggingface-tei",
+                "siliconflow"
               ]
             },
             "params": {
@@ -3091,6 +3106,40 @@
                 },
                 "then": {
                   "required": ["truncation_direction"]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["siliconflow"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "BAAI/bge-reranker-v2-m3",
+                          "netease-youdao/bce-reranker-base_v1",
+                          "Pro/BAAI/bge-reranker-v2-m3"
+                        ],
+                        "default": "BAAI/bge-reranker-v2-m3"
+                      },
+                      "apiBase": {
+                        "type": "string"
+                      },
+                      "apiKey": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
                 }
               }
             }

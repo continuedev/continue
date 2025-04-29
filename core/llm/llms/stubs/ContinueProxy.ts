@@ -1,10 +1,15 @@
-import { ContinueProperties } from "@continuedev/config-yaml";
+import {
+  ContinueProperties,
+  decodeSecretLocation,
+  SecretType,
+} from "@continuedev/config-yaml";
 
 import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 
 import type { Chunk, LLMOptions } from "../../../index.js";
+import { LLMConfigurationStatuses } from "../../constants.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
@@ -47,6 +52,19 @@ class ContinueProxy extends OpenAI {
     return {
       continueProperties,
     };
+  }
+
+  getConfigurationStatus() {
+    if (!this.apiKeyLocation) {
+      return LLMConfigurationStatuses.VALID;
+    }
+
+    const secretLocation = decodeSecretLocation(this.apiKeyLocation);
+    if (secretLocation.secretType === SecretType.NotFound) {
+      return LLMConfigurationStatuses.MISSING_API_KEY;
+    }
+
+    return LLMConfigurationStatuses.VALID;
   }
 
   protected _getHeaders() {

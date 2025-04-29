@@ -1,20 +1,14 @@
-import { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
   vscCommandCenterInactiveBorder,
   vscInputBackground,
 } from "../..";
-import { useAppSelector } from "../../../redux/hooks";
+import { useLump } from "./LumpContext";
 import { LumpToolbar } from "./LumpToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
 
-interface LumpProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}
-
-const LumpDiv = styled.div<{ open: boolean }>`
+const LumpDiv = styled.div`
   background-color: ${vscInputBackground};
   margin-left: 4px;
   margin-right: 4px;
@@ -35,47 +29,23 @@ const ContentDiv = styled.div<{ hasSection: boolean; isVisible: boolean }>`
   overflow-y: auto;
 `;
 
-export function Lump(props: LumpProps) {
-  const { open, setOpen } = props;
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  const [displayedSection, setDisplayedSection] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
-
-  useEffect(() => {
-    if (selectedSection) {
-      setDisplayedSection(selectedSection);
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-      // Delay clearing the displayed section until after the fade-out
-      const timeout = setTimeout(() => {
-        setDisplayedSection(null);
-      }, 300); // Match the transition duration
-      return () => clearTimeout(timeout);
-    }
-  }, [selectedSection]);
-
-  if (!open) {
-    return null;
-  }
+/**
+ * Internal component that consumes the LumpContext
+ */
+export function Lump() {
+  const { isLumpVisible, selectedSection } = useLump();
 
   return (
-    <LumpDiv open={open}>
-      <div className="mt-0.5 px-2">
-        <LumpToolbar
-          selectedSection={selectedSection}
-          setSelectedSection={setSelectedSection}
-        />
+    <LumpDiv>
+      <div className="xs:px-2 mt-0.5 px-1">
+        <LumpToolbar />
 
         <ContentDiv
           className="no-scrollbar pr-0.5"
           hasSection={!!selectedSection}
-          isVisible={isVisible}
+          isVisible={isLumpVisible}
         >
-          {!isStreaming && (
-            <SelectedSection selectedSection={displayedSection} />
-          )}
+          <SelectedSection />
         </ContentDiv>
       </div>
     </LumpDiv>

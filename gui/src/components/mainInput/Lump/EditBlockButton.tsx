@@ -4,7 +4,10 @@ import { useContext } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 
-type SectionKey = Exclude<keyof ConfigYaml, "name" | "version" | "schema">;
+type SectionKey = Exclude<
+  keyof ConfigYaml,
+  "name" | "version" | "schema" | "metadata"
+>;
 
 interface EditBlockButtonProps<T extends SectionKey> {
   blockType: T;
