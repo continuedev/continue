@@ -130,40 +130,72 @@ async function callToolFromUri(
   }
 }
 
+// Handles calls for core/non-client tools
+// Returns an error context item if the tool call fails
+// Note: Edit tool is handled on client
 export async function callTool(
   tool: Tool,
-  args: any,
+  callArgs: string,
   extras: ToolExtras,
-): Promise<ContextItem[]> {
+): Promise<{
+  contextItems: ContextItem[];
+  errorMessage: string | undefined;
+}> {
+  const args = JSON.parse(callArgs || "{}");
   const uri = tool.uri ?? tool.function.name;
-
-  switch (uri) {
-    case BuiltInToolNames.ReadFile:
-      return await readFileImpl(args, extras);
-    // Note: Custom GUI handling for edit
-    case BuiltInToolNames.CreateNewFile:
-      return await createNewFileImpl(args, extras);
-    case BuiltInToolNames.GrepSearch:
-      return await grepSearchImpl(args, extras);
-    case BuiltInToolNames.FileGlobSearch:
-      return await fileGlobSearchImpl(args, extras);
-    case BuiltInToolNames.RunTerminalCommand:
-      return await runTerminalCommandImpl(args, extras);
-    case BuiltInToolNames.SearchWeb:
-      return await searchWebImpl(args, extras);
-    case BuiltInToolNames.ViewDiff:
-      return await viewDiffImpl(args, extras);
-    case BuiltInToolNames.LSTool:
-      return await lsToolImpl(args, extras);
-    case BuiltInToolNames.ReadCurrentlyOpenFile:
-      return await readCurrentlyOpenFileImpl(args, extras);
-    case BuiltInToolNames.CreateRuleBlock:
-      return await createRuleBlockImpl(args, extras);
-    // case BuiltInToolNames.ViewRepoMap:
-    //   return await viewRepoMapImpl(args, extras);
-    // case BuiltInToolNames.ViewSubdirectory:
-    //   return await viewSubdirectoryImpl(args, extras);
-    default:
-      return await callToolFromUri(uri, args, extras);
+  try {
+    let contextItems: ContextItem[] = [];
+    switch (uri) {
+      case BuiltInToolNames.ReadFile:
+        contextItems = await readFileImpl(args, extras);
+        break;
+      case BuiltInToolNames.CreateNewFile:
+        contextItems = await createNewFileImpl(args, extras);
+        break;
+      case BuiltInToolNames.GrepSearch:
+        contextItems = await grepSearchImpl(args, extras);
+        break;
+      case BuiltInToolNames.FileGlobSearch:
+        contextItems = await fileGlobSearchImpl(args, extras);
+        break;
+      case BuiltInToolNames.RunTerminalCommand:
+        contextItems = await runTerminalCommandImpl(args, extras);
+        break;
+      case BuiltInToolNames.SearchWeb:
+        contextItems = await searchWebImpl(args, extras);
+        break;
+      case BuiltInToolNames.ViewDiff:
+        contextItems = await viewDiffImpl(args, extras);
+        break;
+      case BuiltInToolNames.LSTool:
+        contextItems = await lsToolImpl(args, extras);
+        break;
+      case BuiltInToolNames.ReadCurrentlyOpenFile:
+        contextItems = await readCurrentlyOpenFileImpl(args, extras);
+        break;
+      case BuiltInToolNames.CreateRuleBlock:
+        contextItems = await createRuleBlockImpl(args, extras);
+        break;
+      default:
+        contextItems = await callToolFromUri(uri, args, extras);
+    }
+    if (tool.faviconUrl) {
+      contextItems.forEach((item) => {
+        item.icon = tool.faviconUrl;
+      });
+    }
+    return {
+      contextItems,
+      errorMessage: undefined,
+    };
+  } catch (e) {
+    let errorMessage = `${e}`;
+    if (e instanceof Error) {
+      errorMessage = e.message;
+    }
+    return {
+      contextItems: [],
+      errorMessage,
+    };
   }
 }

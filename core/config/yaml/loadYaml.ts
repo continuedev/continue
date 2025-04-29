@@ -1,20 +1,18 @@
-import fs from "node:fs";
-
 import {
   AssistantUnrolled,
+  BLOCK_TYPES,
   ConfigResult,
   ConfigValidationError,
-  FQSN,
   isAssistantUnrolledNonNullable,
   MCPServer,
   ModelRole,
-  PlatformClient,
+  PackageIdentifier,
   RegistryClient,
   Rule,
-  SecretResult,
-  unrollAssistantFromContent,
+  unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
+import { dirname } from "node:path";
 
 import {
   ContinueConfig,
@@ -39,28 +37,14 @@ import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandF
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { allTools } from "../../tools";
 import { GlobalContext } from "../../util/GlobalContext";
-import { getConfigYamlPath } from "../../util/paths";
-import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { logger } from "../../util/logger";
+import { getCleanUriPath } from "../../util/uri";
+import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
+import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
-
-export class LocalPlatformClient implements PlatformClient {
-  constructor(
-    private orgScopeId: string | null,
-    private readonly client: ControlPlaneClient,
-  ) {}
-
-  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
-    if (fqsns.length === 0) {
-      return [];
-    }
-
-    const response = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
-    return response;
-  }
-}
 
 function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
   if (typeof rule === "string") {
@@ -72,7 +56,7 @@ function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
     return {
       source: "rules-block",
       rule: rule.rule,
-      if: rule.if,
+      globs: rule.globs,
       name: rule.name,
     };
   }
@@ -91,35 +75,70 @@ function convertYamlMcpToContinueMcp(
   };
 }
 
-async function loadConfigYaml(
-  rawYaml: string,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  controlPlaneClient: ControlPlaneClient,
-  orgScopeId: string | null,
-  ideSettings: IdeSettings,
-): Promise<ConfigResult<AssistantUnrolled>> {
+async function loadConfigYaml(options: {
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  controlPlaneClient: ControlPlaneClient;
+  orgScopeId: string | null;
+  ideSettings: IdeSettings;
+  ide: IDE;
+  packageIdentifier: PackageIdentifier;
+}): Promise<ConfigResult<AssistantUnrolled>> {
+  const {
+    overrideConfigYaml,
+    controlPlaneClient,
+    orgScopeId,
+    ideSettings,
+    ide,
+    packageIdentifier,
+  } = options;
+
+  // Add local .continue blocks
+  const allLocalBlocks: PackageIdentifier[] = [];
+  for (const blockType of BLOCK_TYPES) {
+    const localBlocks = await getAllDotContinueYamlFiles(
+      ide,
+      { includeGlobal: true, includeWorkspace: true },
+      blockType,
+    );
+    allLocalBlocks.push(
+      ...localBlocks.map((b) => ({
+        uriType: "file" as const,
+        filePath: b.path,
+      })),
+    );
+  }
+
+  const rootPath =
+    packageIdentifier.uriType === "file"
+      ? dirname(getCleanUriPath(packageIdentifier.filePath))
+      : undefined;
+
+  logger.info(
+    `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
+  );
+
   let config =
     overrideConfigYaml ??
     // This is how we allow use of blocks locally
-    (await unrollAssistantFromContent(
-      {
-        ownerSlug: "",
-        packageSlug: "",
-        versionSlug: "",
-      },
-      rawYaml,
-      new RegistryClient(
-        await controlPlaneClient.getAccessToken(),
-        getControlPlaneEnvSync(
-          ideSettings.continueTestEnvironment,
-        ).CONTROL_PLANE_URL,
-      ),
+    (await unrollAssistant(
+      packageIdentifier,
+      new RegistryClient({
+        accessToken: await controlPlaneClient.getAccessToken(),
+        apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
+          .CONTROL_PLANE_URL,
+        rootPath,
+      }),
       {
         currentUserSlug: "",
         onPremProxyUrl: null,
         orgScopeId,
-        platformClient: new LocalPlatformClient(orgScopeId, controlPlaneClient),
+        platformClient: new LocalPlatformClient(
+          orgScopeId,
+          controlPlaneClient,
+          ide,
+        ),
         renderSecrets: true,
+        injectBlocks: allLocalBlocks,
       },
     ));
 
@@ -148,25 +167,27 @@ async function loadConfigYaml(
   };
 }
 
-async function configYamlToContinueConfig({
-  config,
-  ide,
-  ideSettings,
-  ideInfo,
-  uniqueId,
-  llmLogger,
-  platformConfigMetadata,
-  allowFreeTrial = true,
-}: {
+async function configYamlToContinueConfig(options: {
   config: AssistantUnrolled;
   ide: IDE;
   ideSettings: IdeSettings;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
-  allowFreeTrial: boolean;
+  workOsAccessToken: string | undefined;
+  allowFreeTrial?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+  let {
+    config,
+    ide,
+    ideSettings,
+    ideInfo,
+    uniqueId,
+    llmLogger,
+    allowFreeTrial,
+  } = options;
+  allowFreeTrial = allowFreeTrial ?? true;
+
   const localErrors: ConfigValidationError[] = [];
 
   const continueConfig: ContinueConfig = {
@@ -275,7 +296,6 @@ async function configYamlToContinueConfig({
         uniqueId,
         ideSettings,
         llmLogger,
-        platformConfigMetadata,
         config: continueConfig,
       });
 
@@ -431,44 +451,39 @@ async function configYamlToContinueConfig({
   return { config: continueConfig, errors: localErrors };
 }
 
-export async function loadContinueConfigFromYaml({
-  ide,
-  ideSettings,
-  ideInfo,
-  uniqueId,
-  llmLogger,
-  overrideConfigYaml,
-  platformConfigMetadata,
-  controlPlaneClient,
-  configYamlPath,
-  orgScopeId,
-}: {
+export async function loadContinueConfigFromYaml(options: {
   ide: IDE;
   ideSettings: IdeSettings;
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
+  workOsAccessToken: string | undefined;
   overrideConfigYaml: AssistantUnrolled | undefined;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
   controlPlaneClient: ControlPlaneClient;
-  configYamlPath: string | undefined;
   orgScopeId: string | null;
+  packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<ContinueConfig>> {
-  const rawYaml =
-    overrideConfigYaml === undefined
-      ? fs.readFileSync(
-          configYamlPath ?? getConfigYamlPath(ideInfo.ideType),
-          "utf-8",
-        )
-      : "";
+  const {
+    ide,
+    ideSettings,
+    ideInfo,
+    uniqueId,
+    llmLogger,
+    workOsAccessToken,
+    overrideConfigYaml,
+    controlPlaneClient,
+    orgScopeId,
+    packageIdentifier,
+  } = options;
 
-  const configYamlResult = await loadConfigYaml(
-    rawYaml,
+  const configYamlResult = await loadConfigYaml({
     overrideConfigYaml,
     controlPlaneClient,
     orgScopeId,
     ideSettings,
-  );
+    ide,
+    packageIdentifier,
+  });
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
     return {
@@ -486,8 +501,7 @@ export async function loadContinueConfigFromYaml({
       ideInfo,
       uniqueId,
       llmLogger,
-      platformConfigMetadata,
-      allowFreeTrial: true,
+      workOsAccessToken,
     });
 
   // Apply shared config

@@ -2,11 +2,12 @@ import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
-import styled from "styled-components";
-import { vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import {
+  selectCurrentToolCall,
+  selectCurrentToolCallApplyState,
+} from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
@@ -16,7 +17,6 @@ import { exitEditMode } from "../../redux/thunks";
 import { loadLastSession } from "../../redux/thunks/session";
 import {
   getAltKeyLabel,
-  getFontSize,
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
@@ -26,23 +26,6 @@ import ModeSelect from "../modelSelection/ModeSelect";
 import { useFontSize } from "../ui/font";
 import { EnterButton } from "./InputToolbar/EnterButton";
 import HoverItem from "./InputToolbar/HoverItem";
-
-const StyledDiv = styled.div<{ isHidden?: boolean }>`
-  padding-top: 4px;
-  justify-content: space-between;
-  gap: 1px;
-  background-color: ${vscInputBackground};
-  align-items: center;
-  font-size: ${getFontSize() - 2}px;
-  cursor: ${(props) => (props.isHidden ? "default" : "text")};
-  opacity: ${(props) => (props.isHidden ? 0 : 1)};
-  pointer-events: ${(props) => (props.isHidden ? "none" : "auto")};
-  user-select: none;
-
-  & > * {
-    flex: 0 0 auto;
-  }
-`;
 
 export interface ToolbarOptions {
   hideUseCodebase?: boolean;
@@ -73,15 +56,16 @@ function InputToolbar(props: InputToolbarProps) {
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-  const activeToolCallStreamId = useAppSelector(
-    (store) => store.session.activeToolStreamId,
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
   );
 
   const isEnterDisabled =
     props.disabled ||
     isEditModeAndNoCodeToEdit ||
     toolCallState?.status === "generated" ||
-    !!activeToolCallStreamId;
+    (currentToolCallApplyState &&
+      currentToolCallApplyState.status !== "closed");
 
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 

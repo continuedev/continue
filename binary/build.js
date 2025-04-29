@@ -9,17 +9,20 @@ const {
   autodetectPlatformAndArch,
 } = require("../scripts/util");
 
-// Clean slate
 const bin = path.join(__dirname, "bin");
 const out = path.join(__dirname, "out");
 const build = path.join(__dirname, "build");
-rimrafSync(bin);
-rimrafSync(out);
-rimrafSync(build);
-rimrafSync(path.join(__dirname, "tmp"));
-fs.mkdirSync(bin);
-fs.mkdirSync(out);
-fs.mkdirSync(build);
+
+function cleanSlate() {
+// Clean slate
+  rimrafSync(bin);
+  rimrafSync(out);
+  rimrafSync(build);
+  rimrafSync(path.join(__dirname, "tmp"));
+  fs.mkdirSync(bin);
+  fs.mkdirSync(out);
+  fs.mkdirSync(build);
+}
 
 const esbuildOutputFile = "out/index.js";
 let targets = [
@@ -55,6 +58,39 @@ const targetToLanceDb = {
   "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
   "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
 };
+
+// Bundles the extension into one file
+async function buildWithEsbuild() {
+  console.log("[info] Building with esbuild...");
+  await esbuild.build({
+    entryPoints: ["src/index.ts"],
+    bundle: true,
+    outfile: esbuildOutputFile,
+    external: [
+      "esbuild",
+      "./xhr-sync-worker.js",
+      "llamaTokenizerWorkerPool.mjs",
+      "tiktokenWorkerPool.mjs",
+      "vscode",
+      "./index.node",
+    ],
+    format: "cjs",
+    platform: "node",
+    sourcemap: true,
+    minify: true,
+    treeShaking: true,
+    loader: {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      ".node": "file",
+    },
+
+    // To allow import.meta.path for transformers.js
+    // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
+    inject: ["./importMetaUrl.js"],
+    define: { "import.meta.url": "importMetaUrl" },
+  });
+
+}
 
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   console.log(`Copying ${packageName} to ${toCopy}`);
@@ -118,6 +154,13 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 }
 
 (async () => {
+  if (esbuildOnly) {
+    await buildWithEsbuild();
+    return;
+  }
+
+  cleanSlate()
+
   // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
   // This is only needed for our `pkg` command at build time
   fs.writeFileSync(
@@ -192,35 +235,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     fs.rmSync(assetPath, { force: true });
   }
 
-  // Bundles the extension into one file
-  console.log("[info] Building with esbuild...");
-  await esbuild.build({
-    entryPoints: ["src/index.ts"],
-    bundle: true,
-    outfile: esbuildOutputFile,
-    external: [
-      "esbuild",
-      "./xhr-sync-worker.js",
-      "llamaTokenizerWorkerPool.mjs",
-      "tiktokenWorkerPool.mjs",
-      "vscode",
-      "./index.node",
-    ],
-    format: "cjs",
-    platform: "node",
-    sourcemap: true,
-    minify: true,
-    treeShaking: true,
-    loader: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      ".node": "file",
-    },
-
-    // To allow import.meta.path for transformers.js
-    // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
-    inject: ["./importMetaUrl.js"],
-    define: { "import.meta.url": "importMetaUrl" },
-  });
+  await buildWithEsbuild();
 
   // Copy over any worker files
   fs.cpSync(
@@ -232,10 +247,6 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     "../core/llm/llamaTokenizerWorkerPool.mjs",
     "out/llamaTokenizerWorkerPool.mjs",
   );
-
-  if (esbuildOnly) {
-    return;
-  }
 
   console.log("[info] Building binaries with pkg...");
   for (const target of targets) {

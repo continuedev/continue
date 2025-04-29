@@ -123,16 +123,16 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
         >
           {rule.rule}
         </span>
-        {rule.if ? (
+        {rule.globs ? (
           <div
             style={{
               fontSize: tinyFont,
             }}
             className="mt-1.5 flex flex-col gap-1"
           >
-            <span className="italic">Applies if</span>
+            <span className="italic">Applies to files</span>
             <code className="line-clamp-1 px-1 py-0.5 text-gray-400">
-              {rule.if.replace(/\${{|}}/g, "")}
+              {rule.globs}
             </code>
           </div>
         ) : null}
@@ -181,7 +181,7 @@ export function RulesSection() {
       }
     }
     // Add a displayed rule for the base system chat message when in chat mode
-    if (mode === "chat") {
+    if (mode === "chat" || mode === "agent") {
       const baseMessage =
         config.selectedModelByRole.chat?.baseChatSystemMessage;
       if (baseMessage) {

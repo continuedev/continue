@@ -1,4 +1,8 @@
-import { DataDestination, ModelRole } from "@continuedev/config-yaml";
+import {
+  DataDestination,
+  ModelRole,
+  PromptTemplates,
+} from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
@@ -428,6 +432,7 @@ export type ToolStatus =
   | "generating"
   | "generated"
   | "calling"
+  | "errored"
   | "done"
   | "canceled";
 
@@ -566,7 +571,7 @@ export interface LLMOptions {
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, PromptTemplate>;
+  promptTemplates?: Partial<Record<keyof PromptTemplates, PromptTemplate>>;
   templateMessages?: (messages: ChatMessage[]) => string;
   logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
@@ -1211,6 +1216,7 @@ export type EditStatus =
   | "done";
 
 export type ApplyStateStatus =
+  | "not-started" // Apply state created but not necessarily streaming
   | "streaming" // Changes are being applied to the file
   | "done" // All changes have been applied, awaiting user to accept/reject
   | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
@@ -1501,7 +1507,7 @@ export interface RuleWithSource {
     | "rules-block"
     | "json-systemMessage"
     | ".continuerules";
-  if?: string;
+  globs?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;

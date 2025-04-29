@@ -47,8 +47,16 @@ export const completionOptionsSchema = z.object({
   topK: z.number().optional(),
   stop: z.array(z.string()).optional(),
   n: z.number().optional(),
+  reasoning: z.boolean().optional(),
+  reasoningBudgetTokens: z.number().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
+
+export const cacheBehaviorSchema = z.object({
+  cacheSystemMessage: z.boolean().optional(),
+  cacheConversation: z.boolean().optional(),
+})
+export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
 
 export const embedOptionsSchema = z.object({
   maxChunkSize: z.number().optional(),
@@ -65,6 +73,7 @@ export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
   edit: z.string().optional(),
+  autocomplete: z.string().optional()
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
@@ -76,6 +85,7 @@ const baseModelFields = {
   roles: modelRolesSchema.array().optional(),
   capabilities: modelCapabilitySchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
+  cacheBehavior: cacheBehaviorSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
   embedOptions: embedOptionsSchema.optional(),
   chatOptions: chatOptionsSchema.optional(),
