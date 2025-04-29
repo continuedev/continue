@@ -26,7 +26,7 @@ function parseErrorMessage(fullErrMsg: string): string {
   const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
   try {
     const parsed = JSON.parse(msg);
-    return parsed.error ?? parsed.message ?? msg;
+    return JSON.stringify(parsed.error ?? parsed.message ?? msg);
   } catch (e) {
     return msg;
   }
