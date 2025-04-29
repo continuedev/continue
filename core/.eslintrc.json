@@ -7,6 +7,7 @@
   "rules": {
     "quotes": ["off", "double", {}],
     "@typescript-eslint/naming-convention": "off",
+    // This is important: when floating promises cause unhandled rejections, the JetBrains binary blows up
     "@typescript-eslint/no-floating-promises": "error",
     "import/order": "off",
     "curly": "off",
