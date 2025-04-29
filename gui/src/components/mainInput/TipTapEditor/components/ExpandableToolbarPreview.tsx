@@ -88,7 +88,6 @@ interface ExpandableToolbarPreviewProps {
   isSelected?: boolean;
   /** Content to display in the preview */
   children: React.ReactNode;
-  noContent: boolean;
 }
 
 /**
@@ -182,7 +181,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
         </div>
         <div className="flex items-center gap-1">
           <HeaderButtonWithToolTip text={hidden ? "Show" : "Hide"}>
-            {!props.noContent &&
+            {!!props.children &&
               (hidden ? (
                 <EyeIcon className="h-2.5 w-2.5" />
               ) : (
@@ -203,7 +202,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
         </div>
       </div>
 
-      {!hidden && !props.noContent && (
+      {!hidden && !!props.children && (
         <ContentContainer expanded={isExpanded}>
           <ScrollableContent
             ref={contentRef}
