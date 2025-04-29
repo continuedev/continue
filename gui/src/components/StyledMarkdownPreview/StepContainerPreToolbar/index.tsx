@@ -207,7 +207,7 @@ export function StepContainerPreToolbar({
     setAppliedFileUri(undefined);
   }
 
-  function onClickFilename() {
+  async function onClickFilename() {
     if (appliedFileUri) {
       ideMessenger.post("showFile", {
         filepath: appliedFileUri,
@@ -215,8 +215,13 @@ export function StepContainerPreToolbar({
     }
 
     if (relativeFilepath) {
+      const filepath = await inferResolvedUriFromRelativePath(
+        relativeFilepath,
+        ideMessenger.ide,
+      );
+
       ideMessenger.post("showFile", {
-        filepath: relativeFilepath,
+        filepath,
       });
     }
   }

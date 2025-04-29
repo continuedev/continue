@@ -7,6 +7,8 @@ import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceIn
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
+import { LLMError } from "../llm/index.js";
+import { getRootCause } from "../util/errors.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
@@ -350,6 +352,10 @@ export class CodebaseIndexer {
   ): IndexingProgressUpdate {
     console.log("error when indexing: ", err);
     if (err instanceof Error) {
+      const cause = getRootCause(err);
+      if (cause instanceof LLMError) {
+        throw cause;
+      }
       return this.errorToProgressUpdate(err);
     }
     return {
@@ -361,7 +367,8 @@ export class CodebaseIndexer {
   }
 
   private errorToProgressUpdate(err: Error): IndexingProgressUpdate {
-    let errMsg: string = `${err}`;
+    const cause = getRootCause(err);
+    let errMsg: string = `${cause}`;
     let shouldClearIndexes = false;
 
     // Check if any of the error regexes match
