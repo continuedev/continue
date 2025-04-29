@@ -794,11 +794,8 @@ const getCommandsMap: (
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
       vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
-    "continue.openConfigPageFromPalette": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/config", false);
-    },
     "continue.openConfigPage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/config", true);
+      vscode.commands.executeCommand("continue.navigateTo", "/config", false);
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
