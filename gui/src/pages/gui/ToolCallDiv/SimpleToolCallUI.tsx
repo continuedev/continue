@@ -32,7 +32,7 @@ export function SimpleToolCallUI({
   }, [toolCallState.parsedArgs]);
 
   return (
-    <div className={`flex flex-1 flex-col px-2 pt-2`}>
+    <div className="flex flex-1 flex-col px-2 pt-2 hover:brightness-125">
       <div className="flex flex-row justify-between">
         <div
           className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
