@@ -7,7 +7,7 @@ import { useAppSelector } from "../../redux/hooks";
 import {
   addCodeToEdit,
   removeCodeToEdit,
-} from "../../redux/slices/sessionSlice";
+} from "../../redux/slices/editModeState";
 import AddFileButton from "./AddFileButton";
 import AddFileCombobox from "./AddFileCombobox";
 import CodeToEditListItem from "./CodeToEditListItem";
@@ -16,7 +16,7 @@ export default function CodeToEditCard() {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const [showAddFileCombobox, setShowAddFileCombobox] = useState(false);
-  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
+  const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
 
   const itemCount =
     codeToEdit.length === 0

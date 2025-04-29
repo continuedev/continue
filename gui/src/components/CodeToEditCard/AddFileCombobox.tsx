@@ -28,7 +28,7 @@ export default function AddFileCombobox({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { getSubmenuContextItems } = useSubmenuContextProviders();
   const allFiles = getSubmenuContextItems("file", "");
-  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
+  const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const remainingFiles = allFiles.filter(
     (file) => !codeToEdit.find((code) => code.filepath === file.id),
   );
@@ -41,12 +41,11 @@ export default function AddFileCombobox({
 
   useEffect(() => {
     // update selectedFiles showing only the files that are in codeToEdit
-    setSelectedFiles(
-      (prevSelectedFiles) =>
-        prevSelectedFiles.filter(
-          (file) =>
-            codeToEdit.findIndex((code) => code.filepath === file.id) !== -1,
-        ), 
+    setSelectedFiles((prevSelectedFiles) =>
+      prevSelectedFiles.filter(
+        (file) =>
+          codeToEdit.findIndex((code) => code.filepath === file.id) !== -1,
+      ),
     );
   }, [codeToEdit]);
 
