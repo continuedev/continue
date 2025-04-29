@@ -41,12 +41,12 @@ interface OllamaModelFileParams {
   top_k?: number;
   top_p?: number;
   min_p?: number;
+  num_gpu?: number;
 
   // deprecated or not directly supported here:
   num_thread?: number;
   use_mmap?: boolean;
   num_gqa?: number;
-  num_gpu?: number;
   num_keep?: number;
   typical_p?: number;
   presence_penalty?: number;
@@ -280,6 +280,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
       min_p: options.minP,
+      num_gpu: options.numGpu,
     };
   }
 

@@ -23,7 +23,7 @@ class Inception extends OpenAI {
     completionOptions: {
       temperature: 0.0,
       presencePenalty: 1.5,
-      stop: ["\n\n", "\n \n", "<|endoftext|>"],
+      stop: ["<|endoftext|>"],
       model: "mercury-editor-small-experimental", // Added model to fix TypeScript error
     },
   };
@@ -50,7 +50,7 @@ class Inception extends OpenAI {
         top_p: options.topP,
         frequency_penalty: options.frequencyPenalty,
         presence_penalty: options.presencePenalty,
-        stop: options.stop,
+        stop: [...(options.stop ?? []), "\n\n", "\n \n"],
         stream: true,
       }),
       headers: {

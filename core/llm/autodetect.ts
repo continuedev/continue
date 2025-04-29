@@ -77,6 +77,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "azure",
   "scaleway",
   "nebius",
+  "ovhcloud"
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -95,6 +96,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "pixtral",
   "llama3.2",
   "llama-3.2",
+  "llama4"
 ];
 
 function modelSupportsTools(modelDescription: ModelDescription) {
@@ -147,6 +149,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "together",
   "novita",
   "sambanova",
+  "ovhcloud",
   "nebius",
   "vertexai",
   "function-network",
@@ -381,5 +384,6 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
-  modelSupportsTools,
+  modelSupportsTools
 };
+

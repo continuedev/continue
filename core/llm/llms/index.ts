@@ -46,6 +46,7 @@ import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
+import OVHcloud from "./OVHcloud";
 import { Relace } from "./Relace";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
@@ -81,6 +82,7 @@ export const LLMClasses = [
   Kindo,
   LlamaCpp,
   OpenAI,
+  OVHcloud,
   LMStudio,
   Mistral,
   Bedrock,

@@ -1,7 +1,7 @@
 ---
 title: Config YAML Reference
 description: Reference for the Continue configuration YAML file
-keywords: [ config, yaml, configuration, customize, customization ]
+keywords: [config, yaml, configuration, customize, customization]
 ---
 
 # config.yaml Reference
@@ -14,13 +14,12 @@ from [the Hub](https://hub.continue.dev/explore/assistants) or locally
 - [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to
   the extension
 - Locally
-    - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`.
-      The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
-    - in your workspace in a `/.continue/assistants` folder, with the same naming convention
+  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`.
+    The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
+  - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the *
-*[Migration Guide](./yaml-migration.md)**.
+Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the \* \*[Migration Guide](./yaml-migration.md)\*\*.
 :::
 
 An assistant is made up of:
@@ -193,31 +192,32 @@ chat, editing, and summarizing.
   `autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a
   valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
-    - `baseSystemMessage`: Can be used to override the default system prompt.
+  - `baseSystemMessage`: Can be used to override the default system prompt.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
-    - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
-    - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+  - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+  - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
 - `defaultCompletionOptions`: Default completion options for model settings.
-    - `contextLength`: Maximum context length of the model, typically in tokens.
-    - `maxTokens`: Maximum number of tokens to generate in a completion.
-    - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (
-      random).
-    - `topP`: The cumulative probability for nucleus sampling.
-    - `topK`: Maximum number of tokens considered at each step.
-    - `stop`: An array of stop tokens that will terminate the completion.
-    - `n`: Number of completions to generate.
+  - `contextLength`: Maximum context length of the model, typically in tokens.
+  - `maxTokens`: Maximum number of tokens to generate in a completion.
+  - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
+  - `topP`: The cumulative probability for nucleus sampling.
+  - `topK`: Maximum number of tokens considered at each step.
+  - `stop`: An array of stop tokens that will terminate the completion.
+  - `n`: Number of completions to generate.
+  - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
+  - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 - `requestOptions`: HTTP request options specific to the model.
-    - `timeout`: Timeout for each request to the language model.
-    - `verifySsl`: Whether to verify SSL certificates for requests.
-    - `caBundlePath`: Path to a custom CA bundle for HTTP requests.
-    - `proxy`: Proxy URL for HTTP requests.
-    - `headers`: Custom headers for HTTP requests.
-    - `extraBodyProperties`: Additional properties to merge with the HTTP request body.
-    - `noProxy`: List of hostnames that should bypass the specified proxy.
-    - `clientCertificate`: Client certificate for HTTP requests.
-        - `cert`: Path to the client certificate file.
-        - `key`: Path to the client certificate key file.
-        - `passphrase`: Optional passphrase for the client certificate key file.
+  - `timeout`: Timeout for each request to the language model.
+  - `verifySsl`: Whether to verify SSL certificates for requests.
+  - `caBundlePath`: Path to a custom CA bundle for HTTP requests.
+  - `proxy`: Proxy URL for HTTP requests.
+  - `headers`: Custom headers for HTTP requests.
+  - `extraBodyProperties`: Additional properties to merge with the HTTP request body.
+  - `noProxy`: List of hostnames that should bypass the specified proxy.
+  - `clientCertificate`: Client certificate for HTTP requests.
+    - `cert`: Path to the client certificate file.
+    - `key`: Path to the client certificate key file.
+    - `passphrase`: Optional passphrase for the client certificate key file.
 
 #### Example
 
@@ -401,8 +401,8 @@ Destinations to which [development data](./customize/deep-dives/development-data
 
 - `name` (**required**): The display name of the data destination
 - `destination` (**required**): The destination/endpoint that will receive the data. Can be:
-    - an HTTP endpoint that will receive a POST request with a JSON blob
-    - a file URL to a directory in which events will be dumpted to `.jsonl` files
+  - an HTTP endpoint that will receive a POST request with a JSON blob
+  - a file URL to a directory in which events will be dumpted to `.jsonl` files
 - `schema` (**required**): the schema version of the JSON blobs to be sent
 - `events`: an array of event names to include. Defaults to all events if not specified.
 - `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file

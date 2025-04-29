@@ -14,7 +14,7 @@ import {
   MCPTool,
 } from "../..";
 
-const DEFAULT_MCP_TIMEOUT = 20_000; // 10 seconds
+export const DEFAULT_MCP_TIMEOUT = 20_000; // 10 seconds
 
 class MCPConnection {
   public client: Client;
@@ -30,7 +30,7 @@ class MCPConnection {
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
 
-  constructor(private readonly options: MCPOptions) {
+  constructor(public options: MCPOptions) {
     this.transport = this.constructTransport(options);
 
     this.client = new Client(

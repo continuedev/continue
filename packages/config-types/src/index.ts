@@ -13,6 +13,7 @@ export const completionOptionsSchema = z.object({
   numThreads: z.number().optional(),
   useMmap: z.boolean().optional(),
   keepAlive: z.number().optional(),
+  numGpu: z.number().optional(),
   raw: z.boolean().optional(),
   stream: z.boolean().optional(),
 });
@@ -55,6 +56,7 @@ export const modelDescriptionSchema = z.object({
     "sagemaker",
     "cloudflare",
     "azure",
+    "ovhcloud",
     "continue-proxy",
     "nebius",
     "scaleway",
@@ -109,6 +111,7 @@ export const embeddingsProviderSchema = z.object({
     "cohere",
     "free-trial",
     "gemini",
+    "ovhcloud",
     "continue-proxy",
     "nebius",
     "scaleway",
