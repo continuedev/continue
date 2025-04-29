@@ -110,6 +110,16 @@ export class SqliteDb {
     }
 
     try {
+      await SqliteDb.db.exec("COMMIT;");
+      console.log("Committed ongoing transactions");
+    } catch {}
+
+    try {
+      await SqliteDb.db.exec("ROLLBACK;");
+      console.log("Rolled back ongoing transactions");
+    } catch {}
+
+    try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await SqliteDb.db.close();
 
