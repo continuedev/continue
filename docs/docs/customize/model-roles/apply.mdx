@@ -2,7 +2,7 @@ When editing code, Chat and Edit model output often doesn't clearly align with e
 
 ## Recommended Apply models
 
-We recommend [Morph Fast Apply](https://morphllm.com) or [Relace's Instant Apply model](https://hub.continue.dev/relace/instant-apply) for the fastest Apply experience. You can sign up for Morph's generous free tier [here](https://morphllm.com/dashboard) or get a Relace API key [here](https://app.relace.ai/settings/api-keys).
+We recommend [Morph Fast Apply](https://morphllm.com) or [Relace's Instant Apply model](https://hub.continue.dev/relace/instant-apply) for the fastest Apply experience. You can sign up for Morph's free tier [here](https://morphllm.com/dashboard) or get a Relace API key [here](https://app.relace.ai/settings/api-keys).
 
 However, most Chat models can also be used for applying code changes. We recommend smaller/cheaper models for the task, such as Claude 3.5 Haiku.
 
@@ -32,20 +32,4 @@ models:
         New: {{{new_code}}}
 
         Please generate the final code without any markers or explanations.
-```
-
-### Morph Fast Apply Configuration
-
-```yaml
-models:
-  - name: Morph Fast Apply
-    provider: openai
-    model: morph-v0
-    apiKey: sk-test-123
-    apiBase: https://api.morphllm.com/v1/
-    roles:
-      - apply
-      - chat
-    promptTemplates:
-      apply: "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
 ```
