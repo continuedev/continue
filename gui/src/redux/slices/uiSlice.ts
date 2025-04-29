@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Tool } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
@@ -58,7 +58,7 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
     },
     toolGroupSettings: {
-      BUILT_IN_GROUP_NAME: "include",
+      [BUILT_IN_GROUP_NAME]: "include",
     },
   } as UIState,
   reducers: {
