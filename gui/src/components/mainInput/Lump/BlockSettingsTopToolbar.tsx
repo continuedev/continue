@@ -193,7 +193,7 @@ export function BlockSettingsTopToolbar() {
       <div className="flex gap-0.5">
         <HoverItem data-tooltip-id="assistant-select-tooltip">
           <AssistantSelect />
-          <ToolTip id="assistant-select-tooltip" place="top-middle">
+          <ToolTip id="assistant-select-tooltip" place="top">
             Select Assistant
           </ToolTip>
         </HoverItem>
