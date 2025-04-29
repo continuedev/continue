@@ -22,7 +22,11 @@ class VertexAI extends BaseLLM {
 
   private clientPromise = new GoogleAuth({
     scopes: "https://www.googleapis.com/auth/cloud-platform",
-  }).getClient();
+  })
+    .getClient()
+    .catch((e) => {
+      console.warn(`Failed to load credentials for Vertex AI: ${e.message}`);
+    });
 
   private static getDefaultApiBaseFrom(options: LLMOptions) {
     const { region, projectId } = options;

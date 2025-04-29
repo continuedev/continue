@@ -349,7 +349,7 @@ export class ConfigHandler {
     this.currentOrg = org;
 
     if (profileId) {
-      this.setSelectedProfileId(profileId);
+      await this.setSelectedProfileId(profileId);
     } else {
       this.currentProfile = org.currentProfile;
       await this.reloadConfig();
