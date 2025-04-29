@@ -38,6 +38,7 @@
     "dompurify": "^3.0.6",
     "downshift": "^7.6.0",
     "lodash": "^4.17.21",
+    "lowlight": "^3.3.0",
     "minisearch": "^7.0.2",
     "mustache": "^4.2.0",
     "posthog-js": "^1.130.1",
