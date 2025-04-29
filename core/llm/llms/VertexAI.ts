@@ -1,7 +1,7 @@
 import { GoogleAuth } from "google-auth-library";
 
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse, streamSse } from "../stream.js";
 
@@ -11,12 +11,12 @@ import Gemini from "./Gemini.js";
 class VertexAI extends BaseLLM {
   static providerName = "vertexai";
   declare apiBase: string;
-  declare vertexProvider: string;
+  declare vertexProvider: "mistral" | "anthropic" | "gemini" | "unknown";
   declare anthropicInstance: Anthropic;
   declare geminiInstance: Gemini;
 
   static defaultOptions: Partial<LLMOptions> | undefined = {
-    maxEmbeddingBatchSize: 5,
+    maxEmbeddingBatchSize: 250,
     region: "us-central1",
   };
 
@@ -35,6 +35,13 @@ class VertexAI extends BaseLLM {
   }
 
   constructor(_options: LLMOptions) {
+    if (_options.region !== "us-central1") {
+      // Any region outside of us-central1 has a max batch size of 5.
+      _options.maxEmbeddingBatchSize = Math.min(
+        _options.maxEmbeddingBatchSize ?? 5,
+        5,
+      );
+    }
     super(_options);
     this.apiBase ??= VertexAI.getDefaultApiBaseFrom(_options);
     this.vertexProvider =
@@ -85,11 +92,13 @@ class VertexAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage =
-      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const systemMessage: string = renderChatMessage(
-      messages.filter((m) => m.role === "system")[0],
+    const systemMessage = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content ?? "",
     );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
+    );
+
     const apiURL = new URL(
       `publishers/anthropic/models/${options.model}:streamRawPredict`,
       this.apiBase,
@@ -109,7 +118,7 @@ class VertexAI extends BaseLLM {
           ? [
               {
                 type: "text",
-                text: this.systemMessage,
+                text: systemMessage,
                 cache_control: { type: "ephemeral" },
               },
             ]
@@ -133,8 +142,7 @@ class VertexAI extends BaseLLM {
     }
   }
 
-  //Gemini
-
+  // Gemini
   private async *streamChatGemini(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -143,97 +151,16 @@ class VertexAI extends BaseLLM {
       `publishers/google/models/${options.model}:streamGenerateContent`,
       this.apiBase,
     );
-    // This feels hacky to repeat code from above function but was the quickest
-    // way to ensure system message re-formatting isn't done if user has specified v1
-    const isV1API = this.apiBase.includes("/v1/");
 
-    const contents = messages
-      .map((msg) => {
-        if (msg.role === "system" && !isV1API) {
-          return null; // Don't include system message in contents
-        }
-        if (msg.role === "tool") {
-          return null;
-        }
-
-        return {
-          role: msg.role === "assistant" ? "model" : "user",
-          parts:
-            typeof msg.content === "string"
-              ? [{ text: msg.content }]
-              : msg.content.map(this.geminiInstance.continuePartToGeminiPart),
-        };
-      })
-      .filter((c) => c !== null);
-
-    const body = {
-      ...this.geminiInstance.convertArgs(options),
-      contents,
-      // if this.systemMessage is defined, reformat it for Gemini API
-      ...(this.systemMessage &&
-        !isV1API && {
-          systemInstruction: { parts: [{ text: this.systemMessage }] },
-        }),
-    };
+    const body = this.geminiInstance.prepareBody(messages, options, false);
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
     });
-
-    let buffer = "";
-    for await (const chunk of streamResponse(response)) {
-      buffer += chunk;
-      if (buffer.startsWith("[")) {
-        buffer = buffer.slice(1);
-      }
-      if (buffer.endsWith("]")) {
-        buffer = buffer.slice(0, -1);
-      }
-      if (buffer.startsWith(",")) {
-        buffer = buffer.slice(1);
-      }
-
-      const parts = buffer.split("\n,");
-
-      let foundIncomplete = false;
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        let data;
-        try {
-          data = JSON.parse(part);
-        } catch (e) {
-          foundIncomplete = true;
-          continue; // yo!
-        }
-        if (data.error) {
-          throw new Error(data.error.message);
-        }
-        // Check for existence of each level before accessing the final 'text' property
-        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-          // Incrementally stream the content to make it smoother
-          const content = data.candidates[0].content.parts[0].text;
-          const words = content.split(/(\s+)/);
-          const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
-          while (words.length > 0) {
-            const wordsToYield = Math.min(3, words.length);
-            yield {
-              role: "assistant",
-              content: words.splice(0, wordsToYield).join(""),
-            };
-            await delay(delaySeconds);
-          }
-        } else {
-          // Handle the case where the expected data structure is not found
-          if (data?.candidates?.[0]?.finishReason !== "STOP") {
-            console.warn("Unexpected response format:", data);
-          }
-        }
-      }
-      if (foundIncomplete) {
-        buffer = parts[parts.length - 1];
-      } else {
-        buffer = "";
-      }
+    for await (const message of this.geminiInstance.processGeminiResponse(
+      streamResponse(response),
+    )) {
+      yield message;
     }
   }
 
@@ -337,7 +264,9 @@ class VertexAI extends BaseLLM {
     });
 
     for await (const chunk of streamSse(response)) {
-      yield chunk.choices[0].delta.content;
+      if (chunk.choices?.[0].delta) {
+        yield chunk.choices[0].delta.content;
+      }
     }
   }
 
@@ -376,7 +305,7 @@ class VertexAI extends BaseLLM {
     yield (await resp.json()).predictions[0].content;
   }
 
-  //Manager functions
+  // Manager functions
 
   protected async *_streamChat(
     messages: ChatMessage[],
@@ -398,6 +327,8 @@ class VertexAI extends BaseLLM {
     } else {
       if (options.model.includes("bison")) {
         yield* this.streamChatBison(convertedMsgs, options);
+      } else {
+        throw new Error(`Unsupported model: ${options.model}`);
       }
     }
   }
@@ -432,7 +363,9 @@ class VertexAI extends BaseLLM {
   }
 
   supportsFim(): boolean {
-    return ["code-gecko", "codestral-latest"].includes(this.model);
+    return (
+      this.model.includes("code-gecko") || this.model.includes("codestral")
+    );
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
@@ -445,7 +378,7 @@ class VertexAI extends BaseLLM {
     }
 
     const resp = await this.fetch(
-      new URL(this.apiBase + `/publishers/google/models/${this.model}:predict`),
+      new URL(`publishers/google/models/${this.model}:predict`, this.apiBase),
       {
         method: "POST",
         body: JSON.stringify({

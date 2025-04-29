@@ -40,7 +40,6 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("fireworks"),
     z.literal("together"),
     z.literal("novita"),
-    z.literal("sambanova"),
     z.literal("nebius"),
     z.literal("function-network"),
     z.literal("llama.cpp"),
@@ -55,6 +54,8 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("vllm"),
     z.literal("x-ai"),
     z.literal("scaleway"),
+    z.literal("ncompass"),
+    z.literal("relace"),
   ]),
 });
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
@@ -68,6 +69,11 @@ export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("deepseek"),
 });
 export type DeepseekConfig = z.infer<typeof DeepseekConfigSchema>;
+
+export const MockConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("mock"),
+});
+export type MockConfig = z.infer<typeof MockConfigSchema>;
 
 // Other APIs
 export const CohereConfigSchema = OpenAIConfigSchema.extend({
@@ -97,6 +103,11 @@ export const JinaConfigSchema = OpenAIConfigSchema.extend({
 });
 export type JinaConfig = z.infer<typeof JinaConfigSchema>;
 
+export const InceptionConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("inception"),
+});
+export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
+
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
@@ -107,5 +118,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   GeminiConfigSchema,
   AnthropicConfigSchema,
   JinaConfigSchema,
+  MockConfigSchema,
+  InceptionConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

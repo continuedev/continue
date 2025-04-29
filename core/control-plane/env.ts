@@ -1,7 +1,9 @@
-import fetch from "node-fetch";
 import * as fs from "node:fs";
 import { IdeSettings } from "..";
-import { getStagingEnvironmentDotFilePath } from "../util/paths";
+import {
+  getLocalEnvironmentDotFilePath,
+  getStagingEnvironmentDotFilePath,
+} from "../util/paths";
 
 export interface ControlPlaneEnv {
   DEFAULT_CONTROL_PLANE_PROXY_URL: string;
@@ -18,16 +20,6 @@ const WORKOS_CLIENT_ID_STAGING = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ";
 
 const WORKOS_ENV_ID_PRODUCTION = "continue";
 const WORKOS_ENV_ID_STAGING = "continue-staging";
-
-const PRODUCTION_ENV: ControlPlaneEnv = {
-  DEFAULT_CONTROL_PLANE_PROXY_URL:
-    "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/",
-  CONTROL_PLANE_URL:
-    "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/",
-  AUTH_TYPE: WORKOS_ENV_ID_PRODUCTION,
-  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_PRODUCTION,
-  APP_URL: "https://app.continue.dev/",
-};
 
 const PRODUCTION_HUB_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api.continue.dev/",
@@ -62,14 +54,7 @@ const LOCAL_ENV: ControlPlaneEnv = {
 };
 
 export async function enableHubContinueDev() {
-  try {
-    const resp = await fetch("https://api.continue.dev/features/hub");
-    const data = (await resp.json()) as any;
-    if ("enabled" in data && data.enabled === true) {
-      return true;
-    }
-  } catch (e: any) {}
-  return false;
+  return true;
 }
 
 export async function getControlPlaneEnv(
@@ -82,6 +67,11 @@ export async function getControlPlaneEnv(
 export function getControlPlaneEnvSync(
   ideTestEnvironment: IdeSettings["continueTestEnvironment"],
 ): ControlPlaneEnv {
+  // Note .local overrides .staging
+  if (fs.existsSync(getLocalEnvironmentDotFilePath())) {
+    return LOCAL_ENV;
+  }
+
   if (fs.existsSync(getStagingEnvironmentDotFilePath())) {
     return STAGING_ENV;
   }
@@ -101,9 +91,7 @@ export function getControlPlaneEnvSync(
       ? STAGING_ENV
       : env === "test"
         ? TEST_ENV
-        : env === "hub"
-          ? PRODUCTION_HUB_ENV
-          : PRODUCTION_ENV;
+        : PRODUCTION_HUB_ENV;
 }
 
 export async function useHub(

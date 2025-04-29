@@ -1,22 +1,55 @@
-import { Cog8ToothIcon, ListBulletIcon } from "@heroicons/react/24/outline";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { useContext } from "react";
-import { GithubIcon } from "../../components/svg/GithubIcon";
-import { DiscordIcon } from "../../components/svg/DiscordIcon";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+import {
+  ArrowTopRightOnSquareIcon,
+  Cog8ToothIcon,
+} from "@heroicons/react/24/outline";
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
-import { providers } from "../AddNewModel/configs/providers";
+import { useContext, useMemo } from "react";
 import { Button, SecondaryButton } from "../../components";
+import { DiscordIcon } from "../../components/svg/DiscordIcon";
+import { GithubIcon } from "../../components/svg/GithubIcon";
+import { useAuth } from "../../context/Auth";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { selectSelectedProfile } from "../../redux/";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectUseHub } from "../../redux/selectors";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { isLocalProfile } from "../../util";
+import { providers } from "../AddNewModel/configs/providers";
+import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
 
 interface StreamErrorProps {
   error: unknown;
 }
+
+function parseErrorMessage(fullErrMsg: string): string {
+  const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
+  try {
+    const parsed = JSON.parse(msg);
+    return parsed.error ?? parsed.message ?? msg;
+  } catch (e) {
+    return msg;
+  }
+}
+
 const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const selectedModel = useAppSelector(selectDefaultModel);
+  const selectedModel = useAppSelector(selectSelectedChatModel);
+  const hubEnabled = useAppSelector(selectUseHub);
+  const selectedProfile = useAppSelector(selectSelectedProfile);
+  const { session, refreshProfiles } = useAuth();
+
+  const parsedError = useMemo<string>(
+    () => parseErrorMessage((error as any)?.message || ""),
+    [error],
+  );
+
+  const handleRefreshProfiles = () => {
+    refreshProfiles();
+    dispatch(setShowDialog(false));
+    dispatch(setDialogMessage(undefined));
+  };
 
   // Collect model information to display useful error info
   let modelTitle = "Chat model";
@@ -52,11 +85,13 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   ) {
     message = error["message"];
     const parts = message?.split(" ") ?? [];
-    const status = parts[0] === "HTTP" ? parts[1] : parts[0];
-    if (status) {
-      const code = Number(status);
-      if (!Number.isNaN(statusCode)) {
-        statusCode = code;
+    if (parts.length > 1) {
+      const status = parts[0] === "HTTP" ? parts[1] : parts[0];
+      if (status) {
+        const code = Number(status);
+        if (!Number.isNaN(code)) {
+          statusCode = code;
+        }
       }
     }
   }
@@ -84,9 +119,15 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div>
         <Cog8ToothIcon className="h-4 w-4" />
       </div>
-      <span>Open config</span>
+      <span>Open Assistant configuration</span>
     </SecondaryButton>
   );
+
+  if (
+    parsedError === "You have exceeded the chat limit for the Models Add-On."
+  ) {
+    return <ModelsAddOnLimitDialog />;
+  }
 
   let errorContent: React.ReactNode = <></>;
 
@@ -139,7 +180,18 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (statusCode === 401) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        <span>{`Likely cause: your API key is invalid.`}</span>
+        {hubEnabled &&
+          session &&
+          selectedProfile &&
+          !isLocalProfile(selectedProfile) && (
+            <div className="flex flex-col gap-1">
+              <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+              <SecondaryButton onClick={handleRefreshProfiles}>
+                Refresh assistant secrets
+              </SecondaryButton>
+            </div>
+          )}
+        <span>{`It's possible that your API key is invalid.`}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {checkKeysButton}
           {configButton}
@@ -180,19 +232,22 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   }
 
   return (
-    <div className={`flex flex-col gap-1 px-3 pb-2 pt-2`}>
-      <p className="m-0 p-0 text-lg text-red-500">{`${statusCode ? statusCode + " " : ""}Error`}</p>
+    <div className={`flex flex-col gap-1 px-3 pb-2 pt-3`}>
+      <p className="m-0 p-0 text-lg text-red-500">{`Error (status code ${statusCode})`}</p>
 
       {message ? (
-        <div className="mt-2 flex flex-col gap-0 rounded-sm border border-solid">
-          <code className="max-h-20 overflow-y-auto px-1 py-1">{message}</code>
+        <div className="mt-2 flex flex-col gap-0 rounded-sm">
+          <code className="max-h-20 overflow-y-auto p-2 font-mono">
+            {parsedError}
+          </code>
           <div
-            className="flex cursor-pointer flex-row justify-end px-1 py-1 hover:underline"
+            className="flex cursor-pointer flex-row items-center justify-end px-1 py-1 text-gray-500 hover:underline"
             onClick={() => {
               ideMessenger.post("toggleDevTools", undefined);
             }}
           >
             <span className="px-2">View Logs</span>
+            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
           </div>
         </div>
       ) : null}
@@ -219,16 +274,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             <DiscordIcon className="h-5 w-5" />
             <span className="xs:flex hidden">Discord</span>
           </SecondaryButton>
-        </div>
-        <div className="flex flex-row justify-end">
-          <Button
-            onClick={() => {
-              dispatch(setDialogMessage(undefined));
-              dispatch(setShowDialog(false));
-            }}
-          >
-            Close
-          </Button>
         </div>
       </div>
     </div>

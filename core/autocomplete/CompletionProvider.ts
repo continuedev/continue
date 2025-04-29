@@ -134,6 +134,13 @@ export class CompletionProvider {
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
+      // Create abort signal if not given
+      if (!token) {
+        const controller = this.loggingService.createAbortController(
+          input.completionId,
+        );
+        token = controller.signal;
+      }
       const startTime = Date.now();
       const options = await this._getAutocompleteOptions();
 
@@ -147,6 +154,10 @@ export class CompletionProvider {
         return undefined;
       }
 
+      if (llm.promptTemplates?.autocomplete) {
+        options.template = llm.promptTemplates.autocomplete as string;
+      }
+
       const helper = await HelperVars.create(
         input,
         options,
@@ -156,14 +167,6 @@ export class CompletionProvider {
 
       if (await shouldPrefilter(helper, this.ide)) {
         return undefined;
-      }
-
-      // Create abort signal if not given
-      if (!token) {
-        const controller = this.loggingService.createAbortController(
-          input.completionId,
-        );
-        token = controller.signal;
       }
 
       const [snippetPayload, workspaceDirs] = await Promise.all([

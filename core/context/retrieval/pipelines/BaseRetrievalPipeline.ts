@@ -7,6 +7,8 @@ import { FullTextSearchCodebaseIndex } from "../../../indexing/FullTextSearchCod
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
 import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache";
 
+const DEFAULT_CHUNK_SIZE = 384;
+
 export interface RetrievalPipelineOptions {
   llm: ILLM;
   config: ContinueConfig;
@@ -16,13 +18,13 @@ export interface RetrievalPipelineOptions {
   nFinal: number;
   tags: BranchAndDir[];
   filterDirectory?: string;
-  includeEmbeddings?: boolean; // Used to handle JB w/o an embeddings model
 }
 
 export interface RetrievalPipelineRunArguments {
   query: string;
   tags: BranchAndDir[];
   filterDirectory?: string;
+  includeEmbeddings: boolean;
 }
 
 export interface IRetrievalPipeline {
@@ -31,12 +33,21 @@ export interface IRetrievalPipeline {
 
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   private ftsIndex = new FullTextSearchCodebaseIndex();
-  private lanceDbIndex: LanceDbIndex;
+  private lanceDbIndex: LanceDbIndex | null = null;
 
   constructor(protected readonly options: RetrievalPipelineOptions) {
-    this.lanceDbIndex = new LanceDbIndex(
-      options.config.embeddingsProvider,
-      (uri) => options.ide.readFile(uri),
+    void this.initLanceDb();
+  }
+
+  private async initLanceDb() {
+    const embedModel = this.options.config.selectedModelByRole.embed;
+
+    if (!embedModel) {
+      return;
+    }
+
+    this.lanceDbIndex = await LanceDbIndex.create(embedModel, (uri) =>
+      this.options.ide.readFile(uri),
     );
   }
 
@@ -57,30 +68,30 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     const cleanedTokens = [...tokens].join(" ");
     const trigrams = nlp.string.ngram(cleanedTokens, 3);
 
-    return trigrams;
+    return trigrams.map(this.escapeFtsQueryString);
+  }
+
+  private escapeFtsQueryString(query: string): string {
+    const escapedDoubleQuotes = query.replace(/"/g, '""');
+    return `"${escapedDoubleQuotes}"`;
   }
 
   protected async retrieveFts(
     args: RetrievalPipelineRunArguments,
     n: number,
   ): Promise<Chunk[]> {
-    try {
-      if (args.query.trim() === "") {
-        return [];
-      }
-
-      const tokens = this.getCleanedTrigrams(args.query).join(" OR ");
-
-      return await this.ftsIndex.retrieve({
-        n,
-        text: tokens,
-        tags: args.tags,
-        directory: args.filterDirectory,
-      });
-    } catch (e) {
-      console.warn("Error retrieving from FTS:", e);
+    if (args.query.trim() === "") {
       return [];
     }
+
+    const tokens = this.getCleanedTrigrams(args.query).join(" OR ");
+    
+    return await this.ftsIndex.retrieve({
+      n,
+      text: tokens,
+      tags: args.tags,
+      directory: args.filterDirectory,
+    });
   }
 
   protected async retrieveAndChunkRecentlyEditedFiles(
@@ -109,7 +120,8 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
         filepath,
         contents,
         maxChunkSize:
-          this.options.config.embeddingsProvider.maxEmbeddingChunkSize,
+          this.options.config.selectedModelByRole.embed
+            ?.maxEmbeddingChunkSize ?? DEFAULT_CHUNK_SIZE,
         digest: filepath,
       });
 
@@ -125,6 +137,13 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     input: string,
     n: number,
   ): Promise<Chunk[]> {
+    if (!this.lanceDbIndex) {
+      console.warn(
+        "LanceDB index not available, skipping embeddings retrieval",
+      );
+      return [];
+    }
+
     return this.lanceDbIndex.retrieve(
       input,
       n,

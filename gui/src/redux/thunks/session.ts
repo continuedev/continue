@@ -3,6 +3,7 @@ import { ChatMessage, Session, SessionMetadata } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   deleteSessionMetadata,
   newSession,
@@ -166,10 +167,9 @@ export const saveCurrentSession = createAsyncThunk<
     // Now save previous session and update chat title if relevant
     let title = state.session.title;
     if (title === NEW_SESSION_TITLE) {
-      if (
-        !state.config.config?.disableSessionTitles &&
-        state.config.defaultModelTitle
-      ) {
+      const selectedChatModel = selectSelectedChatModel(state);
+
+      if (!state.config.config?.disableSessionTitles && selectedChatModel) {
         let assistantResponse = state.session.history
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
@@ -180,7 +180,6 @@ export const saveCurrentSession = createAsyncThunk<
               "chatDescriber/describe",
               {
                 text: assistantResponse,
-                selectedModelTitle: state.config.defaultModelTitle,
               },
             );
             if (result.status === "success" && result.content) {

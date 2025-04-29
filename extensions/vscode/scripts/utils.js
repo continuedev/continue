@@ -10,7 +10,20 @@ const {
 
 const continueDir = path.join(__dirname, "..", "..", "..");
 
+function generateConfigYamlSchema() {
+  process.chdir(path.join(continueDir, "packages", "config-yaml"));
+  execCmdSync("npm install");
+  execCmdSync("npm run build");
+  execCmdSync("npm run generate-schema");
+  fs.copyFileSync(
+    path.join("schema", "config-yaml-schema.json"),
+    path.join(continueDir, "extensions", "vscode", "config-yaml-schema.json"),
+  );
+  console.log("[info] Generated config.yaml schema");
+}
+
 function copyConfigSchema() {
+  process.chdir(path.join(continueDir, "extensions", "vscode"));
   // Modify and copy for .continuerc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
   schema.$defs.SerializedContinueConfig.properties.mergeBehavior = {
@@ -504,24 +517,29 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 async function copyScripts() {
   process.chdir(path.join(continueDir, "extensions", "vscode"));
   console.log("[info] Copying scripts from core");
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(__dirname, "../../../core/scripts"),
-      path.join(__dirname, "../out"),
-      { dereference: true },
-      (error) => {
-        if (error) {
-          console.warn("[error] Error copying script files", error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
+  fs.copyFileSync(
+    path.join(__dirname, "../../../core/util/start_ollama.sh"),
+    path.join(__dirname, "../out/start_ollama.sh"),
+  );
+  console.log("[info] Copied script files");
+}
+
+// We can't simply touch one of our files to trigger a rebuild, because
+// esbuild doesn't always use modifications times to detect changes -
+// for example, if it finds a file changed within the last 3 seconds,
+// it will fall back to full-contents-comparison for that file
+//
+// So to facilitate development workflows, we always include a timestamp string
+// in the build
+function writeBuildTimestamp() {
+  fs.writeFileSync(
+    "src/.buildTimestamp.ts",
+    `export default "${new Date().toISOString()}";\n`,
+  );
 }
 
 module.exports = {
+  generateConfigYamlSchema,
   copyConfigSchema,
   installNodeModules,
   buildGui,
@@ -536,4 +554,5 @@ module.exports = {
   downloadRipgrepBinary,
   copyTokenizers,
   copyScripts,
+  writeBuildTimestamp,
 };

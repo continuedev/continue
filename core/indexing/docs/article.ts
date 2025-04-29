@@ -139,24 +139,35 @@ export async function htmlPageToArticleWithChunks(
       return undefined;
     }
 
+    const title = readability.title || subpath;
+
     const titles = Array.from(dom.window.document.querySelectorAll("h2"));
-    const article_components = titles.map((titleElement) => {
-      const title = titleElement.textContent || "";
-      let body = "";
-      let nextSibling = titleElement.nextElementSibling;
 
-      while (nextSibling && nextSibling.tagName !== "H2") {
-        body += nextSibling.textContent || "";
-        nextSibling = nextSibling.nextElementSibling;
-      }
+    const article_components =
+      titles.length > 0
+        ? titles.map((titleElement) => {
+            const title = titleElement.textContent || "";
+            let body = "";
+            let nextSibling = titleElement.nextElementSibling;
 
-      return { title, body };
-    });
+            while (nextSibling && nextSibling.tagName !== "H2") {
+              body += nextSibling.textContent || "";
+              nextSibling = nextSibling.nextElementSibling;
+            }
+
+            return { title, body };
+          })
+        : [
+            {
+              title: title,
+              body: readability.textContent,
+            },
+          ];
 
     const article = {
       url,
       subpath,
-      title: readability.title,
+      title: title,
       article_components,
     };
     return {

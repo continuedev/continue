@@ -1,0 +1,155 @@
+---
+title: Autocomplete
+keywords: [autocomplete]
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+### Setting up with Codestral (recommended)
+
+If you want to have the best autocomplete experience, we recommend using Codestral, which is available through the [Mistral API](https://console.mistral.ai/). To do this, obtain an API key and add it to your config:
+
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [Mistral Codestral model block](https://hub.continue.dev/mistral/codestral)
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Codestral
+      provider: mistral
+      model: codestral-latest
+      apiKey: <YOUR_CODESTRAL_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Codestral",
+      "provider": "mistral", 
+      "model": "codestral-latest",
+      "apiKey": "<YOUR_CODESTRAL_API_KEY>"
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+:::tip[Codestral API Key]
+The API keys for Codestral and the general Mistral APIs are different. If you are using Codestral, you probably want a Codestral API key, but if you are sharing the key as a team or otherwise want to use `api.mistral.ai`, then make sure to set `"apiBase": "https://api.mistral.ai/v1"` in your `tabAutocompleteModel`.
+:::
+
+### Setting up with Ollama (default)
+
+If you'd like to run your autocomplete model locally, we recommend using Ollama. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
+
+```bash
+ollama run qwen2.5-coder:1.5b
+```
+
+Then, add the model to your configuration:
+
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [Ollama Qwen 2.5 Coder 1.5B model block](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Qwen 1.5b Autocomplete Model
+      provider: ollama
+      model: qwen2.5-coder:1.5b
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Qwen 1.5b Autocomplete Model",
+      "provider": "ollama", 
+      "model": "qwen2.5-coder:1.5b",
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Once the model has been downloaded, you should begin to see completions in VS Code.
+
+## Configuration Options
+
+### Hub Autocomplete models
+
+Explore autocomplete model configurations on [the hub](https://hub.continue.dev/explore/models?roles=autocomplete)
+
+### Autocomplete User Settings
+
+{/* - `Use autocomplete cache`: If on, caches completions */}
+The following settings can be configured for autocompletion in the IDE extension [User Settings Page](./settings.md):
+
+- `Multiline Autocompletions`: Controls multiline completions for autocomplete. Can be set to `always`, `never`, or `auto`. Defaults to `auto`
+- `Disable autocomplete in files`: List of comma-separated glob pattern to disable autocomplete in matching files. E.g., "\_/.md, \*/.txt"
+
+### `config.json` Configuration
+
+The `config.json` configuration format (deprecated) offers further configuration options through `tabAutocompleteOptions`. See the [JSON Reference](../../json-reference.md#tabautocompleteoptions) for more details.
+
+## FAQs
+
+### I want better completions, should I use GPT-4?
+
+Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/main/core/autocomplete/templating/AutocompleteTemplate.ts)). Some of the best commercial models like GPT-4 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
+
+### I'm not seeing any completions
+
+Follow these steps to ensure that everything is set up correctly:
+
+1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar, and in JetBrains by going to Settings -> Tools -> Continue).
+2. Make sure you have downloaded Ollama.
+3. Run `ollama run qwen2.5-coder:1.5b` to verify that the model is downloaded.
+4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
+5. Check the output of the logs to find any potential errors: <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains.
+6. Check VS Code settings to make sure that `"editor.inlineSuggest.enabled"` is set to `true` (use <kbd>cmd/ctrl</kbd> + <kbd>,</kbd> then search for this and check the box)
+7. If you are still having issues, please let us know in our [Discord](https://discord.gg/vapESyrFmJ) and we'll help as soon as possible.
+
+### Completions are only ever single-line
+
+To ensure that you receive multi-line completions, you can set `"multilineCompletions": "always"` in `tabAutocompleteOptions`. By default, it is `"auto"`. If you still find that you are only seeing single-line completions, this may be because some models tend to produce shorter completions when starting in the middle of a file. You can try temporarily moving text below your cursor out of your active file, or switching to a larger model.
+
+### Can I configure a "trigger key" for autocomplete?
+
+Yes, in VS Code, if you don't want to be shown suggestions automatically you can:
+
+1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disable automatic suggestions
+2. Open "Keyboard Shortcuts" (cmd/ctrl+k, cmd/ctrl+s) and search for `editor.action.inlineSuggest.trigger`
+3. Click the "+" icon to add a new keybinding
+4. Press the key combination you want to use to trigger suggestions (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>)
+5. Now whenever you want to see a suggestion, you can press your key binding (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>) to trigger suggestions manually
+
+### Is there a shortcut to accept one line at a time?
+
+This is a built-in feature of VS Code, but it's just a bit hidden. See this great [StackOverflow answer](https://stackoverflow.com/questions/72228174/accept-line-by-line-from-autocompletion/78001122#78001122) for more details.
+
+### How to turn off autocomplete
+
+#### VS Code
+
+Click the "Continue" button in the status panel at the bottom right of the screen. The checkmark will become a "cancel" symbol and you will no longer see completions. You can click again to turn it back on.
+
+Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
+
+You can also use the default shortcut to disable autocomplete directly using a chord: press and hold <kbd>ctrl/cmd</kbd> + <kbd>K</kbd> (continue holding <kbd>ctrl/cmd</kbd>) and press <kbd>ctrl/cmd</kbd> + <kbd>A</kbd>. This will turn off autocomplete without navigating through settings.
+
+#### JetBrains
+
+Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocomplete".
+
+#### Feedback
+
+If you're turning off autocomplete, we'd love to hear how we can improve! Please let us know in our [Discord](https://discord.gg/vapESyrFmJ) or file an issue on GitHub.

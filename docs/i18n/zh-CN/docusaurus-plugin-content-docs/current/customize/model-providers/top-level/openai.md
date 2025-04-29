@@ -28,7 +28,7 @@ slug: ../openai
 
 OpenAI 当前没有提供任何自动补全模型。
 
-[点击这里](../../model-types/autocomplete.md) 查看自动补全模型提供者列表。
+[点击这里](../../model-roles/autocomplete.md) 查看自动补全模型提供者列表。
 
 ## 嵌入模型
 
@@ -48,7 +48,7 @@ OpenAI 当前没有提供任何自动补全模型。
 
 OpenAI 当前没有提供任何重排序模型。
 
-[点击这里](../../model-types/reranking.md) 查看重排序模型提供者列表。
+[点击这里](../../model-roles/reranking.md) 查看重排序模型提供者列表。
 
 ## OpenAI 兼容服务器 / API
 

@@ -7,7 +7,7 @@ import {
   IContextProvider,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
-import { ControlPlaneClient } from "../../control-plane/client";
+import { LLMLogger } from "../../llm/logger";
 import { TEST_DIR } from "../../test/testDir";
 import FileSystemIde from "../../util/filesystem";
 
@@ -27,11 +27,12 @@ async function getContextProviderExtras(
 ): Promise<ContextProviderExtras> {
   const ide = new FileSystemIde(TEST_DIR);
   const ideSettingsPromise = ide.getIdeSettings();
+  const llmLogger = new LLMLogger();
   const configHandler = new ConfigHandler(
     ide,
     ideSettingsPromise,
-    async (text) => {},
-    new ControlPlaneClient(Promise.resolve(undefined), ideSettingsPromise),
+    llmLogger,
+    Promise.resolve(undefined),
   );
   const { config } = await configHandler.loadConfig();
   if (!config) {
@@ -42,10 +43,10 @@ async function getContextProviderExtras(
     fullInput,
     ide,
     config,
-    embeddingsProvider: config.embeddingsProvider,
+    embeddingsProvider: config.selectedModelByRole.embed,
     fetch: fetch,
-    llm: config.models[0],
-    reranker: config.reranker,
+    llm: config.modelsByRole.chat[0],
+    reranker: config.selectedModelByRole.rerank,
     selectedCode: [],
   };
 }

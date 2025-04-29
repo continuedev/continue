@@ -3,6 +3,8 @@ import { useContext } from "react";
 import { Button, ButtonSubtext } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { selectCurrentOrg } from "../../../../redux";
+import { useAppSelector } from "../../../../redux/hooks";
 import { hasPassedFTL } from "../../../../util/freeTrial";
 import ContinueLogo from "../../../gui/ContinueLogo";
 import { useOnboardingCard } from "../../hooks";
@@ -17,6 +19,7 @@ export default function MainTab({
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const auth = useAuth();
+  const currentOrg = useAppSelector(selectCurrentOrg);
 
   function onGetStarted() {
     auth.login(true).then((success) => {
@@ -29,7 +32,7 @@ export default function MainTab({
   function openPastFreeTrialOnboarding() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "setup-models",
-      orgSlug: auth.selectedOrganization?.slug,
+      orgSlug: currentOrg?.slug,
     });
     onboardingCard.close(isDialog);
   }
@@ -55,6 +58,20 @@ export default function MainTab({
             Go to Continue Platform
           </Button>
         </>
+      ) : onboardingCard.activeTab === "ExistingUserHubIntro" ? (
+        <>
+          <p className="xs:w-3/4 w-full text-sm">
+            You can now browse and create custom AI code assistants at{" "}
+            <code>hub.continue.dev</code>
+          </p>
+
+          <Button
+            onClick={onGetStarted}
+            className="mt-4 grid w-full grid-flow-col items-center gap-2"
+          >
+            Get started
+          </Button>
+        </>
       ) : (
         <>
           <p className="xs:w-3/4 w-full text-sm">
@@ -70,12 +87,21 @@ export default function MainTab({
         </>
       )}
 
-      <ButtonSubtext onClick={onRemainLocal}>
-        <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
-          <span>Or, remain local</span>
-          <ChevronRightIcon className="h-3 w-3" />
-        </div>
-      </ButtonSubtext>
+      {onboardingCard.activeTab === "ExistingUserHubIntro" ? (
+        <ButtonSubtext onClick={() => onboardingCard.close(isDialog)}>
+          <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
+            <span>Or, use Continue as usual</span>
+            <ChevronRightIcon className="h-3 w-3" />
+          </div>
+        </ButtonSubtext>
+      ) : (
+        <ButtonSubtext onClick={onRemainLocal}>
+          <div className="flex cursor-pointer items-center justify-center gap-1 hover:brightness-125">
+            <span>Or, remain local</span>
+            <ChevronRightIcon className="h-3 w-3" />
+          </div>
+        </ButtonSubtext>
+      )}
     </div>
   );
 }

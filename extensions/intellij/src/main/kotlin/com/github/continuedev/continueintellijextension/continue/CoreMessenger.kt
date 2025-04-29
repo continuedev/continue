@@ -65,21 +65,6 @@ class CoreMessenger(
 
         // Forward to webview
         if (MessageTypes.PASS_THROUGH_TO_WEBVIEW.contains(messageType)) {
-            // TODO: Currently we aren't set up to receive a response back from the webview
-            // Can circumvent for getDefaultsModelTitle here for now
-            if (messageType == "getDefaultModelTitle") {
-                val continueSettingsService = service<ContinueExtensionSettings>()
-                val defaultModelTitle = continueSettingsService.continueState.lastSelectedInlineEditModel
-                val message =
-                    gson.toJson(
-                        mapOf(
-                            "messageId" to messageId,
-                            "messageType" to messageType,
-                            "data" to defaultModelTitle
-                        )
-                    )
-                write(message)
-            }
             val continuePluginService = project.service<ContinuePluginService>()
             continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }

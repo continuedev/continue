@@ -30,6 +30,12 @@ class Anthropic extends BaseLLM {
         description: tool.function.description,
         input_schema: tool.function.parameters,
       })),
+      thinking: options.reasoning
+        ? {
+            type: "enabled",
+            budget_tokens: options.reasoningBudgetTokens,
+          }
+        : undefined,
       tool_choice: options.toolChoice
         ? {
             type: "tool",
@@ -63,6 +69,27 @@ class Anthropic extends BaseLLM {
           input: JSON.parse(toolCall.function?.arguments || "{}"),
         })),
       };
+    } else if (message.role === "thinking" && !message.redactedThinking) {
+      return {
+        role: "assistant",
+        content: [
+          {
+            type: "thinking",
+            thinking: message.content,
+            signature: message.signature,
+          },
+        ],
+      };
+    } else if (message.role === "thinking" && message.redactedThinking) {
+      return {
+        role: "assistant",
+        content: [
+          {
+            type: "redacted_thinking",
+            data: message.redactedThinking,
+          },
+        ],
+      };
     }
 
     if (typeof message.content === "string") {
@@ -86,7 +113,7 @@ class Anthropic extends BaseLLM {
           const newpart = {
             ...part,
             // If multiple text parts, only add cache_control to the last one
-            ...(addCaching && contentIdx == message.content.length - 1
+            ...(addCaching && contentIdx === message.content.length - 1
               ? { cache_control: { type: "ephemeral" } }
               : {}),
           };
@@ -145,10 +172,17 @@ class Anthropic extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage =
-      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const systemMessage: string = stripImages(
+    if (!this.apiKey || this.apiKey === "") {
+      throw new Error(
+        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
+      );
+    }
+
+    const systemMessage = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
     );
 
     const msgs = this.convertMessages(messages);
@@ -170,7 +204,7 @@ class Anthropic extends BaseLLM {
           ? [
               {
                 type: "text",
-                text: this.systemMessage,
+                text: systemMessage,
                 cache_control: { type: "ephemeral" },
               },
             ]
@@ -210,12 +244,31 @@ class Anthropic extends BaseLLM {
             lastToolUseId = value.content_block.id;
             lastToolUseName = value.content_block.name;
           }
+          // handle redacted thinking
+          if (value.content_block.type === "redacted_thinking") {
+            console.log("redacted thinking", value.content_block.data);
+            yield {
+              role: "thinking",
+              content: "",
+              redactedThinking: value.content_block.data,
+            };
+          }
           break;
         case "content_block_delta":
           // https://docs.anthropic.com/en/api/messages-streaming#delta-types
           switch (value.delta.type) {
             case "text_delta":
               yield { role: "assistant", content: value.delta.text };
+              break;
+            case "thinking_delta":
+              yield { role: "thinking", content: value.delta.thinking };
+              break;
+            case "signature_delta":
+              yield {
+                role: "thinking",
+                content: "",
+                signature: value.delta.signature,
+              };
               break;
             case "input_json_delta":
               if (!lastToolUseId || !lastToolUseName) {

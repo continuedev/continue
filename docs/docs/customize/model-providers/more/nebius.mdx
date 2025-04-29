@@ -1,0 +1,67 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+# Nebius AI Studio
+
+You can get an API key from the [Nebius AI Studio API keys page](https://studio.nebius.ai/settings/api-keys)
+
+## Availible models
+
+Available models can be found on the [Nebius AI Studio models page](https://studio.nebius.ai/models/text2text)
+
+## Chat model
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: DeepSeek R1
+      provider: nebius
+      model: deepseek-ai/DeepSeek-R1
+      apiKey: <YOUR_NEBIUS_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek R1",
+        "provider": "nebius",
+        "model": "deepseek-ai/DeepSeek-R1",
+        "apiKey": "<YOUR_NEBIUS_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Embeddings model
+
+Available models can be found on the [Nebius AI Studio embeddings page](https://studio.nebius.ai/models/embedding)
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: BAAI Embedder
+      provider: nebius
+      model: BAAI/bge-en-icl
+      apiKey: <YOUR_NEBIUS_API_KEY>
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "nebius",
+      "model": "BAAI/bge-en-icl",
+      "apiKey": "<YOUR_NEBIUS_API_KEY>"
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>

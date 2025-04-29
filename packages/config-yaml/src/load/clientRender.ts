@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
 import {
   decodeSecretLocation,
@@ -8,7 +9,7 @@ import {
   decodeFQSN,
   encodeFQSN,
   FQSN,
-  PackageSlug,
+  PackageIdentifier,
 } from "../interfaces/slugs.js";
 import { AssistantUnrolled } from "../schemas/index.js";
 import {
@@ -17,10 +18,12 @@ import {
   parseAssistantUnrolled,
 } from "./unroll.js";
 
-export async function clientRender(
-  packageSlug: PackageSlug,
+export async function renderSecrets(
+  packageIdentifier: PackageIdentifier,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
+  orgScopeId: string | null, // The "scope" that the user is logged in with
+  onPremProxyUrl: string | null,
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -67,11 +70,16 @@ export async function clientRender(
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
-  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml, packageSlug);
+  const finalConfig = useProxyForUnrenderedSecrets(
+    parsedYaml,
+    packageIdentifier,
+    orgScopeId,
+    onPremProxyUrl,
+  );
   return finalConfig;
 }
 
-function getUnrenderedSecretLocation(
+export function getUnrenderedSecretLocation(
   value: string | undefined,
 ): SecretLocation | undefined {
   if (!value) return undefined;
@@ -95,33 +103,49 @@ function getUnrenderedSecretLocation(
   return undefined;
 }
 
+export function packageIdentifierToShorthandSlug(
+  id: PackageIdentifier,
+): string {
+  switch (id.uriType) {
+    case "slug":
+      return `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
+    case "file":
+      return "/";
+  }
+}
+
 function getContinueProxyModelName(
-  packageSlug: PackageSlug,
+  packageIdentifier: PackageIdentifier,
   provider: string,
   model: string,
 ): string {
-  return `${packageSlug.ownerSlug}/${packageSlug.packageSlug}/${provider}/${model}`;
+  return `${packageIdentifierToShorthandSlug(packageIdentifier)}/${provider}/${model}`;
 }
 
-function useProxyForUnrenderedSecrets(
+export function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
-  packageSlug: PackageSlug,
+  packageIdentifier: PackageIdentifier,
+  orgScopeId: string | null,
+  onPremProxyUrl: string | null,
 ): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
       const apiKeyLocation = getUnrenderedSecretLocation(
-        config.models[i].apiKey,
+        config.models[i]?.apiKey,
       );
       if (apiKeyLocation) {
         config.models[i] = {
           ...config.models[i],
+          name: config.models[i]?.name ?? "",
           provider: "continue-proxy",
           model: getContinueProxyModelName(
-            packageSlug,
-            config.models[i].provider,
-            config.models[i].model,
+            packageIdentifier,
+            config.models[i]?.provider ?? "",
+            config.models[i]?.model ?? "",
           ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
+          orgScopeId,
+          onPremProxyUrl,
           apiKey: undefined,
         };
       }
@@ -130,3 +154,12 @@ function useProxyForUnrenderedSecrets(
 
   return config;
 }
+
+/** The additional properties that are added to the otherwise OpenAI-compatible body when requesting a Continue proxy */
+export const continuePropertiesSchema = z.object({
+  apiKeyLocation: z.string().optional(),
+  apiBase: z.string().optional(),
+  orgScopeId: z.string().nullable(),
+});
+
+export type ContinueProperties = z.infer<typeof continuePropertiesSchema>;

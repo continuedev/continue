@@ -31,6 +31,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   openUrl: [string, void];
   runCommand: [{ command: string; options?: TerminalOptions }, void];
   getSearchResults: [{ query: string }, string];
+  getFileResults: [{ pattern: string }, string[]];
   subprocess: [{ command: string; cwd?: string }, [string, string]];
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
@@ -98,13 +99,10 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     ControlPlaneSessionInfo | undefined,
   ];
   logoutOfControlPlane: [undefined, void];
+  reportError:[any, void];
+  closeSidebar: [undefined, void];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {
   didChangeActiveTextEditor: [{ filepath: string }, void];
-  didChangeControlPlaneSessionInfo: [
-    { sessionInfo: ControlPlaneSessionInfo | undefined },
-    void,
-  ];
-  didChangeIdeSettings: [{ settings: IdeSettings }, void];
 };

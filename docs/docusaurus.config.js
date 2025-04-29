@@ -5,7 +5,7 @@ const { themes } = require("prism-react-renderer");
 const lightCodeTheme = themes.github;
 const darkCodeTheme = themes.dracula;
 
-/** @type {import('@docusaurus/types').Config} */
+/** @type {import("@docusaurus/types").Config} */
 const config = {
   // Docusaurus V3.6 experimental faster compile features
   // https://docusaurus.io/blog/releases/3.6#adoption-strategy
@@ -19,7 +19,7 @@ const config = {
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
-  url: "https://continue.dev",
+  url: "https://docs.continue.dev",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -48,7 +48,7 @@ const config = {
   presets: [
     [
       "classic",
-      /** @type {import('@docusaurus/preset-classic').Options} */
+      /** @type {import("@docusaurus/preset-classic").Options} */
       ({
         docs: {
           routeBasePath: "/",
@@ -66,7 +66,7 @@ const config = {
   ],
 
   themeConfig:
-    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
+    /** @type {import("@docusaurus/preset-classic").ThemeConfig} */
     ({
       metadata: [
         {
@@ -95,6 +95,13 @@ const config = {
           },
           {
             type: "docSidebar",
+            sidebarId: "hubSidebar",
+            position: "left",
+            label: "Hub",
+            href: "/hub/introduction",
+          },
+          {
+            type: "docSidebar",
             sidebarId: "customizingSidebar",
             position: "left",
             label: "Customize",
@@ -107,6 +114,7 @@ const config = {
             label: "Reference",
             href: "/reference",
           },
+
           {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
@@ -194,20 +202,60 @@ const config = {
       {
         redirects: [
           {
+            to: "/hub/introduction",
+            from: "/hub",
+          },
+          {
+            to: "/hub/governance/org-permissions",
+            from: "/hub/governance",
+          },
+          {
+            to: "/hub/secrets/secret-types",
+            from: "/hub/secrets",
+          },
+          {
+            to: "/hub/assistants/intro",
+            from: "/hub/assistants",
+          },
+          {
+            to: "/hub/blocks/intro",
+            from: "/hub/blocks",
+          },
+          {
             to: "/customize/overview",
-            from: "/customization",
+            from: ["/customize", "/customization"],
+          },
+          {
+            to: "/customize/deep-dives/mcp",
+            from: "/customize/tools",
           },
           {
             to: "/getting-started/install",
             from: ["/install/vscode", "/install/jetbrains"],
           },
-          // {
-          //   to: "/getting-started/install",
-          //   from: "/getting-started",
-          // },
           {
-            to: "/customize/model-types",
-            from: "/setup/overview",
+            to: "/customize/deep-dives/settings",
+            from: "/customize/settings",
+          },
+          {
+            to: "/customize/model-roles",
+            from: ["/customize/model-types", "/setup/overview"],
+          },
+          {
+            to: "/customize/model-roles/embeddings",
+            from: "/customize/model-types/embeddings",
+          },
+          {
+            to: "/customize/model-roles/autocomplete",
+            from: "/customize/model-types/autocomplete",
+          },
+          {
+            to: "/customize/model-roles/chat",
+            from: "/customize/model-types/chat",
+          },
+          {
+            to: "/customize/model-roles/reranking",
+            from: "/customize/model-types/reranking",
           },
           {
             to: "/getting-started/overview",
@@ -238,12 +286,27 @@ const config = {
             ],
           },
           {
-            to: "/customize/deep-dives/prompt-files",
+            to: "/customize/deep-dives/prompts",
             from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
+          // TODO - actions redirects
           {
-            to: "/actions/how-to-use-it#quick-actions",
-            from: "/walkthroughs/quick-actions",
+            to: "/customize/deep-dives/slash-commands",
+            from: [
+              "/actions/how-to-use-it",
+              "/actions/how-to-customize",
+              "/actions",
+              "/actions/model-setup",
+              "/actions/context-selection",
+              "/actions/how-it-works",
+              "/customize/slash-commands",
+              "/customization/slash-commands",
+            ],
+          },
+
+          {
+            to: "/customize/deep-dives/vscode-actions",
+            from: ["/walkthroughs/quick-actions"],
           },
           {
             to: "/customize/changelog",
@@ -251,15 +314,19 @@ const config = {
           },
           {
             to: "/reference",
-            from: ["/customization/code-config", "/reference/config"],
+            from: [
+              "/customization/code-config",
+              "/reference/config",
+              "/yaml-reference",
+            ],
           },
           {
             to: "/customize/context-providers",
-            from: "/customization/context-providers",
+            from: ["/customization/context-providers"],
           },
           {
-            to: "/customize/development-data",
-            from: "/development-data",
+            to: "/customize/deep-dives/development-data",
+            from: ["/development-data", "/customize/development-data"],
           },
           {
             to: "/customize/deep-dives/docs",
@@ -282,7 +349,7 @@ const config = {
             from: "/reference/Model Providers/deepseek",
           },
           {
-            to: "/customize/model-providers/free-trial",
+            to: "/customize/model-providers",
             from: "/reference/Model Providers/freetrial",
           },
           {
@@ -300,10 +367,6 @@ const config = {
           {
             to: "/customize/model-providers/openai",
             from: "/reference/Model Providers/openai",
-          },
-          {
-            to: "/customize/slash-commands",
-            from: "/customization/slash-commands",
           },
           {
             to: "/customize/tutorials/custom-code-rag",
@@ -411,12 +474,12 @@ const config = {
             from: "/chat",
           },
           {
-            to: "/edit/how-to-use-it",
-            from: "/edit",
+            to: "/agent/how-to-use-it",
+            from: "/agent",
           },
           {
-            to: "/actions/how-to-use-it",
-            from: "/actions",
+            to: "/edit/how-to-use-it",
+            from: "/edit",
           },
           {
             to: "/autocomplete/how-to-use-it",
@@ -425,6 +488,10 @@ const config = {
           {
             to: "/getting-started/install",
             from: "/getting-started",
+          },
+          {
+            to: "/customize/deep-dives/prompts",
+            from: "/customize/deep-dives/prompt-files",
           },
         ],
       },

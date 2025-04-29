@@ -5,6 +5,7 @@ import {
   FQSN,
   FullSlug,
   SecretResult,
+  SecretType,
 } from "@continuedev/config-yaml";
 import fetch, { RequestInit, Response } from "node-fetch";
 
@@ -40,15 +41,25 @@ export class ControlPlaneClient {
     private readonly ideSettingsPromise: Promise<IdeSettings>,
   ) {}
 
-  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+  async resolveFQSNs(
+    fqsns: FQSN[],
+    orgScopeId: string | null,
+  ): Promise<(SecretResult | undefined)[]> {
     const userId = await this.userId;
     if (!userId) {
-      throw new Error("No user id");
+      return fqsns.map((fqsn) => ({
+        found: false,
+        fqsn,
+        secretLocation: {
+          secretName: fqsn.secretName,
+          secretType: SecretType.NotFound,
+        },
+      }));
     }
 
     const resp = await this.request("ide/sync-secrets", {
       method: "POST",
-      body: JSON.stringify({ fqsns }),
+      body: JSON.stringify({ fqsns, orgScopeId }),
     });
     return (await resp.json()) as any;
   }
@@ -110,6 +121,7 @@ export class ControlPlaneClient {
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;
+      rawYaml: string;
     }[]
   > {
     const userId = await this.userId;
@@ -182,22 +194,5 @@ export class ControlPlaneClient {
       method: "GET",
     });
     return ((await resp.json()) as any).settings;
-  }
-
-  async syncSecrets(secretNames: string[]): Promise<Record<string, string>> {
-    const userId = await this.userId;
-    if (!userId) {
-      throw new Error("No user id");
-    }
-
-    try {
-      const resp = await this.request("ide/sync-secrets", {
-        method: "POST",
-        body: JSON.stringify({ secretNames }),
-      });
-      return (await resp.json()) as any;
-    } catch (e) {
-      return {};
-    }
   }
 }

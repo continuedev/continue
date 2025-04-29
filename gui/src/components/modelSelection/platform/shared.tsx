@@ -6,7 +6,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray } from "../..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscCommandCenterInactiveBorder,
+} from "../..";
 import { ToolTip } from "../../gui/Tooltip";
 
 export const OptionDiv = styled.div<{
@@ -45,7 +49,7 @@ export const MAX_HEIGHT_PX = 300;
 
 export const Divider = styled.div`
   height: 0.5px;
-  background-color: ${lightGray};
+  background-color: ${vscCommandCenterInactiveBorder};
 `;
 
 interface ModelOptionProps {

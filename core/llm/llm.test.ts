@@ -140,8 +140,11 @@ function testLLM(
                     },
                   },
                   type: "function",
-                  wouldLikeTo: "Say hello",
+                  wouldLikeTo: "say hello",
+                  isCurrently: "saying hello",
+                  hasAlready: "said hello",
                   readonly: true,
+                  group: "Hello",
                 },
               ],
               toolChoice: {
@@ -205,10 +208,11 @@ describe("LLM", () => {
   });
   testLLM(
     new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1-preview" }),
-    { skip: false, timeout: 20000 },
+    { skip: false, timeout: 60000 },
   );
   testLLM(new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1" }), {
     skip: false,
+    timeout: 60000,
   });
   testLLM(
     new Gemini({
@@ -222,7 +226,11 @@ describe("LLM", () => {
       apiKey: process.env.MISTRAL_API_KEY,
       model: "codestral-latest",
     }),
-    { testFim: true, skip: false },
+    {
+      testFim: true,
+      skip: false,
+      testToolCall: true,
+    },
   );
   testLLM(
     new Azure({

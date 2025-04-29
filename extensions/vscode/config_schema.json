@@ -33,7 +33,7 @@
           "description": "The presence penalty Aof the completion.",
           "type": "number"
         },
-        "frequencePenalty": {
+        "frequencyPenalty": {
           "title": "Frequency Penalty",
           "description": "The frequency penalty of the completion.",
           "type": "number"
@@ -70,6 +70,16 @@
         "keepAlive": {
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
+          "type": "integer"
+        },
+        "reasoning": {
+          "title": "Reasoning",
+          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ models",
+          "type": "boolean"
+        },
+        "reasoningBudgetTokens": {
+          "title": "Reasoning Budget Tokens",
+          "description": "Set budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models",
           "type": "integer"
         }
       }
@@ -175,6 +185,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -187,12 +198,15 @@
             "llama.cpp",
             "replicate",
             "gemini",
+            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
+            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
+            "ncompass",
             "cloudflare",
             "deepseek",
             "azure",
@@ -211,7 +225,10 @@
             "moonshot",
             "siliconflow",
             "function-network",
-            "scaleway"
+            "scaleway",
+            "relace",
+            "morph",
+            "venice"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -238,22 +255,28 @@
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
             "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
             "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
+            "### Ncompass\nnCompass is an extremely fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://app.ncompass.tech/api-settings).",
             "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
             "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
             "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
+            "### SambaNova\n SambaNova provides fast inference of open-source language models with zero data retention. To get started, obtain an API key in [SambaNova Cloud](https://cloud.sambanova.ai/apis?utm_source=continue&utm_medium=external&utm_campaign=cloud_signup ).",
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
             "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
+            "### Nebius\nNebius AI platform is a cloud service for machine learning model inference and training. To get started, obtain an API key from the [Nebius console](https://console.nebius.ai/).",
+            "### Vertex AI\nVertex AI provides access to Google's foundation models and ML tools. To get started, enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
             "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
             "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings.",
             "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/).",
+            "### Relace\n Relace provides a fast apply model. To get started, obtain an API key from [here](https://app.relace.ai/settings/api-keys).",
+            "### Morph\nMorph provides a fast apply model. To get started, obtain an API key from [here](https://morphllm.com/dashboard).",
             "### Venice\n Venice.AI is a privacy-focused generative AI platform, allowing users to interact with open-source LLMs without storing any private user data.\nHosted models support the OpenAI API standard, providing seamless integration for users seeking privacy and flexibility.\nTo get started with the Venice API, either purchase a pro account, stake $VVV for daily inference allotments, or fund your account with USD.\nVisit the [API settings page](https://venice.ai/settings/api) or learn more at the [Venice API documentation](https://venice.ai/api)."
           ],
           "type": "string"
@@ -265,7 +288,7 @@
         },
         "apiKey": {
           "title": "Api Key",
-          "description": "OpenAI, Anthropic, Cohere, Together, Novita AI, or other API key",
+          "description": "OpenAI, Anthropic, Cohere, Together, Novita AI, nCompass, or other API key",
           "type": "string"
         },
         "apiBase": {
@@ -482,6 +505,7 @@
                   "huggingface-inference-api",
                   "replicate",
                   "together",
+                  "ncompass",
                   "novita",
                   "cloudflare",
                   "sambanova",
@@ -837,6 +861,7 @@
                       "claude-2",
                       "claude-instant-1",
                       "claude-3-5-sonnet-latest",
+                      "claude-3-7-sonnet-20250219",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
@@ -943,7 +968,14 @@
                   "gemini-1.5-flash",
                   "gemini-1.5-flash-8b",
                   "gemini-2.0-flash-exp",
-                  "gemini-2.0-flash"
+                  "gemini-2.0-flash",
+                  "gemini-2.0-flash-thinking-exp-01-21",
+                  "gemini-2.0-pro-exp-02-05",
+                  "gemini-2.0-flash-lite-preview-02-05",
+                  "gemini-2.0-flash-lite",
+                  "gemini-2.0-flash-exp-image-generation",
+                  "gemini-2.5-pro-exp-03-25",
+                  "gemini-2.5-pro-latest"
                 ]
               }
             }
@@ -1316,7 +1348,17 @@
                   "nvidia/Llama-3.1-Nemotron-70B-Instruct",
                   "Qwen/Qwen2-VL-72B-Instruct",
                   "TeleAI/TeleMM",
-                  "deepseek-ai/DeepSeek-V2.5"
+                  "deepseek-ai/DeepSeek-V2.5",
+                  "deepseek-ai/deepseek-vl2",
+                  "deepseek-ai/Janus-Pro-7B",
+                  "deepseek-ai/DeepSeek-V3",
+                  "deepseek-ai/DeepSeek-R1",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
                 ]
               }
             }
@@ -1374,6 +1416,23 @@
         {
           "if": {
             "properties": {
+              "provider": {
+                "enum": ["ncompass"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["qwen2.5-coder-32b", "qwen2.5-72b", "llama3.3-70b"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
               "apiType": {
                 "const": "azure"
               }
@@ -1405,23 +1464,6 @@
           "if": {
             "properties": {
               "provider": {
-                "const": "llamafile"
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "llamafileCommand": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
                 "enum": ["cerebras"]
               }
             },
@@ -1431,23 +1473,6 @@
             "properties": {
               "model": {
                 "enum": ["llama3.1-8b", "llama3.1-70b"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["text-gen-webui"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "streamingUrl": {
-                "type": "string"
               }
             }
           }
@@ -1556,6 +1581,7 @@
                       "gemini-pro",
                       "gemini-1.5-pro-latest",
                       "gemini-1.5-pro",
+                      "gemini-2.5-pro",
                       "gemini-1.5-flash-latest",
                       "gemini-1.5-flash",
                       "mistral-tiny",
@@ -1641,7 +1667,19 @@
               "model": {
                 "anyOf": [
                   {
-                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
+                    "enum": [
+                      "Llama-4-Scout-17B-16E-Instruct",
+                      "Llama-4-Maverick-17B-128E-Instruct",
+                      "Meta-Llama-3.3-70B-Instruct",
+                      "Meta-Llama-3.1-8B-Instruct",
+                      "Meta-Llama-3.1-405B-Instruct",
+                      "Meta-Llama-3.2-1B-Instruct",
+                      "Meta-Llama-3.2-3B-Instruct",
+                      "QwQ-32B",
+                      "DeepSeek-R1-Distill-Llama-70B",
+                      "DeepSeek-R1",
+                      "DeepSeek-V3-0324"
+                    ]
                   },
                   {
                     "type": "string"
@@ -1701,9 +1739,7 @@
               "model": {
                 "anyOf": [
                   {
-                    "enum": [
-                      "AUTODETECT"
-                    ]
+                    "enum": ["AUTODETECT"]
                   },
                   {
                     "type": "string"
@@ -2336,6 +2372,10 @@
                     "type": "string",
                     "description": "Customize the query used to find Jira issues"
                   },
+                  "maxResults": {
+                    "type": "string",
+                    "description": "The maximum number of issues that will be returned. Defaults to 50."
+                  },
                   "apiVersion": {
                     "type": "integer",
                     "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property.",
@@ -2653,7 +2693,7 @@
         },
         "systemMessage": {
           "title": "System Message",
-          "description": "A system message that will always be followed by the LLM",
+          "description": "A system message that will always be followed by the LLM for Chat and Edit requests",
           "type": "string"
         },
         "completionOptions": {
@@ -2783,14 +2823,14 @@
               "description": "Request options to be used in any fetch requests made by the embeddings provider",
               "$ref": "#/$defs/RequestOptions"
             },
-            "maxChunkSize": {
+            "maxEmbeddingChunkSize": {
               "title": "Maximum Chunk Size",
               "description": "The maximum number of tokens that each chunk of a document is allowed to have",
               "type": "integer",
               "minimum": 128,
               "exclusiveMaximum": 2147483647
             },
-            "maxBatchSize": {
+            "maxEmbeddingBatchSize": {
               "title": "Maximum Batch Size",
               "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
               "type": "integer",
@@ -2862,11 +2902,11 @@
                     "description": "The name of your VertexAI project"
                   },
                   "region": {
-                    "description": "The region your VertexAI model is hosted in - typically central1",
-                    "default": "central1"
+                    "description": "The region your VertexAI model is hosted in - typically us-central1",
+                    "default": "us-central1"
                   },
                   "model": {
-                    "default": "text-embedding-004"
+                    "default": "text-embedding-005"
                   }
                 },
                 "required": ["projectId", "model", "region"]
@@ -2884,9 +2924,11 @@
                 "bedrock",
                 "cohere",
                 "voyage",
+                "watsonx",
                 "llm",
                 "free-trial",
-                "huggingface-tei"
+                "huggingface-tei",
+                "siliconflow"
               ]
             },
             "params": {
@@ -3053,6 +3095,40 @@
                   "required": ["truncation_direction"]
                 }
               }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["siliconflow"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "BAAI/bge-reranker-v2-m3",
+                          "netease-youdao/bce-reranker-base_v1",
+                          "Pro/BAAI/bge-reranker-v2-m3"
+                        ],
+                        "default": "BAAI/bge-reranker-v2-m3"
+                      },
+                      "apiBase": {
+                        "type": "string"
+                      },
+                      "apiKey": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
+                }
+              }
             }
           ]
         },
@@ -3063,7 +3139,7 @@
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
-            "model": "deepseek-coder:1.3b-base"
+            "model": "qwen2.5-coder:1.5b-base"
           },
           "oneOf": [
             {

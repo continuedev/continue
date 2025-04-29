@@ -8,10 +8,10 @@ import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import { getFontSize } from "../../util";
-import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../StyledMarkdownPreview";
+import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
-import Reasoning from "./Reasoning";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -20,8 +20,10 @@ interface StepContainerProps {
 }
 
 const ContentDiv = styled.div<{ fontSize?: number }>`
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding: 4px;
+  padding-left: 6px;
+  padding-right: 6px;
+
   background-color: ${vscBackground};
   font-size: ${getFontSize()}px;
   overflow: hidden;
@@ -36,11 +38,10 @@ export default function StepContainer(props: StepContainerProps) {
   );
   const uiConfig = useAppSelector(selectUIConfig);
 
-  const hideActionSpace = historyItemAfterThis?.message.role === "assistant";
+  const hideActionSpace =
+    historyItemAfterThis?.message.role === "assistant" ||
+    historyItemAfterThis?.message.role === "thinking";
   const hideActions = hideActionSpace || (isStreaming && props.isLast);
-
-  // const isStepAheadOfCurCheckpoint =
-  //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
     if (!isStreaming) {
@@ -79,9 +80,7 @@ export default function StepContainer(props: StepContainerProps) {
   }
 
   return (
-    <div
-    // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
-    >
+    <div>
       <ContentDiv>
         {uiConfig?.displayRawMarkdown ? (
           <pre
@@ -92,7 +91,7 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            <Reasoning {...props}/>
+            <Reasoning {...props} />
 
             <StyledMarkdownPreview
               isRenderingInStepContainer

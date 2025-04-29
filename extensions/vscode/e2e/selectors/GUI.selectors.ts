@@ -4,7 +4,7 @@ import { SelectorUtils } from "./SelectorUtils";
 
 export class GUISelectors {
   public static getDescription(view: WebView) {
-    return view.findWebElement(By.xpath("//*[contains(text(), 'Quickly')]"));
+    return view.findWebElement(By.xpath("//*[contains(text(), 'quickly')]"));
   }
 
   public static getMessageInputFields(view: WebView) {
@@ -35,6 +35,31 @@ export class GUISelectors {
     return SelectorUtils.getElementByDataTestId(
       view,
       "accept-tool-call-button",
+    );
+  }
+
+  public static getRejectToolCallButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "reject-tool-call-button",
+    );
+  }
+
+  public static getToolCallStatusMessage(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "toggle-div-title");
+  }
+
+  public static getToolButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `block-settings-toolbar-icon-tools`,
+    );
+  }
+
+  public static getToolPolicyButton(view: WebView, toolName: string) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `tool-policy-item-${toolName}`,
     );
   }
 

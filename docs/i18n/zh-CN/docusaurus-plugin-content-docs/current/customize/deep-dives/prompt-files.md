@@ -79,7 +79,7 @@ Write unit tests for the above selected code, following each of these instructio
 
 ### 上下文提供者
 
-任何你添加到配置中的 [上下文提供者](../context-providers.md) ，可以使用上下文提供者的名称引用。接收输入的上下文提供者也支持。
+任何你添加到配置中的 [上下文提供者](../context-providers.mdx) ，可以使用上下文提供者的名称引用。接收输入的上下文提供者也支持。
 
 - `{{{ terminal }}}` - 终端的内容
 - `{{{ url "https://github.com/continuedev/continue" }}}` - URL 的内容

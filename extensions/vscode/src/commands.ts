@@ -1,40 +1,45 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as os from "node:os";
 
-import { ContextMenuConfig, RangeInFileWithContents } from "core";
+import {
+  ContextMenuConfig,
+  ILLM,
+  ModelInstaller,
+  RangeInFileWithContents,
+} from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { getModelByRole } from "core/config/util";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
+import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
-import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { isModelInstaller } from "core/llm";
+import { startLocalOllama } from "core/util/ollamaHelper";
+import { getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 
 import {
-  StatusBarStatus,
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
   getStatusBarStatus,
   getStatusBarStatusFromQuickPickItemLabel,
   quickPickStatusText,
   setupStatusBar,
+  StatusBarStatus,
 } from "./autocomplete/statusBar";
+import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
-
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
-import { VsCodeIde } from "./VsCodeIde";
 import { getMetaKeyLabel } from "./util/util";
+import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { startLocalOllama } from "core/util/ollamaHelper";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -124,9 +129,20 @@ function getRangeInFileWithContents(
       return null;
     }
 
-    // adjust starting position to include indentation
-    const start = new vscode.Position(selection.start.line, 0);
-    const selectionRange = new vscode.Range(start, selection.end);
+    let selectionRange = new vscode.Range(selection.start, selection.end);
+    const document = editor.document;
+    // Select the context from the beginning of the selection start line to the selection start position
+    const beginningOfSelectionStartLine = selection.start.with(undefined, 0);
+    const textBeforeSelectionStart = document.getText(
+      new vscode.Range(beginningOfSelectionStartLine, selection.start),
+    );
+    // If there are only whitespace before the start of the selection, include the indentation
+    if (textBeforeSelectionStart.trim().length === 0) {
+      selectionRange = selectionRange.with({
+        start: beginningOfSelectionStartLine,
+      });
+    }
+
     const contents = editor.document.getText(selectionRange);
 
     return {
@@ -231,6 +247,7 @@ async function processDiff(
   verticalDiffManager: VerticalDiffManager,
   newFileUri?: string,
   streamId?: string,
+  toolCallId?: string,
 ) {
   captureCommandTelemetry(`${action}Diff`);
 
@@ -264,12 +281,14 @@ async function processDiff(
       streamId,
       status: "closed",
       numDiffs: 0,
+      toolCallId,
     });
   }
 
-  if (action === "accept") {
-    await sidebar.webviewProtocol.request("exitEditMode", undefined);
-  }
+  await sidebar.webviewProtocol.request("exitEditMode", undefined);
+
+  // Save the file
+  await ide.saveFile(newOrCurrentUri);
 }
 
 function waitForSidebarReady(
@@ -299,6 +318,7 @@ const getCommandsMap: (
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -310,6 +330,7 @@ const getCommandsMap: (
   ide,
   extensionContext,
   sidebar,
+  consoleView,
   configHandler,
   verticalDiffManager,
   continueServerClientPromise,
@@ -342,24 +363,23 @@ const getCommandsMap: (
       throw new Error("Config not loaded");
     }
 
-    const defaultModelTitle = await sidebar.webviewProtocol.request(
-      "getDefaultModelTitle",
-      undefined,
-    );
+    const llm =
+      config.selectedModelByRole.edit ?? config.selectedModelByRole.chat;
 
-    const modelTitle =
-      getModelByRole(config, "inlineEdit")?.title ?? defaultModelTitle;
+    if (!llm) {
+      throw new Error("No edit or chat model selected");
+    }
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
-    await verticalDiffManager.streamEdit(
-      config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
-      modelTitle,
-      undefined,
+    await verticalDiffManager.streamEdit({
+      input:
+        config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
+      llm,
       onlyOneInsertion,
-      undefined,
       range,
-    );
+      rules: config.rules,
+    });
   }
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
@@ -535,11 +555,28 @@ const getCommandsMap: (
         return;
       }
 
+      const startFromCharZero = editor.selection.start.with(undefined, 0);
+      const document = editor.document;
+      let lastLine, lastChar;
+      // If the user selected onto a trailing line but didn't actually include any characters in it
+      // they don't want to include that line, so trim it off.
+      if (editor.selection.end.character === 0) {
+        // This is to prevent the rare case that the previous line gets selected when user
+        // is selecting nothing and the cursor is at the beginning of the line
+        if (editor.selection.end.line === editor.selection.start.line) {
+          lastLine = editor.selection.start.line;
+        } else {
+          lastLine = editor.selection.end.line - 1;
+        }
+      } else {
+        lastLine = editor.selection.end.line;
+      }
+      lastChar = document.lineAt(lastLine).range.end.character;
+      const endAtCharLast = new vscode.Position(lastLine, lastChar);
       const range =
-        args?.range ??
-        new vscode.Range(editor.selection.start, editor.selection.end);
+        args?.range ?? new vscode.Range(startFromCharZero, endAtCharLast);
 
-      editDecorationManager.setDecoration(editor, range);
+      editDecorationManager.addDecorations(editor, [range]);
 
       const rangeInFileWithContents = getRangeInFileWithContents(true, range);
 
@@ -601,16 +638,6 @@ const getCommandsMap: (
       editDecorationManager.clear();
       void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
-    // "continue.quickEdit": async (args: QuickEditShowParams) => {
-    //   let linesOfCode = undefined;
-    //   if (args.range) {
-    //     linesOfCode = args.range.end.line - args.range.start.line;
-    //   }
-    //   captureCommandTelemetry("quickEdit", {
-    //     linesOfCode,
-    //   });
-    //   quickEdit.show(args);
-    // },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 
@@ -647,6 +674,9 @@ const getCommandsMap: (
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
     },
+    "continue.clearConsole": async () => {
+      consoleView.clearLog();
+    },
     "continue.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
@@ -674,37 +704,6 @@ const getCommandsMap: (
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
-    },
-    "continue.sendMainUserInput": (text: string) => {
-      sidebar.webviewProtocol?.request("userInput", {
-        input: text,
-      });
-    },
-    "continue.selectRange": (startLine: number, endLine: number) => {
-      if (!vscode.window.activeTextEditor) {
-        return;
-      }
-      vscode.window.activeTextEditor.selection = new vscode.Selection(
-        startLine,
-        0,
-        endLine,
-        0,
-      );
-    },
-    "continue.foldAndUnfold": (
-      foldSelectionLines: number[],
-      unfoldSelectionLines: number[],
-    ) => {
-      vscode.commands.executeCommand("editor.unfold", {
-        selectionLines: unfoldSelectionLines,
-      });
-      vscode.commands.executeCommand("editor.fold", {
-        selectionLines: foldSelectionLines,
-      });
-    },
-    "continue.sendToTerminal": (text: string) => {
-      captureCommandTelemetry("sendToTerminal");
-      ide.runCommand(text);
     },
     "continue.newSession": () => {
       sidebar.webviewProtocol?.request("newSession", undefined);
@@ -796,7 +795,7 @@ const getCommandsMap: (
       vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.openConfigPage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/config", true);
+      vscode.commands.executeCommand("continue.navigateTo", "/config", false);
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
@@ -814,7 +813,9 @@ const getCommandsMap: (
           .stat(uri)
           ?.then((stat) => stat.type === vscode.FileType.Directory);
         if (isDirectory) {
-          for await (const fileUri of walkDirAsync(uri.toString(), ide)) {
+          for await (const fileUri of walkDirAsync(uri.toString(), ide, {
+            source: "vscode continue.selectFilesAsContext command",
+          })) {
             addEntireFileToContext(
               vscode.Uri.parse(fileUri),
               sidebar.webviewProtocol,
@@ -872,16 +873,12 @@ const getCommandsMap: (
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
-      const autocompleteModels =
-        (await configHandler.loadConfig()).config?.tabAutocompleteModels ?? [];
 
-      let selected = new GlobalContext().get("selectedTabAutocompleteModel");
-      if (
-        !selected ||
-        !autocompleteModels.some((model) => model.title === selected)
-      ) {
-        selected = autocompleteModels[0]?.title;
-      }
+      const { config: continueConfig } = await configHandler.loadConfig();
+      const autocompleteModels =
+        continueConfig?.modelsByRole.autocomplete ?? [];
+      const selected =
+        continueConfig?.selectedModelByRole?.autocomplete?.title ?? undefined;
 
       // Toggle between Disabled, Paused, and Enabled
       const pauseOnBattery =
@@ -908,7 +905,7 @@ const getCommandsMap: (
 
       quickPick.items = [
         {
-          label: "$(question) Open help center",
+          label: "$(gear) Open settings",
         },
         {
           label: "$(comment) Open chat",
@@ -921,9 +918,6 @@ const getCommandsMap: (
         },
         {
           label: quickPickStatusText(targetStatus),
-        },
-        {
-          label: "$(gear) Configure autocomplete options",
         },
         {
           label: "$(feedback) Give feedback",
@@ -950,30 +944,26 @@ const getCommandsMap: (
             vscode.ConfigurationTarget.Global,
           );
         } else if (
-          selectedOption === "$(gear) Configure autocomplete options"
-        ) {
-          ide.openFile(vscode.Uri.file(getConfigJsonPath()).toString());
-        } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
-          new GlobalContext().update(
-            "selectedTabAutocompleteModel",
-            selectedOption,
-          );
-          configHandler.reloadConfig();
+          if (core.configHandler.currentProfile?.profileDescription.id) {
+            core.invoke("config/updateSelectedModel", {
+              profileId:
+                core.configHandler.currentProfile?.profileDescription.id,
+              role: "autocomplete",
+              title: selectedOption,
+            });
+          }
         } else if (selectedOption === "$(feedback) Give feedback") {
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
-        } else if (selectedOption === "$(comment) Open chat (Cmd+L)") {
+        } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
-        } else if (
-          selectedOption ===
-          "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
-        ) {
+        } else if (selectedOption === "$(screen-full) Open full screen chat") {
           vscode.commands.executeCommand("continue.toggleFullScreen");
-        } else if (selectedOption === "$(question) Open help center") {
-          focusGUI();
-          vscode.commands.executeCommand("continue.navigateTo", "/more", true);
+        } else if (selectedOption === "$(gear) Open settings") {
+          vscode.commands.executeCommand("continue.navigateTo", "/config");
         }
+
         quickPick.dispose();
       });
       quickPick.show();
@@ -986,14 +976,14 @@ const getCommandsMap: (
       });
       if (feedback) {
         const client = await continueServerClientPromise;
-        const completionsPath = getDevDataFilePath("autocomplete");
+        const completionsPath = getDevDataFilePath(
+          "autocomplete",
+          LOCAL_DEV_DATA_VERSION,
+        );
 
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);
       }
-    },
-    "continue.openMorePage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/more", true);
     },
     "continue.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
@@ -1001,6 +991,25 @@ const getCommandsMap: (
     },
     "continue.startLocalOllama": () => {
       startLocalOllama(ide);
+    },
+    "continue.installModel": async (
+      modelName: string,
+      llmProvider: ILLM | undefined,
+    ) => {
+      try {
+        if (!isModelInstaller(llmProvider)) {
+          const msg = llmProvider
+            ? `LLM provider '${llmProvider.providerName}' does not support installing models`
+            : "Missing LLM Provider";
+          throw new Error(msg);
+        }
+        await installModelWithProgress(modelName, llmProvider);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        vscode.window.showErrorMessage(
+          `Failed to install '${modelName}': ${message}`,
+        );
+      }
     },
   };
 };
@@ -1043,11 +1052,51 @@ const registerCopyBufferSpy = (
   context.subscriptions.push(typeDisposable);
 };
 
+async function installModelWithProgress(
+  modelName: string,
+  modelInstaller: ModelInstaller,
+) {
+  return vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Installing model '${modelName}'`,
+      cancellable: true,
+    },
+    async (windowProgress, token) => {
+      let currentProgress: number = 0;
+      const progressWrapper = (
+        details: string,
+        worked?: number,
+        total?: number,
+      ) => {
+        let increment = 0;
+        if (worked && total) {
+          const progressValue = Math.round((worked / total) * 100);
+          increment = progressValue - currentProgress;
+          currentProgress = progressValue;
+        }
+        windowProgress.report({ message: details, increment });
+      };
+      const abortController = new AbortController();
+      token.onCancellationRequested(() => {
+        console.log(`Pulling ${modelName} model was cancelled`);
+        abortController.abort();
+      });
+      await modelInstaller.installModel(
+        modelName,
+        abortController.signal,
+        progressWrapper,
+      );
+    },
+  );
+}
+
 export function registerAllCommands(
   context: vscode.ExtensionContext,
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -1056,13 +1105,14 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
-  // registerCopyBufferSpy(context, core);
+  registerCopyBufferSpy(context, core);
 
   for (const [command, callback] of Object.entries(
     getCommandsMap(
       ide,
       extensionContext,
       sidebar,
+      consoleView,
       configHandler,
       verticalDiffManager,
       continueServerClientPromise,

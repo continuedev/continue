@@ -1,7 +1,0 @@
-name: Docs
-version: 0.0.1
-
-docs:
-  - name: Python
-    startUrl: https://docs.python.org/release/${{ inputs.version }}
-    rootUrl: https://docs.python.org/release/${{ inputs.version }}

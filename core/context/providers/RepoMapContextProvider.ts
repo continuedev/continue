@@ -54,7 +54,8 @@ class RepoMapContextProvider extends BaseContextProvider {
     const folders = await walkDirs(
       args.ide,
       {
-        onlyDirs: true,
+        include: "dirs",
+        source: "load submenu items - repo map",
       },
       workspaceDirs,
     );

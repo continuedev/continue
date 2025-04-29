@@ -29,12 +29,6 @@ describe("GlobalContext", () => {
     expect(value).toBe(true);
   });
 
-  it("should update and get a string value correctly", () => {
-    globalContext.update("selectedTabAutocompleteModel", "test-model");
-    const value = globalContext.get("selectedTabAutocompleteModel");
-    expect(value).toBe("test-model");
-  });
-
   it("should update and get an object value correctly", () => {
     const workspaceIdentifier = "workspace-1";
     globalContext.update("lastSelectedProfileForWorkspace", {
@@ -108,13 +102,9 @@ describe("GlobalContext", () => {
 
   it("should update and retrieve multiple values correctly", () => {
     globalContext.update("indexingPaused", true);
-    globalContext.update("selectedTabAutocompleteModel", "test-model");
     globalContext.update("hasDismissedConfigTsNoticeJetBrains", false);
 
     expect(globalContext.get("indexingPaused")).toBe(true);
-    expect(globalContext.get("selectedTabAutocompleteModel")).toBe(
-      "test-model",
-    );
     expect(globalContext.get("hasDismissedConfigTsNoticeJetBrains")).toBe(
       false,
     );

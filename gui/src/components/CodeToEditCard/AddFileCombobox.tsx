@@ -1,10 +1,15 @@
-import { useState, useEffect, useRef } from "react";
-import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
-import { Combobox } from "@headlessui/react";
-import FileIcon from "../FileIcon";
-import { useAppSelector } from "../../redux/hooks";
 import { ContextSubmenuItemWithProvider } from "core";
-
+import { useEffect, useRef, useState } from "react";
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+} from "../../components/ui/Combobox";
+import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
+import { useAppSelector } from "../../redux/hooks";
+import FileIcon from "../FileIcon";
 export interface AddFileComboboxProps {
   onSelect: (filepaths: string[]) => void | Promise<void>;
   onEscape: () => void | Promise<void>;
@@ -34,6 +39,17 @@ export default function AddFileCombobox({
     }
   }, []);
 
+  useEffect(() => {
+    // update selectedFiles showing only the files that are in codeToEdit
+    setSelectedFiles(
+      (prevSelectedFiles) =>
+        prevSelectedFiles.filter(
+          (file) =>
+            codeToEdit.findIndex((code) => code.filepath === file.id) !== -1,
+        ), 
+    );
+  }, [codeToEdit]);
+
   const filteredFiles =
     query === ""
       ? remainingFiles
@@ -50,12 +66,14 @@ export default function AddFileCombobox({
           setSelectedFiles(files);
           void onSelect(files.map((file) => file.id));
           buttonRef.current?.click();
+          setQuery("");
         }}
       >
         {({ open }) => (
           <div className="relative">
-            <Combobox.Button className="hidden" ref={buttonRef} />
-            <Combobox.Input
+            <ComboboxButton className="hidden" ref={buttonRef} />
+            <ComboboxInput
+              value={query}
               ref={inputRef}
               onClick={() => {
                 if (!open) {
@@ -65,7 +83,7 @@ export default function AddFileCombobox({
               onFocus={() => {
                 buttonRef.current?.click();
               }}
-              className="bg-vsc-background border-lightgray text-vsc-foreground box-border w-full rounded border border-solid py-0.5 pl-2 focus:outline-none"
+              className="bg-vsc-background border-lightgray text-vsc-foreground box-border w-full rounded border border-solid py-0.5 pl-2 text-xs focus:outline-none"
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Type to search files..."
               onKeyDown={(e) => {
@@ -75,10 +93,10 @@ export default function AddFileCombobox({
               }}
             />
 
-            <Combobox.Options className="no-scrollbar bg-vsc-editor-background border-lightgray/50 absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto overflow-x-hidden rounded-md border border-solid px-1 py-0 pl-0 pr-5 shadow-lg focus:outline-none">
+            <ComboboxOptions className="no-scrollbar bg-vsc-editor-background border-lightgray/50 absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto overflow-x-hidden rounded-md border border-solid px-1 py-0 pl-0 pr-5 shadow-lg focus:outline-none">
               {filteredFiles.length > 0 ? (
                 filteredFiles.map((file) => (
-                  <Combobox.Option
+                  <ComboboxOption
                     key={file.id}
                     value={file}
                     className={({ active }) =>
@@ -109,14 +127,14 @@ export default function AddFileCombobox({
                         </span>
                       </div>
                     )}
-                  </Combobox.Option>
+                  </ComboboxOption>
                 ))
               ) : (
                 <div className="text-list-active-foreground px-2 py-1 text-xs">
                   No results
                 </div>
               )}
-            </Combobox.Options>
+            </ComboboxOptions>
           </div>
         )}
       </Combobox>

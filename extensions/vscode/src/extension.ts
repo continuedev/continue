@@ -8,6 +8,7 @@ import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { getExtensionVersion } from "./util/util";
+export { default as buildTimestamp } from "./.buildTimestamp";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   await setupCa();

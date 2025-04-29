@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.activities
 
 import IntelliJIDE
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.auth.ControlPlaneSessionInfo
@@ -30,14 +31,15 @@ import java.nio.file.Paths
 import javax.swing.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.ide.ui.LafManagerListener
+import com.intellij.openapi.vfs.VirtualFile
 
 fun showTutorial(project: Project) {
     val tutorialFileName = getTutorialFileName()
@@ -48,7 +50,7 @@ fun showTutorial(project: Project) {
                 throw IOException("Resource not found: $tutorialFileName")
             }
             var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
-            
+
             // All jetbrains will use J instead of L
             content = content.replace("[Cmd + L]", "[Cmd + J]")
             content = content.replace("[Cmd + Shift + L]", "[Cmd + Shift + J]")
@@ -152,17 +154,13 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             val connection = ApplicationManager.getApplication().messageBus.connect()
             connection.subscribe(SettingsListener.TOPIC, object : SettingsListener {
                 override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
-                    continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
-                    continuePluginService.sendToWebview(
-                        "didChangeIdeSettings", mapOf(
-                            "settings" to mapOf(
-                                "remoteConfigServerUrl" to settings.remoteConfigServerUrl,
-                                "remoteConfigSyncPeriod" to settings.remoteConfigSyncPeriod,
-                                "userToken" to settings.userToken,
-                                "enableControlServerBeta" to settings.enableContinueTeamsBeta
-                            )
-                        )
-                    )
+                    continuePluginService.coreMessenger?.request(
+                        "config/ideSettingsUpdate", mapOf(
+                            "remoteConfigServerUrl" to settings.remoteConfigServerUrl,
+                            "remoteConfigSyncPeriod" to settings.remoteConfigSyncPeriod,
+                            "userToken" to settings.userToken,
+                        ), null
+                    ) { _ -> }
                 }
             })
 
@@ -175,7 +173,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Send "files/deleted" message if there are any deletions
                     if (deletedURIs.isNotEmpty()) {
-                        val data = mapOf("files" to deletedURIs)
+                        val data = mapOf("uris" to deletedURIs)
                         continuePluginService.coreMessenger?.request("files/deleted", data, null) { _ -> }
                     }
 
@@ -185,11 +183,40 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Notify core of content changes
                     if (changedURIs.isNotEmpty()) {
-                        val data = mapOf("files" to changedURIs)
+                        continuePluginService.updateLastFileSaveTimestamp()
+
+                        val data = mapOf("uris" to changedURIs)
                         continuePluginService.coreMessenger?.request("files/changed", data, null) { _ -> }
+                    }
+
+                    events.filterIsInstance<VFileCreateEvent>()
+                        .mapNotNull { event -> event.file?.toUriOrNull() }
+                        .takeIf { it.isNotEmpty() }?.let {
+                            val data = mapOf("uris" to it)
+                            continuePluginService.coreMessenger?.request("files/created", data, null) { _ -> }
+                        }
+
+                    // TODO: Missing handling of copying files, renaming files, etc.
+                }
+            })
+
+
+            connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
+                override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+                    file.toUriOrNull()?.let { uri ->
+                        val data = mapOf("uris" to listOf(uri))
+                        continuePluginService.coreMessenger?.request("files/closed", data, null) { _ -> }
+                    }
+                }
+
+                override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+                    file.toUriOrNull()?.let { uri ->
+                        val data = mapOf("uris" to listOf(uri))
+                        continuePluginService.coreMessenger?.request("files/opened", data, null) { _ -> }
                     }
                 }
             })
+
 
             // Listen for theme changes
             connection.subscribe(LafManagerListener.TOPIC, LafManagerListener {
@@ -199,7 +226,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                     colors
                 )
             })
-            
+
             // Listen for clicking settings button to start the auth flow
             val authService = service<ContinueAuthService>()
             val initialSessionInfo = authService.loadControlPlaneSessionInfo()
@@ -209,7 +236,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                     "sessionInfo" to initialSessionInfo
                 )
                 continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
-                continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
             }
 
             connection.subscribe(AuthListener.TOPIC, object : AuthListener {
@@ -226,7 +252,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         data,
                         null
                     ) { _ -> }
-                    continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
                 }
             })
 

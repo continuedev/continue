@@ -1,7 +1,8 @@
-import { ConfigResult, AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
+import { getControlPlaneEnv } from "../../control-plane/env.js";
+import { ContinueConfig, IDE, IdeSettings, ILLMLogger } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
 import doLoadConfig from "./doLoadConfig.js";
@@ -20,21 +21,84 @@ export interface PlatformConfigMetadata {
 export default class PlatformProfileLoader implements IProfileLoader {
   static RELOAD_INTERVAL = 1000 * 5; // 5 seconds
 
-  description: ProfileDescription;
+  private configResult: ConfigResult<AssistantUnrolled>;
+  private readonly ownerSlug: string;
+  private readonly packageSlug: string;
+  private readonly iconUrl: string;
+  private readonly versionSlug: string;
+  private readonly controlPlaneClient: ControlPlaneClient;
+  private readonly ide: IDE;
+  private ideSettingsPromise: Promise<IdeSettings>;
+  private llmLogger: ILLMLogger;
+  readonly description: ProfileDescription;
+  private readonly orgScopeId: string | null;
 
-  constructor(
-    private configResult: ConfigResult<AssistantUnrolled>,
-    private readonly ownerSlug: string,
-    private readonly packageSlug: string,
-    private readonly iconUrl: string,
-    versionSlug: string,
-    private readonly controlPlaneClient: ControlPlaneClient,
-    private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
-    private writeLog: (message: string) => Promise<void>,
-    private readonly onReload: () => void,
-  ) {
-    this.description = {
+  private constructor({
+    configResult,
+    ownerSlug,
+    packageSlug,
+    iconUrl,
+    versionSlug,
+    controlPlaneClient,
+    ide,
+    ideSettingsPromise,
+    llmLogger,
+    description,
+    orgScopeId,
+  }: {
+    configResult: ConfigResult<AssistantUnrolled>;
+    ownerSlug: string;
+    packageSlug: string;
+    iconUrl: string;
+    versionSlug: string;
+    controlPlaneClient: ControlPlaneClient;
+    ide: IDE;
+    ideSettingsPromise: Promise<IdeSettings>;
+    llmLogger: ILLMLogger;
+    description: ProfileDescription;
+    orgScopeId: string | null;
+  }) {
+    this.configResult = configResult;
+    this.ownerSlug = ownerSlug;
+    this.packageSlug = packageSlug;
+    this.iconUrl = iconUrl;
+    this.versionSlug = versionSlug;
+    this.controlPlaneClient = controlPlaneClient;
+    this.ide = ide;
+    this.ideSettingsPromise = ideSettingsPromise;
+    this.llmLogger = llmLogger;
+    this.description = description;
+    this.orgScopeId = orgScopeId;
+  }
+
+  static async create({
+    configResult,
+    ownerSlug,
+    packageSlug,
+    iconUrl,
+    versionSlug,
+    controlPlaneClient,
+    ide,
+    ideSettingsPromise,
+    llmLogger,
+    rawYaml,
+    orgScopeId,
+  }: {
+    configResult: ConfigResult<AssistantUnrolled>;
+    ownerSlug: string;
+    packageSlug: string;
+    iconUrl: string;
+    versionSlug: string;
+    controlPlaneClient: ControlPlaneClient;
+    ide: IDE;
+    ideSettingsPromise: Promise<IdeSettings>;
+    llmLogger: ILLMLogger;
+    rawYaml: string;
+    orgScopeId: string | null;
+  }): Promise<PlatformProfileLoader> {
+    const controlPlaneEnv = await getControlPlaneEnv(ideSettingsPromise);
+
+    const description: ProfileDescription = {
       id: `${ownerSlug}/${packageSlug}`,
       profileType: "platform",
       fullSlug: {
@@ -42,14 +106,30 @@ export default class PlatformProfileLoader implements IProfileLoader {
         packageSlug,
         versionSlug,
       },
-      title: `${ownerSlug}/${packageSlug}@${versionSlug}`,
+      title: configResult.config?.name ?? `${ownerSlug}/${packageSlug}`,
       errors: configResult.errors,
-      iconUrl: this.iconUrl,
+      iconUrl: iconUrl,
+      uri: `${controlPlaneEnv}${ownerSlug}/${packageSlug}`,
+      rawYaml,
     };
+
+    return new PlatformProfileLoader({
+      configResult,
+      ownerSlug,
+      packageSlug,
+      iconUrl,
+      versionSlug,
+      controlPlaneClient,
+      ide,
+      ideSettingsPromise,
+      llmLogger,
+      description,
+      orgScopeId,
+    });
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    if (this.configResult.errors?.length) {
+    if (this.configResult.errors?.find((e) => e.fatal)) {
       return {
         config: undefined,
         errors: this.configResult.errors,
@@ -57,22 +137,28 @@ export default class PlatformProfileLoader implements IProfileLoader {
       };
     }
 
-    const results = await doLoadConfig(
-      this.ide,
-      this.ideSettingsPromise,
-      this.controlPlaneClient,
-      this.writeLog,
-      undefined,
-      this.configResult.config,
-      {
-        ownerSlug: this.ownerSlug,
-        packageSlug: this.packageSlug,
+    const results = await doLoadConfig({
+      ide: this.ide,
+      ideSettingsPromise: this.ideSettingsPromise,
+      controlPlaneClient: this.controlPlaneClient,
+      llmLogger: this.llmLogger,
+      overrideConfigYaml: this.configResult.config,
+      profileId: this.description.id,
+      orgScopeId: this.orgScopeId,
+      packageIdentifier: {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: this.ownerSlug,
+          packageSlug: this.packageSlug,
+          versionSlug: this.versionSlug,
+        },
       },
-    );
+    });
 
     return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
+      config: results.config,
+      errors: [...(this.configResult.errors ?? []), ...(results.errors ?? [])],
+      configLoadInterrupted: results.configLoadInterrupted,
     };
   }
 
