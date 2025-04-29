@@ -8,9 +8,9 @@ import {
   FolderIcon,
   FolderOpenIcon,
   GlobeAltIcon,
-  ListBulletIcon,
   MagnifyingGlassIcon,
   MapIcon,
+  PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -45,7 +45,7 @@ const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.ViewDiff]: CodeBracketIcon,
   [BuiltInToolNames.ViewRepoMap]: MapIcon,
   [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
-  [BuiltInToolNames.CreateRuleBlock]: ListBulletIcon,
+  [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
   // EditExistingFile = "builtin_edit_existing_file",
   // CreateNewFile = "builtin_create_new_file",
   // RunTerminalCommand = "builtin_run_terminal_command",
