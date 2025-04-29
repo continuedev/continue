@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
-import { EXTENSION_NAME, getControlPlaneEnvSync } from "core/control-plane/env";
+import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -16,7 +16,6 @@ import {
   ProgressLocation,
   Uri,
   window,
-  workspace,
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
@@ -25,13 +24,7 @@ import { UriEventHandler } from "./uriHandler";
 
 const AUTH_NAME = "Continue";
 
-const enableControlServerBeta = workspace
-  .getConfiguration(EXTENSION_NAME)
-  .get<boolean>("enableContinueForTeams", false);
-const controlPlaneEnv = getControlPlaneEnvSync(
-  true ? "production" : "none",
-  enableControlServerBeta,
-);
+const controlPlaneEnv = getControlPlaneEnvSync(true ? "production" : "none");
 
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
 
@@ -166,19 +159,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   get ideRedirectUri() {
-    if (
-      env.uriScheme === "vscode-insiders" ||
-      env.uriScheme === "vscode" ||
-      env.uriScheme === "code-oss"
-    ) {
-      // We redirect to a page that says "you can close this page", and that page finishes the redirect
-      const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/auth/${env.uriScheme}-redirect`;
-      return url.toString();
-    }
-    const publisher = this.context.extension.packageJSON.publisher;
-    const name = this.context.extension.packageJSON.name;
-    return `${env.uriScheme}://${publisher}.${name}`;
+    // We redirect to a page that says "you can close this page", and that page finishes the redirect
+    const url = new URL(controlPlaneEnv.APP_URL);
+    url.pathname = `/auth/${env.uriScheme}-redirect`;
+    return url.toString();
   }
 
   public static useOnboardingUri: boolean = false;

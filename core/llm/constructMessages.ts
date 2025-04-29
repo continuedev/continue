@@ -1,51 +1,72 @@
 import {
   ChatHistoryItem,
   ChatMessage,
-  MessagePart,
-  ModelDescription,
+  RuleWithSource,
+  TextMessagePart,
+  ToolResultChatMessage,
+  UserChatMessage,
 } from "../";
+import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
+import { isUserOrToolMsg } from "./messages";
+import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
-import { modelSupportsTools } from "./autodetect";
+export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
+  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
 
-const TOOL_USE_RULES = `<tool_use_rules>
-  When using tools, follow the following guidelines:
-  - Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.
-</tool_use_rules>`;
+export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
+<important_rules>
+  Always include the language and file name in the info string when you write code blocks. 
+  If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
 
-function constructSystemPrompt(
-  modelDescription: ModelDescription,
-  useTools: boolean,
-): string | null {
-  let systemMessage = `<important_rules>
-  Always include the language and file name in the info string when you write code blocks. If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'.
-</important_rules>`;
-  if (useTools && modelSupportsTools(modelDescription)) {
-    systemMessage += "\n\n" + TOOL_USE_RULES;
+  When addressing code modification requests, present a concise code snippet that
+  emphasizes only the necessary changes and uses abbreviated placeholders for
+  unmodified sections. For example:
+
+  \`\`\`language /path/to/file
+  // ... rest of code here ...
+
+  {{ modified code here }}
+
+  // ... rest of code here ...
+
+  {{ another modification }}
+
+  // ... rest of code here ...
+  \`\`\`
+
+  In existing files, you should always restate the function or class that the snippet belongs to:
+
+  \`\`\`language /path/to/file
+  // ... rest of code here ...
+  
+  function exampleFunction() {
+    // ... rest of code here ...
+    
+    {{ modified code here }}
+    
+    // ... rest of code here ...
   }
-  return systemMessage;
-}
+  
+  // ... rest of code here ...
+  \`\`\`
 
-const CANCELED_TOOL_CALL_MESSAGE =
-  "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
+  Since users have access to their complete file, they prefer reading only the
+  relevant modifications. It's perfectly acceptable to omit unmodified portions
+  at the beginning, middle, or end of files using these "lazy" comments. Only
+  provide the complete file when explicitly requested. Include a concise explanation
+  of changes unless the user specifically asks for code only.
+</important_rules>`;
 
 export function constructMessages(
   history: ChatHistoryItem[],
-  modelDescription: ModelDescription,
-  useTools: boolean,
+  baseChatSystemMessage: string | undefined,
+  rules: RuleWithSource[],
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
   const msgs: ChatMessage[] = [];
-
-  const systemMessage = constructSystemPrompt(modelDescription, useTools);
-  if (systemMessage) {
-    msgs.push({
-      role: "system",
-      content: systemMessage,
-    });
-  }
 
   for (let i = 0; i < filteredHistory.length; i++) {
     const historyItem = filteredHistory[i];
@@ -54,24 +75,41 @@ export function constructMessages(
       // Gather context items for user messages
       let content = normalizeToMessageParts(historyItem.message);
 
-      const ctxItems = historyItem.contextItems.map((ctxItem) => {
-        return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
-      });
+      const ctxItems = historyItem.contextItems
+        .map((ctxItem) => {
+          return {
+            type: "text",
+            text: `${ctxItem.content}\n`,
+          } as TextMessagePart;
+        })
+        .filter((part) => !!part.text.trim());
 
       content = [...ctxItems, ...content];
       msgs.push({
         ...historyItem.message,
         content,
       });
-    } else if (historyItem.toolCallState?.status === "canceled") {
-      // Canceled tool call
-      msgs.push({
-        ...historyItem.message,
-        content: CANCELED_TOOL_CALL_MESSAGE,
-      });
     } else {
       msgs.push(historyItem.message);
     }
+  }
+
+  const lastUserMsg = findLast(msgs, isUserOrToolMsg) as
+    | UserChatMessage
+    | ToolResultChatMessage
+    | undefined;
+
+  const systemMessage = getSystemMessageWithRules({
+    baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
+    rules,
+    userMessage: lastUserMsg,
+  });
+
+  if (systemMessage.trim()) {
+    msgs.unshift({
+      role: "system",
+      content: systemMessage,
+    });
   }
 
   // Remove the "id" from all of the messages

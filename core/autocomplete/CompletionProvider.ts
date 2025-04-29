@@ -154,6 +154,10 @@ export class CompletionProvider {
         return undefined;
       }
 
+      if (llm.promptTemplates?.autocomplete) {
+        options.template = llm.promptTemplates.autocomplete as string;
+      }
+
       const helper = await HelperVars.create(
         input,
         options,
@@ -262,7 +266,7 @@ export class CompletionProvider {
 
       // When using the JetBrains extension, Mark as displayed
       const ideType = (await this.ide.getIdeInfo()).ideType;
-      if (ideType.toLowerCase() === "jetbrains") {
+      if (ideType === "jetbrains") {
         this.markDisplayed(input.completionId, outcome);
       }
 

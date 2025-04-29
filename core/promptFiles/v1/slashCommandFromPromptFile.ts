@@ -2,10 +2,11 @@ import { ContinueSDK, SlashCommand } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { getLastNPathParts } from "../../util/uri";
 import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
+import { renderPromptFileV2 } from "../v2/renderPromptFile";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
-import { updateChatHistory } from "./updateChatHistory";
+import { replaceSlashCommandWithPromptInChatHistory } from "./updateChatHistory";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
@@ -53,37 +54,54 @@ export function slashCommandFromPromptFileV1(
   path: string,
   content: string,
 ): SlashCommand | null {
-  const { name, description, systemMessage, prompt, version } =
-    parsePromptFileV1V2(path, content);
-
-  if (version !== 1) {
-    return null;
-  }
+  const { name, description, systemMessage, prompt } = parsePromptFileV1V2(
+    path,
+    content,
+  );
 
   return {
     name,
     description,
+    prompt,
     run: async function* (context) {
-      const originalSystemMessage = context.llm.systemMessage;
-      context.llm.systemMessage = systemMessage;
-
       const userInput = extractUserInput(context.input, name);
-      const renderedPrompt = await renderPromptV1(prompt, context, userInput);
-      const messages = updateChatHistory(
+      const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
+        config: context.config,
+        fullInput: userInput,
+        embeddingsProvider: context.config.modelsByRole.embed[0],
+        reranker: context.config.modelsByRole.rerank[0],
+        llm: context.llm,
+        ide: context.ide,
+        selectedCode: context.selectedCode,
+        fetch: context.fetch,
+      });
+
+      const messages = replaceSlashCommandWithPromptInChatHistory(
         context.history,
         name,
         renderedPrompt,
         systemMessage,
       );
 
+      if (systemMessage) {
+        const currentSystemMsg = messages.find((msg) => msg.role === "system");
+        if (currentSystemMsg) {
+          currentSystemMsg.content = systemMessage;
+        } else {
+          messages.unshift({
+            role: "system",
+            content: systemMessage,
+          });
+        }
+      }
+
       for await (const chunk of context.llm.streamChat(
         messages,
         new AbortController().signal,
+        context.completionOptions,
       )) {
         yield renderChatMessage(chunk);
       }
-
-      context.llm.systemMessage = originalSystemMessage;
     },
   };
 }

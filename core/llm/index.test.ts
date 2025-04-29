@@ -1,6 +1,7 @@
 import { ChatMessage, LLMOptions } from "..";
 
 import { BaseLLM } from ".";
+import { LLMLogger } from "./logger";
 
 class DummyLLM extends BaseLLM {
   static providerName = "openai";
@@ -30,11 +31,10 @@ describe("BaseLLM", () => {
       const templatMessagesFunction = (messages: ChatMessage[]) => {
         return messages[0]?.content.toString() ?? "";
       };
-      const writeLogFunction = async () => {};
+      const llmLogger = new LLMLogger();
       const options: LLMOptions = {
         model: "gpt-3.5-turbo",
         uniqueId: "testId",
-        systemMessage: "Test System Message",
         contextLength: 1024,
         completionOptions: {
           model: "some-model",
@@ -43,7 +43,7 @@ describe("BaseLLM", () => {
         requestOptions: {},
         promptTemplates: {},
         templateMessages: templatMessagesFunction,
-        writeLog: writeLogFunction,
+        logger: llmLogger,
         llmRequestHook: () => {},
         apiKey: "testApiKey",
         aiGatewaySlug: "testSlug",
@@ -61,13 +61,12 @@ describe("BaseLLM", () => {
       expect(instance.title).toBeDefined();
       expect(instance.uniqueId).toBe("testId");
       expect(instance.model).toBe("gpt-3.5-turbo");
-      expect(instance.systemMessage).toBe("Test System Message");
       expect(instance.contextLength).toBe(1024);
       expect(instance.completionOptions.maxTokens).toBe(150);
       expect(instance.requestOptions).toEqual({});
       expect(instance.promptTemplates).toEqual({});
       expect(instance.templateMessages).toEqual(templatMessagesFunction);
-      expect(instance.writeLog).toBe(writeLogFunction);
+      expect(instance.logger).toBe(llmLogger);
       expect(instance.apiKey).toBe("testApiKey");
       expect(instance.aiGatewaySlug).toBe("testSlug");
       expect(instance.apiBase).toBe("https://api.example.com/");

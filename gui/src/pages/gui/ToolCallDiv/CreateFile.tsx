@@ -1,15 +1,21 @@
 import { getMarkdownLanguageTagForFile } from "core/util";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 
 interface CreateFileToolCallProps {
   relativeFilepath: string;
   fileContents: string;
+  historyIndex: number;
 }
 
 export function CreateFile(props: CreateFileToolCallProps) {
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilepath ?? "test.txt")} ${props.relativeFilepath}\n${props.fileContents ?? ""}\n\`\`\``;
+  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilepath ?? "output.txt")} ${props.relativeFilepath}\n${props.fileContents ?? ""}\n\`\`\``;
 
   return props.relativeFilepath ? (
-    <StyledMarkdownPreview isRenderingInStepContainer={true} source={src} />
+    <StyledMarkdownPreview
+      isRenderingInStepContainer
+      disableManualApply
+      source={src}
+      itemIndex={props.historyIndex}
+    />
   ) : null;
 }

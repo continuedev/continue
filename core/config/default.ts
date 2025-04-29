@@ -1,93 +1,37 @@
-import {
-  ContextProviderWithParams,
-  ModelDescription,
-  SerializedContinueConfig,
-  SlashCommandDescription,
-} from "../";
+import { ConfigYaml } from "@continuedev/config-yaml";
 
-export const FREE_TRIAL_MODELS: ModelDescription[] = [
-  {
-    title: "Claude 3.5 Sonnet (Free Trial)",
-    provider: "free-trial",
-    model: "claude-3-5-sonnet-latest",
-    systemMessage:
-      "You are an expert software developer. You give helpful and concise responses.",
-  },
-  {
-    title: "GPT-4o (Free Trial)",
-    provider: "free-trial",
-    model: "gpt-4o",
-    systemMessage:
-      "You are an expert software developer. You give helpful and concise responses.",
-  },
-  {
-    title: "Llama3.1 70b (Free Trial)",
-    provider: "free-trial",
-    model: "llama3.1-70b",
-    systemMessage:
-      "You are an expert software developer. You give helpful and concise responses.",
-  },
-  {
-    title: "Codestral (Free Trial)",
-    provider: "free-trial",
-    model: "codestral-latest",
-    systemMessage:
-      "You are an expert software developer. You give helpful and concise responses.",
-  },
+export const defaultContextProvidersVsCode: NonNullable<
+  ConfigYaml["context"]
+>[number][] = [
+  { provider: "code" },
+  { provider: "docs" },
+  { provider: "diff" },
+  { provider: "terminal" },
+  { provider: "problems" },
+  { provider: "folder" },
+  { provider: "codebase" },
 ];
 
-export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
-  { name: "code", params: {} },
-  { name: "docs", params: {} },
-  { name: "diff", params: {} },
-  { name: "terminal", params: {} },
-  { name: "problems", params: {} },
-  { name: "folder", params: {} },
-  { name: "codebase", params: {} },
+export const defaultContextProvidersJetBrains: NonNullable<
+  ConfigYaml["context"]
+>[number][] = [
+  { provider: "diff" },
+  { provider: "folder" },
+  { provider: "codebase" },
 ];
 
-export const defaultContextProvidersJetBrains: ContextProviderWithParams[] = [
-  { name: "diff", params: {} },
-  { name: "folder", params: {} },
-  { name: "codebase", params: {} },
-];
-
-export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
-  {
-    name: "share",
-    description: "Export the current chat session to markdown",
-  },
-  {
-    name: "cmd",
-    description: "Generate a shell command",
-  },
-  {
-    name: "commit",
-    description: "Generate a git commit message",
-  },
-];
-
-export const defaultSlashCommandsJetBrains = [
-  {
-    name: "share",
-    description: "Export the current chat session to markdown",
-  },
-  {
-    name: "commit",
-    description: "Generate a git commit message",
-  },
-];
-
-export const defaultConfig: SerializedContinueConfig = {
+export const defaultConfig: ConfigYaml = {
+  name: "Local Assistant",
+  version: "1.0.0",
+  schema: "v1",
   models: [],
-  contextProviders: defaultContextProvidersVsCode,
-  slashCommands: defaultSlashCommandsVscode,
-  data: [],
+  context: defaultContextProvidersVsCode,
 };
 
-export const defaultConfigJetBrains: SerializedContinueConfig = {
+export const defaultConfigJetBrains: ConfigYaml = {
+  name: "Local Assistant",
+  version: "1.0.0",
+  schema: "v1",
   models: [],
-  contextProviders: defaultContextProvidersJetBrains,
-  slashCommands: defaultSlashCommandsJetBrains,
-  data: [],
+  context: defaultContextProvidersJetBrains,
 };

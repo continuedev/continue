@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.16",
+  "version": "1.0.21",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,13 +16,16 @@
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/config-yaml": "^1.0.51",
     "@continuedev/fetch": "^1.0.3",
+    "dotenv": "^16.5.0",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",
     "openai": "^4.76.0",
+    "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",
+    "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",
     "cross-env": "^7.0.3",
     "ts-jest": "^29.2.3",

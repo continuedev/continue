@@ -47,8 +47,16 @@ export const completionOptionsSchema = z.object({
   topK: z.number().optional(),
   stop: z.array(z.string()).optional(),
   n: z.number().optional(),
+  reasoning: z.boolean().optional(),
+  reasoningBudgetTokens: z.number().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
+
+export const cacheBehaviorSchema = z.object({
+  cacheSystemMessage: z.boolean().optional(),
+  cacheConversation: z.boolean().optional(),
+})
+export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
 
 export const embedOptionsSchema = z.object({
   maxChunkSize: z.number().optional(),
@@ -56,10 +64,37 @@ export const embedOptionsSchema = z.object({
 });
 export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 
+export const chatOptionsSchema = z.object({
+  baseSystemMessage: z.string().optional(),
+});
+export type ChatOptions = z.infer<typeof chatOptionsSchema>;
+
+const templateSchema = z.enum([
+  "llama2",
+  "alpaca",
+  "zephyr",
+  "phi2",
+  "phind",
+  "anthropic",
+  "chatml",
+  "none",
+  "openchat",
+  "deepseek",
+  "xwin-coder",
+  "neural-chat",
+  "codellama-70b",
+  "llava",
+  "gemma",
+  "granite",
+  "llama3",
+]);
+
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
+  chatTemplate: templateSchema.optional(),
   edit: z.string().optional(),
+  autocomplete: z.string().optional()
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
@@ -71,9 +106,12 @@ const baseModelFields = {
   roles: modelRolesSchema.array().optional(),
   capabilities: modelCapabilitySchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
+  cacheBehavior: cacheBehaviorSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
   embedOptions: embedOptionsSchema.optional(),
+  chatOptions: chatOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
+  useLegacyCompletionsEndpoint: z.boolean().optional(),
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),

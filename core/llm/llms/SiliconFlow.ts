@@ -1,4 +1,4 @@
-import { CompletionOptions, LLMOptions } from "../../index.js";
+import { Chunk, CompletionOptions, LLMOptions } from "../../index.js";
 import { streamSse } from "../stream.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
@@ -51,6 +51,41 @@ class SiliconFlow extends OpenAI {
     for await (const chunk of streamSse(resp)) {
       yield chunk.choices[0].text;
     }
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    if (!query || query.trim() === "") {
+      console.warn("[SiliconFlow] rerank: query is empty");
+      return [];
+    }
+    
+    if (!chunks || chunks.length === 0) {
+      console.warn("[SiliconFlow] rerank: chunks is empty");
+      return [];
+    }
+
+    const endpoint = new URL("rerank", this.apiBase);
+    const resp = await this.fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model,
+        query,
+        documents: chunks.map((chunk) => chunk.content),
+      }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    const results = data.results.sort((a: any, b: any) => a.index - b.index);
+    return results.map((result: any) => result.relevance_score);
   }
 }
 

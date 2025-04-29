@@ -59,6 +59,7 @@ export const modelDescriptionSchema = z.object({
     "continue-proxy",
     "nebius",
     "scaleway",
+    "watsonx"
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
@@ -112,6 +113,7 @@ export const embeddingsProviderSchema = z.object({
     "continue-proxy",
     "nebius",
     "scaleway",
+    "watsonx"
   ]),
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),
@@ -174,7 +176,7 @@ export const contextProviderSchema = z.object({
 export type ContextProvider = z.infer<typeof contextProviderSchema>;
 
 export const rerankerSchema = z.object({
-  name: z.enum(["cohere", "voyage", "llm", "continue-proxy"]),
+  name: z.enum(["cohere", "voyage", "watsonx", "llm", "continue-proxy"]),
   params: z.record(z.any()).optional(),
 });
 export type Reranker = z.infer<typeof rerankerSchema>;

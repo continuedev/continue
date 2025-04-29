@@ -1,4 +1,12 @@
-import { ChatMessage, DiffLine, ILLM, Prediction } from "../";
+import {
+  ChatMessage,
+  DiffLine,
+  ILLM,
+  Prediction,
+  RuleWithSource,
+  ToolResultChatMessage,
+  UserChatMessage,
+} from "../";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -10,7 +18,9 @@ import {
 } from "../autocomplete/filtering/streamTransforms/lineStream";
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
+import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRules";
 import { gptEditPrompt } from "../llm/templates/edit";
+import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
 
 function constructPrompt(
@@ -47,16 +57,27 @@ function modelIsInept(model: string): boolean {
   return !(model.includes("gpt") || model.includes("claude"));
 }
 
-export async function* streamDiffLines(
-  prefix: string,
-  highlighted: string,
-  suffix: string,
-  llm: ILLM,
-  input: string,
-  language: string | undefined,
-  onlyOneInsertion: boolean,
-  overridePrompt: ChatMessage[] | undefined,
-): AsyncGenerator<DiffLine> {
+export async function* streamDiffLines({
+  prefix,
+  highlighted,
+  suffix,
+  llm,
+  input,
+  language,
+  onlyOneInsertion,
+  overridePrompt,
+  rules,
+}: {
+  prefix: string;
+  highlighted: string;
+  suffix: string;
+  llm: ILLM;
+  input: string;
+  language: string | undefined;
+  onlyOneInsertion: boolean;
+  overridePrompt: ChatMessage[] | undefined;
+  rules: RuleWithSource[];
+}): AsyncGenerator<DiffLine> {
   void Telemetry.capture(
     "inlineEdit",
     {
@@ -78,12 +99,56 @@ export async function* streamDiffLines(
     oldLines = [];
   }
 
-  // Trim end of oldLines, otherwise we have trailing \r on every line for CRLF files
-  oldLines = oldLines.map((line) => line.trimEnd());
-
-  const prompt =
+  let prompt =
     overridePrompt ??
     constructPrompt(prefix, highlighted, suffix, llm, input, language);
+
+  // Rules will be included with edit prompt
+  // If any rules are present this will result in using chat instead of legacy completion
+  const lastUserMessage =
+    typeof prompt === "string"
+      ? ({
+          role: "user",
+          content: prompt,
+        } as UserChatMessage)
+      : (findLast(
+          prompt,
+          (msg) => msg.role === "user" || msg.role === "tool",
+        ) as UserChatMessage | ToolResultChatMessage | undefined);
+
+  const systemMessage = getSystemMessageWithRules({
+    rules,
+    userMessage: lastUserMessage,
+    baseSystemMessage: undefined,
+  });
+
+  if (systemMessage) {
+    if (typeof prompt === "string") {
+      // Removed system prompt because it was causing it to be used for Apply
+      // We should bring it back only for Edit
+      prompt = [
+        // {
+        //   role: "system",
+        //   content: systemMessage,
+        // },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ];
+    } else {
+      const curSysMsg = prompt.find((msg) => msg.role === "system");
+      if (curSysMsg) {
+        curSysMsg.content = systemMessage + "\n\n" + curSysMsg.content;
+      } else {
+        // prompt.unshift({
+        //   role: "system",
+        //   content: systemMessage,
+        // });
+      }
+    }
+  }
+
   const inept = modelIsInept(llm.model);
 
   const prediction: Prediction = {

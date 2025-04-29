@@ -3,4 +3,7 @@
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="17" />
   </component>
+  <component name="TypeScriptCompiler">
+    <option name="useTypesFromServer" value="true" />
+  </component>
 </project>

@@ -90,7 +90,7 @@ declare global {
     requestOptions?: RequestOptions;
     promptTemplates?: Record<string, PromptTemplate>;
     templateMessages?: (messages: ChatMessage[]) => string;
-    writeLog?: (str: string) => Promise<void>;
+    llmLogger?: ILLMLogger;
     llmRequestHook?: (model: string, prompt: string) => any;
     apiKey?: string;
     apiBase?: string;
@@ -403,6 +403,7 @@ declare global {
     | "generated"
     | "calling"
     | "done"
+    | "errored"
     | "canceled";
   
   // Will exist only on "assistant" messages with tool calls
@@ -433,6 +434,94 @@ declare global {
   
   export type ToastType = "info" | "error" | "warning";
   
+  export interface LLMInteractionBase {
+    interactionId: string;
+    timestamp: number;
+  }
+  
+  export interface LLMInteractionStartChat extends LLMInteractionBase {
+    kind: "startChat";
+    messages: ChatMessage[];
+    options: CompletionOptions;
+  }
+  
+  export interface LLMInteractionStartComplete extends LLMInteractionBase {
+    kind: "startComplete";
+    prompt: string;
+    options: CompletionOptions;
+  }
+  
+  export interface LLMInteractionStartFim extends LLMInteractionBase {
+    kind: "startFim";
+    prefix: string;
+    suffix: string;
+    options: CompletionOptions;
+  }
+  
+  export interface LLMInteractionChunk extends LLMInteractionBase {
+    kind: "chunk";
+    chunk: string;
+  }
+  
+  export interface LLMInteractionMessage extends LLMInteractionBase {
+    kind: "message";
+    message: ChatMessage;
+  }
+  
+  export interface LLMInteractionEnd extends LLMInteractionBase {
+    promptTokens: number;
+    generatedTokens: number;
+    thinkingTokens: number;
+  }
+  
+  export interface LLMInteractionSuccess extends LLMInteractionEnd {
+    kind: "success";
+  }
+  
+  export interface LLMInteractionCancel extends LLMInteractionEnd {
+    kind: "cancel";
+  }
+  
+  export interface LLMInteractionError extends LLMInteractionEnd {
+    kind: "error";
+    name: string;
+    message: string;
+  }
+  
+  export type LLMInteractionItem =
+    | LLMInteractionStartChat
+    | LLMInteractionStartComplete
+    | LLMInteractionStartFim
+    | LLMInteractionChunk
+    | LLMInteractionMessage
+    | LLMInteractionSuccess
+    | LLMInteractionCancel
+    | LLMInteractionError;
+  
+  // When we log a LLM interaction, we want to add the interactionId and timestamp
+  // in the logger code, so we need a type that omits these members from *each*
+  // member of the union. This can be done by using the distributive behavior of
+  // conditional types in Typescript.
+  //
+  // www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+  // https://stackoverflow.com/questions/57103834/typescript-omit-a-property-from-all-interfaces-in-a-union-but-keep-the-union-s
+  type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+    ? Omit<T, K>
+    : never;
+  
+  export type LLMInteractionItemDetails = DistributiveOmit<
+    LLMInteractionItem,
+    "interactionId" | "timestamp"
+  >;
+  
+  export interface ILLMInteractionLog {
+    logItem(item: LLMInteractionItemDetails): void;
+  }
+  
+  export interface ILLMLogger {
+    createInteractionLog(): ILLMInteractionLog;
+  }
+  
   export interface LLMOptions {
     model: string;
   
@@ -446,7 +535,7 @@ declare global {
     template?: TemplateType;
     promptTemplates?: Record<string, PromptTemplate>;
     templateMessages?: (messages: ChatMessage[]) => string;
-    writeLog?: (str: string) => Promise<void>;
+    logger?: ILLMLogger;
     llmRequestHook?: (model: string, prompt: string) => any;
     apiKey?: string;
     aiGatewaySlug?: string;
@@ -570,7 +659,6 @@ declare global {
     remoteConfigServerUrl: string | undefined;
     remoteConfigSyncPeriod: number;
     userToken: string;
-    enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
   }
   
@@ -871,7 +959,7 @@ declare global {
     cacheBehavior?: CacheBehavior;
   }
   
-  export interface EmbedOptions {
+  export interface JSONEmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;

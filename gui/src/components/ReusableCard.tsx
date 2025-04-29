@@ -33,10 +33,10 @@ export function ReusableCard({
     >
       {showCloseButton && (
         <CloseButton onClick={onClose}>
-          <XMarkIcon className="mt-1.5 hidden h-5 w-5 hover:brightness-125 sm:flex" />
+          <XMarkIcon className="flex h-5 w-5 hover:brightness-125" />
         </CloseButton>
       )}
-      <div className="content py-4">{children}</div>
+      <div className="content py-2">{children}</div>
     </StyledCard>
   );
 }

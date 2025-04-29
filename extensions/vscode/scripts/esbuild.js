@@ -1,5 +1,7 @@
-const esbuild = require("esbuild");
 const fs = require("fs");
+const { writeBuildTimestamp } = require("./utils");
+
+const esbuild = require("esbuild");
 
 const flags = process.argv.slice(2);
 
@@ -48,6 +50,8 @@ const esbuildConfig = {
 };
 
 (async () => {
+  // Create .buildTimestamp.js before starting the first build
+  writeBuildTimestamp();
   // Bundles the extension into one file
   if (flags.includes("--watch")) {
     const ctx = await esbuild.context(esbuildConfig);
@@ -59,9 +63,9 @@ const esbuildConfig = {
     // The watcher automatically notices changes to source files
     // so the only thing it needs to be notified about is if the
     // output file gets removed.
-    if (fs.existsSync (outFile)) {
-        console.log("VS Code Extension esbuild up to date");
-        return;
+    if (fs.existsSync(outFile)) {
+      console.log("VS Code Extension esbuild up to date");
+      return;
     }
 
     fs.watchFile(outFile, (current, previous) => {
@@ -73,7 +77,7 @@ const esbuildConfig = {
     });
 
     console.log("Triggering VS Code Extension esbuild rebuild...");
-    fs.utimesSync(inFile, new Date(), new Date());
+    writeBuildTimestamp();
   } else {
     await esbuild.build(esbuildConfig);
   }

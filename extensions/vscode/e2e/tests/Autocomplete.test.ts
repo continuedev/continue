@@ -1,9 +1,4 @@
-import {
-  EditorView,
-  InputBox,
-  TextEditor,
-  Workbench,
-} from "vscode-extension-tester";
+import { EditorView, TextEditor } from "vscode-extension-tester";
 
 import { AutocompleteActions } from "../actions/Autocomplete.actions";
 import { GlobalActions } from "../actions/Global.actions";

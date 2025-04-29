@@ -1,11 +1,12 @@
 import { ConfigResult } from "@continuedev/config-yaml";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
+import { ControlPlaneSessionInfo } from "../control-plane/client.js";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
   ContextProviderName,
   IndexingProgressUpdate,
   IndexingStatus,
-  PackageDocsResult,
 } from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
@@ -13,6 +14,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+      organizations: SerializedOrgWithProfiles[];
+      selectedOrgId: string | null;
     },
     void,
   ];
@@ -37,6 +40,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   setTTSActive: [boolean, void];
   getWebviewHistoryLength: [undefined, number];
   getCurrentSessionId: [undefined, string];
-  "docs/suggestions": [PackageDocsResult[], void];
   "jetbrains/setColors": [Record<string, string>, void];
+  sessionUpdate: [{ sessionInfo: ControlPlaneSessionInfo | undefined }, void];
+  toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
 };

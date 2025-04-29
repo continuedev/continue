@@ -1,16 +1,21 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Tool } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
 } from "../../components/OnboardingCard";
 import { getLocalStorage, LocalStorageKey } from "../../util/localStorage";
 
-type ToolSetting =
+export type ToolPolicy =
   | "allowedWithPermission"
   | "allowedWithoutPermission"
   | "disabled";
+
+export type ToolGroupPolicy = "include" | "exclude";
+
+export type ToolPolicies = { [toolName: string]: ToolPolicy };
+export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
 
 type UIState = {
   showDialog: boolean;
@@ -20,12 +25,12 @@ type UIState = {
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
   shouldAddFileForEditing: boolean;
-  useTools: boolean;
-  toolSettings: { [toolName: string]: ToolSetting };
+  toolSettings: ToolPolicies;
+  toolGroupSettings: ToolGroupPolicies;
   ttsActive: boolean;
 };
 
-export const DEFAULT_TOOL_SETTING: ToolSetting = "allowedWithPermission";
+export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
 
 export const uiSlice = createSlice({
   name: "ui",
@@ -40,16 +45,20 @@ export const uiSlice = createSlice({
     ),
     shouldAddFileForEditing: false,
     ttsActive: false,
-    useTools: false,
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
+      [BuiltInToolNames.EditExistingFile]: "allowedWithPermission",
       [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
       [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
-      [BuiltInToolNames.ViewSubdirectory]: "allowedWithoutPermission",
-      [BuiltInToolNames.ViewRepoMap]: "allowedWithoutPermission",
-      [BuiltInToolNames.ExactSearch]: "allowedWithoutPermission",
+      [BuiltInToolNames.GrepSearch]: "allowedWithoutPermission",
+      [BuiltInToolNames.FileGlobSearch]: "allowedWithoutPermission",
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
+      [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
+      [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
+    },
+    toolGroupSettings: {
+      [BUILT_IN_GROUP_NAME]: "include",
     },
   } as UIState,
   reducers: {
@@ -84,9 +93,6 @@ export const uiSlice = createSlice({
       state.hasDismissedExploreDialog = action.payload;
     },
     // Tools
-    toggleUseTools: (state) => {
-      state.useTools = !state.useTools;
-    },
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
         "allowedWithPermission";
@@ -109,6 +115,15 @@ export const uiSlice = createSlice({
           break;
       }
     },
+    toggleToolGroupSetting: (state, action: PayloadAction<string>) => {
+      const setting = state.toolGroupSettings[action.payload] ?? "include";
+
+      if (setting === "include") {
+        state.toolGroupSettings[action.payload] = "exclude";
+      } else {
+        state.toolGroupSettings[action.payload] = "include";
+      }
+    },
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
@@ -122,8 +137,8 @@ export const {
   setShowDialog,
   setIsExploreDialogOpen,
   setHasDismissedExploreDialog,
-  toggleUseTools,
   toggleToolSetting,
+  toggleToolGroupSetting,
   addTool,
   setTTSActive,
 } = uiSlice.actions;

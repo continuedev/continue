@@ -127,11 +127,15 @@ class OpenConfigAction : AnAction() {
     }
 }
 
-class OpenMorePageAction : AnAction() {
+class OpenLogsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        val params = mapOf("path" to "/more", "toggle" to true)
-        continuePluginService.sendToWebview("navigateTo", params)
+        val project = e.project ?: return
+        val logFile = java.io.File(System.getProperty("user.home") + "/.continue/logs/core.log")
+        if (logFile.exists()) {
+            val virtualFile = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByIoFile(logFile)
+            if (virtualFile != null) {
+                com.intellij.openapi.fileEditor.FileEditorManager.getInstance(project).openFile(virtualFile, true)
+            }
+        }
     }
 }

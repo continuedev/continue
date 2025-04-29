@@ -52,7 +52,6 @@ class FileSystemIde implements IDE {
       remoteConfigServerUrl: undefined,
       remoteConfigSyncPeriod: 60,
       userToken: "",
-      enableControlServerBeta: false,
       continueTestEnvironment: "none",
       pauseCodebaseIndexOnStart: false,
     };
@@ -236,6 +235,10 @@ class FileSystemIde implements IDE {
 
   async getSearchResults(query: string): Promise<string> {
     return "";
+  }
+
+  async getFileResults(pattern: string): Promise<string[]> {
+    return [];
   }
 
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
