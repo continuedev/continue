@@ -2,7 +2,6 @@ import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { renderChatMessage } from "core/util/messageContent";
 import { useAppSelector } from "../../redux/hooks";
-import { selectIsInEditMode } from "../../redux/slices/sessionSlice";
 import FeedbackButtons from "../FeedbackButtons";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
@@ -23,9 +22,9 @@ export default function ResponseActions({
   isTruncated,
   onDelete,
 }: ResponseActionsProps) {
-  const isInEditMode = useAppSelector(selectIsInEditMode);
+  const mode = useAppSelector((store) => store.session.mode);
 
-  if (isInEditMode) {
+  if (mode === "edit") {
     return <EditActions index={index} item={item} />;
   }
 

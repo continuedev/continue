@@ -10,7 +10,6 @@ import {
   ApplyState,
   ChatHistoryItem,
   ChatMessage,
-  CodeToEdit,
   ContextItem,
   ContextItemWithId,
   FileSymbolMap,
@@ -44,7 +43,6 @@ type SessionState = {
   title: string;
   id: string;
   streamAborter: AbortController;
-  codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
@@ -56,25 +54,6 @@ type SessionState = {
   newestToolbarPreviewForInput: Record<string, string>;
 };
 
-function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
-  if (a.filepath !== b.filepath || a.contents !== b.contents) {
-    return false;
-  }
-
-  if ("range" in a && "range" in b) {
-    const rangeA = a.range;
-    const rangeB = b.range;
-
-    return (
-      rangeA.start.line === rangeB.start.line &&
-      rangeA.end.line === rangeB.end.line
-    );
-  }
-
-  // If neither has a range, they are considered equal in this context
-  return !("range" in a) && !("range" in b);
-}
-
 const initialState: SessionState = {
   allSessionMetadata: [],
   history: [],
@@ -83,7 +62,6 @@ const initialState: SessionState = {
   id: uuidv4(),
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
-  codeToEdit: [],
   symbols: {},
   mode: "chat",
   codeBlockApplyStates: {
@@ -584,31 +562,7 @@ export const sessionSlice = createSlice({
     resetNextCodeBlockToApplyIndex: (state) => {
       state.codeBlockApplyStates.curIndex = 0;
     },
-    addCodeToEdit: (
-      state,
-      { payload }: PayloadAction<CodeToEdit | CodeToEdit[]>,
-    ) => {
-      const entries = Array.isArray(payload) ? payload : [payload];
 
-      const newEntries = entries.filter(
-        (entry) =>
-          !state.codeToEdit.some((existingEntry) =>
-            isCodeToEditEqual(existingEntry, entry),
-          ),
-      );
-
-      if (newEntries.length > 0) {
-        state.codeToEdit.push(...newEntries);
-      }
-    },
-    removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      state.codeToEdit = state.codeToEdit.filter(
-        (entry) => !isCodeToEditEqual(entry, payload),
-      );
-    },
-    clearCodeToEdit: (state) => {
-      state.codeToEdit = [];
-    },
     // TOOL CALL STATE
     setToolGenerated: (
       state,
@@ -724,26 +678,6 @@ export const sessionSlice = createSlice({
       const curHistoryItem = state.history.at(-1);
       return curHistoryItem?.isGatheringContext || false;
     },
-    selectIsInEditMode: (state) => {
-      return state.mode === "edit";
-    },
-    selectCurrentMode: (state) => {
-      return state.mode;
-    },
-    selectIsSingleRangeEditOrInsertion: (state) => {
-      if (state.mode !== "edit") {
-        return false;
-      }
-
-      const isInsertion = state.codeToEdit.length === 0;
-      const selectIsSingleRangeEdit =
-        state.codeToEdit.length === 1 && "range" in state.codeToEdit[0];
-
-      return selectIsSingleRangeEdit || isInsertion;
-    },
-    selectHasCodeToEdit: (state) => {
-      return state.codeToEdit.length > 0;
-    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -811,9 +745,6 @@ export const {
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
   abortStream,
-  clearCodeToEdit,
-  addCodeToEdit,
-  removeCodeToEdit,
   setToolCallCalling,
   cancelToolCall,
   errorToolCall,
@@ -829,12 +760,6 @@ export const {
   cycleMode,
 } = sessionSlice.actions;
 
-export const {
-  selectIsGatheringContext,
-  selectIsInEditMode,
-  selectCurrentMode,
-  selectIsSingleRangeEditOrInsertion,
-  selectHasCodeToEdit,
-} = sessionSlice.selectors;
+export const { selectIsGatheringContext } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

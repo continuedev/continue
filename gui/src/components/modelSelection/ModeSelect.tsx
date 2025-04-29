@@ -14,11 +14,7 @@ import { lightGray } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import {
-  cycleMode,
-  selectCurrentMode,
-  setMode,
-} from "../../redux/slices/sessionSlice";
+import { cycleMode, setMode } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
 import {
   loadLastSession,
@@ -40,7 +36,7 @@ const ShortcutText = styled.span`
 
 function ModeSelect() {
   const dispatch = useAppDispatch();
-  const mode = useAppSelector(selectCurrentMode);
+  const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const currentSession = useAppSelector((state) => state.session);
   const [newSessionInitialized, setNewSessionInitialized] = useState(false);

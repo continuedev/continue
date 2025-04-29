@@ -29,7 +29,6 @@ import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseHub } from "../../redux/selectors";
 import {
   selectCurrentToolCall,
   selectCurrentToolCallApplyState,
@@ -38,8 +37,6 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
   newSession,
-  selectIsInEditMode,
-  selectIsSingleRangeEditOrInsertion,
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import {
@@ -56,7 +53,7 @@ import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
-import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
+
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -115,7 +112,7 @@ export function Chat() {
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
-  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
+  const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
@@ -124,12 +121,8 @@ export function Chat() {
     (state) => state.status === "done",
   );
   const hasPendingApplies = pendingApplyStates.length > 0;
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-  const isSingleRangeEditOrInsertion = useAppSelector(
-    selectIsSingleRangeEditOrInsertion,
-  );
+  const mode = useAppSelector((store) => store.session.mode);
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const useHub = useAppSelector(selectUseHub);
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
@@ -206,18 +199,12 @@ export function Chat() {
         }
       }
 
-      if (isSingleRangeEditOrInsertion) {
+      if (mode === "edit") {
         handleSingleRangeEditOrInsertion(editorState);
         return;
       }
 
-      const promptPreamble = isInEditMode
-        ? getMultifileEditPrompt(codeToEdit)
-        : undefined;
-
-      dispatch(
-        streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
-      );
+      dispatch(streamResponseThunk({ editorState, modifiers, index }));
 
       if (editorToClearOnSend) {
         editorToClearOnSend.commands.clearContent();
@@ -240,7 +227,7 @@ export function Chat() {
       history,
       selectedChatModel,
       streamResponse,
-      isSingleRangeEditOrInsertion,
+      mode,
       codeToEdit,
       toolCallState,
     ],
@@ -314,8 +301,6 @@ export function Chat() {
 
   useAutoScroll(stepsDivRef, history);
 
-  const showPageHeader = isInEditMode || useHub;
-
   return (
     <>
       {widget}
@@ -324,7 +309,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-3 overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`mt-3 overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -342,14 +327,13 @@ export function Chat() {
             >
               {item.message.role === "user" ? (
                 <>
-                  {isInEditMode && index === 0 && <CodeToEditCard />}
+                  {mode === "edit" && <CodeToEditCard />}
                   <ContinueInputBox
-                    isEditMode={isInEditMode}
                     onEnter={(editorState, modifiers) =>
                       sendInput(editorState, modifiers, index)
                     }
                     isLastUserInput={isLastUserInput(index)}
-                    isMainInput={false}
+                    isMainInput={mode === "edit"}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
                     inputId={item.message.id}
@@ -421,18 +405,18 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        {isInEditMode && history.length === 0 && <CodeToEditCard />}
-
-        {isInEditMode && history.length > 0 ? null : (
-          <ContinueInputBox
-            isMainInput
-            isEditMode={isInEditMode}
-            isLastUserInput={false}
-            onEnter={(editorState, modifiers, editor) =>
-              sendInput(editorState, modifiers, undefined, editor)
-            }
-            inputId={MAIN_EDITOR_INPUT_ID}
-          />
+        {mode === "edit" && history.length > 0 ? null : (
+          <>
+            {mode === "edit" && <CodeToEditCard />}
+            <ContinueInputBox
+              isMainInput
+              isLastUserInput={false}
+              onEnter={(editorState, modifiers, editor) =>
+                sendInput(editorState, modifiers, undefined, editor)
+              }
+              inputId={MAIN_EDITOR_INPUT_ID}
+            />
+          </>
         )}
 
         <div
@@ -442,7 +426,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {history.length === 0 && lastSessionId && !isInEditMode && (
+              {history.length === 0 && lastSessionId && mode !== "edit" && (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
@@ -462,7 +446,7 @@ export function Chat() {
             </div>
           </div>
 
-          {hasPendingApplies && isSingleRangeEditOrInsertion && (
+          {hasPendingApplies && (
             <AcceptRejectAllButtons
               pendingApplyStates={pendingApplyStates}
               onAcceptOrReject={async (outcome) => {
@@ -481,10 +465,7 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
 
           {history.length === 0 && (
-            <EmptyChatBody
-              useHub={useHub}
-              showOnboardingCard={onboardingCard.show}
-            />
+            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
           )}
         </div>
       </div>

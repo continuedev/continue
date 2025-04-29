@@ -22,11 +22,7 @@ import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
-import {
-  addCodeToEdit,
-  selectHasCodeToEdit,
-  selectIsInEditMode,
-} from "../../../../redux/slices/sessionSlice";
+import { addCodeToEdit } from "../../../../redux/slices/editModeState";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEditMode } from "../../../../redux/thunks";
 import { loadLastSession } from "../../../../redux/thunks/session";
@@ -87,15 +83,14 @@ export function createEditorConfig(options: {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
-  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
+  const mode = useAppSelector((store) => store.session.mode);
+  const modeRef = useUpdatingRef(mode);
+  const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
   const defaultModelRef = useUpdatingRef(defaultModel);
   const isStreamingRef = useUpdatingRef(isStreaming);
-  const isInEditModeRef = useUpdatingRef(isInEditMode);
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
     props.availableContextProviders,
@@ -273,7 +268,7 @@ export function createEditorConfig(options: {
                 return true;
               }
 
-              if (inDropdownRef.current || !isInEditModeRef.current) {
+              if (inDropdownRef.current || modeRef.current !== "edit") {
                 ideMessenger.post("focusEditor", undefined);
                 return true;
               }
@@ -336,7 +331,7 @@ export function createEditorConfig(options: {
             inSubmenuRef,
             ideMessenger,
           ),
-          allow: () => isInEditModeRef.current,
+          allow: () => modeRef.current !== "edit",
           command: async ({ editor, range, props }) => {
             editor.chain().focus().insertContentAt(range, "").run();
             const filepath = props.id;
@@ -389,7 +384,7 @@ export function createEditorConfig(options: {
       if (!editor) {
         return;
       }
-      if (isStreaming || isEditModeAndNoCodeToEdit) {
+      if (isStreaming || (codeToEdit.length === 0 && mode === "edit")) {
         return;
       }
 
@@ -406,7 +401,7 @@ export function createEditorConfig(options: {
 
       props.onEnter(json, modifiers, editor);
     },
-    [props.onEnter, editor, props.isMainInput],
+    [props.onEnter, editor, props.isMainInput, codeToEdit, mode],
   );
 
   return { editor, onEnterRef };

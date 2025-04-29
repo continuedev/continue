@@ -47,7 +47,6 @@ const saveSubsetFilters = [
 
     // Persist edit mode in case closes in middle
     "mode",
-    "codeToEdit",
 
     // higher risk to persist
     // codeBlockApplyStates
@@ -55,7 +54,7 @@ const saveSubsetFilters = [
     // curCheckpointIndex
   ]),
   // Don't persist any of the edit state for now
-  createFilter("editModeState", []),
+  createFilter("editModeState", ["codeToEdit"]),
   createFilter("config", ["defaultModelTitle"]),
   createFilter("ui", ["toolSettings", "toolGroupSettings"]),
   createFilter("indexing", []),

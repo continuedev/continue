@@ -9,10 +9,6 @@ import {
   selectCurrentToolCallApplyState,
 } from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import {
-  selectHasCodeToEdit,
-  selectIsInEditMode,
-} from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
 import { loadLastSession } from "../../redux/thunks/session";
 import {
@@ -52,17 +48,16 @@ function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const mode = useAppSelector((store) => store.session.mode);
+  const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
-  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
   );
 
   const isEnterDisabled =
     props.disabled ||
-    isEditModeAndNoCodeToEdit ||
+    (mode === "edit" && codeToEdit.length === 0) ||
     toolCallState?.status === "generated" ||
     (currentToolCallApplyState &&
       currentToolCallApplyState.status !== "closed");
@@ -158,7 +153,7 @@ function InputToolbar(props: InputToolbarProps) {
             fontSize: tinyFont,
           }}
         >
-          {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
+          {!props.toolbarOptions?.hideUseCodebase && mode !== "edit" && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
             >
@@ -188,7 +183,7 @@ function InputToolbar(props: InputToolbarProps) {
             </div>
           )}
 
-          {isInEditMode && (
+          {mode === "edit" && (
             <HoverItem
               className="hidden hover:underline sm:flex"
               onClick={async (e) => {

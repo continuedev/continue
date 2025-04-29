@@ -6,13 +6,12 @@ import { AuthProvider } from "../context/Auth";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
 import {
   addCodeToEdit,
-  newSession,
-  selectIsInEditMode,
-  setMode,
-} from "../redux/slices/sessionSlice";
+  focusEdit,
+  setEditStatus,
+} from "../redux/slices/editModeState";
+import { newSession, setMode } from "../redux/slices/sessionSlice";
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
@@ -172,7 +171,7 @@ const Layout = () => {
     async (payload) => {
       dispatch(addCodeToEdit(payload));
     },
-    [navigate],
+    [],
   );
 
   useWebviewListener(
@@ -183,11 +182,11 @@ const Layout = () => {
     [],
   );
 
-  const isInEditMode = useAppSelector(selectIsInEditMode);
+  const mode = useAppSelector((store) => store.session.mode);
   useWebviewListener(
     "exitEditMode",
     async () => {
-      if (!isInEditMode) {
+      if (mode !== "edit") {
         return;
       }
       dispatch(
@@ -197,7 +196,7 @@ const Layout = () => {
       );
       dispatch(exitEditMode());
     },
-    [isInEditMode],
+    [mode],
   );
 
   useEffect(() => {

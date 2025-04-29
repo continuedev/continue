@@ -1,24 +1,17 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  clearCodeToEdit,
-  selectIsInEditMode,
-  selectIsSingleRangeEditOrInsertion,
-  setMainEditorContentTrigger,
-  setMode,
-} from "../slices/sessionSlice";
+import { clearCodeToEdit, setEditDone } from "../slices/editModeState";
+import { setMainEditorContentTrigger, setMode } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { setEditDone } from "../slices/editModeState";
 
 export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
   "edit/complete",
   async (_, { dispatch, extra, getState }) => {
     const state = getState();
-    const isInEditMode = selectIsInEditMode(state);
-    const codeToEdit = state.session.codeToEdit;
-    const isSingleRangeEditOrInsertion =
-      selectIsSingleRangeEditOrInsertion(state);
+    const codeToEdit = state.editModeState.codeToEdit;
+    const enteredEditModeFromEditor =
+      state.editModeState.enteredEditModeFromEditor;
 
-    if (!isInEditMode) {
+    if (state.session.mode !== "edit") {
       return;
     }
 
@@ -35,7 +28,7 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
     dispatch(setMainEditorContentTrigger(undefined));
 
     extra.ideMessenger.post("edit/exit", {
-      shouldFocusEditor: isSingleRangeEditOrInsertion,
+      shouldFocusEditor: enteredEditModeFromEditor,
     });
   },
 );
