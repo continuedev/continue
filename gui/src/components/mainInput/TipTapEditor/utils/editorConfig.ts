@@ -24,8 +24,6 @@ import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { addCodeToEdit } from "../../../../redux/slices/editModeState";
 import { AppDispatch } from "../../../../redux/store";
-import { exitEditMode } from "../../../../redux/thunks";
-import { loadLastSession } from "../../../../redux/thunks/session";
 import { getFontSize, isJetBrains } from "../../../../util";
 import * as ContinueExtensions from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
@@ -272,14 +270,11 @@ export function createEditorConfig(options: {
                 ideMessenger.post("focusEditor", undefined);
                 return true;
               }
-              (async () => {
-                await dispatch(
-                  loadLastSession({
-                    saveCurrentSession: false,
-                  }),
-                );
-                dispatch(exitEditMode());
-              })();
+              // dispatch(
+              //   exitEditMode({
+              //     openNewSession: false,
+              //   }),
+              // );
 
               return true;
             },

@@ -2,7 +2,7 @@ import { ChatHistoryItem } from "core";
 
 import { renderChatMessage } from "core/util/messageContent";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import { exitEditMode } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import AcceptRejectAllButtons from "../AcceptRejectAllButtons";
 import FeedbackButtons from "../FeedbackButtons";
@@ -64,7 +64,7 @@ export default function EditActions({ index, item }: EditActionsProps) {
                     saveCurrentSession: false,
                   }),
                 );
-                dispatch(exitEditMode());
+                dispatch(exitEditMode({}));
               }
             }}
           />

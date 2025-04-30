@@ -6,11 +6,10 @@ import { AuthProvider } from "../context/Auth";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { addCodeToEdit, focusEdit } from "../redux/slices/editModeState";
-import { newSession, setMode } from "../redux/slices/sessionSlice";
+import { addCodeToEdit } from "../redux/slices/editModeState";
 import { setShowDialog } from "../redux/slices/uiSlice";
-import { exitEditMode } from "../redux/thunks";
-import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
+import { enterEditMode, exitEditMode } from "../redux/thunks/editMode";
+import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
@@ -46,19 +45,24 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
 
+  const mode = useAppSelector((state) => state.session.mode);
+
   useWebviewListener(
     "newSession",
     async () => {
       navigate(ROUTES.HOME);
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-          generateTitle: true,
-        }),
-      );
-      dispatch(exitEditMode());
+      if (mode === "edit") {
+        await dispatch(exitEditMode({}));
+      } else {
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: true,
+            generateTitle: true,
+          }),
+        );
+      }
     },
-    [],
+    [mode],
   );
 
   useWebviewListener(
@@ -74,13 +78,20 @@ const Layout = () => {
     "focusContinueInputWithNewSession",
     async () => {
       navigate(ROUTES.HOME);
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-          generateTitle: true,
-        }),
-      );
-      dispatch(exitEditMode());
+      if (mode === "edit") {
+        await dispatch(
+          exitEditMode({
+            openNewSession: true,
+          }),
+        );
+      } else {
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: true,
+            generateTitle: true,
+          }),
+        );
+      }
     },
     [location.pathname],
     location.pathname === ROUTES.HOME,
@@ -133,31 +144,7 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: false,
-          // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
-          generateTitle: false,
-        }),
-      );
-      dispatch(newSession());
-      dispatch(focusEdit());
-      dispatch(setMode("edit"));
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "focusEditWithoutClear",
-    async () => {
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-          generateTitle: true,
-        }),
-      );
-      dispatch(focusEdit());
-      dispatch(setMode("edit"));
+      dispatch(enterEditMode({}));
     },
     [],
   );
@@ -171,23 +158,20 @@ const Layout = () => {
           fromEditor: true,
         }),
       );
+      dispatch(
+        enterEditMode({
+          returnCursorToEditor: true,
+          returnToMode: mode,
+        }),
+      );
     },
-    [],
+    [mode],
   );
 
-  const mode = useAppSelector((store) => store.session.mode);
   useWebviewListener(
     "exitEditMode",
     async () => {
-      if (mode !== "edit") {
-        return;
-      }
-      dispatch(
-        loadLastSession({
-          saveCurrentSession: false,
-        }),
-      );
-      dispatch(exitEditMode());
+      dispatch(exitEditMode({}));
     },
     [mode],
   );

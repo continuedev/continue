@@ -8,18 +8,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { lightGray } from "..";
-import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { cycleMode, setMode } from "../../redux/slices/sessionSlice";
+import { setMode } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
-import {
-  loadLastSession,
-  saveCurrentSession,
-} from "../../redux/thunks/session";
+import { enterEditMode } from "../../redux/thunks/editMode";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
 import {
   Listbox,
@@ -38,8 +34,6 @@ function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const currentSession = useAppSelector((state) => state.session);
-  const [newSessionInitialized, setNewSessionInitialized] = useState(false);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
 
   const jetbrains = useMemo(() => {
@@ -70,11 +64,66 @@ function ModeSelect() {
     }
   }, [mode, agentModeSupported, dispatch, selectedModel]);
 
+  const cycleMode = useCallback(async () => {
+    const modes: MessageModes[] = jetbrains
+      ? ["chat", "agent"]
+      : ["chat", "agent", "edit"];
+    const currentIndex = modes.indexOf(mode);
+    const oneModeAhead = modes[(currentIndex + 1) % modes.length];
+    // const twoModesAhead = modes[(currentIndex + 2) % modes.length];
+    if (mode === "edit") {
+      await dispatch(
+        exitEditMode({
+          goToMode: oneModeAhead,
+        }),
+      );
+    } else {
+      if (oneModeAhead === "edit") {
+        await dispatch(
+          enterEditMode({
+            returnToMode: mode, // twoModesAhead
+            returnCursorToEditor: false,
+          }),
+        );
+      } else {
+        dispatch(setMode(oneModeAhead));
+      }
+    }
+  }, [jetbrains, mode]);
+
+  const selectMode = useCallback(
+    async (newMode: MessageModes) => {
+      if (newMode === mode) {
+        return;
+      }
+
+      if (newMode === "edit") {
+        await dispatch(
+          enterEditMode({
+            returnToMode: mode,
+            returnCursorToEditor: false,
+          }),
+        );
+      } else {
+        if (mode === "edit") {
+          await dispatch(
+            exitEditMode({
+              goToMode: newMode,
+            }),
+          );
+        } else {
+          dispatch(setMode(newMode));
+        }
+      }
+    },
+    [mode],
+  );
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "." && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        dispatch(cycleMode({ isJetBrains: jetbrains }));
+        cycleMode();
       }
     };
 
@@ -82,43 +131,8 @@ function ModeSelect() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [dispatch, mode, jetbrains]);
 
-  useWebviewListener("newSession", async () => {
-    setNewSessionInitialized(true);
-  });
-
-  useEffect(() => {
-    if (currentSession.history.length > 0) {
-      setNewSessionInitialized(false);
-    }
-  }, [currentSession.history]);
-
   return (
-    <Listbox
-      value={mode}
-      onChange={async (newMode) => {
-        if (newMode === mode) {
-          return;
-        }
-        dispatch(setMode(newMode));
-        if (newMode === "edit" || newSessionInitialized) {
-          // generate a new session for edit mode and if user opened a new session explicitly
-          await dispatch(
-            saveCurrentSession({
-              generateTitle: false,
-              openNewSession: true,
-            }),
-          );
-        } else if (mode === "edit") {
-          // load last session if the previous mode was edit
-          await dispatch(
-            loadLastSession({
-              saveCurrentSession: false,
-            }),
-          );
-          dispatch(exitEditMode());
-        }
-      }}
-    >
+    <Listbox value={mode} onChange={selectMode}>
       <div className="relative">
         <ListboxButton
           data-testid="mode-select-button"
@@ -138,24 +152,6 @@ function ModeSelect() {
           />
         </ListboxButton>
         <ListboxOptions className="min-w-32 max-w-48">
-          <ListboxOption value="agent" disabled={!agentModeSupported}>
-            <div className="flex flex-row items-center gap-1.5">
-              <SparklesIcon className="h-3 w-3" />
-              <span className="">Agent</span>
-            </div>
-            {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
-            {!agentModeSupported && <span> (Not supported)</span>}
-          </ListboxOption>
-
-          <ListboxOption value="chat">
-            <div className="flex flex-row items-center gap-1.5">
-              <ChatBubbleLeftIcon className="h-3 w-3" />
-              <span className="">Chat</span>
-              <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
-            </div>
-            {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
-          </ListboxOption>
-
           {!jetbrains && (
             <ListboxOption value="edit">
               <div className="flex flex-row items-center gap-1.5">
@@ -166,6 +162,23 @@ function ModeSelect() {
               {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
             </ListboxOption>
           )}
+          <ListboxOption value="chat">
+            <div className="flex flex-row items-center gap-1.5">
+              <ChatBubbleLeftIcon className="h-3 w-3" />
+              <span className="">Chat</span>
+              <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
+            </div>
+            {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
+          </ListboxOption>
+
+          <ListboxOption value="agent" disabled={!agentModeSupported}>
+            <div className="flex flex-row items-center gap-1.5">
+              <SparklesIcon className="h-3 w-3" />
+              <span className="">Agent</span>
+            </div>
+            {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
+            {!agentModeSupported && <span> (Not supported)</span>}
+          </ListboxOption>
 
           <div className="text-lightgray px-2 py-1">
             {metaKeyLabel}. for next mode

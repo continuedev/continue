@@ -1,4 +1,4 @@
-export { exitEditMode } from "./exitEditMode";
+export { exitEditMode } from "./editMode";
 export { gatherContext } from "./gatherContext";
 export { resetStateForNewMessage } from "./resetStateForNewMessage";
 export { streamNormalInput } from "./streamNormalInput";

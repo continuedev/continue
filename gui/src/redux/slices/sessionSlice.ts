@@ -652,14 +652,6 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
-    cycleMode: (state, action: PayloadAction<{ isJetBrains: boolean }>) => {
-      const modes = action.payload.isJetBrains
-        ? ["chat", "agent"]
-        : ["chat", "edit", "agent"];
-      const currentIndex = modes.indexOf(state.mode);
-      const nextIndex = (currentIndex + 1) % modes.length;
-      state.mode = modes[nextIndex] as MessageModes;
-    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -757,7 +749,6 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
-  cycleMode,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

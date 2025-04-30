@@ -10,7 +10,6 @@ import {
 } from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { exitEditMode } from "../../redux/thunks";
-import { loadLastSession } from "../../redux/thunks/session";
 import {
   getAltKeyLabel,
   getMetaKeyLabel,
@@ -186,13 +185,8 @@ function InputToolbar(props: InputToolbarProps) {
           {mode === "edit" && (
             <HoverItem
               className="hidden hover:underline sm:flex"
-              onClick={async (e) => {
-                await dispatch(
-                  loadLastSession({
-                    saveCurrentSession: false,
-                  }),
-                );
-                dispatch(exitEditMode());
+              onClick={async () => {
+                dispatch(exitEditMode({}));
               }}
             >
               <span>

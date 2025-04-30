@@ -1,10 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ApplyState, CodeToEdit, MessageContent, MessageModes } from "core";
+import { ApplyState, ApplyStateStatus, CodeToEdit, MessageModes } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 export interface EditModeState {
   codeToEdit: CodeToEdit[];
   applyState: ApplyState;
-  previousInputs: MessageContent[];
   returnCursorToEditorAfterEdit: boolean;
   returnToMode: MessageModes;
 }
@@ -13,7 +12,6 @@ const initialState: EditModeState = {
   applyState: {
     streamId: EDIT_MODE_STREAM_ID,
   },
-  previousInputs: [],
   codeToEdit: [],
   returnCursorToEditorAfterEdit: false,
   returnToMode: "chat",
@@ -23,17 +21,26 @@ export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    focusEdit: (state) => {
-      state.applyState.status = "not-started";
-      state.previousInputs = [];
+    setReturnCursorToEditorAfterEdit: (
+      state,
+      { payload }: PayloadAction<boolean>,
+    ) => {
+      state.returnCursorToEditorAfterEdit = payload;
     },
-    submitEdit: (state, { payload }: PayloadAction<MessageContent>) => {
-      state.previousInputs.push(payload);
-      state.applyState.status = "streaming";
+    setReturnToModeAfterEdit: (
+      state,
+      { payload }: PayloadAction<MessageModes>,
+    ) => {
+      state.returnToMode = payload;
     },
-    setEditDone: (state) => {
-      state.applyState.status = "done";
-      state.previousInputs = [];
+    setEditStateApplyStatus: (
+      state,
+      { payload }: PayloadAction<ApplyStateStatus>,
+    ) => {
+      state.applyState.status = payload;
+    },
+    setEditStateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
+      state.applyState = payload;
     },
     addCodeToEdit: (
       state,
@@ -68,11 +75,12 @@ export const editModeStateSlice = createSlice({
 });
 
 export const {
-  setEditDone,
-  submitEdit,
-  focusEdit,
+  setReturnToModeAfterEdit,
+  setReturnCursorToEditorAfterEdit,
   clearCodeToEdit,
   addCodeToEdit,
+  setEditStateApplyStatus,
+  setEditStateApplyState,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;
 
@@ -94,17 +102,3 @@ function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
   // If neither has a range, they are considered equal in this context
   return !("range" in a) && !("range" in b);
 }
-
-// export const {  } = editModeStateSlice.selectors;
-
-// selectIsSingleRangeEditOrInsertion: (state) => {
-//   if (state.mode !== "edit") {
-//     return false;
-//   }
-
-//   const isInsertion = state.codeToEdit.length === 0;
-//   const selectIsSingleRangeEdit =
-//     state.codeToEdit.length === 1 && "range" in state.codeToEdit[0];
-
-//   return selectIsSingleRangeEdit || isInsertion;
-// },

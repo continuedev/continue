@@ -88,5 +88,4 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   updateApplyState: [ApplyState, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
-  focusEditWithoutClear: [undefined, void];
 };

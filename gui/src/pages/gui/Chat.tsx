@@ -34,7 +34,7 @@ import {
   selectCurrentToolCallApplyState,
 } from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { submitEdit } from "../../redux/slices/editModeState";
+import { setEditStateApplyStatus } from "../../redux/slices/editModeState";
 import {
   newSession,
   updateToolCallOutput,
@@ -45,7 +45,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import { exitEditMode } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
@@ -261,7 +261,7 @@ export function Chat() {
       range: codeToEdit[0] as RangeInFileWithContents,
     });
 
-    dispatch(submitEdit(prompt));
+    dispatch(setEditStateApplyStatus("streaming"));
   }
 
   useWebviewListener(
@@ -456,7 +456,7 @@ export function Chat() {
                       saveCurrentSession: false,
                     }),
                   );
-                  dispatch(exitEditMode());
+                  dispatch(exitEditMode({}));
                 }
               }}
             />

@@ -2,6 +2,7 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import {
   initializeProfilePreferences,
@@ -15,6 +16,7 @@ import {
   selectSelectedChatModel,
   setConfigResult,
 } from "../redux/slices/configSlice";
+import { setEditStateApplyState } from "../redux/slices/editModeState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   acceptToolCall,
@@ -259,30 +261,35 @@ function useSetup() {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      dispatch(updateApplyState(state));
+      if (state.streamId === EDIT_MODE_STREAM_ID) {
+        dispatch(setEditStateApplyState(state));
+      } else {
+        // chat or agent
+        dispatch(updateApplyState(state));
 
-      // Handle apply status updates that are associated with current tool call
-      if (
-        state.status === "closed" &&
-        currentToolCallApplyState &&
-        currentToolCallApplyState.streamId === state.streamId
-      ) {
-        // const output: ContextItem = {
-        //   name: "Edit tool output",
-        //   content: "Completed edit",
-        //   description: "",
-        // };
-        dispatch(
-          acceptToolCall({
-            toolCallId: currentToolCallApplyState.toolCallId!,
-          }),
-        );
-        // dispatch(setToolCallOutput([]));
-        dispatch(
-          streamResponseAfterToolCall({
-            toolCallId: currentToolCallApplyState.toolCallId!,
-          }),
-        );
+        // Handle apply status updates that are associated with current tool call
+        if (
+          state.status === "closed" &&
+          currentToolCallApplyState &&
+          currentToolCallApplyState.streamId === state.streamId
+        ) {
+          // const output: ContextItem = {
+          //   name: "Edit tool output",
+          //   content: "Completed edit",
+          //   description: "",
+          // };
+          dispatch(
+            acceptToolCall({
+              toolCallId: currentToolCallApplyState.toolCallId!,
+            }),
+          );
+          // dispatch(setToolCallOutput([]));
+          dispatch(
+            streamResponseAfterToolCall({
+              toolCallId: currentToolCallApplyState.toolCallId!,
+            }),
+          );
+        }
       }
     },
     [currentToolCallApplyState, history],
