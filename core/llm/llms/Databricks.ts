@@ -1,14 +1,31 @@
 /*
  * Databricks.ts — Continue LLM adapter for Databricks Model Serving
  */
+
+// VSCode モジュールを条件付きでインポート
+let vscode: any = undefined;
+try {
+  if (typeof window !== 'undefined' && (window as any).vscode) {
+    vscode = (window as any).vscode;
+  } else if (typeof window !== 'undefined' && 'acquireVsCodeApi' in window) {
+    // @ts-ignore
+    vscode = acquireVsCodeApi();
+  }
+} catch (e) {
+  console.warn("VSCode API not available");
+}
+
 import OpenAI from "./OpenAI";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
 } from "../../index";
+// ThinkingContent を直接インポート
+import { ThinkingContent } from "../llms/index";
 import { fromChatCompletionChunk } from "../openaiTypeConverters";
 import { renderChatMessage, stripImages } from "../../util/messageContent";
+import { updateThinking, thinkingCompleted } from './thinkingPanel';
 
 const isNode = typeof process !== 'undefined' && 
                typeof process.versions !== 'undefined' && 
@@ -53,43 +70,64 @@ type AssistantChatMessage = ChatMessage & {
   finish_reason?: string;
 };
 
+// Enhanced type for thinking messages with additional metadata
 type ThinkingChatMessage = ChatMessage & {
   finish_reason?: string;
+  thinking_metadata?: {
+    phase: string;
+    progress: number;
+    formatted_text?: string;
+  };
 };
 
-enum LogLevel {
-  NONE = 0,
-  BASIC = 1,
-  DETAILED = 2,
-  VERBOSE = 3
+// Interface for thinking content blocks in the stream
+interface ThinkingContentBlock {
+  type: "thinking";
+  thinking: string;
 }
 
-interface DebugSettings {
-  enabled: boolean;
-  logPath: string;
-  logLevel: string;
-  logLevelValue: LogLevel;
+interface RedactedThinkingContentBlock {
+  type: "redacted_thinking";
 }
+
+interface TextContentBlock {
+  type: "text";
+  text: string;
+}
+
+type ContentBlock = ThinkingContentBlock | RedactedThinkingContentBlock | TextContentBlock;
+
+interface StreamEvent {
+  type: "content_block_start" | "content_block_delta" | "content_block_stop" | "message_delta" | "message_stop";
+  content_block?: {
+    type: "thinking" | "redacted_thinking" | "text";
+    thinking?: string;
+  };
+  delta?: {
+    type: "thinking_delta" | "text_delta";
+    thinking?: string;
+    text?: string;
+  };
+  message?: {
+    content?: ContentBlock[];
+  };
+}
+
+// Export the registerThinkingPanel function for use in the VS Code extension
+export { registerThinkingPanel } from './thinkingPanel';
 
 export default class Databricks extends OpenAI {
   static providerName = "databricks";
   private modelConfig: any = null;
   private globalConfig: any = null;
   
-  private debugSettings: DebugSettings = {
-    enabled: false,
-    logPath: "",
-    logLevel: "basic",
-    logLevelValue: LogLevel.BASIC
-  };
+  // Track thinking progress for UI visualization
+  private thinkingProgress: number = 0;
+  private thinkingPhase: string = "initial";
+  private thinkingBuffer: string = "";
+  private totalThinkingTokens: number = 0;
+  private thinkingStartTime: number = 0;
   
-  private logLevelMap: Record<string, LogLevel> = {
-    "none": LogLevel.NONE,
-    "basic": LogLevel.BASIC,
-    "detailed": LogLevel.DETAILED,
-    "verbose": LogLevel.VERBOSE
-  };
-
   private static loadConfigFromYaml(modelName: string): any {
     console.log("Attempting to load config from YAML for model:", modelName);
     
@@ -136,7 +174,6 @@ export default class Databricks extends OpenAI {
               hasDefaultCompletionOptions: !!modelConfig.defaultCompletionOptions
             });
             
-            // Claude 3.7 Sonnetの場合は特別な検証と設定
             const isClaudeModel = (modelConfig.model || "").toLowerCase().includes("claude");
             const isClaudeSonnet37 = isClaudeModel && (
               (modelConfig.model || "").toLowerCase().includes("claude-3-7") ||
@@ -144,36 +181,32 @@ export default class Databricks extends OpenAI {
             );
             
             if (isClaudeSonnet37) {
-              console.log("Claude 3.7 Sonnetモデルを検出 - 特別な設定を適用");
+              console.log("Claude 3.7 Sonnet model detected - applying special configuration");
               
-              // Claude 3.7固有の設定を確保
               if (!modelConfig.defaultCompletionOptions) {
                 modelConfig.defaultCompletionOptions = {};
               }
               
-              // 思考モードの設定を確保
               if (!modelConfig.defaultCompletionOptions.thinking) {
                 modelConfig.defaultCompletionOptions.thinking = {
-                  type: "auto",  // auto, enabled, disabled
-                  budget_tokens: 16000  // デフォルト値を16000に更新
+                  type: "enabled",
+                  budget_tokens: 16000
                 };
               }
               
-              // 思考モードのデフォルト設定
               if (!modelConfig.defaultCompletionOptions.thinking.type) {
-                modelConfig.defaultCompletionOptions.thinking.type = "auto";
+                modelConfig.defaultCompletionOptions.thinking.type = "enabled";
               }
               
               if (!modelConfig.defaultCompletionOptions.thinking.budget_tokens) {
-                modelConfig.defaultCompletionOptions.thinking.budget_tokens = 16000;  // デフォルト値を16000に更新
+                modelConfig.defaultCompletionOptions.thinking.budget_tokens = 16000;
               }
               
-              console.log("Claude 3.7 Sonnet設定:", {
+              console.log("Claude 3.7 Sonnet configuration:", {
                 thinking: modelConfig.defaultCompletionOptions.thinking
               });
             }
             
-            // 設定の検証
             Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
             
             if (modelConfig && typeof modelConfig.apiKey === "string" && typeof modelConfig.apiBase === "string") {
@@ -211,61 +244,54 @@ export default class Databricks extends OpenAI {
     );
   }
 
-  // 設定を検証するための新しいヘルパーメソッド
   private static validateModelConfig(config: any, isClaudeSonnet37: boolean): void {
     if (!config) {
-      console.warn("設定オブジェクトが存在しません");
+      console.warn("Configuration object doesn't exist");
       return;
     }
     
-    // 基本的な検証
     if (!config.apiKey) {
-      console.warn("警告: apiKeyが設定されていません");
+      console.warn("Warning: apiKey is not configured");
     }
     
     if (!config.apiBase) {
-      console.warn("警告: apiBaseが設定されていません");
+      console.warn("Warning: apiBase is not configured");
     }
     
-    // defaultCompletionOptionsの検証
     if (!config.defaultCompletionOptions) {
-      console.warn("警告: defaultCompletionOptionsが設定されていません、デフォルト値を使用します");
+      console.warn("Warning: defaultCompletionOptions is not configured, using defaults");
       config.defaultCompletionOptions = {};
     }
     
-    // Claude 3.7固有の検証
     if (isClaudeSonnet37) {
       const options = config.defaultCompletionOptions;
       
-      // 思考モードの設定
       if (!options.thinking) {
-        console.warn("警告: Claude 3.7には思考モード設定が推奨されます、デフォルト値を使用します");
-        options.thinking = { type: "auto", budget_tokens: 16000 };  // デフォルト値を16000に更新
+        console.warn("Warning: Thinking mode configuration is recommended for Claude 3.7, using defaults");
+        options.thinking = { type: "enabled", budget_tokens: 16000 };
       } else {
         if (!["auto", "enabled", "disabled"].includes(options.thinking.type)) {
-          console.warn(`警告: 無効な思考モードタイプ "${options.thinking.type}", "auto"に設定します`);
-          options.thinking.type = "auto";
+          console.warn(`Warning: Invalid thinking mode type "${options.thinking.type}", setting to "enabled"`);
+          options.thinking.type = "enabled";
         }
         
         if (typeof options.thinking.budget_tokens !== "number" || options.thinking.budget_tokens < 0) {
-          console.warn(`警告: 無効な思考トークン予算 "${options.thinking.budget_tokens}", 16000に設定します`);
-          options.thinking.budget_tokens = 16000;  // デフォルト値を16000に更新
+          console.warn(`Warning: Invalid thinking token budget "${options.thinking.budget_tokens}", setting to 16000`);
+          options.thinking.budget_tokens = 16000;
         }
       }
       
-      // ストリーミング設定の検証
       if (options.stream === undefined) {
-        console.warn("警告: stream設定が未定義です、trueに設定します");
+        console.warn("Warning: stream setting is undefined, setting to true");
         options.stream = true;
       }
       
-      // タイムアウト設定の検証
       if (options.timeout === undefined) {
-        console.warn("警告: timeout設定が未定義です、600000msに設定します");  // タイムアウト値を修正
-        options.timeout = 600000;  // 10分に設定
+        console.warn("Warning: timeout setting is undefined, setting to 600000ms");
+        options.timeout = 600000;
       } else if (typeof options.timeout !== "number" || options.timeout < 0) {
-        console.warn(`警告: 無効なタイムアウト値 "${options.timeout}", 600000msに設定します`);
-        options.timeout = 600000;  // タイムアウト値を修正
+        console.warn(`Warning: Invalid timeout value "${options.timeout}", setting to 600000ms`);
+        options.timeout = 600000;
       }
     }
   }
@@ -307,250 +333,31 @@ export default class Databricks extends OpenAI {
     
     this.modelConfig = modelConfig;
     this.globalConfig = globalConfig;
-    
-    this.initializeDebugSettings();
-    
-    this.writeDebugLog("Databricks constructor completed", undefined, "basic");
-  }
-  
-  private initializeDebugSettings(): void {
-    const debugEnabled = this.modelConfig?.defaultCompletionOptions?.debug?.enabled ?? false;
-    const logPath = this.modelConfig?.defaultCompletionOptions?.debug?.logPath ?? "Desktop/databricks-debug.log";
-    const logLevel = this.modelConfig?.defaultCompletionOptions?.debug?.logLevel ?? "basic";
-    
-    const tempDebugEnabled = debugEnabled;
-    
-    if (!tempDebugEnabled) {
-      console.log("デバッグログが無効化されています");
-      this.debugSettings = {
-        enabled: false,
-        logPath: "",
-        logLevel: "none",
-        logLevelValue: LogLevel.NONE
-      };
-      return;
-    }
-    
-    if (!isNode) {
-      console.log("ブラウザ環境ではデバッグログを書き込めません");
-      this.debugSettings = {
-        enabled: false,
-        logPath: "",
-        logLevel: "none",
-        logLevelValue: LogLevel.NONE
-      };
-      return;
-    }
-    
-    try {
-      const homeDir = os.homedir();
-      const absoluteLogPath = path.isAbsolute(logPath) ? logPath : path.join(homeDir, logPath);
-      const logDir = path.dirname(absoluteLogPath);
-      if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
-      }
-      
-      const logLevelValue = this.logLevelMap[logLevel.toLowerCase()] ?? LogLevel.BASIC;
-      
-      this.debugSettings = {
-        enabled: true,
-        logPath: absoluteLogPath,
-        logLevel: logLevel.toLowerCase(),
-        logLevelValue: logLevelValue
-      };
-      
-      const timestamp = new Date().toISOString().replace(/:/g, '-');
-      
-      // モデル情報の取得
-      const isClaudeModel = (this.modelConfig?.model || "").toLowerCase().includes("claude");
-      const isClaudeSonnet37 = isClaudeModel && (
-        (this.modelConfig?.model || "").toLowerCase().includes("claude-3-7") ||
-        (this.modelConfig?.model || "").toLowerCase().includes("claude-3.7")
-      );
-      
-      // モデル情報を含めた拡張ヘッダー
-      const enhancedHeader = `=== デバッグログ開始: ${timestamp} ===
-ログレベル: ${logLevel}
-モデル: ${this.modelConfig?.model || "unknown"}
-モデルタイプ: ${isClaudeModel ? "Claude" : "非Claude"}
-Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
-思考モード: ${this.modelConfig?.defaultCompletionOptions?.thinking?.type || "undefined"}
-思考トークン予算: ${this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || "undefined"}
-ストリーミング: ${this.modelConfig?.defaultCompletionOptions?.stream !== undefined ? 
-                 (this.modelConfig?.defaultCompletionOptions?.stream ? "有効" : "無効") : 
-                 "未設定"}
-タイムアウト: ${this.modelConfig?.defaultCompletionOptions?.timeout || "未設定"}
-
-`;
-      
-      fs.writeFileSync(
-        absoluteLogPath, 
-        enhancedHeader,
-        { encoding: "utf8" }
-      );
-      console.log(`デバッグログを開始: ${absoluteLogPath} (レベル: ${logLevel})`);
-      
-      this.writeRawDebugLog("デバッグ設定", {
-        settings: this.debugSettings,
-        model: this.modelConfig?.model,
-        isClaudeModel,
-        isClaudeSonnet37,
-        thinking: this.modelConfig?.defaultCompletionOptions?.thinking
-      });
-      
-    } catch (error) {
-      console.error("ログファイル初期化エラー:", error);
-      this.debugSettings = { 
-        enabled: false, 
-        logPath: "", 
-        logLevel: "none",
-        logLevelValue: LogLevel.NONE
-      };
-    }
-  }
-
-  private writeDebugLog(message: string, obj?: any, level: string = "basic"): void {
-    if (!this.debugSettings.enabled) return;
-    
-    const requestedLevel = this.logLevelMap[level] ?? LogLevel.BASIC;
-    if (requestedLevel > this.debugSettings.logLevelValue) return;
-    
-    // コンテキスト情報を追加
-    const isClaudeModel = (this.modelConfig?.model || "").toLowerCase().includes("claude");
-    const isClaudeSonnet37 = isClaudeModel && (
-      (this.modelConfig?.model || "").toLowerCase().includes("claude-3-7") ||
-      (this.modelConfig?.model || "").toLowerCase().includes("claude-3.7")
-    );
-    
-    const enhancedObj = obj ? {
-      ...obj,
-      _context: {
-        timestamp: new Date().toISOString(),
-        model: this.modelConfig?.model,
-        isClaudeModel,
-        isClaudeSonnet37
-      }
-    } : {
-      _context: {
-        timestamp: new Date().toISOString(),
-        model: this.modelConfig?.model,
-        isClaudeModel,
-        isClaudeSonnet37
-      }
-    };
-    
-    this.writeRawDebugLog(message, enhancedObj);
-  }
-  
-  private writeRawDebugLog(message: string, obj?: any): void {
-    if (!this.debugSettings.enabled || !this.debugSettings.logPath) return;
-    
-    if (!isNode) return;
-    
-    try {
-      const timestamp = new Date().toISOString();
-      let logMessage = `[${timestamp}] ${message}`;
-      
-      if (obj !== undefined) {
-        let objString;
-        try {
-          if (typeof obj === 'string') {
-            objString = obj;
-          } else {
-            // セキュリティのためセンシティブ情報の検出と処理を追加
-            const sanitizedObj = this.sanitizeObjectForLogs(obj);
-            
-            const stringified = JSON.stringify(sanitizedObj, (key, value) => {
-              if (typeof value === 'string' && value.length > 2000) {
-                return value.substring(0, 2000) + '... [切り詰め]';
-              }
-              return value;
-            }, 2);
-            objString = stringified;
-          }
-          logMessage += `\n${objString}`;
-        } catch (err) {
-          logMessage += `\n[オブジェクト変換エラー: ${(err as Error).message}]`;
-        }
-      }
-      
-      fs.appendFileSync(this.debugSettings.logPath, logMessage + "\n\n", { encoding: "utf8" });
-    } catch (err) {
-      console.error("ログファイル書き込みエラー:", err);
-    }
-  }
-
-  // ログ出力前にセンシティブ情報をサニタイズするための新しいメソッド
-  private sanitizeObjectForLogs(obj: any): any {
-    if (!obj) return obj;
-    
-    const sanitized = { ...obj };
-    
-    // 再帰的に処理する関数
-    const sanitizeRecursive = (object: any): any => {
-      if (!object || typeof object !== 'object') return object;
-      
-      const result = Array.isArray(object) ? [...object] : { ...object };
-      
-      for (const key in result) {
-        // センシティブなキーを検出
-        if (['apiKey', 'api_key', 'apibase', 'api_base', 'password', 'token', 'secret', 'authorization', 'auth'].includes(key.toLowerCase())) {
-          if (typeof result[key] === 'string' && result[key].length > 0) {
-            result[key] = '[REDACTED]';
-          }
-        } 
-        // URL検出とサニタイズ
-        else if (key.toLowerCase().includes('url') && typeof result[key] === 'string') {
-          // URLのドメイン部分のみを保持し、パスとクエリパラメータを隠す
-          try {
-            const urlValue = result[key];
-            if (urlValue.startsWith('http')) {
-              const urlObj = new URL(urlValue);
-              result[key] = `${urlObj.protocol}//${urlObj.host}/[REDACTED_PATH]`;
-            }
-          } catch (e) {
-            // URLパースに失敗した場合は元の値を使用
-          }
-        }
-        // 再帰的に処理
-        else if (typeof result[key] === 'object' && result[key] !== null) {
-          result[key] = sanitizeRecursive(result[key]);
-        }
-      }
-      
-      return result;
-    };
-    
-    return sanitizeRecursive(sanitized);
   }
 
   private getTimeoutFromConfig(): number {
     const timeout = this.modelConfig?.defaultCompletionOptions?.timeout;
     if (typeof timeout === 'number' && timeout > 0) {
-      this.writeDebugLog("タイムアウト設定を設定ファイルから読み込みました", { timeout }, "basic");
+      console.log("Timeout setting loaded from config file:", timeout);
       return timeout;
     }
     
-    this.writeDebugLog("デフォルトのタイムアウト設定を使用します", { timeout: 600000 }, "basic");
-    return 600000; // デフォルト値を10分に更新
+    console.log("Using default timeout setting: 600000ms");
+    return 600000;
   }
 
   private getInvocationUrl(): string {
     const url = (this.apiBase ?? "").replace(/\/+$/, "");
     
-    // URLの安全な表現を作成（ログ用）
     const safeUrl = this.sanitizeUrlForLogs(url);
     
     console.log("Databricks adapter using URL:", safeUrl);
-    this.writeDebugLog("Databricks adapter using URL:", safeUrl, "basic");
     return url;
   }
 
-  // ログ用にURLを安全化する新しいメソッド
   private sanitizeUrlForLogs(url: string): any {
     if (!url) return '';
     
-    // センシティブ情報を含む可能性のあるURLをインデックス付き文字配列に変換
     return Array.from(url).map((c, i) => ({ [i]: c }));
   }
 
@@ -565,7 +372,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       customHeaders["Content-Type"] = "application/json";
     }
     
-    // ヘッダーのサニタイズ版をログに記録
     const sanitizedHeaders = { ...customHeaders };
     if (sanitizedHeaders["Authorization"]) {
       sanitizedHeaders["Authorization"] = "[REDACTED]";
@@ -574,8 +380,7 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       sanitizedHeaders["api-key"] = "[REDACTED]";
     }
     
-    console.log("送信ヘッダー:", sanitizedHeaders);
-    this.writeDebugLog("送信ヘッダー:", sanitizedHeaders, "detailed");
+    console.log("Request headers:", sanitizedHeaders);
     
     return headers;
   }
@@ -583,19 +388,83 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
   private getEnableStreamingFromConfig(): boolean {
     if (this.modelConfig?.defaultCompletionOptions?.stream !== undefined) {
       console.log("Model-specific stream setting found:", this.modelConfig.defaultCompletionOptions.stream);
-      this.writeDebugLog("Model-specific stream setting found:", this.modelConfig.defaultCompletionOptions.stream, "basic");
       return this.modelConfig.defaultCompletionOptions.stream;
     }
     
     if (this.globalConfig?.stream !== undefined) {
       console.log("Global stream setting found:", this.globalConfig.stream);
-      this.writeDebugLog("Global stream setting found:", this.globalConfig.stream, "basic");
       return this.globalConfig.stream;
     }
     
     console.log("No stream setting found in config, using default: true");
-    this.writeDebugLog("No stream setting found in config, using default: true", undefined, "basic");
     return true;
+  }
+
+  // Format thinking content for better readability
+  private formatThinkingText(text: string): string {
+    // Add Markdown formatting to improve readability
+    
+    // Format numbered lists
+    text = text.replace(/^(\d+)\.\s+(.+)$/gm, "**$1.** $2");
+    
+    // Format section headers
+    text = text.replace(/^(Step \d+:)(.+)$/gmi, "### $1$2");
+    text = text.replace(/^(Let's|I'll|I will|First|Now|Next|Finally|Then)(.+):$/gmi, "### $1$2:");
+    
+    // Emphasize key insights
+    text = text.replace(/(Key insight|Note|Important|Remember):/gi, "**$1:**");
+    
+    // Format code blocks
+    text = text.replace(/```([\s\S]*?)```/g, (match) => {
+      return match.replace(/\n/g, '\n    ');
+    });
+    
+    // Detect thinking phases based on content
+    if (text.match(/start|let's|i'll|i will|first/i)) {
+      this.thinkingPhase = "planning";
+      this.thinkingProgress = 0.1;
+    } else if (text.match(/analyze|examining|looking at/i)) {
+      this.thinkingPhase = "analyzing";
+      this.thinkingProgress = 0.3;
+    } else if (text.match(/approach|strategy|method/i)) {
+      this.thinkingPhase = "strategizing";
+      this.thinkingProgress = 0.5;
+    } else if (text.match(/implement|create|write|coding/i)) {
+      this.thinkingPhase = "implementing";
+      this.thinkingProgress = 0.7;
+    } else if (text.match(/review|check|verify|test/i)) {
+      this.thinkingPhase = "reviewing";
+      this.thinkingProgress = 0.9;
+    } else if (text.match(/conclusion|summary|final|therefore/i)) {
+      this.thinkingPhase = "concluding";
+      this.thinkingProgress = 1.0;
+    } else {
+      // Increment progress based on tokens
+      const tokenEstimate = Math.round(text.length / 4);
+      const progressIncrement = tokenEstimate / 16000 * 0.2;
+      this.thinkingProgress = Math.min(0.95, this.thinkingProgress + progressIncrement);
+    }
+    
+    // Update the thinking panel with the latest content
+    updateThinking(text, this.thinkingPhase, this.thinkingProgress);
+    
+    return text;
+  }
+  
+  // Estimate thinking progress based on elapsed time, tokens, and phase
+  private estimateThinkingProgress(): number {
+    const elapsedMs = Date.now() - this.thinkingStartTime;
+    const elapsedSec = elapsedMs / 1000;
+    
+    // Weight by elapsed time (max 2 minutes expected for thinking)
+    const timeProgress = Math.min(1.0, elapsedSec / 120);
+    
+    // Weight by token usage (assuming budget from config)
+    const tokenBudget = this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 16000;
+    const tokenProgress = Math.min(1.0, this.totalThinkingTokens / tokenBudget);
+    
+    // Combine with phase-based progress (from content analysis)
+    return Math.min(0.95, (timeProgress * 0.3) + (tokenProgress * 0.3) + (this.thinkingProgress * 0.4));
   }
 
   private convertArgs(options: CompletionOptions): any {
@@ -606,54 +475,24 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       maxTokens: options.maxTokens,
       reasoning: options.reasoning,
       reasoningBudgetTokens: options.reasoningBudgetTokens,
-      stop: options.stream
+      stream: options.stream
     });
-    this.writeDebugLog("Converting args with options:", {
-      temperature: options.temperature,
-      topP: options.topP,
-      topK: options.topK,
-      maxTokens: options.maxTokens,
-      reasoning: options.reasoning,
-      reasoningBudgetTokens: options.reasoningBudgetTokens,
-      stop: options.stream
-    }, "basic");
     
     const enableStreaming = this.getEnableStreamingFromConfig();
-    console.log("ストリーミングモード:", enableStreaming ? "有効" : "無効", "(設定ファイルから読み込み)");
-    this.writeDebugLog("ストリーミングモード:", { 
-      enabled: enableStreaming, 
-      source: "設定ファイルから読み込み" 
-    }, "basic");
+    console.log("Streaming mode:", enableStreaming ? "enabled" : "disabled", "(loaded from config file)");
     
-    // 思考モードの設定を確認
     const isClaudeModel = (this.modelConfig?.model || "").toLowerCase().includes("claude");
     const isThinkingEnabled = options.reasoning || 
                             (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
     const thinkingBudget = options.reasoningBudgetTokens || 
                           this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
-                          16000; // デフォルト値を16000に更新
+                          16000;
     
-    if (isThinkingEnabled) {
-      this.writeDebugLog("思考モード有効", { 
-        budget: thinkingBudget,
-        source: options.reasoning ? "options.reasoning" : "config.thinking.type",
-        isClaudeModel: isClaudeModel
-      }, "basic");
-    }
-    
-    // Claudeモデルのバージョンを特定
     const isClaudeSonnet37 = isClaudeModel && (
       (this.modelConfig?.model || "").toLowerCase().includes("claude-3-7") ||
       (this.modelConfig?.model || "").toLowerCase().includes("claude-3.7")
     );
     
-    this.writeDebugLog("モデル情報", {
-      model: this.modelConfig?.model || options.model,
-      isClaudeModel: isClaudeModel,
-      isClaudeSonnet37: isClaudeSonnet37
-    }, "basic");
-    
-    // 最大トークン数を設定（思考モードの場合は予算+余裕を持たせる）
     const maxTokens = Math.max(
       options.maxTokens ?? this.modelConfig?.defaultCompletionOptions?.maxTokens ?? 4096,
       isThinkingEnabled ? thinkingBudget + 1000 : 0
@@ -667,56 +506,52 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       stream: enableStreaming && (options.stream ?? true)
     };
     
-    // Top-kとTop-pの設定（Claude 3.7の思考モードでは推奨されない）
     if (!isClaudeSonnet37 || !isThinkingEnabled) {
       finalOptions.top_k = options.topK ?? this.modelConfig?.defaultCompletionOptions?.topK ?? 100;
       finalOptions.top_p = options.topP ?? this.modelConfig?.defaultCompletionOptions?.topP ?? 0.95;
       
       if (isThinkingEnabled) {
         console.log("Note: Using top_k and top_p with thinking mode may affect performance");
-        this.writeDebugLog("Note: Using top_k and top_p with thinking mode may affect performance", undefined, "basic");
       }
     } else {
       console.log("Omitting top_k and top_p parameters for Claude 3.7 with thinking enabled");
-      this.writeDebugLog("Omitting top_k and top_p parameters for Claude 3.7 with thinking enabled", undefined, "basic");
     }
     
-    // 思考モードのパラメータを追加（Claude 3.7用に最適化）
     if (isThinkingEnabled) {
+      // Reset thinking tracking variables for a new request
+      this.thinkingProgress = 0;
+      this.thinkingPhase = "initial";
+      this.thinkingBuffer = "";
+      this.totalThinkingTokens = 0;
+      this.thinkingStartTime = Date.now();
+      
+      // Notify the thinking panel that we're starting to think
+      updateThinking("Starting a new thinking process...\n\n", "initial", 0);
+      
       if (isClaudeSonnet37) {
-        // Claude 3.7の正式なAPIフォーマット
         finalOptions.thinking = {
           type: "enabled",
           budget_tokens: thinkingBudget
         };
         console.log("Added Claude 3.7 thinking parameter with budget:", thinkingBudget);
-        this.writeDebugLog("Added Claude 3.7 thinking parameter", {
-          type: "enabled",
-          budget_tokens: thinkingBudget
-        }, "basic");
       } else {
-        // 他のモデル用の互換モード
         finalOptions.thinking = {
           type: "enabled",
           budget_tokens: thinkingBudget
         };
         console.log("Added thinking parameter with budget:", thinkingBudget);
-        this.writeDebugLog("Added thinking parameter with budget:", thinkingBudget, "basic");
       }
       
       console.log("Ensured max_tokens is greater than thinking budget:", maxTokens);
-      this.writeDebugLog("Ensured max_tokens is greater than thinking budget:", maxTokens, "basic");
     }
     
     console.log("Final API parameters:", JSON.stringify(finalOptions, null, 2));
-    this.writeDebugLog("Final API parameters:", finalOptions, "basic");
     
     return finalOptions;
   }
 
   private convertMessages(msgs: ChatMessage[]): any[] {
     console.log(`Converting ${msgs.length} messages to Databricks format`);
-    this.writeDebugLog(`Converting ${msgs.length} messages to Databricks format`, undefined, "basic");
     
     const filteredMessages = msgs.filter(
       (m) => m.role !== "system" && !!m.content
@@ -730,7 +565,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
         };
       } else {
         console.log("Converting complex message content");
-        this.writeDebugLog("Converting complex message content", undefined, "detailed");
         return {
           role: message.role === "user" ? "user" : "assistant",
           content: message.content
@@ -739,7 +573,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     });
     
     console.log(`Converted to ${messages.length} messages`);
-    this.writeDebugLog(`Converted to ${messages.length} messages`, undefined, "basic");
     return messages;
   }
 
@@ -750,7 +583,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     
     if (systemMessage) {
       console.log("Found system message, length:", systemMessage.length);
-      this.writeDebugLog("Found system message", { length: systemMessage.length }, "basic");
       return systemMessage;
     }
     
@@ -769,56 +601,35 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       (this.modelConfig?.model || "").toLowerCase().includes("claude-3.7")
     );
     
-    // Claude 3.7の場合は思考指示をシステムメッセージに含めない（API経由で制御）
     const enableThinking = options.reasoning || 
       (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
     
     if (enableThinking && !isClaudeSonnet37) {
-      // Claude 3.7以外のモデルの場合は従来通りシステムメッセージに指示を追加
       const budgetTokens = options.reasoningBudgetTokens || 
         this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
-        16000; // デフォルト値を16000に更新
+        16000;
       
       const thinkingInstructions = `\n\nI'd like you to solve this problem step-by-step, showing your reasoning process clearly. Take your time to think through this thoroughly before giving your final answer. Use up to ${budgetTokens} tokens to explore different approaches and ensure your solution is correct.`;
       
       systemMessage += thinkingInstructions;
       console.log("Added thinking instructions to system message for non-Claude 3.7 model");
-      this.writeDebugLog("Added thinking instructions to system message", {
-        forModel: "non-Claude 3.7",
-        budgetTokens: budgetTokens
-      }, "basic");
     } else if (enableThinking && isClaudeSonnet37) {
       console.log("Using Claude 3.7 native thinking capabilities via API parameters");
-      this.writeDebugLog("Using Claude 3.7 native thinking capabilities", {
-        method: "API parameters",
-        systemMessageModified: false
-      }, "basic");
     }
-    
-    this.writeDebugLog("Enhanced system message", { 
-      length: systemMessage.length, 
-      preview: systemMessage.substring(0, 100) + (systemMessage.length > 100 ? "..." : ""),
-      modelIsClaudeSonnet37: isClaudeSonnet37,
-      thinkingEnabled: enableThinking
-    }, "detailed");
     
     return systemMessage;
   }
 
-  // バッファからコンテンツを回復するためのヘルパーメソッド
   private tryRecoverContentFromBuffer(buffer: string): string | null {
-    // UTF-8文字を適切に処理するための追加処理
     try {
-      // 無効なUTF-8シーケンスを適切に処理
       buffer = buffer.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\x00-\x7F]/g, match => {
         try {
           return match;
         } catch (e) {
-          return ''; // 無効なシーケンスを空文字に置換
+          return '';
         }
       });
     
-      // JSONオブジェクトのパターンを検索
       const jsonPattern = /{[\s\S]*?}/g;
       const jsonMatches = buffer.match(jsonPattern);
       
@@ -826,14 +637,12 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
         return null;
       }
       
-      // 最も長いJSONマッチを試行
       const sortedMatches = [...jsonMatches].sort((a, b) => b.length - a.length);
       
       for (const match of sortedMatches) {
         try {
           const json = JSON.parse(match);
           
-          // 考えられるレスポンス形式をチェック
           if (json.choices && json.choices[0]?.message?.content) {
             return json.choices[0].message.content;
           }
@@ -851,18 +660,15 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
           }
           
           if (json.thinking) {
-            return "[思考プロセス] " + json.thinking;
+            return "[Thinking Process] " + json.thinking;
           }
         } catch (e) {
-          // この特定のマッチの解析に失敗 - 次を試す
           continue;
         }
       }
       
-      // 特定のパターンに一致しない場合はプレーンテキストを抽出
       const textMatches = buffer.match(/\"text\":\s*\"([\s\S]*?)\"/g);
       if (textMatches && textMatches.length > 0) {
-        // 最も長いテキストマッチを取得
         const longestTextMatch = [...textMatches].sort((a, b) => b.length - a.length)[0];
         const content = longestTextMatch.replace(/\"text\":\s*\"/, "").replace(/\"$/, "");
         return content;
@@ -870,25 +676,18 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       
       return null;
     } catch (e) {
-      console.error("バッファからのコンテンツ回復エラー:", e);
+      console.error("Error recovering content from buffer:", e);
       return null;
     }
   }
 
-  // チャンク処理のための新しいヘルパーメソッド
   private processChunk(chunk: Uint8Array | Buffer): string {
     try {
-      // より堅牢なデコードオプションを追加
       const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
       return decoder.decode(chunk, { stream: true });
     } catch (e) {
-      console.error("チャンクデコードエラー:", e);
-      this.writeDebugLog("チャンクデコードエラー", { 
-        error: (e as Error).message, 
-        chunkSize: chunk.length || 0
-      }, "basic");
+      console.error("Chunk decoding error:", e);
       
-      // 破損したチャンク用のフォールバックデコード
       return Array.from(new Uint8Array(chunk as any))
         .map(b => String.fromCharCode(b))
         .join('');
@@ -901,22 +700,9 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     console.log("_streamChat called with messages length:", msgs.length);
-    this.writeDebugLog("_streamChat called", { 
-      messagesCount: msgs.length,
-      options: JSON.stringify({
-        maxTokens: options.maxTokens,
-        reasoning: options.reasoning,
-        reasoningBudgetTokens: options.reasoningBudgetTokens,
-        stream: options.stream
-      })
-    }, "basic");
     
     const convertedMessages = this.convertMessages(msgs);
     const originalSystemMessage = this.extractSystemMessage(msgs);
-    this.writeDebugLog("Converted messages", { 
-      convertedCount: convertedMessages.length,
-      hasSystemMessage: !!originalSystemMessage
-    }, "basic");
     
     const enhancedSystemMessage = this.createEnhancedSystemMessage(options, originalSystemMessage);
     
@@ -928,18 +714,12 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
     
     const enableStreaming = this.getEnableStreamingFromConfig();
     body.stream = enableStreaming && (body.stream !== false);
-    this.writeDebugLog("ストリーミング設定", { enabled: body.stream }, "basic");
     
     const sanitizedBody = { ...body };
     if (body.messages) {
       sanitizedBody.messages = `[${convertedMessages.length} messages]`;
     }
     console.log("Sending request with body:", JSON.stringify(sanitizedBody, null, 2));
-    this.writeDebugLog("Sending request", { 
-      url: this.sanitizeUrlForLogs(this.getInvocationUrl()),
-      body: sanitizedBody,
-      streamEnabled: body.stream
-    }, "basic");
     
     const invocationUrl = this.getInvocationUrl();
     console.log("Sending request to:", this.sanitizeUrlForLogs(invocationUrl));
@@ -955,45 +735,27 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
         timeout: timeout
       };
       
-      console.log("タイムアウト設定:", `${timeout}ms`);
-      this.writeDebugLog("タイムアウト設定", { timeoutMs: timeout }, "basic");
+      console.log("Timeout setting:", `${timeout}ms`);
       
       const res = await this.fetch(invocationUrl, fetchOptions);
       
       console.log("Response status:", res.status);
-      console.log("レスポンスヘッダー:", Object.fromEntries([...res.headers.entries()]));
-      console.log("コンテンツタイプ:", res.headers.get("content-type"));
-      
-      this.writeDebugLog("Response received", { 
-        status: res.status,
-        statusText: res.statusText,
-        contentType: res.headers.get("content-type"),
-        headers: Object.fromEntries([...res.headers.entries()])
-      }, "basic");
+      console.log("Response headers:", Object.fromEntries([...res.headers.entries()]));
+      console.log("Content type:", res.headers.get("content-type"));
       
       if (!res.ok || !res.body) {
         const errorMsg = `HTTP ${res.status}`;
         console.error("HTTP error response:", res.status, res.statusText);
-        this.writeDebugLog("HTTP error response", { 
-          status: res.status, 
-          statusText: res.statusText,
-          error: errorMsg
-        }, "basic");
         throw new Error(errorMsg);
       }
 
       if (body.stream === false) {
         console.log("Non-streaming mode, processing single response");
-        this.writeDebugLog("Non-streaming mode, processing single response", undefined, "basic");
         const jsonResponse = await res.json();
         console.log("Received complete response:", JSON.stringify(jsonResponse, null, 2));
-        this.writeDebugLog("Received complete response", jsonResponse, "detailed");
         
         try {
           if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
-            this.writeDebugLog("OpenAI形式のレスポンスを検出", { 
-              content: jsonResponse.choices[0].message.content.substring(0, 100) + "..." 
-            }, "basic");
             const message: ChatMessage = {
               role: "assistant",
               content: jsonResponse.choices[0].message.content
@@ -1001,10 +763,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
             yield message;
           } else if (jsonResponse.content) {
             const contentValue = jsonResponse.content;
-            this.writeDebugLog("直接コンテンツ形式のレスポンスを検出", { 
-              contentType: typeof contentValue,
-              isArray: Array.isArray(contentValue)
-            }, "basic");
             if (typeof contentValue === "string") {
               const message: ChatMessage = {
                 role: "assistant",
@@ -1023,31 +781,24 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
             } else {
               const message: ChatMessage = {
                 role: "assistant",
-                content: "複雑なレスポンス形式: " + JSON.stringify(contentValue)
+                content: "Complex response format: " + JSON.stringify(contentValue)
               };
               yield message;
             }
           } else if (jsonResponse.completion) {
-            this.writeDebugLog("Anthropic互換形式のレスポンスを検出", {
-              completion: jsonResponse.completion.substring(0, 100) + "..."
-            }, "basic");
             const message: ChatMessage = {
               role: "assistant",
               content: jsonResponse.completion
             };
             yield message;
           } else if (jsonResponse.message?.content) {
-            this.writeDebugLog("別の形式のOpenAI互換レスポンスを検出", {
-              content: jsonResponse.message.content.substring(0, 100) + "..."
-            }, "basic");
             const message: ChatMessage = {
               role: "assistant",
               content: jsonResponse.message.content
             };
             yield message;
           } else {
-            console.log("未知のレスポンス形式:", jsonResponse);
-            this.writeDebugLog("未知のレスポンス形式", jsonResponse, "basic");
+            console.log("Unknown response format:", jsonResponse);
             const message: ChatMessage = {
               role: "assistant",
               content: "Response format not recognized: " + JSON.stringify(jsonResponse)
@@ -1055,18 +806,12 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
             yield message;
           }
         } catch (e) {
-          console.error("レスポンス処理エラー:", e);
-          this.writeDebugLog("レスポンス処理エラー", { 
-            error: (e as Error).message, 
-            stack: (e as Error).stack,
-            response: jsonResponse
-          }, "basic");
+          console.error("Response processing error:", e);
           throw e;
         }
         return;
       }
       
-      // 日本語を含む多言語対応のデコーダを作成
       const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
       let buffer = "";
       let rawBuffer = "";
@@ -1074,54 +819,52 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       
       const parseSSE = (
         str: string,
-      ): { done: boolean; messages: ChatMessage[] } => {
+      ): { done: boolean; messages: (ChatMessage | ThinkingContent)[] } => {
         buffer += str;
-        const out: ChatMessage[] = [];
+        const out: (ChatMessage | ThinkingContent)[] = [];
         
-        // 思考出力のマーカーを検出するための正規表現
         const thinkingStartRegex = /^thinking:(.*)$/i;
         
-        // バッファ全体がJSONオブジェクトである場合の処理
         if (buffer.trim() && !buffer.includes("\n")) {
           try {
             const trimmedBuffer = buffer.trim();
-            // "data:" プレフィックスを処理
             const jsonStr = trimmedBuffer.startsWith("data:") ? 
                          trimmedBuffer.slice(trimmedBuffer.indexOf("{")) : 
                          trimmedBuffer;
             
-            console.log("単一JSONの解析を試行:", jsonStr);
-            this.writeDebugLog("単一JSONの解析を試行", jsonStr, "verbose");
+            console.log("Attempting to parse single JSON:", jsonStr);
             
             const json = JSON.parse(jsonStr);
-            console.log("単一JSONを解析:", json);
-            this.writeDebugLog("単一JSONを解析", json, "detailed");
+            console.log("Parsed single JSON:", json);
             
-            // 終了シグナルの検出
             if (json.type === "message_stop" || 
                 json.done === true || 
                 (json.choices && json.choices[0]?.finish_reason === "stop")) {
-              this.writeDebugLog("終了シグナル検出（単一JSON）", json, "basic");
+                
               buffer = "";
+              
+              // Signal the thinking panel that thinking is complete
+              thinkingCompleted();
+              
               return { done: true, messages: out };
             }
             
-            // 完全なレスポンスの検出（OpenAI互換形式）
             if (json.choices && json.choices[0]?.message?.content) {
-              console.log("OpenAI形式の完全なレスポンスを検出");
-              this.writeDebugLog("OpenAI形式の完全なレスポンスを検出", { 
-                content: json.choices[0].message.content.substring(0, 100) + "..." 
-              }, "basic");
+              console.log("Detected complete response in OpenAI format");
+              
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.choices[0].message.content
               };
               out.push(message);
               buffer = "";
+              
+              // Signal the thinking panel that thinking is complete
+              thinkingCompleted();
+              
               return { done: true, messages: out };
             }
             
-            // Claude 3.7の思考出力形式の検出（単一JSON）
             if (json.thinking || (json.content && json.content[0]?.type === "reasoning")) {
               const thinkingContent = json.thinking || 
                                     (json.content && json.content[0]?.type === "reasoning" 
@@ -1129,64 +872,82 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
                                       : "");
               
               if (thinkingContent) {
-                console.log("Claude 3.7の思考出力を検出 (単一JSON)");
-                this.writeDebugLog("Claude 3.7の思考出力を検出 (単一JSON)", {
-                  contentLength: thinkingContent.length,
-                  preview: thinkingContent.substring(0, 100) + "..."
-                }, "basic");
+                console.log("Detected Claude 3.7 thinking output (single JSON)");
                 
-                const message: ThinkingChatMessage = {
-                  role: "assistant",
-                  content: "[思考中...] " + thinkingContent,
-                  finish_reason: "thinking"
+                // Format thinking content for better readability
+                const formattedThinking = this.formatThinkingText(thinkingContent);
+                
+                // Track token usage
+                const tokenEstimate = Math.round(thinkingContent.length / 4);
+                this.totalThinkingTokens += tokenEstimate;
+                
+                // Update progress estimate
+                const progress = this.estimateThinkingProgress();
+                
+                // Send as ThinkingContent instead of ChatMessage
+                const thinkingMessage: ThinkingContent = {
+                  type: "thinking",
+                  thinking: formattedThinking,
+                  metadata: {
+                    phase: this.thinkingPhase,
+                    progress: progress,
+                    tokens: this.totalThinkingTokens,
+                    elapsed_ms: Date.now() - this.thinkingStartTime
+                  }
                 };
-                out.push(message);
+                
+                // この部分でThinkingContentをChatMessageに変換
+                const chatMessage: ChatMessage = {
+                  role: "assistant",
+                  content: `[thinking] ${formattedThinking}`
+                };
+                
+                out.push(chatMessage);
                 buffer = "";
                 return { done: false, messages: out };
               }
             }
           } catch (e) {
-            console.log("単一JSON解析エラー、行解析に切り替え:", e);
-            this.writeDebugLog("単一JSON解析エラー、行解析に切り替え", { 
-              error: (e as Error).message, 
-              buffer: buffer.substring(0, 200) + "..."
-            }, "basic");
+            console.log("Single JSON parsing error, switching to line parsing:", e);
           }
         }
         
-        // 行ごとの処理
         let idx: number;
         while ((idx = buffer.indexOf("\n")) !== -1) {
           const line = buffer.slice(0, idx).trim();
           buffer = buffer.slice(idx + 1);
           
-          console.log("処理中の行:", line);
-          this.writeDebugLog("処理中の行", line, "verbose");
+          console.log("Processing line:", line);
           
           if (!line) continue;
           
-          // "data:" プレフィックスの処理
           if (!line.startsWith("data:") && !line.startsWith("data: ")) {
-            // Claude 3.7の思考出力マーカーの検出
             const thinkingMatch = line.match(thinkingStartRegex);
             if (thinkingMatch) {
               const thinkingContent = thinkingMatch[1].trim();
-              console.log("Claude 3.7の思考マーカーを検出:", thinkingContent);
-              this.writeDebugLog("Claude 3.7の思考マーカーを検出", {
-                content: thinkingContent.substring(0, 100) + (thinkingContent.length > 100 ? "..." : "")
-              }, "basic");
+              console.log("Detected Claude 3.7 thinking marker:", thinkingContent);
               
-              const message: ThinkingChatMessage = {
+              // Format thinking content for better readability
+              const formattedThinking = this.formatThinkingText(thinkingContent);
+              
+              // Track token usage
+              const tokenEstimate = Math.round(thinkingContent.length / 4);
+              this.totalThinkingTokens += tokenEstimate;
+              
+              // Update progress estimate
+              const progress = this.estimateThinkingProgress();
+              
+              // ThinkingContentをChatMessageに変換
+              const chatMessage: ChatMessage = {
                 role: "assistant",
-                content: "[思考中...] " + thinkingContent,
-                finish_reason: "thinking"
+                content: `[thinking] ${formattedThinking}`
               };
-              out.push(message);
+              
+              out.push(chatMessage);
               continue;
             }
             
-            console.log("data:プレフィックスのない行をスキップ:", line);
-            this.writeDebugLog("data:プレフィックスのない行をスキップ", line, "verbose");
+            console.log("Skipping line without data: prefix:", line);
             continue;
           }
           
@@ -1194,30 +955,29 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
           
           if (data === "[DONE]") {
             console.log("Received [DONE] marker");
-            this.writeDebugLog("Received [DONE] marker - ending stream", undefined, "basic");
+            
+            // Signal the thinking panel that thinking is complete
+            thinkingCompleted();
+            
             return { done: true, messages: out };
           }
           
           try {
             const json = JSON.parse(data);
             console.log("Received SSE data:", JSON.stringify(json, null, 2));
-            this.writeDebugLog("Parsed SSE JSON data", {
-              dataType: typeof json,
-              hasThinking: !!(json.thinking || (json.content && json.content[0]?.type === "reasoning")),
-              complete: json.done === true || json.choices?.[0]?.finish_reason === "stop"
-            }, "detailed");
             
-            // 終了シグナルの検出
             if (json.type === "message_stop" || 
                 json.done === true || 
                 (json.choices && json.choices[0]?.finish_reason === "stop")) {
-              this.writeDebugLog("終了シグナル検出", json, "basic");
+                
+              // Signal the thinking panel that thinking is complete
+              thinkingCompleted();
+                
               return { done: true, messages: out };
             }
             
-            // Claude 3.7の思考出力の処理
             if (json.thinking || (json.content && json.content[0]?.type === "reasoning")) {
-              console.log("思考出力を検出");
+              console.log("Detected thinking output");
               let newThinkingContent = "";
               
               if (json.thinking) {
@@ -1228,41 +988,93 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               
               if (newThinkingContent) {
                 thinkingContent += newThinkingContent;
+                this.thinkingBuffer += newThinkingContent;
                 
                 console.log("\n==== THINKING OUTPUT ====");
                 console.log(newThinkingContent);
                 console.log("========================\n");
                 
-                this.writeDebugLog("Claude 3.7思考出力を検出", {
-                  format: json.thinking ? "direct" : "content",
-                  contentLength: newThinkingContent.length,
-                  preview: newThinkingContent.substring(0, 100) + "..."
-                }, "basic");
+                // Format thinking content for better readability
+                const formattedThinking = this.formatThinkingText(newThinkingContent);
                 
-                const message: ThinkingChatMessage = {
+                // Track token usage
+                const tokenEstimate = Math.round(newThinkingContent.length / 4);
+                this.totalThinkingTokens += tokenEstimate;
+                
+                // Update progress estimate
+                const progress = this.estimateThinkingProgress();
+                
+                // ThinkingContentをChatMessageに変換
+                const chatMessage: ChatMessage = {
                   role: "assistant",
-                  content: "[思考中...] " + newThinkingContent,
-                  finish_reason: "thinking"
+                  content: `[thinking] ${formattedThinking}`
                 };
-                out.push(message);
+                
+                out.push(chatMessage);
               }
             }
-            else if (json.type === "content_block_delta" && json.delta?.text) {
-              console.log("Anthropic形式のデルタを検出");
-              this.writeDebugLog("Anthropic形式のデルタを検出", {
-                text: json.delta.text
-              }, "detailed");
+            else if (json.type === "content_block_start" && json.content_block?.type === "thinking") {
+              console.log("Detected Anthropic thinking block start");
+              
+              if (json.content_block.thinking) {
+                const thinkingText = json.content_block.thinking;
+                
+                // Format thinking content for better readability
+                const formattedThinking = this.formatThinkingText(thinkingText);
+                
+                // Track token usage
+                const tokenEstimate = Math.round(thinkingText.length / 4);
+                this.totalThinkingTokens += tokenEstimate;
+                
+                // Update progress estimate
+                const progress = this.estimateThinkingProgress();
+                
+                // ThinkingContentをChatMessageに変換
+                const chatMessage: ChatMessage = {
+                  role: "assistant",
+                  content: `[thinking] ${formattedThinking}`
+                };
+                
+                out.push(chatMessage);
+              }
+            }
+            else if (json.type === "content_block_delta" && json.delta?.type === "thinking_delta") {
+              console.log("Detected Anthropic thinking delta");
+              
+              if (json.delta.thinking) {
+                const thinkingDelta = json.delta.thinking;
+                
+                // Format thinking content for better readability
+                const formattedThinking = this.formatThinkingText(thinkingDelta);
+                
+                // Track token usage
+                const tokenEstimate = Math.round(thinkingDelta.length / 4);
+                this.totalThinkingTokens += tokenEstimate;
+                
+                // Update progress estimate
+                const progress = this.estimateThinkingProgress();
+                
+                // ThinkingContentをChatMessageに変換
+                const chatMessage: ChatMessage = {
+                  role: "assistant",
+                  content: `[thinking] ${formattedThinking}`
+                };
+                
+                out.push(chatMessage);
+              }
+            }
+            else if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
+              console.log("Detected Anthropic text delta");
+              
               const message: ChatMessage = {
                 role: "assistant",
-                content: json.delta.text
+                content: json.delta.text || ""
               };
               out.push(message);
             }
             else if (json.choices && json.choices[0]?.delta?.content) {
-              console.log("OpenAI形式のデルタを検出");
-              this.writeDebugLog("OpenAI形式のデルタを検出", {
-                content: json.choices[0].delta.content
-              }, "detailed");
+              console.log("Detected OpenAI format delta");
+              
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.choices[0].delta.content
@@ -1270,10 +1082,8 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               out.push(message);
             }
             else if (json.content && typeof json.content === "string") {
-              console.log("直接content形式を検出");
-              this.writeDebugLog("直接content形式を検出", {
-                content: json.content.substring(0, 100) + "..."
-              }, "detailed");
+              console.log("Detected direct content format");
+              
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.content
@@ -1281,10 +1091,8 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               out.push(message);
             }
             else if (json.content && Array.isArray(json.content) && json.content[0]?.text) {
-              console.log("コンテンツ配列形式を検出");
-              this.writeDebugLog("コンテンツ配列形式を検出", {
-                text: json.content[0].text.substring(0, 100) + "..."
-              }, "detailed");
+              console.log("Detected content array format");
+              
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.content[0].text
@@ -1292,10 +1100,8 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               out.push(message);
             }
             else if (json.text) {
-              console.log("直接テキスト形式を検出");
-              this.writeDebugLog("直接テキスト形式を検出", {
-                text: json.text.substring(0, 100) + "..."
-              }, "detailed");
+              console.log("Detected direct text format");
+              
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.text
@@ -1305,28 +1111,20 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
             else {
               const delta = fromChatCompletionChunk(json);
               if (delta?.content) {
-                console.log("OpenAI形式のチャンクからコンテンツを抽出");
-                this.writeDebugLog("OpenAI形式のチャンクからコンテンツを抽出", {
-                  content: delta.content
-                }, "detailed");
+                console.log("Extracted content from OpenAI format chunk");
+                
                 const message: ChatMessage = {
                   role: "assistant",
                   content: delta.content
                 };
                 out.push(message);
               } else {
-                console.log("不明なJSON形式:", json);
-                this.writeDebugLog("不明なJSON形式", json, "basic");
+                console.log("Unknown JSON format:", json);
               }
             }
           } catch (e) {
-            console.log("SSEストリームでJSON解析エラー:", e);
-            this.writeDebugLog("SSEストリームでJSON解析エラー", { 
-              error: (e as Error).message, 
-              line: line
-            }, "basic");
+            console.log("JSON parsing error in SSE stream:", e);
             
-            // エラーが発生しても処理を継続
             continue;
           }
         }
@@ -1335,7 +1133,6 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       
       if (typeof (res.body as any).getReader === "function") {
         console.log("Using WHATWG streams reader");
-        this.writeDebugLog("Using WHATWG streams reader", undefined, "basic");
         const reader = (res.body as any).getReader();
         
         const startTime = Date.now();
@@ -1348,24 +1145,18 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
           try {
             const { done, value } = await reader.read();
             
-            // 活動の記録を更新
             lastActivityTimestamp = Date.now();
             
             if (Date.now() - startTime > streamTimeout) {
-              this.writeDebugLog("ストリーム処理がタイムアウトしました - 強制終了します", {
-                elapsedMs: Date.now() - startTime,
-                totalChunks: chunkCount,
-                timeoutMs: streamTimeout
-              }, "basic");
               return;
             }
             
             if (done) {
-              console.log("ストリーム読み取り完了");
-              this.writeDebugLog("ストリーム読み取り完了", {
-                totalChunks: chunkCount,
-                elapsedMs: Date.now() - startTime
-              }, "basic");
+              console.log("Stream reading complete");
+              
+              // Signal the thinking panel that thinking is complete
+              thinkingCompleted();
+              
               break;
             }
             
@@ -1373,48 +1164,37 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
             const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
             
             const chunkSize = value ? value.length : 0;
-            console.log(`[${elapsedSec}s] 受信したチャンク（バイト）:`, value ? 
+            console.log(`[${elapsedSec}s] Received chunk (bytes):`, value ? 
               Array.from(new Uint8Array(value as ArrayBuffer)).map((b: number) => b.toString(16)).join(' ') : 
               'null');
-            this.writeDebugLog(`[${elapsedSec}s] チャンク#${chunkCount}受信`, { 
-              type: typeof value,
-              isBuffer: Buffer && Buffer.isBuffer ? Buffer.isBuffer(value) : false,
-              size: chunkSize
-            }, "detailed");
             
-            // 新しいProcessChunkメソッドを使用してより堅牢なデコードを行う
             const decodedChunk = this.processChunk(value as Uint8Array);
             rawBuffer += decodedChunk;
-            console.log(`[${elapsedSec}s] 受信したチャンク（テキスト）:`, decodedChunk);
-            this.writeDebugLog(`チャンク#${chunkCount}デコード`, { 
-              length: decodedChunk.length
-            }, "verbose");
+            console.log(`[${elapsedSec}s] Received chunk (text):`, decodedChunk);
             
             if (!decodedChunk || decodedChunk.trim() === "") {
-              console.log("空のチャンクを受信しました");
-              this.writeDebugLog("空のチャンクを受信しました", undefined, "detailed");
+              console.log("Received empty chunk");
               continue;
             }
             
             const { done: end, messages } = parseSSE(decodedChunk);
-            this.writeDebugLog("チャンク解析結果", { 
-              isDone: end, 
-              messagesCount: messages.length 
-            }, "basic");
             
             for (const m of messages) {
-              const contentLength = typeof m.content === 'string' ? m.content.length : 'not-string';
-              this.writeDebugLog("UIにメッセージを送信", { 
-                role: m.role,
-                contentLength: contentLength,
-                finished: end
-              }, "basic");
-              yield m;
+              // すべてのメッセージをChatMessageとして処理
+              if ('type' in m && m.type === 'thinking') {
+                // ThinkingContentをChatMessageに変換して返す
+                const chatMessage: ChatMessage = {
+                  role: "assistant",
+                  content: `[thinking] ${m.thinking}`
+                };
+                yield chatMessage;
+              } else {
+                yield m as ChatMessage;
+              }
             }
             
             if (end) {
-              console.log("ストリーム終了マーカーを検出");
-              this.writeDebugLog("ストリーム終了マーカーを検出 - ループを終了します", undefined, "basic");
+              console.log("Detected stream end marker");
               
               const message: ChatMessage = {
                 role: "assistant",
@@ -1425,71 +1205,64 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               return;
             }
           } catch (chunkError) {
-            console.error("チャンク読み取りエラー:", chunkError);
-            this.writeDebugLog("チャンク読み取りエラー", { 
-              error: (chunkError as Error).message, 
-              stack: (chunkError as Error).stack 
-            }, "basic");
+            console.error("Chunk reading error:", chunkError);
             
-            // ストリーム中断からの回復を試みる
-            // 一定時間アクティビティがない場合は処理を中止
             if (Date.now() - lastActivityTimestamp > 10000) {
-              console.log("ストリーム活動なし - 回復不可能として処理を終了");
-              this.writeDebugLog("ストリーム活動なし - 回復不可能", {
-                timeSinceLastActivity: Date.now() - lastActivityTimestamp,
-                totalChunks: chunkCount
-              }, "basic");
+              console.log("No stream activity - terminating as unrecoverable");
               
-              // 最良の努力で部分的な結果を返す
+              // Signal the thinking panel that thinking is complete
+              try {
+                if (typeof vscode !== 'undefined' && vscode && vscode.commands) {
+                  vscode.commands.executeCommand('continue.thinkingCompleted');
+                }
+              } catch (e) {
+                console.debug("Error executing VSCode command:", e);
+                // Ignore errors, as vscode API might not be available
+              }
+              
               const message: ChatMessage = {
                 role: "assistant",
-                content: "[ストリーム中断] 部分的な応答: " + 
-                        (thinkingContent ? "\n\n[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "..." : "")
+                content: "[Stream interrupted] Partial response: " + 
+                        (thinkingContent ? "\n\n[Thinking Process]\n" + thinkingContent.substring(0, 1000) + "..." : "")
               };
               yield message;
               return;
             }
             
-            // 短時間待機して再試行
             await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
           }
         }
         
         if (buffer.trim()) {
-          console.log("残りのバッファを処理:", buffer);
-          this.writeDebugLog("残りのバッファを処理", { 
-            length: buffer.length
-          }, "detailed");
+          console.log("Processing remaining buffer:", buffer.length);
           const { messages } = parseSSE("");
           for (const m of messages) {
-            yield m;
+            if ('type' in m && m.type === 'thinking') {
+              // ThinkingContentをChatMessageに変換して返す
+              const chatMessage: ChatMessage = {
+                role: "assistant", 
+                content: `[thinking] ${m.thinking}`
+              };
+              yield chatMessage;
+            } else {
+              yield m as ChatMessage;
+            }
           }
         }
         
         if (thinkingContent) {
           console.log("\n======= THINKING PROCESS SUMMARY =======");
-          console.log("思考モードで生成された内容の合計トークン数（概算）:", Math.round(thinkingContent.length / 4));
-          console.log("処理時間:", ((Date.now() - startTime) / 1000).toFixed(2), "秒");
+          console.log("Estimated tokens generated in thinking mode:", Math.round(thinkingContent.length / 4));
+          console.log("Processing time:", ((Date.now() - startTime) / 1000).toFixed(2), "seconds");
           console.log("======================================\n");
-          
-          this.writeDebugLog("思考プロセス要約", {
-            approximateTokens: Math.round(thinkingContent.length / 4),
-            processingTimeSeconds: ((Date.now() - startTime) / 1000).toFixed(2),
-            contentLength: thinkingContent.length
-          }, "basic");
         }
         
-        console.log("完全な受信データサイズ:", rawBuffer.length);
-        this.writeDebugLog("完全な受信データサイズ", { 
-          bytes: rawBuffer.length,
-          approximateTokens: Math.round(rawBuffer.length / 4)
-        }, "basic");
+        console.log("Total received data size:", rawBuffer.length);
         return;
       }
       
       console.log("Using Node.js Readable stream");
-      this.writeDebugLog("Using Node.js Readable stream", undefined, "basic");
       
       const startTime = Date.now();
       let chunkCount = 0;
@@ -1502,60 +1275,52 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
           try {
             chunkCount++;
             
-            // 活動の記録を更新
             lastActivityTimestamp = Date.now();
             
             const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
             
             if (Date.now() - startTime > streamTimeout) {
-              this.writeDebugLog("ストリーム処理がタイムアウトしました - 強制終了します", {
-                elapsedMs: Date.now() - startTime,
-                totalChunks: chunkCount,
-                timeoutMs: streamTimeout
-              }, "basic");
               return;
             }
             
-            console.log(`[${elapsedSec}s] 受信したチャンク（バイト）:`, typeof chunk === 'object' ? '(バイナリデータ)' : chunk);
-            this.writeDebugLog(`[${elapsedSec}s] チャンク#${chunkCount}受信`, { 
-              type: typeof chunk,
-              isBuffer: Buffer && Buffer.isBuffer ? Buffer.isBuffer(chunk) : false,
-              size: chunk.length || 0
-            }, "detailed");
+            console.log(`[${elapsedSec}s] Received chunk (bytes):`, typeof chunk === 'object' ? '(binary data)' : chunk);
             
-            // 新しいProcessChunkメソッドを使用してより堅牢なデコードを行う
             const decodedChunk = this.processChunk(chunk as Buffer);
             rawBuffer += decodedChunk;
-            console.log(`[${elapsedSec}s] 受信したチャンク（テキスト）:`, decodedChunk);
-            this.writeDebugLog(`チャンク#${chunkCount}デコード`, { 
-              length: decodedChunk.length
-            }, "verbose");
+            console.log(`[${elapsedSec}s] Received chunk (text):`, decodedChunk);
             
             if (!decodedChunk || decodedChunk.trim() === "") {
-              console.log("空のチャンクを受信しました");
-              this.writeDebugLog("空のチャンクを受信しました", undefined, "detailed");
+              console.log("Received empty chunk");
               continue;
             }
             
             const { done, messages } = parseSSE(decodedChunk);
-            this.writeDebugLog("チャンク解析結果", { 
-              isDone: done, 
-              messagesCount: messages.length 
-            }, "basic");
             
             for (const m of messages) {
-              const contentLength = typeof m.content === 'string' ? m.content.length : 'not-string';
-              this.writeDebugLog("UIにメッセージを送信", { 
-                role: m.role,
-                contentLength: contentLength,
-                finished: done
-              }, "basic");
-              yield m;
+              if ('type' in m && m.type === 'thinking') {
+                // ThinkingContentをChatMessageに変換して返す
+                const chatMessage: ChatMessage = {
+                  role: "assistant",
+                  content: `[thinking] ${m.thinking}`
+                };
+                yield chatMessage;
+              } else {
+                yield m as ChatMessage;
+              }
             }
             
             if (done) {
-              console.log("ストリーム終了マーカーを検出");
-              this.writeDebugLog("ストリーム終了マーカーを検出 - ループを終了します", undefined, "basic");
+              console.log("Detected stream end marker");
+              
+              // Signal the thinking panel that thinking is complete
+              try {
+                if (typeof vscode !== 'undefined' && vscode && vscode.commands) {
+                  vscode.commands.executeCommand('continue.thinkingCompleted');
+                }
+              } catch (e) {
+                console.debug("Error executing VSCode command:", e);
+                // Ignore errors, as vscode API might not be available
+              }
               
               const message: ChatMessage = {
                 role: "assistant",
@@ -1566,84 +1331,69 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               return;
             }
           } catch (e) {
-            console.error("チャンク処理中のエラー:", e);
-            this.writeDebugLog("チャンク処理中のエラー", { 
-              error: (e as Error).message, 
-              stack: (e as Error).stack 
-            }, "basic");
+            console.error("Error during chunk processing:", e);
             
-            // ストリーム中断からの回復を試みる
-            // 一定時間アクティビティがない場合は処理を中止
             if (Date.now() - lastActivityTimestamp > 10000) {
-              console.log("ストリーム活動なし - 回復不可能として処理を終了");
-              this.writeDebugLog("ストリーム活動なし - 回復不可能", {
-                timeSinceLastActivity: Date.now() - lastActivityTimestamp,
-                totalChunks: chunkCount
-              }, "basic");
+              console.log("No stream activity - terminating as unrecoverable");
               
-              // 最良の努力で部分的な結果を返す
+              // Signal the thinking panel that thinking is complete
+              try {
+                if (typeof vscode !== 'undefined' && vscode && vscode.commands) {
+                  vscode.commands.executeCommand('continue.thinkingCompleted');
+                }
+              } catch (e) {
+                console.debug("Error executing VSCode command:", e);
+                // Ignore errors, as vscode API might not be available
+              }
+              
               const message: ChatMessage = {
                 role: "assistant",
-                content: "[ストリーム中断] 部分的な応答: " + 
-                        (thinkingContent ? "\n\n[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "..." : "")
+                content: "[Stream interrupted] Partial response: " + 
+                        (thinkingContent ? "\n\n[Thinking Process]\n" + thinkingContent.substring(0, 1000) + "..." : "")
               };
               yield message;
               return;
             }
             
-            // 短時間待機して再試行
             await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
           }
         }
         
         if (buffer.trim()) {
-          console.log("残りのバッファを処理:", buffer.length);
-          this.writeDebugLog("残りのバッファを処理", { 
-            length: buffer.length
-          }, "detailed");
+          console.log("Processing remaining buffer:", buffer.length);
           const { messages } = parseSSE("");
           for (const m of messages) {
-            yield m;
+            if ('type' in m && m.type === 'thinking') {
+              // ThinkingContentをChatMessageに変換して返す
+              const chatMessage: ChatMessage = {
+                role: "assistant",
+                content: `[thinking] ${m.thinking}`
+              };
+              yield chatMessage;
+            } else {
+              yield m as ChatMessage;
+            }
           }
         }
         
         if (thinkingContent) {
           console.log("\n======= THINKING PROCESS SUMMARY =======");
-          console.log("思考モードで生成された内容の合計トークン数（概算）:", Math.round(thinkingContent.length / 4));
-          console.log("処理時間:", ((Date.now() - startTime) / 1000).toFixed(2), "秒");
+          console.log("Estimated tokens generated in thinking mode:", Math.round(thinkingContent.length / 4));
+          console.log("Processing time:", ((Date.now() - startTime) / 1000).toFixed(2), "seconds");
           console.log("======================================\n");
-          
-          this.writeDebugLog("思考プロセス要約", {
-            approximateTokens: Math.round(thinkingContent.length / 4),
-            processingTimeSeconds: ((Date.now() - startTime) / 1000).toFixed(2),
-            contentLength: thinkingContent.length
-          }, "basic");
         }
         
-        console.log("完全な受信データサイズ:", rawBuffer.length);
-        this.writeDebugLog("完全な受信データサイズ", { 
-          bytes: rawBuffer.length, 
-          approximateTokens: Math.round(rawBuffer.length / 4)
-        }, "basic");
+        console.log("Total received data size:", rawBuffer.length);
       } catch (streamError) {
-        console.error("ストリーム読み取り中のエラー:", streamError);
-        this.writeDebugLog("ストリーム読み取り中のエラー", { 
-          error: (streamError as Error).message, 
-          stack: (streamError as Error).stack 
-        }, "basic");
+        console.error("Error during stream reading:", streamError);
         
-        // エラーからの回復処理
-        this.writeDebugLog("ストリーム処理中の重大なエラー - 回復を試みます", {
-          errorType: (streamError as Error).name,
-          bufferSize: buffer.length,
-          rawBufferSize: rawBuffer.length
-        }, "basic");
+        // Signal the thinking panel that thinking is complete
+        thinkingCompleted();
         
-        // バッファに内容があれば解析して返す
         if (rawBuffer && rawBuffer.trim()) {
           try {
-            console.log("エラー発生後にバッファーからの回復を試みます");
+            console.log("Attempting to recover from buffer after error");
             const recoveredContent = this.tryRecoverContentFromBuffer(rawBuffer);
             if (recoveredContent) {
               const message: ChatMessage = {
@@ -1653,7 +1403,7 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
               yield message;
             }
           } catch (recoveryError) {
-            console.error("回復処理中のエラー:", recoveryError);
+            console.error("Error during recovery processing:", recoveryError);
           }
         }
         
@@ -1661,11 +1411,10 @@ Claude 3.7 Sonnet: ${isClaudeSonnet37 ? "はい" : "いいえ"}
       }
     } catch (error) {
       console.error("Error in _streamChat:", error);
-      this.writeDebugLog("Error in _streamChat", { 
-        name: (error as Error).name,
-        message: (error as Error).message,
-        stack: (error as Error).stack
-      }, "basic");
+      
+      // Signal the thinking panel that thinking is complete
+      thinkingCompleted();
+      
       throw error;
     }
   }

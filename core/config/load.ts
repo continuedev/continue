@@ -32,6 +32,8 @@ import {
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
+// ThinkingConfig をllms/index.tsから直接インポート
+import { ThinkingConfig } from "../llm/llms/index";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
@@ -191,6 +193,44 @@ async function serializedToIntermediateConfig(
     const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
     if (slashCommand) {
       slashCommands.push(slashCommand);
+    }
+  }
+
+  // Process and convert any thinking mode configuration
+  if (initial.models) {
+    for (const model of initial.models) {
+      if (model.completionOptions) {
+        // Convert reasoning to thinking configuration
+        if (model.completionOptions.reasoning !== undefined) {
+          const reasoningEnabled = model.completionOptions.reasoning;
+          const reasoningBudgetTokens = model.completionOptions.reasoningBudgetTokens || 16000;
+          
+          // Add thinking configuration
+          if (!model.requestOptions) {
+            model.requestOptions = {};
+          }
+          
+          if (!model.requestOptions.extraBodyProperties) {
+            model.requestOptions.extraBodyProperties = {};
+          }
+          
+          // Set up thinking configuration for Claude 3.7 models
+          const isClaudeModel = (model.model || "").toLowerCase().includes("claude");
+          const isClaudeSonnet37 = isClaudeModel && (
+            (model.model || "").toLowerCase().includes("claude-3-7") ||
+            (model.model || "").toLowerCase().includes("claude-3.7")
+          );
+          
+          if (isClaudeSonnet37 && reasoningEnabled) {
+            model.requestOptions.extraBodyProperties.thinking = {
+              type: "enabled",
+              budget_tokens: reasoningBudgetTokens,
+            } as ThinkingConfig;
+            
+            console.log(`Added thinking configuration for model ${model.title || model.model}`);
+          }
+        }
+      }
     }
   }
 

@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
+import { registerThinkingPanel } from "../panels";
 import { getExtensionVersion } from "../util/util";
 
 import { VsCodeContinueApi } from "./api";
@@ -18,6 +19,9 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Register commands and providers
   registerQuickFixProvider();
   setupInlineTips(context);
+  
+  // Register the thinking panel for Claude 3.7 Sonnet
+  registerThinkingPanel(context);
 
   const vscodeExtension = new VsCodeExtension(context);
 
@@ -48,6 +52,13 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     // Mark that we've configured the YAML schema
     context.globalState.update("yamlSchemaConfigured", true);
   }
+
+  // Register additional command for showing the thinking panel in Command Palette
+  context.subscriptions.push(
+    vscode.commands.registerCommand('continue.toggleThinkingPanel', () => {
+      vscode.commands.executeCommand('continue.showThinkingPanel');
+    })
+  );
 
   const api = new VsCodeContinueApi(vscodeExtension);
   const continuePublicApi = {

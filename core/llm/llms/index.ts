@@ -20,7 +20,7 @@ import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
-import Databricks from "./Databricks";
+import Databricks, { registerThinkingPanel } from "./Databricks";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
@@ -62,6 +62,27 @@ import Vllm from "./Vllm";
 import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
+
+// ThinkingConfig インターフェースの定義
+export interface ThinkingConfig {
+  type: "enabled" | "disabled" | "auto";
+  budget_tokens?: number;
+}
+
+// ThinkingContent インターフェースの定義（ChatMessageとは別のインターフェース）
+export interface ThinkingContent {
+  type: "thinking";
+  thinking: string;
+  metadata?: {
+    phase: string;
+    progress: number;
+    tokens?: number;
+    elapsed_ms?: number;
+  };
+}
+
+// registerThinkingPanelをエクスポート
+export { registerThinkingPanel };
 
 export const LLMClasses = [
   Anthropic,

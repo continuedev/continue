@@ -324,6 +324,18 @@
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
+      },
+      {
+        "command": "continue.showThinkingPanel",
+        "category": "Continue",
+        "title": "Show Claude's Thinking Process",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.toggleThinkingPanel",
+        "category": "Continue",
+        "title": "Toggle Claude's Thinking Panel",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -415,6 +427,12 @@
         "command": "continue.applyCodeFromChat",
         "mac": "alt+a",
         "key": "alt+a"
+      },
+      {
+        "command": "continue.showThinkingPanel",
+        "mac": "cmd+k cmd+t",
+        "key": "ctrl+k ctrl+t",
+        "when": "!terminalFocus"
       }
     ],
     "submenus": [
@@ -439,6 +457,12 @@
         },
         {
           "command": "continue.newSession"
+        },
+        {
+          "command": "continue.showThinkingPanel"
+        },
+        {
+          "command": "continue.toggleThinkingPanel"
         }
       ],
       "editor/context": [
@@ -511,6 +535,11 @@
         {
           "command": "continue.openConfigPage",
           "group": "navigation@4",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.showThinkingPanel",
+          "group": "navigation@5",
           "when": "view == continue.continueGUIView"
         },
         {
