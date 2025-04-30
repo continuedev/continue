@@ -28,7 +28,12 @@ export default function AddFileButton({ onClick }: AddFileButtonProps) {
       }),
     );
 
-    dispatch(addCodeToEdit(filesData));
+    dispatch(
+      addCodeToEdit({
+        codeToEdit: filesData,
+        fromEditor: false,
+      }),
+    );
   }
 
   return (

@@ -10,12 +10,11 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
     const codeToEdit = state.editModeState.codeToEdit;
     const enteredEditModeFromEditor =
       state.editModeState.enteredEditModeFromEditor;
+    // const editStreamId = state.editModeState.streamId;
 
     if (state.session.mode !== "edit") {
       return;
     }
-
-    dispatch(setMode("chat"));
 
     for (const code of codeToEdit) {
       extra.ideMessenger.post("rejectDiff", {
@@ -26,6 +25,8 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
     dispatch(clearCodeToEdit());
     dispatch(setEditDone());
     dispatch(setMainEditorContentTrigger(undefined));
+
+    dispatch(setMode("chat"));
 
     extra.ideMessenger.post("edit/exit", {
       shouldFocusEditor: enteredEditModeFromEditor,

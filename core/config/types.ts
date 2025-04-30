@@ -1051,13 +1051,6 @@ declare global {
     repoMapFileSelection?: string;
   }
   
-  export type EditStatus =
-    | "not-started"
-    | "streaming"
-    | "accepting"
-    | "accepting:full-diff"
-    | "done";
-  
   export type ApplyStateStatus =
     | "streaming" // Changes are being applied to the file
     | "done" // All changes have been applied, awaiting user to accept/reject

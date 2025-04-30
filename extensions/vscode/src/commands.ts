@@ -269,10 +269,6 @@ async function processDiff(
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
 
-  void sidebar.webviewProtocol.request("setEditStatus", {
-    status: "done",
-  });
-
   if (streamId) {
     const fileContent = await ide.readFile(newOrCurrentUri);
 
@@ -951,7 +947,7 @@ const getCommandsMap: (
           if (core.configHandler.currentProfile?.profileDescription.id) {
             core.invoke("config/updateSelectedModel", {
               profileId:
-              core.configHandler.currentProfile?.profileDescription.id,
+                core.configHandler.currentProfile?.profileDescription.id,
               role: "autocomplete",
               title: selectedOption,
             });

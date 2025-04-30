@@ -4,7 +4,6 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 import type {
   ApplyState,
   CodeToEdit,
-  EditStatus,
   MessageContent,
   RangeInFileWithContents,
 } from "../";
@@ -87,7 +86,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   openOnboardingCard: [undefined, void];
   applyCodeFromChat: [undefined, void];
   updateApplyState: [ApplyState, void];
-  setEditStatus: [{ status: EditStatus; fileAfterEdit?: string }, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
   focusEditWithoutClear: [undefined, void];

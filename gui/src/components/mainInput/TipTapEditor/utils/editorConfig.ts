@@ -338,8 +338,11 @@ export function createEditorConfig(options: {
             const contents = await ideMessenger.ide.readFile(filepath);
             dispatch(
               addCodeToEdit({
-                filepath,
-                contents,
+                codeToEdit: {
+                  filepath,
+                  contents,
+                },
+                fromEditor: false,
               }),
             );
           },

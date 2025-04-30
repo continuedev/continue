@@ -1,16 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { CodeToEdit, EditStatus, MessageContent } from "core";
-
+import { ApplyState, CodeToEdit, MessageContent } from "core";
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 export interface EditModeState {
   codeToEdit: CodeToEdit[];
-  editStatus: EditStatus;
+  applyState: ApplyState;
   previousInputs: MessageContent[];
-  fileAfterEdit?: string;
   enteredEditModeFromEditor: boolean;
 }
 
 const initialState: EditModeState = {
-  editStatus: "not-started",
+  applyState: {
+    streamId: EDIT_MODE_STREAM_ID,
+  },
   previousInputs: [],
   codeToEdit: [],
   enteredEditModeFromEditor: false,
@@ -21,63 +22,30 @@ export const editModeStateSlice = createSlice({
   initialState,
   reducers: {
     focusEdit: (state) => {
-      state.editStatus = "not-started";
+      state.applyState.status = "not-started";
       state.previousInputs = [];
-      state.fileAfterEdit = undefined;
     },
     submitEdit: (state, { payload }: PayloadAction<MessageContent>) => {
       state.previousInputs.push(payload);
-      state.editStatus = "streaming";
-    },
-    setEditStatus: (
-      state,
-      {
-        payload,
-      }: PayloadAction<{ status: EditStatus; fileAfterEdit?: string }>,
-    ) => {
-      // Only allow valid transitions
-      const currentStatus = state.editStatus;
-      if (currentStatus === "not-started" && payload.status === "streaming") {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "streaming" &&
-        payload.status === "accepting"
-      ) {
-        state.editStatus = payload.status;
-        state.fileAfterEdit = payload.fileAfterEdit;
-      } else if (currentStatus === "accepting" && payload.status === "done") {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "accepting:full-diff" &&
-        payload.status === "done"
-      ) {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "accepting" &&
-        payload.status === "accepting:full-diff"
-      ) {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "accepting:full-diff" &&
-        payload.status === "accepting"
-      ) {
-        state.editStatus = payload.status;
-      } else if (currentStatus === "done" && payload.status === "not-started") {
-        state.editStatus = payload.status;
-      }
-    },
-    addPreviousInput: (state, { payload }: PayloadAction<MessageContent>) => {
-      state.previousInputs.push(payload);
+      state.applyState.status = "streaming";
     },
     setEditDone: (state) => {
-      state.editStatus = "done";
+      state.applyState.status = "done";
       state.previousInputs = [];
     },
     addCodeToEdit: (
       state,
-      { payload }: PayloadAction<CodeToEdit | CodeToEdit[]>,
+      {
+        payload,
+      }: PayloadAction<{
+        fromEditor: boolean;
+        codeToEdit: CodeToEdit | CodeToEdit[];
+      }>,
     ) => {
-      const entries = Array.isArray(payload) ? payload : [payload];
+      state.enteredEditModeFromEditor = payload.fromEditor;
+      const entries = Array.isArray(payload.codeToEdit)
+        ? payload.codeToEdit
+        : [payload.codeToEdit];
 
       const newEntries = entries.filter(
         (entry) =>
@@ -90,31 +58,19 @@ export const editModeStateSlice = createSlice({
         state.codeToEdit.push(...newEntries);
       }
     },
-    removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      state.codeToEdit = state.codeToEdit.filter(
-        (entry) => !isCodeToEditEqual(entry, payload),
-      );
-    },
     clearCodeToEdit: (state) => {
       state.codeToEdit = [];
     },
   },
-  selectors: {
-    selectHasCodeToEdit: (state) => {
-      return state.codeToEdit.length > 0;
-    },
-  },
+  selectors: {},
 });
 
 export const {
-  setEditStatus,
-  addPreviousInput,
   setEditDone,
   submitEdit,
   focusEdit,
   clearCodeToEdit,
   addCodeToEdit,
-  removeCodeToEdit,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;
 
@@ -137,7 +93,7 @@ function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
   return !("range" in a) && !("range" in b);
 }
 
-export const { selectHasCodeToEdit } = editModeStateSlice.selectors;
+// export const {  } = editModeStateSlice.selectors;
 
 // selectIsSingleRangeEditOrInsertion: (state) => {
 //   if (state.mode !== "edit") {

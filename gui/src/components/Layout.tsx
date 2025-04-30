@@ -6,11 +6,7 @@ import { AuthProvider } from "../context/Auth";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import {
-  addCodeToEdit,
-  focusEdit,
-  setEditStatus,
-} from "../redux/slices/editModeState";
+import { addCodeToEdit, focusEdit } from "../redux/slices/editModeState";
 import { newSession, setMode } from "../redux/slices/sessionSlice";
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
@@ -169,15 +165,12 @@ const Layout = () => {
   useWebviewListener(
     "addCodeToEdit",
     async (payload) => {
-      dispatch(addCodeToEdit(payload));
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "setEditStatus",
-    async ({ status, fileAfterEdit }) => {
-      dispatch(setEditStatus({ status, fileAfterEdit }));
+      dispatch(
+        addCodeToEdit({
+          codeToEdit: payload,
+          fromEditor: true,
+        }),
+      );
     },
     [],
   );

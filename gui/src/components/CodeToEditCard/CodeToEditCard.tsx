@@ -6,7 +6,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import {
   addCodeToEdit,
-  removeCodeToEdit,
+  clearCodeToEdit,
 } from "../../redux/slices/editModeState";
 import AddFileButton from "./AddFileButton";
 import AddFileCombobox from "./AddFileCombobox";
@@ -25,8 +25,8 @@ export default function CodeToEditCard() {
         ? "(1 item)"
         : `(${codeToEdit.length} items)`;
 
-  function onDelete(rif: CodeToEdit) {
-    dispatch(removeCodeToEdit(rif));
+  function onDelete() {
+    dispatch(clearCodeToEdit());
   }
 
   async function onClickFilename(code: CodeToEdit) {
@@ -50,7 +50,12 @@ export default function CodeToEditCard() {
     const fileResults = await Promise.all(filePromises);
 
     for (const file of fileResults) {
-      dispatch(addCodeToEdit(file));
+      dispatch(
+        addCodeToEdit({
+          codeToEdit: file,
+          fromEditor: false,
+        }),
+      );
     }
   }
 

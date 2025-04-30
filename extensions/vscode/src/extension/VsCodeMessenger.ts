@@ -15,6 +15,7 @@ import {
 import { stripImages } from "core/util/messageContent";
 import * as vscode from "vscode";
 
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
@@ -210,17 +211,12 @@ export class VsCodeMessenger {
       const fileAfterEdit = await verticalDiffManager.streamEdit({
         input: stripImages(prompt),
         llm: model,
-        streamId: "edit",
+        streamId: EDIT_MODE_STREAM_ID,
         range: new vscode.Range(
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
         rules: config.rules,
-      });
-
-      void this.webviewProtocol.request("setEditStatus", {
-        status: "accepting",
-        fileAfterEdit,
       });
     });
     this.onWebview("edit/exit", async (msg) => {
@@ -238,11 +234,11 @@ export class VsCodeMessenger {
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
-          return await this.inProcessMessenger.externalRequest(
-            messageType,
-            msg.data,
-            msg.messageId,
-          );
+        return await this.inProcessMessenger.externalRequest(
+          messageType,
+          msg.data,
+          msg.messageId,
+        );
       });
     });
 
