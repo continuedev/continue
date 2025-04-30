@@ -261,7 +261,9 @@ export class CompletionProvider {
 
       // Save to cache
       if (!outcome.cacheHit && helper.options.useCache) {
-        (await this.autocompleteCache).put(outcome.prefix, outcome.completion);
+        (await this.autocompleteCache)
+          .put(outcome.prefix, outcome.completion)
+          .catch((e) => console.warn(`Failed to save to cache: ${e.message}`));
       }
 
       // When using the JetBrains extension, Mark as displayed
