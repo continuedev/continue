@@ -170,7 +170,7 @@ The `models` section defines the language models used in your configuration. Mod
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [`apply`](./customize/model-roles/apply.mdx#prompt-templating) and [autocomplete](./customize/model-roles/autocomplete.md#prompt-templating)
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
-  - `baseAgentSystemMessage`: Can be used to override the default system prompt for **Agent** mode.
+  <!-- - `baseAgentSystemMessage`: Can be used to override the default system prompt for **Agent** mode. <!-- This setting is experimental and hence is undocumented. -->
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
   - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
   - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
