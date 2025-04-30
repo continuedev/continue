@@ -29,10 +29,9 @@ Our current top recommendation is Claude 3.7 Sonnet from [Anthropic](../model-pr
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude 3.7 Sonnet
-      provider: anthropic
-      model: claude-3-7-sonnet-latest
-      apiKey: <YOUR_ANTHROPIC_API_KEY>
+    - uses: anthropic/claude-3-7-sonnet
+      with:
+        ANTHROPIC_API_KEY: <YOUR_ANTHROPIC_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -71,18 +70,15 @@ If you prefer to use an open-weight model, then the Gemma family of Models from 
         <TabItem value="Ollama">
         ```yaml title="config.yaml"
         models:
-          - name: "Gemma 3 27B"
-            provider: "ollama"
-            model: "gemma3:27b"
+          - uses: ollama/gemma3-27b
         ```
         </TabItem>
         <TabItem value="Together">
         ```yaml title="config.yaml"
         models:
-          - name: "Gemma 3 27B"
-            provider: "together"
-            model: "google/gemma-2-27b-it"
-            apiKey: <YOUR_TOGETHER_API_KEY>
+          - uses: togetherai/gemma-2-instruct-27b
+            with:
+              TOGETHER_API_KEY: <YOUR_TOGETHER_API_KEY>
         ```
         </TabItem>
     </Tabs>
@@ -131,10 +127,9 @@ If you prefer to use a model from [OpenAI](../model-providers/top-level/openai.m
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: GPT-4o
-      provider: openai
-      model: ''
-      apiKey: <YOUR_OPENAI_API_KEY>
+    - uses: openai/gpt-4o
+      with:
+        OPENAI_API_KEY: <YOUR_OPENAI_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -155,19 +150,18 @@ If you prefer to use a model from [OpenAI](../model-providers/top-level/openai.m
 
 ### Grok-2 from xAI
 
-If you prefer to use a model from [xAI](../model-providers/top-level/xAI.mdx), then we recommend Grok-2.
+If you prefer to use a model from [xAI](../model-providers/top-level/xAI.mdx), then we recommend Grok-3.
 
 <Tabs groupId="hub-config-example">
     <TabItem value="hub" label="Hub">
-    Add the [xAI Grok-2 block](https://hub.continue.dev/xai/grok-2) from the hub
+    Add the [xAI Grok-3 block](https://hub.continue.dev/xai/grok-3) from the hub
     </TabItem>
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Grok-2
-      provider: xAI
-      model: grok-2-latest
-      apiKey: <YOUR_XAI_API_KEY>
+    - uses: xai/grok-3
+      with:
+        XAI_API_KEY: <YOUR_XAI_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -186,21 +180,20 @@ If you prefer to use a model from [xAI](../model-providers/top-level/xAI.mdx), t
   </TabItem>
 </Tabs>
 
-### Gemini 2.0 Flash from Google
+### Gemini 2.5 Pro from Google
 
-If you prefer to use a model from [Google](../model-providers/top-level/gemini.mdx), then we recommend Gemini 2.0 Flash.
+If you prefer to use a model from [Google](../model-providers/top-level/gemini.mdx), then we recommend Gemini 2.5 Pro.
 
 <Tabs groupId="hub-config-example">
     <TabItem value="hub" label="Hub">
-    Add the [Gemini 2.0 Flash block](https://hub.continue.dev/google/gemini-2.0-flash) from the hub
+    Add the [Gemini 2.5 Pro block](https://hub.continue.dev/google/gemini-2.5-pro) from the hub
     </TabItem>
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Gemini 2.0 Flash
-      provider: gemini
-      model: gemini-2.0-flash
-      apiKey: <YOUR_GEMINI_API_KEY>
+    - uses: google/gemini-2.5-pro
+      with:
+        GEMINI_API_KEY: <YOUR_GEMINI_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -223,15 +216,15 @@ If you prefer to use a model from [Google](../model-providers/top-level/gemini.m
 
 For the best local, offline Chat experience, you will want to use a model that is large but fast enough on your machine.
 
-### Llama 3.1 8B
+### Qwen3 8B
 
-If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
+If your local machine can run an 8B parameter model, then we recommend running Qwen3 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
 
 <Tabs groupId="hub-config-example">
   <TabItem value="hub" label="Hub">
     <Tabs groupId="providers">
         <TabItem value="ollama" label="Ollama">
-    Add the [Ollama Llama 3.1 8b block](https://hub.continue.dev/ollama/llama3.1-8b) from the hub
+    Add the [Ollama Qwen3 8b block](https://hub.continue.dev/ollama/qwen3-8b) from the hub
     </TabItem>
     {/* HUB_TODO nonexistent block */}
     {/* <TabItem value="lmstudio" label="LM Studio">
@@ -244,25 +237,23 @@ If your local machine can run an 8B parameter model, then we recommend running L
       <TabItem value="Ollama">
       ```yaml title="config.yaml"
       models:
-        - name: Llama 3.1 8B
-          provider: ollama
-          model: llama3.1:8b
+        - uses: ollama/qwen3-8b
       ```
       </TabItem>
       <TabItem value="LM Studio">
       ```yaml title="config.yaml"
       models:
-        - name: Llama 3.1 8B
+        - name: Qwen3 8B
           provider: lmstudio
-          model: llama3.1:8b
+          model: qwen3:8b
       ```
       </TabItem>
       <TabItem value="Msty">
       ```yaml title="config.yaml"
       models:
-        - name: Llama 3.1 8B
+        - name: Qwen3 8B
           provider: msty
-          model: llama3.1:8b
+          model: qwen3:8b
       ```
       </TabItem>
     </Tabs>
@@ -303,96 +294,6 @@ If your local machine can run an 8B parameter model, then we recommend running L
             "title": "Llama 3.1 8B",
             "provider": "msty",
             "model": "llama3.1-8b"
-          }
-        ]
-      }
-      ```
-      </TabItem>
-    </Tabs>
-  </TabItem>
-</Tabs>
-
-### DeepSeek Coder 2 16B
-
-If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
-
-<Tabs groupId="config-example">
-  {/* HUB_TODO nonexistent blocks */}
-  {/* <TabItem value="hub" label="Hub">
-    <Tabs groupId="providers">
-    <TabItem value="ollama" label="Ollama">
-    Add the [Ollama Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
-    </TabItem>
-    <TabItem value="lmstudio" label="LM Studio">
-    Add the [LM Studio Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
-    </TabItem>
-    </Tabs>
-  </TabItem> */}
-  <TabItem value="yaml" label="YAML">
-    <Tabs groupId="providers">
-        <TabItem value="Ollama">
-        ```yaml title="config.yaml"
-        models:
-          - name: DeepSeek Coder 2 16B
-            provider: ollama
-            model: deepseek-coder-v2:16b
-        ```
-        </TabItem>
-        <TabItem value="LM Studio">
-        ```yaml title="config.yaml"
-        models:
-          - name: DeepSeek Coder 2 16B
-            provider: lmstudio
-            model: deepseek-coder-v2:16b
-        ```
-        </TabItem>
-        <TabItem value="Msty">
-        ```yaml title="config.yaml"
-        models:
-          - name: DeepSeek Coder 2 16B
-            provider: msty
-            model: deepseek-coder-v2:16b
-        ```
-        </TabItem>
-    </Tabs>
-  </TabItem>
-  <TabItem value="json" label="JSON">
-    <Tabs groupId="providers">
-      <TabItem value="Ollama">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "ollama",
-            "model": "deepseek-coder-v2:16b",
-            "apiBase": "http://localhost:11434"
-          }
-        ]
-      }
-      ```
-      </TabItem>
-      <TabItem value="LM Studio">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "lmstudio",
-            "model": "deepseek-coder-v2:16b"
-          }
-        ]
-      }
-      ```
-      </TabItem>
-      <TabItem value="Msty">
-      ```json title="config.json"
-      {
-        "models": [
-          {
-            "title": "DeepSeek Coder 2 16B",
-            "provider": "msty",
-            "model": "deepseek-coder-v2:16b"
           }
         ]
       }

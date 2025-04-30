@@ -23,14 +23,9 @@ import TabItem from "@theme/TabItem";
   <TabItem value="yaml" label="YAML">
     ```yaml title="config.yaml"
     models:
-      - name: Codestral
-        provider: mistral
-        model: codestral-latest
-        apiKey: <YOUR_CODESTRAL_API_KEY>
-        apiBase: https://codestral.mistral.ai/v1
-        roles:
-          - chat
-          - autocomplete
+      - uses: mistral/codestral
+        with:
+          MISTRAL_API_KEY: <YOUR_CODESTRAL_API_KEY>
     ```
   </TabItem>
   <TabItem value="json" label="JSON">

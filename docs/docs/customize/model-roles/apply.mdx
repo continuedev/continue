@@ -23,13 +23,12 @@ Example:
 
 ```yaml
 models:
-  - name: My Custom Apply Template
-    provider: anthropic
-    model: claude-3-5-sonnet-latest
-    promptTemplates:
-      apply: |
-        Original: {{{original_code}}}
-        New: {{{new_code}}}
+  - uses: anthropic/claude-3-7-sonnet
+    override:
+      promptTemplates:
+        apply: |
+          Original: {{{original_code}}}
+          New: {{{new_code}}}
 
-        Please generate the final code without any markers or explanations.
+          Please generate the final code without any markers or explanations.
 ```

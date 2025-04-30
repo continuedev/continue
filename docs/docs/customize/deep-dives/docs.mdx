@@ -339,12 +339,9 @@ The following configuration example includes:
       model: nomic-ai/nomic-embed-text-v1.5-GGUF
       roles:
         - embed
-    - name: Voyage Rerank-2
-      provider: voyage
-      apiKey: <VOYAGE_API_KEY>
-      model: rerank-2
-      roles:
-        - rerank
+    - uses: voyageai/rerank-2
+      with:
+        VOYAGE_API_KEY: <YOUR_VOYAGE_API_KEY>
   context:
     - provider: docs
       params:

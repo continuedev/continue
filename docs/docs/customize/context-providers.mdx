@@ -29,7 +29,7 @@ Reference any file in your current workspace.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: file
+    - uses: continuedev/file-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -53,7 +53,7 @@ Reference specific functions or classes from throughout your project.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: code
+    - uses: continuedev/code-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -77,7 +77,7 @@ Reference all of the changes you've made to your current branch. This is useful 
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: diff
+    - uses: continuedev/diff-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -101,7 +101,7 @@ Reference the currently open file.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: currentFile
+    - uses: continuedev/current-file-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -125,7 +125,7 @@ Reference the last command you ran in your IDE's terminal and its output.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: terminal
+    - uses: continuedev/terminal-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -149,7 +149,7 @@ Reference the contents from any documentation site.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: docs
+    - uses: continuedev/docs-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -177,9 +177,9 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: open
-      params:
-        onlyPinned: true
+    - uses: continuedev/open-files-context
+      with:
+        ONLY_PINNED: true
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -208,9 +208,9 @@ Optionally, set `n` to limit the number of results returned (default 6).
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: web
-      params:
-        n: 5
+    - uses: continuedev/web-context
+      with:
+        N: 5
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -237,7 +237,7 @@ Reference the most relevant snippets from your codebase.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml" 
   context:
-    - provider: codebase
+    - uses: continuedev/codebase-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -263,7 +263,7 @@ Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: folder
+    - uses: continuedev/folder-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -313,7 +313,7 @@ Reference the markdown converted contents of a given URL.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml" 
   context:
-    - provider: url
+    - uses: continuedev/url-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -337,7 +337,7 @@ Reference recent clipboard items
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: clipboard
+    - uses: continuedev/clipboard-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -385,7 +385,7 @@ Get Problems from the current file.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: problems
+    - uses: continuedev/problems-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -442,9 +442,7 @@ Reference the outline of your codebase. By default, signatures are included alon
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: repo-map
-      params:
-        includeSignatures: false # default true
+    - uses: continuedev/repo-map-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -477,7 +475,7 @@ Reference the architecture and platform of your current operating system.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: os
+    - uses: continuedev/os-context
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -663,15 +661,14 @@ Reference the schema of a table, and some sample rows
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: postgres
-      params:
-        host: localhost
-        port: 5436
-        user: myuser
-        password: catsarecool
-        database: animals
-        schema: public
-        sampleRows: 3
+    - uses: continuedev/postgres-context
+      with:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5436
+        POSTGRES_USER: myuser
+        POSTGRES_PASSWORD: catsarecool
+        POSTGRES_DATABASE: animals
+        POSTGRES_SCHEMA: public
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -743,9 +740,9 @@ Reference an open MR for this branch on GitLab.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: gitlab-mr
-      params:
-        token: "..."
+    - uses: continuedev/gitlab-mr-context
+      with:
+        GITLAB_TOKEN: "..."
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -809,10 +806,10 @@ Reference the conversation in a Jira issue.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: jira
-      params:
-        domain: company.atlassian.net
-        token: ATATT...
+    - uses: continuedev/jira-context
+      with:
+        JIRA_DOMAIN: company.atlassian.net
+        JIRA_TOKEN: ATATT...
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -844,9 +841,9 @@ to set the API Version to 2 using the `apiVersion` property.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: jira
-      params:
-        apiVersion: "2"
+    - uses: continuedev/jira-context
+      with:
+        JIRA_API_VERSION: "2"
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -890,7 +887,7 @@ Reference the messages in a Discord channel.
     - provider: discord
       params:
         discordKey: "bot token"
-        guildId: "1234567890" 
+        guildId: "1234567890"
         channels:
           - id: "123456"
             name: "example-channel"
@@ -992,10 +989,10 @@ Reference specific git commit metadata and diff or all of the recent commits.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: commit
-      params:
-        Depth: 50
-        LastXCommitsDepth: 10
+    - uses: continuedev/commits-context
+      with:
+        DEPTH: 50
+        LAST_X_COMMITS_DEPTH: 10
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -1026,10 +1023,10 @@ Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - provider: greptile 
-      params:
-        greptileToken: "..."
-        githubToken: "..."
+    - uses: continuedev/greptile-context
+      with:
+        GREPTILE_TOKEN: "..."
+        GITHUB_TOKEN: "..."
   ```
   </TabItem>
   <TabItem value="json" label="JSON">

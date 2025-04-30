@@ -35,12 +35,9 @@ After obtaining an API key from [here](https://www.voyageai.com/), you can confi
     <TabItem value="yaml" label="YAML">
     ```yaml title="config.yaml"
     models:
-      - name: Voyage Code 3
-        provider: voyage
-        model: voyage-code-3
-        apiKey: <YOUR_VOYAGE_API_KEY>
-        roles: 
-          - embed
+      - uses: voyageai/voyage-code-3
+        with:
+          VOYAGE_API_KEY: <YOUR_VOYAGE_API_KEY>
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
