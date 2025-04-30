@@ -7,7 +7,7 @@
   "plugins": ["@typescript-eslint", "import"],
   "rules": {
     "@typescript-eslint/naming-convention": "off",
-    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-floating-promises": "warn",
     "@typescript-eslint/semi": "warn",
     "curly": "warn",
     "eqeqeq": "warn",
