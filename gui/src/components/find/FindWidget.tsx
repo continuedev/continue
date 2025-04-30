@@ -12,8 +12,8 @@ import {
   useState,
 } from "react";
 import { HeaderButton, Input } from "..";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useAppSelector } from "../../redux/hooks";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 interface SearchMatch {
   index: number;
@@ -220,9 +220,11 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
 
         let nodeTextValue = caseSensitive
           ? textNode.nodeValue
-          : textNode.nodeValue.toLowerCase();
+          : textNode.nodeValue?.toLowerCase();
         let startIndex = 0;
-        while ((startIndex = nodeTextValue.indexOf(query, startIndex)) !== -1) {
+        while (
+          (startIndex = nodeTextValue?.indexOf(query, startIndex) ?? -1) !== -1
+        ) {
           // Create a range to measure the size and position of the match
           const range = document.createRange();
           range.setStart(textNode, startIndex);

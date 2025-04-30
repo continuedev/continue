@@ -9,6 +9,7 @@ import {
 import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
 import { isUserOrToolMsg } from "./messages";
+import { filterEnabledRules } from "./rules/filterEnabledRules";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
@@ -62,6 +63,8 @@ export function constructMessages(
   history: ChatHistoryItem[],
   baseChatSystemMessage: string | undefined,
   rules: RuleWithSource[],
+  modelName: string,
+  reduxState?: any,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
@@ -99,9 +102,14 @@ export function constructMessages(
     | ToolResultChatMessage
     | undefined;
 
+  // Get the current state - either from the parameter or from the store
+  const state = reduxState;
+  // Filter rules based on whether they are enabled in the Redux state
+  const enabledRulesFiltered = filterEnabledRules(rules, state);
+
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
-    rules,
+    rules: enabledRulesFiltered,
     userMessage: lastUserMsg,
   });
 

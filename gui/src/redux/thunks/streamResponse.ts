@@ -89,6 +89,8 @@ export const streamResponseThunk = createAsyncThunk<
           [...updatedHistory],
           selectedChatModel?.baseChatSystemMessage,
           state.config.config.rules,
+          selectedChatModel.model,
+          state,
         );
 
         posthog.capture("step run", {

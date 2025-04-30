@@ -9,11 +9,17 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { defaultBorderRadius, vscCommandCenterActiveBorder } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import {
+  generateRuleId,
+  initializeRules,
+  selectRuleEnabled,
+  toggleRule,
+} from "../../../../redux/slices/rulesSlice";
 import {
   setDialogMessage,
   setShowDialog,
@@ -30,6 +36,11 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
+  // Generate a stable ID for this rule
+  const ruleId = useMemo(() => generateRuleId(rule), [rule]);
+
+  // Get the enabled state from redux
+  const isEnabled = useAppSelector((state) => selectRuleEnabled(state, ruleId));
   const handleOpen = async () => {
     if (rule.slug) {
       ideMessenger.request("controlPlane/openUrl", {
@@ -79,6 +90,10 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     );
   }
 
+  const handleToggle = () => {
+    dispatch(toggleRule({ ruleId, enabled: !isEnabled }));
+  };
+
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
   return (
@@ -86,6 +101,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       style={{
         borderRadius: defaultBorderRadius,
         border: `1px solid ${vscCommandCenterActiveBorder}`,
+        opacity: isEnabled ? 1 : 0.5,
       }}
       className="flex flex-col px-2 py-1.5 transition-colors"
     >
@@ -100,6 +116,18 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             {title}
           </span>
           <div className="flex flex-row items-start gap-1">
+            <HeaderButtonWithToolTip
+              onClick={handleToggle}
+              text={isEnabled ? "Disable" : "Enable"}
+            >
+              <div
+                className={`h-3 w-6 rounded-full transition-colors ${isEnabled ? "bg-blue-500" : "bg-gray-400"}`}
+              >
+                <div
+                  className={`h-3 w-3 transform rounded-full bg-white transition-transform ${isEnabled ? "translate-x-3" : "translate-x-0"}`}
+                />
+              </div>
+            </HeaderButtonWithToolTip>
             <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
               <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
             </HeaderButtonWithToolTip>{" "}
@@ -143,6 +171,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
 export function RulesSection() {
   const { selectedProfile } = useAuth();
+  const dispatch = useAppDispatch();
 
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
@@ -199,6 +228,12 @@ export function RulesSection() {
 
     return rules;
   }, [config, selectedProfile, mode]);
+
+  // Initialize all rules in the Redux store on component mount
+  useEffect(() => {
+    const ruleIds = sortedRules.map((rule) => generateRuleId(rule));
+    dispatch(initializeRules(ruleIds));
+  }, [sortedRules, dispatch]);
 
   return (
     <div className="flex flex-col gap-3">
