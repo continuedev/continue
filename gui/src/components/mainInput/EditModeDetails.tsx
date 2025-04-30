@@ -29,7 +29,7 @@ const EditModeDetails = () => {
           applyStates={[editApplyState]}
           onAcceptOrReject={async (outcome) => {
             if (outcome === "acceptDiff") {
-              dispatch(exitEditMode({}));
+              await dispatch(exitEditMode({}));
             } else {
               mainEditor.mainEditor?.commands.focus();
             }

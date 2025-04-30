@@ -18,6 +18,7 @@ import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
+import { useMainEditor } from "./mainInput/TipTapEditor";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
@@ -43,6 +44,7 @@ const Layout = () => {
   const onboardingCard = useOnboardingCard();
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const { mainEditor } = useMainEditor();
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
@@ -147,9 +149,10 @@ const Layout = () => {
     "focusEdit",
     async () => {
       await ideMessenger.request("edit/addCurrentSelection", undefined);
-      dispatch(enterEditMode({}));
+      await dispatch(enterEditMode({}));
+      mainEditor?.commands.focus();
     },
-    [ideMessenger],
+    [ideMessenger, mainEditor],
   );
 
   useWebviewListener(
@@ -168,7 +171,7 @@ const Layout = () => {
   useWebviewListener(
     "exitEditMode",
     async () => {
-      dispatch(exitEditMode({}));
+      await dispatch(exitEditMode({}));
     },
     [mode],
   );

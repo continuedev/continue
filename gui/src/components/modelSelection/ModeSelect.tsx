@@ -16,6 +16,7 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { enterEditMode, exitEditMode } from "../../redux/thunks/editMode";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
+import { useMainEditor } from "../mainInput/TipTapEditor";
 import {
   Listbox,
   ListboxButton,
@@ -34,7 +35,7 @@ function ModeSelect() {
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
-
+  const { mainEditor } = useMainEditor();
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -87,7 +88,8 @@ function ModeSelect() {
         dispatch(setMode(nextMode));
       }
     }
-  }, [jetbrains, mode]);
+    mainEditor?.commands.focus();
+  }, [jetbrains, mode, mainEditor]);
 
   const selectMode = useCallback(
     async (newMode: MessageModes) => {
@@ -113,15 +115,16 @@ function ModeSelect() {
           dispatch(setMode(newMode));
         }
       }
+      mainEditor?.commands.focus();
     },
-    [mode],
+    [mode, mainEditor],
   );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "." && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        cycleMode();
+        void cycleMode();
       }
     };
 
