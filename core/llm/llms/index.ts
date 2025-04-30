@@ -156,6 +156,7 @@ export async function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
     baseChatSystemMessage,
+    baseAgentSystemMessage: baseChatSystemMessage,
     logger: llmLogger,
     uniqueId,
   };
