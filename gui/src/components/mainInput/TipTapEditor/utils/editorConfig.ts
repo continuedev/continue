@@ -22,8 +22,8 @@ import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
-import { addCodeToEdit } from "../../../../redux/slices/editModeState";
 import { AppDispatch } from "../../../../redux/store";
+import { exitEditMode } from "../../../../redux/thunks";
 import { getFontSize, isJetBrains } from "../../../../util";
 import * as ContinueExtensions from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
@@ -270,11 +270,11 @@ export function createEditorConfig(options: {
                 ideMessenger.post("focusEditor", undefined);
                 return true;
               }
-              // dispatch(
-              //   exitEditMode({
-              //     openNewSession: false,
-              //   }),
-              // );
+              dispatch(
+                exitEditMode({
+                  openNewSession: false,
+                }),
+              );
 
               return true;
             },
@@ -314,45 +314,6 @@ export function createEditorConfig(options: {
           inSubmenuRef,
           ideMessenger,
         ),
-      }),
-      ContinueExtensions.AddCodeToEdit.configure({
-        suggestion: {
-          ...getContextProviderDropdownOptions(
-            availableContextProvidersRef,
-            getSubmenuContextItemsRef,
-            enterSubmenu,
-            onClose,
-            onOpen,
-            inSubmenuRef,
-            ideMessenger,
-          ),
-          allow: () => modeRef.current !== "edit",
-          command: async ({ editor, range, props }) => {
-            editor.chain().focus().insertContentAt(range, "").run();
-            const filepath = props.id;
-            const contents = await ideMessenger.ide.readFile(filepath);
-            dispatch(
-              addCodeToEdit({
-                codeToEdit: {
-                  filepath,
-                  contents,
-                },
-                fromEditor: false,
-              }),
-            );
-          },
-          items: async ({ query }) => {
-            // Only display files in the dropdown
-            const results = getSubmenuContextItemsRef.current("file", query);
-            return results.map((result) => ({
-              ...result,
-              label: result.title,
-              type: "file",
-              query: result.id,
-              icon: result.icon,
-            }));
-          },
-        },
       }),
       ContinueExtensions.SlashCommand.configure({
         suggestion: getSlashCommandDropdownOptions(

@@ -42,7 +42,7 @@ export const editModeStateSlice = createSlice({
     setEditStateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       state.applyState = payload;
     },
-    addCodeToEdit: (
+    setCodeToEdit: (
       state,
       {
         payload,
@@ -78,7 +78,7 @@ export const {
   setReturnToModeAfterEdit,
   setReturnCursorToEditorAfterEdit,
   clearCodeToEdit,
-  addCodeToEdit,
+  setCodeToEdit,
   setEditStateApplyStatus,
   setEditStateApplyState,
 } = editModeStateSlice.actions;

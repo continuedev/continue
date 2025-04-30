@@ -6,7 +6,7 @@ import { AuthProvider } from "../context/Auth";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { addCodeToEdit } from "../redux/slices/editModeState";
+import { setCodeToEdit } from "../redux/slices/editModeState";
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { enterEditMode, exitEditMode } from "../redux/thunks/editMode";
 import { saveCurrentSession } from "../redux/thunks/session";
@@ -150,10 +150,10 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "addCodeToEdit",
+    "setCodeToEdit",
     async (payload) => {
       dispatch(
-        addCodeToEdit({
+        setCodeToEdit({
           codeToEdit: payload,
           fromEditor: true,
         }),

@@ -70,7 +70,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
     },
     void,
   ];
-  addCodeToEdit: [CodeToEdit, void];
+  setCodeToEdit: [CodeToEdit, void];
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 

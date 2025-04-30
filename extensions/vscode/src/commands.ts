@@ -580,7 +580,7 @@ const getCommandsMap: (
 
       if (rangeInFileWithContents) {
         sidebar.webviewProtocol?.request(
-          "addCodeToEdit",
+          "setCodeToEdit",
           rangeInFileWithContents,
         );
 
