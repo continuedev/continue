@@ -13,6 +13,8 @@ export class ThinkingPanelProvider {
   private thinkingPhase: string = "initial";
   private progress: number = 0;
   private context: vscode.ExtensionContext;
+  private updateInterval: NodeJS.Timeout | null = null;
+  private pendingUpdates: boolean = false;
 
   // Singleton pattern
   public static getInstance(context: vscode.ExtensionContext): ThinkingPanelProvider {
@@ -39,14 +41,39 @@ export class ThinkingPanelProvider {
       vscode.commands.registerCommand('continue.updateThinking', (content: string, phase: string, progress: number) => {
         this.updateThinking(content, phase, progress);
       }),
+      vscode.commands.registerCommand('continue.appendThinkingChunk', (chunk: string, phase: string, progress: number) => {
+        this.appendThinkingChunk(chunk, phase, progress);
+      }),
+      vscode.commands.registerCommand('continue.forceRefreshThinking', (force: boolean) => {
+        this.forceRefresh(force);
+      }),
       vscode.commands.registerCommand('continue.thinkingCompleted', () => {
         this.thinkingCompleted();
       }),
       this.statusBarItem
     );
     
+    // Setup interval for regular UI updates
+    this.startUpdateInterval();
+    
     // Log initialization
     console.log("ThinkingPanelProvider initialized");
+  }
+
+  // Start an interval for regular UI updates
+  private startUpdateInterval() {
+    // Clear any existing interval
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+    
+    // Create new update interval - 100ms is more responsive than default
+    this.updateInterval = setInterval(() => {
+      if (this.pendingUpdates && this.panel) {
+        this.updatePanel();
+        this.pendingUpdates = false;
+      }
+    }, 100);
   }
 
   // Create or show the thinking panel
@@ -87,15 +114,46 @@ export class ThinkingPanelProvider {
     this.isThinking = true;
     this.thinkingPhase = phase;
     this.progress = progress;
-    this.thinking += content;
+    this.thinking = content; // Replace content instead of appending
     this.statusBarItem.show();
+    
+    // Mark for update
+    this.pendingUpdates = true;
     
     // Update the panel if it exists, or create it if auto-show is enabled
     if (this.panel) {
       this.updatePanel();
+      this.pendingUpdates = false;
     }
     
     console.log(`Thinking updated: ${phase} - Progress: ${Math.round(progress * 100)}%`);
+  }
+
+  // Append a chunk to the thinking content
+  public appendThinkingChunk(chunk: string, phase: string, progress: number) {
+    this.isThinking = true;
+    this.thinkingPhase = phase;
+    this.progress = progress;
+    this.thinking += chunk;
+    this.statusBarItem.show();
+    
+    // Mark for update
+    this.pendingUpdates = true;
+    
+    // Force immediate update for chunk
+    if (this.panel) {
+      this.updatePanel();
+      this.pendingUpdates = false;
+    }
+    
+    console.log(`Thinking chunk appended - Progress: ${Math.round(progress * 100)}%`);
+  }
+
+  // Force a refresh of the UI
+  public forceRefresh(force: boolean) {
+    if (force && this.panel) {
+      this.updatePanel();
+    }
   }
 
   // Mark thinking as completed
@@ -103,6 +161,7 @@ export class ThinkingPanelProvider {
     this.isThinking = false;
     this.statusBarItem.hide();
     
+    // Force final update
     if (this.panel) {
       this.updatePanel();
     }
@@ -203,7 +262,7 @@ export class ThinkingPanelProvider {
                 background-color: var(--vscode-progressBar-background);
                 width: ${progressPercent}%;
                 border-radius: 3px;
-                transition: width 0.5s ease-in-out;
+                transition: width 0.3s ease-in-out;
             }
             .phase-indicator {
                 text-transform: capitalize;
@@ -270,6 +329,14 @@ export class ThinkingPanelProvider {
             // Auto-scroll to bottom
             const thinkingContent = document.querySelector('.thinking-content');
             thinkingContent.scrollTop = thinkingContent.scrollHeight;
+            
+            // Force refresh when receiving message
+            window.addEventListener('message', (event) => {
+                const message = event.data;
+                if (message.command === 'refresh') {
+                    thinkingContent.scrollTop = thinkingContent.scrollHeight;
+                }
+            });
             
             // VSCode API
             const vscode = acquireVsCodeApi();

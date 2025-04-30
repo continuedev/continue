@@ -78,6 +78,7 @@ type ThinkingChatMessage = ChatMessage & {
     progress: number;
     formatted_text?: string;
   };
+  isThinking?: boolean; // フラグを追加してリアルタイム処理を強化
 };
 
 // Interface for thinking content blocks in the stream
@@ -93,6 +94,23 @@ interface RedactedThinkingContentBlock {
 interface TextContentBlock {
   type: "text";
   text: string;
+}
+
+// ツール呼び出し関連の型定義
+interface ToolCall {
+  id: string;
+  type: string;
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+// ツール応答の型定義
+interface ToolResponse {
+  tool_call_id: string;
+  role: string;
+  content: string;
 }
 
 type ContentBlock = ThinkingContentBlock | RedactedThinkingContentBlock | TextContentBlock;
@@ -121,12 +139,24 @@ export default class Databricks extends OpenAI {
   private modelConfig: any = null;
   private globalConfig: any = null;
   
+  // Agent機能のサポートを宣言
+  capabilities = {
+    agent: true,      // Agentモードをサポート
+    chat: true,       // チャットモードをサポート
+    edit: true,       // 編集モードをサポート
+    toolUse: true     // ツール使用をサポート
+  };
+  
   // Track thinking progress for UI visualization
   private thinkingProgress: number = 0;
   private thinkingPhase: string = "initial";
   private thinkingBuffer: string = "";
   private totalThinkingTokens: number = 0;
   private thinkingStartTime: number = 0;
+  private lastThinkingUpdateTime: number = 0;
+  private thinkingUpdateInterval: number = 300; // 更新間隔を50msから300msに変更
+  // バッファ管理の改善
+  private pendingThinkingUpdates: string[] = [];
   
   private static loadConfigFromYaml(modelName: string): any {
     console.log("Attempting to load config from YAML for model:", modelName);
@@ -202,8 +232,19 @@ export default class Databricks extends OpenAI {
                 modelConfig.defaultCompletionOptions.thinking.budget_tokens = 16000;
               }
               
+              // ケーパビリティの設定を追加
+              if (!modelConfig.capabilities) {
+                modelConfig.capabilities = {
+                  agent: true,
+                  chat: true,
+                  edit: true,
+                  toolUse: true
+                };
+              }
+              
               console.log("Claude 3.7 Sonnet configuration:", {
-                thinking: modelConfig.defaultCompletionOptions.thinking
+                thinking: modelConfig.defaultCompletionOptions.thinking,
+                capabilities: modelConfig.capabilities
               });
             }
             
@@ -263,6 +304,17 @@ export default class Databricks extends OpenAI {
       config.defaultCompletionOptions = {};
     }
     
+    // Agent機能のデフォルト設定
+    if (!config.capabilities) {
+      config.capabilities = {
+        agent: true,
+        chat: true,
+        edit: true,
+        toolUse: true
+      };
+      console.log("Warning: capabilities not configured, setting default values:", config.capabilities);
+    }
+    
     if (isClaudeSonnet37) {
       const options = config.defaultCompletionOptions;
       
@@ -310,7 +362,8 @@ export default class Databricks extends OpenAI {
     console.log("Loaded config:", { 
       apiKeyExists: !!modelConfig.apiKey, 
       endpoint: modelConfig.apiBase,
-      defaultCompletionOptionsExist: !!modelConfig.defaultCompletionOptions
+      defaultCompletionOptionsExist: !!modelConfig.defaultCompletionOptions,
+      capabilities: modelConfig.capabilities
     });
     
     if (!modelConfig.apiKey || !modelConfig.apiBase) {
@@ -324,6 +377,12 @@ export default class Databricks extends OpenAI {
       ...opts,
       apiKey: opts.apiKey ?? modelConfig.apiKey,
       apiBase: opts.apiBase ?? modelConfig.apiBase,
+      capabilities: modelConfig.capabilities || {
+        agent: true,
+        chat: true,
+        edit: true,
+        toolUse: true
+      }
     };
     
     opts.apiBase = (opts.apiBase ?? "").replace(/\/+$/, "");
@@ -445,8 +504,23 @@ export default class Databricks extends OpenAI {
       this.thinkingProgress = Math.min(0.95, this.thinkingProgress + progressIncrement);
     }
     
-    // Update the thinking panel with the latest content
-    updateThinking(text, this.thinkingPhase, this.thinkingProgress);
+    // バッファに現在のチャンクを追加
+    this.thinkingBuffer += text;
+    this.pendingThinkingUpdates.push(text);
+    
+    // 更新間隔に達したときだけ思考パネルを更新
+    const now = Date.now();
+    if (now - this.lastThinkingUpdateTime > this.thinkingUpdateInterval) {
+      // 保留中の更新をすべて送信
+      if (this.pendingThinkingUpdates.length > 0) {
+        const combinedUpdates = this.pendingThinkingUpdates.join("");
+        this.pendingThinkingUpdates = [];
+        
+        // 思考パネルを更新
+        updateThinking(combinedUpdates, this.thinkingPhase, this.thinkingProgress);
+        this.lastThinkingUpdateTime = now;
+      }
+    }
     
     return text;
   }
@@ -467,6 +541,21 @@ export default class Databricks extends OpenAI {
     return Math.min(0.95, (timeProgress * 0.3) + (tokenProgress * 0.3) + (this.thinkingProgress * 0.4));
   }
 
+  // ツール定義をDatabricksのAPI形式に変換
+  private static convertToolDefinitionsForDatabricks(tools: any[]): any[] {
+    return tools.map(tool => {
+      // Databricks API形式に変換
+      return {
+        type: "function",
+        function: {
+          name: tool.name || tool.function?.name,
+          description: tool.description || tool.function?.description,
+          parameters: tool.parameters || tool.function?.parameters
+        }
+      };
+    });
+  }
+
   private convertArgs(options: CompletionOptions): any {
     console.log("Converting args with options:", {
       temperature: options.temperature,
@@ -475,7 +564,10 @@ export default class Databricks extends OpenAI {
       maxTokens: options.maxTokens,
       reasoning: options.reasoning,
       reasoningBudgetTokens: options.reasoningBudgetTokens,
-      stream: options.stream
+      stream: options.stream,
+      // ツール関連のオプションも表示
+      tools: options.tools ? `[${options.tools.length} tools]` : undefined,
+      toolChoice: options.toolChoice
     });
     
     const enableStreaming = this.getEnableStreamingFromConfig();
@@ -524,6 +616,8 @@ export default class Databricks extends OpenAI {
       this.thinkingBuffer = "";
       this.totalThinkingTokens = 0;
       this.thinkingStartTime = Date.now();
+      this.lastThinkingUpdateTime = Date.now();
+      this.pendingThinkingUpdates = [];
       
       // Notify the thinking panel that we're starting to think
       updateThinking("Starting a new thinking process...\n\n", "initial", 0);
@@ -545,6 +639,21 @@ export default class Databricks extends OpenAI {
       console.log("Ensured max_tokens is greater than thinking budget:", maxTokens);
     }
     
+    // ツール関連の設定を追加
+    if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+      console.log("Adding tool definitions to request");
+      finalOptions.tools = Databricks.convertToolDefinitionsForDatabricks(options.tools);
+      
+      // ツール選択方法を設定
+      if (options.toolChoice) {
+        finalOptions.tool_choice = options.toolChoice;
+      } else {
+        finalOptions.tool_choice = "auto";
+      }
+      
+      console.log(`Added ${finalOptions.tools.length} tools to request with tool_choice=${finalOptions.tool_choice}`);
+    }
+    
     console.log("Final API parameters:", JSON.stringify(finalOptions, null, 2));
     
     return finalOptions;
@@ -562,6 +671,27 @@ export default class Databricks extends OpenAI {
         return {
           role: message.role === "user" ? "user" : "assistant",
           content: message.content
+        };
+      } else if (message.role === "assistant" && message.tool_calls) {
+        // ツール呼び出しを含むアシスタントメッセージをサポート
+        return {
+          role: "assistant",
+          content: message.content || "",
+          tool_calls: message.tool_calls.map(call => ({
+            id: call.id,
+            type: "function",
+            function: {
+              name: call.function.name,
+              arguments: call.function.arguments
+            }
+          }))
+        };
+      } else if (message.role === "tool" && message.tool_call_id) {
+        // ツール応答メッセージをサポート
+        return {
+          role: "tool",
+          content: message.content || "",
+          tool_call_id: message.tool_call_id
         };
       } else {
         console.log("Converting complex message content");
@@ -617,6 +747,14 @@ export default class Databricks extends OpenAI {
       console.log("Using Claude 3.7 native thinking capabilities via API parameters");
     }
     
+    // Agentモードを使用する場合の追加指示
+    if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+      const agentInstructions = `\n\nWhen appropriate, use the provided tools to help solve the problem. These tools allow you to interact with the external environment to gather information or perform actions needed to complete the task.`;
+      
+      systemMessage += agentInstructions;
+      console.log("Added agent instructions to system message");
+    }
+    
     return systemMessage;
   }
 
@@ -662,6 +800,11 @@ export default class Databricks extends OpenAI {
           if (json.thinking) {
             return "[Thinking Process] " + json.thinking;
           }
+          
+          // ツール呼び出しの処理
+          if (json.tool_calls) {
+            return JSON.stringify(json.tool_calls);
+          }
         } catch (e) {
           continue;
         }
@@ -706,11 +849,26 @@ export default class Databricks extends OpenAI {
     
     const enhancedSystemMessage = this.createEnhancedSystemMessage(options, originalSystemMessage);
     
+    // Agent機能のためのツール定義サポートを追加
+    let toolsParameter: any = undefined;
+    
+    if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+      console.log(`Converting ${options.tools.length} tools for Databricks API`);
+      toolsParameter = Databricks.convertToolDefinitionsForDatabricks(options.tools);
+    }
+    
     const body = {
       ...this.convertArgs(options),
       messages: convertedMessages,
       system: enhancedSystemMessage
     };
+    
+    // ツールが定義されている場合はリクエストに追加
+    if (toolsParameter) {
+      body.tools = toolsParameter;
+      // ツールの選択パラメータを設定
+      body.tool_choice = options.toolChoice || "auto";
+    }
     
     const enableStreaming = this.getEnableStreamingFromConfig();
     body.stream = enableStreaming && (body.stream !== false);
@@ -797,6 +955,21 @@ export default class Databricks extends OpenAI {
               content: jsonResponse.message.content
             };
             yield message;
+          } else if (jsonResponse.tool_calls && Array.isArray(jsonResponse.tool_calls)) {
+            // ツール呼び出しの処理
+            const message: ChatMessage = {
+              role: "assistant",
+              content: "",
+              tool_calls: jsonResponse.tool_calls.map((call: any) => ({
+                id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                type: "function",
+                function: {
+                  name: call.function.name,
+                  arguments: call.function.arguments
+                }
+              }))
+            };
+            yield message;
           } else {
             console.log("Unknown response format:", jsonResponse);
             const message: ChatMessage = {
@@ -865,6 +1038,32 @@ export default class Databricks extends OpenAI {
               return { done: true, messages: out };
             }
             
+            // ツール呼び出しの検出
+            if (json.choices && json.choices[0]?.message?.tool_calls) {
+              console.log("Detected tool calls response");
+              
+              const toolCalls = json.choices[0].message.tool_calls;
+              const message: ChatMessage = {
+                role: "assistant",
+                content: "",
+                tool_calls: toolCalls.map((call: any) => ({
+                  id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                  type: "function",
+                  function: {
+                    name: call.function.name,
+                    arguments: call.function.arguments
+                  }
+                }))
+              };
+              out.push(message);
+              buffer = "";
+              
+              // Signal the thinking panel that thinking is complete
+              thinkingCompleted();
+              
+              return { done: true, messages: out };
+            }
+            
             if (json.thinking || (json.content && json.content[0]?.type === "reasoning")) {
               const thinkingContent = json.thinking || 
                                     (json.content && json.content[0]?.type === "reasoning" 
@@ -896,13 +1095,19 @@ export default class Databricks extends OpenAI {
                   }
                 };
                 
-                // この部分でThinkingContentをChatMessageに変換
-                const chatMessage: ChatMessage = {
+                // 特別なフラグを設定して即時更新を強制
+                const chatMessage: ThinkingChatMessage = {
                   role: "assistant",
-                  content: `[thinking] ${formattedThinking}`
+                  content: `[thinking] ${formattedThinking}`,
+                  isThinking: true,
+                  thinking_metadata: {
+                    phase: this.thinkingPhase,
+                    progress: progress,
+                    formatted_text: formattedThinking
+                  }
                 };
                 
-                out.push(chatMessage);
+                out.push(chatMessage as ChatMessage);
                 buffer = "";
                 return { done: false, messages: out };
               }
@@ -937,13 +1142,19 @@ export default class Databricks extends OpenAI {
               // Update progress estimate
               const progress = this.estimateThinkingProgress();
               
-              // ThinkingContentをChatMessageに変換
-              const chatMessage: ChatMessage = {
+              // 特別なフラグを設定して即時更新を強制
+              const chatMessage: ThinkingChatMessage = {
                 role: "assistant",
-                content: `[thinking] ${formattedThinking}`
+                content: `[thinking] ${formattedThinking}`,
+                isThinking: true,
+                thinking_metadata: {
+                  phase: this.thinkingPhase,
+                  progress: progress,
+                  formatted_text: formattedThinking
+                }
               };
               
-              out.push(chatMessage);
+              out.push(chatMessage as ChatMessage);
               continue;
             }
             
@@ -1004,13 +1215,19 @@ export default class Databricks extends OpenAI {
                 // Update progress estimate
                 const progress = this.estimateThinkingProgress();
                 
-                // ThinkingContentをChatMessageに変換
-                const chatMessage: ChatMessage = {
+                // 特別なフラグを設定して即時更新を強制
+                const chatMessage: ThinkingChatMessage = {
                   role: "assistant",
-                  content: `[thinking] ${formattedThinking}`
+                  content: `[thinking] ${formattedThinking}`,
+                  isThinking: true,
+                  thinking_metadata: {
+                    phase: this.thinkingPhase,
+                    progress: progress,
+                    formatted_text: formattedThinking
+                  }
                 };
                 
-                out.push(chatMessage);
+                out.push(chatMessage as ChatMessage);
               }
             }
             else if (json.type === "content_block_start" && json.content_block?.type === "thinking") {
@@ -1029,13 +1246,19 @@ export default class Databricks extends OpenAI {
                 // Update progress estimate
                 const progress = this.estimateThinkingProgress();
                 
-                // ThinkingContentをChatMessageに変換
-                const chatMessage: ChatMessage = {
+                // 特別なフラグを設定して即時更新を強制
+                const chatMessage: ThinkingChatMessage = {
                   role: "assistant",
-                  content: `[thinking] ${formattedThinking}`
+                  content: `[thinking] ${formattedThinking}`,
+                  isThinking: true,
+                  thinking_metadata: {
+                    phase: this.thinkingPhase,
+                    progress: progress,
+                    formatted_text: formattedThinking
+                  }
                 };
                 
-                out.push(chatMessage);
+                out.push(chatMessage as ChatMessage);
               }
             }
             else if (json.type === "content_block_delta" && json.delta?.type === "thinking_delta") {
@@ -1054,13 +1277,19 @@ export default class Databricks extends OpenAI {
                 // Update progress estimate
                 const progress = this.estimateThinkingProgress();
                 
-                // ThinkingContentをChatMessageに変換
-                const chatMessage: ChatMessage = {
+                // 特別なフラグを設定して即時更新を強制
+                const chatMessage: ThinkingChatMessage = {
                   role: "assistant",
-                  content: `[thinking] ${formattedThinking}`
+                  content: `[thinking] ${formattedThinking}`,
+                  isThinking: true,
+                  thinking_metadata: {
+                    phase: this.thinkingPhase,
+                    progress: progress,
+                    formatted_text: formattedThinking
+                  }
                 };
                 
-                out.push(chatMessage);
+                out.push(chatMessage as ChatMessage);
               }
             }
             else if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
@@ -1078,6 +1307,24 @@ export default class Databricks extends OpenAI {
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.choices[0].delta.content
+              };
+              out.push(message);
+            }
+            else if (json.choices && json.choices[0]?.delta?.tool_calls) {
+              console.log("Detected OpenAI tool calls delta");
+              
+              // ツール呼び出しのデルタ更新
+              const message: ChatMessage = {
+                role: "assistant",
+                content: "",
+                tool_calls: json.choices[0].delta.tool_calls.map((call: any) => ({
+                  id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                  type: "function",
+                  function: {
+                    name: call.function.name,
+                    arguments: call.function.arguments || "{}"
+                  }
+                }))
               };
               out.push(message);
             }
@@ -1105,6 +1352,23 @@ export default class Databricks extends OpenAI {
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.text
+              };
+              out.push(message);
+            }
+            else if (json.tool_calls && Array.isArray(json.tool_calls)) {
+              console.log("Detected direct tool calls format");
+              
+              const message: ChatMessage = {
+                role: "assistant",
+                content: "",
+                tool_calls: json.tool_calls.map((call: any) => ({
+                  id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                  type: "function",
+                  function: {
+                    name: call.function.name,
+                    arguments: call.function.arguments || "{}"
+                  }
+                }))
               };
               out.push(message);
             }
@@ -1179,16 +1443,68 @@ export default class Databricks extends OpenAI {
             
             const { done: end, messages } = parseSSE(decodedChunk);
             
+            // 各メッセージごとに即時yieldして出力を更新
             for (const m of messages) {
-              // すべてのメッセージをChatMessageとして処理
-              if ('type' in m && m.type === 'thinking') {
+              // 大きな思考チャンクを分割して処理（UIのレスポンシブ性向上）
+              if ('type' in m && m.type === 'thinking' && m.thinking.length > 2000) {
+                // 長い思考内容は段落ごとに分割して処理
+                const paragraphs = m.thinking.split(/\n\n+/);
+                let buffer = "";
+                
+                for (const paragraph of paragraphs) {
+                  buffer += paragraph + "\n\n";
+                  
+                  // ある程度たまったらyield
+                  if (buffer.length > 500) {
+                    const chatMessage: ThinkingChatMessage = {
+                      role: "assistant",
+                      content: `[thinking] ${buffer}`,
+                      isThinking: true,
+                      thinking_metadata: {
+                        phase: this.thinkingPhase,
+                        progress: this.thinkingProgress,
+                        formatted_text: buffer
+                      }
+                    };
+                    yield chatMessage as ChatMessage;
+                    buffer = "";
+                  }
+                }
+                
+                // 残りがあれば最後にyield
+                if (buffer) {
+                  const chatMessage: ThinkingChatMessage = {
+                    role: "assistant",
+                    content: `[thinking] ${buffer}`,
+                    isThinking: true,
+                    thinking_metadata: {
+                      phase: this.thinkingPhase,
+                      progress: this.thinkingProgress,
+                      formatted_text: buffer
+                    }
+                  };
+                  yield chatMessage as ChatMessage;
+                }
+              }
+              // ThinkingContentかどうかを確認
+              else if ('type' in m && m.type === 'thinking') {
                 // ThinkingContentをChatMessageに変換して返す
-                const chatMessage: ChatMessage = {
+                const chatMessage: ThinkingChatMessage = {
                   role: "assistant",
-                  content: `[thinking] ${m.thinking}`
+                  content: `[thinking] ${m.thinking}`,
+                  isThinking: true,
+                  thinking_metadata: {
+                    phase: this.thinkingPhase,
+                    progress: this.thinkingProgress,
+                    formatted_text: m.thinking
+                  }
                 };
-                yield chatMessage;
+                yield chatMessage as ChatMessage;
+              } else if ((m as ThinkingChatMessage).isThinking) {
+                // 既にThinkingChatMessageになっている場合はそのままyield
+                yield m as ChatMessage;
               } else {
+                // 通常のChatMessageの場合
                 yield m as ChatMessage;
               }
             }
@@ -1240,11 +1556,17 @@ export default class Databricks extends OpenAI {
           for (const m of messages) {
             if ('type' in m && m.type === 'thinking') {
               // ThinkingContentをChatMessageに変換して返す
-              const chatMessage: ChatMessage = {
+              const chatMessage: ThinkingChatMessage = {
                 role: "assistant", 
-                content: `[thinking] ${m.thinking}`
+                content: `[thinking] ${m.thinking}`,
+                isThinking: true,
+                thinking_metadata: {
+                  phase: this.thinkingPhase,
+                  progress: this.thinkingProgress,
+                  formatted_text: m.thinking
+                }
               };
-              yield chatMessage;
+              yield chatMessage as ChatMessage;
             } else {
               yield m as ChatMessage;
             }
@@ -1296,15 +1618,68 @@ export default class Databricks extends OpenAI {
             
             const { done, messages } = parseSSE(decodedChunk);
             
+            // 各メッセージごとに即時yieldして出力を更新
             for (const m of messages) {
-              if ('type' in m && m.type === 'thinking') {
+              // 大きな思考チャンクを分割して処理（UIのレスポンシブ性向上）
+              if ('type' in m && m.type === 'thinking' && m.thinking.length > 2000) {
+                // 長い思考内容は段落ごとに分割して処理
+                const paragraphs = m.thinking.split(/\n\n+/);
+                let buffer = "";
+                
+                for (const paragraph of paragraphs) {
+                  buffer += paragraph + "\n\n";
+                  
+                  // ある程度たまったらyield
+                  if (buffer.length > 500) {
+                    const chatMessage: ThinkingChatMessage = {
+                      role: "assistant",
+                      content: `[thinking] ${buffer}`,
+                      isThinking: true,
+                      thinking_metadata: {
+                        phase: this.thinkingPhase,
+                        progress: this.thinkingProgress,
+                        formatted_text: buffer
+                      }
+                    };
+                    yield chatMessage as ChatMessage;
+                    buffer = "";
+                  }
+                }
+                
+                // 残りがあれば最後にyield
+                if (buffer) {
+                  const chatMessage: ThinkingChatMessage = {
+                    role: "assistant",
+                    content: `[thinking] ${buffer}`,
+                    isThinking: true,
+                    thinking_metadata: {
+                      phase: this.thinkingPhase,
+                      progress: this.thinkingProgress,
+                      formatted_text: buffer
+                    }
+                  };
+                  yield chatMessage as ChatMessage;
+                }
+              }
+              // ThinkingContentかどうかを確認
+              else if ('type' in m && m.type === 'thinking') {
                 // ThinkingContentをChatMessageに変換して返す
-                const chatMessage: ChatMessage = {
+                const chatMessage: ThinkingChatMessage = {
                   role: "assistant",
-                  content: `[thinking] ${m.thinking}`
+                  content: `[thinking] ${m.thinking}`,
+                  isThinking: true,
+                  thinking_metadata: {
+                    phase: this.thinkingPhase,
+                    progress: this.thinkingProgress,
+                    formatted_text: m.thinking
+                  }
                 };
-                yield chatMessage;
+                yield chatMessage as ChatMessage;
+              } else if ((m as ThinkingChatMessage).isThinking) {
+                // 既にThinkingChatMessageになっている場合はそのままyield
+                yield m as ChatMessage;
               } else {
+                // 通常のChatMessageの場合
                 yield m as ChatMessage;
               }
             }
@@ -1366,11 +1741,17 @@ export default class Databricks extends OpenAI {
           for (const m of messages) {
             if ('type' in m && m.type === 'thinking') {
               // ThinkingContentをChatMessageに変換して返す
-              const chatMessage: ChatMessage = {
+              const chatMessage: ThinkingChatMessage = {
                 role: "assistant",
-                content: `[thinking] ${m.thinking}`
+                content: `[thinking] ${m.thinking}`,
+                isThinking: true,
+                thinking_metadata: {
+                  phase: this.thinkingPhase,
+                  progress: this.thinkingProgress,
+                  formatted_text: m.thinking
+                }
               };
-              yield chatMessage;
+              yield chatMessage as ChatMessage;
             } else {
               yield m as ChatMessage;
             }
