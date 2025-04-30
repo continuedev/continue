@@ -1454,7 +1454,7 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["llama3.1-8b", "llama3.1-70b"]
+                "enum": ["llama3.1-8b", "llama3.1-70b", "llama-4-scout-17b-16e-instruct"]
               }
             }
           }
