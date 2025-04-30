@@ -609,7 +609,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     contextLength: llm.contextLength,
     template: llm.template,
     completionOptions: llm.completionOptions,
-    baseAgentSystemMessage: llm.baseChatSystemMessage, // JSON config does not have a key for agent system message
+    baseAgentSystemMessage: llm.baseAgentSystemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),
