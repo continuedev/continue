@@ -40,23 +40,13 @@ export function EditFile(props: EditToolCallProps) {
   }
 
   return (
-    <>
-      <StyledMarkdownPreview
-        isRenderingInStepContainer
-        disableManualApply
-        source={src}
-        forceStreamId={applyState?.streamId}
-        expandCodeblocks={false}
-        itemIndex={props.historyIndex}
-      />
-      {/* {!isStreaming && applyState?.status === "done" && (
-        <div className={`m-2 flex items-center justify-center`}>
-          <AcceptRejectAllButtons
-            pendingApplyStates={[applyState]}
-            onAcceptOrReject={async (outcome) => {}}
-          />
-        </div>
-      )} */}
-    </>
+    <StyledMarkdownPreview
+      isRenderingInStepContainer
+      disableManualApply
+      source={src}
+      forceStreamId={applyState?.streamId}
+      expandCodeblocks={false}
+      itemIndex={props.historyIndex}
+    />
   );
 }

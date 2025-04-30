@@ -1,14 +1,14 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
 import { CodeToEdit, MessageModes, RangeInFileWithContents } from "core";
-import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { stripImages } from "core/util/messageContent";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import {
   clearCodeToEdit,
-  setEditStateApplyState,
+  INITIAL_EDIT_APPLY_STATE,
   setReturnCursorToEditorAfterEdit,
   setReturnToModeAfterEdit,
+  updateEditStateApplyState,
 } from "../slices/editModeState";
 import { newSession, setActive, setMode } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -125,12 +125,7 @@ export const enterEditMode = createAsyncThunk<
         generateTitle: false,
       }),
     );
-    dispatch(
-      setEditStateApplyState({
-        streamId: EDIT_MODE_STREAM_ID,
-        status: "not-started",
-      }),
-    );
+    dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
     dispatch(setMode("edit"));
   },
 );

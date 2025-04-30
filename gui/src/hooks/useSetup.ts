@@ -14,8 +14,8 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
 import { setConfigResult } from "../redux/slices/configSlice";
 import {
-  setEditStateApplyState,
   setLastNonEditSessionEmpty,
+  updateEditStateApplyState,
 } from "../redux/slices/editModeState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
@@ -263,7 +263,7 @@ function useSetup() {
     async (state) => {
       if (state.streamId === EDIT_MODE_STREAM_ID) {
         console.log(state);
-        dispatch(setEditStateApplyState(state));
+        dispatch(updateEditStateApplyState(state));
       } else {
         // chat or agent
         dispatch(updateApplyState(state));

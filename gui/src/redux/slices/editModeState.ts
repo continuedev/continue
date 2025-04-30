@@ -11,10 +11,13 @@ export interface EditModeState {
   lastNonEditSessionWasEmpty: boolean;
 }
 
+export const INITIAL_EDIT_APPLY_STATE: ApplyState = {
+  streamId: EDIT_MODE_STREAM_ID,
+  status: "not-started",
+};
+
 const initialState: EditModeState = {
-  applyState: {
-    streamId: EDIT_MODE_STREAM_ID,
-  },
+  applyState: INITIAL_EDIT_APPLY_STATE,
   codeToEdit: [],
   returnCursorToEditorAfterEdit: false,
   returnToMode: "chat",
@@ -37,8 +40,14 @@ export const editModeStateSlice = createSlice({
     ) => {
       state.returnToMode = payload;
     },
-    setEditStateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
-      state.applyState = payload;
+    updateEditStateApplyState: (
+      state,
+      { payload }: PayloadAction<ApplyState>,
+    ) => {
+      state.applyState = {
+        ...state.applyState,
+        ...payload,
+      };
     },
     setCodeToEdit: (
       state,
@@ -72,7 +81,7 @@ export const {
   setReturnCursorToEditorAfterEdit,
   clearCodeToEdit,
   setCodeToEdit,
-  setEditStateApplyState,
+  updateEditStateApplyState,
   setLastNonEditSessionEmpty,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;
