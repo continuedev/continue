@@ -49,9 +49,9 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
       prompt: MessageContent;
       range: RangeInFileWithContents;
     },
-    void,
+    string | undefined,
   ];
-  "edit/exit": [{ shouldFocusEditor: boolean }, void];
+  "edit/clearDecorations": [{ shouldFocusEditor: boolean }, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

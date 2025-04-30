@@ -5,9 +5,9 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
-import { InputModifiers, RangeInFileWithContents } from "core";
+import { InputModifiers } from "core";
 import { streamResponse } from "core/llm/stream";
-import { renderChatMessage, stripImages } from "core/util/messageContent";
+import { renderChatMessage } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -21,7 +21,6 @@ import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
 import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import { TabBar } from "../../components/TabBar/TabBar";
@@ -32,8 +31,6 @@ import {
   selectCurrentToolCall,
   selectCurrentToolCallApplyState,
 } from "../../redux/selectors/selectCurrentToolCall";
-import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { setEditStateApplyStatus } from "../../redux/slices/editModeState";
 import {
   newSession,
   updateToolCallOutput,
@@ -44,7 +41,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { exitEditMode } from "../../redux/thunks/editMode";
+import { exitEditMode, streamEditThunk } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
@@ -103,7 +100,9 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const selectedChatModel = useAppSelector(selectSelectedChatModel);
+  const selectedModels = useAppSelector(
+    (store) => store.config?.config.selectedModelByRole,
+  );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -172,7 +171,20 @@ export function Chat() {
           "Cannot submit message while awaiting tool call apply",
         );
       }
-      if (selectedChatModel?.provider === "free-trial") {
+
+      const model =
+        mode === "edit"
+          ? (selectedModels?.edit ?? selectedModels?.chat)
+          : selectedModels?.chat;
+      if (!model) {
+        return;
+      }
+
+      if (mode === "edit" && codeToEdit.length === 0) {
+        return;
+      }
+
+      if (model.provider === "free-trial") {
         const newCount = incrementFreeTrialCount();
 
         if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
@@ -200,14 +212,18 @@ export function Chat() {
       }
 
       if (mode === "edit") {
-        handleSingleRangeEditOrInsertion(editorState);
-        return;
-      }
+        dispatch(
+          streamEditThunk({
+            editorState,
+            codeToEdit,
+          }),
+        );
+      } else {
+        dispatch(streamResponseThunk({ editorState, modifiers, index }));
 
-      dispatch(streamResponseThunk({ editorState, modifiers, index }));
-
-      if (editorToClearOnSend) {
-        editorToClearOnSend.commands.clearContent();
+        if (editorToClearOnSend) {
+          editorToClearOnSend.commands.clearContent();
+        }
       }
 
       // Increment localstorage counter for popup
@@ -223,46 +239,8 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [
-      history,
-      selectedChatModel,
-      streamResponse,
-      mode,
-      codeToEdit,
-      toolCallState,
-    ],
+    [history, selectedModels, streamResponse, mode, codeToEdit, toolCallState],
   );
-
-  async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    if (!selectedChatModel) {
-      console.error("No selected chat model");
-      return;
-    }
-
-    const [contextItems, __, userInstructions, _] = await resolveEditorContent({
-      editorState,
-      modifiers: {
-        noContext: true,
-        useCodebase: false,
-      },
-      ideMessenger,
-      defaultContextProviders: [],
-      availableSlashCommands: [],
-      dispatch,
-    });
-
-    const prompt = [
-      ...contextItems.map((item) => item.content),
-      stripImages(userInstructions),
-    ].join("\n\n");
-
-    ideMessenger.post("edit/sendPrompt", {
-      prompt,
-      range: codeToEdit[0] as RangeInFileWithContents,
-    });
-
-    dispatch(setEditStateApplyStatus("streaming"));
-  }
 
   useWebviewListener(
     "newSession",
@@ -327,13 +305,13 @@ export function Chat() {
             >
               {item.message.role === "user" ? (
                 <>
-                  {mode === "edit" && <CodeToEditCard />}
+                  {/* {mode === "edit" && <CodeToEditCard />} */}
                   <ContinueInputBox
                     onEnter={(editorState, modifiers) =>
                       sendInput(editorState, modifiers, index)
                     }
                     isLastUserInput={isLastUserInput(index)}
-                    isMainInput={mode === "edit"}
+                    isMainInput={false}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
                     inputId={item.message.id}
@@ -405,19 +383,17 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        {mode === "edit" && history.length > 0 ? null : (
-          <>
-            {mode === "edit" && <CodeToEditCard />}
-            <ContinueInputBox
-              isMainInput
-              isLastUserInput={false}
-              onEnter={(editorState, modifiers, editor) =>
-                sendInput(editorState, modifiers, undefined, editor)
-              }
-              inputId={MAIN_EDITOR_INPUT_ID}
-            />
-          </>
-        )}
+        <>
+          {mode === "edit" && <CodeToEditCard />}
+          <ContinueInputBox
+            isMainInput
+            isLastUserInput={false}
+            onEnter={(editorState, modifiers, editor) =>
+              sendInput(editorState, modifiers, undefined, editor)
+            }
+            inputId={MAIN_EDITOR_INPUT_ID}
+          />
+        </>
 
         <div
           style={{

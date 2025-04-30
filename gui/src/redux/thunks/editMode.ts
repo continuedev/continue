@@ -1,5 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { MessageModes } from "core";
+import { JSONContent } from "@tiptap/core";
+import { CodeToEdit, MessageModes, RangeInFileWithContents } from "core";
+import { stripImages } from "core/util/messageContent";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import {
   clearCodeToEdit,
   setEditStateApplyStatus,
@@ -9,6 +12,52 @@ import {
 import { newSession, setMode } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { loadLastSession, saveCurrentSession } from "./session";
+import { streamThunkWrapper } from "./streamThunkWrapper";
+
+export const streamEditThunk = createAsyncThunk<
+  void,
+  {
+    editorState: JSONContent;
+    codeToEdit: CodeToEdit[];
+  },
+  ThunkApiType
+>(
+  "chat/streamResponse",
+  async ({ editorState, codeToEdit }, { dispatch, extra, getState }) => {
+    await dispatch(
+      streamThunkWrapper(async () => {
+        const [contextItems, __, userInstructions, _] =
+          await resolveEditorContent({
+            editorState,
+            modifiers: {
+              noContext: true,
+              useCodebase: false,
+            },
+            ideMessenger: extra.ideMessenger,
+            defaultContextProviders: [],
+            availableSlashCommands: [],
+            dispatch,
+          });
+
+        const prompt = [
+          ...contextItems.map((item) => item.content),
+          stripImages(userInstructions),
+        ].join("\n\n");
+
+        const response = await extra.ideMessenger.request("edit/sendPrompt", {
+          prompt,
+          range: codeToEdit[0] as RangeInFileWithContents,
+        });
+
+        if (response.status === "error") {
+          throw new Error(response.error);
+        }
+
+        dispatch(setEditStateApplyStatus("streaming"));
+      }),
+    );
+  },
+);
 
 export const exitEditMode = createAsyncThunk<
   void,
@@ -44,7 +93,7 @@ export const exitEditMode = createAsyncThunk<
 
     dispatch(setMode(goToMode ?? state.editModeState.returnToMode));
 
-    extra.ideMessenger.post("edit/exit", {
+    extra.ideMessenger.post("edit/clearDecorations", {
       shouldFocusEditor: state.editModeState.returnCursorToEditorAfterEdit,
     });
   },

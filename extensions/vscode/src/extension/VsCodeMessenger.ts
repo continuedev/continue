@@ -218,8 +218,9 @@ export class VsCodeMessenger {
         ),
         rules: config.rules,
       });
+      return fileAfterEdit;
     });
-    this.onWebview("edit/exit", async (msg) => {
+    this.onWebview("edit/clearDecorations", async (msg) => {
       if (msg.data.shouldFocusEditor) {
         const activeEditor = vscode.window.activeTextEditor;
 

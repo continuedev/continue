@@ -102,8 +102,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   }, [availableContextProviders, mode]);
 
   const historyKey = mode === "edit" ? "edit" : "chat";
-  const placeholder =
-    mode === "edit" ? "Describe changes, '#' to add files" : undefined;
+  const placeholder = mode === "edit" ? "Describe changes" : undefined;
 
   const toolbarOptions: ToolbarOptions =
     mode === "edit"
