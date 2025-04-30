@@ -158,12 +158,6 @@ const Layout = () => {
           fromEditor: true,
         }),
       );
-      dispatch(
-        enterEditMode({
-          returnCursorToEditor: true,
-          returnToMode: mode,
-        }),
-      );
     },
     [mode],
   );

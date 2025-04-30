@@ -14,8 +14,7 @@ import { lightGray } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
-import { exitEditMode } from "../../redux/thunks";
-import { enterEditMode } from "../../redux/thunks/editMode";
+import { enterEditMode, exitEditMode } from "../../redux/thunks/editMode";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
 import {
   Listbox,

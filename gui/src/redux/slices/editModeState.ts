@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ApplyState, ApplyStateStatus, CodeToEdit, MessageModes } from "core";
+import { ApplyState, CodeToEdit, MessageModes } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 export interface EditModeState {
   // Array because of previous multi-file edit functionality
@@ -35,12 +35,6 @@ export const editModeStateSlice = createSlice({
     ) => {
       state.returnToMode = payload;
     },
-    setEditStateApplyStatus: (
-      state,
-      { payload }: PayloadAction<ApplyStateStatus>,
-    ) => {
-      state.applyState.status = payload;
-    },
     setEditStateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       state.applyState = payload;
     },
@@ -70,7 +64,6 @@ export const {
   setReturnCursorToEditorAfterEdit,
   clearCodeToEdit,
   setCodeToEdit,
-  setEditStateApplyStatus,
   setEditStateApplyState,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

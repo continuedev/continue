@@ -262,6 +262,7 @@ function useSetup() {
     "updateApplyState",
     async (state) => {
       if (state.streamId === EDIT_MODE_STREAM_ID) {
+        console.log(state);
         dispatch(setEditStateApplyState(state));
       } else {
         // chat or agent

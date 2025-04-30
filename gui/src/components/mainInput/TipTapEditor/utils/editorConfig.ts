@@ -23,7 +23,7 @@ import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
-import { exitEditMode } from "../../../../redux/thunks";
+import { exitEditMode } from "../../../../redux/thunks/editMode";
 import { getFontSize, isJetBrains } from "../../../../util";
 import * as ContinueExtensions from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";

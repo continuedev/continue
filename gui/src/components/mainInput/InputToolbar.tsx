@@ -9,7 +9,7 @@ import {
   selectCurrentToolCallApplyState,
 } from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { exitEditMode } from "../../redux/thunks";
+import { exitEditMode } from "../../redux/thunks/editMode";
 import {
   getAltKeyLabel,
   getMetaKeyLabel,

@@ -1,15 +1,16 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
 import { CodeToEdit, MessageModes, RangeInFileWithContents } from "core";
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { stripImages } from "core/util/messageContent";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import {
   clearCodeToEdit,
-  setEditStateApplyStatus,
+  setEditStateApplyState,
   setReturnCursorToEditorAfterEdit,
   setReturnToModeAfterEdit,
 } from "../slices/editModeState";
-import { newSession, setMode } from "../slices/sessionSlice";
+import { newSession, setActive, setMode } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { loadLastSession, saveCurrentSession } from "./session";
 import { streamThunkWrapper } from "./streamThunkWrapper";
@@ -26,6 +27,7 @@ export const streamEditThunk = createAsyncThunk<
   async ({ editorState, codeToEdit }, { dispatch, extra, getState }) => {
     await dispatch(
       streamThunkWrapper(async () => {
+        dispatch(setActive());
         const [contextItems, __, userInstructions, _] =
           await resolveEditorContent({
             editorState,
@@ -52,8 +54,6 @@ export const streamEditThunk = createAsyncThunk<
         if (response.status === "error") {
           throw new Error(response.error);
         }
-
-        dispatch(setEditStateApplyStatus("streaming"));
       }),
     );
   },
@@ -79,6 +79,10 @@ export const exitEditMode = createAsyncThunk<
       });
     }
 
+    extra.ideMessenger.post("edit/clearDecorations", {
+      shouldFocusEditor: state.editModeState.returnCursorToEditorAfterEdit,
+    });
+
     dispatch(clearCodeToEdit());
 
     if (openNewSession) {
@@ -92,10 +96,6 @@ export const exitEditMode = createAsyncThunk<
     }
 
     dispatch(setMode(goToMode ?? state.editModeState.returnToMode));
-
-    extra.ideMessenger.post("edit/clearDecorations", {
-      shouldFocusEditor: state.editModeState.returnCursorToEditorAfterEdit,
-    });
   },
 );
 
@@ -125,7 +125,12 @@ export const enterEditMode = createAsyncThunk<
         generateTitle: false,
       }),
     );
-    dispatch(setEditStateApplyStatus("not-started"));
+    dispatch(
+      setEditStateApplyState({
+        streamId: EDIT_MODE_STREAM_ID,
+        status: "not-started",
+      }),
+    );
     dispatch(setMode("edit"));
   },
 );

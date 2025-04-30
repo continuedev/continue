@@ -9,7 +9,14 @@ import { InputModifiers } from "core";
 import { streamResponse } from "core/llm/stream";
 import { renderChatMessage } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
@@ -41,7 +48,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { exitEditMode, streamEditThunk } from "../../redux/thunks/editMode";
+import { streamEditThunk } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
@@ -51,6 +58,7 @@ import {
 } from "../../util/freeTrial";
 
 import CodeToEditCard from "../../components/mainInput/CodeToEditCard";
+import EditModeDetails from "../../components/mainInput/EditModeDetails";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -113,19 +121,18 @@ export function Chat() {
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
+  const mode = useAppSelector((store) => store.session.mode);
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
   );
-  const pendingApplyStates = applyStates.filter(
-    (state) => state.status === "done",
-  );
-  const hasPendingApplies = pendingApplyStates.length > 0;
-  const mode = useAppSelector((store) => store.session.mode);
+
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
-  const jetbrains = isJetBrains();
+  const jetbrains = useMemo(() => {
+    return isJetBrains();
+  }, []);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -143,7 +150,7 @@ export function Chat() {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [isStreaming]);
+  }, [isStreaming, jetbrains]);
 
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
@@ -305,7 +312,6 @@ export function Chat() {
             >
               {item.message.role === "user" ? (
                 <>
-                  {/* {mode === "edit" && <CodeToEditCard />} */}
                   <ContinueInputBox
                     onEnter={(editorState, modifiers) =>
                       sendInput(editorState, modifiers, index)
@@ -384,6 +390,12 @@ export function Chat() {
       </StepsDiv>
       <div className={"relative"}>
         <>
+          {!isStreaming && mode !== "edit" && (
+            <AcceptRejectAllButtons
+              applyStates={applyStates}
+              onAcceptOrReject={async () => {}}
+            />
+          )}
           {mode === "edit" && <CodeToEditCard />}
           <ContinueInputBox
             isMainInput
@@ -393,6 +405,7 @@ export function Chat() {
             }
             inputId={MAIN_EDITOR_INPUT_ID}
           />
+          <EditModeDetails />
         </>
 
         <div
@@ -421,25 +434,7 @@ export function Chat() {
               )}
             </div>
           </div>
-
-          {hasPendingApplies && (
-            <AcceptRejectAllButtons
-              pendingApplyStates={pendingApplyStates}
-              onAcceptOrReject={async (outcome) => {
-                if (outcome === "acceptDiff") {
-                  await dispatch(
-                    loadLastSession({
-                      saveCurrentSession: false,
-                    }),
-                  );
-                  dispatch(exitEditMode({}));
-                }
-              }}
-            />
-          )}
-
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-
           {history.length === 0 && (
             <EmptyChatBody showOnboardingCard={onboardingCard.show} />
           )}

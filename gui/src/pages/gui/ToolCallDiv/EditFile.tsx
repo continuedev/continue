@@ -1,7 +1,6 @@
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import AcceptRejectAllButtons from "../../../components/AcceptRejectAllButtons";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -50,20 +49,14 @@ export function EditFile(props: EditToolCallProps) {
         expandCodeblocks={false}
         itemIndex={props.historyIndex}
       />
-      {/* TODO better indicator of generation at bottom */}
-      {/* {isStreaming && applyState?.status === "streaming" && (
-        <div className={`m-2 flex items-center justify-center`}>
-          Generating...
-        </div>
-      )} */}
-      {!isStreaming && applyState?.status === "done" && (
+      {/* {!isStreaming && applyState?.status === "done" && (
         <div className={`m-2 flex items-center justify-center`}>
           <AcceptRejectAllButtons
             pendingApplyStates={[applyState]}
             onAcceptOrReject={async (outcome) => {}}
           />
         </div>
-      )}
+      )} */}
     </>
   );
 }
