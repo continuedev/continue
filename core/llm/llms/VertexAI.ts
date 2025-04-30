@@ -22,7 +22,11 @@ class VertexAI extends BaseLLM {
 
   private clientPromise = new GoogleAuth({
     scopes: "https://www.googleapis.com/auth/cloud-platform",
-  }).getClient();
+  })
+    .getClient()
+    .catch((e) => {
+      console.warn(`Failed to load credentials for Vertex AI: ${e.message}`);
+    });
 
   private static getDefaultApiBaseFrom(options: LLMOptions) {
     const { region, projectId } = options;
@@ -60,8 +64,8 @@ class VertexAI extends BaseLLM {
 
   async fetch(url: RequestInfo | URL, init?: RequestInit) {
     const client = await this.clientPromise;
-    const { token } = await client.getAccessToken();
-    if (!token) {
+    const result = await client?.getAccessToken();
+    if (!result?.token) {
       throw new Error(
         "Could not get an access token. Set up your Google Application Default Credentials.",
       );
@@ -70,7 +74,7 @@ class VertexAI extends BaseLLM {
       ...init,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${result.token}`,
         ...init?.headers,
       },
     });
@@ -370,8 +374,8 @@ class VertexAI extends BaseLLM {
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
     const client = await this.clientPromise;
-    const { token } = await client.getAccessToken();
-    if (!token) {
+    const result = await client?.getAccessToken();
+    if (!result?.token) {
       throw new Error(
         "Could not get an access token. Set up your Google Application Default Credentials.",
       );
@@ -386,7 +390,7 @@ class VertexAI extends BaseLLM {
         }),
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${result.token}`,
         },
       },
     );
@@ -400,10 +404,6 @@ class VertexAI extends BaseLLM {
       (prediction: any) => prediction.embeddings.values,
     );
   }
-}
-
-async function delay(seconds: number) {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
 export default VertexAI;

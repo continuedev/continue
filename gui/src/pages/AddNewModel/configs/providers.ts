@@ -996,4 +996,24 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
   },
+  venice: {
+    title: "Venice",
+    provider: "venice",
+    icon: "venice.png",
+    description: "Venice.",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Venice API key",
+        required: true,
+      },
+    ],
+    packages: [
+      {...models.AUTODETECT}
+    ],
+    apiKeyUrl: "https://venice.ai/chat"
+  }
 };

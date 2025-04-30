@@ -349,8 +349,8 @@ export class Core {
       return await this.configHandler.getSerializedConfig();
     });
 
-    on("config/ideSettingsUpdate", (msg) => {
-      this.configHandler.updateIdeSettings(msg.data);
+    on("config/ideSettingsUpdate", async (msg) => {
+      await this.configHandler.updateIdeSettings(msg.data);
     });
 
     on("config/refreshProfiles", async (msg) => {
@@ -389,7 +389,7 @@ export class Core {
     });
 
     on("mcp/reloadServer", async (msg) => {
-      MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });
     // Context providers
     on("context/addDocs", async (msg) => {
@@ -743,7 +743,7 @@ export class Core {
     if (!config) {
       return false;
     }
-    
+
     const llm = config?.selectedModelByRole.chat;
     if (!llm) {
       throw new Error("No chat model selected");
@@ -1034,10 +1034,9 @@ export class Core {
     }
     this.indexingCancellationController = new AbortController();
     try {
-      for await (const update of (await this.codebaseIndexerPromise).refreshDirs(
-        paths,
-        this.indexingCancellationController.signal,
-      )) {
+      for await (const update of (
+        await this.codebaseIndexerPromise
+      ).refreshDirs(paths, this.indexingCancellationController.signal)) {
         let updateToSend = { ...update };
 
         void this.messenger.request("indexProgress", updateToSend);
@@ -1067,10 +1066,10 @@ export class Core {
       return;
     }
     this.indexingCancellationController = new AbortController();
-    try{
-      for await (const update of (await this.codebaseIndexerPromise).refreshFiles(
-        files,
-      )) {
+    try {
+      for await (const update of (
+        await this.codebaseIndexerPromise
+      ).refreshFiles(files)) {
         let updateToSend = { ...update };
 
         void this.messenger.request("indexProgress", updateToSend);
@@ -1093,18 +1092,18 @@ export class Core {
 
   // private
   handleIndexingError(e: any) {
-      if (e instanceof LLMError) {
-        // Need to report this specific error to the IDE for special handling
-        this.messenger.request("reportError", e);
-      }
-      // broadcast indexing error
-      let updateToSend: IndexingProgressUpdate = {
-        progress: 0,
-        status: "failed",
-        desc: e.message,
-      };
-      void this.messenger.request("indexProgress", updateToSend);
-      this.codebaseIndexingState = updateToSend;
-      void this.sendIndexingErrorTelemetry(updateToSend);
+    if (e instanceof LLMError) {
+      // Need to report this specific error to the IDE for special handling
+      void this.messenger.request("reportError", e);
+    }
+    // broadcast indexing error
+    let updateToSend: IndexingProgressUpdate = {
+      progress: 0,
+      status: "failed",
+      desc: e.message,
+    };
+    void this.messenger.request("indexProgress", updateToSend);
+    this.codebaseIndexingState = updateToSend;
+    void this.sendIndexingErrorTelemetry(updateToSend);
   }
 }

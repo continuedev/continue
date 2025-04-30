@@ -60,7 +60,7 @@ class Docker extends OpenAI implements ModelInstaller {
     }
 
     // Check if Docker Model Runner is active and enable it if needed
-    this.ensureModelRunnerEnabled();
+    this.ensureModelRunnerEnabled().catch((e) => {});
   }
 
   /**
@@ -198,7 +198,7 @@ class Docker extends OpenAI implements ModelInstaller {
       return { success: true, stdout, stderr };
     } catch (error) {
       console.error(`Failed to install Docker model ${targetModel}:`, error);
-// Fix: Type check the error before accessing message property
+      // Fix: Type check the error before accessing message property
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       throw new Error(
