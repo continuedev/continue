@@ -16,9 +16,9 @@ jobs:
           repo-token: ${{ secrets.CI_GITHUB_TOKEN }}
           assignees: sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa
           numOfAssignee: 1
-      - name: "Add default labels"
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: |
-            "needs-triage"
+      # - name: "Add default labels"
+      #   uses: actions-ecosystem/action-add-labels@v1
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     labels: |
+      #       "needs-triage"
