@@ -85,13 +85,13 @@ function InputToolbar(props: InputToolbarProps) {
         }}
       >
         <div className="xs:gap-1.5 flex flex-row items-center gap-1">
-          <HoverItem data-tooltip-id="mode-select-tooltip">
+          <HoverItem data-tooltip-id="mode-select-tooltip" className="!p-0">
             <ModeSelect />
             <ToolTip id="mode-select-tooltip" place="top">
               Select Mode
             </ToolTip>
           </HoverItem>
-          <HoverItem data-tooltip-id="model-select-tooltip">
+          <HoverItem data-tooltip-id="model-select-tooltip" className="!p-0">
             <ModelSelect />
             <ToolTip id="model-select-tooltip" place="top">
               Select Model

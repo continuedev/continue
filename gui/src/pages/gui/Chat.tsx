@@ -14,7 +14,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
 import AcceptRejectAllButtons from "../../components/AcceptRejectAllButtons";
-import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
@@ -54,6 +53,7 @@ import {
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
 
+import CodeToEditCard from "../../components/mainInput/CodeToEditCard";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";

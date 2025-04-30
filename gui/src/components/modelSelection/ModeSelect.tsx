@@ -136,7 +136,7 @@ function ModeSelect() {
       <div className="relative">
         <ListboxButton
           data-testid="mode-select-button"
-          className="gap-1 border-none px-2 py-0.5 text-gray-400 transition-colors duration-200"
+          className="xs:px-2 gap-1 border-none px-1.5 py-0.5 text-gray-400 transition-colors duration-200"
           style={{
             backgroundColor: `${lightGray}33`,
             borderRadius: "9999px",
