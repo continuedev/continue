@@ -53,8 +53,11 @@ const saveSubsetFilters = [
     // symbols
     // curCheckpointIndex
   ]),
-  // Don't persist any of the edit state for now
-  createFilter("editModeState", ["codeToEdit"]),
+  createFilter("editModeState", [
+    "returnToMode",
+    "lastNonEditSessionWasEmpty",
+    "codeToEdit",
+  ]),
   createFilter("config", ["defaultModelTitle"]),
   createFilter("ui", ["toolSettings", "toolGroupSettings"]),
   createFilter("indexing", []),
