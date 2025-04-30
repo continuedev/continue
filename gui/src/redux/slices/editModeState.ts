@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ApplyState, CodeToEdit, MessageContent } from "core";
+import { ApplyState, CodeToEdit, MessageContent, MessageModes } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 export interface EditModeState {
   codeToEdit: CodeToEdit[];
   applyState: ApplyState;
   previousInputs: MessageContent[];
-  enteredEditModeFromEditor: boolean;
+  returnCursorToEditorAfterEdit: boolean;
+  returnToMode: MessageModes;
 }
 
 const initialState: EditModeState = {
@@ -14,7 +15,8 @@ const initialState: EditModeState = {
   },
   previousInputs: [],
   codeToEdit: [],
-  enteredEditModeFromEditor: false,
+  returnCursorToEditorAfterEdit: false,
+  returnToMode: "chat",
 };
 
 export const editModeStateSlice = createSlice({
@@ -42,7 +44,7 @@ export const editModeStateSlice = createSlice({
         codeToEdit: CodeToEdit | CodeToEdit[];
       }>,
     ) => {
-      state.enteredEditModeFromEditor = payload.fromEditor;
+      state.returnCursorToEditorAfterEdit = payload.fromEditor;
       const entries = Array.isArray(payload.codeToEdit)
         ? payload.codeToEdit
         : [payload.codeToEdit];

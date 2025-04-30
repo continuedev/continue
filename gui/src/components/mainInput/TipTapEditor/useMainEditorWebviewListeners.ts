@@ -167,16 +167,6 @@ export function useMainEditorWebviewListeners({
   );
 
   useWebviewListener(
-    "focusEditWithoutClear",
-    async () => {
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 2000);
-    },
-    [editor],
-  );
-
-  useWebviewListener(
     "isContinueInputFocused",
     async () => {
       return !!editorFocusedRef.current;

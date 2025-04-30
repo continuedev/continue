@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { clearCodeToEdit, setEditDone } from "../slices/editModeState";
+import { clearCodeToEdit, clearPreviousInputs } from "../slices/editModeState";
 import { setMainEditorContentTrigger, setMode } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 
@@ -8,8 +8,8 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
   async (_, { dispatch, extra, getState }) => {
     const state = getState();
     const codeToEdit = state.editModeState.codeToEdit;
-    const enteredEditModeFromEditor =
-      state.editModeState.enteredEditModeFromEditor;
+    const returnCursorToEditorAfterEdit =
+      state.editModeState.returnCursorToEditorAfterEdit;
     // const editStreamId = state.editModeState.streamId;
 
     if (state.session.mode !== "edit") {
@@ -23,13 +23,13 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
     }
 
     dispatch(clearCodeToEdit());
-    dispatch(setEditDone());
+    dispatch(clearPreviousInputs());
     dispatch(setMainEditorContentTrigger(undefined));
 
     dispatch(setMode("chat"));
 
     extra.ideMessenger.post("edit/exit", {
-      shouldFocusEditor: enteredEditModeFromEditor,
+      shouldFocusEditor: returnCursorToEditorAfterEdit,
     });
   },
 );
