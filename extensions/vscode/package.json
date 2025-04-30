@@ -666,6 +666,7 @@
     "vscode-extension-tester": "^8.10.0"
   },
   "dependencies": {
+    "@continuedev/config-types": "^1.0.14",
     "@continuedev/fetch": "^1.0.3",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
