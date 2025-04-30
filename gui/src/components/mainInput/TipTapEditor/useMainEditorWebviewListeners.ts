@@ -3,7 +3,9 @@ import { InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { MutableRefObject } from "react";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
+import { useAppSelector } from "../../../redux/hooks";
 import {
+  addCodeToEdit,
   clearCodeToEdit,
   setNewestToolbarPreviewForInput,
 } from "../../../redux/slices/sessionSlice";
@@ -29,6 +31,8 @@ export function useMainEditorWebviewListeners({
   inputId: string;
   editorFocusedRef: MutableRefObject<boolean | undefined>;
 }) {
+  const messageMode = useAppSelector((state) => state.session.mode);
+
   useWebviewListener(
     "isContinueInputFocused",
     async () => {
@@ -123,6 +127,16 @@ export function useMainEditorWebviewListeners({
         }
       }
 
+      if (messageMode === "edit" && contextItem.uri?.value) {
+        dispatch(
+          addCodeToEdit({
+            filepath: data.rangeInFileWithContents.filepath,
+            contents: data.rangeInFileWithContents.contents,
+            range: data.rangeInFileWithContents.range,
+          }),
+        );
+      }
+
       editor
         .chain()
         .insertContentAt(index, {
@@ -155,7 +169,7 @@ export function useMainEditorWebviewListeners({
         editor.commands.focus("end");
       }, 20);
     },
-    [editor, inputId, onEnterRef.current],
+    [editor, inputId, onEnterRef.current, messageMode],
   );
 
   useWebviewListener(
