@@ -84,6 +84,7 @@ export const exitEditMode = createAsyncThunk<
     });
 
     dispatch(clearCodeToEdit());
+    dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
 
     if (openNewSession || state.editModeState.lastNonEditSessionWasEmpty) {
       dispatch(newSession());
@@ -127,5 +128,9 @@ export const enterEditMode = createAsyncThunk<
     );
     dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
     dispatch(setMode("edit"));
+
+    if (!state.editModeState.codeToEdit[0]) {
+      extra.ideMessenger.post("edit/addCurrentSelection", undefined);
+    }
   },
 );

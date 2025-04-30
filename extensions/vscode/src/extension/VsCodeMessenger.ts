@@ -18,6 +18,7 @@ import * as vscode from "vscode";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import { addCurrentSelectionToEdit } from "../quickEdit/AddCurrentSelection";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
@@ -187,6 +188,15 @@ export class VsCodeMessenger {
           new vscode.Range(editor.selection.start, editor.selection.end),
           msg.data.text,
         );
+      });
+    });
+    this.onWebview("edit/addCurrentSelection", async (msg) => {
+      const verticalDiffManager = await this.verticalDiffManagerPromise;
+      await addCurrentSelectionToEdit({
+        args: undefined,
+        editDecorationManager,
+        webviewProtocol: this.webviewProtocol,
+        verticalDiffManager,
       });
     });
     this.onWebview("edit/sendPrompt", async (msg) => {

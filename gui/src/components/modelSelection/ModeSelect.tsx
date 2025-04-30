@@ -68,24 +68,23 @@ function ModeSelect() {
       ? ["chat", "agent"]
       : ["chat", "agent", "edit"];
     const currentIndex = modes.indexOf(mode);
-    const oneModeAhead = modes[(currentIndex + 1) % modes.length];
-    // const twoModesAhead = modes[(currentIndex + 2) % modes.length];
+    const nextMode = modes[(currentIndex + 1) % modes.length];
     if (mode === "edit") {
       await dispatch(
         exitEditMode({
-          goToMode: oneModeAhead,
+          goToMode: nextMode,
         }),
       );
     } else {
-      if (oneModeAhead === "edit") {
+      if (nextMode === "edit") {
         await dispatch(
           enterEditMode({
-            returnToMode: mode, // twoModesAhead
+            returnToMode: mode,
             returnCursorToEditor: false,
           }),
         );
       } else {
-        dispatch(setMode(oneModeAhead));
+        dispatch(setMode(nextMode));
       }
     }
   }, [jetbrains, mode]);
