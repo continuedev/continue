@@ -135,25 +135,26 @@ export function useMainEditorWebviewListeners({
             range: data.rangeInFileWithContents.range,
           }),
         );
+      } else {
+        editor
+          .chain()
+          .insertContentAt(index, {
+            type: CodeBlock.name,
+            attrs: {
+              item: contextItem,
+              inputId,
+            },
+          })
+          .run();
+  
+        dispatch(
+          setNewestToolbarPreviewForInput({
+            inputId,
+            contextItemId: contextItem.id.itemId,
+          }),
+        );
       }
 
-      editor
-        .chain()
-        .insertContentAt(index, {
-          type: CodeBlock.name,
-          attrs: {
-            item: contextItem,
-            inputId,
-          },
-        })
-        .run();
-
-      dispatch(
-        setNewestToolbarPreviewForInput({
-          inputId,
-          contextItemId: contextItem.id.itemId,
-        }),
-      );
 
       if (data.prompt) {
         editor.commands.focus("end");
