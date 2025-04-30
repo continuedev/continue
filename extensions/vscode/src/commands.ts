@@ -124,8 +124,6 @@ async function processDiff(
     });
   }
 
-  // await sidebar.webviewProtocol.request("exitEditMode", undefined);
-
   // Save the file
   await ide.saveFile(newOrCurrentUri);
 }
@@ -376,7 +374,6 @@ const getCommandsMap: (
     "continue.focusEdit": async (args?: QuickEditShowParams) => {
       captureCommandTelemetry("focusEdit");
       focusGUI();
-
       sidebar.webviewProtocol?.request("focusEdit", undefined);
     },
     "continue.exitEditMode": async () => {

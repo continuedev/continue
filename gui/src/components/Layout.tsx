@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { AuthProvider } from "../context/Auth";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
@@ -40,6 +41,7 @@ const Layout = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
@@ -144,9 +146,10 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
+      await ideMessenger.request("edit/addCurrentSelection", undefined);
       dispatch(enterEditMode({}));
     },
-    [],
+    [ideMessenger],
   );
 
   useWebviewListener(
