@@ -72,6 +72,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "sagemaker",
   "continue-proxy",
   "openrouter",
+  "venice",
   "sambanova",
   "vertexai",
   "azure",
@@ -96,7 +97,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "pixtral",
   "llama3.2",
   "llama-3.2",
-  "llama4"
+  "llama4",
 ];
 
 function modelSupportsTools(modelDescription: ModelDescription) {
