@@ -146,6 +146,9 @@ Icon?
 
 notes.md
 
+# Ignore pnpm lock file to prevent it from being tracked
+pnpm-lock.yaml
+
 manual-testing-sandbox/.idea/**
 manual-testing-sandbox/.continue/**
 extensions/intellij/.idea/**

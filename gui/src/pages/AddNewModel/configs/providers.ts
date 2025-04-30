@@ -83,6 +83,33 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://platform.openai.com/account/api-keys",
   },
+  databricks: {
+    title: "Databricks",
+    provider: "databricks",
+    description: "Connect to models hosted on Databricks serving endpoints",
+    longDescription: "Access Claude 3.7 Sonnet models hosted on Databricks serving endpoints with your credentials.",
+    icon: "databricks.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiBase", // Change from 'endpoint' to 'apiBase'
+        label: "Serving Endpoint URL",
+        required: true,
+        placeholder: "https://adb-*.*.*/serving-endpoints/databricks-claude-3-7-sonnet/invocations",
+      },
+      {
+        inputType: "password",
+        key: "apiKey",
+        label: "Databricks Access Token",
+        required: true,
+        placeholder: "********",
+      },
+      ...completionParamsInputsConfigs
+     ],
+    packages: [models.databricksClaudeSonnet],
+    apiKeyUrl: "https://cloud.databricks.com/",
+  },
   anthropic: {
     title: "Anthropic",
     provider: "anthropic",

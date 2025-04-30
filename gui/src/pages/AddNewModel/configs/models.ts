@@ -87,6 +87,18 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
+  databricksClaudeSonnet: {
+    title: "Claude 3.7 Sonnet (Databricks)",
+    description: "Anthropic's latest Claude model hosted on Databricks",
+    params: {
+      model: "databricks-claude-3-7-sonnet",
+      contextLength: 200000,
+      title: "Claude 3.7 Sonnet (Databricks)"
+    },
+    icon: "databricks.png",
+    providerOptions: ["databricks"],
+    isOpenSource: false
+  },
   llama318BChat: {
     title: "Llama 3.1 8B",
     description: "A model from Meta, fine-tuned for chat",
