@@ -85,7 +85,7 @@ export const exitEditMode = createAsyncThunk<
 
     dispatch(clearCodeToEdit());
 
-    if (openNewSession) {
+    if (openNewSession || state.editModeState.lastNonEditSessionWasEmpty) {
       dispatch(newSession());
     } else {
       await dispatch(
@@ -111,12 +111,12 @@ export const enterEditMode = createAsyncThunk<
   ) => {
     const state = getState();
 
-    dispatch(setReturnToModeAfterEdit(returnToMode ?? state.session.mode));
-    dispatch(setReturnCursorToEditorAfterEdit(returnCursorToEditor ?? false));
-
     if (state.session.mode === "edit") {
       return;
     }
+
+    dispatch(setReturnToModeAfterEdit(returnToMode ?? state.session.mode));
+    dispatch(setReturnCursorToEditorAfterEdit(returnCursorToEditor ?? false));
 
     await dispatch(
       saveCurrentSession({

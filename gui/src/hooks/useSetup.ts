@@ -12,11 +12,11 @@ import {
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
+import { setConfigResult } from "../redux/slices/configSlice";
 import {
-  selectSelectedChatModel,
-  setConfigResult,
-} from "../redux/slices/configSlice";
-import { setEditStateApplyState } from "../redux/slices/editModeState";
+  setEditStateApplyState,
+  setLastNonEditSessionEmpty,
+} from "../redux/slices/editModeState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   acceptToolCall,
@@ -37,7 +37,7 @@ function useSetup() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
-  const defaultModel = useAppSelector(selectSelectedChatModel);
+
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
@@ -295,6 +295,13 @@ function useSetup() {
     },
     [currentToolCallApplyState, history],
   );
+
+  const mode = useAppSelector((store) => store.session.mode);
+  useEffect(() => {
+    if (mode !== "edit") {
+      dispatch(setLastNonEditSessionEmpty(history.length === 0));
+    }
+  }, [mode, history]);
 }
 
 export default useSetup;

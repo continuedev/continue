@@ -8,6 +8,7 @@ export interface EditModeState {
   applyState: ApplyState;
   returnCursorToEditorAfterEdit: boolean;
   returnToMode: MessageModes;
+  lastNonEditSessionWasEmpty: boolean;
 }
 
 const initialState: EditModeState = {
@@ -17,6 +18,7 @@ const initialState: EditModeState = {
   codeToEdit: [],
   returnCursorToEditorAfterEdit: false,
   returnToMode: "chat",
+  lastNonEditSessionWasEmpty: false,
 };
 
 export const editModeStateSlice = createSlice({
@@ -55,6 +57,12 @@ export const editModeStateSlice = createSlice({
     clearCodeToEdit: (state) => {
       state.codeToEdit = [];
     },
+    setLastNonEditSessionEmpty: (
+      state,
+      { payload }: PayloadAction<boolean>,
+    ) => {
+      state.lastNonEditSessionWasEmpty = payload;
+    },
   },
   selectors: {},
 });
@@ -65,5 +73,6 @@ export const {
   clearCodeToEdit,
   setCodeToEdit,
   setEditStateApplyState,
+  setLastNonEditSessionEmpty,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;
