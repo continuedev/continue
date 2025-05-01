@@ -6,15 +6,49 @@ import { Assistant } from "./Assistant";
 import { createOpenAIClient } from "./createOpenAIClient";
 
 export interface ContinueClientOptions {
+  /**
+   * The assistant identifier in the format owner-slug/package-slug
+   */
   assistant: string;
+
+  /**
+   * API Key Authentication
+   *
+   * API keys must be prefixed with "con_" and provided in the Authorization header.
+   * Example: `Authorization: Bearer con_your_api_key_here`
+   *
+   * API keys can be generated in the Continue Hub web interface under account settings.
+   */
   apiKey: string;
+
+  /**
+   * Optional organization ID
+   *
+   * TODO: This should be an org name, not the UUID
+   */
   organizationId?: string;
+
+  /**
+   * Base URL for the Continue API
+   */
   baseURL?: string;
 }
 
 export type ContinueResult = {
+  /**
+   * The Continue API client
+   */
   api: DefaultApi;
+
+  /**
+   * The OpenAI client configured to use the Continue API
+   */
   client: OpenAI;
+
+  /**
+   * The full YAML configuration for the assistant, along
+   * with some additional utility methods
+   */
   assistant: Assistant;
 };
 
