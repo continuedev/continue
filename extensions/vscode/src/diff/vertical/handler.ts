@@ -4,10 +4,10 @@ import * as vscode from "vscode";
 
 import {
   DecorationTypeRangeManager,
+  RedDecorationsManager,
   belowIndexDecorationType,
   greenDecorationType,
   indexDecorationType,
-  redDecorationType,
 } from "./decorations";
 
 import type { ApplyState, DiffLine } from "core";
@@ -28,7 +28,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private cancelled = false;
   private newLinesAdded = 0;
   private deletionBuffer: string[] = [];
-  private redDecorationManager: DecorationTypeRangeManager;
+  private redDecorationManager: RedDecorationsManager;
   private get fileUri() {
     return this.editor.document.uri.toString();
   }
@@ -56,10 +56,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   ) {
     this.currentLineIndex = startLine;
 
-    this.redDecorationManager = new DecorationTypeRangeManager(
-      redDecorationType,
-      this.editor,
-    );
+    this.redDecorationManager = new RedDecorationsManager(this.editor);
 
     this.greenDecorationManager = new DecorationTypeRangeManager(
       greenDecorationType,
@@ -86,8 +83,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   private async insertDeletionBuffer() {
-    const totalDeletedContent = this.deletionBuffer.join("\n");
-
     if (this.deletionBuffer.length || this.insertedInCurrentBlock > 0) {
       const blocks = this.editorToVerticalDiffCodeLens.get(this.fileUri) || [];
 
@@ -105,15 +100,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
       return;
     }
 
-    // Insert the block of deleted lines
+    // Insert the block of deleted lines as empty new lines
     await this.insertTextAboveLine(
       this.currentLineIndex - this.insertedInCurrentBlock,
-      totalDeletedContent,
+      "\n".repeat(this.deletionBuffer.length),
     );
 
     this.redDecorationManager.addLines(
       this.currentLineIndex - this.insertedInCurrentBlock,
-      this.deletionBuffer.length,
+      this.deletionBuffer,
     );
 
     // Shift green decorations downward
@@ -215,21 +210,21 @@ export class VerticalDiffHandler implements vscode.Disposable {
     this.editor.setDecorations(indexDecorationType, []);
   }
 
-  public getLineDeltaBeforeLine(line: number) {
-    // Returns the number of lines removed from a file when the diff currently active is closed
-    let totalLineDelta = 0;
-    for (const range of this.greenDecorationManager
-      .getRanges()
-      .sort((a, b) => a.start.line - b.start.line)) {
-      if (range.start.line > line) {
-        break;
-      }
+  // public getLineDeltaBeforeLine(line: number) {
+  //   // Returns the number of lines removed from a file when the diff currently active is closed
+  //   let totalLineDelta = 0;
+  //   for (const range of this.greenDecorationManager
+  //     .getRanges()
+  //     .sort((a, b) => a.start.line - b.start.line)) {
+  //     if (range.start.line > line) {
+  //       break;
+  //     }
 
-      totalLineDelta -= range.end.line - range.start.line + 1;
-    }
+  //     totalLineDelta -= range.end.line - range.start.line + 1;
+  //   }
 
-    return totalLineDelta;
-  }
+  //   return totalLineDelta;
+  // }
 
   async clear(accept: boolean) {
     vscode.commands.executeCommand(
@@ -500,15 +495,17 @@ export class VerticalDiffHandler implements vscode.Disposable {
     // ["A"] => "A" and ["A", ""] => "A\n" to be the same single line.
     // "A\n" and "A\n\n" are unambiguous.
     //
-    const oldFileContent = diffLines
-      .filter((line) => line.type === "same" || line.type === "old")
-      .map((line) => line.line)
-      .join("\n") + "\n";
+    const oldFileContent =
+      diffLines
+        .filter((line) => line.type === "same" || line.type === "old")
+        .map((line) => line.line)
+        .join("\n") + "\n";
 
-    const newFileContent = diffLines
-      .filter((line) => line.type === "same" || line.type === "new")
-      .map((line) => line.line)
-      .join("\n") + "\n";
+    const newFileContent =
+      diffLines
+        .filter((line) => line.type === "same" || line.type === "new")
+        .map((line) => line.line)
+        .join("\n") + "\n";
 
     const diffs = myersDiff(oldFileContent, newFileContent);
 
@@ -531,7 +528,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     diffs.forEach((diff, index) => {
       if (diff.type === "old") {
-        this.redDecorationManager.addLine(this.startLine + index);
+        this.redDecorationManager.addLine(this.startLine + index, diff.line);
         numRed++;
       } else if (diff.type === "new") {
         this.greenDecorationManager.addLine(this.startLine + index);
