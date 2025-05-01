@@ -1,15 +1,33 @@
 # @continuedev/sdk
 
-> **⚠️ EXPERIMENTAL: This package is in early development and subject to frequent breaking changes without notice.**
+This SDK provides programmatic access to Continue's Hub APIs and functionality.
 
-This SDK provides programmatic access to Continue's APIs and functionality.
+## Overview
 
-## Status
+The Continue SDK is structured into separate language-specific packages, currently with implementations for TypeScript and Python, with more languages planned for the future:
 
-This package is currently in early development and is considered **experimental**. It is not recommended for production use. The API surface, functionality, and implementation are subject to change at any time without prior notice or deprecation period.
+- **TypeScript SDK**: Located in the `/typescript` directory, providing a drop-in replacement for OpenAI's TypeScript client libraries
+- **Python SDK**: Located in the `/python` directory, providing a drop-in replacement for OpenAI's Python client libraries
+- **Additional languages**: More language implementations are planned to be added in the future
 
+Each package includes:
 
-## Development
+1. OpenAPI-generated clients for the Continue Hub API
+2. A wrapper layer that exposes a `Continue.from()` method to easily initialize and use Continue assistants with an OpenAI-compatible interface
+
+## For End Users
+
+End users should install the published packages directly:
+
+- For TypeScript/JavaScript: `npm install @continuedev/sdk`
+- For Python: `pip install continuedev`
+- For other languages: Check back for new language support
+
+Each published package includes its own documentation.
+
+## For Developers
+
+### Development
 
 ```bash
 # Install dependencies

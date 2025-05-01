@@ -1,6 +1,6 @@
-import { expect } from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import dotenv from "dotenv";
-import { Continue } from "../src/Continue";
+import { Continue } from "../src/Continue.js";
 
 dotenv.config();
 
