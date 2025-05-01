@@ -627,6 +627,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     contextLength: llm.contextLength,
     template: llm.template,
     completionOptions: llm.completionOptions,
+    baseAgentSystemMessage: llm.baseAgentSystemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),
@@ -969,5 +970,6 @@ export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadContinueConfigFromJson,
-  type BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig
 };
+

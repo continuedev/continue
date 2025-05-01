@@ -192,7 +192,8 @@ chat, editing, and summarizing.
   `autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a
   valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
-  - `baseSystemMessage`: Can be used to override the default system prompt.
+  - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
+  <!-- - `baseAgentSystemMessage`: Can be used to override the default system prompt for **Agent** mode. <!-- This setting is experimental and hence is undocumented. -->
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
   - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
   - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.

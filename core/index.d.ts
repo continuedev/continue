@@ -561,6 +561,7 @@ export interface LLMOptions {
 
   title?: string;
   uniqueId?: string;
+  baseAgentSystemMessage?: string;
   baseChatSystemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
@@ -1044,6 +1045,7 @@ export interface ModelDescription {
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
+  baseAgentSystemMessage?: string;
   baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
