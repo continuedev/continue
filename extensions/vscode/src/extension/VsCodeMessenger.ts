@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import { checkForIncompatibleExtensions } from "../granite/utils/compatibilityUtil";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
@@ -233,6 +234,9 @@ export class VsCodeMessenger {
       }
 
       editDecorationManager.clear();
+    });
+    this.onWebview("checkForIncompatibleExtensions", async (msg) => {
+      this.webviewProtocol.send("updateIncompatibleExtensions", checkForIncompatibleExtensions());
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

@@ -97,7 +97,7 @@ export class VsCodeExtension {
       this.extensionContext,
     );
 
-    setupExtensionCheck(this.sidebar.webviewProtocol);
+    setupExtensionCheck(context, this.sidebar.webviewProtocol);
 
     // Sidebar
     context.subscriptions.push(

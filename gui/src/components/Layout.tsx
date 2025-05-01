@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
@@ -25,6 +25,7 @@ import Footer from "./Footer";
 import IncompatibleExtensionsOverlay from "./IncompatibleExtensionsOverlay";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -44,6 +45,7 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
   const [showGraniteOnboardingCard, setShowGraniteOnboardingCard] =
     useState<boolean>(window.showGraniteCodeOnboarding ?? false);
   const { pathname } = useLocation();
@@ -58,7 +60,7 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
 
-  const [bumpWithOtherExtensions, setBumpWithOtherExtensions] = useState(false);
+  const [conflictsWithOtherExtensions, setConflictsWithOtherExtensions] = useState(false);
 
   useWebviewListener(
     "newSession",
@@ -201,9 +203,8 @@ const Layout = () => {
     [isInEditMode],
   );
 
-  useWebviewListener("checkForIncompatibleExtensions", async (data) => {
-    setBumpWithOtherExtensions(data);
-    return true;
+  useWebviewListener("updateIncompatibleExtensions", async (data) => {
+    setConflictsWithOtherExtensions(data);
   });
 
   useEffect(() => {
@@ -226,11 +227,16 @@ const Layout = () => {
     };
   }, []);
 
+  // Check if there are any incompatible extension enabled when the webview is on mount
+  useEffect(() => {
+    ideMessenger.post("checkForIncompatibleExtensions", undefined)
+  }, [])
+
   return showGraniteOnboardingCard ? (
     <GraniteOnboardingCard />
   ) : (
     <>
-      {bumpWithOtherExtensions && <IncompatibleExtensionsOverlay />}
+      {conflictsWithOtherExtensions && <IncompatibleExtensionsOverlay />}
       <LocalStorageProvider>
         <AuthProvider>
           <LayoutTopDiv>
