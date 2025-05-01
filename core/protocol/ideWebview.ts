@@ -4,7 +4,6 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 import type {
   ApplyState,
   CodeToEdit,
-  EditStatus,
   MessageContent,
   RangeInFileWithContents,
 } from "../";
@@ -50,9 +49,10 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
       prompt: MessageContent;
       range: RangeInFileWithContents;
     },
-    void,
+    string | undefined,
   ];
-  "edit/exit": [{ shouldFocusEditor: boolean }, void];
+  "edit/addCurrentSelection": [undefined, void];
+  "edit/clearDecorations": [undefined, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
@@ -71,7 +71,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
     },
     void,
   ];
-  addCodeToEdit: [CodeToEdit, void];
+  setCodeToEdit: [CodeToEdit, void];
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 
@@ -87,8 +87,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   openOnboardingCard: [undefined, void];
   applyCodeFromChat: [undefined, void];
   updateApplyState: [ApplyState, void];
-  setEditStatus: [{ status: EditStatus; fileAfterEdit?: string }, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
-  focusEditWithoutClear: [undefined, void];
 };

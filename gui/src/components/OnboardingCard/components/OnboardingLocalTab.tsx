@@ -12,9 +12,9 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../../redux/thunks";
-import OllamaModelDownload from "../components/OllamaModelDownload";
-import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
+import OllamaModelDownload from "./OllamaModelDownload";
+import { OllamaStatus } from "./OllamaStatus";
 
 const OLLAMA_CHECK_INTERVAL_MS = 3000;
 

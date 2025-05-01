@@ -3,7 +3,7 @@ import Layout from "./components/Layout";
 import { MainEditorProvider } from "./components/mainInput/TipTapEditor";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
 import { VscThemeProvider } from "./context/VscTheme";
-import useSetup from "./hooks/useSetup";
+import ParallelListeners from "./hooks/ParallelListeners";
 import ConfigPage from "./pages/config";
 import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
@@ -42,14 +42,9 @@ const router = createMemoryRouter([
 ]);
 
 /*
-  Prevents entire app from rerendering continuously with useSetup in App
-  TODO - look into a more redux-esque way to do this
+  ParallelListeners prevents entire app from rerendering on any change in the listeners,
+  most of which interact with redux etc.
 */
-export function SetupListeners() {
-  useSetup();
-  return <></>;
-}
-
 function App() {
   return (
     <VscThemeProvider>
@@ -58,7 +53,7 @@ function App() {
           <RouterProvider router={router} />
         </SubmenuContextProvidersProvider>
       </MainEditorProvider>
-      <SetupListeners />
+      <ParallelListeners />
     </VscThemeProvider>
   );
 }

@@ -15,8 +15,10 @@ import {
 import { stripImages } from "core/util/messageContent";
 import * as vscode from "vscode";
 
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import { addCurrentSelectionToEdit } from "../quickEdit/AddCurrentSelection";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
@@ -188,6 +190,15 @@ export class VsCodeMessenger {
         );
       });
     });
+    this.onWebview("edit/addCurrentSelection", async (msg) => {
+      const verticalDiffManager = await this.verticalDiffManagerPromise;
+      await addCurrentSelectionToEdit({
+        args: undefined,
+        editDecorationManager,
+        webviewProtocol: this.webviewProtocol,
+        verticalDiffManager,
+      });
+    });
     this.onWebview("edit/sendPrompt", async (msg) => {
       const prompt = msg.data.prompt;
       const { start, end } = msg.data.range.range;
@@ -210,39 +221,28 @@ export class VsCodeMessenger {
       const fileAfterEdit = await verticalDiffManager.streamEdit({
         input: stripImages(prompt),
         llm: model,
-        streamId: "edit",
+        streamId: EDIT_MODE_STREAM_ID,
         range: new vscode.Range(
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
         rules: config.rules,
       });
-
-      void this.webviewProtocol.request("setEditStatus", {
-        status: "accepting",
-        fileAfterEdit,
-      });
+      return fileAfterEdit;
     });
-    this.onWebview("edit/exit", async (msg) => {
-      if (msg.data.shouldFocusEditor) {
-        const activeEditor = vscode.window.activeTextEditor;
 
-        if (activeEditor) {
-          vscode.window.showTextDocument(activeEditor.document);
-        }
-      }
-
+    this.onWebview("edit/clearDecorations", async (msg) => {
       editDecorationManager.clear();
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
-          return await this.inProcessMessenger.externalRequest(
-            messageType,
-            msg.data,
-            msg.messageId,
-          );
+        return await this.inProcessMessenger.externalRequest(
+          messageType,
+          msg.data,
+          msg.messageId,
+        );
       });
     });
 

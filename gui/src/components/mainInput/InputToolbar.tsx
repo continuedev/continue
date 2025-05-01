@@ -1,7 +1,8 @@
 import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
-import { useRef } from "react";
+import { useContext, useRef } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
 import {
@@ -9,12 +10,7 @@ import {
   selectCurrentToolCallApplyState,
 } from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import {
-  selectHasCodeToEdit,
-  selectIsInEditMode,
-} from "../../redux/slices/sessionSlice";
-import { exitEditMode } from "../../redux/thunks";
-import { loadLastSession } from "../../redux/thunks/session";
+import { exitEditMode } from "../../redux/thunks/editMode";
 import {
   getAltKeyLabel,
   getMetaKeyLabel,
@@ -49,20 +45,20 @@ interface InputToolbarProps {
 
 function InputToolbar(props: InputToolbarProps) {
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const mode = useAppSelector((store) => store.session.mode);
+  const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
-  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
   );
 
   const isEnterDisabled =
     props.disabled ||
-    isEditModeAndNoCodeToEdit ||
+    (mode === "edit" && codeToEdit.length === 0) ||
     toolCallState?.status === "generated" ||
     (currentToolCallApplyState &&
       currentToolCallApplyState.status !== "closed");
@@ -91,13 +87,13 @@ function InputToolbar(props: InputToolbarProps) {
         }}
       >
         <div className="xs:gap-1.5 flex flex-row items-center gap-1">
-          <HoverItem data-tooltip-id="mode-select-tooltip">
+          <HoverItem data-tooltip-id="mode-select-tooltip" className="!p-0">
             <ModeSelect />
             <ToolTip id="mode-select-tooltip" place="top">
               Select Mode
             </ToolTip>
           </HoverItem>
-          <HoverItem data-tooltip-id="model-select-tooltip">
+          <HoverItem data-tooltip-id="model-select-tooltip" className="!p-0">
             <ModelSelect />
             <ToolTip id="model-select-tooltip" place="top">
               Select Model
@@ -158,7 +154,7 @@ function InputToolbar(props: InputToolbarProps) {
             fontSize: tinyFont,
           }}
         >
-          {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
+          {!props.toolbarOptions?.hideUseCodebase && mode !== "edit" && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
             >
@@ -188,16 +184,12 @@ function InputToolbar(props: InputToolbarProps) {
             </div>
           )}
 
-          {isInEditMode && (
+          {mode === "edit" && (
             <HoverItem
               className="hidden hover:underline sm:flex"
-              onClick={async (e) => {
-                await dispatch(
-                  loadLastSession({
-                    saveCurrentSession: false,
-                  }),
-                );
-                dispatch(exitEditMode());
+              onClick={async () => {
+                dispatch(exitEditMode({}));
+                ideMessenger.post("focusEditor", undefined);
               }}
             >
               <span>

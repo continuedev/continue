@@ -3,10 +3,8 @@ import { InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { MutableRefObject } from "react";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import {
-  clearCodeToEdit,
-  setNewestToolbarPreviewForInput,
-} from "../../../redux/slices/sessionSlice";
+import { clearCodeToEdit } from "../../../redux/slices/editModeState";
+import { setNewestToolbarPreviewForInput } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
 import { CodeBlock, PromptBlock } from "./extensions";
@@ -156,26 +154,6 @@ export function useMainEditorWebviewListeners({
       }, 20);
     },
     [editor, inputId, onEnterRef.current],
-  );
-
-  useWebviewListener(
-    "focusEdit",
-    async () => {
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 20);
-    },
-    [editor],
-  );
-
-  useWebviewListener(
-    "focusEditWithoutClear",
-    async () => {
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 2000);
-    },
-    [editor],
   );
 
   useWebviewListener(

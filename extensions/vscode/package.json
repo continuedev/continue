@@ -384,11 +384,6 @@
         "key": "ctrl+i"
       },
       {
-        "command": "continue.focusEditWithoutClear",
-        "mac": "cmd+shift+i",
-        "key": "ctrl+shift+i"
-      },
-      {
         "command": "continue.exitEditMode",
         "mac": "escape",
         "key": "escape",

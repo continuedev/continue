@@ -4,7 +4,7 @@ export const ErrorsSectionTooltip = () => {
   const configError = useAppSelector((store) => store.config.configError);
 
   const numErrors = configError?.length ?? 0;
-  const plural = numErrors > 1 ? "s" : "";
+  const plural = numErrors === 1 ? "" : "s";
 
   return (
     <div>
