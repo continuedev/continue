@@ -2,6 +2,7 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
+import { getBaseSystemMessage } from "../../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   addContextItemsAtIndex,
@@ -68,12 +69,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const updatedHistory = getState().session.history;
         const messageMode = getState().session.mode
 
-        let baseChatOrAgentSystemMessage: string|undefined
-        if(messageMode === 'agent') {
-          baseChatOrAgentSystemMessage = selectedChatModel?.baseAgentSystemMessage ?? selectedChatModel?.baseChatSystemMessage // fallback to chat system message if agent system message is unavailable
-        } else {
-          baseChatOrAgentSystemMessage = selectedChatModel.baseChatSystemMessage
-        }
+        const baseChatOrAgentSystemMessage = getBaseSystemMessage(selectedChatModel, messageMode)
         
         const messages = constructMessages(
           [...updatedHistory],

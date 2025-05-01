@@ -18,6 +18,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../redux/slices/uiSlice";
+import { getBaseSystemMessage } from "../../../../util";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 import { useFontSize } from "../../../ui/font";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
@@ -182,12 +183,7 @@ export function RulesSection() {
     }
     // Add a displayed rule for the base system chat message when in chat mode
     if (mode === "chat" || mode === "agent") {
-      let baseMessage:string | undefined;
-      if(mode === 'agent') {
-        baseMessage = config.selectedModelByRole.chat?.baseAgentSystemMessage ?? config.selectedModelByRole.chat?.baseChatSystemMessage
-      } else {
-        baseMessage = config.selectedModelByRole.chat?.baseChatSystemMessage
-      }
+      const baseMessage = getBaseSystemMessage(config.selectedModelByRole.chat, mode)
       if (baseMessage) {
         rules.unshift({
           rule: baseMessage,
