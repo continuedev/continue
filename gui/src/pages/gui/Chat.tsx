@@ -139,9 +139,9 @@ export function Chat() {
     // Cmd + Backspace to delete current step
     const listener = (e: any) => {
       if (
-        e.key === "Backspace" && jetbrains
-          ? e.altKey
-          : isMetaEquivalentKeyPressed(e) && !e.shiftKey
+        e.key === "Backspace" &&
+        (jetbrains ? e.altKey : isMetaEquivalentKeyPressed(e)) &&
+        !e.shiftKey
       ) {
         dispatch(cancelStream());
       }

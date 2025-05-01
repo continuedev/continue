@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import * as fs from "node:fs";
 import * as os from "node:os";
 
 import {
@@ -15,11 +16,17 @@ import { Core } from "core/core";
 import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
+import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { startLocalOllama } from "core/util/ollamaHelper";
-import { getDevDataFilePath } from "core/util/paths";
+import {
+  getConfigJsonPath,
+  getConfigYamlPath,
+  getDevDataFilePath,
+} from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
+import * as YAML from "yaml";
 
 import {
   getAutocompleteStatusBarDescription,
@@ -39,6 +46,8 @@ import { Battery } from "./util/battery";
 import { getMetaKeyLabel } from "./util/util";
 import { VsCodeIde } from "./VsCodeIde";
 
+import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
+import { openEditorAndRevealRange } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -381,6 +390,7 @@ const getCommandsMap: (
       rules: config.rules,
     });
   }
+
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
       processDiff(
@@ -795,7 +805,7 @@ const getCommandsMap: (
       vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.openConfigPage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/config", true);
+      vscode.commands.executeCommand("continue.navigateTo", "/config", false);
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
@@ -949,7 +959,7 @@ const getCommandsMap: (
           if (core.configHandler.currentProfile?.profileDescription.id) {
             core.invoke("config/updateSelectedModel", {
               profileId:
-                core.configHandler.currentProfile?.profileDescription.id,
+              core.configHandler.currentProfile?.profileDescription.id,
               role: "autocomplete",
               title: selectedOption,
             });
@@ -1011,10 +1021,39 @@ const getCommandsMap: (
         );
       }
     },
+    "continue.convertConfigJsonToConfigYaml": async () => {
+      const configJson = fs.readFileSync(getConfigJsonPath(), "utf-8");
+      const parsed = JSON.parse(configJson);
+      const configYaml = convertJsonToYamlConfig(parsed);
+
+      const configYamlPath = getConfigYamlPath();
+      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml));
+
+      // Open config.yaml
+      await openEditorAndRevealRange(
+        vscode.Uri.file(configYamlPath),
+        undefined,
+        undefined,
+        false,
+      );
+
+      vscode.window
+        .showInformationMessage(
+          "Your config.json has been converted to the new config.yaml format. If you need to switch back to config.json, you can delete or rename config.yaml.",
+          "Read the docs",
+        )
+        .then((selection) => {
+          if (selection === "Read the docs") {
+            vscode.env.openExternal(
+              vscode.Uri.parse("https://docs.continue.dev/yaml-migration"),
+            );
+          }
+        });
+    },
   };
 };
 
-const registerCopyBufferSpy = (
+const registerCopyBufferService = (
   context: vscode.ExtensionContext,
   core: Core,
 ) => {
@@ -1105,8 +1144,6 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
-  registerCopyBufferSpy(context, core);
-
   for (const [command, callback] of Object.entries(
     getCommandsMap(
       ide,
@@ -1124,6 +1161,22 @@ export function registerAllCommands(
   )) {
     context.subscriptions.push(
       vscode.commands.registerCommand(command, callback),
+    );
+  }
+
+  try {
+    registerCopyBufferService(context, core);
+  } catch (e: any) {
+    //Non-critical error, it needs to be intercepted and not prevent the extension from starting
+    console.log("Error registering CopyBufferService: ", e);
+    Telemetry.capture(
+      "vscode_extension_copy_buffer_failure",
+      {
+        stack: extractMinimalStackTraceInfo(e.stack),
+        message: e.message,
+      },
+      false,
+      true,
     );
   }
 }

@@ -46,6 +46,7 @@ import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
+import OVHcloud from "./OVHcloud";
 import { Relace } from "./Relace";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
@@ -56,6 +57,7 @@ import ContinueProxy from "./stubs/ContinueProxy";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import Venice from "./Venice";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import Voyage from "./Voyage";
@@ -81,6 +83,7 @@ export const LLMClasses = [
   Kindo,
   LlamaCpp,
   OpenAI,
+  OVHcloud,
   LMStudio,
   Mistral,
   Bedrock,
@@ -107,6 +110,7 @@ export const LLMClasses = [
   Cerebras,
   Asksage,
   Nebius,
+  Venice,
   VertexAI,
   xAI,
   SiliconFlow,

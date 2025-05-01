@@ -203,6 +203,24 @@ async function serializedToIntermediateConfig(
   return config;
 }
 
+// Merge request options set for entire config with model specific options
+function applyRequestOptionsToModels(
+  models: BaseLLM[],
+  config: Config,
+  roles: ModelRole[] | undefined = undefined,
+) {
+  // Prepare models
+  for (const model of models) {
+    model.requestOptions = {
+      ...model.requestOptions,
+      ...config.requestOptions,
+    };
+    if (roles !== undefined) {
+      model.roles = model.roles ?? roles;
+    }
+  }
+}
+
 export function isContextProviderWithParams(
   contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
@@ -311,14 +329,12 @@ async function intermediateToFinalConfig({
     }),
   );
 
-  // Prepare models
-  for (const model of models) {
-    model.requestOptions = {
-      ...model.requestOptions,
-      ...config.requestOptions,
-    };
-    model.roles = model.roles ?? ["chat", "apply", "edit", "summarize"]; // Default to chat role if not specified
-  }
+  applyRequestOptionsToModels(models, config, [
+    "chat",
+    "apply",
+    "edit",
+    "summarize",
+  ]); // Default to chat role if not specified
 
   if (allowFreeTrial) {
     // Obtain auth token (iff free trial being used)
@@ -371,6 +387,8 @@ async function intermediateToFinalConfig({
       )
     ).filter((x) => x !== undefined) as BaseLLM[];
   }
+
+  applyRequestOptionsToModels(tabAutocompleteModels, config);
 
   // These context providers are always included, regardless of what, if anything,
   // the user has configured in config.json
@@ -486,7 +504,7 @@ async function intermediateToFinalConfig({
       const cls = LLMClasses.find((c) => c.providerName === name);
       if (cls) {
         const llmOptions: LLMOptions = {
-          model: params?.model,
+          model: params?.model ?? "UNSPECIFIED",
           ...params,
         };
         return new cls(llmOptions);

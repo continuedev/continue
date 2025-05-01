@@ -161,9 +161,11 @@ export async function* streamDiffLines({
       ? llm.streamComplete(prompt, new AbortController().signal, {
           raw: true,
           prediction,
+          reasoning: false,
         })
       : llm.streamChat(prompt, new AbortController().signal, {
           prediction,
+          reasoning: false,
         });
 
   let lines = streamLines(completion);
