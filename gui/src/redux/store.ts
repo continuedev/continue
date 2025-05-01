@@ -51,7 +51,6 @@ const saveSubsetFilters = [
     // higher risk to persist
     // codeBlockApplyStates
     // symbols
-    // curCheckpointIndex
   ]),
   createFilter("editModeState", [
     "returnToMode",

@@ -104,9 +104,10 @@ async function processDiff(
 ) {
   captureCommandTelemetry(`${action}Diff`);
 
+  const currentFile = await ide.getCurrentFile();
+
   let newOrCurrentUri = newFileUri;
   if (!newOrCurrentUri) {
-    const currentFile = await ide.getCurrentFile();
     newOrCurrentUri = currentFile?.path;
   }
   if (!newOrCurrentUri) {
@@ -116,7 +117,10 @@ async function processDiff(
     return;
   }
 
+  // if (!currentFile || newOrCurrentUri !== currentFile.path) {
   await ide.openFile(newOrCurrentUri);
+  //   focusGUI();
+  // }
 
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");

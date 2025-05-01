@@ -246,10 +246,6 @@ export interface IContextProvider {
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
-export interface Checkpoint {
-  [filepath: string]: string;
-}
-
 export interface Session {
   sessionId: string;
   title: string;
@@ -462,8 +458,6 @@ export interface ChatHistoryItem {
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
-  checkpoint?: Checkpoint;
-  isBeforeCheckpoint?: boolean;
   reasoning?: Reasoning;
 }
 

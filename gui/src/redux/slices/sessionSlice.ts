@@ -43,7 +43,6 @@ type SessionState = {
   title: string;
   id: string;
   streamAborter: AbortController;
-  curCheckpointIndex: number;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
@@ -60,7 +59,6 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   symbols: {},
   mode: "chat",
@@ -178,8 +176,6 @@ export const sessionSlice = createSlice({
           },
           contextItems: [],
         });
-
-        state.curCheckpointIndex = Math.floor(index / 2);
       } else {
         // New input/response messages
         state.history = state.history.concat([
@@ -201,8 +197,6 @@ export const sessionSlice = createSlice({
             contextItems: [],
           },
         ]);
-
-        state.curCheckpointIndex = Math.floor((state.history.length - 1) / 2); // TODO this feels really fragile
       }
 
       state.isStreaming = true;
@@ -432,12 +426,10 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
-        state.curCheckpointIndex = 0;
       } else {
         state.history = [];
         state.title = NEW_SESSION_TITLE;
         state.id = uuidv4();
-        state.curCheckpointIndex = 0;
       }
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
@@ -528,19 +520,6 @@ export const sessionSlice = createSlice({
       });
 
       state.history[state.history.length - 1].contextItems = contextItems;
-    },
-
-    updateCurCheckpoint: (
-      state,
-      { payload }: PayloadAction<{ filepath: string; content: string }>,
-    ) => {
-      const checkpoint = state.history[state.curCheckpointIndex].checkpoint;
-      if (checkpoint) {
-        checkpoint[payload.filepath] = payload.content;
-      }
-    },
-    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
-      state.curCheckpointIndex = payload;
     },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(
@@ -732,8 +711,6 @@ export const {
   setMainEditorContentTrigger,
   deleteMessage,
   setIsGatheringContext,
-  updateCurCheckpoint,
-  setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
   abortStream,
