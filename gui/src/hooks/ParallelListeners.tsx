@@ -33,7 +33,7 @@ import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
-function useSetup() {
+function ParallelListeners() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
@@ -83,10 +83,6 @@ function useSetup() {
 
   const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
-      // const authResult = await ideMessenger.request(
-      //   "auth/getState",
-      //   undefined
-      // )
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
@@ -302,6 +298,7 @@ function useSetup() {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
   }, [mode, history]);
+  return <></>;
 }
 
-export default useSetup;
+export default ParallelListeners;

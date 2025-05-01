@@ -48,7 +48,6 @@ const Layout = () => {
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
-
   const mode = useAppSelector((state) => state.session.mode);
 
   useWebviewListener(
@@ -97,7 +96,7 @@ const Layout = () => {
         );
       }
     },
-    [location.pathname],
+    [location.pathname, mode],
     location.pathname === ROUTES.HOME,
   );
 
