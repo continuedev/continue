@@ -72,6 +72,7 @@ function convertYamlMcpToContinueMcp(
       args: server.args ?? [],
       env: server.env,
     },
+    timeout: server.timeout
   };
 }
 
@@ -444,6 +445,7 @@ async function configYamlToContinueConfig(options: {
         args: [],
         ...server,
       },
+      timeout: server.timeout
     })),
     false,
   );

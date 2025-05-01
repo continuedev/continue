@@ -14,7 +14,7 @@ import {
   MCPTool,
 } from "../..";
 
-export const DEFAULT_MCP_TIMEOUT = 20_000; // 10 seconds
+const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
 class MCPConnection {
   public client: Client;
