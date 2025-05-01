@@ -128,7 +128,7 @@ function ModeSelect() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch, mode, jetbrains]);
+  }, [cycleMode]);
 
   return (
     <Listbox value={mode} onChange={selectMode}>

@@ -72,9 +72,9 @@ export const exitEditMode = createAsyncThunk<
       return;
     }
 
-    for (const code of codeToEdit) {
+    if (codeToEdit[0] && state.editModeState.applyState.numDiffs) {
       extra.ideMessenger.post("rejectDiff", {
-        filepath: code.filepath,
+        filepath: codeToEdit[0].filepath,
       });
     }
 

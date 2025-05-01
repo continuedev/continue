@@ -117,10 +117,7 @@ async function processDiff(
     return;
   }
 
-  // if (!currentFile || newOrCurrentUri !== currentFile.path) {
   await ide.openFile(newOrCurrentUri);
-  //   focusGUI();
-  // }
 
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");

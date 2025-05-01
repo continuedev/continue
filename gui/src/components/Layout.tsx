@@ -164,7 +164,7 @@ const Layout = () => {
         }),
       );
     },
-    [mode],
+    [],
   );
 
   useWebviewListener(
@@ -172,7 +172,7 @@ const Layout = () => {
     async () => {
       await dispatch(exitEditMode({}));
     },
-    [mode],
+    [],
   );
 
   useEffect(() => {
