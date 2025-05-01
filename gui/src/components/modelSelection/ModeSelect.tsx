@@ -73,8 +73,6 @@ function ModeSelect() {
     const currentIndex = modes.indexOf(mode);
     const nextMode = modes[(currentIndex + 1) % modes.length];
 
-    // const mainEditorContent = mainEditor?.getJSON();
-
     if (mode === "edit") {
       await dispatch(
         exitEditMode({
@@ -92,7 +90,6 @@ function ModeSelect() {
         dispatch(setMode(nextMode));
       }
     }
-    // dispatch(setMainEditorContentTrigger(mainEditorContent));
     mainEditor?.commands.focus();
   }, [jetbrains, mode, mainEditor]);
 
@@ -101,8 +98,6 @@ function ModeSelect() {
       if (newMode === mode) {
         return;
       }
-      // const mainEditorContent = mainEditor?.getJSON();
-
       if (newMode === "edit") {
         await dispatch(
           enterEditMode({
@@ -120,7 +115,7 @@ function ModeSelect() {
           dispatch(setMode(newMode));
         }
       }
-      // dispatch(setMainEditorContentTrigger(mainEditorContent));
+
       mainEditor?.commands.focus();
     },
     [mode, mainEditor],

@@ -269,8 +269,7 @@ export function createEditorConfig(options: {
                 return true;
               }
 
-              if (modeRef.current !== "edit") {
-              } else {
+              if (modeRef.current === "edit") {
                 dispatch(
                   exitEditMode({
                     openNewSession: false,

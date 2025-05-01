@@ -55,6 +55,9 @@ export function TipTapEditor(props: TipTapEditorProps) {
     ideMessenger,
     dispatch,
   });
+  useEffect(() => {
+    console.log(editor);
+  }, [editor]);
 
   // Register the main editor with the provider
   useEffect(() => {
@@ -81,13 +84,16 @@ export function TipTapEditor(props: TipTapEditorProps) {
   }, [editor, props.placeholder, historyLength]);
 
   useEffect(() => {
-    if (mode === "edit") {
-      setShouldHideToolbar(false);
-    }
     if (props.isMainInput) {
       editor?.commands.clearContent(true);
     }
-  }, [editor, mode, props.isMainInput]);
+  }, [editor, props.isMainInput]);
+
+  useEffect(() => {
+    if (mode === "edit") {
+      setShouldHideToolbar(false);
+    }
+  }, [mode]);
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 

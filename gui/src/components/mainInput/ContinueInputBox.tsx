@@ -85,12 +85,10 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const editModeState = useAppSelector((state) => state.editModeState);
 
   const filteredSlashCommands = useMemo(() => {
-    return availableSlashCommands;
     return mode === "edit" ? [] : availableSlashCommands;
   }, [mode, availableSlashCommands]);
 
   const filteredContextProviders = useMemo(() => {
-    return availableContextProviders;
     if (mode === "edit") {
       return (
         availableContextProviders?.filter(
