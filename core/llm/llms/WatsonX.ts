@@ -223,8 +223,16 @@ class WatsonX extends BaseLLM {
       parameters.top_k = options.topK || 100;
     }
 
+    let input = messages[messages.length - 1].content
+    // Prevent Codestral from continuing user input, regardless of chat template
+    if (
+        options.model?.toLowerCase()?.includes("codestral") ||
+        this.deploymentId?.toLowerCase()?.includes("codestral")
+    ) {
+      input += "\n"
+    }
     const payload: any = {
-      input: messages[messages.length - 1].content,
+      input: input,
       parameters: parameters,
     };
     if (!this.deploymentId) {
