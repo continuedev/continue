@@ -7,8 +7,9 @@
     "strict": true,
     "outDir": "dist",
     "declaration": true,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "client/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "clients"]
 }

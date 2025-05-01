@@ -12,7 +12,10 @@
     "swagger-ui": "node swagger-ui-server.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-    "build": "tsc"
+    "prebuild": "rm -rf dist",
+    "build": "tsc && npm run copy-clients",
+    "copy-clients": "mkdir -p dist/clients && cp -r clients/typescript dist/clients/",
+    "prepublishOnly": "npm run build"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
@@ -32,5 +35,8 @@
     "npm": "^11.3.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.0.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
