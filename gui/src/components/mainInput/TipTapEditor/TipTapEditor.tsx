@@ -55,9 +55,6 @@ export function TipTapEditor(props: TipTapEditorProps) {
     ideMessenger,
     dispatch,
   });
-  useEffect(() => {
-    console.log(editor);
-  }, [editor]);
 
   // Register the main editor with the provider
   useEffect(() => {

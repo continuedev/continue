@@ -258,7 +258,6 @@ function ParallelListeners() {
     "updateApplyState",
     async (state) => {
       if (state.streamId === EDIT_MODE_STREAM_ID) {
-        console.log(state);
         dispatch(updateEditStateApplyState(state));
       } else {
         // chat or agent
