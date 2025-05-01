@@ -23,7 +23,7 @@ import { gptEditPrompt } from "../llm/templates/edit";
 import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
 
-function constructPrompt(
+function constructEditPrompt(
   prefix: string,
   highlighted: string,
   suffix: string,
@@ -66,7 +66,7 @@ export async function* streamDiffLines({
   language,
   onlyOneInsertion,
   overridePrompt,
-  rules,
+  includeRulesAsSystemMessage,
 }: {
   prefix: string;
   highlighted: string;
@@ -76,7 +76,7 @@ export async function* streamDiffLines({
   language: string | undefined;
   onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
-  rules: RuleWithSource[];
+  includeRulesAsSystemMessage: RuleWithSource[] | undefined;
 }): AsyncGenerator<DiffLine> {
   void Telemetry.capture(
     "inlineEdit",
@@ -99,38 +99,41 @@ export async function* streamDiffLines({
     oldLines = [];
   }
 
+  // Defaults to creating an edit prompt
+  // For apply can be overridden with simply apply prompt
   let prompt =
     overridePrompt ??
-    constructPrompt(prefix, highlighted, suffix, llm, input, language);
+    constructEditPrompt(prefix, highlighted, suffix, llm, input, language);
 
-  // Rules will be included with edit prompt
+  // Rules can be included with edit prompt
   // If any rules are present this will result in using chat instead of legacy completion
-  const lastUserMessage =
-    typeof prompt === "string"
-      ? ({
-          role: "user",
-          content: prompt,
-        } as UserChatMessage)
-      : (findLast(
-          prompt,
-          (msg) => msg.role === "user" || msg.role === "tool",
-        ) as UserChatMessage | ToolResultChatMessage | undefined);
+  let systemMessage: string | undefined = undefined;
+  if (includeRulesAsSystemMessage) {
+    const lastUserMessage =
+      typeof prompt === "string"
+        ? ({
+            role: "user",
+            content: prompt,
+          } as UserChatMessage)
+        : (findLast(
+            prompt,
+            (msg) => msg.role === "user" || msg.role === "tool",
+          ) as UserChatMessage | ToolResultChatMessage | undefined);
 
-  const systemMessage = getSystemMessageWithRules({
-    rules,
-    userMessage: lastUserMessage,
-    baseSystemMessage: undefined,
-  });
+    systemMessage = getSystemMessageWithRules({
+      rules: includeRulesAsSystemMessage,
+      userMessage: lastUserMessage,
+      baseSystemMessage: undefined,
+    });
+  }
 
   if (systemMessage) {
     if (typeof prompt === "string") {
-      // Removed system prompt because it was causing it to be used for Apply
-      // We should bring it back only for Edit
       prompt = [
-        // {
-        //   role: "system",
-        //   content: systemMessage,
-        // },
+        {
+          role: "system",
+          content: systemMessage,
+        },
         {
           role: "user",
           content: prompt,
@@ -141,10 +144,10 @@ export async function* streamDiffLines({
       if (curSysMsg) {
         curSysMsg.content = systemMessage + "\n\n" + curSysMsg.content;
       } else {
-        // prompt.unshift({
-        //   role: "system",
-        //   content: systemMessage,
-        // });
+        prompt.unshift({
+          role: "system",
+          content: systemMessage,
+        });
       }
     }
   }

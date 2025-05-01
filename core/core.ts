@@ -63,32 +63,54 @@ import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
+// This function is used for jetbrains inline edit and apply
 async function* streamDiffLinesGenerator(
   configHandler: ConfigHandler,
   abortedMessageIds: Set<string>,
   msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
 ): AsyncGenerator<DiffLine> {
-  const data = msg.data;
+  const {
+    highlighted,
+    prefix,
+    suffix,
+    input,
+    language,
+    modelTitle,
+    includeRulesInSystemMessage,
+  } = msg.data;
 
   const { config } = await configHandler.loadConfig();
   if (!config) {
     throw new Error("Failed to load config");
   }
 
-  const llm = config.selectedModelByRole.chat;
+  // title can be an edit, chat, or apply model
+  let llm =
+    config.modelsByRole.edit.find((m) => m.title === modelTitle) ??
+    config.modelsByRole.apply.find((m) => m.title === modelTitle) ??
+    config.modelsByRole.chat.find((m) => m.title === modelTitle) ??
+    null;
 
+  // fallback to selected chat model
   if (!llm) {
-    throw new Error("No chat model selected");
+    llm = config.selectedModelByRole.chat;
   }
 
+  if (!llm) {
+    throw new Error("No model selected");
+  }
+
+  // rules included for edit, NOT apply
+  const rules = includeRulesInSystemMessage ? config.rules : undefined;
+
   for await (const diffLine of streamDiffLines({
-    highlighted: data.highlighted,
-    prefix: data.prefix,
-    suffix: data.suffix,
+    highlighted,
+    prefix,
+    suffix,
     llm,
-    rules: config.rules,
-    input: data.input,
-    language: data.language,
+    includeRulesAsSystemMessage: rules,
+    input,
+    language,
     onlyOneInsertion: false,
     overridePrompt: undefined,
   })) {

@@ -181,7 +181,7 @@ export class ApplyManager {
       range: rangeToApplyTo,
       newCode: text,
       toolCallId,
-      rules: config.rules,
+      includeRulesAsSystemMessage: undefined, // No rules for apply
     });
   }
 }

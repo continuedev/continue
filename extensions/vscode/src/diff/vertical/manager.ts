@@ -280,7 +280,7 @@ export class VerticalDiffManager {
     range,
     newCode,
     toolCallId,
-    rules,
+    includeRulesAsSystemMessage,
   }: {
     input: string;
     llm: ILLM;
@@ -290,7 +290,7 @@ export class VerticalDiffManager {
     range?: vscode.Range;
     newCode?: string;
     toolCallId?: string;
-    rules: RuleWithSource[];
+    includeRulesAsSystemMessage: undefined | RuleWithSource[];
   }): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
@@ -443,7 +443,7 @@ export class VerticalDiffManager {
           prefix,
           suffix,
           llm,
-          rules,
+          includeRulesAsSystemMessage,
           input,
           language: getMarkdownLanguageTagForFile(fileUri),
           onlyOneInsertion: !!onlyOneInsertion,
