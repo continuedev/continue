@@ -40,6 +40,7 @@ export class Continue {
    */
   static async from(options: ContinueClientOptions): Promise<ContinueResult> {
     const baseURL = options.baseURL || "https://api.continue.dev/";
+
     const api = new DefaultApi(
       new Configuration({
         basePath: baseURL,
@@ -55,12 +56,17 @@ export class Continue {
       };
     }
 
+    const { ownerSlug, packageSlug } = decodePackageSlug(options.assistant);
+    if (!ownerSlug || !packageSlug) {
+      throw new Error(
+        `Invalid assistant identifier: ${options.assistant}. Expected format: owner-slug/package-slug`,
+      );
+    }
+
     const assistants = await api.listAssistants({
       organizationId: options.organizationId,
       alwaysUseProxy: "true",
     });
-
-    const { ownerSlug, packageSlug } = decodePackageSlug(options.assistant);
 
     const assistantRes = assistants.find(
       (a) => a.ownerSlug === ownerSlug && a.packageSlug === packageSlug,
