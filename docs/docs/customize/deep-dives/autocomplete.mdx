@@ -136,6 +136,14 @@ Yes, in VS Code, if you don't want to be shown suggestions automatically you can
 
 This is a built-in feature of VS Code, but it's just a bit hidden. See this great [StackOverflow answer](https://stackoverflow.com/questions/72228174/accept-line-by-line-from-autocompletion/78001122#78001122) for more details.
 
+Or, follow these settings to reassign the keyboard shortcuts in VS Code:
+1. Press `Ctrl+Shift+P`, type the command: `Preferences: Open Keyboard Shortcuts`, and enter the keyboard shortcuts settings page.
+2. Search for `editor.action.inlineSuggest.acceptNextLine`.
+3. Set the key binding to `Tab`.
+4. Set the trigger condition (when) to `inlineSuggestionVisible && !editorReadonly`.
+This will make multi-line completion (including continue and from VS Code built-in or other plugin snippets) still work, and you will see multi-line completion. However, Tab will only fill in one line at a time. Any unnecessary code can be canceled with `Esc`.
+If you need to apply all the code, just press `Tab` multiple times.
+
 ### How to turn off autocomplete
 
 #### VS Code
