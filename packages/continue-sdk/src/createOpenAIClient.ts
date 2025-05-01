@@ -47,11 +47,9 @@ export function createOpenAIClient({
   apiKey,
   baseURL = "https://api.continue.dev/",
 }: OpenAIClientOptions): OpenAI {
-  const proxyBaseURL = new URL("model-proxy/v1/", baseURL).toString();
-
   return new OpenAI({
     apiKey,
-    baseURL: proxyBaseURL,
+    baseURL: new URL("model-proxy/v1/", baseURL).toString(),
     fetch: async (url: RequestInfo, init?: RequestInit): Promise<Response> => {
       // Clone the init object to avoid modifying the original
       const modifiedInit = init ? { ...init } : {};
