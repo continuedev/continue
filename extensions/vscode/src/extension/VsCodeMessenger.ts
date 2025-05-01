@@ -230,15 +230,8 @@ export class VsCodeMessenger {
       });
       return fileAfterEdit;
     });
+
     this.onWebview("edit/clearDecorations", async (msg) => {
-      if (msg.data.shouldFocusEditor) {
-        const activeEditor = vscode.window.activeTextEditor;
-
-        if (activeEditor) {
-          vscode.window.showTextDocument(activeEditor.document);
-        }
-      }
-
       editDecorationManager.clear();
     });
 

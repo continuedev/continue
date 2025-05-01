@@ -81,7 +81,6 @@ function ModeSelect() {
         await dispatch(
           enterEditMode({
             returnToMode: mode,
-            returnCursorToEditor: false,
           }),
         );
       } else {
@@ -101,7 +100,6 @@ function ModeSelect() {
         await dispatch(
           enterEditMode({
             returnToMode: mode,
-            returnCursorToEditor: false,
           }),
         );
       } else {

@@ -52,7 +52,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     string | undefined,
   ];
   "edit/addCurrentSelection": [undefined, void];
-  "edit/clearDecorations": [{ shouldFocusEditor: boolean }, void];
+  "edit/clearDecorations": [undefined, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

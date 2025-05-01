@@ -1,7 +1,8 @@
 import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
-import { useRef } from "react";
+import { useContext, useRef } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
 import {
@@ -44,6 +45,7 @@ interface InputToolbarProps {
 
 function InputToolbar(props: InputToolbarProps) {
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
@@ -187,6 +189,7 @@ function InputToolbar(props: InputToolbarProps) {
               className="hidden hover:underline sm:flex"
               onClick={async () => {
                 dispatch(exitEditMode({}));
+                ideMessenger.post("focusEditor", undefined);
               }}
             >
               <span>

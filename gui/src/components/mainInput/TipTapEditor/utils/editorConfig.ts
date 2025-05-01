@@ -260,21 +260,24 @@ export function createEditorConfig(options: {
               return false;
             },
             Escape: () => {
+              if (inDropdownRef.current) {
+                return false;
+              }
               // In JetBrains, this is how we close the sidebar when the input box is focused
               if (isJetBrains()) {
                 ideMessenger.post("closeSidebar", undefined);
                 return true;
               }
 
-              if (inDropdownRef.current || modeRef.current !== "edit") {
-                ideMessenger.post("focusEditor", undefined);
-                return true;
+              if (modeRef.current !== "edit") {
+              } else {
+                dispatch(
+                  exitEditMode({
+                    openNewSession: false,
+                  }),
+                );
               }
-              dispatch(
-                exitEditMode({
-                  openNewSession: false,
-                }),
-              );
+              ideMessenger.post("focusEditor", undefined);
 
               return true;
             },

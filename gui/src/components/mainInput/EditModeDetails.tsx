@@ -1,3 +1,5 @@
+import { useContext } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { exitEditMode } from "../../redux/thunks/editMode";
 import AcceptRejectAllButtons from "../AcceptRejectAllButtons";
@@ -10,7 +12,8 @@ const EditModeDetails = () => {
   const editApplyState = useAppSelector(
     (store) => store.editModeState.applyState,
   );
-  const mainEditor = useMainEditor();
+  const { mainEditor } = useMainEditor();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   if (mode !== "edit") {
     return null;
@@ -30,8 +33,9 @@ const EditModeDetails = () => {
           onAcceptOrReject={async (outcome) => {
             if (outcome === "acceptDiff") {
               await dispatch(exitEditMode({}));
+              ideMessenger.post("focusEditor", undefined);
             } else {
-              mainEditor.mainEditor?.commands.focus();
+              mainEditor?.commands.focus();
             }
           }}
         />

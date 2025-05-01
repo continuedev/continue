@@ -6,7 +6,6 @@ import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import {
   clearCodeToEdit,
   INITIAL_EDIT_APPLY_STATE,
-  setReturnCursorToEditorAfterEdit,
   setReturnToModeAfterEdit,
   updateEditStateApplyState,
 } from "../slices/editModeState";
@@ -79,9 +78,7 @@ export const exitEditMode = createAsyncThunk<
       });
     }
 
-    extra.ideMessenger.post("edit/clearDecorations", {
-      shouldFocusEditor: state.editModeState.returnCursorToEditorAfterEdit,
-    });
+    extra.ideMessenger.post("edit/clearDecorations", undefined);
 
     dispatch(clearCodeToEdit());
     dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
@@ -102,35 +99,28 @@ export const exitEditMode = createAsyncThunk<
 
 export const enterEditMode = createAsyncThunk<
   void,
-  { returnToMode?: MessageModes; returnCursorToEditor?: boolean },
+  { returnToMode?: MessageModes },
   ThunkApiType
->(
-  "edit/enterMode",
-  async (
-    { returnCursorToEditor, returnToMode },
-    { dispatch, extra, getState },
-  ) => {
-    const state = getState();
+>("edit/enterMode", async ({ returnToMode }, { dispatch, extra, getState }) => {
+  const state = getState();
 
-    if (state.session.mode === "edit") {
-      return;
-    }
+  if (state.session.mode === "edit") {
+    return;
+  }
 
-    dispatch(setReturnToModeAfterEdit(returnToMode ?? state.session.mode));
-    dispatch(setReturnCursorToEditorAfterEdit(returnCursorToEditor ?? false));
+  dispatch(setReturnToModeAfterEdit(returnToMode ?? state.session.mode));
 
-    await dispatch(
-      saveCurrentSession({
-        openNewSession: true,
-        // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
-        generateTitle: false,
-      }),
-    );
-    dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
-    dispatch(setMode("edit"));
+  await dispatch(
+    saveCurrentSession({
+      openNewSession: true,
+      // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
+      generateTitle: false,
+    }),
+  );
+  dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
+  dispatch(setMode("edit"));
 
-    if (!state.editModeState.codeToEdit[0]) {
-      extra.ideMessenger.post("edit/addCurrentSelection", undefined);
-    }
-  },
-);
+  if (!state.editModeState.codeToEdit[0]) {
+    extra.ideMessenger.post("edit/addCurrentSelection", undefined);
+  }
+});

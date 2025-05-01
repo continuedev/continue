@@ -36,9 +36,7 @@ function CodeToEditItem({ code }: CodeToEditItemProps) {
 
   function onDelete() {
     dispatch(clearCodeToEdit());
-    ideMessenger.post("edit/clearDecorations", {
-      shouldFocusEditor: false,
-    });
+    ideMessenger.post("edit/clearDecorations", undefined);
   }
 
   const fileName = getUriPathBasename(code.filepath);

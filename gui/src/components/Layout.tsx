@@ -161,7 +161,6 @@ const Layout = () => {
       dispatch(
         setCodeToEdit({
           codeToEdit: payload,
-          fromEditor: true,
         }),
       );
     },

@@ -157,16 +157,6 @@ export function useMainEditorWebviewListeners({
   );
 
   useWebviewListener(
-    "focusEdit",
-    async () => {
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 20);
-    },
-    [editor],
-  );
-
-  useWebviewListener(
     "isContinueInputFocused",
     async () => {
       return !!editorFocusedRef.current;

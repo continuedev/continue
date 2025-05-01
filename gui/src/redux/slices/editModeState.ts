@@ -6,7 +6,6 @@ export interface EditModeState {
   // Keeping array to not break persisted redux for now
   codeToEdit: CodeToEdit[];
   applyState: ApplyState;
-  returnCursorToEditorAfterEdit: boolean;
   returnToMode: MessageModes;
   lastNonEditSessionWasEmpty: boolean;
 }
@@ -19,7 +18,6 @@ export const INITIAL_EDIT_APPLY_STATE: ApplyState = {
 const initialState: EditModeState = {
   applyState: INITIAL_EDIT_APPLY_STATE,
   codeToEdit: [],
-  returnCursorToEditorAfterEdit: false,
   returnToMode: "chat",
   lastNonEditSessionWasEmpty: false,
 };
@@ -28,12 +26,6 @@ export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    setReturnCursorToEditorAfterEdit: (
-      state,
-      { payload }: PayloadAction<boolean>,
-    ) => {
-      state.returnCursorToEditorAfterEdit = payload;
-    },
     setReturnToModeAfterEdit: (
       state,
       { payload }: PayloadAction<MessageModes>,
@@ -54,11 +46,9 @@ export const editModeStateSlice = createSlice({
       {
         payload,
       }: PayloadAction<{
-        fromEditor: boolean;
         codeToEdit: CodeToEdit | CodeToEdit[];
       }>,
     ) => {
-      state.returnCursorToEditorAfterEdit = payload.fromEditor;
       state.codeToEdit = Array.isArray(payload.codeToEdit)
         ? payload.codeToEdit
         : [payload.codeToEdit];
@@ -78,7 +68,6 @@ export const editModeStateSlice = createSlice({
 
 export const {
   setReturnToModeAfterEdit,
-  setReturnCursorToEditorAfterEdit,
   clearCodeToEdit,
   setCodeToEdit,
   updateEditStateApplyState,
