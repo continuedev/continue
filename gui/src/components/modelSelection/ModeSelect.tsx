@@ -13,7 +13,10 @@ import styled from "styled-components";
 import { lightGray } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { setMode } from "../../redux/slices/sessionSlice";
+import {
+  setMainEditorContentTrigger,
+  setMode,
+} from "../../redux/slices/sessionSlice";
 import { enterEditMode, exitEditMode } from "../../redux/thunks/editMode";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
 import { useMainEditor } from "../mainInput/TipTapEditor";
@@ -34,7 +37,9 @@ function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
+  const agentModeSupported = useMemo(() => {
+    return selectedModel && modelSupportsTools(selectedModel);
+  }, [selectedModel]);
   const { mainEditor } = useMainEditor();
   const jetbrains = useMemo(() => {
     return isJetBrains();
@@ -70,6 +75,9 @@ function ModeSelect() {
       : ["chat", "agent", "edit"];
     const currentIndex = modes.indexOf(mode);
     const nextMode = modes[(currentIndex + 1) % modes.length];
+
+    const mainEditorContent = mainEditor?.getJSON();
+
     if (mode === "edit") {
       await dispatch(
         exitEditMode({
@@ -87,6 +95,7 @@ function ModeSelect() {
         dispatch(setMode(nextMode));
       }
     }
+    dispatch(setMainEditorContentTrigger(mainEditorContent));
     mainEditor?.commands.focus();
   }, [jetbrains, mode, mainEditor]);
 
@@ -95,6 +104,7 @@ function ModeSelect() {
       if (newMode === mode) {
         return;
       }
+      const mainEditorContent = mainEditor?.getJSON();
 
       if (newMode === "edit") {
         await dispatch(
@@ -113,6 +123,7 @@ function ModeSelect() {
           dispatch(setMode(newMode));
         }
       }
+      dispatch(setMainEditorContentTrigger(mainEditorContent));
       mainEditor?.commands.focus();
     },
     [mode, mainEditor],
