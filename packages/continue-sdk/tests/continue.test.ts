@@ -26,7 +26,7 @@ test("should make a real API call to the Continue service", async () => {
     baseURL: "http://localhost:3001",
   });
 
-  const response = await client?.chat.completions.create({
+  const response = await client.chat.completions.create({
     model: assistant.getModel(modelName),
     messages: [
       { role: "system", content: assistant.systemMessage },

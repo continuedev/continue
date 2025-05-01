@@ -6,30 +6,17 @@ import { Assistant } from "./Assistant";
 import { createOpenAIClient } from "./createOpenAIClient";
 
 export interface ContinueClientOptions {
-  apiKey?: string;
+  assistant: string;
+  apiKey: string;
   organizationId?: string;
-  assistant?: string;
   baseURL?: string;
 }
 
-/**
- * Result from Continue.from() containing configured clients
- */
 export type ContinueResult = {
-  /**
-   * The Continue API client
-   */
   api: DefaultApi;
-} & (
-  | {
-      client: OpenAI;
-      assistant: Assistant;
-    }
-  | {
-      client?: undefined;
-      assistant?: undefined;
-    }
-);
+  client: OpenAI;
+  assistant: Assistant;
+};
 
 export class Continue {
   /**
@@ -49,12 +36,6 @@ export class Continue {
           : undefined,
       }),
     );
-
-    if (!options.assistant) {
-      return {
-        api,
-      };
-    }
 
     const { ownerSlug, packageSlug } = decodePackageSlug(options.assistant);
     if (!ownerSlug || !packageSlug) {
