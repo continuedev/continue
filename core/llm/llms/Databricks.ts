@@ -20,6 +20,7 @@ import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
+  ModelCapability,
 } from "../../index";
 // ThinkingContent を直接インポート
 import { ThinkingContent } from "../llms/index";
@@ -108,7 +109,7 @@ interface ToolCall {
 
 // ツール応答の型定義
 interface ToolResponse {
-  tool_call_id: string;
+  toolCallId: string;
   role: string;
   content: string;
 }
@@ -139,12 +140,10 @@ export default class Databricks extends OpenAI {
   private modelConfig: any = null;
   private globalConfig: any = null;
   
-  // Agent機能のサポートを宣言
-  capabilities = {
-    agent: true,      // Agentモードをサポート
-    chat: true,       // チャットモードをサポート
-    edit: true,       // 編集モードをサポート
-    toolUse: true     // ツール使用をサポート
+  // Agent機能のサポートを宣言（ModelCapabilityとして定義）
+  capabilities: ModelCapability = {
+    tools: true,      // ツール使用をサポート
+    uploadImage: false // 画像アップロードは非サポート
   };
   
   // Track thinking progress for UI visualization
@@ -232,14 +231,10 @@ export default class Databricks extends OpenAI {
                 modelConfig.defaultCompletionOptions.thinking.budget_tokens = 16000;
               }
               
-              // ケーパビリティの設定を追加
-              if (!modelConfig.capabilities) {
-                modelConfig.capabilities = {
-                  agent: true,
-                  chat: true,
-                  edit: true,
-                  toolUse: true
-                };
+              // Ensure capabilities are properly defined (array format)
+              if (!modelConfig.capabilities || !Array.isArray(modelConfig.capabilities)) {
+                console.log("Converting capabilities to array format");
+                modelConfig.capabilities = ["tool_use"];
               }
               
               console.log("Claude 3.7 Sonnet configuration:", {
@@ -304,15 +299,28 @@ export default class Databricks extends OpenAI {
       config.defaultCompletionOptions = {};
     }
     
-    // Agent機能のデフォルト設定
+    // 必ずcapabilitiesを配列形式にする（配列でない場合は変換）
     if (!config.capabilities) {
-      config.capabilities = {
-        agent: true,
-        chat: true,
-        edit: true,
-        toolUse: true
-      };
-      console.log("Warning: capabilities not configured, setting default values:", config.capabilities);
+      config.capabilities = ["tool_use"];
+      console.log("Warning: capabilities not configured, setting defaults:", config.capabilities);
+    } else if (!Array.isArray(config.capabilities)) {
+      // オブジェクト形式から配列形式への変換
+      const newCapabilities: string[] = [];
+      
+      if (config.capabilities.agent || config.capabilities.toolUse) {
+        newCapabilities.push("tool_use");
+      }
+      if (config.capabilities.edit) {
+        newCapabilities.push("edit");
+      }
+      if (config.capabilities.chat) {
+        newCapabilities.push("chat");
+      }
+      
+      console.log("Converting capabilities from object to array format:", 
+                 { before: config.capabilities, after: newCapabilities });
+      
+      config.capabilities = newCapabilities;
     }
     
     if (isClaudeSonnet37) {
@@ -377,11 +385,12 @@ export default class Databricks extends OpenAI {
       ...opts,
       apiKey: opts.apiKey ?? modelConfig.apiKey,
       apiBase: opts.apiBase ?? modelConfig.apiBase,
-      capabilities: modelConfig.capabilities || {
-        agent: true,
-        chat: true,
-        edit: true,
-        toolUse: true
+      // ModelCapabilityの形式で渡す
+      capabilities: {
+        tools: Array.isArray(modelConfig.capabilities) ? 
+              modelConfig.capabilities.includes("tool_use") : 
+              true,
+        uploadImage: false
       }
     };
     
@@ -672,26 +681,26 @@ export default class Databricks extends OpenAI {
           role: message.role === "user" ? "user" : "assistant",
           content: message.content
         };
-      } else if (message.role === "assistant" && message.tool_calls) {
+      } else if (message.role === "assistant" && message.toolCalls) {
         // ツール呼び出しを含むアシスタントメッセージをサポート
         return {
           role: "assistant",
           content: message.content || "",
-          tool_calls: message.tool_calls.map(call => ({
+          tool_calls: message.toolCalls.map(call => ({
             id: call.id,
             type: "function",
             function: {
-              name: call.function.name,
-              arguments: call.function.arguments
+              name: call.function?.name || "",
+              arguments: call.function?.arguments || "{}"
             }
           }))
         };
-      } else if (message.role === "tool" && message.tool_call_id) {
+      } else if (message.role === "tool" && message.toolCallId) {
         // ツール応答メッセージをサポート
         return {
           role: "tool",
           content: message.content || "",
-          tool_call_id: message.tool_call_id
+          tool_call_id: message.toolCallId
         };
       } else {
         console.log("Converting complex message content");
@@ -960,7 +969,7 @@ export default class Databricks extends OpenAI {
             const message: ChatMessage = {
               role: "assistant",
               content: "",
-              tool_calls: jsonResponse.tool_calls.map((call: any) => ({
+              toolCalls: jsonResponse.tool_calls.map((call: any) => ({
                 id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                 type: "function",
                 function: {
@@ -1046,7 +1055,7 @@ export default class Databricks extends OpenAI {
               const message: ChatMessage = {
                 role: "assistant",
                 content: "",
-                tool_calls: toolCalls.map((call: any) => ({
+                toolCalls: toolCalls.map((call: ToolCall) => ({
                   id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                   type: "function",
                   function: {
@@ -1317,7 +1326,7 @@ export default class Databricks extends OpenAI {
               const message: ChatMessage = {
                 role: "assistant",
                 content: "",
-                tool_calls: json.choices[0].delta.tool_calls.map((call: any) => ({
+                toolCalls: json.choices[0].delta.tool_calls.map((call: ToolCall) => ({
                   id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                   type: "function",
                   function: {
@@ -1361,7 +1370,7 @@ export default class Databricks extends OpenAI {
               const message: ChatMessage = {
                 role: "assistant",
                 content: "",
-                tool_calls: json.tool_calls.map((call: any) => ({
+                toolCalls: json.tool_calls.map((call: ToolCall) => ({
                   id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                   type: "function",
                   function: {

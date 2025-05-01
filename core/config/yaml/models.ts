@@ -6,6 +6,7 @@ import {
   IdeSettings,
   ILLMLogger,
   LLMOptions,
+  ModelCapability
 } from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";

@@ -5,6 +5,7 @@ import {
   ILLMLogger,
   JSONModelDescription,
   LLMOptions,
+  ModelCapability,
 } from "../..";
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
 import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
