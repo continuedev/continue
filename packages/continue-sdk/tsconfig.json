@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "strict": true,
     "outDir": "dist",
     "declaration": true,
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "client/**/*"],
   "exclude": ["node_modules", "dist"]
 }

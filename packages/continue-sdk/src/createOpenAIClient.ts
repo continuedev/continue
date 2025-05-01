@@ -2,7 +2,7 @@ import {
   AssistantUnrolled,
   ContinueProperties,
 } from "@continuedev/config-yaml";
-import fetch from "node-fetch";
+import fetch, { Response } from "node-fetch";
 import OpenAI from "openai";
 
 /**
@@ -50,7 +50,7 @@ export function createOpenAIClient({
   return new OpenAI({
     apiKey,
     baseURL: new URL("model-proxy/v1/", baseURL).toString(),
-    fetch: async (url: RequestInfo, init?: RequestInit): Promise<Response> => {
+    fetch: async (url, init) => {
       // Clone the init object to avoid modifying the original
       const modifiedInit = init ? { ...init } : {};
 

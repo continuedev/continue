@@ -1,9 +1,9 @@
 import { decodePackageSlug } from "@continuedev/config-yaml";
 import type { OpenAI } from "openai";
-import { Configuration } from "../clients/typescript/src";
-import { DefaultApi } from "../clients/typescript/src/apis/DefaultApi";
-import { Assistant } from "./Assistant";
-import { createOpenAIClient } from "./createOpenAIClient";
+import { DefaultApi } from "../clients/typescript/src/apis/DefaultApi.js";
+import { Configuration } from "../clients/typescript/src/index.js";
+import { Assistant } from "./Assistant.js";
+import { createOpenAIClient } from "./createOpenAIClient.js";
 
 export interface ContinueClientOptions {
   /**

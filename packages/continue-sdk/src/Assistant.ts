@@ -24,17 +24,23 @@ export class Assistant {
    * @param modelName - The name of the model to find
    * @returns The model configuration or the first model if no name is provided
    */
-  getModel(modelName: string): any {
-    if (!this.config.models || !this.config.models.length) {
+  getModel(modelName?: string): string {
+    const firstModel = this.config?.models?.[0];
+
+    if (!this.config.models || !firstModel) {
       throw new Error("No models available in assistant configuration");
+    }
+
+    if (!modelName) {
+      return firstModel.model;
     }
 
     // Look for a model matching the provided name
     const model = this.config.models.find(
-      (m: any) =>
-        m.model === modelName ||
-        m.model.includes(modelName) ||
-        m.model.endsWith(`/${modelName}`),
+      (m) =>
+        m?.model === modelName ||
+        m?.model.includes(modelName) ||
+        m?.model.endsWith(`/${modelName}`),
     );
 
     if (!model) {
@@ -56,6 +62,9 @@ export class Assistant {
       return "";
     }
 
-    return this.config.rules.join("\n");
+    return this.config.rules
+      ?.filter((rule) => !!rule)
+      .map((rule) => (typeof rule === "string" ? rule : rule?.rule))
+      .join("\n");
   }
 }
