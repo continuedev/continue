@@ -102,13 +102,32 @@ function processThinkingQueue() {
  * @param progress The progress value between 0 and 1
  */
 export function updateThinking(content: string, phase: string, progress: number) {
+  // 内容のバリデーション
+  if (!content || content.trim() === "") {
+    console.warn("空の思考コンテンツが送信されました。無視します。");
+    return;
+  }
+  
+  // デバッグログを追加
+  console.log(`思考更新: ${phase} - 進捗率: ${Math.round(progress * 100)}% - コンテンツ長: ${content.length}文字`);
+  
   // 更新をキューに追加
   thinkingQueue.push({ content, phase, progress });
+  
+  // VSCode拡張機能に直接通知（バックアップメカニズムとして）
+  if (vscode && vscode.commands) {
+    try {
+      vscode.commands.executeCommand('continue.appendThinkingChunk', content, phase, progress);
+      console.log("VS Codeに直接思考更新を送信しました");
+    } catch (e) {
+      console.warn("VS Codeへの直接更新に失敗しました:", e);
+    }
+  }
   
   // 即座に処理開始（スロットリングはプロセス内で行われる）
   processThinkingQueue();
   
-  console.log(`Thinking queued: ${phase} - Progress: ${Math.round(progress * 100)}%`);
+  console.log(`思考キューに追加: ${phase} - 進捗率: ${Math.round(progress * 100)}%`);
 }
 
 /**
@@ -119,12 +138,14 @@ export function thinkingCompleted() {
   thinkingQueue = [];
   isProcessingQueue = false;
   
+  console.log("思考プロセス完了 - 通知を送信します");
+  
   if (vscode && vscode.commands) {
     try {
       vscode.commands.executeCommand('continue.thinkingCompleted');
-      console.log("Thinking process completed notification sent");
+      console.log("思考プロセス完了通知が送信されました");
     } catch (e) {
-      console.warn("Failed to signal thinking completion:", e);
+      console.warn("思考完了の通知に失敗しました:", e);
     }
   }
 }

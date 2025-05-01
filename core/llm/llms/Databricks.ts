@@ -833,6 +833,42 @@ export default class Databricks extends OpenAI {
     }
   }
 
+  // JSON構造を詳細に調査するヘルパー関数
+  private inspectThinkingJSON(json: any) {
+    if (!json) return;
+    
+    console.log("=== THINKING JSON INSPECTION ===");
+    
+    // choices構造をチェック
+    if (json.choices && json.choices.length > 0 && json.choices[0].delta) {
+      const delta = json.choices[0].delta;
+      console.log("Found choices[0].delta structure");
+      
+      if (delta.content && Array.isArray(delta.content) && delta.content.length > 0) {
+        console.log("Found delta.content array with length:", delta.content.length);
+        
+        const firstContent = delta.content[0];
+        console.log("First content type:", firstContent.type);
+        
+        if (firstContent.type === "reasoning" && firstContent.summary) {
+          console.log("Found reasoning with summary:", 
+            Array.isArray(firstContent.summary) ? firstContent.summary.length + " items" : "not an array");
+          
+          if (Array.isArray(firstContent.summary) && firstContent.summary.length > 0) {
+            const summary = firstContent.summary[0];
+            console.log("Summary type:", summary.type);
+            console.log("Has text:", !!summary.text);
+            if (summary.text) {
+              console.log("First 50 chars:", summary.text.substring(0, 50) + "...");
+            }
+          }
+        }
+      }
+    }
+    
+    console.log("===============================");
+  }
+
   private processChunk(chunk: Uint8Array | Buffer): string {
     try {
       const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
@@ -1019,6 +1055,9 @@ export default class Databricks extends OpenAI {
             const json = JSON.parse(jsonStr);
             console.log("Parsed single JSON:", json);
             
+            // JSONの構造を詳細に調査
+            this.inspectThinkingJSON(json);
+            
             if (json.type === "message_stop" || 
                 json.done === true || 
                 (json.choices && json.choices[0]?.finish_reason === "stop")) {
@@ -1073,11 +1112,27 @@ export default class Databricks extends OpenAI {
               return { done: true, messages: out };
             }
             
-            if (json.thinking || (json.content && json.content[0]?.type === "reasoning")) {
-              const thinkingContent = json.thinking || 
-                                    (json.content && json.content[0]?.type === "reasoning" 
-                                      ? json.content[0].summary?.[0]?.text || "" 
-                                      : "");
+            // 思考内容の検出 - 追加の条件を含む
+            if (json.thinking || 
+                (json.content && json.content[0]?.type === "reasoning") ||
+                (json.choices && json.choices[0]?.delta?.content && 
+                 Array.isArray(json.choices[0].delta.content) && 
+                 json.choices[0].delta.content[0]?.type === "reasoning")) {
+              
+              let thinkingContent = "";
+              
+              if (json.thinking) {
+                thinkingContent = json.thinking;
+              } else if (json.content && json.content[0]?.type === "reasoning") {
+                thinkingContent = json.content[0].summary?.[0]?.text || "";
+              } else if (json.choices && json.choices[0]?.delta?.content && 
+                        Array.isArray(json.choices[0].delta.content) && 
+                        json.choices[0].delta.content[0]?.type === "reasoning") {
+                // この部分が追加 - Claude 3.7 Sonnetの特定のJSON構造を処理
+                thinkingContent = json.choices[0].delta.content[0].summary?.[0]?.text || "";
+                console.log("Extracted thinking from Claude 3.7 format:", 
+                          thinkingContent.substring(0, 50) + "...");
+              }
               
               if (thinkingContent) {
                 console.log("Detected Claude 3.7 thinking output (single JSON)");
@@ -1092,31 +1147,21 @@ export default class Databricks extends OpenAI {
                 // Update progress estimate
                 const progress = this.estimateThinkingProgress();
                 
-                // Send as ThinkingContent instead of ChatMessage
-                const thinkingMessage: ThinkingContent = {
+                // 思考パネルを強制的に更新
+                updateThinking(formattedThinking, this.thinkingPhase, progress);
+                
+                const thinkingObj: ThinkingContent = {
                   type: "thinking",
                   thinking: formattedThinking,
                   metadata: {
                     phase: this.thinkingPhase,
                     progress: progress,
-                    tokens: this.totalThinkingTokens,
+                    tokens: tokenEstimate,
                     elapsed_ms: Date.now() - this.thinkingStartTime
                   }
                 };
                 
-                // 特別なフラグを設定して即時更新を強制
-                const chatMessage: ThinkingChatMessage = {
-                  role: "assistant",
-                  content: `[thinking] ${formattedThinking}`,
-                  isThinking: true,
-                  thinking_metadata: {
-                    phase: this.thinkingPhase,
-                    progress: progress,
-                    formatted_text: formattedThinking
-                  }
-                };
-                
-                out.push(chatMessage as ChatMessage);
+                out.push(thinkingObj);
                 buffer = "";
                 return { done: false, messages: out };
               }
@@ -1151,19 +1196,21 @@ export default class Databricks extends OpenAI {
               // Update progress estimate
               const progress = this.estimateThinkingProgress();
               
-              // 特別なフラグを設定して即時更新を強制
-              const chatMessage: ThinkingChatMessage = {
-                role: "assistant",
-                content: `[thinking] ${formattedThinking}`,
-                isThinking: true,
-                thinking_metadata: {
+              // 思考パネルを更新
+              updateThinking(formattedThinking, this.thinkingPhase, progress);
+              
+              const thinkingObj: ThinkingContent = {
+                type: "thinking",
+                thinking: formattedThinking,
+                metadata: {
                   phase: this.thinkingPhase,
                   progress: progress,
-                  formatted_text: formattedThinking
+                  tokens: tokenEstimate,
+                  elapsed_ms: Date.now() - this.thinkingStartTime
                 }
               };
               
-              out.push(chatMessage as ChatMessage);
+              out.push(thinkingObj);
               continue;
             }
             
@@ -1186,6 +1233,9 @@ export default class Databricks extends OpenAI {
             const json = JSON.parse(data);
             console.log("Received SSE data:", JSON.stringify(json, null, 2));
             
+            // JSONの構造を詳細に調査
+            this.inspectThinkingJSON(json);
+            
             if (json.type === "message_stop" || 
                 json.done === true || 
                 (json.choices && json.choices[0]?.finish_reason === "stop")) {
@@ -1196,7 +1246,13 @@ export default class Databricks extends OpenAI {
               return { done: true, messages: out };
             }
             
-            if (json.thinking || (json.content && json.content[0]?.type === "reasoning")) {
+            // 思考内容の検出 - 追加の条件を含む
+            if (json.thinking || 
+                (json.content && json.content[0]?.type === "reasoning") ||
+                (json.choices && json.choices[0]?.delta?.content && 
+                Array.isArray(json.choices[0].delta.content) && 
+                json.choices[0].delta.content[0]?.type === "reasoning")) {
+              
               console.log("Detected thinking output");
               let newThinkingContent = "";
               
@@ -1204,6 +1260,13 @@ export default class Databricks extends OpenAI {
                 newThinkingContent = json.thinking;
               } else if (json.content && json.content[0]?.type === "reasoning") {
                 newThinkingContent = json.content[0].summary?.[0]?.text || "";
+              } else if (json.choices && json.choices[0]?.delta?.content && 
+                        Array.isArray(json.choices[0].delta.content) && 
+                        json.choices[0].delta.content[0]?.type === "reasoning") {
+                // この部分が追加 - Claude 3.7 Sonnetの特定のJSON構造を処理
+                newThinkingContent = json.choices[0].delta.content[0].summary?.[0]?.text || "";
+                console.log("Extracted thinking from Claude 3.7 format:", 
+                          newThinkingContent.substring(0, 50) + "...");
               }
               
               if (newThinkingContent) {
@@ -1224,19 +1287,21 @@ export default class Databricks extends OpenAI {
                 // Update progress estimate
                 const progress = this.estimateThinkingProgress();
                 
-                // 特別なフラグを設定して即時更新を強制
-                const chatMessage: ThinkingChatMessage = {
-                  role: "assistant",
-                  content: `[thinking] ${formattedThinking}`,
-                  isThinking: true,
-                  thinking_metadata: {
+                // 思考パネルを強制的に更新
+                updateThinking(formattedThinking, this.thinkingPhase, progress);
+                
+                const thinkingObj: ThinkingContent = {
+                  type: "thinking",
+                  thinking: formattedThinking,
+                  metadata: {
                     phase: this.thinkingPhase,
                     progress: progress,
-                    formatted_text: formattedThinking
+                    tokens: tokenEstimate,
+                    elapsed_ms: Date.now() - this.thinkingStartTime
                   }
                 };
                 
-                out.push(chatMessage as ChatMessage);
+                out.push(thinkingObj);
               }
             }
             else if (json.type === "content_block_start" && json.content_block?.type === "thinking") {
@@ -1255,19 +1320,21 @@ export default class Databricks extends OpenAI {
                 // Update progress estimate
                 const progress = this.estimateThinkingProgress();
                 
-                // 特別なフラグを設定して即時更新を強制
-                const chatMessage: ThinkingChatMessage = {
-                  role: "assistant",
-                  content: `[thinking] ${formattedThinking}`,
-                  isThinking: true,
-                  thinking_metadata: {
+                // 思考パネルを強制的に更新
+                updateThinking(formattedThinking, this.thinkingPhase, progress);
+                
+                const thinkingObj: ThinkingContent = {
+                  type: "thinking",
+                  thinking: formattedThinking,
+                  metadata: {
                     phase: this.thinkingPhase,
                     progress: progress,
-                    formatted_text: formattedThinking
+                    tokens: tokenEstimate,
+                    elapsed_ms: Date.now() - this.thinkingStartTime
                   }
                 };
                 
-                out.push(chatMessage as ChatMessage);
+                out.push(thinkingObj);
               }
             }
             else if (json.type === "content_block_delta" && json.delta?.type === "thinking_delta") {
@@ -1286,19 +1353,21 @@ export default class Databricks extends OpenAI {
                 // Update progress estimate
                 const progress = this.estimateThinkingProgress();
                 
-                // 特別なフラグを設定して即時更新を強制
-                const chatMessage: ThinkingChatMessage = {
-                  role: "assistant",
-                  content: `[thinking] ${formattedThinking}`,
-                  isThinking: true,
-                  thinking_metadata: {
+                // 思考パネルを強制的に更新
+                updateThinking(formattedThinking, this.thinkingPhase, progress);
+                
+                const thinkingObj: ThinkingContent = {
+                  type: "thinking",
+                  thinking: formattedThinking,
+                  metadata: {
                     phase: this.thinkingPhase,
                     progress: progress,
-                    formatted_text: formattedThinking
+                    tokens: tokenEstimate,
+                    elapsed_ms: Date.now() - this.thinkingStartTime
                   }
                 };
                 
-                out.push(chatMessage as ChatMessage);
+                out.push(thinkingObj);
               }
             }
             else if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
@@ -1452,69 +1521,63 @@ export default class Databricks extends OpenAI {
             
             const { done: end, messages } = parseSSE(decodedChunk);
             
-            // 各メッセージごとに即時yieldして出力を更新
+            // 思考メッセージかどうかを判定するヘルパー関数
+              const isThinkingMessage = (msg: any): boolean => {
+              if ('type' in msg && msg.type === 'thinking') {
+                return true;
+            }
+            if ((msg as ThinkingChatMessage).isThinking) {
+              return true;
+            }
+            if (typeof msg.content === 'string' && msg.content.startsWith('[thinking]')) {
+            return true;
+            }
+            return false;
+            };
+
+            // 各メッセージごとに処理
             for (const m of messages) {
-              // 大きな思考チャンクを分割して処理（UIのレスポンシブ性向上）
-              if ('type' in m && m.type === 'thinking' && m.thinking.length > 2000) {
-                // 長い思考内容は段落ごとに分割して処理
-                const paragraphs = m.thinking.split(/\n\n+/);
-                let buffer = "";
-                
+            // 思考メッセージの場合
+            if (isThinkingMessage(m)) {
+            // 思考パネルに送る
+            if ('type' in m && m.type === 'thinking') {
+            // 長い思考内容は段落ごとに分割して処理
+            if (m.thinking.length > 2000) {
+              const paragraphs = m.thinking.split(/\n\n+/);
+              let buffer = "";
+              
                 for (const paragraph of paragraphs) {
-                  buffer += paragraph + "\n\n";
-                  
-                  // ある程度たまったらyield
-                  if (buffer.length > 500) {
-                    const chatMessage: ThinkingChatMessage = {
-                      role: "assistant",
-                      content: `[thinking] ${buffer}`,
-                      isThinking: true,
-                      thinking_metadata: {
-                        phase: this.thinkingPhase,
-                        progress: this.thinkingProgress,
-                        formatted_text: buffer
-                      }
-                    };
-                    yield chatMessage as ChatMessage;
-                    buffer = "";
-                  }
-                }
-                
-                // 残りがあれば最後にyield
-                if (buffer) {
-                  const chatMessage: ThinkingChatMessage = {
-                    role: "assistant",
-                    content: `[thinking] ${buffer}`,
-                    isThinking: true,
-                    thinking_metadata: {
-                      phase: this.thinkingPhase,
-                      progress: this.thinkingProgress,
-                      formatted_text: buffer
-                    }
-                  };
-                  yield chatMessage as ChatMessage;
+                    buffer += paragraph + "\n\n";
+                    
+                    // ある程度たまったら思考パネルに送る
+                    if (buffer.length > 500) {
+                    updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
+                  buffer = "";
                 }
               }
-              // ThinkingContentかどうかを確認
-              else if ('type' in m && m.type === 'thinking') {
-                // ThinkingContentをChatMessageに変換して返す
-                const chatMessage: ThinkingChatMessage = {
-                  role: "assistant",
-                  content: `[thinking] ${m.thinking}`,
-                  isThinking: true,
-                  thinking_metadata: {
-                    phase: this.thinkingPhase,
-                    progress: this.thinkingProgress,
-                    formatted_text: m.thinking
-                  }
-                };
-                yield chatMessage as ChatMessage;
-              } else if ((m as ThinkingChatMessage).isThinking) {
-                // 既にThinkingChatMessageになっている場合はそのままyield
-                yield m as ChatMessage;
+              
+            // 残りがあれば最後に送る
+            if (buffer) {
+              updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
+              }
               } else {
-                // 通常のChatMessageの場合
-                yield m as ChatMessage;
+                // 通常の思考コンテンツ
+                  updateThinking(m.thinking, m.metadata?.phase || this.thinkingPhase, m.metadata?.progress || this.thinkingProgress);
+                  }
+                } else if ((m as ThinkingChatMessage).isThinking) {
+                  // ThinkingChatMessageの場合
+                const thinkMsg = m as ThinkingChatMessage;
+                const thinkingContent = typeof thinkMsg.content === 'string' ? thinkMsg.content.replace(/^\[thinking\]\s*/, '') : (Array.isArray(thinkMsg.content) ? JSON.stringify(thinkMsg.content) : '');
+              updateThinking(
+                thinkMsg.thinking_metadata?.formatted_text || thinkingContent,
+                thinkMsg.thinking_metadata?.phase || this.thinkingPhase,
+                thinkMsg.thinking_metadata?.progress || this.thinkingProgress
+            );
+            }
+            // チャットには送らない（yieldしない）
+            } else {
+              // 通常のChatMessageの場合のみyield
+              yield m as ChatMessage;
               }
             }
             
@@ -1560,26 +1623,22 @@ export default class Databricks extends OpenAI {
         }
         
         if (buffer.trim()) {
-          console.log("Processing remaining buffer:", buffer.length);
-          const { messages } = parseSSE("");
-          for (const m of messages) {
-            if ('type' in m && m.type === 'thinking') {
-              // ThinkingContentをChatMessageに変換して返す
-              const chatMessage: ThinkingChatMessage = {
-                role: "assistant", 
-                content: `[thinking] ${m.thinking}`,
-                isThinking: true,
-                thinking_metadata: {
-                  phase: this.thinkingPhase,
-                  progress: this.thinkingProgress,
-                  formatted_text: m.thinking
-                }
-              };
-              yield chatMessage as ChatMessage;
-            } else {
-              yield m as ChatMessage;
-            }
-          }
+        console.log("Processing remaining buffer:", buffer.length);
+        const { messages } = parseSSE("");
+        for (const m of messages) {
+        // 思考メッセージかどうかを判定
+        const isThinking = 'type' in m && m.type === 'thinking';
+        
+        if (isThinking) {
+        // 思考モードの内容は思考パネルにのみ送る
+        const thinkingContent = m.thinking;
+        updateThinking(thinkingContent, this.thinkingPhase, this.thinkingProgress);
+        // チャットにはyieldしない
+        } else {
+        // 通常のメッセージのみyield
+        yield m as ChatMessage;
+        }
+        }
         }
         
         if (thinkingContent) {
@@ -1627,68 +1686,62 @@ export default class Databricks extends OpenAI {
             
             const { done, messages } = parseSSE(decodedChunk);
             
-            // 各メッセージごとに即時yieldして出力を更新
-            for (const m of messages) {
-              // 大きな思考チャンクを分割して処理（UIのレスポンシブ性向上）
-              if ('type' in m && m.type === 'thinking' && m.thinking.length > 2000) {
-                // 長い思考内容は段落ごとに分割して処理
-                const paragraphs = m.thinking.split(/\n\n+/);
-                let buffer = "";
-                
-                for (const paragraph of paragraphs) {
-                  buffer += paragraph + "\n\n";
-                  
-                  // ある程度たまったらyield
-                  if (buffer.length > 500) {
-                    const chatMessage: ThinkingChatMessage = {
-                      role: "assistant",
-                      content: `[thinking] ${buffer}`,
-                      isThinking: true,
-                      thinking_metadata: {
-                        phase: this.thinkingPhase,
-                        progress: this.thinkingProgress,
-                        formatted_text: buffer
-                      }
-                    };
-                    yield chatMessage as ChatMessage;
-                    buffer = "";
-                  }
-                }
-                
-                // 残りがあれば最後にyield
-                if (buffer) {
-                  const chatMessage: ThinkingChatMessage = {
-                    role: "assistant",
-                    content: `[thinking] ${buffer}`,
-                    isThinking: true,
-                    thinking_metadata: {
-                      phase: this.thinkingPhase,
-                      progress: this.thinkingProgress,
-                      formatted_text: buffer
-                    }
-                  };
-                  yield chatMessage as ChatMessage;
-                }
+            // 思考メッセージかどうかを判定するヘルパー関数
+            const isThinkingMessage = (msg: any): boolean => {
+              if ('type' in msg && msg.type === 'thinking') {
+                return true;
               }
-              // ThinkingContentかどうかを確認
-              else if ('type' in m && m.type === 'thinking') {
-                // ThinkingContentをChatMessageに変換して返す
-                const chatMessage: ThinkingChatMessage = {
-                  role: "assistant",
-                  content: `[thinking] ${m.thinking}`,
-                  isThinking: true,
-                  thinking_metadata: {
-                    phase: this.thinkingPhase,
-                    progress: this.thinkingProgress,
-                    formatted_text: m.thinking
+              if ((msg as ThinkingChatMessage).isThinking) {
+                return true;
+              }
+              if (typeof msg.content === 'string' && msg.content.startsWith('[thinking]')) {
+                return true;
+              }
+              return false;
+            };
+
+            // 各メッセージごとに処理
+            for (const m of messages) {
+              // 思考メッセージの場合
+              if (isThinkingMessage(m)) {
+                // 思考パネルに送る
+                if ('type' in m && m.type === 'thinking') {
+                  // 長い思考内容は段落ごとに分割して処理
+                  if (m.thinking.length > 2000) {
+                    const paragraphs = m.thinking.split(/\n\n+/);
+                    let buffer = "";
+                    
+                    for (const paragraph of paragraphs) {
+                      buffer += paragraph + "\n\n";
+                      
+                      // ある程度たまったら思考パネルに送る
+                      if (buffer.length > 500) {
+                        updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
+                        buffer = "";
+                      }
+                    }
+                    
+                    // 残りがあれば最後に送る
+                    if (buffer) {
+                      updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
+                    }
+                  } else {
+                    // 通常の思考コンテンツ
+                    updateThinking(m.thinking, m.metadata?.phase || this.thinkingPhase, m.metadata?.progress || this.thinkingProgress);
                   }
-                };
-                yield chatMessage as ChatMessage;
-              } else if ((m as ThinkingChatMessage).isThinking) {
-                // 既にThinkingChatMessageになっている場合はそのままyield
-                yield m as ChatMessage;
+                } else if ((m as ThinkingChatMessage).isThinking) {
+                  // ThinkingChatMessageの場合
+                  const thinkMsg = m as ThinkingChatMessage;
+                  const thinkingContent = typeof thinkMsg.content === 'string' ? thinkMsg.content.replace(/^\[thinking\]\s*/, '') : (Array.isArray(thinkMsg.content) ? JSON.stringify(thinkMsg.content) : '');
+                  updateThinking(
+                    thinkMsg.thinking_metadata?.formatted_text || thinkingContent,
+                    thinkMsg.thinking_metadata?.phase || this.thinkingPhase,
+                    thinkMsg.thinking_metadata?.progress || this.thinkingProgress
+                  );
+                }
+                // チャットには送らない（yieldしない）
               } else {
-                // 通常のChatMessageの場合
+                // 通常のChatMessageの場合のみyield
                 yield m as ChatMessage;
               }
             }
@@ -1745,26 +1798,22 @@ export default class Databricks extends OpenAI {
         }
         
         if (buffer.trim()) {
-          console.log("Processing remaining buffer:", buffer.length);
-          const { messages } = parseSSE("");
-          for (const m of messages) {
-            if ('type' in m && m.type === 'thinking') {
-              // ThinkingContentをChatMessageに変換して返す
-              const chatMessage: ThinkingChatMessage = {
-                role: "assistant",
-                content: `[thinking] ${m.thinking}`,
-                isThinking: true,
-                thinking_metadata: {
-                  phase: this.thinkingPhase,
-                  progress: this.thinkingProgress,
-                  formatted_text: m.thinking
-                }
-              };
-              yield chatMessage as ChatMessage;
-            } else {
-              yield m as ChatMessage;
-            }
-          }
+        console.log("Processing remaining buffer:", buffer.length);
+        const { messages } = parseSSE("");
+        for (const m of messages) {
+        // 思考メッセージかどうかを判定
+        const isThinking = 'type' in m && m.type === 'thinking';
+        
+        if (isThinking) {
+        // 思考モードの内容は思考パネルにのみ送る
+        const thinkingContent = m.thinking;
+        updateThinking(thinkingContent, this.thinkingPhase, this.thinkingProgress);
+        // チャットにはyieldしない
+        } else {
+        // 通常のメッセージのみyield
+        yield m as ChatMessage;
+        }
+        }
         }
         
         if (thinkingContent) {
