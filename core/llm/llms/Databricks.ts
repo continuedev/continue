@@ -157,6 +157,10 @@ export default class Databricks extends OpenAI {
   // バッファ管理の改善
   private pendingThinkingUpdates: string[] = [];
   
+  // ストリーム状態管理フラグを追加
+  private isStreamActive: boolean = false;
+  private hasCompletedThinking: boolean = false;
+  
   private static loadConfigFromYaml(modelName: string): any {
     console.log("Attempting to load config from YAML for model:", modelName);
     
@@ -627,6 +631,8 @@ export default class Databricks extends OpenAI {
       this.thinkingStartTime = Date.now();
       this.lastThinkingUpdateTime = Date.now();
       this.pendingThinkingUpdates = [];
+      this.isStreamActive = false;
+      this.hasCompletedThinking = false;
       
       // Notify the thinking panel that we're starting to think
       updateThinking("Starting a new thinking process...\n\n", "initial", 0);
@@ -882,6 +888,24 @@ export default class Databricks extends OpenAI {
     }
   }
 
+  // 思考完了時の処理を強化する関数
+  private ensureThinkingComplete() {
+    if (!this.hasCompletedThinking) {
+      console.log("Ensuring thinking completion is properly handled");
+      // 思考完了通知を送信
+      thinkingCompleted();
+      this.hasCompletedThinking = true;
+      
+      // 通知が確実に処理されるよう遅延実行も追加
+      setTimeout(() => {
+        if (this.isStreamActive) {
+          console.log("追加の思考完了通知を送信（バックアップ）");
+          thinkingCompleted();
+        }
+      }, 1000);
+    }
+  }
+
   protected async *_streamChat(
     msgs: ChatMessage[],
     signal: AbortSignal,
@@ -889,45 +913,49 @@ export default class Databricks extends OpenAI {
   ): AsyncGenerator<ChatMessage> {
     console.log("_streamChat called with messages length:", msgs.length);
     
-    const convertedMessages = this.convertMessages(msgs);
-    const originalSystemMessage = this.extractSystemMessage(msgs);
-    
-    const enhancedSystemMessage = this.createEnhancedSystemMessage(options, originalSystemMessage);
-    
-    // Agent機能のためのツール定義サポートを追加
-    let toolsParameter: any = undefined;
-    
-    if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
-      console.log(`Converting ${options.tools.length} tools for Databricks API`);
-      toolsParameter = Databricks.convertToolDefinitionsForDatabricks(options.tools);
-    }
-    
-    const body = {
-      ...this.convertArgs(options),
-      messages: convertedMessages,
-      system: enhancedSystemMessage
-    };
-    
-    // ツールが定義されている場合はリクエストに追加
-    if (toolsParameter) {
-      body.tools = toolsParameter;
-      // ツールの選択パラメータを設定
-      body.tool_choice = options.toolChoice || "auto";
-    }
-    
-    const enableStreaming = this.getEnableStreamingFromConfig();
-    body.stream = enableStreaming && (body.stream !== false);
-    
-    const sanitizedBody = { ...body };
-    if (body.messages) {
-      sanitizedBody.messages = `[${convertedMessages.length} messages]`;
-    }
-    console.log("Sending request with body:", JSON.stringify(sanitizedBody, null, 2));
-    
-    const invocationUrl = this.getInvocationUrl();
-    console.log("Sending request to:", this.sanitizeUrlForLogs(invocationUrl));
+    // ストリーム状態管理フラグをリセット
+    this.isStreamActive = true;
+    this.hasCompletedThinking = false;
     
     try {
+      const convertedMessages = this.convertMessages(msgs);
+      const originalSystemMessage = this.extractSystemMessage(msgs);
+      
+      const enhancedSystemMessage = this.createEnhancedSystemMessage(options, originalSystemMessage);
+      
+      // Agent機能のためのツール定義サポートを追加
+      let toolsParameter: any = undefined;
+      
+      if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+        console.log(`Converting ${options.tools.length} tools for Databricks API`);
+        toolsParameter = Databricks.convertToolDefinitionsForDatabricks(options.tools);
+      }
+      
+      const body = {
+        ...this.convertArgs(options),
+        messages: convertedMessages,
+        system: enhancedSystemMessage
+      };
+      
+      // ツールが定義されている場合はリクエストに追加
+      if (toolsParameter) {
+        body.tools = toolsParameter;
+        // ツールの選択パラメータを設定
+        body.tool_choice = options.toolChoice || "auto";
+      }
+      
+      const enableStreaming = this.getEnableStreamingFromConfig();
+      body.stream = enableStreaming && (body.stream !== false);
+      
+      const sanitizedBody = { ...body };
+      if (body.messages) {
+        sanitizedBody.messages = `[${convertedMessages.length} messages]`;
+      }
+      console.log("Sending request with body:", JSON.stringify(sanitizedBody, null, 2));
+      
+      const invocationUrl = this.getInvocationUrl();
+      console.log("Sending request to:", this.sanitizeUrlForLogs(invocationUrl));
+      
       const timeout = this.getTimeoutFromConfig();
       
       const fetchOptions = {
@@ -949,6 +977,10 @@ export default class Databricks extends OpenAI {
       if (!res.ok || !res.body) {
         const errorMsg = `HTTP ${res.status}`;
         console.error("HTTP error response:", res.status, res.statusText);
+        
+        // エラー時には思考完了通知を確実に送信
+        this.ensureThinkingComplete();
+        
         throw new Error(errorMsg);
       }
 
@@ -956,6 +988,9 @@ export default class Databricks extends OpenAI {
         console.log("Non-streaming mode, processing single response");
         const jsonResponse = await res.json();
         console.log("Received complete response:", JSON.stringify(jsonResponse, null, 2));
+        
+        // 非ストリーミングモードでも思考完了通知を確実に送信
+        this.ensureThinkingComplete();
         
         try {
           if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
@@ -1064,8 +1099,8 @@ export default class Databricks extends OpenAI {
                 
               buffer = "";
               
-              // Signal the thinking panel that thinking is complete
-              thinkingCompleted();
+              // 思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               
               return { done: true, messages: out };
             }
@@ -1080,8 +1115,8 @@ export default class Databricks extends OpenAI {
               out.push(message);
               buffer = "";
               
-              // Signal the thinking panel that thinking is complete
-              thinkingCompleted();
+              // 思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               
               return { done: true, messages: out };
             }
@@ -1106,8 +1141,8 @@ export default class Databricks extends OpenAI {
               out.push(message);
               buffer = "";
               
-              // Signal the thinking panel that thinking is complete
-              thinkingCompleted();
+              // 思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               
               return { done: true, messages: out };
             }
@@ -1223,8 +1258,8 @@ export default class Databricks extends OpenAI {
           if (data === "[DONE]") {
             console.log("Received [DONE] marker");
             
-            // Signal the thinking panel that thinking is complete
-            thinkingCompleted();
+            // 思考完了通知を確実に送信
+            this.ensureThinkingComplete();
             
             return { done: true, messages: out };
           }
@@ -1240,8 +1275,8 @@ export default class Databricks extends OpenAI {
                 json.done === true || 
                 (json.choices && json.choices[0]?.finish_reason === "stop")) {
                 
-              // Signal the thinking panel that thinking is complete
-              thinkingCompleted();
+              // 思考完了通知を確実に送信
+              this.ensureThinkingComplete();
                 
               return { done: true, messages: out };
             }
@@ -1370,6 +1405,11 @@ export default class Databricks extends OpenAI {
                 out.push(thinkingObj);
               }
             }
+            else if (json.type === "content_block_stop" && json.content_block?.type === "thinking") {
+              console.log("Detected Anthropic thinking block stop - explicitにthinking completedを送信");
+              // 思考完了通知を確実に送信
+              this.ensureThinkingComplete();
+            }
             else if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
               console.log("Detected Anthropic text delta");
               
@@ -1483,21 +1523,23 @@ export default class Databricks extends OpenAI {
         const streamTimeout = this.getTimeoutFromConfig();
         let lastActivityTimestamp = Date.now();
         
-        while (true) {
-          try {
+        try {
+          while (true) {
             const { done, value } = await reader.read();
             
             lastActivityTimestamp = Date.now();
             
             if (Date.now() - startTime > streamTimeout) {
+              // タイムアウト時に思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               return;
             }
             
             if (done) {
               console.log("Stream reading complete");
               
-              // Signal the thinking panel that thinking is complete
-              thinkingCompleted();
+              // ストリーム完了時に思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               
               break;
             }
@@ -1525,64 +1567,67 @@ export default class Databricks extends OpenAI {
               const isThinkingMessage = (msg: any): boolean => {
               if ('type' in msg && msg.type === 'thinking') {
                 return true;
-            }
-            if ((msg as ThinkingChatMessage).isThinking) {
-              return true;
-            }
-            if (typeof msg.content === 'string' && msg.content.startsWith('[thinking]')) {
-            return true;
-            }
-            return false;
+              }
+              if ((msg as ThinkingChatMessage).isThinking) {
+                return true;
+              }
+              if (typeof msg.content === 'string' && msg.content.startsWith('[thinking]')) {
+                return true;
+              }
+              return false;
             };
 
             // 各メッセージごとに処理
             for (const m of messages) {
-            // 思考メッセージの場合
-            if (isThinkingMessage(m)) {
-            // 思考パネルに送る
-            if ('type' in m && m.type === 'thinking') {
-            // 長い思考内容は段落ごとに分割して処理
-            if (m.thinking.length > 2000) {
-              const paragraphs = m.thinking.split(/\n\n+/);
-              let buffer = "";
-              
-                for (const paragraph of paragraphs) {
-                    buffer += paragraph + "\n\n";
+              // 思考メッセージの場合
+              if (isThinkingMessage(m)) {
+                // 思考パネルに送る
+                if ('type' in m && m.type === 'thinking') {
+                  // 長い思考内容は段落ごとに分割して処理
+                  if (m.thinking.length > 2000) {
+                    const paragraphs = m.thinking.split(/\n\n+/);
+                    let buffer = "";
                     
-                    // ある程度たまったら思考パネルに送る
-                    if (buffer.length > 500) {
-                    updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
-                  buffer = "";
-                }
-              }
-              
-            // 残りがあれば最後に送る
-            if (buffer) {
-              updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
-              }
-              } else {
-                // 通常の思考コンテンツ
-                  updateThinking(m.thinking, m.metadata?.phase || this.thinkingPhase, m.metadata?.progress || this.thinkingProgress);
+                    for (const paragraph of paragraphs) {
+                      buffer += paragraph + "\n\n";
+                      
+                      // ある程度たまったら思考パネルに送る
+                      if (buffer.length > 500) {
+                        updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
+                        buffer = "";
+                      }
+                    }
+                    
+                    // 残りがあれば最後に送る
+                    if (buffer) {
+                      updateThinking(buffer, this.thinkingPhase, this.thinkingProgress);
+                    }
+                  } else {
+                    // 通常の思考コンテンツ
+                    updateThinking(m.thinking, m.metadata?.phase || this.thinkingPhase, m.metadata?.progress || this.thinkingProgress);
                   }
                 } else if ((m as ThinkingChatMessage).isThinking) {
                   // ThinkingChatMessageの場合
-                const thinkMsg = m as ThinkingChatMessage;
-                const thinkingContent = typeof thinkMsg.content === 'string' ? thinkMsg.content.replace(/^\[thinking\]\s*/, '') : (Array.isArray(thinkMsg.content) ? JSON.stringify(thinkMsg.content) : '');
-              updateThinking(
-                thinkMsg.thinking_metadata?.formatted_text || thinkingContent,
-                thinkMsg.thinking_metadata?.phase || this.thinkingPhase,
-                thinkMsg.thinking_metadata?.progress || this.thinkingProgress
-            );
-            }
-            // チャットには送らない（yieldしない）
-            } else {
-              // 通常のChatMessageの場合のみyield
-              yield m as ChatMessage;
+                  const thinkMsg = m as ThinkingChatMessage;
+                  const thinkingContent = typeof thinkMsg.content === 'string' ? thinkMsg.content.replace(/^\[thinking\]\s*/, '') : (Array.isArray(thinkMsg.content) ? JSON.stringify(thinkMsg.content) : '');
+                  updateThinking(
+                    thinkMsg.thinking_metadata?.formatted_text || thinkingContent,
+                    thinkMsg.thinking_metadata?.phase || this.thinkingPhase,
+                    thinkMsg.thinking_metadata?.progress || this.thinkingProgress
+                  );
+                }
+                // チャットには送らない（yieldしない）
+              } else {
+                // 通常のChatMessageの場合のみyield
+                yield m as ChatMessage;
               }
             }
             
             if (end) {
               console.log("Detected stream end marker");
+              
+              // ストリーム終了時に思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               
               const message: ChatMessage = {
                 role: "assistant",
@@ -1592,54 +1637,49 @@ export default class Databricks extends OpenAI {
               
               return;
             }
-          } catch (chunkError) {
-            console.error("Chunk reading error:", chunkError);
-            
-            if (Date.now() - lastActivityTimestamp > 10000) {
-              console.log("No stream activity - terminating as unrecoverable");
-              
-              // Signal the thinking panel that thinking is complete
-              try {
-                if (typeof vscode !== 'undefined' && vscode && vscode.commands) {
-                  vscode.commands.executeCommand('continue.thinkingCompleted');
-                }
-              } catch (e) {
-                console.debug("Error executing VSCode command:", e);
-                // Ignore errors, as vscode API might not be available
-              }
-              
-              const message: ChatMessage = {
-                role: "assistant",
-                content: "[Stream interrupted] Partial response: " + 
-                        (thinkingContent ? "\n\n[Thinking Process]\n" + thinkingContent.substring(0, 1000) + "..." : "")
-              };
-              yield message;
-              return;
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
           }
+        } catch (chunkError) {
+          console.error("Chunk reading error:", chunkError);
+          
+          // エラー発生時にも思考完了通知を確実に送信
+          this.ensureThinkingComplete();
+          
+          if (Date.now() - lastActivityTimestamp > 10000) {
+            console.log("No stream activity - terminating as unrecoverable");
+            
+            const message: ChatMessage = {
+              role: "assistant",
+              content: "[Stream interrupted] Partial response: " + 
+                      (thinkingContent ? "\n\n[Thinking Process]\n" + thinkingContent.substring(0, 1000) + "..." : "")
+            };
+            yield message;
+            return;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
         
         if (buffer.trim()) {
-        console.log("Processing remaining buffer:", buffer.length);
-        const { messages } = parseSSE("");
-        for (const m of messages) {
-        // 思考メッセージかどうかを判定
-        const isThinking = 'type' in m && m.type === 'thinking';
+          console.log("Processing remaining buffer:", buffer.length);
+          const { messages } = parseSSE("");
+          for (const m of messages) {
+            // 思考メッセージかどうかを判定
+            const isThinking = 'type' in m && m.type === 'thinking';
+            
+            if (isThinking) {
+              // 思考モードの内容は思考パネルにのみ送る
+              const thinkingContent = m.thinking;
+              updateThinking(thinkingContent, this.thinkingPhase, this.thinkingProgress);
+              // チャットにはyieldしない
+            } else {
+              // 通常のメッセージのみyield
+              yield m as ChatMessage;
+            }
+          }
+        }
         
-        if (isThinking) {
-        // 思考モードの内容は思考パネルにのみ送る
-        const thinkingContent = m.thinking;
-        updateThinking(thinkingContent, this.thinkingPhase, this.thinkingProgress);
-        // チャットにはyieldしない
-        } else {
-        // 通常のメッセージのみyield
-        yield m as ChatMessage;
-        }
-        }
-        }
+        // 処理完了時にも思考完了通知を確実に送信
+        this.ensureThinkingComplete();
         
         if (thinkingContent) {
           console.log("\n======= THINKING PROCESS SUMMARY =======");
@@ -1670,6 +1710,8 @@ export default class Databricks extends OpenAI {
             const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
             
             if (Date.now() - startTime > streamTimeout) {
+              // タイムアウト時に思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               return;
             }
             
@@ -1749,15 +1791,8 @@ export default class Databricks extends OpenAI {
             if (done) {
               console.log("Detected stream end marker");
               
-              // Signal the thinking panel that thinking is complete
-              try {
-                if (typeof vscode !== 'undefined' && vscode && vscode.commands) {
-                  vscode.commands.executeCommand('continue.thinkingCompleted');
-                }
-              } catch (e) {
-                console.debug("Error executing VSCode command:", e);
-                // Ignore errors, as vscode API might not be available
-              }
+              // ストリーム終了時に思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               
               const message: ChatMessage = {
                 role: "assistant",
@@ -1773,15 +1808,8 @@ export default class Databricks extends OpenAI {
             if (Date.now() - lastActivityTimestamp > 10000) {
               console.log("No stream activity - terminating as unrecoverable");
               
-              // Signal the thinking panel that thinking is complete
-              try {
-                if (typeof vscode !== 'undefined' && vscode && vscode.commands) {
-                  vscode.commands.executeCommand('continue.thinkingCompleted');
-                }
-              } catch (e) {
-                console.debug("Error executing VSCode command:", e);
-                // Ignore errors, as vscode API might not be available
-              }
+              // エラー発生時にも思考完了通知を確実に送信
+              this.ensureThinkingComplete();
               
               const message: ChatMessage = {
                 role: "assistant",
@@ -1798,23 +1826,26 @@ export default class Databricks extends OpenAI {
         }
         
         if (buffer.trim()) {
-        console.log("Processing remaining buffer:", buffer.length);
-        const { messages } = parseSSE("");
-        for (const m of messages) {
-        // 思考メッセージかどうかを判定
-        const isThinking = 'type' in m && m.type === 'thinking';
+          console.log("Processing remaining buffer:", buffer.length);
+          const { messages } = parseSSE("");
+          for (const m of messages) {
+            // 思考メッセージかどうかを判定
+            const isThinking = 'type' in m && m.type === 'thinking';
+            
+            if (isThinking) {
+              // 思考モードの内容は思考パネルにのみ送る
+              const thinkingContent = m.thinking;
+              updateThinking(thinkingContent, this.thinkingPhase, this.thinkingProgress);
+              // チャットにはyieldしない
+            } else {
+              // 通常のメッセージのみyield
+              yield m as ChatMessage;
+            }
+          }
+        }
         
-        if (isThinking) {
-        // 思考モードの内容は思考パネルにのみ送る
-        const thinkingContent = m.thinking;
-        updateThinking(thinkingContent, this.thinkingPhase, this.thinkingProgress);
-        // チャットにはyieldしない
-        } else {
-        // 通常のメッセージのみyield
-        yield m as ChatMessage;
-        }
-        }
-        }
+        // 処理完了時にも思考完了通知を確実に送信
+        this.ensureThinkingComplete();
         
         if (thinkingContent) {
           console.log("\n======= THINKING PROCESS SUMMARY =======");
@@ -1827,8 +1858,8 @@ export default class Databricks extends OpenAI {
       } catch (streamError) {
         console.error("Error during stream reading:", streamError);
         
-        // Signal the thinking panel that thinking is complete
-        thinkingCompleted();
+        // エラー発生時にも思考完了通知を確実に送信
+        this.ensureThinkingComplete();
         
         if (rawBuffer && rawBuffer.trim()) {
           try {
@@ -1851,10 +1882,25 @@ export default class Databricks extends OpenAI {
     } catch (error) {
       console.error("Error in _streamChat:", error);
       
-      // Signal the thinking panel that thinking is complete
-      thinkingCompleted();
+      // エラー発生時にも思考完了通知を確実に送信
+      this.ensureThinkingComplete();
       
       throw error;
+    } finally {
+      // 最終的に思考完了通知を確実に送信
+      console.log("Stream processing completed - 最終的な思考完了通知を送信");
+      this.ensureThinkingComplete();
+      
+      // ストリーム状態のクリーンアップ
+      this.isStreamActive = false;
+      
+      // 3秒後に再度思考完了通知を送信（最終バックアップ）
+      setTimeout(() => {
+        if (!this.isStreamActive) {
+          console.log("ストリーム終了後の最終バックアップ思考完了通知を送信");
+          thinkingCompleted();
+        }
+      }, 3000);
     }
   }
 }
