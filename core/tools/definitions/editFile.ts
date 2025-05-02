@@ -30,7 +30,7 @@ export const editFileTool: Tool = {
         changes: {
           type: "string",
           description:
-            "Any modifications to the file, showing only needed changes. Do NOT wrap this in a codeblock. Use brief language-appropriate placeholders for large unmodified sections, e.g. '// ... rest of code here ...'",
+            "Any modifications to the file, showing only needed changes. Do NOT wrap this in a codeblock or write anything besides the code changes. In larger files, use brief language-appropriate placeholders for large unmodified sections, e.g. '// ... existing code ...'",
         },
       },
     },
