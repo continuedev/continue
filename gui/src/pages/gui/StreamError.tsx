@@ -22,6 +22,10 @@ interface StreamErrorProps {
 }
 
 function parseErrorMessage(fullErrMsg: string): string {
+  if (!fullErrMsg.includes("\n\n")) {
+    return fullErrMsg;
+  }
+
   const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
   try {
     const parsed = JSON.parse(msg);
@@ -228,7 +232,9 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
 
   return (
     <div className={`flex flex-col gap-1 px-3 pb-2 pt-3`}>
-      <p className="m-0 p-0 text-lg text-red-500">{`Error (status code ${statusCode})`}</p>
+      <p className="m-0 p-0 text-lg text-red-500">
+        {statusCode ? `Error (status code ${statusCode})` : "Error"}
+      </p>
 
       {message ? (
         <div className="mt-2 flex flex-col gap-0 rounded-sm">

@@ -189,7 +189,7 @@ chat, editing, and summarizing.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
   `chat`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [
   `apply`](./customize/model-roles/apply.mdx#prompt-templating) and [
-  `autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a
+  `autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chat` property must be a
   valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
