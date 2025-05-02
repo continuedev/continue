@@ -52,7 +52,7 @@ export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
   language: string | null;
   relativeFilepath?: string;
-  isGeneratingCodeBlock: boolean;
+  isFinalCodeblock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
   codeBlockStreamId: string;
   range?: string;
@@ -65,7 +65,7 @@ export function StepContainerPreToolbar({
   codeBlockContent,
   language,
   relativeFilepath,
-  isGeneratingCodeBlock,
+  isFinalCodeblock,
   codeBlockIndex,
   codeBlockStreamId,
   range,
@@ -114,6 +114,9 @@ export function StepContainerPreToolbar({
   const isNextCodeBlock = nextCodeBlockIndex === codeBlockIndex;
   const hasFileExtension =
     relativeFilepath && /\.[0-9a-z]+$/i.test(relativeFilepath);
+
+  const isStreaming = useAppSelector((store) => store.session.isStreaming);
+  const isGeneratingCodeBlock = isFinalCodeblock && isStreaming;
 
   // If we are creating a file, we already render that in the button
   // so we don't want to dispaly it twice here

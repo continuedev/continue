@@ -310,6 +310,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
+          const isFinalCodeblock =
+            preChildProps["data-islastcodeblock"] && isLastItemRef.current;
+
           const isGeneratingCodeBlock =
             preChildProps["data-islastcodeblock"] &&
             isLastItemRef.current &&
@@ -331,7 +334,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               codeBlockIndex={codeBlockIndex}
               language={language}
               relativeFilepath={relativeFilePath}
-              isGeneratingCodeBlock={isGeneratingCodeBlock}
+              isFinalCodeblock={isFinalCodeblock}
               range={range}
               codeBlockStreamId={
                 codeblockState.current[codeBlockIndex].streamId
@@ -381,7 +384,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
     <StyledMarkdown
-      contentEditable='false'
+      contentEditable="false"
       fontSize={getFontSize()}
       whiteSpace={codeWrapState}
       bgColor={props.useParentBackgroundColor ? "" : vscBackground}
