@@ -176,16 +176,15 @@ export class RemovedLineDecorationManager {
   deleteRangesStartingAt(line: number) {
     for (let i = 0; i < this.ranges.length; i++) {
       if (this.ranges[i].range.start.line === line) {
-        this.ranges[i].decoration.dispose();
-        let count = 1;
+        let sequential = 0;
         while (
-          i + count < this.ranges.length &&
-          this.ranges[i + count].range.start.line === line + count
+          i + sequential < this.ranges.length &&
+          this.ranges[i + sequential].range.start.line === line + sequential
         ) {
-          count++;
-          this.ranges[i + count].decoration.dispose();
+          this.ranges[i + sequential].decoration.dispose();
+          sequential++;
         }
-        return this.ranges.splice(i, count);
+        return this.ranges.splice(i, sequential);
       }
     }
   }

@@ -454,11 +454,11 @@ export class VerticalDiffHandler implements vscode.Disposable {
       return;
     }
 
-    //update decorations
+    // Update decorations
     this.removedLineDecorations.shiftDownAfterLine(startLine, lineDelta);
     this.addedLineDecorations.shiftDownAfterLine(startLine, lineDelta);
 
-    //update code lens
+    // Update code lens
     this.shiftCodeLensObjects(startLine, lineDelta);
   }
 
@@ -504,7 +504,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
     // newline separated, because myersDiff() would consider
     // ["A"] => "A" and ["A", ""] => "A\n" to be the same single line.
     // "A\n" and "A\n\n" are unambiguous.
-    //
     const oldFileContent =
       diffLines
         .filter((line) => line.type === "same" || line.type === "old")
@@ -517,13 +516,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
         .map((line) => line.line)
         .join("\n") + "\n";
 
-    const diffs = myersDiff(oldFileContent, newFileContent);
+    const myersDiffs = myersDiff(oldFileContent, newFileContent);
 
-    const myersDiffLines = diffs.map((diff) => diff.line).join("\n");
+    const replaceContent = myersDiffs
+      .map((diff) => (diff.type === "old" ? "" : diff.line))
+      .join("\n");
 
     // Then, we insert our diff lines
     await this.editor.edit((editBuilder) => {
-      editBuilder.replace(this.range, myersDiffLines),
+      editBuilder.replace(this.range, replaceContent),
         {
           undoStopAfter: false,
           undoStopBefore: false,
@@ -536,7 +537,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     const codeLensBlocks: VerticalDiffCodeLens[] = [];
 
-    diffs.forEach((diff, index) => {
+    myersDiffs.forEach((diff, index) => {
       if (diff.type === "old") {
         this.removedLineDecorations.addLine(this.startLine + index, diff.line);
         numRed++;
@@ -558,7 +559,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       codeLensBlocks.push({
         numGreen,
         numRed,
-        start: this.startLine + diffs.length - numRed - numGreen,
+        start: this.startLine + myersDiffs.length - numRed - numGreen,
       });
     }
 
