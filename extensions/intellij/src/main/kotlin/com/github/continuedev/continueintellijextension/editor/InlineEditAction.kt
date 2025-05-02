@@ -131,7 +131,9 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val modelTitles = mutableListOf<String>()
 
     continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        response.castNestedOrNull<List<*>>("content", "result", "config", "modelsByRole", "edit")
+        val modelsByRole = response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "modelsByRole") ?: return@request
+        val role = if (modelsByRole.containsKey("edit")) "edit" else "chat"
+        modelsByRole.castNestedOrNull<List<*>>(role)
             ?.mapNotNull { it.castNestedOrNull<String>("title") }
             ?.let(modelTitles::addAll)
     }
