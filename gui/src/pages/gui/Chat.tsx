@@ -285,7 +285,7 @@ export function Chat() {
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
   useAutoScroll(stepsDivRef, history);
-  console.log(showSessionTabs);
+
   return (
     <>
       {widget}
