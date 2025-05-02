@@ -10,11 +10,6 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-  actions: write
-  checks: write
-  statuses: write
-  deployments: write
-  discussions: write
 
 jobs:
   generate-description:
@@ -61,8 +56,8 @@ jobs:
           continue-cli --headless --assistant "starter/nextjs-assistant" "$(cat prompt.txt)" > analysis.txt
           echo "analysis_file=analysis.txt" >> $GITHUB_OUTPUT
         env:
-          CONTINUE_API_KEY: con-05c7fd30d8932830c76dca916b866fcb25f65a543b53f11668cfc0c2349322e3
-          # CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          ## TODO: This needs to be set on the repo
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
       - name: Add PR Comment
         uses: actions/github-script@v7
