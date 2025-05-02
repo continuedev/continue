@@ -261,7 +261,7 @@ export class VerticalDiffManager {
       this.disableDocumentChangeListener();
       const handled = await handleLLMError(e);
       if (!handled) {
-        let message = "Error streaming diff";
+        let message = "Error streaming diffs";
         if (e instanceof Error) {
           message += `: ${e.message}`;
         }
@@ -473,7 +473,7 @@ export class VerticalDiffManager {
       this.disableDocumentChangeListener();
       const handled = await handleLLMError(e);
       if (!handled) {
-        let message = "Error streaming diff";
+        let message = "Error streaming edit diffs";
         if (e instanceof Error) {
           message += `: ${e.message}`;
         }

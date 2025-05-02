@@ -336,7 +336,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
     let diffLines = [];
 
     try {
-      throw new Error("INTENTIONAL");
       // As an indicator of loading
       this.updateIndexLineDecorations();
 
