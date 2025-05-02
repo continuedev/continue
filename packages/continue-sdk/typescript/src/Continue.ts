@@ -3,6 +3,7 @@ import { Configuration, DefaultApi } from "@continuedev/hub-api";
 import type { OpenAI } from "openai";
 import { Assistant } from "./Assistant.js";
 import { createOpenAIClient } from "./createOpenAIClient.js";
+
 export interface ContinueClientOptions {
   /**
    * The assistant identifier in the format owner-slug/package-slug
@@ -32,7 +33,7 @@ export interface ContinueClientOptions {
   baseURL?: string;
 }
 
-export type ContinueResult = {
+export type ContinueClient = {
   /**
    * The Continue API client
    */
@@ -57,7 +58,7 @@ export class Continue {
    * @param options - Configuration options
    * @returns Object containing Continue client, OpenAI client, and assistant config
    */
-  static async from(options: ContinueClientOptions): Promise<ContinueResult> {
+  static async from(options: ContinueClientOptions): Promise<ContinueClient> {
     const baseURL = options.baseURL || "https://api.continue.dev/";
 
     const api = new DefaultApi(

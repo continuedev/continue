@@ -1,5 +1,7 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 
+export type AssistantConfig = AssistantUnrolled;
+
 /**
  * Class that wraps an assistant configuration with utility methods
  */
@@ -7,7 +9,7 @@ export class Assistant {
   /**
    * The assistant configuration object
    */
-  config: AssistantUnrolled;
+  config: AssistantConfig;
 
   /**
    * Create a new Assistant instance
