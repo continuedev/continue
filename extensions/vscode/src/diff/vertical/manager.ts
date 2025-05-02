@@ -259,8 +259,13 @@ export class VerticalDiffManager {
       this.enableDocumentChangeListener();
     } catch (e) {
       this.disableDocumentChangeListener();
-      if (!handleLLMError(e)) {
-        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      const handled = await handleLLMError(e);
+      if (!handled) {
+        let message = "Error streaming diffs";
+        if (e instanceof Error) {
+          message += `: ${e.message}`;
+        }
+        throw new Error(message);
       }
     } finally {
       vscode.commands.executeCommand(
@@ -466,10 +471,14 @@ export class VerticalDiffManager {
       return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {
       this.disableDocumentChangeListener();
-      if (!handleLLMError(e)) {
-        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      const handled = await handleLLMError(e);
+      if (!handled) {
+        let message = "Error streaming edit diffs";
+        if (e instanceof Error) {
+          message += `: ${e.message}`;
+        }
+        throw new Error(message);
       }
-      return undefined;
     } finally {
       vscode.commands.executeCommand(
         "setContext",

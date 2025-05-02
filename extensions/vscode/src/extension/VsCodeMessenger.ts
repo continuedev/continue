@@ -413,7 +413,7 @@ export class VsCodeMessenger {
     });
 
     this.onWebviewOrCore("reportError", async (msg) => {
-      handleLLMError(msg.data);
+      await handleLLMError(msg.data);
     });
   }
 }
