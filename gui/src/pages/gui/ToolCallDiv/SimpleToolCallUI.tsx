@@ -2,7 +2,7 @@ import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId, Tool, ToolCallState } from "core";
 import { ComponentType, useMemo, useState } from "react";
 import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
-import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
+import { ArgsItems } from "./ToolCallArgs";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 
 interface SimpleToolCallUIProps {
@@ -66,7 +66,7 @@ export function SimpleToolCallUI({
             <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </span>
         </div>
-        <div>
+        {/* <div>
           {args.length > 0 ? (
             <ArgsToggleIcon
               isShowing={showingArgs}
@@ -74,7 +74,7 @@ export function SimpleToolCallUI({
               toolCallId={toolCallState.toolCallId}
             />
           ) : null}
-        </div>
+        </div> */}
       </div>
       <ArgsItems args={args} isShowing={showingArgs} />
       <div
