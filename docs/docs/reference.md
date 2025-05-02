@@ -381,6 +381,7 @@ prompts, context, and tool use. Continue supports any MCP server with the MCP co
 - `command` (**required**): The command used to start the server.
 - `args`: An optional array of arguments for the command.
 - `env`: An optional map of environment variables for the server process.
+- `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
 **Example:**
 

@@ -1205,6 +1205,7 @@ export interface ExperimentalModelRoles {
 export interface ExperimentalMCPOptions {
   transport: TransportOptions;
   faviconUrl?: string;
+  timeout?: number;
 }
 
 export type ApplyStateStatus =
