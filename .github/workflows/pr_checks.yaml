@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - main
+      - v1.0.8-vscode-release
 
 jobs:
   install-root:
