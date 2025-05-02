@@ -8,6 +8,7 @@ type EditToolCallProps = {
   relativeFilePath: string;
   changes: string;
   toolCallId?: string;
+  historyIndex: number;
 };
 
 export function EditFile(props: EditToolCallProps) {
@@ -34,6 +35,7 @@ export function EditFile(props: EditToolCallProps) {
         source={src}
         singleCodeblockStreamId={applyState?.streamId}
         expandCodeblocks={false}
+        itemIndex={props.historyIndex}
       />
       {/* TODO better indicator of generation at bottom */}
       {/* {isStreaming && applyState?.status === "streaming" && (

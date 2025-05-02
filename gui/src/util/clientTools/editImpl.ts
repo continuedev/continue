@@ -1,5 +1,4 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
-import { updateApplyState } from "../../redux/slices/sessionSlice";
 import { ClientToolImpl } from "./callClientTool";
 
 export const editToolImpl: ClientToolImpl = async (
@@ -26,17 +25,17 @@ export const editToolImpl: ClientToolImpl = async (
   if (apply.status === "error") {
     throw new Error(apply.error);
   }
-  if (extras.activeToolStreamId) {
-    extras.dispatch(
-      updateApplyState({
-        streamId: extras.activeToolStreamId,
-        status: "closed",
-        toolCallId,
-        numDiffs: 0,
-        filepath: args.filepath,
-      }),
-    );
-  }
+  // if (extras.activeToolStreamId) {
+  //   extras.dispatch(
+  //     updateApplyState({
+  //       streamId: extras.activeToolStreamId,
+  //       status: "closed",
+  //       toolCallId,
+  //       numDiffs: 0,
+  //       filepath: args.filepath,
+  //     }),
+  //   );
+  // }
   return {
     respondImmediately: false,
     output: undefined, // No immediate output.
