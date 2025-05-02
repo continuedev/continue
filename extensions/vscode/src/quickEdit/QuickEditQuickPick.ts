@@ -331,7 +331,7 @@ export class QuickEdit {
       llm: model,
       quickEdit: this.previousInput,
       range: this.range,
-      includeRulesAsSystemMessage: rules,
+      rulesToInclude: rules,
     });
   }
 

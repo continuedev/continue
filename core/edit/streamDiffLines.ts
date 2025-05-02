@@ -66,7 +66,7 @@ export async function* streamDiffLines({
   language,
   onlyOneInsertion,
   overridePrompt,
-  includeRulesAsSystemMessage,
+  rulesToInclude,
 }: {
   prefix: string;
   highlighted: string;
@@ -76,7 +76,7 @@ export async function* streamDiffLines({
   language: string | undefined;
   onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
-  includeRulesAsSystemMessage: RuleWithSource[] | undefined;
+  rulesToInclude: RuleWithSource[] | undefined;
 }): AsyncGenerator<DiffLine> {
   void Telemetry.capture(
     "inlineEdit",
@@ -107,25 +107,22 @@ export async function* streamDiffLines({
 
   // Rules can be included with edit prompt
   // If any rules are present this will result in using chat instead of legacy completion
-  let systemMessage: string | undefined = undefined;
-  if (includeRulesAsSystemMessage) {
-    const lastUserMessage =
-      typeof prompt === "string"
-        ? ({
-            role: "user",
-            content: prompt,
-          } as UserChatMessage)
-        : (findLast(
-            prompt,
-            (msg) => msg.role === "user" || msg.role === "tool",
-          ) as UserChatMessage | ToolResultChatMessage | undefined);
-
-    systemMessage = getSystemMessageWithRules({
-      rules: includeRulesAsSystemMessage,
-      userMessage: lastUserMessage,
-      baseSystemMessage: undefined,
-    });
-  }
+  const systemMessage = rulesToInclude
+    ? getSystemMessageWithRules({
+        rules: rulesToInclude,
+        userMessage:
+          typeof prompt === "string"
+            ? ({
+                role: "user",
+                content: prompt,
+              } as UserChatMessage)
+            : (findLast(
+                prompt,
+                (msg) => msg.role === "user" || msg.role === "tool",
+              ) as UserChatMessage | ToolResultChatMessage | undefined),
+        baseSystemMessage: undefined,
+      })
+    : undefined;
 
   if (systemMessage) {
     if (typeof prompt === "string") {

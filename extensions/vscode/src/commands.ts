@@ -226,7 +226,7 @@ const getCommandsMap: (
       llm,
       onlyOneInsertion,
       range,
-      includeRulesAsSystemMessage: config.rules,
+      rulesToInclude: config.rules,
     });
   }
 

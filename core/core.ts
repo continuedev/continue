@@ -84,17 +84,13 @@ async function* streamDiffLinesGenerator(
     throw new Error("Failed to load config");
   }
 
-  // title can be an edit, chat, or apply model
-  let llm =
+  // Title can be an edit, chat, or apply model
+  // Fall back to chat
+  const llm =
     config.modelsByRole.edit.find((m) => m.title === modelTitle) ??
     config.modelsByRole.apply.find((m) => m.title === modelTitle) ??
     config.modelsByRole.chat.find((m) => m.title === modelTitle) ??
-    null;
-
-  // fallback to selected chat model
-  if (!llm) {
-    llm = config.selectedModelByRole.chat;
-  }
+    config.selectedModelByRole.chat;
 
   if (!llm) {
     throw new Error("No model selected");
@@ -108,7 +104,7 @@ async function* streamDiffLinesGenerator(
     prefix,
     suffix,
     llm,
-    includeRulesAsSystemMessage: rules,
+    rulesToInclude: rules,
     input,
     language,
     onlyOneInsertion: false,
