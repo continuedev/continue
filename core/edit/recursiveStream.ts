@@ -3,7 +3,7 @@ import { DEFAULT_MAX_TOKENS } from "../llm/constants";
 import { countTokens } from "../llm/countTokens";
 import { renderChatMessage } from "../util/messageContent";
 
-const INFINITE_STREAM_SAFETY = 0.8;
+const INFINITE_STREAM_SAFETY = 0.9;
 
 const DUD_PROMPT_LOG: PromptLog = {
   modelTitle: "",
@@ -25,8 +25,7 @@ export async function* recursiveStream(
   const safeTokens = maxTokens * INFINITE_STREAM_SAFETY;
   let totalTokens = 0;
   let buffer = currentBuffer;
-  let whiteSpaceAtEndOfBuffer = buffer.match(/\s*$/)?.[0] ?? "";
-  let firstChunk = true;
+  // let whiteSpaceAtEndOfBuffer = buffer.match(/\s*$/)?.[0] ?? ""; // attempts at fixing whitespace bug with recursive boundaries
 
   if (typeof prompt === "string") {
     const generator = llm.streamComplete(prompt, new AbortController().signal, {
@@ -36,27 +35,28 @@ export async function* recursiveStream(
     });
 
     for await (const chunk of generator) {
-      firstChunk = false;
-
       yield chunk;
       buffer += chunk;
       totalTokens += countTokens(chunk);
 
       if (totalTokens >= safeTokens) {
-        const continuationPrompt = `${RECURSIVE_PROMPT}:\n\n${buffer}`;
+        throw new Error(
+          "Token limit reached. File/range likely too large for this edit",
+        );
+        // const continuationPrompt = `${RECURSIVE_PROMPT}:\n\n${buffer}`;
 
-        await generator.return(DUD_PROMPT_LOG); // kill the previous generator
+        // await generator.return(DUD_PROMPT_LOG); // kill the previous generator
 
-        // TODO - Prediction capabilities lost because of partial input
-        yield* recursiveStream(
-          llm,
-          continuationPrompt,
-          undefined,
-          buffer,
-          true,
-        ); // Recursively stream the continuation
+        // // TODO - Prediction capabilities lost because of partial input
+        // yield* recursiveStream(
+        //   llm,
+        //   continuationPrompt,
+        //   undefined,
+        //   buffer,
+        //   true,
+        // ); // Recursively stream the continuation
 
-        return;
+        // return;
       }
     }
   } else {
@@ -66,35 +66,36 @@ export async function* recursiveStream(
     });
 
     for await (const chunk of generator) {
-      firstChunk = false;
-
       yield chunk;
       const rendered = renderChatMessage(chunk);
       buffer += rendered;
       totalTokens += countTokens(chunk.content);
 
       if (totalTokens >= safeTokens) {
-        const continuationPrompt: ChatMessage[] = [
-          ...(isContinuation ? prompt.slice(0, -2) : prompt),
-          {
-            role: "assistant",
-            content: buffer,
-          },
-          {
-            role: "user",
-            content: RECURSIVE_PROMPT,
-          },
-        ];
-
-        await generator.return(DUD_PROMPT_LOG);
-        yield* recursiveStream(
-          llm,
-          continuationPrompt,
-          undefined,
-          buffer,
-          true,
+        throw new Error(
+          "Token limit reached. File/range likely too large for this edit",
         );
-        return;
+        // const continuationPrompt: ChatMessage[] = [
+        //   ...(isContinuation ? prompt.slice(0, -2) : prompt),
+        //   {
+        //     role: "assistant",
+        //     content: buffer,
+        //   },
+        //   {
+        //     role: "user",
+        //     content: RECURSIVE_PROMPT,
+        //   },
+        // ];
+
+        // await generator.return(DUD_PROMPT_LOG);
+        // yield* recursiveStream(
+        //   llm,
+        //   continuationPrompt,
+        //   undefined,
+        //   buffer,
+        //   true,
+        // );
+        // return;
       }
     }
   }
