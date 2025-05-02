@@ -1,19 +1,18 @@
 {
   "name": "@continuedev/sdk",
-  "version": "0.0.1",
+  "version": "0.0.9",
   "description": "SDK for Continue.dev",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "bash ./build.sh",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/hub-api": "file:./api",
     "openai": "^4.96.2"
   },
   "devDependencies": {

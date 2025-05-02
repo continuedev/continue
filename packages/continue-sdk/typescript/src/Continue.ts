@@ -1,6 +1,6 @@
 import { decodePackageSlug } from "@continuedev/config-yaml";
-import { Configuration, DefaultApi } from "@continuedev/hub-api";
 import type { OpenAI } from "openai";
+import { Configuration, DefaultApi } from "../api/dist/index.js";
 import { Assistant } from "./Assistant.js";
 import { createOpenAIClient } from "./createOpenAIClient.js";
 
