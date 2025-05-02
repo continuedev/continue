@@ -355,7 +355,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
         {currentStatus !== WizardStatus.downloadingOllama && serverButton}
 
         {currentStatus === WizardStatus.downloadingOllama &&
-          installationModes[0]?.id !== "script" && (
+          installationModes[0]?.id === "windows" && (
             <div className="mt-4 flex items-center gap-2">
               <VSCodeButton variant="secondary" onClick={cancelDownload}>
                 Cancel
