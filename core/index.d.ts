@@ -1024,6 +1024,7 @@ export interface BaseCompletionOptions {
   toolChoice?: ToolChoice;
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
+  stepByStepThinking?: boolean;
 }
 
 export interface ModelCapability {

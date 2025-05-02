@@ -1,0 +1,8 @@
+name: New prompt
+version: 0.0.1
+schema: v1
+prompts:
+  - name: New prompt
+    description: New prompt
+    prompt: Please write a thorough suite of unit tests for this code, making sure
+      to cover all relevant edge cases

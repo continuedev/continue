@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"terminal.integrated.defaultProfile.linux": "bash",
+		"terminal.integrated.profiles.linux": {
+			"bash": {
+				"path": "bash",
+				"args": [
+					"-l"
+				]
+			}
+		},
+		"typescript.tsdk": "node_modules/typescript/lib"
+	}
+}

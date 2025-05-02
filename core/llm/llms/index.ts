@@ -82,8 +82,25 @@ export interface ThinkingContent {
   };
 }
 
-// registerThinkingPanelをエクスポート
+// ThinkingPanel関連の機能をエクスポート
 export { registerThinkingPanel };
+
+// VSCode拡張のコンテキストを保持する変数
+let _extensionContext: any = null;
+
+// 拡張機能のコンテキストを設定する関数
+export function setExtensionContext(context: any) {
+  _extensionContext = context;
+  // ThinkingPanelのセットアップ
+  if (context) {
+    registerThinkingPanel(context);
+  }
+}
+
+// 拡張機能のコンテキストを取得する関数
+export function getExtensionContext() {
+  return _extensionContext;
+}
 
 export const LLMClasses = [
   Anthropic,

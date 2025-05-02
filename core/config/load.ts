@@ -34,7 +34,7 @@ import {
   ModelCapability,
 } from "..";
 // ThinkingConfig をllms/index.tsから直接インポート
-import { ThinkingConfig } from "../llm/llms/index";
+import { ThinkingConfig, setExtensionContext } from "../llm/llms/index";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
