@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.29",
+  "version": "1.1.30",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -384,11 +384,6 @@
         "key": "ctrl+i"
       },
       {
-        "command": "continue.focusEditWithoutClear",
-        "mac": "cmd+shift+i",
-        "key": "ctrl+shift+i"
-      },
-      {
         "command": "continue.exitEditMode",
         "mac": "escape",
         "key": "escape",
@@ -666,6 +661,7 @@
     "vscode-extension-tester": "^8.10.0"
   },
   "dependencies": {
+    "@continuedev/config-types": "^1.0.14",
     "@continuedev/fetch": "^1.0.3",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",

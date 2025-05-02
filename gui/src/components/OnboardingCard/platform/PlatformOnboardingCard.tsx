@@ -5,8 +5,8 @@ import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
 import Alert from "../../gui/Alert";
 import { ReusableCard } from "../../ReusableCard";
 import { TabTitle } from "../components/OnboardingCardTabs";
+import OnboardingLocalTab from "../components/OnboardingLocalTab";
 import { useOnboardingCard } from "../hooks";
-import OnboardingLocalTab from "../tabs/OnboardingLocalTab";
 import MainTab from "./tabs/main";
 
 export interface OnboardingCardState {

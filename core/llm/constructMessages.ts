@@ -60,7 +60,7 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 
 export function constructMessages(
   history: ChatHistoryItem[],
-  baseChatSystemMessage: string | undefined,
+  baseChatOrAgentSystemMessage: string | undefined,
   rules: RuleWithSource[],
 ): ChatMessage[] {
   const filteredHistory = history.filter(
@@ -100,7 +100,7 @@ export function constructMessages(
     | undefined;
 
   const systemMessage = getSystemMessageWithRules({
-    baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
+    baseSystemMessage: baseChatOrAgentSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules,
     userMessage: lastUserMsg,
   });

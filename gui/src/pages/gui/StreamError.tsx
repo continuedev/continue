@@ -11,7 +11,6 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { selectSelectedProfile } from "../../redux/";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseHub } from "../../redux/selectors";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { isLocalProfile } from "../../util";
@@ -26,7 +25,7 @@ function parseErrorMessage(fullErrMsg: string): string {
   const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
   try {
     const parsed = JSON.parse(msg);
-    return parsed.error ?? parsed.message ?? msg;
+    return JSON.stringify(parsed.error ?? parsed.message ?? msg);
   } catch (e) {
     return msg;
   }
@@ -36,7 +35,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const hubEnabled = useAppSelector(selectUseHub);
   const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
 
@@ -180,17 +178,14 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (statusCode === 401) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        {hubEnabled &&
-          session &&
-          selectedProfile &&
-          !isLocalProfile(selectedProfile) && (
-            <div className="flex flex-col gap-1">
-              <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
-              <SecondaryButton onClick={handleRefreshProfiles}>
-                Refresh assistant secrets
-              </SecondaryButton>
-            </div>
-          )}
+        {session && selectedProfile && !isLocalProfile(selectedProfile) && (
+          <div className="flex flex-col gap-1">
+            <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+            <SecondaryButton onClick={handleRefreshProfiles}>
+              Refresh assistant secrets
+            </SecondaryButton>
+          </div>
+        )}
         <span>{`It's possible that your API key is invalid.`}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {checkKeysButton}

@@ -510,7 +510,7 @@ export default class DocsService {
     } catch (e) {
       if (e instanceof LLMError) {
         // Report the error to the IDE
-        this.messenger?.request("reportError", e);
+        await this.messenger?.request("reportError", e);
       }
       this.handleStatusUpdate({
         ...fixedStatus,

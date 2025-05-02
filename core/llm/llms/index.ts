@@ -57,6 +57,7 @@ import ContinueProxy from "./stubs/ContinueProxy";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import Venice from "./Venice";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import Voyage from "./Voyage";
@@ -109,6 +110,7 @@ export const LLMClasses = [
   Cerebras,
   Asksage,
   Nebius,
+  Venice,
   VertexAI,
   xAI,
   SiliconFlow,
@@ -158,6 +160,7 @@ export async function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
     baseChatSystemMessage,
+    baseAgentSystemMessage: baseChatSystemMessage,
     logger: llmLogger,
     uniqueId,
   };

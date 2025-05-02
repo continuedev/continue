@@ -12,9 +12,6 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  selectIsInEditMode,
-} from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
@@ -123,12 +120,12 @@ function ModelOption({
 function ModelSelect() {
   const dispatch = useAppDispatch();
 
-  const isInEditMode = useAppSelector(selectIsInEditMode);
+  const mode = useAppSelector((store) => store.session.mode);
   const config = useAppSelector((state) => state.config.config);
 
   let selectedModel = null;
   let allModels = null;
-  if (isInEditMode) {
+  if (mode === "edit") {
     allModels = config.modelsByRole.edit;
     selectedModel = config.selectedModelByRole.edit;
   }
@@ -158,14 +155,14 @@ function ModelSelect() {
   useEffect(() => {
     setOptions(
       allModels.map((model) => {
-          return {
-            value: model.title,
-            title: modelSelectTitle(model),
-            apiKey: model.apiKey,
-          };
-        }),
+        return {
+          value: model.title,
+          title: modelSelectTitle(model),
+          apiKey: model.apiKey,
+        };
+      }),
     );
-  }, [isInEditMode, config]);
+  }, [config]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -225,7 +222,7 @@ function ModelSelect() {
         dispatch(
           updateSelectedModelByRole({
             selectedProfile,
-            role: isInEditMode ? "edit" : "chat",
+            role: mode === "edit" ? "edit" : "chat",
             modelTitle: val,
           }),
         );

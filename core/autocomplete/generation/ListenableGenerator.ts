@@ -3,16 +3,18 @@ export class ListenableGenerator<T> {
   private _buffer: T[] = [];
   private _listeners: Set<(value: T) => void> = new Set();
   private _isEnded = false;
-  private _abortController: AbortController
+  private _abortController: AbortController;
 
   constructor(
     source: AsyncGenerator<T>,
     private readonly onError: (e: any) => void,
-    abortController: AbortController
+    abortController: AbortController,
   ) {
     this._source = source;
     this._abortController = abortController;
-    this._start();
+    this._start().catch((e) =>
+      console.log(`Listenable generator failed: ${e.message}`),
+    );
   }
 
   public cancel() {

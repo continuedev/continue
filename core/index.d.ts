@@ -158,9 +158,7 @@ export interface ModelInstaller {
     progressReporter?: (task: string, increment: number, total: number) => void,
   ): Promise<any>;
 
-  isInstallingModel(
-    modelName: string
-  ): Promise<boolean>;
+  isInstallingModel(modelName: string): Promise<boolean>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -246,10 +244,6 @@ export interface IContextProvider {
   ): Promise<ContextItem[]>;
 
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
-}
-
-export interface Checkpoint {
-  [filepath: string]: string;
 }
 
 export interface Session {
@@ -464,8 +458,6 @@ export interface ChatHistoryItem {
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
-  checkpoint?: Checkpoint;
-  isBeforeCheckpoint?: boolean;
   reasoning?: Reasoning;
 }
 
@@ -569,6 +561,7 @@ export interface LLMOptions {
 
   title?: string;
   uniqueId?: string;
+  baseAgentSystemMessage?: string;
   baseChatSystemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
@@ -1052,6 +1045,7 @@ export interface ModelDescription {
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
+  baseAgentSystemMessage?: string;
   baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
@@ -1212,13 +1206,6 @@ export interface ExperimentalMCPOptions {
   transport: TransportOptions;
   faviconUrl?: string;
 }
-
-export type EditStatus =
-  | "not-started"
-  | "streaming"
-  | "accepting"
-  | "accepting:full-diff"
-  | "done";
 
 export type ApplyStateStatus =
   | "not-started" // Apply state created but not necessarily streaming

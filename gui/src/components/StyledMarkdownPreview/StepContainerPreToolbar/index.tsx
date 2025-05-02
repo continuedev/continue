@@ -11,10 +11,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useIdeMessengerRequest } from "../../../hooks";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
-import {
-  selectApplyStateByStreamId,
-  selectIsInEditMode,
-} from "../../../redux/slices/sessionSlice";
+import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
 import { isTerminalCodeBlock } from "../utils";
 import { ApplyActions } from "./ApplyActions";
@@ -74,10 +71,7 @@ export function StepContainerPreToolbar({
   disableManualApply,
 }: StepContainerPreToolbarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-  const [isExpanded, setIsExpanded] = useState(
-    expanded ?? (isInEditMode ? false : true),
-  );
+  const [isExpanded, setIsExpanded] = useState(expanded ?? true);
 
   const [relativeFilepathUri, setRelativeFilepathUri] = useState<string | null>(
     null,

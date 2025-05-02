@@ -1,3 +1,4 @@
+import { MessageModes, ModelDescription } from "core";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import _ from "lodash";
 import { KeyboardEvent } from "react";
@@ -113,4 +114,17 @@ export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
 
 export function isLocalProfile(profile: ProfileDescription): boolean {
   return profile.profileType === "local";
+}
+
+/**
+ * Get the base system message for the agent or chat mode from the model description.
+ */
+export function getBaseSystemMessage(modelDetails: ModelDescription | null, mode: MessageModes) {
+  let baseChatOrAgentSystemMessage: string|undefined
+  if(mode === 'agent') {
+    baseChatOrAgentSystemMessage = modelDetails?.baseAgentSystemMessage ?? modelDetails?.baseChatSystemMessage // fallback to chat system message if agent system message is unavailable
+  } else {
+    baseChatOrAgentSystemMessage = modelDetails?.baseChatSystemMessage
+  }
+  return baseChatOrAgentSystemMessage
 }
