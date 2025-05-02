@@ -11,11 +11,15 @@ import { introMessage } from "./intro.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
+import { configureLogger } from "./logger.js";
 import * as fs from "fs";
 import { ContinueClient } from "@continuedev/sdk";
 
 // Parse command line arguments
 const args = parseArgs();
+
+// Configure logger based on headless mode
+configureLogger(args.isHeadless);
 
 async function chat() {
   const isAuthenticated = await ensureAuthenticated(true);
@@ -36,7 +40,7 @@ async function chat() {
 
   // if (fs.existsSync(args.assistantPath)) {
   // // If it's a file, load it directly
-  // console.log(
+  // console.info(
   //   chalk.yellow(`Loading assistant from file: ${args.assistantPath}`)
   // );
   // // We need to extract the assistant slug from the yaml to use with the SDK
@@ -111,6 +115,7 @@ async function chat() {
         break;
       }
 
+      // Note that `console.log` is shown in headless mode, `console.info` is not
       console.log(`\n${chalk.italic.gray(commandResult.output ?? "")}`);
 
       if (commandResult.newInput) {
@@ -125,14 +130,14 @@ async function chat() {
 
     // Get AI response with potential tool usage
     if (!args.isHeadless) {
-      console.log(`\n${chalk.bold.blue("Assistant:")}`);
+      console.info(`\n${chalk.bold.blue("Assistant:")}`);
     }
 
     try {
       await streamChatResponse(chatHistory, assistant!, client!);
     } catch (e: any) {
       console.error(`\n${chalk.red(`Error: ${e.message}`)}`);
-      console.log(
+      console.info(
         chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
       );
     }

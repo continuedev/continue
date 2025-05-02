@@ -148,7 +148,7 @@ export async function streamChatResponse(
       }
     }
 
-    console.log(); // Add a newline after the response
+    console.info(); // Add a newline after the response
 
     // Add the tool calls to the chat history
     if (currentToolCalls.length > 0) {
@@ -186,7 +186,7 @@ export async function streamChatResponse(
             content: toolResult,
           });
 
-          console.log(chalk.green(toolResult) + "\n");
+          console.info(chalk.green(toolResult) + "\n");
         } catch (error) {
           const errorMessage = `Error executing tool ${toolCall.name}: ${
             error instanceof Error ? error.message : String(error)
@@ -196,7 +196,7 @@ export async function streamChatResponse(
             tool_call_id: toolCall.id,
             content: errorMessage,
           });
-          console.log(
+          console.info(
             `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(
               ")"
             )}`

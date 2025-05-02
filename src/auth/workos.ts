@@ -170,7 +170,7 @@ export async function login(
 ): Promise<AuthConfig> {
   // If CONTINUE_API_KEY environment variable exists, use that instead
   if (process.env.CONTINUE_API_KEY) {
-    console.log(
+    console.info(
       chalk.green("Using CONTINUE_API_KEY from environment variables")
     );
     return {
@@ -179,24 +179,24 @@ export async function login(
   }
 
   try {
-    console.log(chalk.cyan("\nStarting authentication with Continue..."));
+    console.info(chalk.cyan("\nStarting authentication with Continue..."));
 
     // Get auth URL using the direct implementation
     const authUrl = getAuthUrlForTokenPage(useOnboarding);
-    console.log(chalk.green(`Opening browser to sign in at: ${authUrl}`));
+    console.info(chalk.green(`Opening browser to sign in at: ${authUrl}`));
     await open(authUrl);
 
-    console.log(chalk.yellow("\nAfter signing in, you'll receive a token."));
+    console.info(chalk.yellow("\nAfter signing in, you'll receive a token."));
 
     // Get token from user
     const token = await prompt(chalk.yellow("Paste your sign-in token here: "));
 
-    console.log(chalk.cyan("Verifying token..."));
+    console.info(chalk.cyan("Verifying token..."));
 
     // Exchange token for session
     const response = await refreshToken(token);
 
-    console.log(chalk.green("\nAuthentication successful!"));
+    console.info(chalk.green("\nAuthentication successful!"));
 
     return response;
   } catch (error: any) {
@@ -213,7 +213,7 @@ export async function login(
  */
 export function logout(): void {
   if (process.env.CONTINUE_API_KEY) {
-    console.log(
+    console.info(
       chalk.yellow(
         "Using CONTINUE_API_KEY from environment variables, nothing to log out"
       )
@@ -223,8 +223,8 @@ export function logout(): void {
 
   if (fs.existsSync(AUTH_CONFIG_PATH)) {
     fs.unlinkSync(AUTH_CONFIG_PATH);
-    console.log(chalk.green("Successfully logged out"));
+    console.info(chalk.green("Successfully logged out"));
   } else {
-    console.log(chalk.yellow("No active session found"));
+    console.info(chalk.yellow("No active session found"));
   }
 }

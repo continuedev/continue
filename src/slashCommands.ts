@@ -44,7 +44,7 @@ export function handleSlashCommands(
       case "login":
         login()
           .then((config) => {
-            console.log(
+            console.info(
               chalk.green(`\nLogged in as ${config.userEmail || config.userId}`)
             );
           })
