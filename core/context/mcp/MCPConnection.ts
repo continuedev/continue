@@ -69,7 +69,19 @@ class MCPConnection {
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
       case "sse":
-        return new SSEClientTransport(new URL(options.transport.url));
+        return new SSEClientTransport(new URL(options.transport.url), {
+          eventSourceInit: {
+            fetch: (input, init) =>
+              fetch(input, {
+                ...init,
+                headers: {
+                  ...init?.headers,
+                  ...(options.transport.headers as Record<string, string> | undefined),
+                }
+              }),
+          },
+          requestInit: { headers: options.transport.headers }
+        });
       default:
         throw new Error(
           `Unsupported transport type: ${(options.transport as any).type}`,
