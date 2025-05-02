@@ -67,6 +67,7 @@ export async function* streamDiffLines({
   onlyOneInsertion,
   overridePrompt,
   rules,
+  abortController,
 }: {
   prefix: string;
   highlighted: string;
@@ -77,6 +78,7 @@ export async function* streamDiffLines({
   onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
   rules: RuleWithSource[];
+  abortController: AbortController;
 }): AsyncGenerator<DiffLine> {
   void Telemetry.capture(
     "inlineEdit",
@@ -158,12 +160,12 @@ export async function* streamDiffLines({
 
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt, new AbortController().signal, {
+      ? llm.streamComplete(prompt, abortController.signal, {
           raw: true,
           prediction,
           reasoning: false,
         })
-      : llm.streamChat(prompt, new AbortController().signal, {
+      : llm.streamChat(prompt, abortController.signal, {
           prediction,
           reasoning: false,
         });
@@ -190,6 +192,9 @@ export async function* streamDiffLines({
 
   let seenGreen = false;
   for await (const diffLine of diffLines) {
+    if (abortController.signal.aborted) {
+      break;
+    }
     yield diffLine;
     if (diffLine.type === "new") {
       seenGreen = true;

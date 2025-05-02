@@ -35,7 +35,6 @@ import { TTS } from "./util/tts";
 
 import {
   ContextItemWithId,
-  DiffLine,
   IdeSettings,
   ModelDescription,
   RangeInFile,
@@ -63,43 +62,6 @@ import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
-async function* streamDiffLinesGenerator(
-  configHandler: ConfigHandler,
-  abortedMessageIds: Set<string>,
-  msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
-): AsyncGenerator<DiffLine> {
-  const data = msg.data;
-
-  const { config } = await configHandler.loadConfig();
-  if (!config) {
-    throw new Error("Failed to load config");
-  }
-
-  const llm = config.selectedModelByRole.chat;
-
-  if (!llm) {
-    throw new Error("No chat model selected");
-  }
-
-  for await (const diffLine of streamDiffLines({
-    highlighted: data.highlighted,
-    prefix: data.prefix,
-    suffix: data.suffix,
-    llm,
-    rules: config.rules,
-    input: data.input,
-    language: data.language,
-    onlyOneInsertion: false,
-    overridePrompt: undefined,
-  })) {
-    if (abortedMessageIds.has(msg.messageId)) {
-      abortedMessageIds.delete(msg.messageId);
-      break;
-    }
-    yield diffLine;
-  }
-}
-
 export class Core {
   configHandler: ConfigHandler;
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
@@ -114,7 +76,18 @@ export class Core {
     this.globalContext.get("indexingPaused") === true,
   );
 
-  private abortedMessageIds: Set<string> = new Set();
+  private messageAbortControllers = new Map<string, AbortController>();
+  private addMessageAbortController(messageId: string): AbortController {
+    const controller = new AbortController();
+    this.messageAbortControllers.set(messageId, controller);
+    controller.signal.addEventListener("abort", () => {
+      this.messageAbortControllers.delete(messageId);
+    });
+    return controller;
+  }
+  private abortMessage(messageId: string) {
+    this.messageAbortControllers.get(messageId)?.abort();
+  }
 
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
@@ -283,7 +256,7 @@ export class Core {
     });
 
     on("abort", (msg) => {
-      this.abortedMessageIds.add(msg.messageId);
+      this.abortMessage(msg.messageId);
     });
 
     on("ping", (msg) => {
@@ -452,15 +425,16 @@ export class Core {
       }
     });
 
-    on("llm/streamChat", (msg) =>
-      llmStreamChat(
+    on("llm/streamChat", (msg) => {
+      const abortController = this.addMessageAbortController(msg.messageId);
+      return llmStreamChat(
         this.configHandler,
-        this.abortedMessageIds,
+        abortController,
         msg,
         this.ide,
         this.messenger,
-      ),
-    );
+      );
+    });
 
     on("llm/complete", async (msg) => {
       const model = (await this.configHandler.loadConfig()).config
@@ -514,9 +488,33 @@ export class Core {
       this.completionProvider.cancel();
     });
 
-    on("streamDiffLines", (msg) =>
-      streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
-    );
+    on("streamDiffLines", async (msg) => {
+      const abortController = this.addMessageAbortController(msg.messageId);
+
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Failed to load config");
+      }
+
+      const llm = config.selectedModelByRole.chat;
+      if (!llm) {
+        throw new Error("No chat model selected");
+      }
+
+      const { data } = msg;
+      return streamDiffLines({
+        highlighted: data.highlighted,
+        prefix: data.prefix,
+        suffix: data.suffix,
+        llm,
+        rules: config.rules,
+        input: data.input,
+        language: data.language,
+        onlyOneInsertion: false,
+        overridePrompt: undefined,
+        abortController,
+      });
+    });
 
     on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
 
