@@ -55,7 +55,9 @@ class MCPConnection {
   private constructTransport(options: MCPOptions): Transport {
     switch (options.transport.type) {
       case "stdio":
-        const env: Record<string, string> = options.transport.env || {};
+        const env: Record<string, string> = options.transport.env
+          ? { ...options.transport.env }
+          : {};
         if (process.env.PATH !== undefined) {
           env.PATH = process.env.PATH;
         }
