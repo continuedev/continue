@@ -4,7 +4,6 @@ const removedLineDecorationType = (line: string) =>
   vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
     backgroundColor: { id: "diffEditor.removedLineBackground" },
-    // color: "#808080",
     outlineWidth: "1px",
     outlineStyle: "solid",
     outlineColor: { id: "diffEditor.removedTextBorder" },
@@ -14,6 +13,9 @@ const removedLineDecorationType = (line: string) =>
       color: "#808080",
       textDecoration: "none; white-space: pre",
     },
+    // NOTE this has the effect of hiding text the user enters into a red line, which may cause linting errors
+    // But probably worth saving the ugly effect of having the ghost text after entered text
+    // And resolved upon accept/reject when line deleted anyways
     textDecoration: "none; display: none",
   });
 
@@ -47,10 +49,11 @@ function translateRange(range: vscode.Range, lineOffset: number): vscode.Range {
   );
 }
 
+// Class for managing highlight decorations for added lines (e.g. GREEN)
 export class AddedLineDecorationManager {
   constructor(private editor: vscode.TextEditor) {}
 
-  private ranges: vscode.Range[] = [];
+  ranges: vscode.Range[] = [];
   decorationType = addedLineDecorationType;
 
   applyToNewEditor(newEditor: vscode.TextEditor) {
@@ -88,10 +91,6 @@ export class AddedLineDecorationManager {
     this.editor.setDecorations(this.decorationType, this.ranges);
   }
 
-  getRanges() {
-    return this.ranges;
-  }
-
   shiftDownAfterLine(afterLine: number, offset: number) {
     for (let i = 0; i < this.ranges.length; i++) {
       if (this.ranges[i].start.line >= afterLine) {
@@ -111,10 +110,13 @@ export class AddedLineDecorationManager {
   }
 }
 
+// Class for managing ghost-text decorations for removed lines (e.g. RED)
+// Behavior is slightly different all around
+// because each line will have a unique decoration type
 export class RemovedLineDecorationManager {
   constructor(private editor: vscode.TextEditor) {}
 
-  private ranges: {
+  ranges: {
     line: string;
     range: vscode.Range;
     decoration: vscode.TextEditorDecorationType;
@@ -153,16 +155,12 @@ export class RemovedLineDecorationManager {
     });
   }
 
-  // Red decorations are always unique, so we'll always dispose
+  // Removed decorations are always unique, so we'll always dispose
   clear() {
     this.ranges.forEach((r) => {
       r.decoration.dispose();
     });
     this.ranges = [];
-  }
-
-  getRanges() {
-    return this.ranges;
   }
 
   shiftDownAfterLine(afterLine: number, offset: number) {
@@ -179,7 +177,6 @@ export class RemovedLineDecorationManager {
     for (let i = 0; i < this.ranges.length; i++) {
       if (this.ranges[i].range.start.line === line) {
         this.ranges[i].decoration.dispose();
-        // Find how many sequential ranges we have starting from this line
         let count = 1;
         while (
           i + count < this.ranges.length &&
@@ -188,7 +185,6 @@ export class RemovedLineDecorationManager {
           count++;
           this.ranges[i + count].decoration.dispose();
         }
-        // Remove all sequential ranges and return them
         return this.ranges.splice(i, count);
       }
     }

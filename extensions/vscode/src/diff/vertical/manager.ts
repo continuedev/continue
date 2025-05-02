@@ -344,11 +344,11 @@ export class VerticalDiffManager {
       // startLine += effectiveLineDelta;
       // endLine += effectiveLineDelta;
 
-      existingHandler.clear(false);
+      await existingHandler.clear(false);
     }
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 200);
+      setTimeout(resolve, 150);
     });
 
     // Create new handler with determined start/end

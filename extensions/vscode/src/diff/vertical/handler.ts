@@ -228,8 +228,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
       false,
     );
 
-    const redRanges = this.removedLineDecorations.getRanges();
-
     const deleteRangeLines = async (ranges: vscode.Range[]) => {
       await this.editor.edit(
         (editBuilder) => {
@@ -249,17 +247,17 @@ export class VerticalDiffHandler implements vscode.Disposable {
       );
     };
 
+    const removedRanges = this.removedLineDecorations.ranges;
     if (accept) {
       // Accept all: delete all the red ranges and clear green decorations
-      await deleteRangeLines(redRanges.map((r) => r.range));
+      await deleteRangeLines(removedRanges.map((r) => r.range));
     } else {
       // Reject all: Re-insert red lines, delete green ones
-      for (const r of redRanges) {
+      for (const r of removedRanges) {
         await deleteRangeLines([r.range]);
         await this.insertTextAboveLine(r.range.start.line, r.line);
       }
-      const greenRanges = this.addedLineDecorations.getRanges();
-      await deleteRangeLines(greenRanges);
+      await deleteRangeLines(this.addedLineDecorations.ranges);
     }
 
     this.clearDecorations();
