@@ -106,6 +106,8 @@ export class ContinueCompletionProvider
   public dispose(): void {
     this.disposables.forEach(d => d.dispose());
     this.disposables = [];
+
+    this.completionProvider.dispose();
   }
 
   private async requestNewInlineCompletion() {
