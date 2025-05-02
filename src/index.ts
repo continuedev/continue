@@ -31,49 +31,48 @@ async function chat() {
   let assistant: ContinueClient["assistant"];
   let client: ContinueClient["client"];
 
-  if (fs.existsSync(args.assistantPath)) {
-    // // If it's a file, load it directly
-    // console.log(
-    //   chalk.yellow(`Loading assistant from file: ${args.assistantPath}`)
-    // );
-    // // We need to extract the assistant slug from the yaml to use with the SDK
-    // // For now, let's just use a placeholder slug and use the file content for assistant config
-    // // In a real implementation, we'd need to parse the YAML and extract the slug
-    // const assistantSlug = "default/assistant";
-    // try {
-    //   sdkClient = await initializeContinueSDK(
-    //     authConfig.accessToken,
-    //     assistantSlug
-    //   );
-    //   // Since we're using a file, we need to manually set the assistant config
-    //   assistant = JSON.parse(JSON.stringify(sdkClient.assistant.config));
-    // } catch (error) {
-    //   console.error(
-    //     chalk.red("Error initializing SDK with local file:"),
-    //     error
-    //   );
-    //   throw error;
-    // }
-  } else {
-    // If it's not a file, assume it's a slug
-    // console.log(
-    //   chalk.yellow(`Loading assistant using slug: ${args.assistantPath}`)
-    // );
-    try {
-      let continueSdk = await initializeContinueSDK(
-        authConfig.accessToken,
-        args.assistantPath
-      );
+  // This was the previous default behavior, but currently the SDK
+  // only supports slugs, so we've disabled reading local assistant files
 
-      assistant = continueSdk.assistant;
-      client = continueSdk.client;
-    } catch (error) {
-      console.error(
-        chalk.red(`Error loading assistant ${args.assistantPath}:`),
-        error
-      );
-      throw error;
-    }
+  // if (fs.existsSync(args.assistantPath)) {
+  // // If it's a file, load it directly
+  // console.log(
+  //   chalk.yellow(`Loading assistant from file: ${args.assistantPath}`)
+  // );
+  // // We need to extract the assistant slug from the yaml to use with the SDK
+  // // For now, let's just use a placeholder slug and use the file content for assistant config
+  // // In a real implementation, we'd need to parse the YAML and extract the slug
+  // const assistantSlug = "default/assistant";
+  // try {
+  //   sdkClient = await initializeContinueSDK(
+  //     authConfig.accessToken,
+  //     assistantSlug
+  //   );
+  //   // Since we're using a file, we need to manually set the assistant config
+  //   assistant = JSON.parse(JSON.stringify(sdkClient.assistant.config));
+  // } catch (error) {
+  //   console.error(
+  //     chalk.red("Error initializing SDK with local file:"),
+  //     error
+  //   );
+  //   throw error;
+  // }
+  // }
+
+  try {
+    let continueSdk = await initializeContinueSDK(
+      authConfig.accessToken,
+      args.assistantPath
+    );
+
+    assistant = continueSdk.assistant;
+    client = continueSdk.client;
+  } catch (error) {
+    console.error(
+      chalk.red(`Error loading assistant ${args.assistantPath}:`),
+      error
+    );
+    throw error;
   }
 
   const mcpService = await MCPService.create(assistant!.config);
