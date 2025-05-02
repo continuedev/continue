@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-export const redDecorationType = (line: string) =>
+const removedLineDecorationType = (line: string) =>
   vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
     backgroundColor: { id: "diffEditor.removedLineBackground" },
@@ -12,19 +12,19 @@ export const redDecorationType = (line: string) =>
     after: {
       contentText: line,
       color: "#808080",
+      textDecoration: "none; white-space: pre",
     },
+    textDecoration: "none; display: none",
   });
 
-export const greenDecorationType = vscode.window.createTextEditorDecorationType(
-  {
-    isWholeLine: true,
-    backgroundColor: { id: "diffEditor.insertedLineBackground" },
-    outlineWidth: "1px",
-    outlineStyle: "solid",
-    outlineColor: { id: "diffEditor.insertedTextBorder" },
-    rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-  },
-);
+const addedLineDecorationType = vscode.window.createTextEditorDecorationType({
+  isWholeLine: true,
+  backgroundColor: { id: "diffEditor.insertedLineBackground" },
+  outlineWidth: "1px",
+  outlineStyle: "solid",
+  outlineColor: { id: "diffEditor.insertedTextBorder" },
+  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+});
 
 export const indexDecorationType = vscode.window.createTextEditorDecorationType(
   {
@@ -47,13 +47,11 @@ function translateRange(range: vscode.Range, lineOffset: number): vscode.Range {
   );
 }
 
-export class DecorationTypeRangeManager {
-  constructor(
-    private decorationType: vscode.TextEditorDecorationType,
-    private editor: vscode.TextEditor,
-  ) {}
+export class AddedLineDecorationManager {
+  constructor(private editor: vscode.TextEditor) {}
 
   private ranges: vscode.Range[] = [];
+  decorationType = addedLineDecorationType;
 
   applyToNewEditor(newEditor: vscode.TextEditor) {
     this.editor = newEditor;
@@ -109,13 +107,15 @@ export class DecorationTypeRangeManager {
         return this.ranges.splice(i, 1)[0];
       }
     }
+    this.editor.setDecorations(this.decorationType, this.ranges);
   }
 }
 
-export class RedDecorationsManager {
+export class RemovedLineDecorationManager {
   constructor(private editor: vscode.TextEditor) {}
 
   private ranges: {
+    line: string;
     range: vscode.Range;
     decoration: vscode.TextEditorDecorationType;
   }[] = [];
@@ -129,13 +129,14 @@ export class RedDecorationsManager {
     let i = 0;
     for (const line of lines) {
       this.ranges.push({
+        line,
         range: new vscode.Range(
           startIndex + i,
           0,
           startIndex + i,
           Number.MAX_SAFE_INTEGER,
         ),
-        decoration: redDecorationType(line),
+        decoration: removedLineDecorationType(line),
       });
       i++;
     }
@@ -146,36 +147,22 @@ export class RedDecorationsManager {
     this.addLines(index, [line]);
   }
 
-  private getDecorationsMap() {
-    const decorationsMap = new Map<
-      vscode.TextEditorDecorationType,
-      vscode.Range[]
-    >();
-    for (const range of this.ranges) {
-      const ranges = decorationsMap.get(range.decoration) ?? [];
-      ranges.push(range.range);
-      decorationsMap.set(range.decoration, ranges);
-    }
-    return decorationsMap;
-  }
-
   applyDecorations() {
-    const decorationsMap = this.getDecorationsMap();
-    for (const [decoration, ranges] of decorationsMap) {
-      this.editor.setDecorations(decoration, ranges);
-    }
+    this.ranges.forEach((r) => {
+      this.editor.setDecorations(r.decoration, [r.range]);
+    });
   }
 
+  // Red decorations are always unique, so we'll always dispose
   clear() {
-    const decorationsMap = this.getDecorationsMap();
-    for (const [decoration, _] of decorationsMap) {
-      this.editor.setDecorations(decoration, []);
-    }
+    this.ranges.forEach((r) => {
+      r.decoration.dispose();
+    });
     this.ranges = [];
   }
 
   getRanges() {
-    return this.ranges.map((r) => r.range);
+    return this.ranges;
   }
 
   shiftDownAfterLine(afterLine: number, offset: number) {
@@ -187,10 +174,22 @@ export class RedDecorationsManager {
     this.applyDecorations();
   }
 
-  deleteRangeStartingAt(line: number) {
+  // Red ranges are always single-line, so to delete group, delete sequential ranges
+  deleteRangesStartingAt(line: number) {
     for (let i = 0; i < this.ranges.length; i++) {
       if (this.ranges[i].range.start.line === line) {
-        return this.ranges.splice(i, 1)[0];
+        this.ranges[i].decoration.dispose();
+        // Find how many sequential ranges we have starting from this line
+        let count = 1;
+        while (
+          i + count < this.ranges.length &&
+          this.ranges[i + count].range.start.line === line + count
+        ) {
+          count++;
+          this.ranges[i + count].decoration.dispose();
+        }
+        // Remove all sequential ranges and return them
+        return this.ranges.splice(i, count);
       }
     }
   }
