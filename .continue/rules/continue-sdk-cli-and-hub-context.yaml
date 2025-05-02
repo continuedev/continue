@@ -1,0 +1,36 @@
+name: Continue SDK CLI and Hub Context
+version: 0.0.1
+schema: v1
+rules:
+  - name: Continue SDK CLI and Hub Context
+    rule: >-
+      This repository is a CLI for the Continue SDK, which provides programmatic
+      access to Continue's APIs.
+
+
+      Key components:
+
+      - Continue SDK: Experimental package in early development, subject to
+      breaking changes
+
+      - Continue Hub: Registry for custom AI code assistants
+
+      - Hub functionality: Manages assistant building blocks (models, rules,
+      context providers, prompts, docs, etc.)
+
+      - Governance: Allows central configuration for organizations
+
+
+      Important libraries:
+
+      - WorkOS: Handles authentication flows
+
+      - Model Context Protocol (MCP): Manages MCP server interactions
+
+      - readline-sync: Provides synchronous CLI user interactions
+
+      - Jest: Used for testing framework
+
+
+      All code should follow established patterns for a Node.js CLI tool
+      interfacing with this experimental SDK.

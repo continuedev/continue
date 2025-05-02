@@ -1,4 +1,4 @@
-name: Main
+name: CLI Assistant
 version: 0.0.1
 schema: v1
 
@@ -6,3 +6,7 @@ models:
   - uses: anthropic/claude-3-7-sonnet
     with:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+mcpServers:
+  - uses: repomix/repomix-mcp
+  - uses: anthropic/memory-mcp

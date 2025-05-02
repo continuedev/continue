@@ -1,4 +1,3 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
 import chalk from "chalk";
 import {
   isAuthenticated,
@@ -6,10 +5,11 @@ import {
   login,
   logout,
 } from "./auth/workos.js";
+import { type AssistantConfig } from "@continuedev/sdk";
 
 export function handleSlashCommands(
   input: string,
-  assistant: AssistantUnrolled,
+  assistant: AssistantConfig
 ): {
   output?: string;
   exit?: boolean;
@@ -28,13 +28,16 @@ export function handleSlashCommands(
           "/whoami - Check who you're currently logged in as",
           "/models - List available AI models",
           ...(assistant.prompts?.map(
-            (prompt) => `/${prompt.name} - ${prompt.description}`,
+            (prompt) => `/${prompt?.name} - ${prompt?.description}`
           ) ?? []),
         ].join("\n");
         return { output: helpMessage };
       case "models":
         return {
-          output: `Available models:\n• ${assistant.models?.map((model) => model.name)?.join("\n• ") || "None"}`,
+          output: `Available models:\n• ${
+            assistant.models?.map((model) => model?.name)?.join("\n• ") ||
+            "None"
+          }`,
         };
       case "exit":
         return { exit: true, output: "Goodbye!" };
@@ -42,9 +45,7 @@ export function handleSlashCommands(
         login()
           .then((config) => {
             console.log(
-              chalk.green(
-                `\nLogged in as ${config.userEmail || config.userId}`,
-              ),
+              chalk.green(`\nLogged in as ${config.userEmail || config.userId}`)
             );
           })
           .catch((error) => {
@@ -78,7 +79,7 @@ export function handleSlashCommands(
 
       default:
         const assistantPrompt = assistant.prompts?.find(
-          (prompt) => prompt.name === command,
+          (prompt) => prompt?.name === command
         );
         if (assistantPrompt) {
           const newInput = assistantPrompt.prompt + args.join(" ");

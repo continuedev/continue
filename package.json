@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/cli",
-  "version": "0.0.13",
+  "version": "0.0.15",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,15 +11,15 @@
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
+    "repomix:cli": "npx repomix --ignore sdk-repomix.xml -o cli-repomix.xml"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-yaml": "^1.0.78",
-    "@continuedev/hub": "^0.0.6",
     "@continuedev/openai-adapters": "^1.0.18",
-    "@continuedev/sdk": "^0.0.2",
+    "@continuedev/sdk": "^0.0.9",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@workos-inc/node": "^7.45.0",
     "axios": "^1.8.4",

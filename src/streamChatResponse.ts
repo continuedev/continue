@@ -1,9 +1,6 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
-import { constructLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
-import {
-  ChatCompletionChunk,
+import type {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
@@ -11,29 +8,9 @@ import {
 import { MCPService } from "./mcp.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
+import { ContinueClient } from "@continuedev/sdk";
 
 dotenv.config();
-
-export function getLlmFromAssistant(assistant: AssistantUnrolled) {
-  const chatModel = assistant.models?.filter((model) =>
-    model?.roles?.includes("chat"),
-  )?.[0];
-  if (!chatModel) {
-    console.error(chalk.red("Error: No chat model found in the assistant."));
-    process.exit(1);
-  }
-  const llm = constructLlmApi({
-    provider: chatModel.provider as any,
-    apiKey: chatModel.apiKey,
-    apiBase: chatModel.apiBase,
-  });
-  if (!llm) {
-    console.error(chalk.red("Error: Failed to construct LLM API."));
-    process.exit(1);
-  }
-
-  return { llm, model: chatModel.model };
-}
 
 export function getAllTools() {
   const allTools: ChatCompletionTool[] = BUILTIN_TOOLS.map((tool) => ({
@@ -47,7 +24,7 @@ export function getAllTools() {
           Object.entries(tool.parameters).map(([key, param]) => [
             key,
             { type: param.type, description: param.description },
-          ]),
+          ])
         ),
         required: Object.entries(tool.parameters)
           .filter(([_, param]) => param.required)
@@ -65,7 +42,7 @@ export function getAllTools() {
         description: tool.description,
         parameters: tool.inputSchema,
       },
-    })),
+    }))
   );
 
   return allTools;
@@ -76,10 +53,9 @@ type TODO = any;
 // Define a function to handle streaming responses with tool calling
 export async function streamChatResponse(
   chatHistory: ChatCompletionMessageParam[],
-  assistant: AssistantUnrolled,
+  assistant: ContinueClient["assistant"],
+  client: ContinueClient["client"]
 ) {
-  const { llm, model } = getLlmFromAssistant(assistant);
-
   // Prepare tools for the API call
   const toolsForRequest = getAllTools();
 
@@ -88,21 +64,19 @@ export async function streamChatResponse(
   let shouldContinueConversation = true;
 
   while (shouldContinueConversation) {
-    let stream: AsyncGenerator<ChatCompletionChunk, any, any>;
+    let stream;
+
     try {
-      stream = llm.chatCompletionStream(
-        {
-          model,
-          messages: chatHistory,
-          stream: true,
-          tools: toolsForRequest,
-        },
-        new AbortController().signal,
-      );
+      stream = await client.chat.completions.create({
+        model: assistant.getModel(),
+        messages: chatHistory,
+        stream: true,
+        tools: toolsForRequest,
+      });
     } catch (error: any) {
       console.error(
         chalk.red("Error in streamChatResponse:"),
-        chalk.red(error.message),
+        chalk.red(error.message)
       );
       process.exit(1);
     }
@@ -138,13 +112,15 @@ export async function streamChatResponse(
           // Add function name if present
           if (toolCallDelta.function?.name) {
             const toolCall = currentToolCalls.find(
-              (tc) => tc.id === currentToolCallId,
+              (tc) => tc.id === currentToolCallId
             );
             if (toolCall) {
               if (!toolCall.name) {
                 toolCall.name = toolCallDelta.function.name;
                 process.stdout.write(
-                  `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(toolCall.name)}${chalk.yellow("]")}`,
+                  `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
+                    toolCall.name
+                  )}${chalk.yellow("]")}`
                 );
               }
             }
@@ -153,7 +129,7 @@ export async function streamChatResponse(
           // Collect function arguments
           if (toolCallDelta.function?.arguments) {
             const toolCall = currentToolCalls.find(
-              (tc) => tc.id === currentToolCallId,
+              (tc) => tc.id === currentToolCallId
             );
             if (toolCall) {
               // Accumulate arguments as string to later parse as JSON
@@ -184,7 +160,7 @@ export async function streamChatResponse(
             name: tc.name,
             arguments: JSON.stringify(tc.arguments),
           },
-        }),
+        })
       );
       chatHistory.push({
         role: "assistant",
@@ -212,14 +188,18 @@ export async function streamChatResponse(
 
           console.log(chalk.green(toolResult) + "\n");
         } catch (error) {
-          const errorMessage = `Error executing tool ${toolCall.name}: ${error instanceof Error ? error.message : String(error)}`;
+          const errorMessage = `Error executing tool ${toolCall.name}: ${
+            error instanceof Error ? error.message : String(error)
+          }`;
           chatHistory.push({
             role: "tool",
             tool_call_id: toolCall.id,
             content: errorMessage,
           });
           console.log(
-            `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(")")}`,
+            `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(
+              ")"
+            )}`
           );
         }
       }

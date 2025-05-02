@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
@@ -6,11 +6,11 @@ export class MCPService {
   private readonly connections: MCPConnection[] = [];
   private static instance: MCPService | null = null;
 
-  private constructor(private readonly assistant: AssistantUnrolled) {
+  private constructor(private readonly assistant: AssistantConfig) {
     this.assistant = assistant;
   }
 
-  public static async create(assistant: AssistantUnrolled) {
+  public static async create(assistant: AssistantConfig) {
     // If instance already exists, return it
     if (MCPService.instance) {
       return MCPService.instance;
@@ -21,7 +21,7 @@ export class MCPService {
 
     if (assistant.mcpServers?.length) {
       const connectionPromises = assistant.mcpServers.map((server) =>
-        MCPConnection.create(server),
+        MCPConnection.create(server)
       );
       const connections = await Promise.all(connectionPromises);
       service.connections.push(...connections);
@@ -65,24 +65,29 @@ export class MCPConnection {
   private constructor(public readonly client: Client) {}
 
   public static async create(
-    config: NonNullable<AssistantUnrolled["mcpServers"]>[number],
+    config: NonNullable<AssistantConfig["mcpServers"]>[number]
   ) {
     const client = new Client(
       {
         name: "continue-cli-client",
         version: "1.0.0",
       },
-      { capabilities: {} },
+      { capabilities: {} }
     );
 
     // Construct transport
-    const env: Record<string, string> = config.env || {};
+    const env: Record<string, string> = config?.env || {};
     if (process.env.PATH !== undefined) {
       env.PATH = process.env.PATH;
     }
+
+    if (!config?.command) {
+      throw new Error("MCP server command is not specified");
+    }
+
     const transport = new StdioClientTransport({
       command: config.command,
-      args: config.args,
+      args: config?.args,
       env,
     });
 

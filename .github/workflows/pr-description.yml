@@ -1,0 +1,209 @@
+name: PR Description Generator
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: write
+  checks: write
+  statuses: write
+  deployments: write
+  discussions: write
+
+jobs:
+  generate-description:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Continue CLI
+        run: npm install -g @continuedev/cli
+
+      - name: Prepare PR Analysis Files
+        run: |
+          # Save changed files list to file
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > changed_files.txt
+
+          # Create a summarized diff file (limit to 10k lines to avoid size issues)
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | head -n 1000 > pr_diff.txt
+
+          # Create a prompt file that we'll use with continue-cli
+          cat > prompt.txt << EOL
+          Analyze this PR and come up with a concise description for the changes. 
+          Do not use any tools, just analyze the provided files and the diff.
+          Do not write any preamble, just immediately start with the description.
+
+          The PR includes these files:
+          $(cat changed_files.txt)
+
+          Here are the changes (first 10k lines):
+          $(cat pr_diff.txt)
+          EOL
+
+      - name: Analyze PR with Continue
+        id: analyze
+        run: |
+          continue-cli --headless --assistant "starter/nextjs-assistant" "$(cat prompt.txt)" > analysis.txt
+          echo "analysis_file=analysis.txt" >> $GITHUB_OUTPUT
+        env:
+          CONTINUE_API_KEY: con-05c7fd30d8932830c76dca916b866fcb25f65a543b53f11668cfc0c2349322e3
+          # CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+
+      - name: Add PR Comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const analysisText = fs.readFileSync('analysis.txt', 'utf8');
+
+            const comment = `## 🤖 Suggested PR Description
+
+            ${analysisText}
+
+            ---
+            To use this as your PR description, reply with a comment containing just: \`/apply-description\``;
+            const { data: newComment } = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  update-description:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      github.event.comment.body == '/apply-description'
+    steps:
+      - name: React to Comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Add eyes reaction to show we're processing
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+
+      - name: Find Bot Comment
+        id: find_comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              issue_number: context.issue.number
+              });
+              
+            const botComment = comments
+              .reverse()
+              .find(comment => comment.body.includes('🤖 Suggested PR Description'));
+
+            if (botComment) {
+              core.setOutput('comment_body', botComment.body);
+              return true;
+            }
+            await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '-1'  // thumbs down
+              });
+
+            core.setFailed('No bot comment found');
+            return false;
+
+      - name: Update PR Description
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commentBody = process.env.COMMENT_BODY;
+            console.log('Processing comment body:', commentBody);
+
+            // Extract the description part (between the header and footer)
+            const descriptionMatch = commentBody.match(/## 🤖 Suggested PR Description\s+([\s\S]*?)\s+---/);
+
+            if (descriptionMatch && descriptionMatch[1]) {
+              const newDescription = descriptionMatch[1].trim();
+              console.log('Extracted description:', newDescription);
+
+              // Update PR description
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                body: newDescription
+              });
+              
+              // Add a confirmation reply
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `✅ PR description has been updated with the suggested text.`
+              });
+            } else {
+              core.setFailed('Failed to extract description from comment');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `❌ Error: Could not extract the description from the original comment.`
+              });
+            }
+        env:
+          COMMENT_BODY: ${{ steps.find_comment.outputs.comment_body }}
+
+      - name: Final Reaction
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Remove eyes reaction
+            const { data: reactions } = await github.rest.reactions.listForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id
+            });
+
+            const eyesReaction = reactions.find(r => r.content === 'eyes');
+            if (eyesReaction) {
+              await github.rest.reactions.deleteForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                reaction_id: eyesReaction.id
+              });
+            }
+
+            // Add success reaction
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1'  // thumbs up
+            });
