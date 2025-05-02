@@ -6,7 +6,8 @@ export interface IndexingProgressBarProps {
 }
 
 function IndexingProgressBar({ update }: IndexingProgressBarProps) {
-  const progressPercentage = getProgressPercentage(update.progress);
+  // Show 100% red progress bar if indexing failed
+  const progressPercentage =  update.status === "failed" ? 100 : getProgressPercentage(update.progress);
 
   return (
     <div className="my-2 h-1.5 w-full rounded-md border border-solid border-gray-400">

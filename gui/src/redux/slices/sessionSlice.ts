@@ -10,7 +10,6 @@ import {
   ApplyState,
   ChatHistoryItem,
   ChatMessage,
-  CodeToEdit,
   ContextItem,
   ContextItemWithId,
   FileSymbolMap,
@@ -44,8 +43,6 @@ type SessionState = {
   title: string;
   id: string;
   streamAborter: AbortController;
-  codeToEdit: CodeToEdit[];
-  curCheckpointIndex: number;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
@@ -56,34 +53,13 @@ type SessionState = {
   newestToolbarPreviewForInput: Record<string, string>;
 };
 
-function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
-  if (a.filepath !== b.filepath || a.contents !== b.contents) {
-    return false;
-  }
-
-  if ("range" in a && "range" in b) {
-    const rangeA = a.range;
-    const rangeB = b.range;
-
-    return (
-      rangeA.start.line === rangeB.start.line &&
-      rangeA.end.line === rangeB.end.line
-    );
-  }
-
-  // If neither has a range, they are considered equal in this context
-  return !("range" in a) && !("range" in b);
-}
-
 const initialState: SessionState = {
   allSessionMetadata: [],
   history: [],
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  curCheckpointIndex: 0,
   streamAborter: new AbortController(),
-  codeToEdit: [],
   symbols: {},
   mode: "chat",
   codeBlockApplyStates: {
@@ -200,8 +176,6 @@ export const sessionSlice = createSlice({
           },
           contextItems: [],
         });
-
-        state.curCheckpointIndex = Math.floor(index / 2);
       } else {
         // New input/response messages
         state.history = state.history.concat([
@@ -223,8 +197,6 @@ export const sessionSlice = createSlice({
             contextItems: [],
           },
         ]);
-
-        state.curCheckpointIndex = Math.floor((state.history.length - 1) / 2); // TODO this feels really fragile
       }
 
       state.isStreaming = true;
@@ -454,12 +426,10 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
-        state.curCheckpointIndex = 0;
       } else {
         state.history = [];
         state.title = NEW_SESSION_TITLE;
         state.id = uuidv4();
-        state.curCheckpointIndex = 0;
       }
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
@@ -551,19 +521,6 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-
-    updateCurCheckpoint: (
-      state,
-      { payload }: PayloadAction<{ filepath: string; content: string }>,
-    ) => {
-      const checkpoint = state.history[state.curCheckpointIndex].checkpoint;
-      if (checkpoint) {
-        checkpoint[payload.filepath] = payload.content;
-      }
-    },
-    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
-      state.curCheckpointIndex = payload;
-    },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(
         (state) => state.streamId === payload.streamId,
@@ -584,31 +541,7 @@ export const sessionSlice = createSlice({
     resetNextCodeBlockToApplyIndex: (state) => {
       state.codeBlockApplyStates.curIndex = 0;
     },
-    addCodeToEdit: (
-      state,
-      { payload }: PayloadAction<CodeToEdit | CodeToEdit[]>,
-    ) => {
-      const entries = Array.isArray(payload) ? payload : [payload];
 
-      const newEntries = entries.filter(
-        (entry) =>
-          !state.codeToEdit.some((existingEntry) =>
-            isCodeToEditEqual(existingEntry, entry),
-          ),
-      );
-
-      if (newEntries.length > 0) {
-        state.codeToEdit.push(...newEntries);
-      }
-    },
-    removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      state.codeToEdit = state.codeToEdit.filter(
-        (entry) => !isCodeToEditEqual(entry, payload),
-      );
-    },
-    clearCodeToEdit: (state) => {
-      state.codeToEdit = [];
-    },
     // TOOL CALL STATE
     setToolGenerated: (
       state,
@@ -698,14 +631,6 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
-    cycleMode: (state, action: PayloadAction<{ isJetBrains: boolean }>) => {
-      const modes = action.payload.isJetBrains
-        ? ["chat", "agent"]
-        : ["chat", "edit", "agent"];
-      const currentIndex = modes.indexOf(state.mode);
-      const nextIndex = (currentIndex + 1) % modes.length;
-      state.mode = modes[nextIndex] as MessageModes;
-    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -723,26 +648,6 @@ export const sessionSlice = createSlice({
     selectIsGatheringContext: (state) => {
       const curHistoryItem = state.history.at(-1);
       return curHistoryItem?.isGatheringContext || false;
-    },
-    selectIsInEditMode: (state) => {
-      return state.mode === "edit";
-    },
-    selectCurrentMode: (state) => {
-      return state.mode;
-    },
-    selectIsSingleRangeEditOrInsertion: (state) => {
-      if (state.mode !== "edit") {
-        return false;
-      }
-
-      const isInsertion = state.codeToEdit.length === 0;
-      const selectIsSingleRangeEdit =
-        state.codeToEdit.length === 1 && "range" in state.codeToEdit[0];
-
-      return selectIsSingleRangeEdit || isInsertion;
-    },
-    selectHasCodeToEdit: (state) => {
-      return state.codeToEdit.length > 0;
     },
   },
   extraReducers: (builder) => {
@@ -806,14 +711,9 @@ export const {
   setMainEditorContentTrigger,
   deleteMessage,
   setIsGatheringContext,
-  updateCurCheckpoint,
-  setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
   abortStream,
-  clearCodeToEdit,
-  addCodeToEdit,
-  removeCodeToEdit,
   setToolCallCalling,
   cancelToolCall,
   errorToolCall,
@@ -826,15 +726,8 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
-  cycleMode,
 } = sessionSlice.actions;
 
-export const {
-  selectIsGatheringContext,
-  selectIsInEditMode,
-  selectCurrentMode,
-  selectIsSingleRangeEditOrInsertion,
-  selectHasCodeToEdit,
-} = sessionSlice.selectors;
+export const { selectIsGatheringContext } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

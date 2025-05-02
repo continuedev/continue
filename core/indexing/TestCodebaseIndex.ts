@@ -48,10 +48,10 @@ export class TestCodebaseIndex implements CodebaseIndex {
       );
     }
 
-    markComplete(results.compute, IndexResultType.Compute);
-    markComplete(results.addTag, IndexResultType.AddTag);
-    markComplete(results.del, IndexResultType.Delete);
-    markComplete(results.removeTag, IndexResultType.RemoveTag);
+    await markComplete(results.compute, IndexResultType.Compute);
+    await markComplete(results.addTag, IndexResultType.AddTag);
+    await markComplete(results.del, IndexResultType.Delete);
+    await markComplete(results.removeTag, IndexResultType.RemoveTag);
   }
 
   async getIndexedFilesForTags(tags: IndexTag[]): Promise<string[]> {

@@ -235,10 +235,6 @@ declare global {
     loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
   }
   
-  export interface Checkpoint {
-    [filepath: string]: string;
-  }
-  
   export interface Session {
     sessionId: string;
     title: string;
@@ -423,8 +419,6 @@ declare global {
     promptLogs?: PromptLog[];
     toolCallState?: ToolCallState;
     isGatheringContext?: boolean;
-    checkpoint?: Checkpoint;
-    isBeforeCheckpoint?: boolean;
   }
   
   export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -931,6 +925,7 @@ declare global {
     numThreads?: number;
     useMmap?: boolean;
     keepAlive?: number;
+    numGpu?: number;
     raw?: boolean;
     stream?: boolean;
     prediction?: Prediction;
@@ -1049,13 +1044,6 @@ declare global {
     applyCodeBlock?: string;
     repoMapFileSelection?: string;
   }
-  
-  export type EditStatus =
-    | "not-started"
-    | "streaming"
-    | "accepting"
-    | "accepting:full-diff"
-    | "done";
   
   export type ApplyStateStatus =
     | "streaming" // Changes are being applied to the file

@@ -2,6 +2,7 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import {
   initializeProfilePreferences,
@@ -11,10 +12,11 @@ import {
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
+import { setConfigResult } from "../redux/slices/configSlice";
 import {
-  selectSelectedChatModel,
-  setConfigResult,
-} from "../redux/slices/configSlice";
+  setLastNonEditSessionEmpty,
+  updateEditStateApplyState,
+} from "../redux/slices/editModeState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   acceptToolCall,
@@ -31,11 +33,11 @@ import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
-function useSetup() {
+function ParallelListeners() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
-  const defaultModel = useAppSelector(selectSelectedChatModel);
+
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
@@ -81,10 +83,6 @@ function useSetup() {
 
   const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
-      // const authResult = await ideMessenger.request(
-      //   "auth/getState",
-      //   undefined
-      // )
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
@@ -259,34 +257,47 @@ function useSetup() {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      dispatch(updateApplyState(state));
+      if (state.streamId === EDIT_MODE_STREAM_ID) {
+        dispatch(updateEditStateApplyState(state));
+      } else {
+        // chat or agent
+        dispatch(updateApplyState(state));
 
-      // Handle apply status updates that are associated with current tool call
-      if (
-        state.status === "closed" &&
-        currentToolCallApplyState &&
-        currentToolCallApplyState.streamId === state.streamId
-      ) {
-        // const output: ContextItem = {
-        //   name: "Edit tool output",
-        //   content: "Completed edit",
-        //   description: "",
-        // };
-        dispatch(
-          acceptToolCall({
-            toolCallId: currentToolCallApplyState.toolCallId!,
-          }),
-        );
-        // dispatch(setToolCallOutput([]));
-        dispatch(
-          streamResponseAfterToolCall({
-            toolCallId: currentToolCallApplyState.toolCallId!,
-          }),
-        );
+        // Handle apply status updates that are associated with current tool call
+        if (
+          state.status === "closed" &&
+          currentToolCallApplyState &&
+          currentToolCallApplyState.streamId === state.streamId
+        ) {
+          // const output: ContextItem = {
+          //   name: "Edit tool output",
+          //   content: "Completed edit",
+          //   description: "",
+          // };
+          dispatch(
+            acceptToolCall({
+              toolCallId: currentToolCallApplyState.toolCallId!,
+            }),
+          );
+          // dispatch(setToolCallOutput([]));
+          dispatch(
+            streamResponseAfterToolCall({
+              toolCallId: currentToolCallApplyState.toolCallId!,
+            }),
+          );
+        }
       }
     },
     [currentToolCallApplyState, history],
   );
+
+  const mode = useAppSelector((store) => store.session.mode);
+  useEffect(() => {
+    if (mode !== "edit") {
+      dispatch(setLastNonEditSessionEmpty(history.length === 0));
+    }
+  }, [mode, history]);
+  return <></>;
 }
 
-export default useSetup;
+export default ParallelListeners;

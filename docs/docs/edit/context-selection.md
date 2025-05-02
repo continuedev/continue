@@ -11,7 +11,7 @@ The input you provide is included in the prompt.
 
 ## Code to Edit
 
-The **entire contents** of each file (the current file for Jetbrains inline Edit, each `Code to Edit` item for VS Code Edit mode) are included in the prompt for context. The model will only attempt to edit the highlighted/specified ranges.
+The **entire contents** of each file (the current file for Jetbrains inline Edit, the `Code to Edit` item for VS Code Edit mode) are included in the prompt for context. The model will only attempt to edit the highlighted/specified ranges.
 
 ## Context Providers
 

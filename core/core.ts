@@ -57,6 +57,7 @@ import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
+import { LLMError } from "./llm";
 import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -348,8 +349,8 @@ export class Core {
       return await this.configHandler.getSerializedConfig();
     });
 
-    on("config/ideSettingsUpdate", (msg) => {
-      this.configHandler.updateIdeSettings(msg.data);
+    on("config/ideSettingsUpdate", async (msg) => {
+      await this.configHandler.updateIdeSettings(msg.data);
     });
 
     on("config/refreshProfiles", async (msg) => {
@@ -388,7 +389,7 @@ export class Core {
     });
 
     on("mcp/reloadServer", async (msg) => {
-      MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });
     // Context providers
     on("context/addDocs", async (msg) => {
@@ -742,7 +743,7 @@ export class Core {
     if (!config) {
       return false;
     }
-    
+
     const llm = config?.selectedModelByRole.chat;
     if (!llm) {
       throw new Error("No chat model selected");
@@ -1032,25 +1033,22 @@ export class Core {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
-    for await (const update of (await this.codebaseIndexerPromise).refreshDirs(
-      paths,
-      this.indexingCancellationController.signal,
-    )) {
-      let updateToSend = { ...update };
-      // TODO reconsider this status overwrite?
-      // original goal was to not concern users with edge noncritical errors
-      if (update.status === "failed") {
-        updateToSend.status = "done";
-        updateToSend.desc = "Indexing complete";
-        updateToSend.progress = 1.0;
-      }
+    try {
+      for await (const update of (
+        await this.codebaseIndexerPromise
+      ).refreshDirs(paths, this.indexingCancellationController.signal)) {
+        let updateToSend = { ...update };
 
-      void this.messenger.request("indexProgress", updateToSend);
-      this.codebaseIndexingState = updateToSend;
+        void this.messenger.request("indexProgress", updateToSend);
+        this.codebaseIndexingState = updateToSend;
 
-      if (update.status === "failed") {
-        void this.sendIndexingErrorTelemetry(update);
+        if (update.status === "failed") {
+          void this.sendIndexingErrorTelemetry(update);
+        }
       }
+    } catch (e: any) {
+      console.log(`Failed refreshing codebase index directories : ${e}`);
+      this.handleIndexingError(e);
     }
 
     this.messenger.send("refreshSubmenuItems", {
@@ -1068,22 +1066,22 @@ export class Core {
       return;
     }
     this.indexingCancellationController = new AbortController();
-    for await (const update of (await this.codebaseIndexerPromise).refreshFiles(
-      files,
-    )) {
-      let updateToSend = { ...update };
-      if (update.status === "failed") {
-        updateToSend.status = "done";
-        updateToSend.desc = "Indexing complete";
-        updateToSend.progress = 1.0;
-      }
+    try {
+      for await (const update of (
+        await this.codebaseIndexerPromise
+      ).refreshFiles(files)) {
+        let updateToSend = { ...update };
 
-      void this.messenger.request("indexProgress", updateToSend);
-      this.codebaseIndexingState = updateToSend;
+        void this.messenger.request("indexProgress", updateToSend);
+        this.codebaseIndexingState = updateToSend;
 
-      if (update.status === "failed") {
-        void this.sendIndexingErrorTelemetry(update);
+        if (update.status === "failed") {
+          void this.sendIndexingErrorTelemetry(update);
+        }
       }
+    } catch (e: any) {
+      console.log(`Failed refreshing codebase index files : ${e}`);
+      this.handleIndexingError(e);
     }
 
     this.messenger.send("refreshSubmenuItems", {
@@ -1093,4 +1091,19 @@ export class Core {
   }
 
   // private
+  handleIndexingError(e: any) {
+    if (e instanceof LLMError) {
+      // Need to report this specific error to the IDE for special handling
+      void this.messenger.request("reportError", e);
+    }
+    // broadcast indexing error
+    let updateToSend: IndexingProgressUpdate = {
+      progress: 0,
+      status: "failed",
+      desc: e.message,
+    };
+    void this.messenger.request("indexProgress", updateToSend);
+    this.codebaseIndexingState = updateToSend;
+    void this.sendIndexingErrorTelemetry(updateToSend);
+  }
 }

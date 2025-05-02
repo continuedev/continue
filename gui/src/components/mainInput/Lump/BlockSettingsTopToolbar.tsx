@@ -12,9 +12,9 @@ import {
 import { ReactNode } from "react";
 import { vscBadgeForeground } from "../..";
 import { useAppSelector } from "../../../redux/hooks";
-import { fontSize } from "../../../util";
 import { ToolTip } from "../../gui/Tooltip";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
+import { useFontSize } from "../../ui/font";
 import HoverItem from "../InputToolbar/HoverItem";
 import { useLump } from "./LumpContext";
 import { ErrorsSectionTooltip } from "./sections/errors/ErrorsSectionTooltip";
@@ -74,6 +74,8 @@ function BlockSettingsToolbarIcon(
   const isErrorSection = props.sectionId === "error";
 
   const id = `block-settings-toolbar-icon-${props.sectionId}`;
+
+  const fontSize = useFontSize(-3);
   return (
     <>
       <HoverItem
@@ -97,7 +99,7 @@ function BlockSettingsToolbarIcon(
                 ? "bg-red-600"
                 : "bg-badge"
               : undefined
-          } relative flex select-none items-center rounded-full px-1 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${props.className || ""}`}
+          } relative flex select-none items-center rounded-full px-[3px] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
         >
           <props.icon
             className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
@@ -109,7 +111,7 @@ function BlockSettingsToolbarIcon(
             aria-hidden="true"
           />
           <div
-            style={{ fontSize: fontSize(-3) }}
+            style={{ fontSize }}
             className={`overflow-hidden transition-all duration-200 ${
               props.isSelected ? "ml-1 w-auto opacity-100" : "w-0 opacity-0"
             }`}
@@ -154,15 +156,13 @@ export function BlockSettingsTopToolbar() {
   );
 
   return (
-    <div className="flex w-full items-center justify-between gap-4">
+    <div className="flex flex-1 items-center justify-between gap-2">
       <div className="flex flex-row">
         <div className="xs:flex hidden items-center justify-center text-gray-400">
           <BlockSettingsToolbarIcon
             className="-ml-1.5"
             icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-            tooltip={
-              isToolbarExpanded ? "Collapse sections" : "Expand sections"
-            }
+            tooltip={isToolbarExpanded ? "Collapse Toolbar" : "Expand Toolbar"}
             title=""
             isSelected={false}
             onClick={handleEllipsisClick}
@@ -190,8 +190,16 @@ export function BlockSettingsTopToolbar() {
           </div>
         </div>
       </div>
-      <div className="flex">
-        <AssistantSelect />
+      <div className="flex gap-0.5">
+        <HoverItem
+          data-tooltip-id="assistant-select-tooltip"
+          className="!m-0 !p-0"
+        >
+          <AssistantSelect />
+          <ToolTip id="assistant-select-tooltip" place="top">
+            Select Assistant
+          </ToolTip>
+        </HoverItem>
       </div>
     </div>
   );
