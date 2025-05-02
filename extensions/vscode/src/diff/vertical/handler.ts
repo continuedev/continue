@@ -500,17 +500,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
     // ["A"] => "A" and ["A", ""] => "A\n" to be the same single line.
     // "A\n" and "A\n\n" are unambiguous.
     //
-    const oldFileContent =
-      diffLines
-        .filter((line) => line.type === "same" || line.type === "old")
-        .map((line) => line.line)
-        .join("\n") + "\n";
+    const oldFileContent = diffLines
+      .filter((line) => line.type === "same" || line.type === "old")
+      .map((line) => line.line)
+      .join("\n") + "\n";
 
-    const newFileContent =
-      diffLines
-        .filter((line) => line.type === "same" || line.type === "new")
-        .map((line) => line.line)
-        .join("\n") + "\n";
+    const newFileContent = diffLines
+      .filter((line) => line.type === "same" || line.type === "new")
+      .map((line) => line.line)
+      .join("\n") + "\n";
 
     const diffs = myersDiff(oldFileContent, newFileContent);
 
