@@ -22,6 +22,7 @@ import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRule
 import { gptEditPrompt } from "../llm/templates/edit";
 import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
+import { recursiveStream } from "./recursiveStream";
 
 function constructPrompt(
   prefix: string,
@@ -156,17 +157,7 @@ export async function* streamDiffLines({
     content: highlighted,
   };
 
-  const completion =
-    typeof prompt === "string"
-      ? llm.streamComplete(prompt, new AbortController().signal, {
-          raw: true,
-          prediction,
-          reasoning: false,
-        })
-      : llm.streamChat(prompt, new AbortController().signal, {
-          prediction,
-          reasoning: false,
-        });
+  const completion = recursiveStream(llm, prompt, prediction);
 
   let lines = streamLines(completion);
 
