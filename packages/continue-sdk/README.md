@@ -1,5 +1,7 @@
 # @continuedev/sdk
 
+> **⚠️ EXPERIMENTAL: This package is in early development and subject to frequent breaking changes without notice.**
+
 This SDK provides programmatic access to Continue's Hub APIs and functionality.
 
 ## Overview
