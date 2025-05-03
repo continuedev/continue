@@ -1,6 +1,44 @@
 import { ExperimentalMCPOptions } from './mcp-types';
 
 /**
+ * コンテキストメニュー設定
+ */
+export interface ContextMenuConfig {
+  items?: any[];
+  enabled?: boolean;
+  // 他の必要なプロパティ
+}
+
+/**
+ * 実験的モデルロール
+ */
+export interface ExperimentalModelRoles {
+  inlineEdit?: string;
+  applyCodeBlock?: string;
+  // 他の必要なプロパティ
+}
+
+/**
+ * デフォルトコンテキストプロバイダ
+ */
+export interface DefaultContextProvider {
+  name: string;
+  description?: string;
+  enabled?: boolean;
+  params?: Record<string, any>;
+  // 他の必要なプロパティ
+}
+
+/**
+ * クイックアクション設定
+ */
+export interface QuickActionConfig {
+  actions?: any[];
+  enabled?: boolean;
+  // 他の必要なプロパティ
+}
+
+/**
  * Updates to fix the experimental configuration interfaces
  */
 export interface ExperimentalConfig {

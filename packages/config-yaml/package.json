@@ -18,7 +18,7 @@
   "dependencies": {
     "@continuedev/config-types": "^1.0.14",
     "yaml": "^2.6.1",
-    "zod": "^3.24.2"
+    "zod": "3.24.3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

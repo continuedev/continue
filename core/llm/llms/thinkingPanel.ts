@@ -118,6 +118,25 @@ function normalizePath(pathStr: string): string {
   return pathStr;
 }
 
+// コマンドが既に登録されているかチェック
+async function isCommandRegistered(commandName: string): Promise<boolean> {
+  if (registeredCommands.has(commandName)) {
+    return true;
+  }
+  
+  if (!vscode || !vscode.commands) {
+    return false;
+  }
+  
+  try {
+    const commands = await vscode.commands.getCommands(true);
+    return commands.includes(commandName);
+  } catch (e) {
+    console.error(`Error checking if command ${commandName} is registered:`, e);
+    return false;
+  }
+}
+
 function safeExecuteCommand(commandName: string, args: any[] = [], fallback?: () => void) {
   if (vscode && vscode.commands) {
     try {
@@ -138,6 +157,7 @@ function safeExecuteCommand(commandName: string, args: any[] = [], fallback?: ()
         });
       }
     } catch (e) {
+      console.warn(`Error executing command ${commandName}:`, e);
       if (fallback) {
         fallback();
       }
@@ -187,6 +207,7 @@ function initializeThinkingPanelFallback(): boolean {
     initRetryCount = 0;
     return true;
   } catch (e) {
+    console.error("Error initializing thinking panel:", e);
     if (initRetryCount < MAX_INIT_RETRY) {
       initRetryCount++;
       setTimeout(() => {
@@ -392,64 +413,80 @@ function appendThinkingContentFallback(content: string, phase?: string, progress
 
 export function registerThinkingPanel(context: any) {
   if (!vscode || !vscode.commands) {
+    console.log('VSCode API not available for registerThinkingPanel');
     return;
   }
   
   try {
+    // コマンドを登録する前に、既に存在するかチェック
+    const registerCommand = async (name: string, callback: (...args: any[]) => any) => {
+      const isRegistered = await isCommandRegistered(name);
+      if (!isRegistered) {
+        const disposable = vscode.commands.registerCommand(name, callback);
+        context.subscriptions.push(disposable);
+        registeredCommands.add(name);
+        console.log(`Registered command: ${name}`);
+        return true;
+      } else {
+        console.log(`Command ${name} already exists, skipping registration`);
+        registeredCommands.add(name);
+        return false;
+      }
+    };
+    
     if (context && context.subscriptions) {
-      const resetCommand = vscode.commands.registerCommand('continue.resetThinkingPanel', () => {
-        resetThinkingState();
-      });
-      
-      const appendCommand = vscode.commands.registerCommand('continue.appendThinkingChunk', 
-        (content: string, phase: string, progress: number) => {
-          if (thinkingPanel) {
-            appendThinkingContentFallback(content, phase, progress);
-          } else {
-            initializeThinkingPanelFallback();
-            appendThinkingContentFallback(content, phase, progress);
-          }
-      });
-      
-      const refreshCommand = vscode.commands.registerCommand('continue.forceRefreshThinking', 
-        (force: boolean) => {
-          if (thinkingPanel) {
-            try {
-              thinkingPanel.reveal();
-            } catch (e) {
-              thinkingPanel = null;
+      // コマンド登録を非同期で行い、重複を防止
+      Promise.all([
+        registerCommand('continue.resetThinkingPanel', () => {
+          resetThinkingState();
+        }),
+        
+        registerCommand('continue.appendThinkingChunk', 
+          (content: string, phase: string, progress: number) => {
+            if (thinkingPanel) {
+              appendThinkingContentFallback(content, phase, progress);
+            } else {
+              initializeThinkingPanelFallback();
+              appendThinkingContentFallback(content, phase, progress);
+            }
+        }),
+        
+        registerCommand('continue.forceRefreshThinking', 
+          (force: boolean) => {
+            if (thinkingPanel) {
+              try {
+                thinkingPanel.reveal();
+              } catch (e) {
+                thinkingPanel = null;
+                initializeThinkingPanelFallback();
+              }
+            } else {
               initializeThinkingPanelFallback();
             }
-          } else {
-            initializeThinkingPanelFallback();
-          }
+        }),
+        
+        registerCommand('continue.thinkingCompleted', () => {
+          thinkingCompletedSent = true;
+        })
+      ]).then(() => {
+        console.log('ThinkingPanel commands registered successfully');
+      }).catch((error) => {
+        console.error('Error registering ThinkingPanel commands:', error);
+        initializeThinkingPanelFallback();
       });
-      
-      const completedCommand = vscode.commands.registerCommand('continue.thinkingCompleted', () => {
-        thinkingCompletedSent = true;
-      });
-      
-      context.subscriptions.push(
-        resetCommand,
-        appendCommand,
-        refreshCommand,
-        completedCommand
-      );
-      
-      registeredCommands.add('continue.resetThinkingPanel');
-      registeredCommands.add('continue.appendThinkingChunk');
-      registeredCommands.add('continue.forceRefreshThinking');
-      registeredCommands.add('continue.thinkingCompleted');
     }
     
     try {
       vscode.commands.executeCommand('continue.registerThinkingPanel', context);
     } catch (e) {
+      console.log('Thinking panel already registered, initializing fallback panel');
       initializeThinkingPanelFallback();
     }
     
     resetThinkingState();
+    console.log('Thinking panel registered with extension context');
   } catch (e) {
+    console.error('Error in registerThinkingPanel:', e);
     initializeThinkingPanelFallback();
   }
 }
@@ -558,7 +595,20 @@ function processThinkingQueue() {
       appendThinkingContentFallback(combinedContent, lastPhase, highestProgress);
     });
     
-    safeExecuteCommand('continue.forceRefreshThinking', [true], () => {
+    // コマンドが存在するかチェックしてから実行
+    isCommandRegistered('continue.forceRefreshThinking').then(exists => {
+      if (exists) {
+        vscode.commands.executeCommand('continue.forceRefreshThinking', true);
+      } else {
+        if (thinkingPanel) {
+          try {
+            thinkingPanel.reveal();
+          } catch (e) { }
+        } else {
+          initializeThinkingPanelFallback();
+        }
+      }
+    }).catch(() => {
       if (thinkingPanel) {
         try {
           thinkingPanel.reveal();
@@ -627,7 +677,25 @@ export function thinkingCompleted() {
   thinkingCompletedSent = true;
   
   setTimeout(() => {
-    safeExecuteCommand('continue.forceRefreshThinking', [false], () => {
+    // コマンドが存在するかチェックしてから実行
+    isCommandRegistered('continue.forceRefreshThinking').then(exists => {
+      if (exists) {
+        vscode.commands.executeCommand('continue.forceRefreshThinking', false);
+      } else {
+        if (thinkingPanel) {
+          try {
+            thinkingPanel.reveal();
+          } catch (e) {
+            thinkingPanel = null;
+            initializeThinkingPanelFallback();
+            appendThinkingContentFallback("✨ 思考プロセス完了 ✨", '✅ 完了', 1.0);
+          }
+        } else {
+          initializeThinkingPanelFallback();
+          appendThinkingContentFallback("✨ 思考プロセス完了 ✨", '✅ 完了', 1.0);
+        }
+      }
+    }).catch(() => {
       if (thinkingPanel) {
         try {
           thinkingPanel.reveal();

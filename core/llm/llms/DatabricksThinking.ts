@@ -32,6 +32,25 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
+// ThinkingChatMessage型の定義を追加
+type ThinkingChatMessage = ChatMessage & {
+  finish_reason?: string;
+  thinking_metadata?: {
+    phase: string;
+    progress: number;
+    formatted_text?: string;
+  };
+  isThinking?: boolean;
+};
+
+// SSEパース結果の型定義
+interface ParseSSEResult {
+  done: boolean;
+  messages: (ChatMessage | ThinkingContent)[];
+  lastActivityTime: number;
+  buffer?: string;
+}
+
 export default class DatabricksThinking {
   private thinkingProgress: number = 0;
   private thinkingPhase: string = "initial";
@@ -52,11 +71,65 @@ export default class DatabricksThinking {
   private maxRetryAttempts: number = 5;
   private backoffFactor: number = 1.5;
   private modelConfig: any = null;
+  private activityTimeoutMs: number = 30000; // 30秒の非アクティブタイムアウト
   
   constructor(modelConfig: any) {
     this.modelConfig = modelConfig;
     this.useStepByStepThinking = 
       this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true;
+  }
+  
+  /**
+   * 指定されたモデル名がClaudeモデルかどうかを判定する静的メソッド
+   * @param modelName モデル名
+   * @returns Claudeモデルかどうか
+   */
+  public static isClaudeModel(modelName: string): boolean {
+    return (modelName || "").toLowerCase().includes("claude");
+  }
+  
+  /**
+   * 指定されたモデル名がClaude 3.7 Sonnetかどうかを判定する静的メソッド
+   * @param modelName モデル名
+   * @returns Claude 3.7 Sonnetかどうか
+   */
+  public static isClaudeSonnet37(modelName: string): boolean {
+    const isClaudeModel = DatabricksThinking.isClaudeModel(modelName);
+    return isClaudeModel && (
+      (modelName || "").toLowerCase().includes("claude-3-7") ||
+      (modelName || "").toLowerCase().includes("claude-3.7")
+    );
+  }
+  
+  /**
+   * モデル設定の思考モード関連の初期化を行う静的メソッド
+   * @param modelConfig モデル設定
+   */
+  public static initializeModelConfig(modelConfig: any): void {
+    if (!modelConfig.defaultCompletionOptions) {
+      modelConfig.defaultCompletionOptions = {};
+    }
+    
+    // Thinking設定を確認して初期値を設定
+    if (!modelConfig.defaultCompletionOptions.thinking) {
+      modelConfig.defaultCompletionOptions.thinking = {
+        type: "enabled",
+        budget_tokens: 16000
+      };
+    }
+    
+    if (!modelConfig.defaultCompletionOptions.thinking.type) {
+      modelConfig.defaultCompletionOptions.thinking.type = "enabled";
+    }
+    
+    if (!modelConfig.defaultCompletionOptions.thinking.budget_tokens) {
+      modelConfig.defaultCompletionOptions.thinking.budget_tokens = 16000;
+    }
+    
+    // ステップバイステップ思考モードのデフォルト値
+    if (modelConfig.defaultCompletionOptions.stepByStepThinking === undefined) {
+      modelConfig.defaultCompletionOptions.stepByStepThinking = true;
+    }
   }
   
   /**
@@ -165,6 +238,70 @@ export default class DatabricksThinking {
   }
   
   /**
+   * LLMオプションを準備する関数
+   * @param options ユーザーが指定したオプション
+   * @returns 思考モードの設定と最終的なオプション
+   */
+  public prepareLLMOptions(options: CompletionOptions): { 
+    isThinkingEnabled: boolean; 
+    thinkingOptions: any; 
+    finalOptions: any
+  } {
+    const isClaudeModel = DatabricksThinking.isClaudeModel(this.modelConfig?.model || "");
+    const isThinkingEnabled = options.reasoning || 
+                            (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
+    const thinkingBudget = options.reasoningBudgetTokens || 
+                          this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
+                          16000;
+    
+    const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(this.modelConfig?.model || "");
+    
+    // 必要なトークン数をThinking用の余裕を持って設定
+    const maxTokens = Math.max(
+      options.maxTokens ?? this.modelConfig?.defaultCompletionOptions?.maxTokens ?? 4096,
+      isThinkingEnabled ? thinkingBudget + 2000 : 0 // 余裕を持たせる (1000→2000)
+    );
+    
+    // オプションを構築
+    const finalOptions: any = {
+      model: options.model || this.modelConfig?.model,
+      temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
+      max_tokens: maxTokens,
+      stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? []
+    };
+    
+    // ステップバイステップ思考を使用する場合は温度を少し下げる
+    const useStepByStepThinking = 
+      options.stepByStepThinking !== undefined ? 
+      !!options.stepByStepThinking : 
+      (this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true);
+    
+    if (useStepByStepThinking && options.temperature === undefined && 
+        this.modelConfig?.defaultCompletionOptions?.temperature === undefined) {
+      finalOptions.temperature = 0.6;
+    }
+    
+    // Claude 3.7 Sonnet非対応、または思考機能無効の場合のオプション
+    if (!isClaudeSonnet37 || !isThinkingEnabled) {
+      finalOptions.top_k = options.topK ?? this.modelConfig?.defaultCompletionOptions?.topK ?? 100;
+      finalOptions.top_p = options.topP ?? this.modelConfig?.defaultCompletionOptions?.topP ?? 0.95;
+    }
+    
+    // 思考機能の初期化と設定
+    const thinkingOptions = isThinkingEnabled ? {
+      type: "enabled",
+      budget_tokens: thinkingBudget
+    } : null;
+    
+    if (this.initializeThinking(options) && thinkingOptions) {
+      // Thinking設定をAPIリクエストに追加
+      finalOptions.thinking = thinkingOptions;
+    }
+    
+    return { isThinkingEnabled, thinkingOptions, finalOptions };
+  }
+  
+  /**
    * 大量の思考コンテンツを処理する関数
    * @param content 思考コンテンツ
    * @param phase フェーズ
@@ -198,6 +335,53 @@ export default class DatabricksThinking {
       this.hasCompletedThinking = true;
       this.thinkingStarted = false;
     }
+  }
+  
+  /**
+   * システムメッセージを拡張する関数
+   * @param options 補完オプション
+   * @param originalSystemMessage 元のシステムメッセージ
+   * @returns 拡張されたシステムメッセージ
+   */
+  public createEnhancedSystemMessage(
+    options: CompletionOptions, 
+    originalSystemMessage?: string
+  ): string {
+    let systemMessage = originalSystemMessage || "";
+    
+    const isClaudeModel = DatabricksThinking.isClaudeModel(this.modelConfig?.model || "");
+    const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(this.modelConfig?.model || "");
+    
+    const enableThinking = options.reasoning || 
+      (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
+    
+    const useStepByStepThinking = 
+      options.stepByStepThinking !== undefined ? 
+      !!options.stepByStepThinking : 
+      (this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true);
+    
+    // 思考モードが有効な場合、システムメッセージに指示を追加
+    if (enableThinking) {
+      if (useStepByStepThinking) {
+        const stepByStepInstructions = `\n\nBefore answering, think step-by-step and explain your reasoning in detail. Please provide detailed, step-by-step reasoning before arriving at a conclusion.`;
+        systemMessage += stepByStepInstructions;
+      } else if (!isClaudeSonnet37) {
+        const budgetTokens = options.reasoningBudgetTokens || 
+          this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
+          16000;
+        
+        const thinkingInstructions = `\n\nI'd like you to solve this problem step-by-step, showing your reasoning process clearly. Take your time to think through this thoroughly before giving your final answer. Use up to ${budgetTokens} tokens to explore different approaches and ensure your solution is correct.`;
+        systemMessage += thinkingInstructions;
+      }
+    }
+    
+    // ツールが指定されている場合、ツール使用の指示を追加
+    if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+      const agentInstructions = `\n\nWhen appropriate, use the provided tools to help solve the problem. These tools allow you to interact with the external environment to gather information or perform actions needed to complete the task.`;
+      systemMessage += agentInstructions;
+    }
+    
+    return systemMessage;
   }
   
   /**
@@ -253,12 +437,223 @@ export default class DatabricksThinking {
   }
   
   /**
+   * SSEパーサー関数 - ストリームデータからメッセージを抽出
+   * @param buffer バッファ文字列
+   * @param thinkingContent 思考内容バッファ
+   * @returns パース結果
+   */
+  private parseSSE(
+    buffer: string,
+    thinkingContent: string,
+  ): ParseSSEResult {
+    const out: (ChatMessage | ThinkingContent)[] = [];
+    let currentBuffer = buffer;
+    
+    // アクティビティ時間を更新
+    const lastActivityTime = Date.now();
+    
+    const thinkingStartRegex = /^thinking:(.*)$/i;
+    
+    // 一行のみで完結するJSONの処理
+    if (currentBuffer.trim() && !currentBuffer.includes("\n")) {
+      try {
+        const trimmedBuffer = currentBuffer.trim();
+        const jsonStr = trimmedBuffer.startsWith("data:") ? 
+                     trimmedBuffer.slice(trimmedBuffer.indexOf("{")) : 
+                     trimmedBuffer;
+        
+        const json = JSON.parse(jsonStr);
+        
+        // 完了シグナルの検出
+        if (json.type === "message_stop" || 
+            json.done === true || 
+            (json.choices && json.choices[0]?.finish_reason === "stop")) {
+            
+          this.ensureThinkingComplete();
+          return { done: true, messages: out, lastActivityTime };
+        }
+        
+        // 完了メッセージの内容
+        if (json.choices && json.choices[0]?.message?.content) {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: json.choices[0].message.content
+          };
+          out.push(message);
+          
+          this.ensureThinkingComplete();
+          return { done: true, messages: out, lastActivityTime };
+        }
+        
+        // ツール呼び出しの処理
+        if (json.choices && json.choices[0]?.message?.tool_calls) {
+          const toolCalls = json.choices[0].message.tool_calls;
+          const message: ChatMessage = {
+            role: "assistant",
+            content: "",
+            toolCalls: toolCalls.map((call: any) => ({
+              id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+              type: "function",
+              function: {
+                name: call.function.name,
+                arguments: call.function.arguments
+              }
+            }))
+          };
+          out.push(message);
+          
+          this.ensureThinkingComplete();
+          return { done: true, messages: out, lastActivityTime };
+        }
+        
+        // 思考内容の処理
+        const thinkingObj = this.processStreamEventThinking(json);
+        if (thinkingObj) {
+          out.push(thinkingObj);
+          return { done: false, messages: out, lastActivityTime };
+        }
+      } catch (e) {}
+    }
+    
+    // 複数行の処理
+    let idx: number;
+    while ((idx = currentBuffer.indexOf("\n")) !== -1) {
+      const line = currentBuffer.slice(0, idx).trim();
+      currentBuffer = currentBuffer.slice(idx + 1);
+      
+      if (!line) continue;
+      
+      // 特殊なデータ行の処理
+      if (!line.startsWith("data:") && !line.startsWith("data: ")) {
+        const thinkingMatch = line.match(thinkingStartRegex);
+        if (thinkingMatch) {
+          const thinkingContent = thinkingMatch[1].trim();
+          
+          // 思考内容を処理
+          const thinkingObj = this.processStreamEventThinking({ thinking: thinkingContent });
+          if (thinkingObj) {
+            out.push(thinkingObj);
+          }
+          continue;
+        }
+        
+        continue;
+      }
+      
+      // SSEデータ行の処理
+      const data = line.startsWith("data: ") ? line.slice(6).trim() : line.slice(5).trim();
+      
+      if (data === "[DONE]") {
+        this.ensureThinkingComplete();
+        return { done: true, messages: out, lastActivityTime };
+      }
+      
+      try {
+        const json = JSON.parse(data);
+        
+        // 完了シグナルのチェック
+        if (json.type === "message_stop" || 
+            json.done === true || 
+            (json.choices && json.choices[0]?.finish_reason === "stop")) {
+            
+          this.ensureThinkingComplete();
+          return { done: true, messages: out, lastActivityTime };
+        }
+        
+        // 思考内容の処理
+        const thinkingObj = this.processStreamEventThinking(json);
+        if (thinkingObj) {
+          out.push(thinkingObj);
+          continue;
+        }
+        
+        // テキストデルタの処理
+        if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: json.delta.text || ""
+          };
+          out.push(message);
+        }
+        // 通常のテキストコンテンツデルタの処理
+        else if (json.choices && json.choices[0]?.delta?.content) {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: json.choices[0].delta.content
+          };
+          out.push(message);
+        }
+        // ツール呼び出しデルタの処理
+        else if (json.choices && json.choices[0]?.delta?.tool_calls) {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: "",
+            toolCalls: json.choices[0].delta.tool_calls.map((call: any) => ({
+              id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+              type: "function",
+              function: {
+                name: call.function.name,
+                arguments: call.function.arguments || "{}"
+              }
+            }))
+          };
+          out.push(message);
+        }
+        // 直接のコンテンツ（文字列）の処理
+        else if (json.content && typeof json.content === "string") {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: json.content
+          };
+          out.push(message);
+        }
+        // 配列コンテンツの処理
+        else if (json.content && Array.isArray(json.content) && json.content[0]?.text) {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: json.content[0].text
+          };
+          out.push(message);
+        }
+        // テキストプロパティの処理
+        else if (json.text) {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: json.text
+          };
+          out.push(message);
+        }
+        // ツール呼び出しの処理
+        else if (json.tool_calls && Array.isArray(json.tool_calls)) {
+          const message: ChatMessage = {
+            role: "assistant",
+            content: "",
+            toolCalls: json.tool_calls.map((call: any) => ({
+              id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+              type: "function",
+              function: {
+                name: call.function.name,
+                arguments: call.function.arguments || "{}"
+              }
+            }))
+          };
+          out.push(message);
+        }
+      } catch (e) {
+        console.error("Error parsing SSE JSON:", e);
+        continue;
+      }
+    }
+    return { done: false, messages: out, lastActivityTime, buffer: currentBuffer };
+  }
+  
+  /**
    * 思考機能を初期化する関数
    * @param options 補完オプション
    * @returns 思考が有効かどうか
    */
   public initializeThinking(options: CompletionOptions): boolean {
-    const isClaudeModel = (this.modelConfig?.model || "").toLowerCase().includes("claude");
+    const isClaudeModel = DatabricksThinking.isClaudeModel(this.modelConfig?.model || "");
     const isThinkingEnabled = options.reasoning || 
                             (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
     
@@ -385,6 +780,506 @@ export default class DatabricksThinking {
     if (this.bufferTimeoutId) {
       clearTimeout(this.bufferTimeoutId);
       this.bufferTimeoutId = null;
+    }
+  }
+  
+  /**
+   * ストリーミングを処理する関数
+   * @param res レスポンス
+   * @param processChunk チャンク処理関数
+   * @param fetchWithRetry リトライ付きフェッチ関数
+   * @param invocationUrl 呼び出しURL
+   * @param msgs メッセージ
+   * @param options オプション
+   * @param timeout タイムアウト
+   * @param toolsParameter ツールパラメータ
+   * @returns 処理されたメッセージのAsyncGenerator
+   */
+  public async *handleStreaming(
+    res: Response,
+    processChunk: (chunk: Uint8Array | Buffer) => string,
+    fetchWithRetry: (url: string, options: any, retryCount?: number) => Promise<Response>,
+    invocationUrl: string,
+    msgs: ChatMessage[],
+    options: CompletionOptions,
+    timeout: number,
+    toolsParameter: any
+  ): AsyncGenerator<ChatMessage> {
+    // バッファと状態の初期化
+    let buffer = "";
+    let rawBuffer = "";
+    let thinkingContent = "";
+    let lastActivityTime = Date.now();
+    
+    // fetch APIのReader APIを使用する場合
+    if (typeof (res.body as any).getReader === "function") {
+      const reader = (res.body as any).getReader();
+      
+      const startTime = Date.now();
+      let chunkCount = 0;
+      
+      const streamTimeout = timeout;
+      
+      try {
+        let continueReading = true;
+        
+        while (continueReading) {
+          // タイムアウトチェック
+          if (Date.now() - startTime > streamTimeout) {
+            console.log("Stream timeout reached");
+            this.ensureThinkingComplete();
+            return;
+          }
+          
+          // 非アクティブチェック
+          if (Date.now() - lastActivityTime > this.activityTimeoutMs) {
+            console.log("Stream inactive timeout reached");
+            
+            // 接続状況を確認する小さなヘルスチェック
+            try {
+              // 非同期でチェックを実行
+              const healthCheckUrl = invocationUrl.replace(/\/invocations$/, '/health');
+              
+              // タイムアウト付きフェッチを実装
+              const healthCheckPromise = await fetchWithRetry(healthCheckUrl, {
+                method: "GET"
+              });
+              
+              if (!healthCheckPromise || !healthCheckPromise.ok) {
+                throw new Error("Health check failed");
+              }
+              
+              // サーバーは生きているが、ストリームが停止している可能性がある
+              console.log("API server is responsive but stream may be stalled");
+            } catch (healthError) {
+              console.error("Health check failed:", healthError);
+              throw new Error("Stream connection lost and health check failed");
+            }
+          }
+          
+          // チャンクの読み取り
+          const { done, value } = await reader.read();
+          
+          // アクティビティタイムスタンプを更新
+          lastActivityTime = Date.now();
+          
+          if (done) {
+            console.log("Stream reader done");
+            this.ensureThinkingComplete();
+            break;
+          }
+          
+          chunkCount++;
+          
+          const decodedChunk = processChunk(value as Uint8Array);
+          rawBuffer += decodedChunk;
+          
+          if (!decodedChunk || decodedChunk.trim() === "") {
+            continue;
+          }
+          
+          const parseResult = this.parseSSE(buffer + decodedChunk, thinkingContent);
+          if (parseResult.buffer) {
+            buffer = parseResult.buffer;
+          } else {
+            buffer = "";
+          }
+          lastActivityTime = parseResult.lastActivityTime;
+          const { done: end, messages } = parseResult;
+          
+          const isThinkingMessage = (msg: any): boolean => {
+            if ('type' in msg && msg.type === 'thinking') {
+              return true;
+            }
+            if ('isThinking' in msg && msg.isThinking) {
+              return true;
+            }
+            if (typeof msg.content === 'string' && msg.content.startsWith('[thinking]')) {
+              return true;
+            }
+            return false;
+          };
+
+          // 思考メッセージではないメッセージのみを返す
+          for (const m of messages) {
+            if (isThinkingMessage(m)) {
+              // 思考メッセージはUIで処理
+            } else {
+              yield m as ChatMessage;
+            }
+          }
+          
+          if (end) {
+            console.log("Stream end signal received");
+            this.ensureThinkingComplete();
+            
+            const message: ChatMessage = {
+              role: "assistant",
+              content: ""
+            };
+            yield message;
+            
+            continueReading = false;
+            break;
+          }
+        }
+      } catch (chunkError) {
+        console.error("Error during stream processing:", chunkError);
+        this.ensureThinkingComplete();
+        
+        if (Date.now() - lastActivityTime > 10000) {
+          // 自動復旧試行
+          console.log("Stream interruption detected. Attempting to recover the response...");
+          
+          // エラーメッセージを表示
+          const errorMessage = "⚠️ ストリームが中断されました。応答の復旧を試みています...";
+          updateThinking(errorMessage, "error", 0.9);
+          
+          // 再接続を試みる
+          try {
+            // 再接続用の短縮メッセージ配列を作成
+            const reconnectMessages = msgs.slice(-3); // 最後の3つのメッセージのみを使用
+            
+            // 再接続メッセージを構築
+            const recoverMessage: ChatMessage = {
+              role: "assistant",
+              content: "⚠️ 接続が中断されました。会話を回復中です..."
+            };
+            yield recoverMessage;
+            
+            // 非ストリーミングモードで再試行
+            const recoveryOptions = {
+              ...options,
+              stream: false,
+              // トークン長を短めに設定して迅速な応答を得る
+              maxTokens: Math.min(options.maxTokens || 4096, 1000)
+            };
+            
+            // フォールバックシステムメッセージを使用
+            const fallbackSystemMessage = "The user's request was interrupted. Please provide a brief, helpful response based on the latest messages.";
+            
+            const { isThinkingEnabled, thinkingOptions, finalOptions } = 
+              this.prepareLLMOptions(recoveryOptions);
+            
+            const reconnectUrl = invocationUrl;
+            
+            // 変換関数（バックアップ）
+            const convertMessages = (msgs: ChatMessage[]): any[] => {
+              return msgs.map(m => ({
+                role: m.role === "user" ? "user" : "assistant",
+                content: m.content || ""
+              }));
+            };
+            
+            const reconnectBody = {
+              ...finalOptions,
+              messages: convertMessages(reconnectMessages),
+              system: fallbackSystemMessage
+            };
+            
+            // ツールを引き継ぐ
+            if (toolsParameter) {
+              reconnectBody.tools = toolsParameter;
+              reconnectBody.tool_choice = options.toolChoice || "auto";
+            }
+            
+            const reconnectOptions = {
+              method: "POST",
+              body: JSON.stringify(reconnectBody),
+              timeout: timeout / 2 // 通常の半分のタイムアウトで素早く応答を得る
+            };
+            
+            // リトライ機能付きフェッチを使用
+            const reconnectRes = await fetchWithRetry(reconnectUrl, reconnectOptions);
+            
+            if (reconnectRes.ok) {
+              const jsonResponse = await reconnectRes.json();
+              if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
+                const recoveredMessage: ChatMessage = {
+                  role: "assistant",
+                  content: "🔄 会話を回復しました:\n\n" + jsonResponse.choices[0].message.content
+                };
+                yield recoveredMessage;
+                return;
+              }
+            }
+          } catch (reconnectError) {
+            console.error("Error during reconnection attempt:", reconnectError);
+          }
+          
+          // 再接続に失敗した場合は元の部分的な応答を表示
+          try {
+            // バッファからの復旧を試みる
+            const recoveredContent = this.tryRecoverContentFromBuffer(rawBuffer);
+            
+            const message: ChatMessage = {
+              role: "assistant",
+              content: "⚠️ ストリームが中断され、再接続に失敗しました。部分的な応答を表示します:\n\n" + 
+                      (recoveredContent || thinkingContent ? 
+                       (recoveredContent || "[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "...") : 
+                       "応答を取得できませんでした。お手数ですが、もう一度お試しください。")
+            };
+            yield message;
+            return;
+          } catch (bufferRecoveryError) {
+            // 最終手段 - 汎用エラーメッセージを表示
+            const message: ChatMessage = {
+              role: "assistant",
+              content: "⚠️ 申し訳ありません。接続が中断され、応答を完全に取得できませんでした。もう一度お試しください。"
+            };
+            yield message;
+            return;
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      if (buffer.trim()) {
+        const { messages } = this.parseSSE(buffer, thinkingContent);
+        for (const m of messages) {
+          const isThinking = 'type' in m && m.type === 'thinking';
+          
+          if (!isThinking) {
+            yield m as ChatMessage;
+          }
+        }
+      }
+      
+      this.ensureThinkingComplete();
+      return;
+    }
+    
+    // Node.jsスタイルのストリーム処理（for-await-of）
+    const startTime = Date.now();
+    
+    const streamTimeout = timeout;
+    
+    try {
+      for await (const chunk of res.body as any) {
+        try {
+          // アクティビティタイムスタンプを更新
+          lastActivityTime = Date.now();
+          
+          // タイムアウトチェック
+          if (Date.now() - startTime > streamTimeout) {
+            console.log("Stream timeout reached");
+            this.ensureThinkingComplete();
+            return;
+          }
+          
+          // 非アクティブチェック
+          if (Date.now() - lastActivityTime > this.activityTimeoutMs) {
+            console.log("Stream inactive timeout reached");
+            throw new Error("Stream inactive for too long");
+          }
+          
+          const decodedChunk = processChunk(chunk as Buffer);
+          rawBuffer += decodedChunk;
+          
+          if (!decodedChunk || decodedChunk.trim() === "") {
+            continue;
+          }
+          
+          const parseResult = this.parseSSE(buffer + decodedChunk, thinkingContent);
+          if (parseResult.buffer) {
+            buffer = parseResult.buffer;
+          } else {
+            buffer = "";
+          }
+          lastActivityTime = parseResult.lastActivityTime;
+          const { done: end, messages } = parseResult;
+          
+          const isThinkingMessage = (msg: any): boolean => {
+            if ('type' in msg && msg.type === 'thinking') {
+              return true;
+            }
+            if ('isThinking' in msg && msg.isThinking) {
+              return true;
+            }
+            if (typeof msg.content === 'string' && msg.content.startsWith('[thinking]')) {
+              return true;
+            }
+            return false;
+          };
+
+          // 思考メッセージではないメッセージのみを返す
+          for (const m of messages) {
+            if (isThinkingMessage(m)) {
+              // 思考メッセージはUIで処理
+            } else {
+              yield m as ChatMessage;
+            }
+          }
+          
+          if (end) {
+            console.log("Stream end signal received");
+            this.ensureThinkingComplete();
+            
+            const message: ChatMessage = {
+              role: "assistant",
+              content: ""
+            };
+            yield message;
+            
+            return;
+          }
+        } catch (e) {
+          console.error("Error processing stream chunk:", e);
+          if (Date.now() - lastActivityTime > 10000) {
+            this.ensureThinkingComplete();
+            
+            // 自動復旧試行
+            console.log("Stream interruption detected. Attempting to recover the response...");
+            
+            // エラーメッセージを表示
+            const errorMessage = "⚠️ ストリームが中断されました。応答の復旧を試みています...";
+            updateThinking(errorMessage, "error", 0.9);
+            
+            // 再接続を試みる
+            try {
+              // 再接続用の短縮メッセージ配列を作成
+              const reconnectMessages = msgs.slice(-3); // 最後の3つのメッセージのみを使用
+              
+              // 再接続メッセージを構築
+              const recoverMessage: ChatMessage = {
+                role: "assistant",
+                content: "⚠️ 接続が中断されました。会話を回復中です..."
+              };
+              yield recoverMessage;
+              
+              // 非ストリーミングモードで再試行
+              const recoveryOptions = {
+                ...options,
+                stream: false,
+                // トークン長を短めに設定
+                maxTokens: Math.min(options.maxTokens || 4096, 1000)
+              };
+              
+              // フォールバックシステムメッセージを使用
+              const fallbackSystemMessage = "The user's request was interrupted. Please provide a brief, helpful response based on the latest messages.";
+              
+              const { isThinkingEnabled, thinkingOptions, finalOptions } = 
+                this.prepareLLMOptions(recoveryOptions);
+              
+              const reconnectUrl = invocationUrl;
+              
+              // 変換関数（バックアップ）
+              const convertMessages = (msgs: ChatMessage[]): any[] => {
+                return msgs.map(m => ({
+                  role: m.role === "user" ? "user" : "assistant",
+                  content: m.content || ""
+                }));
+              };
+              
+              const reconnectBody = {
+                ...finalOptions,
+                messages: convertMessages(reconnectMessages),
+                system: fallbackSystemMessage
+              };
+              
+              if (toolsParameter) {
+                reconnectBody.tools = toolsParameter;
+                reconnectBody.tool_choice = options.toolChoice || "auto";
+              }
+              
+              const reconnectOptions = {
+                method: "POST",
+                body: JSON.stringify(reconnectBody),
+                timeout: timeout / 2
+              };
+              
+              // リトライ機能付きフェッチを使用
+              const reconnectRes = await fetchWithRetry(reconnectUrl, reconnectOptions);
+              
+              if (reconnectRes.ok) {
+                const jsonResponse = await reconnectRes.json();
+                if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
+                  const recoveredMessage: ChatMessage = {
+                    role: "assistant",
+                    content: "🔄 会話を回復しました:\n\n" + jsonResponse.choices[0].message.content
+                  };
+                  yield recoveredMessage;
+                  return;
+                }
+              }
+            } catch (reconnectError) {
+              console.error("Error during reconnection attempt:", reconnectError);
+            }
+            
+            // 再接続に失敗した場合は元の部分的な応答を表示
+            try {
+              // バッファからの復旧を試みる
+              const recoveredContent = this.tryRecoverContentFromBuffer(rawBuffer);
+              
+              const message: ChatMessage = {
+                role: "assistant",
+                content: "⚠️ ストリームが中断され、再接続に失敗しました。部分的な応答を表示します:\n\n" + 
+                        (recoveredContent || thinkingContent ? 
+                         (recoveredContent || "[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "...") : 
+                         "応答を取得できませんでした。お手数ですが、もう一度お試しください。")
+              };
+              yield message;
+              return;
+            } catch (bufferRecoveryError) {
+              // 最終手段 - 汎用エラーメッセージを表示
+              const message: ChatMessage = {
+                role: "assistant",
+                content: "⚠️ 申し訳ありません。接続が中断され、応答を完全に取得できませんでした。もう一度お試しください。"
+              };
+              yield message;
+              return;
+            }
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+      }
+      
+      if (buffer.trim()) {
+        const { messages } = this.parseSSE(buffer, thinkingContent);
+        for (const m of messages) {
+          const isThinking = 'type' in m && m.type === 'thinking';
+          
+          if (!isThinking) {
+            yield m as ChatMessage;
+          }
+        }
+      }
+      
+      this.ensureThinkingComplete();
+    } catch (streamError) {
+      console.error("Stream error:", streamError);
+      this.ensureThinkingComplete();
+      
+      // エラー時のコンテンツ復旧
+      if (rawBuffer && rawBuffer.trim()) {
+        try {
+          const recoveredContent = this.tryRecoverContentFromBuffer(rawBuffer);
+          if (recoveredContent) {
+            // エラーメッセージを改善
+            const errorMessage = "⚠️ ストリームが中断されました。部分的な応答を表示します:";
+            updateThinking(errorMessage, "error", 1.0);
+            
+            const message: ChatMessage = {
+              role: "assistant",
+              content: errorMessage + "\n\n" + recoveredContent
+            };
+            yield message;
+            return;
+          }
+        } catch (recoveryError) {
+          console.error("Error recovering content:", recoveryError);
+        }
+      }
+      
+      // 最終的なフォールバック
+      const message: ChatMessage = {
+        role: "assistant",
+        content: "⚠️ 申し訳ありません。応答の生成中にエラーが発生しました。もう一度お試しください。"
+      };
+      yield message;
     }
   }
 }
