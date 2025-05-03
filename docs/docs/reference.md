@@ -379,21 +379,33 @@ prompts, context, and tool use. Continue supports any MCP server with the MCP co
 **Properties:**
 
 - `name` (**required**): The name of the MCP server.
+- `type"` (**required**): The type of the MCP server. Can be "stdio", "sse", or "websocket.
+
+**Stdio type**
+
 - `command` (**required**): The command used to start the server.
 - `args`: An optional array of arguments for the command.
 - `env`: An optional map of environment variables for the server process.
 - `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
+**SSE or Websocket type**
+
+- `url` (**required**): The URL of the MCP server.
+
 **Example:**
 
 ```yaml title="config.yaml"
 mcpServers:
-  - name: My MCP Server
+  - name: My MCP Server with stdio
+    type: stdio
     command: uvx
     args:
       - mcp-server-sqlite
       - --db-path
       - /Users/NAME/test.db
+  - name: My MCP Server with SSE
+    type: sse
+    url: "https://example.com/mcp-server/sse"
 ```
 
 ### `data`

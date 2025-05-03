@@ -9,14 +9,31 @@ export const contextSchema = z.object({
   params: z.any().optional(),
 });
 
-const mcpServerSchema = z.object({
-  name: z.string(),
-  command: z.string(),
-  faviconUrl: z.string().optional(),
-  args: z.array(z.string()).optional(),
-  env: z.record(z.string()).optional(),
-  connectionTimeout: z.number().gt(0).optional()
-});
+const mcpServerSchema = z.discriminatedUnion("type", [
+  z.object({
+    name: z.string(),
+    type: z.literal("stdio"),
+    command: z.string(),
+    faviconUrl: z.string().optional(),
+    args: z.array(z.string()).optional(),
+    env: z.record(z.string()).optional(),
+    connectionTimeout: z.number().gt(0).optional()
+  }),
+  z.object({
+    name: z.string(),
+    type: z.literal("sse"),
+    url: z.string(),
+    faviconUrl: z.string().optional(),
+    connectionTimeout: z.number().gt(0).optional()
+  }),
+  z.object({
+    name: z.string(),
+    type: z.literal("websocket"),
+    url: z.string(),
+    faviconUrl: z.string().optional(),
+    connectionTimeout: z.number().gt(0).optional()
+  })
+]);
 
 export type MCPServer = z.infer<typeof mcpServerSchema>;
 
@@ -63,6 +80,17 @@ export const blockOrSchema = <T extends z.AnyZodObject>(
   usesSchema: z.ZodTypeAny = defaultUsesSchema,
 ) => z.union([schema, blockItemWrapperSchema(schema, usesSchema)]);
 
+export const blockOrDiscriminatedUnionSchema = <T extends z.ZodType>(
+  schema: T,
+  usesSchema: z.ZodTypeAny = defaultUsesSchema,
+) => z.union([schema, z.object({
+  uses: usesSchema,
+  with: z.record(z.string()).optional(),
+  // For a discriminated union, we can't easily create a partial version
+  // So we'll use any for the override
+  override: z.any().optional(),
+})]);
+
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
   sourceCodeUrl: z.string().optional(),
@@ -98,7 +126,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
     .optional(),
   context: z.array(blockOrSchema(contextSchema)).optional(),
   data: z.array(blockOrSchema(dataSchema)).optional(),
-  mcpServers: z.array(blockOrSchema(mcpServerSchema)).optional(),
+  mcpServers: z.array(blockOrDiscriminatedUnionSchema(mcpServerSchema)).optional(),
   rules: z
     .array(
       z.union([
