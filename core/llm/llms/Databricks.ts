@@ -16,8 +16,11 @@ import {
 } from "../../index";
 import { ThinkingContent } from "../llms/index";
 import { fromChatCompletionChunk } from "../openaiTypeConverters";
-import { renderChatMessage, stripImages } from "../../util/messageContent";
-import { updateThinking, thinkingCompleted } from './thinkingPanel';
+import { stripImages } from "../../util/messageContent";
+import DatabricksThinking from "./DatabricksThinking";
+import { registerThinkingPanel, updateThinking, thinkingCompleted } from './thinkingPanel';
+import { setExtensionContext, getExtensionContext } from './index';
+import { normalizePath, safeReadFile, readFirstAvailableFile } from '../../config/load';
 
 const isNode = typeof process !== 'undefined' && 
                typeof process.versions !== 'undefined' && 
@@ -93,11 +96,8 @@ interface StreamEvent {
   message?: { content?: ContentBlock[]; };
 }
 
-import { registerThinkingPanel } from './thinkingPanel';
-import { setExtensionContext, getExtensionContext } from './index';
-
-// ThinkingPanelをエクスポート
-export { registerThinkingPanel, setExtensionContext, getExtensionContext };
+// エクスポート
+export { registerThinkingPanel, updateThinking, thinkingCompleted, setExtensionContext, getExtensionContext };
 
 export default class Databricks extends OpenAI {
   static providerName = "databricks";
@@ -108,23 +108,9 @@ export default class Databricks extends OpenAI {
     uploadImage: false
   };
   
-  private thinkingProgress: number = 0;
-  private thinkingPhase: string = "initial";
-  private thinkingBuffer: string = "";
-  private thinkingContentBuffer: string = "";
-  private totalThinkingTokens: number = 0;
-  private thinkingStartTime: number = 0;
-  private lastThinkingUpdateTime: number = 0;
-  private thinkingUpdateInterval: number = 2000;
-  private pendingThinkingUpdates: string[] = [];
-  private sentThinkingHashes: Set<string> = new Set<string>();
-  private isStreamActive: boolean = false;
-  private hasCompletedThinking: boolean = false;
-  private thinkingStarted: boolean = false;
-  private useStepByStepThinking: boolean = false;
-  private bufferTimeoutId: NodeJS.Timeout | null = null;
-  private sentCompleteSentences: Set<string> = new Set<string>();
-  private maxRetryAttempts: number = 3; // 最大リトライ回数を設定
+  private maxRetryAttempts: number = 5; // 最大リトライ回数
+  private backoffFactor: number = 1.5; // 指数バックオフの係数
+  private thinking: DatabricksThinking;
   
   private static loadConfigFromYaml(modelName: string): any {
     if (!isNode) {
@@ -164,6 +150,7 @@ export default class Databricks extends OpenAI {
                 modelConfig.defaultCompletionOptions = {};
               }
               
+              // Thinking設定を確認して初期値を設定
               if (!modelConfig.defaultCompletionOptions.thinking) {
                 modelConfig.defaultCompletionOptions.thinking = {
                   type: "enabled",
@@ -179,10 +166,12 @@ export default class Databricks extends OpenAI {
                 modelConfig.defaultCompletionOptions.thinking.budget_tokens = 16000;
               }
               
+              // ステップバイステップ思考モードのデフォルト値
               if (modelConfig.defaultCompletionOptions.stepByStepThinking === undefined) {
                 modelConfig.defaultCompletionOptions.stepByStepThinking = true;
               }
               
+              // モデルケイパビリティの設定
               if (!modelConfig.capabilities || !Array.isArray(modelConfig.capabilities)) {
                 modelConfig.capabilities = ["tool_use"];
               }
@@ -197,6 +186,46 @@ export default class Databricks extends OpenAI {
         }
       }
       
+      // MCPサーバー設定ファイルからの読み込みを試みる
+      try {
+        const mcpServerDir = path.join(homeDir, ".continue", "mcpServers");
+        // 複数の場所を検索
+        const searchPaths = [
+          path.join(mcpServerDir, "databricks.yaml"),
+          path.join(process.cwd(), ".continue", "mcpServers", "databricks.yaml"),
+          path.join(process.cwd(), "extensions", ".continue-debug", "mcpServers", "databricks.yaml")
+        ];
+        
+        // 正規化されたパスで検索
+        const normalizedPaths = searchPaths.map(p => normalizePath(p));
+        const mcpConfig = readFirstAvailableFile(normalizedPaths);
+        
+        if (mcpConfig) {
+          console.log(`Found MCP server config at: ${mcpConfig.path}`);
+          const mcpYaml = yaml.load(mcpConfig.content);
+          
+          if (mcpYaml && mcpYaml.serving_endpoint) {
+            return {
+              modelConfig: {
+                apiKey: mcpYaml.api_token || process.env.DATABRICKS_TOKEN,
+                apiBase: mcpYaml.serving_endpoint,
+                defaultCompletionOptions: {
+                  thinking: {
+                    type: "enabled",
+                    budget_tokens: 16000
+                  },
+                  stepByStepThinking: true
+                }
+              },
+              globalConfig: null
+            };
+          }
+        }
+      } catch (e) {
+        console.warn("Error loading MCP server config:", e);
+      }
+      
+      // 環境変数からの読み込み（フォールバック）
       const pat = process.env.DATABRICKS_TOKEN;
       const base = process.env.YOUR_DATABRICKS_URL;
       if (pat && base) {
@@ -221,10 +250,12 @@ export default class Databricks extends OpenAI {
   private static validateModelConfig(config: any, isClaudeSonnet37: boolean): void {
     if (!config) return;
     
+    // デフォルト設定のチェックと初期化
     if (!config.defaultCompletionOptions) {
       config.defaultCompletionOptions = {};
     }
     
+    // ケイパビリティのチェックと初期化
     if (!config.capabilities) {
       config.capabilities = ["tool_use"];
     } else if (!Array.isArray(config.capabilities)) {
@@ -243,9 +274,11 @@ export default class Databricks extends OpenAI {
       config.capabilities = newCapabilities;
     }
     
+    // Claude 3.7 Sonnet特有の設定
     if (isClaudeSonnet37) {
       const options = config.defaultCompletionOptions;
       
+      // 思考設定の検証
       if (!options.thinking) {
         options.thinking = { type: "enabled", budget_tokens: 16000 };
       } else {
@@ -258,18 +291,21 @@ export default class Databricks extends OpenAI {
         }
       }
       
+      // ステップバイステップ思考モードの設定
       if (options.stepByStepThinking === undefined) {
         options.stepByStepThinking = true;
       } else if (typeof options.stepByStepThinking !== "boolean") {
         options.stepByStepThinking = true;
       }
       
+      // ストリーミング設定のデフォルト値
       if (options.stream === undefined) {
         options.stream = true;
       }
       
+      // タイムアウト設定のデフォルト値
       if (options.timeout === undefined) {
-        options.timeout = 600000;
+        options.timeout = 600000; // 10分
       } else if (typeof options.timeout !== "number" || options.timeout < 0) {
         options.timeout = 600000;
       }
@@ -304,16 +340,16 @@ export default class Databricks extends OpenAI {
       }
     };
     
+    // APIベースURLの末尾のスラッシュを削除
     opts.apiBase = (opts.apiBase ?? "").replace(/\/+$/, "");
     
     super(opts);
     
     this.modelConfig = modelConfig;
     this.globalConfig = globalConfig;
+    this.thinking = new DatabricksThinking(modelConfig);
     
-    this.useStepByStepThinking = this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true;
-    
-    // キャパビリティの検出
+    // ケイパビリティの検出
     this.detectModelCapabilities();
   }
   
@@ -347,16 +383,11 @@ export default class Databricks extends OpenAI {
     if (typeof timeout === 'number' && timeout > 0) {
       return timeout;
     }
-    return 600000;
+    return 600000; // デフォルト10分
   }
 
   private getInvocationUrl(): string {
     return (this.apiBase ?? "").replace(/\/+$/, "");
-  }
-
-  private sanitizeUrlForLogs(url: string): any {
-    if (!url) return '';
-    return Array.from(url).map((c, i) => ({ [i]: c }));
   }
 
   protected _getHeaders(): { "Content-Type": string; Authorization: string; "api-key": string; } {
@@ -380,102 +411,7 @@ export default class Databricks extends OpenAI {
       return this.globalConfig.stream;
     }
     
-    return true;
-  }
-
-  private hashThinkingContent(text: string): string {
-    return text.substring(0, 100);
-  }
-
-  private formatThinkingText(text: string): string {
-    const contentHash = this.hashThinkingContent(text);
-    if (this.sentThinkingHashes.has(contentHash)) {
-      return "";
-    }
-    
-    this.sentThinkingHashes.add(contentHash);
-    
-    // HTMLエスケープは thinkingPanel.ts で行うため、ここでは行わない
-    
-    text = text.replace(/^(\d+)\.\s+(.+)$/gm, "**$1.** $2");
-    text = text.replace(/^(Step \d+)[:：](.+)$/gm, "### $1:$2");
-    text = text.replace(/^(Let's|I'll|I will|First|Now|Next|Finally|Then)(.+):$/gmi, "### $1$2:");
-    
-    if (this.useStepByStepThinking) {
-      text = text.replace(/^(First|To start|Initially|Let me start by)(.+?)[:：]/gmi, "### Initial Analysis:$2:");
-      text = text.replace(/^(Next|Then|Moving on|After that|Subsequently)(.+?)[:：]/gmi, "### Next Step:$2:");
-      text = text.replace(/^(Finally|In conclusion|To conclude|Therefore|As a result)(.+?)[:：]/gmi, "### Conclusion:$2:");
-    }
-    
-    text = text.replace(/(Key insight|Note|Important|Remember|Key point)[:：]/gi, "**$1:**");
-    
-    text = text.replace(/```([\s\S]*?)```/g, (match) => {
-      return match.replace(/\n/g, '\n    ');
-    });
-    
-    if (text.match(/start|let's|i'll|i will|first/i)) {
-      this.thinkingPhase = this.useStepByStepThinking ? "initial_analysis" : "planning";
-      this.thinkingProgress = 0.1;
-    } else if (text.match(/analyze|examining|looking at/i)) {
-      this.thinkingPhase = this.useStepByStepThinking ? "analyzing" : "analyzing";
-      this.thinkingProgress = 0.3;
-    } else if (text.match(/approach|strategy|method/i)) {
-      this.thinkingPhase = this.useStepByStepThinking ? "strategizing" : "strategizing";
-      this.thinkingProgress = 0.5;
-    } else if (text.match(/implement|create|write|coding/i)) {
-      this.thinkingPhase = this.useStepByStepThinking ? "implementing" : "implementing";
-      this.thinkingProgress = 0.7;
-    } else if (text.match(/review|check|verify|test/i)) {
-      this.thinkingPhase = this.useStepByStepThinking ? "reviewing" : "reviewing";
-      this.thinkingProgress = 0.9;
-    } else if (text.match(/conclusion|summary|final|therefore/i)) {
-      this.thinkingPhase = this.useStepByStepThinking ? "concluding" : "concluding";
-      this.thinkingProgress = 1.0;
-    } else {
-      const tokenEstimate = Math.round(text.length / 4);
-      const progressIncrement = tokenEstimate / 16000 * 0.2;
-      this.thinkingProgress = Math.min(0.95, this.thinkingProgress + progressIncrement);
-    }
-    
-    this.thinkingBuffer += text;
-    
-    // バッファを使用して思考コンテンツを更新
-    this.thinkingContentBuffer += text;
-    this.flushThinkingBufferIfReady();
-    
-    return text;
-  }
-  
-  private flushThinkingBufferIfReady() {
-    if (this.bufferTimeoutId) {
-      clearTimeout(this.bufferTimeoutId);
-    }
-    
-    this.bufferTimeoutId = setTimeout(() => {
-      if (this.thinkingContentBuffer.trim()) {
-        // バッファ全体を送信してクリアする (簡素化)
-        updateThinking(this.thinkingContentBuffer, this.thinkingPhase, this.thinkingProgress);
-        this.thinkingContentBuffer = "";
-      }
-      
-      this.bufferTimeoutId = null;
-    }, 500);
-  }
-  
-  private hashSentence(sentence: string): string {
-    return sentence.substring(0, 100) + sentence.length.toString();
-  }
-  
-  private estimateThinkingProgress(): number {
-    const elapsedMs = Date.now() - this.thinkingStartTime;
-    const elapsedSec = elapsedMs / 1000;
-    
-    const timeProgress = Math.min(1.0, elapsedSec / 120);
-    
-    const tokenBudget = this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 16000;
-    const tokenProgress = Math.min(1.0, this.totalThinkingTokens / tokenBudget);
-    
-    return Math.min(0.95, (timeProgress * 0.3) + (tokenProgress * 0.3) + (this.thinkingProgress * 0.4));
+    return true; // デフォルトはストリーミング有効
   }
 
   private static convertToolDefinitionsForDatabricks(tools: any[]): any[] {
@@ -506,16 +442,13 @@ export default class Databricks extends OpenAI {
       (this.modelConfig?.model || "").toLowerCase().includes("claude-3.7")
     );
     
-    this.useStepByStepThinking = 
-      options.stepByStepThinking !== undefined ? 
-      !!options.stepByStepThinking : 
-      (this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true);
-    
+    // 必要なトークン数をThinking用の余裕を持って設定
     const maxTokens = Math.max(
       options.maxTokens ?? this.modelConfig?.defaultCompletionOptions?.maxTokens ?? 4096,
-      isThinkingEnabled ? thinkingBudget + 1000 : 0
+      isThinkingEnabled ? thinkingBudget + 2000 : 0 // 余裕を持たせる (1000→2000)
     );
     
+    // オプションを構築
     const finalOptions: any = {
       model: options.model || this.modelConfig?.model,
       temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
@@ -524,48 +457,33 @@ export default class Databricks extends OpenAI {
       stream: enableStreaming && (options.stream ?? true)
     };
     
-    if (this.useStepByStepThinking && options.temperature === undefined && 
+    // ステップバイステップ思考を使用する場合は温度を少し下げる
+    const useStepByStepThinking = 
+      options.stepByStepThinking !== undefined ? 
+      !!options.stepByStepThinking : 
+      (this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true);
+    
+    if (useStepByStepThinking && options.temperature === undefined && 
         this.modelConfig?.defaultCompletionOptions?.temperature === undefined) {
       finalOptions.temperature = 0.6;
     }
     
+    // Claude 3.7 Sonnet非対応、または思考機能無効の場合のオプション
     if (!isClaudeSonnet37 || !isThinkingEnabled) {
       finalOptions.top_k = options.topK ?? this.modelConfig?.defaultCompletionOptions?.topK ?? 100;
       finalOptions.top_p = options.topP ?? this.modelConfig?.defaultCompletionOptions?.topP ?? 0.95;
     }
     
-    if (isThinkingEnabled && !this.thinkingStarted) {
-      this.thinkingProgress = 0;
-      this.thinkingPhase = "initial";
-      this.thinkingBuffer = "";
-      this.thinkingContentBuffer = "";
-      this.totalThinkingTokens = 0;
-      this.thinkingStartTime = Date.now();
-      this.lastThinkingUpdateTime = Date.now();
-      this.pendingThinkingUpdates = [];
-      this.isStreamActive = false;
-      this.hasCompletedThinking = false;
-      this.sentThinkingHashes.clear();
-      this.sentCompleteSentences.clear();
-      this.thinkingStarted = true;
-      
-      if (this.bufferTimeoutId) {
-        clearTimeout(this.bufferTimeoutId);
-        this.bufferTimeoutId = null;
-      }
-      
-      const startMessage = this.useStepByStepThinking ? 
-        "Starting step-by-step thinking process...\n\n" : 
-        "Starting a new thinking process...\n\n";
-      
-      updateThinking(startMessage, "initial", 0);
-      
+    // 思考機能の初期化と設定
+    if (this.thinking.initializeThinking(options)) {
+      // Thinking設定をAPIリクエストに追加
       finalOptions.thinking = {
         type: "enabled",
         budget_tokens: thinkingBudget
       };
     }
     
+    // ツール定義があれば追加
     if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
       finalOptions.tools = Databricks.convertToolDefinitionsForDatabricks(options.tools);
       finalOptions.tool_choice = options.toolChoice || "auto";
@@ -575,8 +493,10 @@ export default class Databricks extends OpenAI {
   }
 
   private convertMessages(msgs: ChatMessage[]): any[] {
+    // roleが"system"でない、contentを持つメッセージだけをフィルタリング
     const filteredMessages = msgs.filter(m => m.role !== "system" && !!m.content);
     
+    // メッセージ変換
     const messages = filteredMessages.map((message) => {
       if (typeof message.content === "string") {
         return {
@@ -614,6 +534,7 @@ export default class Databricks extends OpenAI {
   }
 
   private extractSystemMessage(msgs: ChatMessage[]): string | undefined {
+    // システムメッセージを抽出し、画像を除去
     const systemMessage = stripImages(
       msgs.filter((m) => m.role === "system")[0]?.content ?? ""
     );
@@ -641,6 +562,7 @@ export default class Databricks extends OpenAI {
       !!options.stepByStepThinking : 
       (this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true);
     
+    // 思考モードが有効な場合、システムメッセージに指示を追加
     if (enableThinking) {
       if (useStepByStepThinking) {
         const stepByStepInstructions = `\n\nBefore answering, think step-by-step and explain your reasoning in detail. Please provide detailed, step-by-step reasoning before arriving at a conclusion.`;
@@ -655,6 +577,7 @@ export default class Databricks extends OpenAI {
       }
     }
     
+    // ツールが指定されている場合、ツール使用の指示を追加
     if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
       const agentInstructions = `\n\nWhen appropriate, use the provided tools to help solve the problem. These tools allow you to interact with the external environment to gather information or perform actions needed to complete the task.`;
       systemMessage += agentInstructions;
@@ -663,110 +586,21 @@ export default class Databricks extends OpenAI {
     return systemMessage;
   }
 
-  private tryRecoverContentFromBuffer(buffer: string): string | null {
-    try {
-      buffer = buffer.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\x00-\x7F]/g, match => {
-        try { return match; } catch (e) { return ''; }
-      });
-    
-      const jsonPattern = /{[\s\S]*?}/g;
-      const jsonMatches = buffer.match(jsonPattern);
-      
-      if (!jsonMatches || jsonMatches.length === 0) {
-        return null;
-      }
-      
-      const sortedMatches = [...jsonMatches].sort((a, b) => b.length - a.length);
-      
-      for (const match of sortedMatches) {
-        try {
-          const json = JSON.parse(match);
-          
-          if (json.choices && json.choices[0]?.message?.content) {
-            return json.choices[0].message.content;
-          }
-          
-          if (json.content && typeof json.content === "string") {
-            return json.content;
-          }
-          
-          if (json.content && Array.isArray(json.content) && json.content[0]?.text) {
-            return json.content[0].text;
-          }
-          
-          if (json.completion) {
-            return json.completion;
-          }
-          
-          if (json.thinking) {
-            return "[Thinking Process] " + json.thinking;
-          }
-          
-          if (json.tool_calls) {
-            return JSON.stringify(json.tool_calls);
-          }
-        } catch (e) { continue; }
-      }
-      
-      const textMatches = buffer.match(/\"text\":\s*\"([\s\S]*?)\"/g);
-      if (textMatches && textMatches.length > 0) {
-        const longestTextMatch = [...textMatches].sort((a, b) => b.length - a.length)[0];
-        const content = longestTextMatch.replace(/\"text\":\s*\"/, "").replace(/\"$/, "");
-        return content;
-      }
-      
-      return null;
-    } catch (e) {
-      console.error("Error recovering content from buffer:", e);
-      return null;
-    }
-  }
-
-  private inspectThinkingJSON(json: any) {
-    if (!json) return;
-    // JSON検査のロジックが必要な場合はここに追加
-  }
-
   private processChunk(chunk: Uint8Array | Buffer): string {
     try {
       const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
       return decoder.decode(chunk, { stream: true });
     } catch (e) {
       console.error("Error processing chunk:", e);
+      // フォールバック処理
       return Array.from(new Uint8Array(chunk as any))
         .map(b => String.fromCharCode(b))
         .join('');
     }
   }
 
-  private processLargeThinkingContent(content: string, phase: string, progress: number) {
-    // バッファに追加
-    this.thinkingContentBuffer += content;
-    this.flushThinkingBufferIfReady();
-  }
-
-  private ensureThinkingComplete() {
-    // バッファの残りを処理
-    if (this.thinkingContentBuffer.trim()) {
-      updateThinking(this.thinkingContentBuffer, this.thinkingPhase, 1.0);
-      this.thinkingContentBuffer = "";
-    }
-    
-    // タイムアウトをクリア
-    if (this.bufferTimeoutId) {
-      clearTimeout(this.bufferTimeoutId);
-      this.bufferTimeoutId = null;
-    }
-    
-    if (!this.hasCompletedThinking && this.thinkingStarted) {
-      thinkingCompleted();
-      this.hasCompletedThinking = true;
-      this.thinkingStarted = false;
-    }
-  }
-
   /**
-   * リトライ機能付きのフェッチ関数
+   * 改良版リトライ機能付きのフェッチ関数
    * @param url リクエストURL
    * @param options フェッチオプション
    * @param retryCount 現在のリトライ回数
@@ -774,14 +608,60 @@ export default class Databricks extends OpenAI {
    */
   private async fetchWithRetry(url: string, options: any, retryCount: number = 0): Promise<Response> {
     try {
-      const response = await this.fetch(url, options);
+      console.log(`Making API request to ${url}${retryCount > 0 ? ` (retry ${retryCount}/${this.maxRetryAttempts})` : ''}`);
+      
+      // リクエスト開始時間を記録
+      const requestStartTime = Date.now();
+      
+      // タイムアウト値を取得してoptionsから削除（標準のRequestInitには存在しないため）
+      const timeoutMs = options.timeout || 30000;
+      const fetchOptions = { ...options };
+      delete fetchOptions.timeout;
+      
+      // タイムアウト付きフェッチを実装
+      const fetchPromise = this.fetch(url, fetchOptions);
+      const timeoutPromise = new Promise<Response>((_, reject) => {
+        setTimeout(() => reject(new Error(`Request timeout after ${timeoutMs}ms`)), timeoutMs);
+      });
+      
+      // Promise.raceでタイムアウト処理を実装
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      // レスポンス時間を計算
+      const responseTime = Date.now() - requestStartTime;
+      console.log(`Received response in ${responseTime}ms with status ${response.status}`);
       
       if (!response.ok && retryCount < this.maxRetryAttempts) {
-        // レート制限エラーか一時的なエラーの場合にリトライ
-        if (response.status === 429 || response.status >= 500) {
-          // 指数バックオフでリトライ間隔を計算
-          const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-          console.log(`Retrying request after ${retryDelay}ms (attempt ${retryCount + 1}/${this.maxRetryAttempts})`);
+        const statusCode = response.status;
+        
+        // 429 Too Many Requestsとサーバーエラーのみをリトライ対象とする
+        if (statusCode === 429 || statusCode >= 500) {
+          // Retry-After ヘッダーの確認
+          let retryAfter = response.headers.get('Retry-After');
+          let retryDelay: number;
+          
+          if (retryAfter && !isNaN(parseInt(retryAfter))) {
+            // ヘッダーが秒単位で指定されている場合
+            retryDelay = parseInt(retryAfter) * 1000;
+          } else {
+            // 指数バックオフ + ジッター（ランダム要素を追加）
+            const baseDelay = 1000 * Math.pow(this.backoffFactor, retryCount);
+            const jitter = baseDelay * 0.1 * Math.random(); // 10%のランダム値
+            retryDelay = Math.min(baseDelay + jitter, 30000); // 最大30秒まで
+          }
+          
+          console.log(`Request failed with status ${statusCode}. Retrying after ${Math.round(retryDelay / 1000)} seconds...`);
+          
+          // カスタムエラーレスポンスの読み取りを試みる
+          let errorDetails = "";
+          try {
+            const errorText = await response.text();
+            if (errorText) {
+              errorDetails = ` Error details: ${errorText.substring(0, 200)}${errorText.length > 200 ? '...' : ''}`;
+            }
+          } catch (e) {}
+          
+          console.warn(`API error (${statusCode})${errorDetails}. Retry ${retryCount + 1}/${this.maxRetryAttempts} scheduled.`);
           
           await new Promise(resolve => setTimeout(resolve, retryDelay));
           return this.fetchWithRetry(url, options, retryCount + 1);
@@ -791,14 +671,15 @@ export default class Databricks extends OpenAI {
       return response;
     } catch (error) {
       if (retryCount < this.maxRetryAttempts) {
-        // ネットワークエラーなどの場合にリトライ
-        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-        console.log(`Network error, retrying after ${retryDelay}ms (attempt ${retryCount + 1}/${this.maxRetryAttempts})`);
+        // ネットワークエラーの場合のリトライ
+        const retryDelay = Math.min(1000 * Math.pow(this.backoffFactor, retryCount), 30000);
+        console.error(`Network error: ${error}. Retrying after ${Math.round(retryDelay / 1000)} seconds...`);
         
         await new Promise(resolve => setTimeout(resolve, retryDelay));
         return this.fetchWithRetry(url, options, retryCount + 1);
       }
       
+      console.error(`All retry attempts failed. Last error: ${error}`);
       throw error;
     }
   }
@@ -808,12 +689,6 @@ export default class Databricks extends OpenAI {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    this.isStreamActive = true;
-    this.hasCompletedThinking = false;
-    this.thinkingStarted = false;
-    this.sentThinkingHashes.clear();
-    this.sentCompleteSentences.clear();
-    
     try {
       const convertedMessages = this.convertMessages(msgs);
       const originalSystemMessage = this.extractSystemMessage(msgs);
@@ -821,27 +696,33 @@ export default class Databricks extends OpenAI {
       
       let toolsParameter: any = undefined;
       
+      // ツール定義の変換
       if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
         toolsParameter = Databricks.convertToolDefinitionsForDatabricks(options.tools);
       }
       
+      // リクエストボディの構築
       const body = {
         ...this.convertArgs(options),
         messages: convertedMessages,
         system: enhancedSystemMessage
       };
       
+      // ツールパラメータがある場合は追加
       if (toolsParameter) {
         body.tools = toolsParameter;
         body.tool_choice = options.toolChoice || "auto";
       }
       
+      // ストリーミングの設定
       const enableStreaming = this.getEnableStreamingFromConfig();
       body.stream = enableStreaming && (body.stream !== false);
       
+      // リクエスト情報
       const invocationUrl = this.getInvocationUrl();
       const timeout = this.getTimeoutFromConfig();
       
+      // フェッチオプションの構築
       const fetchOptions = {
         method: "POST",
         headers: this._getHeaders(),
@@ -850,21 +731,43 @@ export default class Databricks extends OpenAI {
         timeout: timeout
       };
 
-      console.log(`Making request to ${invocationUrl}`);
+      console.log(`Preparing request to Databricks API: ${invocationUrl}`);
       
       // リトライ機能付きフェッチを使用
       const res = await this.fetchWithRetry(invocationUrl, fetchOptions);
       
+      // エラーレスポンスのチェック
       if (!res.ok || !res.body) {
-        this.ensureThinkingComplete();
-        throw new Error(`HTTP ${res.status} - ${await res.text()}`);
-      }
-
-      if (body.stream === false) {
-        const jsonResponse = await res.json();
-        this.ensureThinkingComplete();
+        this.thinking.ensureThinkingComplete();
+        
+        // エラーメッセージを取得
+        let errorText = await res.text();
+        let friendlyError = `HTTP ${res.status}`;
         
         try {
+          // JSONエラーの場合はより詳細なメッセージを表示
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error?.message) {
+            friendlyError += ` - ${errorJson.error.message}`;
+          } else if (errorJson.message) {
+            friendlyError += ` - ${errorJson.message}`;
+          } else {
+            friendlyError += ` - ${errorText}`;
+          }
+        } catch (e) {
+          friendlyError += ` - ${errorText}`;
+        }
+        
+        throw new Error(friendlyError);
+      }
+
+      // 非ストリーミングモードの処理
+      if (body.stream === false) {
+        const jsonResponse = await res.json();
+        this.thinking.ensureThinkingComplete();
+        
+        try {
+          // 様々なレスポンス形式に対応
           if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
             yield {
               role: "assistant",
@@ -927,18 +830,26 @@ export default class Databricks extends OpenAI {
         return;
       }
       
+      // バッファと状態の初期化
       let buffer = "";
       let rawBuffer = "";
       let thinkingContent = "";
+      let lastActivityTime = Date.now();
+      const activityTimeoutMs = 30000; // 30秒の非アクティブタイムアウト
       
+      // SSEパーサー関数
       const parseSSE = (
         str: string,
       ): { done: boolean; messages: (ChatMessage | ThinkingContent)[] } => {
         buffer += str;
         const out: (ChatMessage | ThinkingContent)[] = [];
         
+        // アクティビティ時間を更新
+        lastActivityTime = Date.now();
+        
         const thinkingStartRegex = /^thinking:(.*)$/i;
         
+        // 一行のみで完結するJSONの処理
         if (buffer.trim() && !buffer.includes("\n")) {
           try {
             const trimmedBuffer = buffer.trim();
@@ -948,17 +859,17 @@ export default class Databricks extends OpenAI {
             
             const json = JSON.parse(jsonStr);
             
-            this.inspectThinkingJSON(json);
-            
+            // 完了シグナルの検出
             if (json.type === "message_stop" || 
                 json.done === true || 
                 (json.choices && json.choices[0]?.finish_reason === "stop")) {
                 
               buffer = "";
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               return { done: true, messages: out };
             }
             
+            // 完了メッセージの内容
             if (json.choices && json.choices[0]?.message?.content) {
               const message: ChatMessage = {
                 role: "assistant",
@@ -967,10 +878,11 @@ export default class Databricks extends OpenAI {
               out.push(message);
               buffer = "";
               
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               return { done: true, messages: out };
             }
             
+            // ツール呼び出しの処理
             if (json.choices && json.choices[0]?.message?.tool_calls) {
               const toolCalls = json.choices[0].message.tool_calls;
               const message: ChatMessage = {
@@ -988,58 +900,21 @@ export default class Databricks extends OpenAI {
               out.push(message);
               buffer = "";
               
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               return { done: true, messages: out };
             }
             
-            if (json.thinking || 
-                (json.content && json.content[0]?.type === "reasoning") ||
-                (json.choices && json.choices[0]?.delta?.content && 
-                 Array.isArray(json.choices[0].delta.content) && 
-                 json.choices[0].delta.content[0]?.type === "reasoning")) {
-              
-              let thinkingContent = "";
-              
-              if (json.thinking) {
-                thinkingContent = json.thinking;
-              } else if (json.content && json.content[0]?.type === "reasoning") {
-                thinkingContent = json.content[0].summary?.[0]?.text || "";
-              } else if (json.choices && json.choices[0]?.delta?.content && 
-                        Array.isArray(json.choices[0].delta.content) && 
-                        json.choices[0].delta.content[0]?.type === "reasoning") {
-                thinkingContent = json.choices[0].delta.content[0].summary?.[0]?.text || "";
-              }
-              
-              if (thinkingContent) {
-                const formattedThinking = this.formatThinkingText(thinkingContent);
-                
-                if (formattedThinking.trim() !== "") {
-                  const tokenEstimate = Math.round(thinkingContent.length / 4);
-                  this.totalThinkingTokens += tokenEstimate;
-                  
-                  const progress = this.estimateThinkingProgress();
-                  
-                  const thinkingObj: ThinkingContent = {
-                    type: "thinking",
-                    thinking: formattedThinking,
-                    metadata: {
-                      phase: this.thinkingPhase,
-                      progress: progress,
-                      tokens: tokenEstimate,
-                      elapsed_ms: Date.now() - this.thinkingStartTime
-                    }
-                  };
-                  
-                  out.push(thinkingObj);
-                }
-                
-                buffer = "";
-                return { done: false, messages: out };
-              }
+            // 思考内容の処理
+            const thinkingObj = this.thinking.processStreamEventThinking(json);
+            if (thinkingObj) {
+              out.push(thinkingObj);
+              buffer = "";
+              return { done: false, messages: out };
             }
           } catch (e) {}
         }
         
+        // 複数行の処理
         let idx: number;
         while ((idx = buffer.indexOf("\n")) !== -1) {
           const line = buffer.slice(0, idx).trim();
@@ -1047,30 +922,15 @@ export default class Databricks extends OpenAI {
           
           if (!line) continue;
           
+          // 特殊なデータ行の処理
           if (!line.startsWith("data:") && !line.startsWith("data: ")) {
             const thinkingMatch = line.match(thinkingStartRegex);
             if (thinkingMatch) {
               const thinkingContent = thinkingMatch[1].trim();
               
-              const formattedThinking = this.formatThinkingText(thinkingContent);
-              
-              if (formattedThinking.trim() !== "") {
-                const tokenEstimate = Math.round(thinkingContent.length / 4);
-                this.totalThinkingTokens += tokenEstimate;
-                
-                const progress = this.estimateThinkingProgress();
-                
-                const thinkingObj: ThinkingContent = {
-                  type: "thinking",
-                  thinking: formattedThinking,
-                  metadata: {
-                    phase: this.thinkingPhase,
-                    progress: progress,
-                    tokens: tokenEstimate,
-                    elapsed_ms: Date.now() - this.thinkingStartTime
-                  }
-                };
-                
+              // 思考内容を処理
+              const thinkingObj = this.thinking.processStreamEventThinking({ thinking: thinkingContent });
+              if (thinkingObj) {
                 out.push(thinkingObj);
               }
               continue;
@@ -1079,134 +939,42 @@ export default class Databricks extends OpenAI {
             continue;
           }
           
+          // SSEデータ行の処理
           const data = line.startsWith("data: ") ? line.slice(6).trim() : line.slice(5).trim();
           
           if (data === "[DONE]") {
-            this.ensureThinkingComplete();
+            this.thinking.ensureThinkingComplete();
             return { done: true, messages: out };
           }
           
           try {
             const json = JSON.parse(data);
             
-            this.inspectThinkingJSON(json);
-            
+            // 完了シグナルのチェック
             if (json.type === "message_stop" || 
                 json.done === true || 
                 (json.choices && json.choices[0]?.finish_reason === "stop")) {
                 
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               return { done: true, messages: out };
             }
             
-            if (json.thinking || 
-                (json.content && json.content[0]?.type === "reasoning") ||
-                (json.choices && json.choices[0]?.delta?.content && 
-                Array.isArray(json.choices[0].delta.content) && 
-                json.choices[0].delta.content[0]?.type === "reasoning")) {
-              
-              let newThinkingContent = "";
-              
-              if (json.thinking) {
-                newThinkingContent = json.thinking;
-              } else if (json.content && json.content[0]?.type === "reasoning") {
-                newThinkingContent = json.content[0].summary?.[0]?.text || "";
-              } else if (json.choices && json.choices[0]?.delta?.content && 
-                        Array.isArray(json.choices[0].delta.content) && 
-                        json.choices[0].delta.content[0]?.type === "reasoning") {
-                newThinkingContent = json.choices[0].delta.content[0].summary?.[0]?.text || "";
-              }
-              
-              if (newThinkingContent) {
-                thinkingContent += newThinkingContent;
-                
-                const formattedThinking = this.formatThinkingText(newThinkingContent);
-                
-                if (formattedThinking.trim() !== "") {
-                  const tokenEstimate = Math.round(newThinkingContent.length / 4);
-                  this.totalThinkingTokens += tokenEstimate;
-                  
-                  const progress = this.estimateThinkingProgress();
-                  
-                  const thinkingObj: ThinkingContent = {
-                    type: "thinking",
-                    thinking: formattedThinking,
-                    metadata: {
-                      phase: this.thinkingPhase,
-                      progress: progress,
-                      tokens: tokenEstimate,
-                      elapsed_ms: Date.now() - this.thinkingStartTime
-                    }
-                  };
-                  
-                  out.push(thinkingObj);
-                }
-              }
+            // 思考内容の処理
+            const thinkingObj = this.thinking.processStreamEventThinking(json);
+            if (thinkingObj) {
+              out.push(thinkingObj);
+              continue;
             }
-            else if (json.type === "content_block_start" && json.content_block?.type === "thinking") {
-              if (json.content_block.thinking) {
-                const thinkingText = json.content_block.thinking;
-                
-                const formattedThinking = this.formatThinkingText(thinkingText);
-                
-                if (formattedThinking.trim() !== "") {
-                  const tokenEstimate = Math.round(thinkingText.length / 4);
-                  this.totalThinkingTokens += tokenEstimate;
-                  
-                  const progress = this.estimateThinkingProgress();
-                  
-                  const thinkingObj: ThinkingContent = {
-                    type: "thinking",
-                    thinking: formattedThinking,
-                    metadata: {
-                      phase: this.thinkingPhase,
-                      progress: progress,
-                      tokens: tokenEstimate,
-                      elapsed_ms: Date.now() - this.thinkingStartTime
-                    }
-                  };
-                  
-                  out.push(thinkingObj);
-                }
-              }
-            }
-            else if (json.type === "content_block_delta" && json.delta?.type === "thinking_delta") {
-              if (json.delta.thinking) {
-                const thinkingDelta = json.delta.thinking;
-                
-                const formattedThinking = this.formatThinkingText(thinkingDelta);
-                
-                if (formattedThinking.trim() !== "") {
-                  const tokenEstimate = Math.round(thinkingDelta.length / 4);
-                  this.totalThinkingTokens += tokenEstimate;
-                  
-                  const progress = this.estimateThinkingProgress();
-                  
-                  const thinkingObj: ThinkingContent = {
-                    type: "thinking",
-                    thinking: formattedThinking,
-                    metadata: {
-                      phase: this.thinkingPhase,
-                      progress: progress,
-                      tokens: tokenEstimate,
-                      elapsed_ms: Date.now() - this.thinkingStartTime
-                    }
-                  };
-                  
-                  out.push(thinkingObj);
-                }
-              }
-            }
-            else if (json.type === "content_block_stop" && json.content_block?.type === "thinking") {
-              this.ensureThinkingComplete();
-            }
-            else if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
+            
+            // テキストデルタの処理
+            if (json.type === "content_block_delta" && json.delta?.type === "text_delta") {
               const message: ChatMessage = {
                 role: "assistant",
                 content: json.delta.text || ""
               };
               out.push(message);
             }
+            // 通常のテキストコンテンツデルタの処理
             else if (json.choices && json.choices[0]?.delta?.content) {
               const message: ChatMessage = {
                 role: "assistant",
@@ -1214,6 +982,7 @@ export default class Databricks extends OpenAI {
               };
               out.push(message);
             }
+            // ツール呼び出しデルタの処理
             else if (json.choices && json.choices[0]?.delta?.tool_calls) {
               const message: ChatMessage = {
                 role: "assistant",
@@ -1229,6 +998,7 @@ export default class Databricks extends OpenAI {
               };
               out.push(message);
             }
+            // 直接のコンテンツ（文字列）の処理
             else if (json.content && typeof json.content === "string") {
               const message: ChatMessage = {
                 role: "assistant",
@@ -1236,6 +1006,7 @@ export default class Databricks extends OpenAI {
               };
               out.push(message);
             }
+            // 配列コンテンツの処理
             else if (json.content && Array.isArray(json.content) && json.content[0]?.text) {
               const message: ChatMessage = {
                 role: "assistant",
@@ -1243,6 +1014,7 @@ export default class Databricks extends OpenAI {
               };
               out.push(message);
             }
+            // テキストプロパティの処理
             else if (json.text) {
               const message: ChatMessage = {
                 role: "assistant",
@@ -1250,6 +1022,7 @@ export default class Databricks extends OpenAI {
               };
               out.push(message);
             }
+            // ツール呼び出しの処理
             else if (json.tool_calls && Array.isArray(json.tool_calls)) {
               const message: ChatMessage = {
                 role: "assistant",
@@ -1265,6 +1038,7 @@ export default class Databricks extends OpenAI {
               };
               out.push(message);
             }
+            // その他のデルタチャンクの処理
             else {
               const delta = fromChatCompletionChunk(json);
               if (delta?.content) {
@@ -1283,6 +1057,7 @@ export default class Databricks extends OpenAI {
         return { done: false, messages: out };
       };
       
+      // fetch APIのReader APIを使用する場合
       if (typeof (res.body as any).getReader === "function") {
         const reader = (res.body as any).getReader();
         
@@ -1290,23 +1065,65 @@ export default class Databricks extends OpenAI {
         let chunkCount = 0;
         
         const streamTimeout = this.getTimeoutFromConfig();
-        let lastActivityTimestamp = Date.now();
         
         try {
-          while (true) {
-            const { done, value } = await reader.read();
-            
-            lastActivityTimestamp = Date.now();
-            
+          let continueReading = true;
+          
+          while (continueReading) {
+            // タイムアウトチェック
             if (Date.now() - startTime > streamTimeout) {
               console.log("Stream timeout reached");
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               return;
             }
             
+            // 非アクティブチェック
+            if (Date.now() - lastActivityTime > activityTimeoutMs) {
+              console.log("Stream inactive timeout reached");
+              
+              // 接続状況を確認する小さなヘルスチェック
+              try {
+                // 非同期でチェックを実行
+                const healthCheckUrl = invocationUrl.replace(/\/invocations$/, '/health');
+                
+                // タイムアウト付きフェッチを実装
+                const healthCheckPromise = this.fetch(healthCheckUrl, {
+                  method: "GET",
+                  headers: this._getHeaders()
+                });
+                
+                // 非同期でタイムアウトを設定
+                const timeoutPromise = new Promise<null>((_, reject) => {
+                  setTimeout(() => reject(new Error("Health check timeout")), 30000);
+                });
+                
+                // 最初に完了した方を採用
+                const healthCheckResult: Response | null = await Promise.race([
+                  healthCheckPromise, 
+                  timeoutPromise
+                ]);
+                
+                if (!healthCheckResult || !healthCheckResult.ok) {
+                  throw new Error("Health check failed");
+                }
+                
+                // サーバーは生きているが、ストリームが停止している可能性がある
+                console.log("API server is responsive but stream may be stalled");
+              } catch (healthError) {
+                console.error("Health check failed:", healthError);
+                throw new Error("Stream connection lost and health check failed");
+              }
+            }
+            
+            // チャンクの読み取り
+            const { done, value } = await reader.read();
+            
+            // アクティビティタイムスタンプを更新
+            lastActivityTime = Date.now();
+            
             if (done) {
               console.log("Stream reader done");
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               break;
             }
             
@@ -1334,11 +1151,10 @@ export default class Databricks extends OpenAI {
               return false;
             };
 
-            // 思考メッセージはスキップしてバッファに追加する
-            // 通常のメッセージのみを返す
+            // 思考メッセージではないメッセージのみを返す
             for (const m of messages) {
               if (isThinkingMessage(m)) {
-                // アクションは processLargeThinkingContent と formatThinkingText で処理済み
+                // 思考メッセージはUIで処理
               } else {
                 yield m as ChatMessage;
               }
@@ -1346,7 +1162,7 @@ export default class Databricks extends OpenAI {
             
             if (end) {
               console.log("Stream end signal received");
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               
               const message: ChatMessage = {
                 role: "assistant",
@@ -1354,23 +1170,25 @@ export default class Databricks extends OpenAI {
               };
               yield message;
               
-              return;
+              continueReading = false;
+              break;
             }
           }
         } catch (chunkError) {
           console.error("Error during stream processing:", chunkError);
-          this.ensureThinkingComplete();
+          this.thinking.ensureThinkingComplete();
           
-          if (Date.now() - lastActivityTimestamp > 10000) {
-            // エラーメッセージを改善
-            const errorMessage = "⚠️ ストリームが中断されました。部分的な応答を表示します:";
-            updateThinking(errorMessage, "error", 1.0);
+          if (Date.now() - lastActivityTime > 10000) {
+            // 自動復旧試行
+            console.log("Stream interruption detected. Attempting to recover the response...");
+            
+            // エラーメッセージを表示
+            const errorMessage = "⚠️ ストリームが中断されました。応答の復旧を試みています...";
+            updateThinking(errorMessage, "error", 0.9);
             
             // 再接続を試みる
             try {
-              console.log("Attempting to reconnect and recover the conversation...");
-              
-              // 再接続用の省略されたメッセージ配列を作成
+              // 再接続用の短縮メッセージ配列を作成
               const reconnectMessages = msgs.slice(-3); // 最後の3つのメッセージのみを使用
               
               // 再接続メッセージを構築
@@ -1383,16 +1201,22 @@ export default class Databricks extends OpenAI {
               // 非ストリーミングモードで再試行
               const recoveryOptions = {
                 ...options,
-                stream: false
+                stream: false,
+                // トークン長を短めに設定して迅速な応答を得る
+                maxTokens: Math.min(options.maxTokens || 4096, 1000)
               };
+              
+              // フォールバックシステムメッセージを使用
+              const fallbackSystemMessage = "The user's request was interrupted. Please provide a brief, helpful response based on the latest messages.";
               
               const reconnectUrl = this.getInvocationUrl();
               const reconnectBody = {
                 ...this.convertArgs(recoveryOptions),
                 messages: this.convertMessages(reconnectMessages),
-                system: enhancedSystemMessage
+                system: fallbackSystemMessage
               };
               
+              // ツールを引き継ぐ
               if (toolsParameter) {
                 reconnectBody.tools = toolsParameter;
                 reconnectBody.tool_choice = options.toolChoice || "auto";
@@ -1402,7 +1226,7 @@ export default class Databricks extends OpenAI {
                 method: "POST",
                 headers: this._getHeaders(),
                 body: JSON.stringify(reconnectBody),
-                timeout: timeout
+                timeout: timeout / 2 // 通常の半分のタイムアウトで素早く応答を得る
               };
               
               // リトライ機能付きフェッチを使用
@@ -1424,13 +1248,28 @@ export default class Databricks extends OpenAI {
             }
             
             // 再接続に失敗した場合は元の部分的な応答を表示
-            const message: ChatMessage = {
-              role: "assistant",
-              content: errorMessage + "\n\n" + 
-                      (thinkingContent ? "[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "..." : "取得できませんでした")
-            };
-            yield message;
-            return;
+            try {
+              // バッファからの復旧を試みる
+              const recoveredContent = this.thinking.tryRecoverContentFromBuffer(rawBuffer);
+              
+              const message: ChatMessage = {
+                role: "assistant",
+                content: "⚠️ ストリームが中断され、再接続に失敗しました。部分的な応答を表示します:\n\n" + 
+                        (recoveredContent || thinkingContent ? 
+                         (recoveredContent || "[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "...") : 
+                         "応答を取得できませんでした。お手数ですが、もう一度お試しください。")
+              };
+              yield message;
+              return;
+            } catch (bufferRecoveryError) {
+              // 最終手段 - 汎用エラーメッセージを表示
+              const message: ChatMessage = {
+                role: "assistant",
+                content: "⚠️ 申し訳ありません。接続が中断され、応答を完全に取得できませんでした。もう一度お試しください。"
+              };
+              yield message;
+              return;
+            }
           }
           
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1447,24 +1286,32 @@ export default class Databricks extends OpenAI {
           }
         }
         
-        this.ensureThinkingComplete();
+        this.thinking.ensureThinkingComplete();
         return;
       }
       
+      // Node.jsスタイルのストリーム処理（for-await-of）
       const startTime = Date.now();
       
       const streamTimeout = this.getTimeoutFromConfig();
-      let lastActivityTimestamp = Date.now();
       
       try {
         for await (const chunk of res.body as any) {
           try {
-            lastActivityTimestamp = Date.now();
+            // アクティビティタイムスタンプを更新
+            lastActivityTime = Date.now();
             
+            // タイムアウトチェック
             if (Date.now() - startTime > streamTimeout) {
               console.log("Stream timeout reached");
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               return;
+            }
+            
+            // 非アクティブチェック
+            if (Date.now() - lastActivityTime > activityTimeoutMs) {
+              console.log("Stream inactive timeout reached");
+              throw new Error("Stream inactive for too long");
             }
             
             const decodedChunk = this.processChunk(chunk as Buffer);
@@ -1489,11 +1336,10 @@ export default class Databricks extends OpenAI {
               return false;
             };
 
-            // 思考メッセージはスキップしてバッファに追加する
-            // 通常のメッセージのみを返す
+            // 思考メッセージではないメッセージのみを返す
             for (const m of messages) {
               if (isThinkingMessage(m)) {
-                // アクションは processLargeThinkingContent と formatThinkingText で処理済み
+                // 思考メッセージはUIで処理
               } else {
                 yield m as ChatMessage;
               }
@@ -1501,7 +1347,7 @@ export default class Databricks extends OpenAI {
             
             if (done) {
               console.log("Stream end signal received");
-              this.ensureThinkingComplete();
+              this.thinking.ensureThinkingComplete();
               
               const message: ChatMessage = {
                 role: "assistant",
@@ -1513,18 +1359,19 @@ export default class Databricks extends OpenAI {
             }
           } catch (e) {
             console.error("Error processing stream chunk:", e);
-            if (Date.now() - lastActivityTimestamp > 10000) {
-              this.ensureThinkingComplete();
+            if (Date.now() - lastActivityTime > 10000) {
+              this.thinking.ensureThinkingComplete();
               
-              // エラーメッセージを改善
-              const errorMessage = "⚠️ ストリームが中断されました。部分的な応答を表示します:";
-              updateThinking(errorMessage, "error", 1.0);
+              // 自動復旧試行
+              console.log("Stream interruption detected. Attempting to recover the response...");
+              
+              // エラーメッセージを表示
+              const errorMessage = "⚠️ ストリームが中断されました。応答の復旧を試みています...";
+              updateThinking(errorMessage, "error", 0.9);
               
               // 再接続を試みる
               try {
-                console.log("Attempting to reconnect and recover the conversation...");
-                
-                // 再接続用の省略されたメッセージ配列を作成
+                // 再接続用の短縮メッセージ配列を作成
                 const reconnectMessages = msgs.slice(-3); // 最後の3つのメッセージのみを使用
                 
                 // 再接続メッセージを構築
@@ -1537,14 +1384,19 @@ export default class Databricks extends OpenAI {
                 // 非ストリーミングモードで再試行
                 const recoveryOptions = {
                   ...options,
-                  stream: false
+                  stream: false,
+                  // トークン長を短めに設定
+                  maxTokens: Math.min(options.maxTokens || 4096, 1000)
                 };
+                
+                // フォールバックシステムメッセージを使用
+                const fallbackSystemMessage = "The user's request was interrupted. Please provide a brief, helpful response based on the latest messages.";
                 
                 const reconnectUrl = this.getInvocationUrl();
                 const reconnectBody = {
                   ...this.convertArgs(recoveryOptions),
                   messages: this.convertMessages(reconnectMessages),
-                  system: enhancedSystemMessage
+                  system: fallbackSystemMessage
                 };
                 
                 if (toolsParameter) {
@@ -1556,7 +1408,7 @@ export default class Databricks extends OpenAI {
                   method: "POST",
                   headers: this._getHeaders(),
                   body: JSON.stringify(reconnectBody),
-                  timeout: timeout
+                  timeout: timeout / 2
                 };
                 
                 // リトライ機能付きフェッチを使用
@@ -1578,13 +1430,28 @@ export default class Databricks extends OpenAI {
               }
               
               // 再接続に失敗した場合は元の部分的な応答を表示
-              const message: ChatMessage = {
-                role: "assistant",
-                content: errorMessage + "\n\n" + 
-                        (thinkingContent ? "[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "..." : "取得できませんでした")
-              };
-              yield message;
-              return;
+              try {
+                // バッファからの復旧を試みる
+                const recoveredContent = this.thinking.tryRecoverContentFromBuffer(rawBuffer);
+                
+                const message: ChatMessage = {
+                  role: "assistant",
+                  content: "⚠️ ストリームが中断され、再接続に失敗しました。部分的な応答を表示します:\n\n" + 
+                          (recoveredContent || thinkingContent ? 
+                           (recoveredContent || "[思考プロセス]\n" + thinkingContent.substring(0, 1000) + "...") : 
+                           "応答を取得できませんでした。お手数ですが、もう一度お試しください。")
+                };
+                yield message;
+                return;
+              } catch (bufferRecoveryError) {
+                // 最終手段 - 汎用エラーメッセージを表示
+                const message: ChatMessage = {
+                  role: "assistant",
+                  content: "⚠️ 申し訳ありません。接続が中断され、応答を完全に取得できませんでした。もう一度お試しください。"
+                };
+                yield message;
+                return;
+              }
             }
             
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1603,14 +1470,15 @@ export default class Databricks extends OpenAI {
           }
         }
         
-        this.ensureThinkingComplete();
+        this.thinking.ensureThinkingComplete();
       } catch (streamError) {
         console.error("Stream error:", streamError);
-        this.ensureThinkingComplete();
+        this.thinking.ensureThinkingComplete();
         
+        // エラー時のコンテンツ復旧
         if (rawBuffer && rawBuffer.trim()) {
           try {
-            const recoveredContent = this.tryRecoverContentFromBuffer(rawBuffer);
+            const recoveredContent = this.thinking.tryRecoverContentFromBuffer(rawBuffer);
             if (recoveredContent) {
               // エラーメッセージを改善
               const errorMessage = "⚠️ ストリームが中断されました。部分的な応答を表示します:";
@@ -1621,32 +1489,47 @@ export default class Databricks extends OpenAI {
                 content: errorMessage + "\n\n" + recoveredContent
               };
               yield message;
+              return;
             }
           } catch (recoveryError) {
             console.error("Error recovering content:", recoveryError);
           }
         }
         
-        throw streamError;
+        // 最終的なフォールバック
+        const message: ChatMessage = {
+          role: "assistant",
+          content: "⚠️ 申し訳ありません。応答の生成中にエラーが発生しました。もう一度お試しください。"
+        };
+        yield message;
       }
     } catch (error) {
       console.error("_streamChat error:", error);
-      this.ensureThinkingComplete();
-      throw error;
-    } finally {
-      this.ensureThinkingComplete();
-      this.isStreamActive = false;
-      this.thinkingStarted = false;
+      this.thinking.ensureThinkingComplete();
       
-      // バッファの片付け
-      if (this.bufferTimeoutId) {
-        clearTimeout(this.bufferTimeoutId);
-        this.bufferTimeoutId = null;
+      // ユーザーフレンドリーなエラーメッセージを構築
+      let errorMessage = "リクエスト処理中にエラーが発生しました。";
+      
+      if (error instanceof Error) {
+        // エラーメッセージからAPIキーやURLなどの機密情報を除去
+        const sanitizedMessage = error.message
+          .replace(/api[-_]?key[^a-zA-Z0-9]/i, "[REDACTED]")
+          .replace(/bearer\s+[a-zA-Z0-9_\-\.]+/i, "Bearer [REDACTED]")
+          .replace(/(https?:\/\/)[^/\s]+/g, "$1[REDACTED-DOMAIN]");
+        
+        errorMessage = `エラー: ${sanitizedMessage}`;
       }
       
-      this.thinkingContentBuffer = "";
-      this.sentThinkingHashes.clear();
-      this.sentCompleteSentences.clear();
+      // エラーをラップして通知
+      const errorNotificationMessage: ChatMessage = {
+        role: "assistant",
+        content: `⚠️ ${errorMessage}`
+      };
+      yield errorNotificationMessage;
+    } finally {
+      // 後処理
+      this.thinking.ensureThinkingComplete();
+      this.thinking.resetThinking();
     }
   }
 }

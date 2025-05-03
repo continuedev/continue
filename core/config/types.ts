@@ -1025,8 +1025,12 @@ declare global {
   type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
   
   export interface MCPOptions {
-    transport: TransportOptions;
-  }
+  /** Transport configuration for the MCP server */
+  transport: TransportOptions;
+  
+  /** Additional MCP server configuration parameters */
+  [key: string]: any;
+}
   
   export interface ContinueUIConfig {
     codeBlockToolbarPosition?: "top" | "bottom";
@@ -1134,14 +1138,21 @@ declare global {
      */
     useChromiumForDocsCrawling?: boolean;
     useTools?: boolean;
+    /** 
+     * Model Context Protocol server configurations
+     * @deprecated Use ExperimentalMCPOptions type from mcp-types.ts instead
+     */
     modelContextProtocolServers?: MCPOptions[];
   }
   
   interface AnalyticsConfig {
-    type: string;
-    url?: string;
-    clientKey?: string;
-  }
+  /** Analytics type */
+  type: string;
+  /** Analytics endpoint URL */
+  url?: string;
+  /** Client key for authentication */
+  clientKey?: string;
+}
   
   // config.json
   export interface SerializedContinueConfig {

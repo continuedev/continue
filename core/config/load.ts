@@ -32,6 +32,7 @@ import {
   SerializedContinueConfig,
   SlashCommand,
   ModelCapability,
+  MCPOptions,
 } from "..";
 // ThinkingConfig をllms/index.tsから直接インポート
 import { ThinkingConfig, setExtensionContext } from "../llm/llms/index";
@@ -77,10 +78,65 @@ import {
   serializePromptTemplates,
 } from "./util";
 import { validateConfig } from "./validation.js";
+import { ExperimentalMCPOptions } from './mcp-types';
+
+/**
+ * パス文字列を正規化する関数
+ * @param pathStr パス文字列
+ * @returns 正規化されたパス
+ */
+function normalizePath(pathStr: string): string {
+  if (!pathStr) return pathStr;
+  
+  // デバッグ出力
+  console.log(`Normalizing path: ${pathStr}`);
+  
+  // パスをクリーンな形式に変換
+  let normalizedPath = pathStr;
+  
+  // Windows環境でパスの最初の部分がドライブレターとコロンである場合の処理
+  if (/^[A-Za-z]:/.test(normalizedPath)) {
+    const drivePrefix = normalizedPath.substring(0, 2).toUpperCase(); // ドライブレターを大文字に標準化
+    
+    // 二重ドライブレターのパターンを正規化（C:\c:\path や C:\C:\path → C:\path）
+    const patternA = new RegExp(`^${drivePrefix}\\\\+[A-Za-z]:\\\\+`, 'i');
+    if (patternA.test(normalizedPath)) {
+      console.log(`二重ドライブレターパターンA検出: ${normalizedPath}`);
+      normalizedPath = drivePrefix + '\\' + normalizedPath.replace(patternA, '');
+    }
+    
+    // 同じドライブレターが二重で現れるパターンを正規化（C:\C:\path → C:\path）
+    const patternB = new RegExp(`^${drivePrefix}\\\\+${drivePrefix.substring(0, 1)}:\\\\+`, 'i');
+    if (patternB.test(normalizedPath)) {
+      console.log(`二重ドライブレターパターンB検出: ${normalizedPath}`);
+      normalizedPath = drivePrefix + '\\' + normalizedPath.replace(patternB, '').substring(2);
+    }
+    
+    // 同一ドライブレターの重複パターンを正規化（C:\C:\path → C:\path）
+    const patternC = new RegExp(`^([A-Za-z]:)\\\\+\\1\\\\+`, 'i');
+    if (patternC.test(normalizedPath)) {
+      console.log(`同一ドライブレター重複検出: ${normalizedPath}`);
+      normalizedPath = normalizedPath.replace(patternC, '$1\\');
+    }
+  }
+  
+  // 連続するバックスラッシュを単一に正規化
+  normalizedPath = normalizedPath.replace(/\\{2,}/g, '\\');
+  
+  // 結果をログに出力
+  if (pathStr !== normalizedPath) {
+    console.log(`Path normalized: ${pathStr} → ${normalizedPath}`);
+  }
+  
+  return normalizedPath;
+}
 
 export function resolveSerializedConfig(
   filepath: string,
 ): SerializedContinueConfig {
+  // パスを正規化
+  filepath = normalizePath(filepath);
+
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
@@ -119,7 +175,8 @@ function loadSerializedConfig(
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
     try {
-      config = resolveSerializedConfig(getConfigJsonPath());
+      const configPath = normalizePath(getConfigJsonPath());
+      config = resolveSerializedConfig(configPath);
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
@@ -141,9 +198,8 @@ function loadSerializedConfig(
 
   if (ideSettings.remoteConfigServerUrl) {
     try {
-      const remoteConfigJson = resolveSerializedConfig(
-        getConfigJsonPathForRemote(ideSettings.remoteConfigServerUrl),
-      );
+      const remoteConfigPath = normalizePath(getConfigJsonPathForRemote(ideSettings.remoteConfigServerUrl));
+      const remoteConfigJson = resolveSerializedConfig(remoteConfigPath);
       config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
     } catch (e) {
       console.warn("Error loading remote config: ", e);
@@ -578,16 +634,31 @@ async function intermediateToFinalConfig({
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.experimental?.modelContextProtocolServers ?? []).map(
-      (server, index) => ({
+  const mcpServers = (config.experimental?.modelContextProtocolServers ?? []).map(
+    (server: ExperimentalMCPOptions, index) => {
+      // MCPサーバー設定のパスを正規化 (safely check properties)
+      if (typeof server.type === 'string' && server.type === 'yaml-file' && typeof server.path === 'string') {
+        server.path = normalizePath(server.path);
+      }
+      return {
         id: `continue-mcp-server-${index + 1}`,
         name: `MCP Server`,
         ...server,
-      }),
-    ),
-    false,
+      };
+    },
   );
+  
+  // 修正：transportプロパティが存在し、必須のプロパティを持つMCPサーバーのみをフィルタリング
+  // 型述語を用いて、validMcpServersがMCPOptions[]型に適合することを保証
+  const validMcpServers = mcpServers.filter(
+    (server): server is MCPOptions => 
+      server.transport !== undefined && 
+      typeof server.transport === 'object' &&
+      typeof server.transport.type === 'string'
+  );
+  
+  // 型チェック済みのvalidMcpServersをsetConnectionsに渡す
+  mcpManager.setConnections(validMcpServers, false);
 
   // Handle experimental modelRole config values for apply and edit
   const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;
@@ -877,6 +948,64 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   return readConfigJs();
 }
 
+/**
+ * 安全にファイルを読み込む関数
+ * @param filePath ファイルパス
+ * @returns ファイルの内容（読み込みに失敗した場合はnull）
+ */
+function safeReadFile(filePath: string): string | null {
+  try {
+    // パスを正規化
+    filePath = normalizePath(filePath);
+    
+    // ファイルが存在するか確認
+    if (!fs.existsSync(filePath)) {
+      console.warn(`ファイルが存在しません: ${filePath}`);
+      return null;
+    }
+    
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    console.error(`ファイル読み込みエラー: ${error}`);
+    return null;
+  }
+}
+
+/**
+ * 複数のパスから最初に見つかったファイルを読み込む関数
+ * @param filePaths 検索するファイルパスの配列
+ * @returns 最初に見つかったファイルの内容（全て失敗した場合はnull）
+ */
+function readFirstAvailableFile(filePaths: string[]): { content: string, path: string } | null {
+  // 各パスのデバッグ情報を表示
+  console.log(`以下のパスからファイルを検索します: ${filePaths.join(', ')}`);
+  
+  for (const filePath of filePaths) {
+    // パスを正規化
+    const normalizedPath = normalizePath(filePath);
+    console.log(`正規化されたパス: ${normalizedPath}`);
+    
+    // ファイルが存在するか確認
+    if (!fs.existsSync(normalizedPath)) {
+      console.warn(`ファイル ${normalizedPath} は存在しません`);
+      continue;
+    }
+    
+    try {
+      console.log(`ファイル ${normalizedPath} を読み込み中...`);
+      const content = fs.readFileSync(normalizedPath, 'utf8');
+      console.log(`成功: ファイル ${normalizedPath} を読み込みました`);
+      return { content, path: normalizedPath };
+    } catch (error) {
+      console.warn(`ファイル ${normalizedPath} の読み込みに失敗: ${error}`);
+    }
+  }
+  
+  // すべてのパスで失敗
+  console.error(`以下のパスから有効なファイルが見つかりませんでした: ${filePaths.join(', ')}`);
+  return null;
+}
+
 async function loadContinueConfigFromJson(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
@@ -920,7 +1049,7 @@ async function loadContinueConfigFromJson(
   if (configJsContents) {
     try {
       // Try config.ts first
-      const configJsPath = getConfigJsPath();
+      const configJsPath = normalizePath(getConfigJsPath());
       let module: any;
 
       try {
@@ -954,9 +1083,9 @@ async function loadContinueConfigFromJson(
   // Apply remote config.js to modify intermediate config
   if (ideSettings.remoteConfigServerUrl) {
     try {
-      const configJsPathForRemote = getConfigJsPathForRemote(
+      const configJsPathForRemote = normalizePath(getConfigJsPathForRemote(
         ideSettings.remoteConfigServerUrl,
-      );
+      ));
       const module = await import(configJsPathForRemote);
       if (typeof require !== "undefined") {
         delete require.cache[require.resolve(configJsPathForRemote)];
@@ -992,5 +1121,9 @@ export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadContinueConfigFromJson,
+  normalizePath,
+  safeReadFile,
+  readFirstAvailableFile,
   type BrowserSerializedContinueConfig,
+  type ExperimentalMCPOptions,
 };

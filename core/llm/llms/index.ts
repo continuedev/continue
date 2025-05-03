@@ -22,6 +22,7 @@ import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Databricks, { registerThinkingPanel } from "./Databricks";
+import DatabricksThinking from "./DatabricksThinking";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
@@ -83,7 +84,7 @@ export interface ThinkingContent {
 }
 
 // ThinkingPanel関連の機能をエクスポート
-export { registerThinkingPanel };
+export { registerThinkingPanel, DatabricksThinking };
 
 // VSCode拡張のコンテキストを保持する変数
 let _extensionContext: any = null;
