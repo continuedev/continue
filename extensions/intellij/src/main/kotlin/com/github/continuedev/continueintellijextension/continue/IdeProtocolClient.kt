@@ -596,7 +596,7 @@ class IdeProtocolClient(
                         diffStreamService.register(diffStreamHandler, editor)
 
                         diffStreamHandler.streamDiffLinesToEditor(
-                            prompt, prefix, highlighted, suffix, llmTitle
+                            prompt, prefix, highlighted, suffix, llmTitle, false
                         )
 
                         respond(null)

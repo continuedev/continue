@@ -222,7 +222,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(DOWN_ARROW)
         customPanelRef.get().enter()
         diffStreamHandler.streamDiffLinesToEditor(
-            textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret
+            textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret, true
         )
     }
 

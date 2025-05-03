@@ -150,6 +150,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       input: string;
       language: string | undefined;
       modelTitle: string | undefined;
+      includeRulesInSystemMessage: boolean;
     },
     AsyncGenerator<DiffLine>,
   ];

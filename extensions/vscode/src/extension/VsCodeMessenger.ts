@@ -226,7 +226,7 @@ export class VsCodeMessenger {
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
-        rules: config.rules,
+        rulesToInclude: config.rules,
       });
       return fileAfterEdit;
     });
