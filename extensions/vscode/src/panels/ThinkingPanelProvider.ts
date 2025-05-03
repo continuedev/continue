@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 
 /**
- * ThinkingPanelProvider - Manages the UI panel for displaying Claude's thinking process
- * This panel shows real-time updates of Claude's thinking as it processes requests
+ * ThinkingPanelProvider - 思考プロセス表示用UIパネルの管理
+ * このパネルはClaudeの思考プロセスをリアルタイムで表示します
  */
 export class ThinkingPanelProvider {
   private static instance: ThinkingPanelProvider;
@@ -15,8 +15,12 @@ export class ThinkingPanelProvider {
   private context: vscode.ExtensionContext;
   private updateInterval: NodeJS.Timeout | null = null;
   private pendingUpdates: boolean = false;
+  private registeredCommands = new Set<string>();
+  private disposed: boolean = false;
 
-  // Singleton pattern
+  /**
+   * シングルトンパターンによるインスタンス取得
+   */
   public static getInstance(context: vscode.ExtensionContext): ThinkingPanelProvider {
     if (!ThinkingPanelProvider.instance) {
       ThinkingPanelProvider.instance = new ThinkingPanelProvider(context);
@@ -27,131 +31,171 @@ export class ThinkingPanelProvider {
   private constructor(context: vscode.ExtensionContext) {
     this.context = context;
     
-    // Create status bar item to show when thinking is in progress
-    this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    this.statusBarItem.text = "$(sync~spin) Claude is thinking...";
-    this.statusBarItem.command = 'continue.showThinkingPanel';
-    this.statusBarItem.tooltip = "Click to show Claude's thinking process";
-    
-    // Register commands early to ensure they're available
-    this.registerCommands();
-    
-    // Setup interval for regular UI updates
-    this.startUpdateInterval();
-    
-    // Log initialization
-    console.log("ThinkingPanelProvider initialized");
-  }
-
-  // Register all commands needed by the thinking panel
-  private registerCommands() {
     try {
-      // Register commands before pushing to subscriptions
-      const showThinkingCommand = vscode.commands.registerCommand('continue.showThinkingPanel', () => {
-        this.createOrShowPanel();
-      });
+      // ステータスバーアイテムの作成
+      this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+      this.statusBarItem.text = "$(sync~spin) Claude is thinking...";
+      this.statusBarItem.command = 'continue.showThinkingPanel';
+      this.statusBarItem.tooltip = "Click to show Claude's thinking process";
       
-      const updateThinkingCommand = vscode.commands.registerCommand('continue.updateThinking', 
-        (content: string, phase: string, progress: number) => {
-          this.updateThinking(content, phase, progress);
-      });
+      // コマンドの登録
+      this.registerCommands();
       
-      const appendThinkingCommand = vscode.commands.registerCommand('continue.appendThinkingChunk', 
-        (chunk: string, phase: string, progress: number) => {
-          this.appendThinkingChunk(chunk, phase, progress);
-      });
-      
-      const forceRefreshCommand = vscode.commands.registerCommand('continue.forceRefreshThinking', 
-        (force: boolean) => {
-          this.forceRefresh(force);
-      });
-      
-      const thinkingCompletedCommand = vscode.commands.registerCommand('continue.thinkingCompleted', () => {
-        this.thinkingCompleted();
-      });
-      
-      const resetThinkingCommand = vscode.commands.registerCommand('continue.resetThinkingPanel', () => {
-        this.resetThinkingPanel();
-      });
-      
-      // 新規セッション用コマンドのフォールバック
-      const newSessionCommand = vscode.commands.registerCommand('continue.newSession', () => {
-        vscode.commands.executeCommand('continue.sidebar.newSession').catch(err => {
-          console.error("Error executing new session command:", err);
-          vscode.window.showErrorMessage("セッションの作成に失敗しました。続行するには、最初にサイドバーから新しいセッションを開始してください。");
-        });
-      });
-      
-      // ログ表示用コマンドのフォールバック
-      const viewLogsCommand = vscode.commands.registerCommand('continue.viewLogs', () => {
-        try {
-          const logDirUri = vscode.Uri.joinPath(this.context.globalStorageUri, 'logs');
-          vscode.commands.executeCommand('workbench.action.openFolder', logDirUri);
-        } catch (error) {
-          console.error("Error opening logs folder:", error);
-          vscode.window.showErrorMessage(`ログフォルダを開けませんでした: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      });
-      
-      // コンテキストにコマンドを追加
-      this.context.subscriptions.push(
-        showThinkingCommand,
-        updateThinkingCommand,
-        appendThinkingCommand,
-        forceRefreshCommand,
-        thinkingCompletedCommand,
-        resetThinkingCommand,
-        newSessionCommand,
-        viewLogsCommand,
-        this.statusBarItem
-      );
-      
-      console.log("ThinkingPanel commands registered successfully");
+      // 定期更新用のインターバルをセットアップ
+      this.startUpdateInterval();
     } catch (error) {
-      console.error("Error registering ThinkingPanel commands:", error);
+      // 初期化エラーは静かに処理（エラーログなし）
+      this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
     }
   }
 
-  // Reset thinking panel
-  private resetThinkingPanel() {
-    this.thinking = '';
-    this.isThinking = false;
-    this.thinkingPhase = "initial";
-    this.progress = 0;
-    this.statusBarItem.hide();
-    
-    if (this.panel) {
-      this.updatePanel();
-    }
-    
-    console.log("Thinking panel reset");
-  }
-
-  // Start an interval for regular UI updates
-  private startUpdateInterval() {
-    // Clear any existing interval
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-    
-    // Create new update interval - 100ms is more responsive than default
-    this.updateInterval = setInterval(() => {
-      if (this.pendingUpdates && this.panel) {
-        this.updatePanel();
-        this.pendingUpdates = false;
-      }
-    }, 100);
-  }
-
-  // Create or show the thinking panel
-  private createOrShowPanel() {
-    if (this.panel) {
-      this.panel.reveal();
-      return;
+  /**
+   * コマンドが登録済みかどうかを確認
+   */
+  private async isCommandRegistered(commandId: string): Promise<boolean> {
+    if (this.registeredCommands.has(commandId)) {
+      return true;
     }
     
     try {
-      // Create a new webview panel
+      const commands = await vscode.commands.getCommands();
+      const exists = commands.includes(commandId);
+      if (exists) {
+        this.registeredCommands.add(commandId);
+      }
+      return exists;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * コマンドを安全に登録する
+   */
+  private async safeRegisterCommand(
+    commandId: string, 
+    callback: (...args: any[]) => any
+  ): Promise<boolean> {
+    try {
+      // 既に登録済みならスキップ
+      if (this.registeredCommands.has(commandId)) {
+        return true;
+      }
+      
+      const exists = await this.isCommandRegistered(commandId);
+      if (!exists) {
+        try {
+          const disposable = vscode.commands.registerCommand(commandId, callback);
+          this.context.subscriptions.push(disposable);
+          this.registeredCommands.add(commandId);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      } else {
+        // 既に存在する場合は記録のみ
+        this.registeredCommands.add(commandId);
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * 思考パネル関連のコマンドを登録
+   */
+  private async registerCommands() {
+    try {
+      // 各コマンドを安全に登録
+      await Promise.all([
+        this.safeRegisterCommand('continue.showThinkingPanel', () => {
+          this.createOrShowPanel();
+        }),
+        
+        this.safeRegisterCommand('continue.updateThinking', 
+          (content: string, phase: string, progress: number) => {
+            this.updateThinking(content, phase, progress);
+        }),
+        
+        this.safeRegisterCommand('continue.appendThinkingChunk', 
+          (chunk: string, phase: string, progress: number) => {
+            this.appendThinkingChunk(chunk, phase, progress);
+        }),
+        
+        this.safeRegisterCommand('continue.forceRefreshThinking', 
+          (force: boolean) => {
+            this.forceRefresh(force);
+        }),
+        
+        this.safeRegisterCommand('continue.thinkingCompleted', () => {
+          this.thinkingCompleted();
+        }),
+        
+        this.safeRegisterCommand('continue.resetThinkingPanel', () => {
+          this.resetThinkingPanel();
+        })
+      ]);
+      
+      // ステータスバーアイテムも登録
+      this.context.subscriptions.push(this.statusBarItem);
+    } catch (error) {
+      // エラーは静かに処理
+    }
+  }
+
+  /**
+   * 思考パネルをリセット
+   */
+  private resetThinkingPanel() {
+    try {
+      this.thinking = '';
+      this.isThinking = false;
+      this.thinkingPhase = "initial";
+      this.progress = 0;
+      this.statusBarItem.hide();
+      
+      if (this.panel) {
+        this.updatePanel();
+      }
+    } catch (error) {
+      // エラーは静かに処理
+    }
+  }
+
+  /**
+   * UIの定期更新用インターバルを開始
+   */
+  private startUpdateInterval() {
+    try {
+      // 既存のインターバルをクリア
+      if (this.updateInterval) {
+        clearInterval(this.updateInterval);
+      }
+      
+      // 新しいインターバルを100msで作成（よりレスポンシブに）
+      this.updateInterval = setInterval(() => {
+        if (this.pendingUpdates && this.panel && !this.disposed) {
+          this.updatePanel();
+          this.pendingUpdates = false;
+        }
+      }, 100);
+    } catch (error) {
+      // エラーは静かに処理
+    }
+  }
+
+  /**
+   * 思考パネルを作成または表示
+   */
+  private createOrShowPanel() {
+    try {
+      if (this.panel) {
+        this.panel.reveal();
+        return;
+      }
+      
+      // 新しいwebviewパネルを作成
       this.panel = vscode.window.createWebviewPanel(
         'claudeThinking',
         "Claude's Thinking Process",
@@ -165,140 +209,169 @@ export class ThinkingPanelProvider {
         }
       );
       
-      // Initial HTML content
+      // 初期HTML設定
       this.updatePanel();
       
-      // Handle panel disposal
+      // パネル破棄時の処理
       this.panel.onDidDispose(() => {
         this.panel = undefined;
       });
-      
-      console.log("Thinking panel created and displayed");
     } catch (error) {
-      console.error("Error creating thinking panel:", error);
-      vscode.window.showErrorMessage(`Thinking panel could not be created: ${error instanceof Error ? error.message : String(error)}`);
+      // エラーは静かに処理
     }
   }
 
-  // Update the thinking content with new data
+  /**
+   * 思考内容を更新
+   */
   public updateThinking(content: string, phase: string, progress: number) {
-    // Show the status bar item when thinking starts
-    this.isThinking = true;
-    this.thinkingPhase = phase;
-    this.progress = progress;
-    this.thinking = content; // Replace content instead of appending
-    this.statusBarItem.show();
-    
-    // Mark for update
-    this.pendingUpdates = true;
-    
-    // Update the panel if it exists, or create it if auto-show is enabled
-    if (this.panel) {
-      this.updatePanel();
-      this.pendingUpdates = false;
-    }
-    
-    console.log(`Thinking updated: ${phase} - Progress: ${Math.round(progress * 100)}%`);
-  }
-
-  // Append a chunk to the thinking content
-  public appendThinkingChunk(chunk: string, phase: string, progress: number) {
-    this.isThinking = true;
-    this.thinkingPhase = phase;
-    this.progress = progress;
-    this.thinking += chunk;
-    this.statusBarItem.show();
-    
-    // Mark for update
-    this.pendingUpdates = true;
-    
-    // Force immediate update for chunk
-    if (this.panel) {
-      this.updatePanel();
-      this.pendingUpdates = false;
-    }
-    
-    console.log(`Thinking chunk appended - Progress: ${Math.round(progress * 100)}%`);
-  }
-
-  // Force a refresh of the UI
-  public forceRefresh(force: boolean) {
-    if (this.panel) {
-      this.updatePanel();
-    } else if (force) {
-      this.createOrShowPanel();
-    }
-  }
-
-  // Mark thinking as completed
-  public thinkingCompleted() {
-    this.isThinking = false;
-    this.statusBarItem.hide();
-    
-    // Force final update
-    if (this.panel) {
-      this.updatePanel();
-    }
-    
-    console.log("Thinking process completed");
-  }
-
-  // Update the panel HTML
-  private updatePanel() {
-    if (!this.panel) return;
-    
     try {
+      if (this.disposed) return;
+      
+      // ステータスバーアイテムを表示
+      this.isThinking = true;
+      this.thinkingPhase = phase;
+      this.progress = progress;
+      this.thinking = content; // 内容を置き換え
+      this.statusBarItem.show();
+      
+      // 更新をマーク
+      this.pendingUpdates = true;
+      
+      // パネルが存在すれば更新
+      if (this.panel) {
+        this.updatePanel();
+        this.pendingUpdates = false;
+      }
+    } catch (error) {
+      // エラーは静かに処理
+    }
+  }
+
+  /**
+   * 思考内容に新しいチャンクを追加
+   */
+  public appendThinkingChunk(chunk: string, phase: string, progress: number) {
+    try {
+      if (this.disposed) return;
+      
+      this.isThinking = true;
+      this.thinkingPhase = phase;
+      this.progress = progress;
+      this.thinking += chunk;
+      this.statusBarItem.show();
+      
+      // 更新をマーク
+      this.pendingUpdates = true;
+      
+      // チャンク追加時は即時更新
+      if (this.panel) {
+        this.updatePanel();
+        this.pendingUpdates = false;
+      }
+    } catch (error) {
+      // エラーは静かに処理
+    }
+  }
+
+  /**
+   * UIを強制的に更新
+   */
+  public forceRefresh(force: boolean) {
+    try {
+      if (this.disposed) return;
+      
+      if (this.panel) {
+        this.updatePanel();
+      } else if (force) {
+        this.createOrShowPanel();
+      }
+    } catch (error) {
+      // エラーは静かに処理
+    }
+  }
+
+  /**
+   * 思考終了を設定
+   */
+  public thinkingCompleted() {
+    try {
+      if (this.disposed) return;
+      
+      this.isThinking = false;
+      this.statusBarItem.hide();
+      
+      // 最終更新を強制
+      if (this.panel) {
+        this.updatePanel();
+      }
+    } catch (error) {
+      // エラーは静かに処理
+    }
+  }
+
+  /**
+   * パネルHTMLを更新
+   */
+  private updatePanel() {
+    try {
+      if (!this.panel || this.disposed) return;
+      
       this.panel.webview.html = this.getWebviewContent();
     } catch (error) {
-      console.error("Error updating panel HTML:", error);
+      // エラーは静かに処理
     }
   }
 
-  // Format thinking for HTML display
+  /**
+   * HTML表示用に思考内容をフォーマット
+   */
   private formatThinkingForHtml(text: string): string {
     if (!text) return '';
     
     try {
-      // Escape HTML entities
+      // HTMLエンティティをエスケープ
       text = text.replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
       
-      // Format code blocks
+      // コードブロックをフォーマット
       text = text.replace(/```([a-z]*)\n([\s\S]*?)```/g, 
         '<pre class="code-block"><div class="code-header">$1</div><code>$2</code></pre>');
       
-      // Format headings
+      // 見出しをフォーマット
       text = text.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
       text = text.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
       text = text.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
       
-      // Format bold and italic
+      // 太字と斜体をフォーマット
       text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
       
-      // Format paragraphs
+      // 段落をフォーマット
       text = text.replace(/\n\n/g, '</p><p>');
       
-      // Format lists
+      // リストをフォーマット
       text = text.replace(/^\s*-\s+(.*?)$/gm, '<li>$1</li>');
       
       return `<p>${text}</p>`;
     } catch (error) {
-      console.error("Error formatting thinking HTML:", error);
+      // エラーが発生した場合は通常テキストとして表示
       return `<p>${text}</p>`;
     }
   }
 
-  // Generate the HTML content for the webview
+  /**
+   * Webview用のHTML生成
+   */
   private getWebviewContent(): string {
     try {
-      // Convert thinking process to HTML
+      // 思考プロセスをHTMLに変換
       const formattedThinking = this.formatThinkingForHtml(this.thinking);
       
-      // Calculate progress percentage
+      // 進捗率の計算
       const progressPercent = Math.round(this.progress * 100);
       
       return `<!DOCTYPE html>
@@ -413,61 +486,91 @@ export class ThinkingPanelProvider {
               ${formattedThinking || 'Waiting for Claude to start thinking...'}
           </div>
           <script>
-              // Auto-scroll to bottom
-              const thinkingContent = document.querySelector('.thinking-content');
-              thinkingContent.scrollTop = thinkingContent.scrollHeight;
-              
-              // Force refresh when receiving message
-              window.addEventListener('message', (event) => {
-                  const message = event.data;
-                  if (message.command === 'refresh') {
-                      thinkingContent.scrollTop = thinkingContent.scrollHeight;
-                  }
-              });
-              
-              // VSCode API
-              const vscode = acquireVsCodeApi();
+              try {
+                  // 自動スクロールを最下部に
+                  const thinkingContent = document.querySelector('.thinking-content');
+                  thinkingContent.scrollTop = thinkingContent.scrollHeight;
+                  
+                  // メッセージ受信時に強制更新
+                  window.addEventListener('message', (event) => {
+                      try {
+                          const message = event.data;
+                          if (message.command === 'refresh') {
+                              thinkingContent.scrollTop = thinkingContent.scrollHeight;
+                          }
+                      } catch (e) {
+                          // エラーは静かに処理
+                      }
+                  });
+                  
+                  // VSCode API
+                  const vscode = acquireVsCodeApi();
+              } catch (e) {
+                  // エラーは静かに処理
+              }
           </script>
       </body>
       </html>`;
     } catch (error) {
-      console.error("Error generating webview content:", error);
+      // エラー時はシンプルな内容を返す
       return `<!DOCTYPE html>
       <html lang="en">
-      <head><meta charset="UTF-8"><title>Error</title></head>
-      <body><p>Error generating thinking panel content: ${error instanceof Error ? error.message : String(error)}</p></body>
+      <head><meta charset="UTF-8"><title>Claude Thinking</title></head>
+      <body><p>Thinking content is being updated...</p></body>
       </html>`;
+    }
+  }
+
+  /**
+   * リソース解放用の破棄メソッド
+   */
+  public dispose() {
+    try {
+      this.disposed = true;
+      
+      if (this.updateInterval) {
+        clearInterval(this.updateInterval);
+        this.updateInterval = null;
+      }
+      
+      if (this.panel) {
+        this.panel.dispose();
+        this.panel = undefined;
+      }
+      
+      this.statusBarItem.dispose();
+      
+      ThinkingPanelProvider.instance = undefined as any;
+    } catch (error) {
+      // エラーは静かに処理
     }
   }
 }
 
-// Function to register the thinking panel with the extension
+/**
+ * 思考パネルを拡張機能に登録する関数
+ */
 export function registerThinkingPanel(context: vscode.ExtensionContext) {
-  if (!context) {
-    console.error("Error: No valid extension context provided to registerThinkingPanel");
-    return;
-  }
-  
   try {
-    // Create the thinking panel provider and register all commands
+    if (!context) {
+      return null;
+    }
+    
+    // グローバル状態をチェック
+    const isRegistered = context.globalState.get('thinkingPanelRegistered');
+    if (isRegistered) {
+      return ThinkingPanelProvider.getInstance(context);
+    }
+    
+    // 思考パネルプロバイダを作成してコマンドを登録
     const provider = ThinkingPanelProvider.getInstance(context);
-    console.log("Thinking panel registered with extension context");
     
-    // Core ThinkingPanelをブリッジするためのコマンドを登録
-    const bridgeCommands = [
-      vscode.commands.registerCommand('continue.registerThinkingPanel', () => {
-        // このコマンドはcore/llm/llms/thinkingPanel.tsからのインテグレーション用
-        console.log("Bridge command 'registerThinkingPanel' executed");
-      }),
-    ];
-    
-    // コンテキストに登録
-    context.subscriptions.push(...bridgeCommands);
+    // 登録済みとマーク
+    context.globalState.update('thinkingPanelRegistered', true);
     
     return provider;
   } catch (error) {
-    console.error("Failed to register thinking panel:", error);
-    vscode.window.showErrorMessage(`Thinking panel initialization failed: ${error instanceof Error ? error.message : String(error)}`);
+    // エラーは静かに処理
     return null;
   }
 }

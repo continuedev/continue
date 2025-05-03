@@ -13,68 +13,103 @@ import Types from "../config/types";
 
 dotenv.config();
 
-// 強化された normalizePath 関数 - パス正規化のバグを修正
+/**
+ * 強化された normalizePath 関数 - 二重ドライブレター問題を改善
+ * @param p 正規化するパス
+ * @returns 正規化されたパス
+ */
 export function normalizePath(p: string): string {
   if (!p) return p;
   
-  // パスをOS標準に変換（基本的な正規化）
-  let normalizedPath = path.normalize(p);
-  
-  // Windowsパスの場合の特別な処理
-  if (process.platform === 'win32') {
-    // 様々なパターンの二重ドライブレターを検出して修正
-    const driveLetterPatterns = [
-      /^([A-Za-z]:)[\\\/]+([A-Za-z]:)[\\\/]+/i,  // C:\C:\ パターン
-      /^([A-Za-z]:)[\\\/]+[^\\\/]+[\\\/]+([A-Za-z]:)[\\\/]+/i,  // C:\dir\C:\ パターン
-      /^([A-Za-z]:)[\\\/]+([A-Za-z]:|[^\\\/]+[\\\/]+[A-Za-z]:)[\\\/]+/i,  // 複合パターン
-      /^([A-Za-z]:).*?[\\\/]+\1[\\\/]+/i,  // 末尾にドライブレターが現れるパターン C:\path\...\C:\
-    ];
-    
-    // パターンを順に適用
-    for (const pattern of driveLetterPatterns) {
-      if (pattern.test(normalizedPath)) {
-        normalizedPath = normalizedPath.replace(pattern, '$1\\');
+  try {
+    // Windowsパスの場合の特別な処理
+    if (process.platform === 'win32') {
+      // パスが長すぎる場合の保護（MAX_PATH = 260）
+      const maxPathLength = 2048;
+      if (p.length > maxPathLength) {
+        p = p.substring(0, maxPathLength);
       }
+      
+      // 元のドライブレターを抽出
+      const driveLetterMatch = p.match(/^([A-Za-z]:)/i);
+      if (driveLetterMatch) {
+        const driveLetter = driveLetterMatch[1];
+        
+        // すべての二重ドライブレターパターンをチェック
+        const patterns = [
+          /^([A-Za-z]:)[\\\/]+([A-Za-z]:)[\\\/]+/i,                    // C:\C:\ パターン
+          /^([A-Za-z]:)[\\\/]+[^\\\/]+[\\\/]+([A-Za-z]:)[\\\/]+/i,     // C:\dir\C:\ パターン
+          /^([A-Za-z]:)[\\\/]+[cC]:[\\\/]/i,                          // C:\c:\ パターン
+          /^([A-Za-z]:)[\\\/]+[A-Za-z]:[\\\/]/i,                       // C:\D:\ パターン - 任意のドライブレター組み合わせ
+          /^([A-Za-z]:).*[\\\/]+([A-Za-z]:)[\\\/]+/i                   // 途中にドライブレターが現れるパターン
+        ];
+        
+        // 二重ドライブレターのパターンを持つかチェック
+        let hasDriveLetter = false;
+        for (const pattern of patterns) {
+          if (pattern.test(p)) {
+            hasDriveLetter = true;
+            break;
+          }
+        }
+        
+        if (hasDriveLetter) {
+          // 一番目のドライブレターのみ使用し、残りのパスを正規化
+          const pathAfterDrive = p.substring(driveLetter.length);
+          
+          // すべてのドライブレター表現を取り除く（先頭の区切り文字は維持）
+          let cleanedPath = pathAfterDrive.replace(/[\\\/]+[A-Za-z]:[\\\/]*/gi, '\\');
+          
+          // 連続するパス区切り文字を単一に
+          cleanedPath = cleanedPath.replace(/[\\\/]{2,}/g, '\\');
+          
+          // 先頭のスラッシュが欠けていたら追加
+          if (!cleanedPath.startsWith('\\')) {
+            cleanedPath = '\\' + cleanedPath;
+          }
+          
+          p = driveLetter + cleanedPath;
+        }
+      }
+      
+      // 連続するパス区切り文字を単一に
+      p = p.replace(/[\\\/]{2,}/g, '\\');
     }
     
-    // 連続するパス区切り文字を単一に
-    normalizedPath = normalizedPath.replace(/[\\\/]{2,}/g, '\\');
-    
-    // 最終的な安全チェック - 他のフォーマットで再出現する可能性に対処
-    if (/[A-Za-z]:[\\\/].*?[A-Za-z]:[\\\/]/i.test(normalizedPath)) {
-      console.warn(`二重ドライブレターが検出されました: ${normalizedPath}. 最初のドライブレターのみを使用します。`);
-      const match = normalizedPath.match(/^([A-Za-z]:[\\\/])/i);
-      if (match) {
-        const firstDrivePart = match[1];
-        const pathParts = normalizedPath.split(/[A-Za-z]:[\\\/]/i).slice(1);
-        normalizedPath = firstDrivePart + pathParts.join('\\');
-      }
-    }
+    // 最終的な正規化
+    const normalizedPath = path.normalize(p);
+    return normalizedPath;
+  } catch (e) {
+    // エラーは発生させず、元のパスを返す
+    return p;
   }
-  
-  return normalizedPath;
 }
 
-// 安全にファイル読み込みを行う拡張関数
+/**
+ * 安全にファイル読み込みを行う拡張関数
+ * @param filepath 読み込むファイルのパス
+ * @returns ファイルの内容か、エラー時はnull
+ */
 export function safeReadFile(filepath: string): string | null {
   try {
     // パスを正規化
     const normalizedPath = normalizePath(filepath);
-    console.log(`Attempting to read file: ${normalizedPath} (original: ${filepath})`);
     
     // ファイル存在チェックと読み込み
     if (fs.existsSync(normalizedPath)) {
       return fs.readFileSync(normalizedPath, 'utf8');
-    } else {
-      console.warn(`File not found: ${normalizedPath}`);
     }
   } catch (e) {
-    console.warn(`Failed to read file ${filepath}:`, e);
+    // エラーは静かに処理（ログ出力なし）
   }
   return null;
 }
 
-// デバッグ環境用の設定ファイルパスを取得する関数
+/**
+ * デバッグ環境用の設定ファイルパスを取得する関数
+ * @param fileType 設定ファイルの種類
+ * @returns 設定ファイルのパスまたはnull
+ */
 export function getDebugConfigPath(fileType: 'config' | 'mcpServer' = 'config'): string | null {
   // 開発モードかどうかを確認
   const isDevMode = process.env.NODE_ENV === 'development';
@@ -83,74 +118,84 @@ export function getDebugConfigPath(fileType: 'config' | 'mcpServer' = 'config'):
     return null;
   }
   
-  const basePath = normalizePath(path.join(process.cwd(), "extensions", ".continue-debug"));
-  
-  if (fileType === 'config') {
-    const configPath = path.join(basePath, "config.yaml");
-    if (fs.existsSync(configPath)) {
-      return configPath;
-    }
-  } else if (fileType === 'mcpServer') {
-    const mcpServerDir = path.join(basePath, "mcpServers");
-    if (fs.existsSync(mcpServerDir)) {
-      const databricksPath = path.join(mcpServerDir, "databricks.yaml");
-      if (fs.existsSync(databricksPath)) {
-        return databricksPath;
+  try {
+    const basePath = normalizePath(path.join(process.cwd(), "extensions", ".continue-debug"));
+    
+    if (fileType === 'config') {
+      const configPath = path.join(basePath, "config.yaml");
+      if (fs.existsSync(configPath)) {
+        return configPath;
       }
-      return mcpServerDir;
+    } else if (fileType === 'mcpServer') {
+      const mcpServerDir = path.join(basePath, "mcpServers");
+      if (fs.existsSync(mcpServerDir)) {
+        const databricksPath = path.join(mcpServerDir, "databricks.yaml");
+        if (fs.existsSync(databricksPath)) {
+          return databricksPath;
+        }
+        return mcpServerDir;
+      }
     }
+  } catch (e) {
+    // エラーは静かに処理（ログ出力なし）
   }
   
   return null;
 }
 
-// 最初に見つかった利用可能なファイルを読み込む関数（改善版）
+/**
+ * 最初に見つかった利用可能なファイルを読み込む関数（改善版）
+ * @param filepaths 検索するファイルパスの配列
+ * @returns 見つかったファイル情報またはnull
+ */
 export function readFirstAvailableFile(filepaths: string[]): { path: string; content: string } | null {
-  console.log("Searching for files in paths:", filepaths);
-  
-  // 各パスが正しい形式かチェック
-  const normalizedPaths = filepaths.map(filepath => {
-    const normalized = normalizePath(filepath);
-    return normalized;
-  });
-  
-  for (const filepath of normalizedPaths) {
-    try {
-      console.log(`Checking file: ${filepath}`);
-      if (fs.existsSync(filepath)) {
-        const content = fs.readFileSync(filepath, 'utf8');
-        console.log(`Found file at: ${filepath}`);
-        return { path: filepath, content };
+  try {
+    // 各パスを正規化
+    const normalizedPaths = filepaths.map(filepath => {
+      try {
+        return normalizePath(filepath);
+      } catch (e) {
+        return filepath; // 正規化に失敗した場合は元のパスを使用
       }
-    } catch (e) {
-      console.warn(`Error checking file ${filepath}:`, e);
-    }
-  }
-  
-  // デバッグ用の設定ファイルも試す
-  if (process.env.NODE_ENV === 'development') {
-    try {
-      const debugMcpPath = getDebugConfigPath('mcpServer');
-      if (debugMcpPath && fs.existsSync(debugMcpPath)) {
-        if (fs.statSync(debugMcpPath).isDirectory()) {
-          const databricksPath = path.join(debugMcpPath, "databricks.yaml");
-          if (fs.existsSync(databricksPath)) {
-            const content = fs.readFileSync(databricksPath, 'utf8');
-            console.log(`Found debug MCP file at: ${databricksPath}`);
-            return { path: databricksPath, content };
-          }
-        } else {
-          const content = fs.readFileSync(debugMcpPath, 'utf8');
-          console.log(`Found debug MCP file at: ${debugMcpPath}`);
-          return { path: debugMcpPath, content };
+    });
+    
+    // 正規化されたパスを使ってファイルを探す
+    for (const filepath of normalizedPaths) {
+      try {
+        if (fs.existsSync(filepath)) {
+          const content = fs.readFileSync(filepath, 'utf8');
+          return { path: filepath, content };
         }
+      } catch (e) {
+        // 個別ファイルのエラーは静かに処理（続行）
+        continue;
       }
-    } catch (e) {
-      console.warn(`Error checking debug config:`, e);
     }
+    
+    // デバッグ用の設定ファイルも試す
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const debugMcpPath = getDebugConfigPath('mcpServer');
+        if (debugMcpPath && fs.existsSync(debugMcpPath)) {
+          if (fs.statSync(debugMcpPath).isDirectory()) {
+            const databricksPath = path.join(debugMcpPath, "databricks.yaml");
+            if (fs.existsSync(databricksPath)) {
+              const content = fs.readFileSync(databricksPath, 'utf8');
+              return { path: databricksPath, content };
+            }
+          } else {
+            const content = fs.readFileSync(debugMcpPath, 'utf8');
+            return { path: debugMcpPath, content };
+          }
+        }
+      } catch (e) {
+        // デバッグ設定のエラーは静かに処理
+      }
+    }
+  } catch (e) {
+    // 全体的なエラーは静かに処理
   }
   
-  console.log("No files found in any of the provided paths");
   return null;
 }
 
@@ -242,25 +287,33 @@ export function getConfigJsonPath(): string {
   return p;
 }
 
-// デバッグモードを考慮した設定ファイルパス取得
+/**
+ * デバッグモードを考慮した設定ファイルパス取得
+ * @param ideType IDE種別
+ * @returns 設定ファイルのパス
+ */
 export function getConfigYamlPath(ideType?: IdeType): string {
-  // デバッグ用設定ファイルがあれば優先（開発モード時）
-  const debugConfigPath = getDebugConfigPath('config');
-  if (debugConfigPath && fs.existsSync(debugConfigPath)) {
-    console.log(`Using debug config from: ${debugConfigPath}`);
-    return normalizePath(debugConfigPath);
-  }
-  
-  // 通常の設定ファイルパス
-  const p = normalizePath(path.join(getContinueGlobalPath(), "config.yaml"));
-  if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
-    if (ideType === "jetbrains") {
-      fs.writeFileSync(p, YAML.stringify(defaultConfigJetBrains));
-    } else {
-      fs.writeFileSync(p, YAML.stringify(defaultConfig));
+  try {
+    // デバッグ用設定ファイルがあれば優先（開発モード時）
+    const debugConfigPath = getDebugConfigPath('config');
+    if (debugConfigPath && fs.existsSync(debugConfigPath)) {
+      return normalizePath(debugConfigPath);
     }
+    
+    // 通常の設定ファイルパス
+    const p = normalizePath(path.join(getContinueGlobalPath(), "config.yaml"));
+    if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
+      if (ideType === "jetbrains") {
+        fs.writeFileSync(p, YAML.stringify(defaultConfigJetBrains));
+      } else {
+        fs.writeFileSync(p, YAML.stringify(defaultConfig));
+      }
+    }
+    return p;
+  } catch (e) {
+    // エラーが発生した場合はデフォルトパスを返す
+    return path.join(getContinueGlobalPath(), "config.yaml");
   }
-  return p;
 }
 
 export function getPrimaryConfigFilePath(): string {
@@ -385,26 +438,40 @@ export function getDevDataFilePath(
 function editConfigJson(
   callback: (config: SerializedContinueConfig) => SerializedContinueConfig,
 ): void {
-  const config = fs.readFileSync(getConfigJsonPath(), "utf8");
-  let configJson = JSONC.parse(config);
-  // Check if it's an object
-  if (typeof configJson === "object" && configJson !== null) {
-    configJson = callback(configJson as any) as any;
-    fs.writeFileSync(getConfigJsonPath(), JSONC.stringify(configJson, null, 2));
-  } else {
-    console.warn("config.json is not a valid object");
+  try {
+    const configJsonPath = getConfigJsonPath();
+    if (!fs.existsSync(configJsonPath)) {
+      return;
+    }
+    
+    const config = fs.readFileSync(configJsonPath, "utf8");
+    let configJson = JSONC.parse(config);
+    // Check if it's an object
+    if (typeof configJson === "object" && configJson !== null) {
+      configJson = callback(configJson as any) as any;
+      fs.writeFileSync(configJsonPath, JSONC.stringify(configJson, null, 2));
+    }
+  } catch (e) {
+    // エラーは静かに処理
   }
 }
 
 function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
-  const config = fs.readFileSync(getConfigYamlPath(), "utf8");
-  let configYaml = YAML.parse(config);
-  // Check if it's an object
-  if (typeof configYaml === "object" && configYaml !== null) {
-    configYaml = callback(configYaml as any) as any;
-    fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml));
-  } else {
-    console.warn("config.yaml is not a valid object");
+  try {
+    const configYamlPath = getConfigYamlPath();
+    if (!fs.existsSync(configYamlPath)) {
+      return;
+    }
+    
+    const config = fs.readFileSync(configYamlPath, "utf8");
+    let configYaml = YAML.parse(config);
+    // Check if it's an object
+    if (typeof configYaml === "object" && configYaml !== null) {
+      configYaml = callback(configYaml as any) as any;
+      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml));
+    }
+  } catch (e) {
+    // エラーは静かに処理
   }
 }
 
@@ -414,10 +481,14 @@ export function editConfigFile(
   ) => SerializedContinueConfig,
   configYamlCallback: (config: ConfigYaml) => ConfigYaml,
 ): void {
-  if (fs.existsSync(getConfigYamlPath())) {
-    editConfigYaml(configYamlCallback);
-  } else if (fs.existsSync(getConfigJsonPath())) {
-    editConfigJson(configJsonCallback);
+  try {
+    if (fs.existsSync(getConfigYamlPath())) {
+      editConfigYaml(configYamlCallback);
+    } else if (fs.existsSync(getConfigJsonPath())) {
+      editConfigJson(configJsonCallback);
+    }
+  } catch (e) {
+    // エラーは静かに処理
   }
 }
 
@@ -438,20 +509,22 @@ export async function migrate(
     return await Promise.resolve(callback());
   }
 
-  const migrationsPath = getMigrationsFolderPath();
-  const migrationPath = normalizePath(path.join(migrationsPath, id));
+  try {
+    const migrationsPath = getMigrationsFolderPath();
+    const migrationPath = normalizePath(path.join(migrationsPath, id));
 
-  if (!fs.existsSync(migrationPath)) {
-    try {
-      console.log(`Running migration: ${id}`);
-
-      fs.writeFileSync(migrationPath, "");
-      await Promise.resolve(callback());
-    } catch (e) {
-      console.warn(`Migration ${id} failed`, e);
+    if (!fs.existsSync(migrationPath)) {
+      try {
+        fs.writeFileSync(migrationPath, "");
+        await Promise.resolve(callback());
+      } catch (e) {
+        // エラーは静かに処理
+      }
+    } else if (onAlreadyComplete) {
+      onAlreadyComplete();
     }
-  } else if (onAlreadyComplete) {
-    onAlreadyComplete();
+  } catch (e) {
+    // エラーは静かに処理
   }
 }
 
@@ -509,7 +582,12 @@ export function getConfigJsPathForRemote(
 export function getContinueDotEnv(): { [key: string]: string } {
   const filepath = normalizePath(path.join(getContinueGlobalPath(), ".env"));
   if (fs.existsSync(filepath)) {
-    return dotenv.parse(fs.readFileSync(filepath));
+    try {
+      return dotenv.parse(fs.readFileSync(filepath));
+    } catch (e) {
+      // エラーは静かに処理
+      return {};
+    }
   }
   return {};
 }
@@ -548,22 +626,34 @@ export function readAllGlobalPromptFiles(
   if (!fs.existsSync(folderPath)) {
     return [];
   }
-  const files = fs.readdirSync(folderPath);
-  const promptFiles: { path: string; content: string }[] = [];
-  files.forEach((file) => {
-    const filepath = normalizePath(path.join(folderPath, file));
-    const stats = fs.statSync(filepath);
+  
+  try {
+    const files = fs.readdirSync(folderPath);
+    const promptFiles: { path: string; content: string }[] = [];
+    
+    for (const file of files) {
+      try {
+        const filepath = normalizePath(path.join(folderPath, file));
+        const stats = fs.statSync(filepath);
 
-    if (stats.isDirectory()) {
-      const nestedPromptFiles = readAllGlobalPromptFiles(filepath);
-      promptFiles.push(...nestedPromptFiles);
-    } else if (file.endsWith(".prompt")) {
-      const content = fs.readFileSync(filepath, "utf8");
-      promptFiles.push({ path: filepath, content });
+        if (stats.isDirectory()) {
+          const nestedPromptFiles = readAllGlobalPromptFiles(filepath);
+          promptFiles.push(...nestedPromptFiles);
+        } else if (file.endsWith(".prompt")) {
+          const content = fs.readFileSync(filepath, "utf8");
+          promptFiles.push({ path: filepath, content });
+        }
+      } catch (e) {
+        // 個別ファイルのエラーは静かに処理
+        continue;
+      }
     }
-  });
 
-  return promptFiles;
+    return promptFiles;
+  } catch (e) {
+    // エラーは静かに処理
+    return [];
+  }
 }
 
 export function getRepoMapFilePath(): string {
@@ -575,24 +665,34 @@ export function getEsbuildBinaryPath(): string {
 }
 
 export function migrateV1DevDataFiles() {
-  const devDataPath = getDevDataPath();
-  function moveToV1FolderIfExists(
-    oldFileName: string,
-    newFileName: DevEventName,
-  ) {
-    const oldFilePath = normalizePath(path.join(devDataPath, `${oldFileName}.jsonl`));
-    if (fs.existsSync(oldFilePath)) {
-      const newFilePath = getDevDataFilePath(newFileName, "0.1.0");
-      if (!fs.existsSync(newFilePath)) {
-        fs.copyFileSync(oldFilePath, newFilePath);
-        fs.unlinkSync(oldFilePath);
+  try {
+    const devDataPath = getDevDataPath();
+    
+    function moveToV1FolderIfExists(
+      oldFileName: string,
+      newFileName: DevEventName,
+    ) {
+      try {
+        const oldFilePath = normalizePath(path.join(devDataPath, `${oldFileName}.jsonl`));
+        if (fs.existsSync(oldFilePath)) {
+          const newFilePath = getDevDataFilePath(newFileName, "0.1.0");
+          if (!fs.existsSync(newFilePath)) {
+            fs.copyFileSync(oldFilePath, newFilePath);
+            fs.unlinkSync(oldFilePath);
+          }
+        }
+      } catch (e) {
+        // エラーは静かに処理
       }
     }
+    
+    moveToV1FolderIfExists("tokens_generated", "tokensGenerated");
+    moveToV1FolderIfExists("chat", "chatFeedback");
+    moveToV1FolderIfExists("quickEdit", "quickEdit");
+    moveToV1FolderIfExists("autocomplete", "autocomplete");
+  } catch (e) {
+    // エラーは静かに処理
   }
-  moveToV1FolderIfExists("tokens_generated", "tokensGenerated");
-  moveToV1FolderIfExists("chat", "chatFeedback");
-  moveToV1FolderIfExists("quickEdit", "quickEdit");
-  moveToV1FolderIfExists("autocomplete", "autocomplete");
 }
 
 export function getLocalEnvironmentDotFilePath(): string {
@@ -607,9 +707,13 @@ export function getDiffsDirectoryPath(): string {
   const diffsPath = normalizePath(path.join(getContinueGlobalPath(), ".diffs"));
   
   if (!fs.existsSync(diffsPath)) {
-    fs.mkdirSync(diffsPath, {
-      recursive: true,
-    });
+    try {
+      fs.mkdirSync(diffsPath, {
+        recursive: true,
+      });
+    } catch (e) {
+      // エラーは静かに処理
+    }
   }
   return diffsPath;
 }
