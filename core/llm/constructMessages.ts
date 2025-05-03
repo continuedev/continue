@@ -24,31 +24,31 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   unmodified sections. For example:
 
   \`\`\`language /path/to/file
-  // ... rest of code here ...
+  // ... existing code ...
 
   {{ modified code here }}
 
-  // ... rest of code here ...
+  // ... existing code ...
 
   {{ another modification }}
 
-  // ... rest of code here ...
+  // ... rest of code ...
   \`\`\`
 
   In existing files, you should always restate the function or class that the snippet belongs to:
 
   \`\`\`language /path/to/file
-  // ... rest of code here ...
+  // ... existing code ...
   
   function exampleFunction() {
-    // ... rest of code here ...
+    // ... existing code ...
     
     {{ modified code here }}
     
-    // ... rest of code here ...
+    // ... rest of function ...
   }
   
-  // ... rest of code here ...
+  // ... rest of code ...
   \`\`\`
 
   Since users have access to their complete file, they prefer reading only the
@@ -100,7 +100,8 @@ export function constructMessages(
     | undefined;
 
   const systemMessage = getSystemMessageWithRules({
-    baseSystemMessage: baseChatOrAgentSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
+    baseSystemMessage:
+      baseChatOrAgentSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules,
     userMessage: lastUserMsg,
   });
