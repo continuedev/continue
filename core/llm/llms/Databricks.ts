@@ -20,7 +20,8 @@ import { stripImages } from "../../util/messageContent";
 import DatabricksThinking from "./DatabricksThinking";
 import { registerThinkingPanel, updateThinking, thinkingCompleted } from './thinkingPanel';
 import { setExtensionContext, getExtensionContext } from './index';
-import { normalizePath, safeReadFile, readFirstAvailableFile } from '../../util/paths';
+import { normalizePath, safeReadFile, readFirstAvailableFile, getDebugConfigPath } from '../../util/paths';
+import { parseAssistant } from '../../config/yaml/models';
 
 const isNode = typeof process !== 'undefined' && 
                typeof process.versions !== 'undefined' && 
@@ -125,8 +126,48 @@ export default class Databricks extends OpenAI {
     }
     
     try {
+      // 開発モードかどうかを確認
+      const isDevMode = process.env.NODE_ENV === "development";
+      console.log(`Current mode: ${isDevMode ? "development" : "production"}`);
+      
+      // 環境に合わせた設定パスを取得
       const homeDir = os.homedir();
+      
+      // 1. デバッグモードの場合はデバッグ用の設定ファイルを試す
+      if (isDevMode) {
+        const debugConfigPath = getDebugConfigPath('config');
+        if (debugConfigPath && fs.existsSync(debugConfigPath)) {
+          console.log(`Using debug config from: ${debugConfigPath}`);
+          const fileContents = fs.readFileSync(debugConfigPath, "utf8");
+          const parsed = yaml.load(fileContents) as any;
+          const globalConfig = parsed;
+          
+          if (parsed && typeof parsed === "object" && Array.isArray(parsed.models)) {
+            const modelConfig = (parsed.models as any[]).find(
+              (m) => m.provider === "databricks" && m.model === modelName
+            );
+            
+            if (modelConfig) {
+              const isClaudeModel = DatabricksThinking.isClaudeModel(modelConfig.model);
+              const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(modelConfig.model);
+              
+              if (isClaudeSonnet37) {
+                DatabricksThinking.initializeModelConfig(modelConfig);
+              }
+              
+              Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
+              
+              if (modelConfig && typeof modelConfig.apiKey === "string" && typeof modelConfig.apiBase === "string") {
+                return { modelConfig, globalConfig };
+              }
+            }
+          }
+        }
+      }
+      
+      // 2. 通常の設定ファイルを試す
       const configPath = path.join(homeDir, ".continue", "config.yaml");
+      console.log("Checking standard config at:", configPath);
       
       if (fs.existsSync(configPath)) {
         const fileContents = fs.readFileSync(configPath, "utf8");
@@ -155,78 +196,200 @@ export default class Databricks extends OpenAI {
         }
       }
       
-      // MCPサーバー設定ファイルからの読み込みを試みる
+      // 3. MCPサーバー設定ファイルからの読み込みを試みる
+      console.log("Checking MCP server configurations...");
       try {
-        const mcpServerDir = path.join(homeDir, ".continue", "mcpServers");
-        // 複数の場所を検索
-        const searchPaths = [
-          path.join(mcpServerDir, "databricks.yaml"),
-          path.join(process.cwd(), ".continue", "mcpServers", "databricks.yaml"),
-          path.join(process.cwd(), "extensions", ".continue-debug", "mcpServers", "databricks.yaml")
-        ];
+        // MCP設定を探すパスの準備（優先順位順）
+        const searchPaths = [];
         
-        // 正規化されたパスで検索
-        const normalizedPaths = searchPaths.map(p => normalizePath(p));
+        // デバッグモードの場合はデバッグ用の設定を優先
+        if (isDevMode) {
+          const debugMcpPath = getDebugConfigPath('mcpServer');
+          if (debugMcpPath) {
+            if (fs.statSync(debugMcpPath).isDirectory()) {
+              searchPaths.push(path.join(debugMcpPath, "databricks.yaml"));
+            } else {
+              searchPaths.push(debugMcpPath);
+            }
+          }
+        }
+        
+        // 標準の設定パスを追加
+        const homeMcpServerDir = path.join(homeDir, ".continue", "mcpServers");
+        searchPaths.push(path.join(homeMcpServerDir, "databricks.yaml"));
+        
+        // プロジェクトルートの設定を追加
+        if (path.isAbsolute(process.cwd())) {
+          searchPaths.push(path.join(process.cwd(), ".continue", "mcpServers", "databricks.yaml"));
+        } else {
+          searchPaths.push(path.resolve(process.cwd(), ".continue", "mcpServers", "databricks.yaml"));
+        }
+        
+        // 検索パスを表示
+        console.log("Searching for MCP server config in the following paths:");
+        searchPaths.forEach((p, i) => console.log(`  ${i + 1}. ${p}`));
+        
+        // パスを絶対パスに変換して正規化
+        const normalizedPaths = searchPaths.map(p => {
+          const resolvedPath = path.isAbsolute(p) ? p : path.resolve(p);
+          return normalizePath(resolvedPath);
+        });
+        
+        // 最初に見つかったファイルを読み込む
         const mcpConfig = readFirstAvailableFile(normalizedPaths);
         
         if (mcpConfig) {
           console.log(`Found MCP server config at: ${mcpConfig.path}`);
           const mcpYaml = yaml.load(mcpConfig.content);
           
-          if (mcpYaml && mcpYaml.serving_endpoint) {
-            return {
-              modelConfig: {
-                apiKey: mcpYaml.api_token || process.env.DATABRICKS_TOKEN,
-                apiBase: mcpYaml.serving_endpoint,
-                defaultCompletionOptions: {
-                  thinking: {
-                    type: "enabled",
-                    budget_tokens: 16000
-                  },
-                  stepByStepThinking: true
-                }
-              },
-              globalConfig: null
+          if (mcpYaml) {
+            // MCPサーバー設定からモデル設定を構築
+            const modelConfig = {
+              apiKey: mcpYaml.api_token || process.env.DATABRICKS_TOKEN,
+              apiBase: mcpYaml.serving_endpoint || mcpYaml.host,
+              model: modelName,
+              provider: "databricks",
+              capabilities: ["tool_use", "image_input"],
+              defaultCompletionOptions: {
+                thinking: {
+                  type: "enabled",
+                  budget_tokens: 16000
+                },
+                stepByStepThinking: true,
+                stream: true,
+                maxTokens: 100000,
+                timeout: 600000 // 10分
+              }
             };
+            
+            // モデル設定を検証
+            const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(modelName);
+            Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
+            
+            return { modelConfig, globalConfig: null };
           }
         }
       } catch (e) {
         console.warn("Error loading MCP server config:", e);
       }
       
-      // 環境変数からの読み込み（フォールバック）
+      // 4. 環境変数からの読み込み（最終フォールバック）
       const pat = process.env.DATABRICKS_TOKEN;
       const base = process.env.YOUR_DATABRICKS_URL;
       if (pat && base) {
-        return {
-          modelConfig: {
-            apiKey: pat,
-            apiBase: base,
-          },
-          globalConfig: null
+        console.log("Using Databricks configuration from environment variables");
+        
+        // 環境変数からモデル設定を構築
+        const modelConfig = {
+          apiKey: pat,
+          apiBase: base,
+          model: modelName,
+          provider: "databricks",
+          defaultCompletionOptions: {
+            thinking: {
+              type: "enabled",
+              budget_tokens: 16000
+            },
+            stepByStepThinking: true,
+            stream: true,
+            maxTokens: 100000,
+            timeout: 600000
+          }
         };
+        
+        // モデル設定を検証
+        const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(modelName);
+        Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
+        
+        return { modelConfig, globalConfig: null };
       }
+      
+      // 5. すべてのオプションが失敗した場合、デフォルト設定を使用
+      console.warn("No configuration found, using default Databricks configuration");
+      const defaultConfig = parseAssistant(null);
+      
+      // デフォルト設定を検証
+      Databricks.validateModelConfig(defaultConfig, true);
+      
+      return {
+        modelConfig: {
+          apiKey: "",
+          apiBase: "",
+          model: modelName,
+          ...defaultConfig
+        },
+        globalConfig: null
+      };
       
     } catch (error) {
       console.error("Error loading config from YAML:", error);
+      
+      // エラー発生時もデフォルト設定を提供
+      const defaultConfig = parseAssistant(null);
+      
+      return {
+        modelConfig: {
+          apiKey: "",
+          apiBase: "",
+          model: modelName,
+          ...defaultConfig
+        },
+        globalConfig: null
+      };
     }
-    
-    throw new Error(
-      "Databricks connection information not found. Please configure 'apiKey' and 'apiBase' for the model in .continue/config.yaml."
-    );
   }
 
+  /**
+   * モデル設定のバリデーション（強化版）
+   */
   private static validateModelConfig(config: any, isClaudeSonnet37: boolean): void {
-    if (!config) return;
+    if (!config) {
+      console.warn("Empty model config, creating default configuration");
+      config = parseAssistant(null);
+      return;
+    }
+    
+    // 必須パラメータの確認と警告
+    if (!config.apiKey) {
+      console.warn("Missing required 'apiKey' in model config");
+    }
+    
+    if (!config.apiBase) {
+      console.warn("Missing required 'apiBase' in model config");
+    }
     
     // デフォルト設定のチェックと初期化
     if (!config.defaultCompletionOptions) {
       config.defaultCompletionOptions = {};
     }
     
+    // 思考設定のチェックと初期化
+    if (!config.defaultCompletionOptions.thinking) {
+      config.defaultCompletionOptions.thinking = {
+        type: "enabled",
+        budget_tokens: 16000
+      };
+    } else if (typeof config.defaultCompletionOptions.thinking === 'object') {
+      // 部分的な設定の場合は不足部分を補完
+      const thinking = config.defaultCompletionOptions.thinking;
+      if (!thinking.type) thinking.type = 'enabled';
+      if (!thinking.budget_tokens) thinking.budget_tokens = 16000;
+    } else {
+      // オブジェクトでない場合は完全に置き換え
+      config.defaultCompletionOptions.thinking = {
+        type: 'enabled',
+        budget_tokens: 16000
+      };
+    }
+    
+    // ステップバイステップ思考のデフォルト値
+    if (config.defaultCompletionOptions.stepByStepThinking === undefined) {
+      config.defaultCompletionOptions.stepByStepThinking = true;
+    }
+    
     // ケイパビリティのチェックと初期化
     if (!config.capabilities) {
-      config.capabilities = ["tool_use"];
+      config.capabilities = ["tool_use", "image_input"];
     } else if (!Array.isArray(config.capabilities)) {
       const newCapabilities: string[] = [];
       
@@ -239,6 +402,9 @@ export default class Databricks extends OpenAI {
       if (config.capabilities.chat) {
         newCapabilities.push("chat");
       }
+      if (config.capabilities.imageInput || config.capabilities.image) {
+        newCapabilities.push("image_input");
+      }
       
       config.capabilities = newCapabilities;
     }
@@ -247,7 +413,6 @@ export default class Databricks extends OpenAI {
     if (isClaudeSonnet37) {
       const options = config.defaultCompletionOptions;
       
-      // 思考設定以外の検証
       // ストリーミング設定のデフォルト値
       if (options.stream === undefined) {
         options.stream = true;
@@ -259,6 +424,11 @@ export default class Databricks extends OpenAI {
       } else if (typeof options.timeout !== "number" || options.timeout < 0) {
         options.timeout = 600000;
       }
+      
+      // 最大トークン数のデフォルト値
+      if (options.maxTokens === undefined) {
+        options.maxTokens = 100000;
+      }
     }
   }
 
@@ -268,39 +438,45 @@ export default class Databricks extends OpenAI {
       throw new Error("No model specified for Databricks. Please include a model name in the options.");
     }
     
-    const { modelConfig, globalConfig } = Databricks.loadConfigFromYaml(modelName);
-    
-    if (!modelConfig.apiKey || !modelConfig.apiBase) {
-      throw new Error(
-        "Databricks connection information not found. Please configure 'apiKey' and 'apiBase' for the model in .continue/config.yaml."
-      );
-    }
-    
-    opts = {
-      ...opts,
-      apiKey: opts.apiKey ?? modelConfig.apiKey,
-      apiBase: opts.apiBase ?? modelConfig.apiBase,
-      capabilities: {
-        tools: Array.isArray(modelConfig.capabilities) ? 
-              modelConfig.capabilities.includes("tool_use") : 
-              true,
-        uploadImage: Array.isArray(modelConfig.capabilities) ? 
-                   modelConfig.capabilities.includes("image_input") : 
-                   false
+    try {
+      // 設定読み込み
+      const { modelConfig, globalConfig } = Databricks.loadConfigFromYaml(modelName);
+      
+      if (!modelConfig.apiKey || !modelConfig.apiBase) {
+        throw new Error(
+          "Databricks connection information not found. Please configure 'apiKey' and 'apiBase' for the model in .continue/config.yaml or mcpServers/databricks.yaml."
+        );
       }
-    };
-    
-    // APIベースURLの末尾のスラッシュを削除
-    opts.apiBase = (opts.apiBase ?? "").replace(/\/+$/, "");
-    
-    super(opts);
-    
-    this.modelConfig = modelConfig;
-    this.globalConfig = globalConfig;
-    this.thinking = new DatabricksThinking(modelConfig);
-    
-    // ケイパビリティの検出
-    this.detectModelCapabilities();
+      
+      opts = {
+        ...opts,
+        apiKey: opts.apiKey ?? modelConfig.apiKey,
+        apiBase: opts.apiBase ?? modelConfig.apiBase,
+        capabilities: {
+          tools: Array.isArray(modelConfig.capabilities) ? 
+                modelConfig.capabilities.includes("tool_use") : 
+                true,
+          uploadImage: Array.isArray(modelConfig.capabilities) ? 
+                     modelConfig.capabilities.includes("image_input") : 
+                     false
+        }
+      };
+      
+      // APIベースURLの末尾のスラッシュを削除
+      opts.apiBase = (opts.apiBase ?? "").replace(/\/+$/, "");
+      
+      super(opts);
+      
+      this.modelConfig = modelConfig;
+      this.globalConfig = globalConfig;
+      this.thinking = new DatabricksThinking(modelConfig);
+      
+      // ケイパビリティの検出
+      this.detectModelCapabilities();
+    } catch (error) {
+      console.error("Error during Databricks initialization:", error);
+      throw error;
+    }
   }
   
   /**

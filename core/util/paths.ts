@@ -13,24 +13,60 @@ import Types from "../config/types";
 
 dotenv.config();
 
-// 改善された normalizePath 関数
+// 強化された normalizePath 関数 - パス正規化のバグを修正
 export function normalizePath(p: string): string {
-  // 重複したドライブレターパターンを修正（例：C:\c:\ → C:\）
-  if (p.match(/^[A-Z]:\\[a-zA-Z]:\\/i)) {
-    p = p.replace(/^([A-Z]:\\)[a-zA-Z]:\\/i, '$1');
+  if (!p) return p;
+  
+  // パスをOS標準に変換（基本的な正規化）
+  let normalizedPath = path.normalize(p);
+  
+  // Windowsパスの場合の特別な処理
+  if (process.platform === 'win32') {
+    // 様々なパターンの二重ドライブレターを検出して修正
+    const driveLetterPatterns = [
+      /^([A-Za-z]:)[\\\/]+([A-Za-z]:)[\\\/]+/i,  // C:\C:\ パターン
+      /^([A-Za-z]:)[\\\/]+[^\\\/]+[\\\/]+([A-Za-z]:)[\\\/]+/i,  // C:\dir\C:\ パターン
+      /^([A-Za-z]:)[\\\/]+([A-Za-z]:|[^\\\/]+[\\\/]+[A-Za-z]:)[\\\/]+/i,  // 複合パターン
+      /^([A-Za-z]:).*?[\\\/]+\1[\\\/]+/i,  // 末尾にドライブレターが現れるパターン C:\path\...\C:\
+    ];
+    
+    // パターンを順に適用
+    for (const pattern of driveLetterPatterns) {
+      if (pattern.test(normalizedPath)) {
+        normalizedPath = normalizedPath.replace(pattern, '$1\\');
+      }
+    }
+    
+    // 連続するパス区切り文字を単一に
+    normalizedPath = normalizedPath.replace(/[\\\/]{2,}/g, '\\');
+    
+    // 最終的な安全チェック - 他のフォーマットで再出現する可能性に対処
+    if (/[A-Za-z]:[\\\/].*?[A-Za-z]:[\\\/]/i.test(normalizedPath)) {
+      console.warn(`二重ドライブレターが検出されました: ${normalizedPath}. 最初のドライブレターのみを使用します。`);
+      const match = normalizedPath.match(/^([A-Za-z]:[\\\/])/i);
+      if (match) {
+        const firstDrivePart = match[1];
+        const pathParts = normalizedPath.split(/[A-Za-z]:[\\\/]/i).slice(1);
+        normalizedPath = firstDrivePart + pathParts.join('\\');
+      }
+    }
   }
   
-  // Windowsのドライブ文字を小文字に標準化（例：C:\ → c:\）
-  return p.replace(/^([A-Z]):/i, (match) => match.toLowerCase());
+  return normalizedPath;
 }
 
-// ファイル読み込み関数の実装
+// 安全にファイル読み込みを行う拡張関数
 export function safeReadFile(filepath: string): string | null {
   try {
     // パスを正規化
     const normalizedPath = normalizePath(filepath);
+    console.log(`Attempting to read file: ${normalizedPath} (original: ${filepath})`);
+    
+    // ファイル存在チェックと読み込み
     if (fs.existsSync(normalizedPath)) {
       return fs.readFileSync(normalizedPath, 'utf8');
+    } else {
+      console.warn(`File not found: ${normalizedPath}`);
     }
   } catch (e) {
     console.warn(`Failed to read file ${filepath}:`, e);
@@ -38,14 +74,83 @@ export function safeReadFile(filepath: string): string | null {
   return null;
 }
 
-// 最初に見つかった利用可能なファイルを読み込む関数
-export function readFirstAvailableFile(filepaths: string[]): { path: string; content: string } | null {
-  for (const filepath of filepaths) {
-    const content = safeReadFile(filepath);
-    if (content !== null) {
-      return { path: filepath, content };
+// デバッグ環境用の設定ファイルパスを取得する関数
+export function getDebugConfigPath(fileType: 'config' | 'mcpServer' = 'config'): string | null {
+  // 開発モードかどうかを確認
+  const isDevMode = process.env.NODE_ENV === 'development';
+  
+  if (!isDevMode) {
+    return null;
+  }
+  
+  const basePath = normalizePath(path.join(process.cwd(), "extensions", ".continue-debug"));
+  
+  if (fileType === 'config') {
+    const configPath = path.join(basePath, "config.yaml");
+    if (fs.existsSync(configPath)) {
+      return configPath;
+    }
+  } else if (fileType === 'mcpServer') {
+    const mcpServerDir = path.join(basePath, "mcpServers");
+    if (fs.existsSync(mcpServerDir)) {
+      const databricksPath = path.join(mcpServerDir, "databricks.yaml");
+      if (fs.existsSync(databricksPath)) {
+        return databricksPath;
+      }
+      return mcpServerDir;
     }
   }
+  
+  return null;
+}
+
+// 最初に見つかった利用可能なファイルを読み込む関数（改善版）
+export function readFirstAvailableFile(filepaths: string[]): { path: string; content: string } | null {
+  console.log("Searching for files in paths:", filepaths);
+  
+  // 各パスが正しい形式かチェック
+  const normalizedPaths = filepaths.map(filepath => {
+    const normalized = normalizePath(filepath);
+    return normalized;
+  });
+  
+  for (const filepath of normalizedPaths) {
+    try {
+      console.log(`Checking file: ${filepath}`);
+      if (fs.existsSync(filepath)) {
+        const content = fs.readFileSync(filepath, 'utf8');
+        console.log(`Found file at: ${filepath}`);
+        return { path: filepath, content };
+      }
+    } catch (e) {
+      console.warn(`Error checking file ${filepath}:`, e);
+    }
+  }
+  
+  // デバッグ用の設定ファイルも試す
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const debugMcpPath = getDebugConfigPath('mcpServer');
+      if (debugMcpPath && fs.existsSync(debugMcpPath)) {
+        if (fs.statSync(debugMcpPath).isDirectory()) {
+          const databricksPath = path.join(debugMcpPath, "databricks.yaml");
+          if (fs.existsSync(databricksPath)) {
+            const content = fs.readFileSync(databricksPath, 'utf8');
+            console.log(`Found debug MCP file at: ${databricksPath}`);
+            return { path: databricksPath, content };
+          }
+        } else {
+          const content = fs.readFileSync(debugMcpPath, 'utf8');
+          console.log(`Found debug MCP file at: ${debugMcpPath}`);
+          return { path: debugMcpPath, content };
+        }
+      }
+    } catch (e) {
+      console.warn(`Error checking debug config:`, e);
+    }
+  }
+  
+  console.log("No files found in any of the provided paths");
   return null;
 }
 
@@ -59,10 +164,6 @@ const CONTINUE_GLOBAL_DIR = (() => {
   }
   return path.join(os.homedir(), ".continue");
 })();
-
-// export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
-//   return config;
-// }`;
 
 export const DEFAULT_CONFIG_TS_CONTENTS = `export function modifyConfig(config: Config): Config {
   return config;
@@ -141,7 +242,16 @@ export function getConfigJsonPath(): string {
   return p;
 }
 
+// デバッグモードを考慮した設定ファイルパス取得
 export function getConfigYamlPath(ideType?: IdeType): string {
+  // デバッグ用設定ファイルがあれば優先（開発モード時）
+  const debugConfigPath = getDebugConfigPath('config');
+  if (debugConfigPath && fs.existsSync(debugConfigPath)) {
+    console.log(`Using debug config from: ${debugConfigPath}`);
+    return normalizePath(debugConfigPath);
+  }
+  
+  // 通常の設定ファイルパス
   const p = normalizePath(path.join(getContinueGlobalPath(), "config.yaml"));
   if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
     if (ideType === "jetbrains") {
@@ -494,9 +604,6 @@ export function getStagingEnvironmentDotFilePath(): string {
 }
 
 export function getDiffsDirectoryPath(): string {
-  // 以前コメントアウトされていた部分を正式に実装
-  // この関数では、もともと「.replace(/^C:/, "c:")」という処理が注釈としてコメントアウトされていた
-  // normalizePath関数を使用して正しくパスを処理する
   const diffsPath = normalizePath(path.join(getContinueGlobalPath(), ".diffs"));
   
   if (!fs.existsSync(diffsPath)) {

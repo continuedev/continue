@@ -1,4 +1,4 @@
-import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
+import { getContinueRcPath, getTsConfigPath, normalizePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
@@ -13,26 +13,65 @@ import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
 /**
- * Tries to load a module from multiple possible paths
- * @param basePaths Array of base paths to try
- * @param modulePath Relative path to the module
- * @returns The module if found, or null if not found
+ * コマンドが既に登録されているか確認する関数
+ * @param commandId 確認するコマンドID
+ * @returns 登録済みの場合はtrue
  */
-function tryLoadModule(basePaths: string[], modulePath: string): any | null {
-  for (const basePath of basePaths) {
+async function isCommandRegistered(commandId: string): Promise<boolean> {
+  try {
+    const commands = await vscode.commands.getCommands();
+    return commands.includes(commandId);
+  } catch (error) {
+    console.error(`Error checking if command exists: ${error}`);
+    return false;
+  }
+}
+
+/**
+ * コマンドを安全に登録する関数
+ * @param context 拡張機能のコンテキスト
+ * @param commandId コマンドID
+ * @param callback コマンドが実行されたときのコールバック
+ */
+async function safeRegisterCommand(
+  context: vscode.ExtensionContext,
+  commandId: string,
+  callback: (...args: any[]) => any
+): Promise<void> {
+  try {
+    // コマンドが既に登録されているか確認
+    const exists = await isCommandRegistered(commandId);
+    if (!exists) {
+      const disposable = vscode.commands.registerCommand(commandId, callback);
+      context.subscriptions.push(disposable);
+      console.log(`Registered command: ${commandId}`);
+    } else {
+      console.log(`Command ${commandId} already exists, skipping registration`);
+    }
+  } catch (error) {
+    console.error(`Error registering command ${commandId}: ${error}`);
+  }
+}
+
+/**
+ * 指定されたモジュールを安全に読み込む関数
+ * @param paths モジュールが存在する可能性のあるパスの配列
+ * @returns モジュールが見つかればそのモジュールを、見つからなければnullを返す
+ */
+function loadModuleSafely(paths: string[]): any | null {
+  for (const modulePath of paths) {
     try {
-      const fullPath = path.join(basePath, modulePath);
-      
       // パスが存在するか確認
-      if (fs.existsSync(fullPath)) {
-        console.log(`Module found at: ${fullPath}`);
-        return require(fullPath);
+      const normalizedPath = normalizePath(modulePath);
+      if (fs.existsSync(normalizedPath)) {
+        console.log(`Module found at: ${normalizedPath}`);
+        // モジュールをrequireで読み込む
+        return require(normalizedPath);
       }
-    } catch (e) {
-      console.log(`Failed to load module from ${path.join(basePath, modulePath)}:`, e);
+    } catch (error) {
+      console.log(`Failed to load module from ${modulePath}:`, error);
     }
   }
-  
   return null;
 }
 
@@ -46,9 +85,9 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   setupInlineTips(context);
   
   // Register core commands first to ensure they're available
-  // Register showThinkingPanel command explicitly
-  context.subscriptions.push(
-    vscode.commands.registerCommand('continue.showThinkingPanel', () => {
+  await Promise.all([
+    // コマンドを安全に登録
+    safeRegisterCommand(context, 'continue.showThinkingPanel', () => {
       try {
         vscode.commands.executeCommand('continue.forceRefreshThinking', true);
       } catch (error) {
@@ -56,17 +95,17 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       }
     }),
     
-    vscode.commands.registerCommand('continue.viewLogs', () => {
+    safeRegisterCommand(context, 'continue.viewLogs', () => {
       try {
         const logPath = path.join(context.globalStorageUri.fsPath, 'logs');
-        vscode.commands.executeCommand('workbench.action.openFolder', vscode.Uri.file(logPath));
+        vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(logPath));
       } catch (error) {
         console.warn("Error viewing logs:", error);
         vscode.window.showErrorMessage(`Could not open logs: ${error.message}`);
       }
     }),
     
-    vscode.commands.registerCommand('continue.newSession', () => {
+    safeRegisterCommand(context, 'continue.newSession', () => {
       try {
         // VsCodeExtension インスタンスから新しいセッションを開始
         vscode.commands.executeCommand('continue.sidebar.newSession');
@@ -74,56 +113,60 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         console.warn("Error creating new session:", error);
         vscode.window.showErrorMessage(`Could not create new session: ${error.message}`);
       }
+    }),
+    
+    // Thinking Panel関連のコマンドを登録
+    safeRegisterCommand(context, 'continue.toggleThinkingPanel', () => {
+      vscode.commands.executeCommand('continue.showThinkingPanel');
     })
-  );
+  ]);
   
   // Register the thinking panel for Claude 3.7 Sonnet
-  registerThinkingPanel(context);
+  try {
+    registerThinkingPanel(context);
+    console.log("ThinkingPanelProvider initialized");
+  } catch (error) {
+    console.warn("Error initializing thinking panel provider:", error);
+  }
   
   // コア系のモジュールからも利用できるように、コンテキストをグローバルに設定
   try {
-    // 複数の可能性のあるパスを定義
-    const possibleBasePaths = [
-      context.extensionPath,                         // 通常のパス
-      path.resolve(context.extensionPath, '..'),     // 1レベル上
-      path.resolve(context.extensionPath, '..', '..'), // 2レベル上
-      path.resolve(context.extensionPath, '..', '..', '..') // 3レベル上
-    ];
-    
-    // 複数の可能性のあるモジュールパスを定義
+    // より堅牢なモジュール読み込みパスの定義
+    const extensionRootPath = normalizePath(context.extensionPath);
     const possibleModulePaths = [
-      path.join('core', 'llm', 'llms', 'index.js'),
-      path.join('extensions', 'vscode', 'core', 'llm', 'llms', 'index.js'),
-      path.join('core', 'llm', 'llms', 'index.ts'),
-      path.join('extensions', 'vscode', 'core', 'llm', 'llms', 'index.ts')
+      // JavaScriptビルド済みファイル
+      path.join(extensionRootPath, 'out', 'core', 'llm', 'llms', 'index.js'),
+      path.join(extensionRootPath, 'dist', 'core', 'llm', 'llms', 'index.js'),
+      // 上位ディレクトリのビルド済みファイル
+      path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'index.js'),
+      path.join(extensionRootPath, '..', '..', 'core', 'llm', 'llms', 'index.js'),
+      // TypeScriptソースファイル（直接読み込める場合）
+      path.join(extensionRootPath, 'core', 'llm', 'llms', 'index.ts'),
+      path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'index.ts'),
+      // 個別のThinkingPanelモジュール
+      path.join(extensionRootPath, 'out', 'core', 'llm', 'llms', 'thinkingPanel.js'),
+      path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'thinkingPanel.js')
     ];
     
     console.log("Trying to load core module from various paths...");
     
-    // すべての可能性のある組み合わせを試す
-    let coreModule = null;
-    for (const modulePath of possibleModulePaths) {
-      coreModule = tryLoadModule(possibleBasePaths, modulePath);
-      if (coreModule) {
-        console.log(`Successfully loaded core module from ${modulePath}`);
-        break;
-      }
-    }
+    // モジュールの読み込みを試行
+    const coreModule = loadModuleSafely(possibleModulePaths);
     
-    if (!coreModule) {
-      // 最後の手段として、直接ソースディレクトリからみる
-      const directSourcePath = path.resolve(context.extensionPath, '..', '..', 'core', 'llm', 'llms', 'Databricks.js');
-      if (fs.existsSync(directSourcePath)) {
-        console.log(`Using direct source path: ${directSourcePath}`);
-        coreModule = require(directSourcePath);
+    if (coreModule) {
+      // setExtensionContextメソッドが存在する場合は呼び出す
+      if (typeof coreModule.setExtensionContext === 'function') {
+        coreModule.setExtensionContext(context);
+        console.log("Extension context registered for Claude Thinking Panel functionality");
+      } else if (coreModule.registerThinkingPanel && typeof coreModule.registerThinkingPanel === 'function') {
+        // registerThinkingPanel関数が利用可能な場合は直接呼び出す
+        coreModule.registerThinkingPanel(context);
+        console.log("Registered thinking panel through core module");
+      } else {
+        console.warn("setExtensionContext is not available in core module");
       }
-    }
-    
-    if (coreModule && typeof coreModule.setExtensionContext === 'function') {
-      coreModule.setExtensionContext(context);
-      console.log("Databricks extension context registered for Claude Thinking Panel functionality");
     } else {
-      console.warn("setExtensionContext is not available in core module");
+      console.warn("Could not load core module from any path");
     }
   } catch (error) {
     console.error("Failed to register extension context:", error);
@@ -158,13 +201,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     // Mark that we've configured the YAML schema
     context.globalState.update("yamlSchemaConfigured", true);
   }
-
-  // Register additional command for toggling the thinking panel
-  context.subscriptions.push(
-    vscode.commands.registerCommand('continue.toggleThinkingPanel', () => {
-      vscode.commands.executeCommand('continue.showThinkingPanel');
-    })
-  );
 
   const api = new VsCodeContinueApi(vscodeExtension);
   const continuePublicApi = {

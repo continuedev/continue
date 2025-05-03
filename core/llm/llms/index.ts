@@ -21,8 +21,6 @@ import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
-import Databricks, { registerThinkingPanel } from "./Databricks";
-import DatabricksThinking from "./DatabricksThinking";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
@@ -65,6 +63,10 @@ import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 
+// Databricksは循環参照になるため最後にインポート
+import Databricks from "./Databricks";
+import DatabricksThinking from "./DatabricksThinking";
+
 // ThinkingConfig インターフェースの定義
 export interface ThinkingConfig {
   type: "enabled" | "disabled" | "auto";
@@ -83,8 +85,10 @@ export interface ThinkingContent {
   };
 }
 
-// ThinkingPanel関連の機能をエクスポート
-export { registerThinkingPanel, DatabricksThinking };
+// ThinkingPanel関連の機能
+// 直接Databricksからインポートせず、thinkingPanelを使用
+import { registerThinkingPanel, updateThinking, thinkingCompleted } from './thinkingPanel';
+export { registerThinkingPanel, updateThinking, thinkingCompleted, DatabricksThinking };
 
 // VSCode拡張のコンテキストを保持する変数
 let _extensionContext: any = null;
