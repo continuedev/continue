@@ -174,6 +174,25 @@ export class VerticalDiffHandler implements vscode.Disposable {
     );
   }
 
+  private async deleteRangeLines(ranges: vscode.Range[]) {
+    await this.editor.edit(
+      (editBuilder) => {
+        for (const range of ranges) {
+          editBuilder.delete(
+            new vscode.Range(
+              range.start,
+              new vscode.Position(range.end.line + 1, 0),
+            ),
+          );
+        }
+      },
+      {
+        undoStopAfter: false,
+        undoStopBefore: false,
+      },
+    );
+  }
+
   private updateIndexLineDecorations() {
     if (this.options.instant) {
       // We don't show progress on instant apply
@@ -205,22 +224,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
     this.editor.setDecorations(indexDecorationType, []);
   }
 
-  // public getLineDeltaBeforeLine(line: number) {
-  //   // Returns the number of lines removed from a file when the diff currently active is closed
-  //   let totalLineDelta = 0;
-  //   for (const range of this.addedLineDecorations
-  //     .getRanges()
-  //     .sort((a, b) => a.start.line - b.start.line)) {
-  //     if (range.start.line > line) {
-  //       break;
-  //     }
-
-  //     totalLineDelta -= range.end.line - range.start.line + 1;
-  //   }
-
-  //   return totalLineDelta;
-  // }
-
   async clear(accept: boolean) {
     vscode.commands.executeCommand(
       "setContext",
@@ -228,36 +231,17 @@ export class VerticalDiffHandler implements vscode.Disposable {
       false,
     );
 
-    const deleteRangeLines = async (ranges: vscode.Range[]) => {
-      await this.editor.edit(
-        (editBuilder) => {
-          for (const range of ranges) {
-            editBuilder.delete(
-              new vscode.Range(
-                range.start,
-                new vscode.Position(range.end.line + 1, 0),
-              ),
-            );
-          }
-        },
-        {
-          undoStopAfter: false,
-          undoStopBefore: false,
-        },
-      );
-    };
-
     const removedRanges = this.removedLineDecorations.ranges;
     if (accept) {
       // Accept all: delete all the red ranges and clear green decorations
-      await deleteRangeLines(removedRanges.map((r) => r.range));
+      await this.deleteRangeLines(removedRanges.map((r) => r.range));
     } else {
       // Reject all: Re-insert red lines, delete green ones
       for (const r of removedRanges) {
-        await deleteRangeLines([r.range]);
+        await this.deleteRangeLines([r.range]);
         await this.insertTextAboveLine(r.range.start.line, r.line);
       }
-      await deleteRangeLines(this.addedLineDecorations.ranges);
+      await this.deleteRangeLines(this.addedLineDecorations.ranges);
     }
 
     this.clearDecorations();
