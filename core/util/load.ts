@@ -5,7 +5,6 @@ import path from "path";
 
 import {
   ConfigResult,
-  ConfigValidationError,
   ModelRole,
 } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
@@ -67,13 +66,13 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
   isSupportedLanceDbCpuTargetForLinux,
   serializePromptTemplates,
 } from "./util";
-import { validateConfig } from "./validation.js";
+import { validateConfig, ConfigValidationError } from "./validation";
+import { modifyAnyConfigWithSharedConfig, AnyConfig } from "./sharedConfig";
 
 export function resolveSerializedConfig(
   filepath: string,
@@ -124,7 +123,7 @@ function loadSerializedConfig(
 
   const errors = validateConfig(config);
 
-  if (errors?.some((error) => error.fatal)) {
+  if (errors?.some((error: ConfigValidationError) => error.fatal)) {
     return {
       errors,
       config: undefined,
@@ -627,7 +626,6 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     contextLength: llm.contextLength,
     template: llm.template,
     completionOptions: llm.completionOptions,
-    baseAgentSystemMessage: llm.baseAgentSystemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),
@@ -882,10 +880,10 @@ async function loadContinueConfigFromJson(
     return { errors, config: undefined, configLoadInterrupted: true };
   }
 
-  // Apply shared config
-  // TODO: override several of these values with user/org shared config
+  // 共有設定を適用
   const sharedConfig = new GlobalContext().getSharedConfig();
-  const withShared = modifyAnyConfigWithSharedConfig(serialized, sharedConfig);
+  // withSharedを正しい型にキャスト
+  const withShared = modifyAnyConfigWithSharedConfig(serialized, sharedConfig) as SerializedContinueConfig;
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(withShared, ide);

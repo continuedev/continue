@@ -63,9 +63,17 @@ import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 
-// Databricksは循環参照になるため最後にインポート
-import Databricks from "./Databricks";
-import DatabricksThinking from "./DatabricksThinking";
+// ThinkingPanel関連のコマンド定数
+export const THINKING_COMMANDS = {
+  RESET_THINKING_PANEL: 'continue.resetThinkingPanel',
+  APPEND_THINKING_CHUNK: 'continue.appendThinkingChunk',
+  FORCE_REFRESH_THINKING: 'continue.forceRefreshThinking',
+  THINKING_COMPLETED: 'continue.thinkingCompleted',
+  SHOW_THINKING_PANEL: 'continue.showThinkingPanel',
+  VIEW_LOGS: 'continue.viewLogs',
+  NEW_SESSION: 'continue.newSession',
+  TOGGLE_THINKING_PANEL: 'continue.toggleThinkingPanel'
+};
 
 // ThinkingConfig インターフェースの定義
 export interface ThinkingConfig {
@@ -88,17 +96,26 @@ export interface ThinkingContent {
 // ThinkingPanel関連の機能
 // 直接Databricksからインポートせず、thinkingPanelを使用
 import { registerThinkingPanel, updateThinking, thinkingCompleted } from './thinkingPanel';
-export { registerThinkingPanel, updateThinking, thinkingCompleted, DatabricksThinking };
+export { registerThinkingPanel, updateThinking, thinkingCompleted };
 
 // VSCode拡張のコンテキストを保持する変数
 let _extensionContext: any = null;
 
 // 拡張機能のコンテキストを設定する関数
 export function setExtensionContext(context: any) {
+  console.log("Setting extension context in core/llm/llms/index.ts");
   _extensionContext = context;
+  
   // ThinkingPanelのセットアップ
   if (context) {
-    registerThinkingPanel(context);
+    try {
+      registerThinkingPanel(context);
+      console.log("Thinking panel registered via setExtensionContext");
+    } catch (e) {
+      console.error("Error registering thinking panel:", e);
+    }
+  } else {
+    console.warn("Extension context is null or undefined");
   }
 }
 
@@ -106,6 +123,11 @@ export function setExtensionContext(context: any) {
 export function getExtensionContext() {
   return _extensionContext;
 }
+
+// Databricksは循環参照を避けるため個別にインポート
+import Databricks from "./Databricks";
+import DatabricksThinking from "./DatabricksThinking";
+export { DatabricksThinking };
 
 export const LLMClasses = [
   Anthropic,

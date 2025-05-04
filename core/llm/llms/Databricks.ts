@@ -1,11 +1,36 @@
-let vscode: any = undefined;
-try {
-  if (typeof window !== 'undefined' && (window as any).vscode) {
-    vscode = (window as any).vscode;
-  } else if (typeof window !== 'undefined' && 'acquireVsCodeApi' in window) {
-    vscode = (window as any).acquireVsCodeApi();
+// VSCode API初期化の安全な実装 - Node.js環境とブラウザ環境の区別を強化
+let vscodeApi: any = undefined;
+
+// Node.js環境かどうかの検出を強化
+const isNode = typeof process !== 'undefined' && 
+               typeof process.versions !== 'undefined' && 
+               typeof process.versions.node !== 'undefined';
+
+// ブラウザ環境の場合のみwindowオブジェクトを参照
+if (!isNode) {
+  try {
+    if (typeof window !== 'undefined') {
+      // windowオブジェクトを安全に参照
+      const win = window as any;
+      
+      // vscodeオブジェクトが存在する場合はそれを使用
+      if (win.vscode) {
+        vscodeApi = win.vscode;
+      } 
+      // acquireVsCodeApi関数が存在する場合はそれを呼び出す
+      else if (typeof win.acquireVsCodeApi === 'function') {
+        try {
+          // 直接name属性を変更せず、関数を実行結果を取得
+          vscodeApi = win.acquireVsCodeApi();
+        } catch (apiError) {
+          console.warn("Error calling acquireVsCodeApi:", apiError);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Error initializing VSCode API in browser environment:", e);
   }
-} catch (e) {}
+}
 
 import OpenAI from "./OpenAI";
 import {
@@ -20,13 +45,16 @@ import { stripImages } from "../../util/messageContent";
 import DatabricksThinking from "./DatabricksThinking";
 import { registerThinkingPanel, updateThinking, thinkingCompleted } from './thinkingPanel';
 import { setExtensionContext, getExtensionContext } from './index';
-import { normalizePath, safeReadFile, readFirstAvailableFile, getDebugConfigPath } from '../../util/paths';
+import { 
+  normalizePath, 
+  safeReadFile, 
+  readFirstAvailableFile, 
+  getDebugConfigPath,
+  safeJoinPath
+} from '../../util/paths';
 import { parseAssistant } from '../../config/yaml/models';
 
-const isNode = typeof process !== 'undefined' && 
-               typeof process.versions !== 'undefined' && 
-               typeof process.versions.node !== 'undefined';
-
+// Node.js環境での必要なモジュール読み込み
 let fs: any = null;
 let path: any = null;
 let os: any = null;
@@ -42,17 +70,20 @@ if (isNode) {
     console.error("Error loading Node.js modules:", error);
   }
 } else {
+  // ブラウザ環境用のスタブ実装
   fs = {
     existsSync: () => false,
     readFileSync: () => '',
     writeFileSync: () => undefined,
     appendFileSync: () => undefined,
-    mkdirSync: () => undefined
+    mkdirSync: () => undefined,
+    statSync: () => ({ isDirectory: () => false })
   };
   path = {
     join: (...args: string[]) => args.join('/'),
     dirname: (p: string) => p.split('/').slice(0, -1).join('/'),
-    isAbsolute: (p: string) => p.startsWith('/') || /^[A-Z]:[\\\/]/.test(p)
+    isAbsolute: (p: string) => p.startsWith('/') || /^[A-Za-z]:[\\\/]/.test(p),
+    resolve: (...args: string[]) => args.join('/')
   };
   os = { homedir: () => '/' };
   yaml = { load: () => ({}) };
@@ -131,7 +162,17 @@ export default class Databricks extends OpenAI {
       console.log(`Current mode: ${isDevMode ? "development" : "production"}`);
       
       // 環境に合わせた設定パスを取得
-      const homeDir = os.homedir();
+      let homeDir = "";
+      try {
+        homeDir = os.homedir();
+        if (!homeDir) {
+          console.warn("Home directory path is empty, using fallback.");
+          homeDir = process.env.HOME || process.env.USERPROFILE || "/";
+        }
+      } catch (e) {
+        console.error("Error getting home directory:", e);
+        homeDir = process.env.HOME || process.env.USERPROFILE || "/";
+      }
       
       // 1. デバッグモードの場合はデバッグ用の設定ファイルを試す
       if (isDevMode) {
@@ -166,10 +207,18 @@ export default class Databricks extends OpenAI {
       }
       
       // 2. 通常の設定ファイルを試す
-      const configPath = path.join(homeDir, ".continue", "config.yaml");
+      let configPath;
+      try {
+        configPath = safeJoinPath(homeDir, ".continue", "config.yaml");
+      } catch (e) {
+        console.error("Error joining config path:", e);
+        // フォールバックとして直接パスを構築
+        configPath = homeDir + "/.continue/config.yaml";
+      }
+      
       console.log("Checking standard config at:", configPath);
       
-      if (fs.existsSync(configPath)) {
+      if (configPath && fs.existsSync(configPath)) {
         const fileContents = fs.readFileSync(configPath, "utf8");
         const parsed = yaml.load(fileContents) as any;
         const globalConfig = parsed;
@@ -206,37 +255,87 @@ export default class Databricks extends OpenAI {
         if (isDevMode) {
           const debugMcpPath = getDebugConfigPath('mcpServer');
           if (debugMcpPath) {
-            if (fs.statSync(debugMcpPath).isDirectory()) {
-              searchPaths.push(path.join(debugMcpPath, "databricks.yaml"));
-            } else {
-              searchPaths.push(debugMcpPath);
+            try {
+              const stats = fs.statSync(debugMcpPath);
+              if (stats.isDirectory()) {
+                let databricksPath;
+                try {
+                  databricksPath = safeJoinPath(debugMcpPath, "databricks.yaml");
+                } catch (e) {
+                  console.error("Error joining debug databricks path:", e);
+                  databricksPath = debugMcpPath + "/databricks.yaml";
+                }
+                console.debug(`[PATH DEBUG] Debug databricks path: ${databricksPath}`);
+                if (databricksPath) {
+                  searchPaths.push(databricksPath);
+                }
+              } else {
+                searchPaths.push(debugMcpPath);
+              }
+            } catch (e) {
+              console.error("Error checking debug MCP path:", e);
             }
           }
         }
         
         // 標準の設定パスを追加
-        const homeMcpServerDir = path.join(homeDir, ".continue", "mcpServers");
-        searchPaths.push(path.join(homeMcpServerDir, "databricks.yaml"));
-        
-        // プロジェクトルートの設定を追加
-        if (path.isAbsolute(process.cwd())) {
-          searchPaths.push(path.join(process.cwd(), ".continue", "mcpServers", "databricks.yaml"));
-        } else {
-          searchPaths.push(path.resolve(process.cwd(), ".continue", "mcpServers", "databricks.yaml"));
+        let homeMcpServerDir;
+        try {
+          homeMcpServerDir = safeJoinPath(homeDir, ".continue", "mcpServers");
+        } catch (e) {
+          console.error("Error joining MCP server directory path:", e);
+          homeMcpServerDir = homeDir + "/.continue/mcpServers";
         }
         
-        // 検索パスを表示
-        console.log("Searching for MCP server config in the following paths:");
-        searchPaths.forEach((p, i) => console.log(`  ${i + 1}. ${p}`));
+        let homeDatabricksPath;
+        try {
+          homeDatabricksPath = safeJoinPath(homeMcpServerDir, "databricks.yaml");
+        } catch (e) {
+          console.error("Error joining home databricks path:", e);
+          homeDatabricksPath = homeMcpServerDir + "/databricks.yaml";
+        }
         
-        // パスを絶対パスに変換して正規化
-        const normalizedPaths = searchPaths.map(p => {
-          const resolvedPath = path.isAbsolute(p) ? p : path.resolve(p);
-          return normalizePath(resolvedPath);
+        if (homeDatabricksPath) {
+          searchPaths.push(homeDatabricksPath);
+        }
+        
+        // プロジェクトルートの設定を追加
+        const cwdPath = process.cwd();
+        console.debug(`[PATH DEBUG] Current working directory: ${cwdPath}`);
+        
+        // ルートパスからの設定パスを追加
+        if (cwdPath) {
+          let cwdMcpServerPath;
+          try {
+            cwdMcpServerPath = safeJoinPath(cwdPath, ".continue", "mcpServers", "databricks.yaml");
+          } catch (e) {
+            console.error("Error joining CWD MCP server path:", e);
+            cwdMcpServerPath = cwdPath + "/.continue/mcpServers/databricks.yaml";
+          }
+          
+          if (cwdMcpServerPath) {
+            searchPaths.push(cwdMcpServerPath);
+          }
+        }
+        
+        // 検索パスを表示（詳細情報付き）
+        console.log("Searching for MCP server config in the following paths:");
+        searchPaths.forEach((p, i) => {
+          if (!p) {
+            console.log(`  ${i + 1}. [Invalid path]`);
+            return;
+          }
+          
+          const hasDrive = path.isAbsolute(p);
+          const hasDoubleDrive = /[A-Za-z]:[\\\/].*[A-Za-z]:[\\\/]/i.test(p);
+          console.log(`  ${i + 1}. ${p} (Absolute: ${hasDrive ? 'Yes' : 'No'}, Double drive: ${hasDoubleDrive ? '⚠️ YES!' : 'No'})`);
         });
         
+        // 無効なパスを除去
+        const validSearchPaths = searchPaths.filter(p => p);
+        
         // 最初に見つかったファイルを読み込む
-        const mcpConfig = readFirstAvailableFile(normalizedPaths);
+        const mcpConfig = validSearchPaths.length > 0 ? readFirstAvailableFile(validSearchPaths) : null;
         
         if (mcpConfig) {
           console.log(`Found MCP server config at: ${mcpConfig.path}`);
@@ -538,16 +637,22 @@ export default class Databricks extends OpenAI {
   }
 
   private static convertToolDefinitionsForDatabricks(tools: any[]): any[] {
+    if (!tools || !Array.isArray(tools) || tools.length === 0) {
+      return [];
+    }
+    
     return tools.map(tool => {
+      if (!tool) return null;
+      
       return {
         type: "function",
         function: {
-          name: tool.name || tool.function?.name,
-          description: tool.description || tool.function?.description,
-          parameters: tool.parameters || tool.function?.parameters
+          name: tool.name || tool.function?.name || "unknown_function",
+          description: tool.description || tool.function?.description || "",
+          parameters: tool.parameters || tool.function?.parameters || {}
         }
       };
-    });
+    }).filter(Boolean); // nullを除外
   }
 
   private convertArgs(options: CompletionOptions): any {
@@ -573,11 +678,20 @@ export default class Databricks extends OpenAI {
   }
 
   private convertMessages(msgs: ChatMessage[]): any[] {
+    if (!msgs || !Array.isArray(msgs)) {
+      console.warn("Invalid or missing messages array");
+      return [];
+    }
+    
     // roleが"system"でない、contentを持つメッセージだけをフィルタリング
-    const filteredMessages = msgs.filter(m => m.role !== "system" && !!m.content);
+    const filteredMessages = msgs.filter(m => m && m.role !== "system" && !!m.content);
     
     // メッセージ変換
     const messages = filteredMessages.map((message) => {
+      if (!message) {
+        return { role: "user", content: "" };
+      }
+      
       if (typeof message.content === "string") {
         return {
           role: message.role === "user" ? "user" : "assistant",
@@ -588,7 +702,7 @@ export default class Databricks extends OpenAI {
           role: "assistant",
           content: message.content || "",
           tool_calls: message.toolCalls.map(call => ({
-            id: call.id,
+            id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: "function",
             function: {
               name: call.function?.name || "",
@@ -605,7 +719,7 @@ export default class Databricks extends OpenAI {
       } else {
         return {
           role: message.role === "user" ? "user" : "assistant",
-          content: message.content
+          content: message.content || ""
         };
       }
     });
@@ -614,9 +728,13 @@ export default class Databricks extends OpenAI {
   }
 
   private extractSystemMessage(msgs: ChatMessage[]): string | undefined {
+    if (!msgs || !Array.isArray(msgs)) {
+      return undefined;
+    }
+    
     // システムメッセージを抽出し、画像を除去
     const systemMessage = stripImages(
-      msgs.filter((m) => m.role === "system")[0]?.content ?? ""
+      msgs.filter((m) => m && m.role === "system")[0]?.content ?? ""
     );
     
     return systemMessage || undefined;
@@ -630,6 +748,10 @@ export default class Databricks extends OpenAI {
    * @returns レスポンス
    */
   private async fetchWithRetry(url: string, options: any, retryCount: number = 0): Promise<Response> {
+    if (!url) {
+      throw new Error("Invalid URL: URL cannot be empty");
+    }
+    
     try {
       console.log(`Making API request to ${url}${retryCount > 0 ? ` (retry ${retryCount}/${this.maxRetryAttempts})` : ''}`);
       
@@ -713,6 +835,10 @@ export default class Databricks extends OpenAI {
    * @returns デコードされた文字列
    */
   protected processChunk(chunk: Uint8Array | Buffer): string {
+    if (!chunk || (chunk.length === 0)) {
+      return "";
+    }
+    
     try {
       const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
       return decoder.decode(chunk, { stream: true });
@@ -730,6 +856,15 @@ export default class Databricks extends OpenAI {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    if (!msgs || !Array.isArray(msgs)) {
+      console.error("Invalid messages array");
+      yield {
+        role: "assistant",
+        content: "エラー: メッセージデータが無効です。"
+      };
+      return;
+    }
+    
     try {
       const convertedMessages = this.convertMessages(msgs);
       const originalSystemMessage = this.extractSystemMessage(msgs);
@@ -761,6 +896,10 @@ export default class Databricks extends OpenAI {
       
       // リクエスト情報
       const invocationUrl = this.getInvocationUrl();
+      if (!invocationUrl) {
+        throw new Error("Invalid invocation URL: URL cannot be empty");
+      }
+      
       const timeout = this.getTimeoutFromConfig();
       
       // フェッチオプションの構築

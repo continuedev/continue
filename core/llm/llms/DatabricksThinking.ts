@@ -1,11 +1,29 @@
+// 環境チェックを改善 - Node.js環境かブラウザ環境かを適切に判定
+// Node.js環境かどうかの検出を強化
+const isNode = typeof process !== 'undefined' && 
+               typeof process.versions !== 'undefined' && 
+               typeof process.versions.node !== 'undefined';
+
+// VSCode APIを安全に取得
 let vscode: any = undefined;
-try {
-  if (typeof window !== 'undefined' && (window as any).vscode) {
-    vscode = (window as any).vscode;
-  } else if (typeof window !== 'undefined' && 'acquireVsCodeApi' in window) {
-    vscode = (window as any).acquireVsCodeApi();
+if (!isNode) {
+  try {
+    if (typeof window !== 'undefined') {
+      const win = window as any;
+      if (win.vscode) {
+        vscode = win.vscode;
+      } else if (typeof win.acquireVsCodeApi === 'function') {
+        try {
+          vscode = win.acquireVsCodeApi();
+        } catch (apiError) {
+          console.warn("Error calling acquireVsCodeApi:", apiError);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Error initializing VSCode API in browser environment:", e);
   }
-} catch (e) {}
+}
 
 import {
   ChatMessage,
@@ -14,16 +32,14 @@ import {
 import { ThinkingContent } from "./index";
 import { updateThinking, thinkingCompleted } from './thinkingPanel';
 
-const isNode = typeof process !== 'undefined' && 
-               typeof process.versions !== 'undefined' && 
-               typeof process.versions.node !== 'undefined';
-
 /**
  * HTMLタグをエスケープする関数
  * @param text エスケープするテキスト
  * @returns エスケープされたテキスト
  */
 function escapeHtml(text: string): string {
+  if (!text) return '';
+  
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -74,7 +90,7 @@ export default class DatabricksThinking {
   private activityTimeoutMs: number = 30000; // 30秒の非アクティブタイムアウト
   
   constructor(modelConfig: any) {
-    this.modelConfig = modelConfig;
+    this.modelConfig = modelConfig || {};
     this.useStepByStepThinking = 
       this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true;
   }
@@ -85,7 +101,7 @@ export default class DatabricksThinking {
    * @returns Claudeモデルかどうか
    */
   public static isClaudeModel(modelName: string): boolean {
-    return (modelName || "").toLowerCase().includes("claude");
+    return typeof modelName === 'string' && modelName.toLowerCase().includes("claude");
   }
   
   /**
@@ -94,10 +110,14 @@ export default class DatabricksThinking {
    * @returns Claude 3.7 Sonnetかどうか
    */
   public static isClaudeSonnet37(modelName: string): boolean {
+    if (!modelName || typeof modelName !== 'string') {
+      return false;
+    }
+    
     const isClaudeModel = DatabricksThinking.isClaudeModel(modelName);
     return isClaudeModel && (
-      (modelName || "").toLowerCase().includes("claude-3-7") ||
-      (modelName || "").toLowerCase().includes("claude-3.7")
+      modelName.toLowerCase().includes("claude-3-7") ||
+      modelName.toLowerCase().includes("claude-3.7")
     );
   }
   
@@ -106,6 +126,11 @@ export default class DatabricksThinking {
    * @param modelConfig モデル設定
    */
   public static initializeModelConfig(modelConfig: any): void {
+    if (!modelConfig) {
+      console.warn("Model config is null or undefined");
+      return;
+    }
+    
     if (!modelConfig.defaultCompletionOptions) {
       modelConfig.defaultCompletionOptions = {};
     }
@@ -138,6 +163,8 @@ export default class DatabricksThinking {
    * @returns 整形されたテキスト
    */
   private formatThinkingText(text: string): string {
+    if (!text) return '';
+    
     // HTMLタグをエスケープ
     text = escapeHtml(text);
 
@@ -197,6 +224,7 @@ export default class DatabricksThinking {
   }
   
   private hashThinkingContent(text: string): string {
+    if (!text) return 'empty';
     return text.substring(0, 100);
   }
   
@@ -204,11 +232,12 @@ export default class DatabricksThinking {
     // 既存のタイマーをクリア
     if (this.bufferTimeoutId) {
       clearTimeout(this.bufferTimeoutId);
+      this.bufferTimeoutId = null;
     }
     
     // バッファの内容を送信するタイマーを設定
     this.bufferTimeoutId = setTimeout(() => {
-      if (this.thinkingContentBuffer.trim()) {
+      if (this.thinkingContentBuffer && this.thinkingContentBuffer.trim()) {
         // バッファの内容を送信
         updateThinking(this.thinkingContentBuffer, this.thinkingPhase, this.thinkingProgress);
         this.thinkingContentBuffer = "";
@@ -219,6 +248,7 @@ export default class DatabricksThinking {
   }
   
   private hashSentence(sentence: string): string {
+    if (!sentence) return 'empty';
     return sentence.substring(0, 100) + sentence.length.toString();
   }
   
@@ -247,6 +277,16 @@ export default class DatabricksThinking {
     thinkingOptions: any; 
     finalOptions: any
   } {
+    if (!options) {
+      // オプションが未指定の場合はmodelプロパティを含む初期値を設定
+      options = { 
+        model: this.modelConfig?.model || "" // modelプロパティは必須なのでモデル設定から取得
+      };
+    } else if (!options.model) {
+      // modelプロパティが存在しない場合は追加
+      options.model = this.modelConfig?.model || "";
+    }
+    
     const isClaudeModel = DatabricksThinking.isClaudeModel(this.modelConfig?.model || "");
     const isThinkingEnabled = options.reasoning || 
                             (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
@@ -267,7 +307,7 @@ export default class DatabricksThinking {
       model: options.model || this.modelConfig?.model,
       temperature: options.temperature ?? this.modelConfig?.defaultCompletionOptions?.temperature ?? 0.7,
       max_tokens: maxTokens,
-      stop: options.stop?.filter(x => x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? []
+      stop: options.stop?.filter(x => x && x.trim() !== "") ?? this.modelConfig?.defaultCompletionOptions?.stop ?? []
     };
     
     // ステップバイステップ思考を使用する場合は温度を少し下げる
@@ -308,6 +348,8 @@ export default class DatabricksThinking {
    * @param progress 進捗率
    */
   public processLargeThinkingContent(content: string, phase: string, progress: number) {
+    if (!content) return;
+    
     // バッファに追加して更新をスケジュール
     this.thinkingContentBuffer += content;
     this.flushThinkingBufferIfReady();
@@ -318,7 +360,7 @@ export default class DatabricksThinking {
    */
   public ensureThinkingComplete() {
     // バッファの残りを処理
-    if (this.thinkingContentBuffer.trim()) {
+    if (this.thinkingContentBuffer && this.thinkingContentBuffer.trim()) {
       updateThinking(this.thinkingContentBuffer, this.thinkingPhase, 1.0);
       this.thinkingContentBuffer = "";
     }
@@ -352,11 +394,11 @@ export default class DatabricksThinking {
     const isClaudeModel = DatabricksThinking.isClaudeModel(this.modelConfig?.model || "");
     const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(this.modelConfig?.model || "");
     
-    const enableThinking = options.reasoning || 
+    const enableThinking = options?.reasoning || 
       (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
     
     const useStepByStepThinking = 
-      options.stepByStepThinking !== undefined ? 
+      options?.stepByStepThinking !== undefined ? 
       !!options.stepByStepThinking : 
       (this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true);
     
@@ -366,7 +408,7 @@ export default class DatabricksThinking {
         const stepByStepInstructions = `\n\nBefore answering, think step-by-step and explain your reasoning in detail. Please provide detailed, step-by-step reasoning before arriving at a conclusion.`;
         systemMessage += stepByStepInstructions;
       } else if (!isClaudeSonnet37) {
-        const budgetTokens = options.reasoningBudgetTokens || 
+        const budgetTokens = options?.reasoningBudgetTokens || 
           this.modelConfig?.defaultCompletionOptions?.thinking?.budget_tokens || 
           16000;
         
@@ -376,7 +418,7 @@ export default class DatabricksThinking {
     }
     
     // ツールが指定されている場合、ツール使用の指示を追加
-    if (options.tools && Array.isArray(options.tools) && options.tools.length > 0) {
+    if (options?.tools && Array.isArray(options.tools) && options.tools.length > 0) {
       const agentInstructions = `\n\nWhen appropriate, use the provided tools to help solve the problem. These tools allow you to interact with the external environment to gather information or perform actions needed to complete the task.`;
       systemMessage += agentInstructions;
     }
@@ -390,6 +432,8 @@ export default class DatabricksThinking {
    * @returns 処理された思考コンテンツ
    */
   public processStreamEventThinking(jsonData: any): ThinkingContent | null {
+    if (!jsonData) return null;
+    
     let thinkingContent = "";
     
     // 様々なフォーマットから思考内容を抽出
@@ -414,7 +458,7 @@ export default class DatabricksThinking {
     // HTMLタグを適切に処理して思考内容を整形
     const formattedThinking = this.formatThinkingText(thinkingContent);
     
-    if (formattedThinking.trim() === "") {
+    if (!formattedThinking || formattedThinking.trim() === "") {
       return null;
     }
     
@@ -446,6 +490,10 @@ export default class DatabricksThinking {
     buffer: string,
     thinkingContent: string,
   ): ParseSSEResult {
+    if (!buffer) {
+      return { done: false, messages: [], lastActivityTime: Date.now() };
+    }
+    
     const out: (ChatMessage | ThinkingContent)[] = [];
     let currentBuffer = buffer;
     
@@ -461,6 +509,10 @@ export default class DatabricksThinking {
         const jsonStr = trimmedBuffer.startsWith("data:") ? 
                      trimmedBuffer.slice(trimmedBuffer.indexOf("{")) : 
                      trimmedBuffer;
+        
+        if (!jsonStr || !jsonStr.includes("{")) {
+          return { done: false, messages: [], lastActivityTime: lastActivityTime };
+        }
         
         const json = JSON.parse(jsonStr);
         
@@ -512,7 +564,9 @@ export default class DatabricksThinking {
           out.push(thinkingObj);
           return { done: false, messages: out, lastActivityTime };
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Error parsing single-line JSON:", e);
+      }
     }
     
     // 複数行の処理
@@ -549,6 +603,11 @@ export default class DatabricksThinking {
       }
       
       try {
+        // データが空か無効な場合はスキップ
+        if (!data || !data.includes("{")) {
+          continue;
+        }
+        
         const json = JSON.parse(data);
         
         // 完了シグナルのチェック
@@ -654,7 +713,7 @@ export default class DatabricksThinking {
    */
   public initializeThinking(options: CompletionOptions): boolean {
     const isClaudeModel = DatabricksThinking.isClaudeModel(this.modelConfig?.model || "");
-    const isThinkingEnabled = options.reasoning || 
+    const isThinkingEnabled = options?.reasoning || 
                             (this.modelConfig?.defaultCompletionOptions?.thinking?.type === "enabled");
     
     if (!isThinkingEnabled) {
@@ -662,7 +721,7 @@ export default class DatabricksThinking {
     }
     
     this.useStepByStepThinking = 
-      options.stepByStepThinking !== undefined ? 
+      options?.stepByStepThinking !== undefined ? 
       !!options.stepByStepThinking : 
       (this.modelConfig?.defaultCompletionOptions?.stepByStepThinking === true);
     
@@ -702,6 +761,8 @@ export default class DatabricksThinking {
    * @returns 回復されたコンテンツ、または null
    */
   public tryRecoverContentFromBuffer(buffer: string): string | null {
+    if (!buffer) return null;
+    
     try {
       // Unicodeの問題を修正
       buffer = buffer.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\x00-\x7F]/g, match => {
@@ -805,6 +866,33 @@ export default class DatabricksThinking {
     timeout: number,
     toolsParameter: any
   ): AsyncGenerator<ChatMessage> {
+    if (!res || !res.body) {
+      console.error("Invalid response or response body");
+      yield {
+        role: "assistant",
+        content: "⚠️ 無効なレスポンスを受信しました。"
+      };
+      return;
+    }
+    
+    if (!processChunk || typeof processChunk !== 'function') {
+      console.error("Invalid processChunk function");
+      yield {
+        role: "assistant",
+        content: "⚠️ 内部エラー: チャンク処理関数が無効です。"
+      };
+      return;
+    }
+    
+    if (!invocationUrl) {
+      console.error("Invalid invocation URL");
+      yield {
+        role: "assistant",
+        content: "⚠️ 内部エラー: 呼び出しURLが無効です。"
+      };
+      return;
+    }
+    
     // バッファと状態の初期化
     let buffer = "";
     let rawBuffer = "";
@@ -812,13 +900,13 @@ export default class DatabricksThinking {
     let lastActivityTime = Date.now();
     
     // fetch APIのReader APIを使用する場合
-    if (typeof (res.body as any).getReader === "function") {
-      const reader = (res.body as any).getReader();
+    if (typeof res.body.getReader === "function") {
+      const reader = res.body.getReader();
       
       const startTime = Date.now();
       let chunkCount = 0;
       
-      const streamTimeout = timeout;
+      const streamTimeout = timeout || 600000; // デフォルト10分
       
       try {
         let continueReading = true;
@@ -858,7 +946,15 @@ export default class DatabricksThinking {
           }
           
           // チャンクの読み取り
-          const { done, value } = await reader.read();
+          let readResult: { done: boolean; value?: Uint8Array };
+          try {
+            readResult = await reader.read();
+          } catch (readError) {
+            console.error("Error reading from stream:", readError);
+            throw new Error("Stream read error: " + (readError instanceof Error ? readError.message : String(readError)));
+          }
+          
+          const { done, value } = readResult;
           
           // アクティビティタイムスタンプを更新
           lastActivityTime = Date.now();
@@ -871,7 +967,12 @@ export default class DatabricksThinking {
           
           chunkCount++;
           
-          const decodedChunk = processChunk(value as Uint8Array);
+          if (!value) {
+            console.warn("Empty chunk received");
+            continue;
+          }
+          
+          const decodedChunk = processChunk(value);
           rawBuffer += decodedChunk;
           
           if (!decodedChunk || decodedChunk.trim() === "") {
@@ -938,7 +1039,7 @@ export default class DatabricksThinking {
           // 再接続を試みる
           try {
             // 再接続用の短縮メッセージ配列を作成
-            const reconnectMessages = msgs.slice(-3); // 最後の3つのメッセージのみを使用
+            const reconnectMessages = msgs && Array.isArray(msgs) ? msgs.slice(-3) : []; // 最後の3つのメッセージのみを使用
             
             // 再接続メッセージを構築
             const recoverMessage: ChatMessage = {
@@ -952,7 +1053,7 @@ export default class DatabricksThinking {
               ...options,
               stream: false,
               // トークン長を短めに設定して迅速な応答を得る
-              maxTokens: Math.min(options.maxTokens || 4096, 1000)
+              maxTokens: Math.min(options?.maxTokens || 4096, 1000)
             };
             
             // フォールバックシステムメッセージを使用
@@ -966,8 +1067,8 @@ export default class DatabricksThinking {
             // 変換関数（バックアップ）
             const convertMessages = (msgs: ChatMessage[]): any[] => {
               return msgs.map(m => ({
-                role: m.role === "user" ? "user" : "assistant",
-                content: m.content || ""
+                role: m?.role === "user" ? "user" : "assistant",
+                content: m?.content || ""
               }));
             };
             
@@ -980,7 +1081,7 @@ export default class DatabricksThinking {
             // ツールを引き継ぐ
             if (toolsParameter) {
               reconnectBody.tools = toolsParameter;
-              reconnectBody.tool_choice = options.toolChoice || "auto";
+              reconnectBody.tool_choice = options?.toolChoice || "auto";
             }
             
             const reconnectOptions = {
@@ -1035,7 +1136,7 @@ export default class DatabricksThinking {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
-      if (buffer.trim()) {
+      if (buffer && buffer.trim()) {
         const { messages } = this.parseSSE(buffer, thinkingContent);
         for (const m of messages) {
           const isThinking = 'type' in m && m.type === 'thinking';
@@ -1053,7 +1154,7 @@ export default class DatabricksThinking {
     // Node.jsスタイルのストリーム処理（for-await-of）
     const startTime = Date.now();
     
-    const streamTimeout = timeout;
+    const streamTimeout = timeout || 600000; // デフォルト10分
     
     try {
       for await (const chunk of res.body as any) {
@@ -1072,6 +1173,11 @@ export default class DatabricksThinking {
           if (Date.now() - lastActivityTime > this.activityTimeoutMs) {
             console.log("Stream inactive timeout reached");
             throw new Error("Stream inactive for too long");
+          }
+          
+          if (!chunk) {
+            console.warn("Empty chunk received in Node.js stream");
+            continue;
           }
           
           const decodedChunk = processChunk(chunk as Buffer);
@@ -1139,7 +1245,7 @@ export default class DatabricksThinking {
             // 再接続を試みる
             try {
               // 再接続用の短縮メッセージ配列を作成
-              const reconnectMessages = msgs.slice(-3); // 最後の3つのメッセージのみを使用
+              const reconnectMessages = msgs && Array.isArray(msgs) ? msgs.slice(-3) : []; // 最後の3つのメッセージのみを使用
               
               // 再接続メッセージを構築
               const recoverMessage: ChatMessage = {
@@ -1153,7 +1259,7 @@ export default class DatabricksThinking {
                 ...options,
                 stream: false,
                 // トークン長を短めに設定
-                maxTokens: Math.min(options.maxTokens || 4096, 1000)
+                maxTokens: Math.min(options?.maxTokens || 4096, 1000)
               };
               
               // フォールバックシステムメッセージを使用
@@ -1167,8 +1273,8 @@ export default class DatabricksThinking {
               // 変換関数（バックアップ）
               const convertMessages = (msgs: ChatMessage[]): any[] => {
                 return msgs.map(m => ({
-                  role: m.role === "user" ? "user" : "assistant",
-                  content: m.content || ""
+                  role: m?.role === "user" ? "user" : "assistant",
+                  content: m?.content || ""
                 }));
               };
               
@@ -1180,7 +1286,7 @@ export default class DatabricksThinking {
               
               if (toolsParameter) {
                 reconnectBody.tools = toolsParameter;
-                reconnectBody.tool_choice = options.toolChoice || "auto";
+                reconnectBody.tool_choice = options?.toolChoice || "auto";
               }
               
               const reconnectOptions = {
@@ -1237,7 +1343,7 @@ export default class DatabricksThinking {
         }
       }
       
-      if (buffer.trim()) {
+      if (buffer && buffer.trim()) {
         const { messages } = this.parseSSE(buffer, thinkingContent);
         for (const m of messages) {
           const isThinking = 'type' in m && m.type === 'thinking';
