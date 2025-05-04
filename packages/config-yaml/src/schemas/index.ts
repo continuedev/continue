@@ -12,6 +12,7 @@ export const contextSchema = z.object({
 const mcpServerSchema = z.object({
   name: z.string(),
   command: z.string(),
+  transport: z.string().optional(),
   faviconUrl: z.string().optional(),
   args: z.array(z.string()).optional(),
   env: z.record(z.string()).optional(),

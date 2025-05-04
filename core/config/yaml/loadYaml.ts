@@ -45,6 +45,7 @@ import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
+import { TransportOptions } from "../..";
 
 function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
   if (typeof rule === "string") {
@@ -67,7 +68,7 @@ function convertYamlMcpToContinueMcp(
 ): ExperimentalMCPOptions {
   return {
     transport: {
-      type: "stdio",
+      type: server.transport ?? "stdio" as TransportOptions["type"],
       command: server.command,
       args: server.args ?? [],
       env: server.env,

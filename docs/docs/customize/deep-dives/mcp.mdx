@@ -37,7 +37,36 @@ To set up your own MCP server, read the [MCP quickstart](https://modelcontextpro
             "type": "stdio",
             "command": "uvx",
             "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
-          }  
+          }
+        }
+      ]
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Alternatively you can connect to a remote MCP server, for example using the `sse` transport:
+
+<Tabs groupId="config-remote-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  mcpServers:
+    - name: Remote MCP Server
+      transport: sse
+      url: https://api.example.com/mcp/sse
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "experimental": {
+      "modelContextProtocolServers": [
+        {
+          "transport": {
+            "type": "sse",
+            "url": "https://api.example.com/mcp/sse"
+          }
         }
       ]
     }
