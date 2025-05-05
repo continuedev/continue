@@ -45,8 +45,8 @@ const { api } = await Continue.from({
   apiKey: process.env.CONTINUE_API_KEY,
 });
 
-// Use the continueClient for direct API calls
-const assistants = await continueClient.listAssistants({});
+// Make calls to the Continue API
+const assistants = await api.listAssistants({});
 ```
 
 ## API Reference

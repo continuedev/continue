@@ -34,7 +34,7 @@ export interface ContinueClientOptions {
   baseURL?: string;
 }
 
-export type ContinueClientWithAssistant = {
+export type ContinueClient = {
   /**
    * The Continue API client
    */
@@ -52,7 +52,7 @@ export type ContinueClientWithAssistant = {
   assistant: Assistant;
 };
 
-export type ContinueClientOnly = {
+export type ContinueClientBase = {
   /**
    * The Continue API client
    */
@@ -73,7 +73,7 @@ export class Continue {
    */
   static async from(
     options: ContinueClientOptions & { assistant: string },
-  ): Promise<ContinueClientWithAssistant>;
+  ): Promise<ContinueClient>;
 
   /**
    * Create a simple Continue API client
@@ -86,14 +86,14 @@ export class Continue {
    */
   static async from(
     options: ContinueClientOptions & { assistant?: undefined },
-  ): Promise<ContinueClientOnly>;
+  ): Promise<ContinueClientBase>;
 
   /**
    * Internal implementation
    */
   static async from(
     options: ContinueClientOptions,
-  ): Promise<ContinueClientWithAssistant | ContinueClientOnly> {
+  ): Promise<ContinueClientBase | ContinueClient> {
     const baseURL = options.baseURL || "https://api.continue.dev/";
 
     const continueClient = new DefaultApi(
