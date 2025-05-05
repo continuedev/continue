@@ -224,10 +224,11 @@ class WatsonX extends BaseLLM {
     }
 
     let input = messages[messages.length - 1].content
-    // Prevent Codestral from continuing user input, regardless of chat template
+    // Add \n to prevent Codestral from continuing user input when using chat template
     if (
-        options.model?.toLowerCase()?.includes("codestral") ||
-        this.deploymentId?.toLowerCase()?.includes("codestral")
+        input.toString().endsWith("[/INST]") &&
+        (options.model?.toLowerCase()?.includes("codestral") ||
+        this.deploymentId?.toLowerCase()?.includes("codestral"))
     ) {
       input += "\n"
     }
