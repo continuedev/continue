@@ -93,6 +93,15 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+// Llama2 template with added \n to prevent Codestral from continuing user message
+function codestralTemplateMessages(msgs: ChatMessage[]): string {
+    let template = llama2TemplateMessages(msgs);
+    if (template.length == 0) {
+        return template;
+    }
+    return template + "\n";
+}
+
 function anthropicTemplateMessages(messages: ChatMessage[]): string {
   const HUMAN_PROMPT = "\n\nHuman:";
   const AI_PROMPT = "\n\nAssistant:";
@@ -300,4 +309,5 @@ export {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
+  codestralTemplateMessages,
 };
