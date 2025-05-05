@@ -38,7 +38,7 @@ export type ContinueClientWithAssistant = {
   /**
    * The Continue API client
    */
-  continueClient: DefaultApi;
+  api: DefaultApi;
 
   /**
    * The OpenAI client configured to use the Continue API

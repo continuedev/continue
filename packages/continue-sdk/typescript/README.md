@@ -35,6 +35,20 @@ const response = await client.chat.completions.create({
 console.log(response.choices[0].message.content);
 ```
 
+You can also use the SDK without specifying an assistant to just get the Continue API client:
+
+```typescript
+import { Continue } from "@continuedev/sdk";
+
+// Initialize just the Continue API client
+const { api } = await Continue.from({
+  apiKey: process.env.CONTINUE_API_KEY,
+});
+
+// Use the continueClient for direct API calls
+const assistants = await continueClient.listAssistants({});
+```
+
 ## API Reference
 
 ### Continue.from(options)
@@ -44,14 +58,18 @@ Creates a Continue instance with a pre-configured OpenAI client and assistant.
 #### Options
 
 - `apiKey` (string, required): Your Continue API key
-- `assistant` (string, required): The assistant identifier in the format `owner-slug/assistant-slug`
+- `assistant` (string, optional): The assistant identifier in the format `owner-slug/assistant-slug`
 - `organizationId` (string, optional): Optional organization ID
 - `baseURL` (string, optional): Base URL for the Continue API (defaults to `https://api.continue.dev/`)
 
 #### Returns
 
-An object containing:
+When `assistant` is provided, returns an object containing:
 
+- `api`: The Continue API client for direct API access
 - `client`: An OpenAI-compatible client configured to use the Continue API
 - `assistant`: The assistant configuration with utility methods
-- `api`: The raw Continue API client for direct API access
+
+When assistant is not provided, returns an object containing:
+
+- `api`: The Continue API client for direct API access
