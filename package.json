@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@continuedev/openai-adapters": "^1.0.18",
-    "@continuedev/sdk": "^0.0.9",
+    "@continuedev/sdk": "^0.0.12",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@workos-inc/node": "^7.45.0",
     "axios": "^1.8.4",

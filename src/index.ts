@@ -12,7 +12,6 @@ import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
 import { configureLogger } from "./logger.js";
-import * as fs from "fs";
 import { ContinueClient } from "@continuedev/sdk";
 
 // Parse command line arguments
