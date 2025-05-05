@@ -56,7 +56,8 @@
     "onStartupFinished",
     "onView:continueGUIView"
   ],
-  "main": "./out/extension.js",
+  "main": "./extension-entry.js",
+
   "contributes": {
     "languages": [
       {
@@ -87,6 +88,32 @@
     "configuration": {
       "title": "Continue",
       "properties": {
+        "continue.experimental.embeddings.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable embeddings-based search for codebase indexing."
+        },
+        "continue.experimental.useNativeEmbeddings": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use native embeddings instead of ONNX runtime."
+        },
+        "continue.experimental.searchEngine": {
+          "type": "string",
+          "enum": ["brave", "google", "bing"],
+          "default": "brave",
+          "description": "The search engine to use for web search."
+        },
+        "continue.experimental.directMcpServerConnection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Connect directly to MCP server without going through core."
+        },
+        "continue.experimental.thinkingPanel.useNodeStream": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use Node stream for thinking panel updates."
+        },
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
@@ -141,6 +168,12 @@
           "type": "number",
           "default": 60,
           "description": "The period of time in minutes between automatic syncs."
+        },
+        "continue.debug.logLevel": {
+          "type": "string",
+          "enum": ["error", "warn", "info", "debug", "trace"],
+          "default": "info",
+          "description": "Logging level for the extension."
         }
       }
     },
@@ -335,6 +368,30 @@
         "command": "continue.toggleThinkingPanel",
         "category": "Continue",
         "title": "Toggle Claude's Thinking Panel",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.resetThinkingPanel",
+        "category": "Continue", 
+        "title": "Reset Claude's Thinking Panel",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.appendThinkingChunk",
+        "category": "Continue",
+        "title": "Append to Claude's Thinking Panel",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.forceRefreshThinking",
+        "category": "Continue",
+        "title": "Force Refresh Claude's Thinking Panel",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.thinkingCompleted",
+        "category": "Continue",
+        "title": "Notify Thinking Completed",
         "group": "Continue"
       }
     ],
@@ -620,6 +677,7 @@
     ]
   },
   "scripts": {
+    "preload": "node preload.js",
     "esbuild-base": "node scripts/esbuild.js",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",

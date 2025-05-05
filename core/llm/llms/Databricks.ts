@@ -1,27 +1,27 @@
-// VSCode API初期化の安全な実装 - Node.js環境とブラウザ環境の区別を強化
-let vscodeApi: any = undefined;
-
-// Node.js環境かどうかの検出を強化
+// Node.js環境かどうかの検出を強化（より堅牢な実装）
 const isNode = typeof process !== 'undefined' && 
                typeof process.versions !== 'undefined' && 
                typeof process.versions.node !== 'undefined';
 
-// ブラウザ環境の場合のみwindowオブジェクトを参照
+// VSCode API初期化の安全な実装 - Node.js環境とブラウザ環境の区別を強化
+let vscodeApi: any = undefined;
+
+// ブラウザ環境の場合のみglobalThisオブジェクトを安全に参照
 if (!isNode) {
   try {
-    if (typeof window !== 'undefined') {
-      // windowオブジェクトを安全に参照
-      const win = window as any;
+    // globalThisを使用することでwindowへの直接参照を避ける
+    if (typeof globalThis !== 'undefined') {
+      const context = globalThis as any;
       
       // vscodeオブジェクトが存在する場合はそれを使用
-      if (win.vscode) {
-        vscodeApi = win.vscode;
+      if (context.vscode) {
+        vscodeApi = context.vscode;
       } 
       // acquireVsCodeApi関数が存在する場合はそれを呼び出す
-      else if (typeof win.acquireVsCodeApi === 'function') {
+      else if (typeof context.acquireVsCodeApi === 'function') {
         try {
-          // 直接name属性を変更せず、関数を実行結果を取得
-          vscodeApi = win.acquireVsCodeApi();
+          // 直接name属性を変更せず、関数を実行して結果を取得
+          vscodeApi = context.acquireVsCodeApi();
         } catch (apiError) {
           console.warn("Error calling acquireVsCodeApi:", apiError);
         }
@@ -50,8 +50,16 @@ import {
   safeReadFile, 
   readFirstAvailableFile, 
   getDebugConfigPath,
-  safeJoinPath
+  safeJoinPath,
+  fixDoubleDriveLetter,
+  getExtensionRootPath,
 } from '../../util/paths';
+import { 
+  fixPath, 
+  getManualTestingSandboxMcpPath, 
+  resolveAndFixPath,
+  getHomeDirSafe
+} from '../../util/pathfix';
 import { parseAssistant } from '../../config/yaml/models';
 
 // Node.js環境での必要なモジュール読み込み
@@ -144,8 +152,14 @@ export default class Databricks extends OpenAI {
   private backoffFactor: number = 1.5; // 指数バックオフの係数
   private thinking: DatabricksThinking;
   
+  /**
+   * YAML設定ファイルからモデル設定を読み込む関数（改良版）
+   * @param modelName モデル名
+   * @returns モデル設定と全体設定のオブジェクト
+   */
   private static loadConfigFromYaml(modelName: string): any {
     if (!isNode) {
+      // ブラウザ環境用の最小限設定を返す
       return {
         modelConfig: {
           apiKey: process.env.DATABRICKS_TOKEN || "",
@@ -162,30 +176,90 @@ export default class Databricks extends OpenAI {
       console.log(`Current mode: ${isDevMode ? "development" : "production"}`);
       
       // 環境に合わせた設定パスを取得
-      let homeDir = "";
-      try {
-        homeDir = os.homedir();
-        if (!homeDir) {
-          console.warn("Home directory path is empty, using fallback.");
-          homeDir = process.env.HOME || process.env.USERPROFILE || "/";
+      // 安全なホームディレクトリ取得関数を使用
+      const homeDir = getHomeDirSafe();
+      
+      // 1. デバッグモードの場合はデバッグ用の設定ファイルを優先
+      if (isDevMode) {
+        // 改良されたgetDebugConfigPath関数を使用
+        const debugConfigPath = getDebugConfigPath('config');
+        
+        if (debugConfigPath && fs.existsSync(debugConfigPath)) {
+          console.log(`デバッグ設定を使用: ${debugConfigPath}`);
+          try {
+            const fileContents = fs.readFileSync(debugConfigPath, "utf8");
+            const parsed = yaml.load(fileContents) as any;
+            const globalConfig = parsed;
+            
+            if (parsed && typeof parsed === "object" && Array.isArray(parsed.models)) {
+              const modelConfig = (parsed.models as any[]).find(
+                (m) => m.provider === "databricks" && 
+                        (m.model === modelName || 
+                         // 部分一致も許可（"claude"などの名前の一部）
+                         (isDevMode && m.model && modelName && 
+                          m.model.toLowerCase().includes(modelName.toLowerCase())))
+              );
+              
+              if (modelConfig) {
+                const isClaudeModel = DatabricksThinking.isClaudeModel(modelConfig.model);
+                const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(modelConfig.model);
+                
+                if (isClaudeSonnet37) {
+                  DatabricksThinking.initializeModelConfig(modelConfig);
+                }
+                
+                Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
+                
+                if (modelConfig && 
+                    typeof modelConfig.apiKey === "string" && 
+                    typeof modelConfig.apiBase === "string") {
+                  console.log(`デバッグモード: ${modelName}の設定を使用します`);
+                  return { modelConfig, globalConfig };
+                }
+              }
+            }
+          } catch (e) {
+            console.warn(`デバッグ設定ファイル読み込みエラー: ${e}`);
+          }
         }
-      } catch (e) {
-        console.error("Error getting home directory:", e);
-        homeDir = process.env.HOME || process.env.USERPROFILE || "/";
       }
       
-      // 1. デバッグモードの場合はデバッグ用の設定ファイルを試す
-      if (isDevMode) {
-        const debugConfigPath = getDebugConfigPath('config');
-        if (debugConfigPath && fs.existsSync(debugConfigPath)) {
-          console.log(`Using debug config from: ${debugConfigPath}`);
-          const fileContents = fs.readFileSync(debugConfigPath, "utf8");
+      // 2. 通常の設定ファイルを試す
+      let configPath;
+      try {
+        // パスを安全に結合して正規化
+        try {
+          // まず二重ドライブレター問題を防ぐためにhomeDirを正規化
+          const normalizedHomeDir = normalizePath(homeDir);
+          configPath = path.join(normalizedHomeDir, ".continue", "config.yaml");
+          // 最終的なパスも正規化
+          configPath = normalizePath(configPath);
+          console.log(`通常設定パス: ${configPath}`);
+        } catch (e1) {
+          console.error("パス正規化エラー:", e1);
+          // 内部エラー時のフォールバック
+          configPath = homeDir + "/.continue/config.yaml";
+        }
+      } catch (e) {
+        console.error("設定パス結合エラー:", e);
+        // フォールバックとして直接パスを構築
+        configPath = homeDir + "/.continue/config.yaml";
+      }
+      
+      if (configPath && fs.existsSync(configPath)) {
+        console.log(`通常設定ファイルを確認: ${configPath}`);
+        try {
+          const fileContents = fs.readFileSync(configPath, "utf8");
           const parsed = yaml.load(fileContents) as any;
           const globalConfig = parsed;
           
           if (parsed && typeof parsed === "object" && Array.isArray(parsed.models)) {
             const modelConfig = (parsed.models as any[]).find(
-              (m) => m.provider === "databricks" && m.model === modelName
+              (m) => m.provider === "databricks" && 
+                      (m.model === modelName || 
+                       // 部分一致も許可（開発モード時のみ）
+                       (isDevMode && m.model && modelName && 
+                        m.model.toLowerCase().includes(modelName.toLowerCase())))
             );
             
             if (modelConfig) {
@@ -198,185 +272,182 @@ export default class Databricks extends OpenAI {
               
               Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
               
-              if (modelConfig && typeof modelConfig.apiKey === "string" && typeof modelConfig.apiBase === "string") {
+              if (modelConfig && 
+                  typeof modelConfig.apiKey === "string" && 
+                  typeof modelConfig.apiBase === "string") {
+                console.log(`通常設定: ${modelName}の設定を使用します`);
                 return { modelConfig, globalConfig };
               }
             }
           }
-        }
-      }
-      
-      // 2. 通常の設定ファイルを試す
-      let configPath;
-      try {
-        configPath = safeJoinPath(homeDir, ".continue", "config.yaml");
-      } catch (e) {
-        console.error("Error joining config path:", e);
-        // フォールバックとして直接パスを構築
-        configPath = homeDir + "/.continue/config.yaml";
-      }
-      
-      console.log("Checking standard config at:", configPath);
-      
-      if (configPath && fs.existsSync(configPath)) {
-        const fileContents = fs.readFileSync(configPath, "utf8");
-        const parsed = yaml.load(fileContents) as any;
-        const globalConfig = parsed;
-        
-        if (parsed && typeof parsed === "object" && Array.isArray(parsed.models)) {
-          const modelConfig = (parsed.models as any[]).find(
-            (m) => m.provider === "databricks" && m.model === modelName
-          );
-          
-          if (modelConfig) {
-            const isClaudeModel = DatabricksThinking.isClaudeModel(modelConfig.model);
-            const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(modelConfig.model);
-            
-            if (isClaudeSonnet37) {
-              DatabricksThinking.initializeModelConfig(modelConfig);
-            }
-            
-            Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
-            
-            if (modelConfig && typeof modelConfig.apiKey === "string" && typeof modelConfig.apiBase === "string") {
-              return { modelConfig, globalConfig };
-            }
-          }
+        } catch (e) {
+          console.warn(`通常設定ファイル読み込みエラー: ${e}`);
         }
       }
       
       // 3. MCPサーバー設定ファイルからの読み込みを試みる
-      console.log("Checking MCP server configurations...");
+      console.log("MCPサーバー設定を確認中...");
       try {
         // MCP設定を探すパスの準備（優先順位順）
         const searchPaths = [];
         
+        // プロジェクトルートとその直下のディレクトリの特定
+        const extensionRoot = getExtensionRootPath();
+        const projectRoot = extensionRoot.replace(/[\\\/]extensions[\\\/].*$/, '');
+        
+        // パスを安全に追加する関数
+        function safeAddPath(basePath: string, ...segments: string[]) {
+          try {
+            // まずベースパスを正規化
+            let normalizedBase = normalizePath(basePath);
+            
+            // セグメントを結合（先頭のスラッシュを削除）
+            let combined = normalizedBase;
+            for (let segment of segments) {
+              // Windowsパス区切り文字を統一
+              segment = segment.replace(/\\/g, '/').replace(/^[\/\\]+/, '');
+              combined = path.join(combined, segment);
+            }
+            
+            // 最終的なパスを正規化
+            let finalPath = normalizePath(combined);
+            finalPath = fixDoubleDriveLetter(finalPath);
+            
+            // 二重ドライブレターがないことを確認
+            if (!/[A-Za-z]:[\\\/].*[A-Za-z]:[\\\/]/i.test(finalPath)) {
+              searchPaths.push(finalPath);
+              console.log(`MCPサーバー設定パス候補追加: ${finalPath}`);
+            } else {
+              console.warn(`無効なパスのため追加しません: ${finalPath}`);
+            }
+          } catch (e) {
+            console.warn(`パス追加エラー: ${e}`);
+          }
+        }
+        
+        // 複数のパス候補を追加（優先順）
+        safeAddPath(projectRoot, "extensions", ".continue-debug", "mcpServers", "databricks.yaml");
+        safeAddPath(process.cwd(), "extensions", ".continue-debug", "mcpServers", "databricks.yaml");
+        safeAddPath(extensionRoot, ".continue-debug", "mcpServers", "databricks.yaml");
+        safeAddPath(projectRoot, "extensions", "vscode", ".continue-debug", "mcpServers", "databricks.yaml");
+        
+        // 特定の固定パスを追加（開発環境向け）
+        if (process.platform === 'win32') {
+          const fixedPaths = [
+            "C:\\continue-databricks-claude-3-7-sonnet\\extensions\\.continue-debug\\mcpServers\\databricks.yaml",
+            "C:\\continue-databricks-claude-3-7-sonnet\\extensions\\.continue-debug\\mcpServers\\mcpServer.yaml"
+          ];
+          
+          for (const fixedPath of fixedPaths) {
+            const normalizedPath = normalizePath(fixedPath);
+            searchPaths.push(normalizedPath);
+            console.log(`固定MCPパス候補追加: ${normalizedPath}`);
+          }
+        }
+        
         // デバッグモードの場合はデバッグ用の設定を優先
         if (isDevMode) {
+          // debug config路径を取得
           const debugMcpPath = getDebugConfigPath('mcpServer');
+          console.log(`デバッグMCPパス: ${debugMcpPath}`);
+          
           if (debugMcpPath) {
             try {
               const stats = fs.statSync(debugMcpPath);
+              
               if (stats.isDirectory()) {
-                let databricksPath;
-                try {
-                  databricksPath = safeJoinPath(debugMcpPath, "databricks.yaml");
-                } catch (e) {
-                  console.error("Error joining debug databricks path:", e);
-                  databricksPath = debugMcpPath + "/databricks.yaml";
-                }
-                console.debug(`[PATH DEBUG] Debug databricks path: ${databricksPath}`);
-                if (databricksPath) {
-                  searchPaths.push(databricksPath);
-                }
+                // ディレクトリの場合、パスを結合する前に正規化
+                const normalizedDebugPath = normalizePath(debugMcpPath);
+                
+                // データブリックスパスを生成
+                const databricksPath = safeJoinPath(normalizedDebugPath, "databricks.yaml");
+                searchPaths.unshift(databricksPath); // 最優先で追加
+                console.log(`構築されたdatabricks.yamlパス: ${databricksPath}`);
+                
+                // mcpServerパスも追加
+                const mcpServerPath = safeJoinPath(normalizedDebugPath, "mcpServer.yaml");
+                searchPaths.unshift(mcpServerPath); // データブリックスの次に優先
+                console.log(`構築されたmcpServer.yamlパス: ${mcpServerPath}`);
               } else {
-                searchPaths.push(debugMcpPath);
+                // ファイルの場合は安全に追加
+                const normalizedPath = normalizePath(debugMcpPath);
+                searchPaths.unshift(normalizedPath); // 最優先で追加
+                console.log(`デバッグMCPファイルパス追加: ${normalizedPath}`);
               }
             } catch (e) {
-              console.error("Error checking debug MCP path:", e);
+              console.warn(`デバッグMCPパス確認エラー: ${e}`);
             }
           }
         }
         
-        // 標準の設定パスを追加
-        let homeMcpServerDir;
+        // ユーザーホームの設定ファイルも追加
         try {
-          homeMcpServerDir = safeJoinPath(homeDir, ".continue", "mcpServers");
+          // パスの安全な結合
+          safeAddPath(getHomeDirSafe(), ".continue", "mcpServers", "databricks.yaml");
+          safeAddPath(getHomeDirSafe(), ".continue", "mcpServers", "mcpServer.yaml");
         } catch (e) {
-          console.error("Error joining MCP server directory path:", e);
-          homeMcpServerDir = homeDir + "/.continue/mcpServers";
+          console.warn(`ホームディレクトリMCPパス追加エラー: ${e}`);
         }
         
-        let homeDatabricksPath;
-        try {
-          homeDatabricksPath = safeJoinPath(homeMcpServerDir, "databricks.yaml");
-        } catch (e) {
-          console.error("Error joining home databricks path:", e);
-          homeDatabricksPath = homeMcpServerDir + "/databricks.yaml";
+        // パスの検索順序をログ出力
+        console.log("MCPサーバー設定の検索パス:");
+        for (let i = 0; i < searchPaths.length; i++) {
+          const p = searchPaths[i];
+          console.log(`  ${i + 1}. ${p} - ${fs.existsSync(p) ? '存在します ✅' : '存在しません ❌'}`);
         }
-        
-        if (homeDatabricksPath) {
-          searchPaths.push(homeDatabricksPath);
-        }
-        
-        // プロジェクトルートの設定を追加
-        const cwdPath = process.cwd();
-        console.debug(`[PATH DEBUG] Current working directory: ${cwdPath}`);
-        
-        // ルートパスからの設定パスを追加
-        if (cwdPath) {
-          let cwdMcpServerPath;
-          try {
-            cwdMcpServerPath = safeJoinPath(cwdPath, ".continue", "mcpServers", "databricks.yaml");
-          } catch (e) {
-            console.error("Error joining CWD MCP server path:", e);
-            cwdMcpServerPath = cwdPath + "/.continue/mcpServers/databricks.yaml";
-          }
-          
-          if (cwdMcpServerPath) {
-            searchPaths.push(cwdMcpServerPath);
-          }
-        }
-        
-        // 検索パスを表示（詳細情報付き）
-        console.log("Searching for MCP server config in the following paths:");
-        searchPaths.forEach((p, i) => {
-          if (!p) {
-            console.log(`  ${i + 1}. [Invalid path]`);
-            return;
-          }
-          
-          const hasDrive = path.isAbsolute(p);
-          const hasDoubleDrive = /[A-Za-z]:[\\\/].*[A-Za-z]:[\\\/]/i.test(p);
-          console.log(`  ${i + 1}. ${p} (Absolute: ${hasDrive ? 'Yes' : 'No'}, Double drive: ${hasDoubleDrive ? '⚠️ YES!' : 'No'})`);
-        });
-        
-        // 無効なパスを除去
-        const validSearchPaths = searchPaths.filter(p => p);
         
         // 最初に見つかったファイルを読み込む
-        const mcpConfig = validSearchPaths.length > 0 ? readFirstAvailableFile(validSearchPaths) : null;
-        
-        if (mcpConfig) {
-          console.log(`Found MCP server config at: ${mcpConfig.path}`);
-          const mcpYaml = yaml.load(mcpConfig.content);
-          
-          if (mcpYaml) {
-            // MCPサーバー設定からモデル設定を構築
-            const modelConfig = {
-              apiKey: mcpYaml.api_token || process.env.DATABRICKS_TOKEN,
-              apiBase: mcpYaml.serving_endpoint || mcpYaml.host,
-              model: modelName,
-              provider: "databricks",
-              capabilities: ["tool_use", "image_input"],
-              defaultCompletionOptions: {
-                thinking: {
-                  type: "enabled",
-                  budget_tokens: 16000
-                },
-                stepByStepThinking: true,
-                stream: true,
-                maxTokens: 100000,
-                timeout: 600000 // 10分
+        for (const mcpPath of searchPaths) {
+          if (fs.existsSync(mcpPath)) {
+            try {
+              console.log(`MCPサーバー設定を読み込み中: ${mcpPath}`);
+              const content = fs.readFileSync(mcpPath, 'utf8');
+              const mcpYaml = yaml.load(content);
+              
+              if (mcpYaml) {
+                // MCPサーバー設定からモデル設定を構築
+                const modelConfig = {
+                  apiKey: mcpYaml.api_token || process.env.DATABRICKS_TOKEN,
+                  apiBase: mcpYaml.serving_endpoint || mcpYaml.host,
+                  model: modelName,
+                  provider: "databricks",
+                  capabilities: ["tool_use", "image_input"],
+                  defaultCompletionOptions: {
+                    thinking: {
+                      type: "enabled",
+                      budget_tokens: 16000
+                    },
+                    stepByStepThinking: true,
+                    stream: true,
+                    maxTokens: 100000,
+                    timeout: 600000 // 10分
+                  }
+                };
+                
+                // モデル設定を検証
+                const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(modelName);
+                Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
+                
+                console.log(`MCPサーバー設定から構築した設定を使用: ${mcpPath}`);
+                return { modelConfig, globalConfig: null };
               }
-            };
-            
-            // モデル設定を検証
-            const isClaudeSonnet37 = DatabricksThinking.isClaudeSonnet37(modelName);
-            Databricks.validateModelConfig(modelConfig, isClaudeSonnet37);
-            
-            return { modelConfig, globalConfig: null };
+            } catch (e) {
+              console.warn(`MCPサーバー設定読み込みエラー (${mcpPath}): ${e}`);
+              continue; // エラー時には次のパスを試す
+            }
           }
         }
+        
+        console.log("有効なMCPサーバー設定が見つかりませんでした");
       } catch (e) {
-        console.warn("Error loading MCP server config:", e);
+        console.warn("MCPサーバー設定読み込み総合エラー:", e);
       }
       
       // 4. 環境変数からの読み込み（最終フォールバック）
       const pat = process.env.DATABRICKS_TOKEN;
       const base = process.env.YOUR_DATABRICKS_URL;
       if (pat && base) {
-        console.log("Using Databricks configuration from environment variables");
+        console.log("環境変数からDatabricks設定を使用");
         
         // 環境変数からモデル設定を構築
         const modelConfig = {
@@ -404,7 +475,7 @@ export default class Databricks extends OpenAI {
       }
       
       // 5. すべてのオプションが失敗した場合、デフォルト設定を使用
-      console.warn("No configuration found, using default Databricks configuration");
+      console.warn("設定が見つからないため、デフォルトのDatabricks設定を使用");
       const defaultConfig = parseAssistant(null);
       
       // デフォルト設定を検証
@@ -421,7 +492,7 @@ export default class Databricks extends OpenAI {
       };
       
     } catch (error) {
-      console.error("Error loading config from YAML:", error);
+      console.error("YAML設定読み込みエラー:", error);
       
       // エラー発生時もデフォルト設定を提供
       const defaultConfig = parseAssistant(null);
@@ -683,24 +754,33 @@ export default class Databricks extends OpenAI {
       return [];
     }
     
-    // roleが"system"でない、contentを持つメッセージだけをフィルタリング
-    const filteredMessages = msgs.filter(m => m && m.role !== "system" && !!m.content);
+    // roleが"system"でないメッセージだけをフィルタリング
+    const filteredMessages = msgs.filter(m => m && m.role !== "system");
     
-    // メッセージ変換
+    // メッセージ変換（空白チェック強化版）
     const messages = filteredMessages.map((message) => {
       if (!message) {
-        return { role: "user", content: "" };
+        return { role: "user", content: "Empty message" };
       }
+      
+      // 空文字または空白のみのコンテンツをチェック
+      const hasValidContent = typeof message.content === "string" && 
+                            message.content.trim() !== "";
+      
+      // デフォルトコンテンツ（空白・未設定の場合に使用）
+      const defaultContent = message.role === "user" ? 
+                          "I need assistance." : 
+                          "I understand. How can I help you?";
       
       if (typeof message.content === "string") {
         return {
           role: message.role === "user" ? "user" : "assistant",
-          content: message.content
+          content: hasValidContent ? message.content : defaultContent
         };
       } else if (message.role === "assistant" && message.toolCalls) {
         return {
           role: "assistant",
-          content: message.content || "",
+          content: hasValidContent ? message.content : defaultContent,
           tool_calls: message.toolCalls.map(call => ({
             id: call.id || `call-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: "function",
@@ -713,16 +793,25 @@ export default class Databricks extends OpenAI {
       } else if (message.role === "tool" && message.toolCallId) {
         return {
           role: "tool",
-          content: message.content || "",
+          content: hasValidContent ? message.content : "Tool response",
           tool_call_id: message.toolCallId
         };
       } else {
         return {
           role: message.role === "user" ? "user" : "assistant",
-          content: message.content || ""
+          content: hasValidContent ? message.content : defaultContent
         };
       }
     });
+    
+    // 最終チェック：少なくとも1つのメッセージがあることを確認
+    if (messages.length === 0) {
+      // 最低限のメッセージを追加
+      messages.push({
+        role: "user",
+        content: "I need assistance."
+      });
+    }
     
     return messages;
   }
@@ -865,6 +954,12 @@ export default class Databricks extends OpenAI {
       return;
     }
     
+    // 空のメッセージがないか確認し、警告
+    const emptyMessages = msgs.filter(m => !m || (typeof m.content === 'string' && m.content.trim() === ''));
+    if (emptyMessages.length > 0) {
+      console.warn(`Warning: ${emptyMessages.length} empty messages detected in request`);
+    }
+    
     try {
       const convertedMessages = this.convertMessages(msgs);
       const originalSystemMessage = this.extractSystemMessage(msgs);
@@ -883,6 +978,25 @@ export default class Databricks extends OpenAI {
         messages: convertedMessages,
         system: enhancedSystemMessage
       };
+      
+      // 最終チェック：空のメッセージがないことを確認
+      if (body.messages && Array.isArray(body.messages)) {
+        body.messages = body.messages.map(msg => {
+          if (!msg) return null; // nullメッセージの除外用
+          
+          // コンテンツが空か空白のみの場合はデフォルトを設定
+          if (typeof msg.content === 'string' && msg.content.trim() === '') {
+            const defaultContent = msg.role === 'user' ? 
+                                "I need assistance." : 
+                                "I understand. How can I help you?";
+            return { ...msg, content: defaultContent };
+          }
+          return msg;
+        }).filter(Boolean); // nullエントリを除外
+      }
+      
+      // デバッグ用：リクエストの前にメッセージをログに記録
+      console.log(`Request prepared with ${body.messages?.length || 0} messages`);
       
       // ツールパラメータがある場合は追加
       if (toolsParameter) {

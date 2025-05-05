@@ -17,6 +17,8 @@ export class ThinkingPanelProvider {
   private pendingUpdates: boolean = false;
   private registeredCommands = new Set<string>();
   private disposed: boolean = false;
+  // 静的フラグをprivateからpublicに変更
+  public static thinkingPanelRegistered: boolean = false;
 
   /**
    * シングルトンパターンによるインスタンス取得
@@ -79,6 +81,7 @@ export class ThinkingPanelProvider {
     try {
       // 既に登録済みならスキップ
       if (this.registeredCommands.has(commandId)) {
+        console.log(`Command ${commandId} already registered internally`);
         return true;
       }
       
@@ -88,16 +91,20 @@ export class ThinkingPanelProvider {
           const disposable = vscode.commands.registerCommand(commandId, callback);
           this.context.subscriptions.push(disposable);
           this.registeredCommands.add(commandId);
+          console.log(`Command ${commandId} registered successfully`);
           return true;
         } catch (e) {
+          console.error(`Error registering command ${commandId}:`, e);
           return false;
         }
       } else {
         // 既に存在する場合は記録のみ
         this.registeredCommands.add(commandId);
+        console.log(`Command ${commandId} already registered in VS Code`);
         return true;
       }
     } catch (e) {
+      console.error(`Unexpected error registering command ${commandId}:`, e);
       return false;
     }
   }
@@ -141,6 +148,7 @@ export class ThinkingPanelProvider {
       this.context.subscriptions.push(this.statusBarItem);
     } catch (error) {
       // エラーは静かに処理
+      console.error("Error registering thinking panel commands:", error);
     }
   }
 
@@ -218,6 +226,7 @@ export class ThinkingPanelProvider {
       });
     } catch (error) {
       // エラーは静かに処理
+      console.error("Error creating thinking panel:", error);
     }
   }
 
@@ -505,6 +514,9 @@ export class ThinkingPanelProvider {
                   
                   // VSCode API
                   const vscode = acquireVsCodeApi();
+                  
+                  // Webviewの準備完了を親に通知
+                  vscode.postMessage({ command: 'webviewReady' });
               } catch (e) {
                   // エラーは静かに処理
               }
@@ -541,9 +553,17 @@ export class ThinkingPanelProvider {
       this.statusBarItem.dispose();
       
       ThinkingPanelProvider.instance = undefined as any;
+      ThinkingPanelProvider.thinkingPanelRegistered = false;
     } catch (error) {
       // エラーは静かに処理
     }
+  }
+  
+  /**
+   * 重複設定を避けるためのクラスメソッド
+   */
+  public static isRegistered(): boolean {
+    return ThinkingPanelProvider.thinkingPanelRegistered;
   }
 }
 
@@ -553,14 +573,27 @@ export class ThinkingPanelProvider {
 export function registerThinkingPanel(context: vscode.ExtensionContext) {
   try {
     if (!context) {
+      console.warn("No valid context provided for thinking panel registration");
       return null;
+    }
+    
+    // 重複登録を避ける
+    if (ThinkingPanelProvider.isRegistered()) {
+      console.log("Thinking panel already registered, returning existing instance");
+      return ThinkingPanelProvider.getInstance(context);
     }
     
     // グローバル状態をチェック
     const isRegistered = context.globalState.get('thinkingPanelRegistered');
     if (isRegistered) {
+      console.log("Thinking panel registered according to global state");
+      ThinkingPanelProvider.thinkingPanelRegistered = true;
       return ThinkingPanelProvider.getInstance(context);
     }
+    
+    // 新規登録の場合はマーク
+    console.log("Registering thinking panel for the first time");
+    ThinkingPanelProvider.thinkingPanelRegistered = true;
     
     // 思考パネルプロバイダを作成してコマンドを登録
     const provider = ThinkingPanelProvider.getInstance(context);
@@ -570,7 +603,13 @@ export function registerThinkingPanel(context: vscode.ExtensionContext) {
     
     return provider;
   } catch (error) {
-    // エラーは静かに処理
+    // エラーは詳細にログ
+    console.error("Error registering thinking panel:", error);
+    if (error instanceof Error) {
+      console.error(`  Name: ${error.name}`);
+      console.error(`  Message: ${error.message}`);
+      if (error.stack) console.error(`  Stack: ${error.stack}`);
+    }
     return null;
   }
 }

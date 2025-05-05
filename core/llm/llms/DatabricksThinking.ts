@@ -4,25 +4,89 @@ const isNode = typeof process !== 'undefined' &&
                typeof process.versions !== 'undefined' && 
                typeof process.versions.node !== 'undefined';
 
-// VSCode APIを安全に取得
-let vscode: any = undefined;
-if (!isNode) {
+// ブラウザ環境検出の安全実装
+const isBrowser = !isNode && typeof globalThis !== 'undefined' && 
+                (typeof globalThis.window !== 'undefined' || 
+                typeof globalThis.document !== 'undefined');
+
+// VSCode API初期化の安全な実装 - 環境別に最適化
+let vsCodeApi: any = undefined;
+
+if (isNode) {
   try {
-    if (typeof window !== 'undefined') {
-      const win = window as any;
-      if (win.vscode) {
-        vscode = win.vscode;
-      } else if (typeof win.acquireVsCodeApi === 'function') {
-        try {
-          vscode = win.acquireVsCodeApi();
-        } catch (apiError) {
-          console.warn("Error calling acquireVsCodeApi:", apiError);
-        }
-      }
+    // Node.js環境でのrequire (importで置き換えない)
+    vsCodeApi = require('vscode');
+    console.log("VSCode API loaded in Node.js environment");
+  } catch (e) {
+    console.warn("Error loading vscode module in Node.js environment:", e);
+    // エラー詳細をログ
+    if (e instanceof Error) {
+      console.warn(`  Name: ${e.name}, Message: ${e.message}`);
+      if (e.stack) console.warn(`  Stack: ${e.stack.split('\n')[0]}`);
     }
+  }
+} else if (isBrowser) {
+  try {
+    // ブラウザ環境での安全なアクセス
+    const context = globalThis as any;
+    
+    // グローバルスコープでacquireVsCodeApi関数を宣言（ブラウザ環境での型定義用）
+    if (typeof (context as any).acquireVsCodeApi === 'function') {
+      try {
+        vsCodeApi = (context as any).acquireVsCodeApi();
+        console.log("VSCode API acquired via acquireVsCodeApi");
+      } catch (apiError) {
+        console.warn("Error calling acquireVsCodeApi:", apiError);
+      }
+    } else if (typeof context.vscode !== 'undefined') {
+      vsCodeApi = context.vscode;
+      console.log("VSCode API accessed via globalThis.vscode");
+    } 
   } catch (e) {
     console.warn("Error initializing VSCode API in browser environment:", e);
   }
+}
+
+// VSCode APIが利用できない場合のスタブ実装
+if (!vsCodeApi) {
+  console.log("Creating VSCode API stub implementation for thinking panel");
+  vsCodeApi = {
+    commands: {
+      executeCommand: (command: string, ...args: any[]) => {
+        console.log(`[STUB] Executing command: ${command}`);
+        return Promise.resolve();
+      },
+      registerCommand: (command: string, callback: Function) => {
+        console.log(`[STUB] Registering command: ${command}`);
+        return { dispose: () => {} };
+      },
+      getCommands: () => {
+        console.log(`[STUB] Getting commands`);
+        return Promise.resolve([]);
+      }
+    },
+    window: {
+      createWebviewPanel: () => {
+        console.log(`[STUB] Creating webview panel`);
+        return {
+          webview: { 
+            html: '', 
+            onDidReceiveMessage: () => ({ dispose: () => {} }),
+            postMessage: (msg: any) => console.log(`[STUB] Posting message: ${JSON.stringify(msg).substring(0, 100)}...`)
+          },
+          onDidDispose: () => ({ dispose: () => {} }),
+          reveal: () => {},
+          dispose: () => {}
+        };
+      },
+      showInformationMessage: (msg: string) => {
+        console.log(`[STUB INFO] ${msg}`);
+      },
+      showErrorMessage: (msg: string) => {
+        console.error(`[STUB ERROR] ${msg}`);
+      }
+    }
+  };
 }
 
 import {
@@ -75,7 +139,7 @@ export default class DatabricksThinking {
   private totalThinkingTokens: number = 0;
   private thinkingStartTime: number = 0;
   private lastThinkingUpdateTime: number = 0;
-  private thinkingUpdateInterval: number = 2000;
+  private thinkingUpdateInterval: number = 5000; // 2秒→5秒に変更
   private pendingThinkingUpdates: string[] = [];
   private sentThinkingHashes: Set<string> = new Set<string>();
   private isStreamActive: boolean = false;
@@ -238,13 +302,36 @@ export default class DatabricksThinking {
     // バッファの内容を送信するタイマーを設定
     this.bufferTimeoutId = setTimeout(() => {
       if (this.thinkingContentBuffer && this.thinkingContentBuffer.trim()) {
-        // バッファの内容を送信
-        updateThinking(this.thinkingContentBuffer, this.thinkingPhase, this.thinkingProgress);
+        console.log(`思考データ更新: ${this.thinkingPhase}, 進捗: ${this.thinkingProgress}`);
+        
+        try {
+          // VSCode APIコマンドを使用して思考内容を更新
+          if (vsCodeApi && vsCodeApi.commands && typeof vsCodeApi.commands.executeCommand === 'function') {
+            // コマンド経由で実行
+            vsCodeApi.commands.executeCommand(
+              'continue.appendThinkingChunk', 
+              this.thinkingContentBuffer, 
+              this.thinkingPhase, 
+              this.thinkingProgress
+            ).catch((e: Error) => {
+              // エラー時は直接更新
+              updateThinking(this.thinkingContentBuffer, this.thinkingPhase, this.thinkingProgress);
+            });
+          } else {
+            // 直接関数を呼び出し
+            updateThinking(this.thinkingContentBuffer, this.thinkingPhase, this.thinkingProgress);
+          }
+        } catch (e) {
+          console.warn("思考データ送信エラー:", e);
+          // エラー時はフォールバック
+          updateThinking(this.thinkingContentBuffer, this.thinkingPhase, this.thinkingProgress);
+        }
+        
         this.thinkingContentBuffer = "";
       }
       
       this.bufferTimeoutId = null;
-    }, 250); // 送信間隔を短縮（500ms→250ms）
+    }, 1000); // 送信間隔を1秒に短縮（より頻繁な更新）
   }
   
   private hashSentence(sentence: string): string {
@@ -940,7 +1027,7 @@ export default class DatabricksThinking {
               // サーバーは生きているが、ストリームが停止している可能性がある
               console.log("API server is responsive but stream may be stalled");
             } catch (healthError) {
-              console.error("Health check failed:", healthError);
+              console.error("Health check failed:", healthError instanceof Error ? healthError.message : String(healthError));
               throw new Error("Stream connection lost and health check failed");
             }
           }
@@ -950,7 +1037,7 @@ export default class DatabricksThinking {
           try {
             readResult = await reader.read();
           } catch (readError) {
-            console.error("Error reading from stream:", readError);
+            console.error("Error reading from stream:", readError instanceof Error ? readError.message : String(readError));
             throw new Error("Stream read error: " + (readError instanceof Error ? readError.message : String(readError)));
           }
           
@@ -1025,7 +1112,7 @@ export default class DatabricksThinking {
           }
         }
       } catch (chunkError) {
-        console.error("Error during stream processing:", chunkError);
+        console.error("Error during stream processing:", chunkError instanceof Error ? chunkError.message : String(chunkError));
         this.ensureThinkingComplete();
         
         if (Date.now() - lastActivityTime > 10000) {
@@ -1105,7 +1192,7 @@ export default class DatabricksThinking {
               }
             }
           } catch (reconnectError) {
-            console.error("Error during reconnection attempt:", reconnectError);
+            console.error("Error during reconnection attempt:", reconnectError instanceof Error ? reconnectError.message : String(reconnectError));
           }
           
           // 再接続に失敗した場合は元の部分的な応答を表示
@@ -1231,7 +1318,7 @@ export default class DatabricksThinking {
             return;
           }
         } catch (e) {
-          console.error("Error processing stream chunk:", e);
+          console.error("Error processing stream chunk:", e instanceof Error ? e.message : String(e));
           if (Date.now() - lastActivityTime > 10000) {
             this.ensureThinkingComplete();
             
@@ -1310,7 +1397,7 @@ export default class DatabricksThinking {
                 }
               }
             } catch (reconnectError) {
-              console.error("Error during reconnection attempt:", reconnectError);
+              console.error("Error during reconnection attempt:", reconnectError instanceof Error ? reconnectError.message : String(reconnectError));
             }
             
             // 再接続に失敗した場合は元の部分的な応答を表示
@@ -1356,7 +1443,7 @@ export default class DatabricksThinking {
       
       this.ensureThinkingComplete();
     } catch (streamError) {
-      console.error("Stream error:", streamError);
+      console.error("Stream error:", streamError instanceof Error ? streamError.message : String(streamError));
       this.ensureThinkingComplete();
       
       // エラー時のコンテンツ復旧
@@ -1376,7 +1463,7 @@ export default class DatabricksThinking {
             return;
           }
         } catch (recoveryError) {
-          console.error("Error recovering content:", recoveryError);
+          console.error("Error recovering content:", recoveryError instanceof Error ? recoveryError.message : String(recoveryError));
         }
       }
       

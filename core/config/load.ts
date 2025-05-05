@@ -2,6 +2,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import os from "os";
 import path from "path";
+import * as YAML from "yaml";
 
 import {
   ConfigResult,
@@ -64,6 +65,9 @@ import {
   getConfigTsPath,
   getContinueDotEnv,
   getEsbuildBinaryPath,
+  fixDoubleDriveLetter,
+  normalizePath,
+  getDebugConfigPath,
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
@@ -555,16 +559,89 @@ async function intermediateToFinalConfig({
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.experimental?.modelContextProtocolServers ?? []).map(
-      (server, index) => ({
+  
+  // MCPサーバー設定のロード処理を強化
+  try {
+    // デフォルトのMCPサーバー設定
+    const mcpServers = config.experimental?.modelContextProtocolServers ?? [];
+    
+    // デバッグモードの場合は詳細ログを出力
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`初期設定: ${mcpServers.length}個のMCPサーバーをconfigからロード`);
+    }
+    
+    // デバッグ設定ファイルを探し、最優先で読み込む
+    const debugMcpServers: any[] = [];
+    
+    try {
+      // 改善されたgetDebugConfigPath関数を使用してデバッグ設定を探索
+      const debugMcpPath = getDebugConfigPath('mcpServer');
+      
+      if (debugMcpPath) {
+        // 取得したパスが存在するか確認
+        if (fs.existsSync(debugMcpPath)) {
+          const stats = fs.statSync(debugMcpPath);
+          
+          if (stats.isDirectory()) {
+            // ディレクトリの場合、databricks.yaml を明示的に探す
+            const databricksPath = normalizePath(path.join(debugMcpPath, "databricks.yaml"));
+            
+            if (fs.existsSync(databricksPath)) {
+              try {
+                const content = fs.readFileSync(databricksPath, 'utf8');
+                const yamlData = YAML.parse(content);
+                
+                if (yamlData) {
+                  debugMcpServers.push(yamlData);
+                  console.log(`デバッグMCPサーバー設定を読み込み成功: ${databricksPath}`);
+                }
+              } catch (parseError) {
+                console.warn(`デバッグMCP YAML解析エラー: ${parseError}`);
+              }
+            } else {
+              console.log(`databricks.yamlが指定パスに存在しません: ${databricksPath}`);
+            }
+          } else {
+            // ファイルの場合は直接読み込み
+            try {
+              const content = fs.readFileSync(debugMcpPath, 'utf8');
+              const yamlData = YAML.parse(content);
+              
+              if (yamlData) {
+                debugMcpServers.push(yamlData);
+                console.log(`デバッグMCPサーバー設定を読み込み成功: ${debugMcpPath}`);
+              }
+            } catch (parseError) {
+              console.warn(`デバッグMCP YAML解析エラー: ${parseError}`);
+            }
+          }
+        } else {
+          console.log(`デバッグMCPパスが存在しません: ${debugMcpPath}`);
+        }
+      }
+    } catch (debugError) {
+      console.warn(`デバッグMCPサーバー設定読み込みエラー: ${debugError}`);
+    }
+    
+    // すべての設定をマージして登録（デバッグ設定を優先）
+    const allServers = [...debugMcpServers, ...mcpServers];
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`合計${allServers.length}個のMCPサーバーを登録（デバッグ: ${debugMcpServers.length}個、通常: ${mcpServers.length}個）`);
+    }
+    
+    // MCP接続を設定
+    mcpManager.setConnections(
+      allServers.map((server, index) => ({
         id: `continue-mcp-server-${index + 1}`,
-        name: `MCP Server`,
+        name: server.name || `MCP Server ${index + 1}`,
         ...server,
-      }),
-    ),
-    false,
-  );
+      })),
+      true // デバッグ時はforceをtrueに設定
+    );
+  } catch (error) {
+    console.error('MCPサーバー接続設定エラー:', error);
+  }
 
   // Handle experimental modelRole config values for apply and edit
   const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;

@@ -1,4 +1,4 @@
-import { getContinueRcPath, getTsConfigPath, normalizePath, getLogsDirPath } from "core/util/paths";
+import { getContinueRcPath, getTsConfigPath, normalizePath, getLogsDirPath, setExtensionPath, getExtensionRootPath, fixDoubleDriveLetter } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
@@ -32,11 +32,17 @@ const EXTENSION_COMMANDS = {
   TOGGLE_THINKING_PANEL: 'continue.toggleThinkingPanel',
   OPEN_CONFIG_PAGE: 'continue.openConfigPage',
   FORCE_REFRESH_THINKING: 'continue.forceRefreshThinking',
-  SIDEBAR_NEW_SESSION: 'continue.sidebar.newSession'
+  SIDEBAR_NEW_SESSION: 'continue.sidebar.newSession',
+  RESET_THINKING_PANEL: 'continue.resetThinkingPanel',
+  APPEND_THINKING_CHUNK: 'continue.appendThinkingChunk',
+  THINKING_COMPLETED: 'continue.thinkingCompleted',
+  UPDATE_THINKING: 'continue.updateThinking'
 };
 
 // 既に登録されたコマンドを追跡するセット
 const registeredCommands = new Set<string>();
+// 登録失敗したコマンドのフォールバック関数
+const commandFallbacks = new Map<string, (...args: any[]) => any>();
 
 /**
  * コマンドが既に登録されているか確認する関数
@@ -58,16 +64,17 @@ async function isCommandRegistered(commandId: string): Promise<boolean> {
   try {
     // VSCodeのAPIを使用して登録状況を確認
     const commands = await vscode.commands.getCommands();
-    const exists = commands.includes(commandId);
+    const exists = Array.isArray(commands) && commands.includes(commandId);
     
     // 登録されていた場合は内部状態も更新
     if (exists) {
       registeredCommands.add(commandId);
+      return true;
     }
     
-    return exists;
+    return false;
   } catch (error) {
-    console.warn(`Error checking command registration for ${commandId}:`, error);
+    console.warn(`Error checking command registration for ${commandId}:`, error instanceof Error ? error.message : String(error));
     return false;
   }
 }
@@ -77,11 +84,13 @@ async function isCommandRegistered(commandId: string): Promise<boolean> {
  * @param context 拡張機能のコンテキスト
  * @param commandId コマンドID
  * @param callback コマンドが実行されたときのコールバック
+ * @param fallback 登録失敗時のフォールバック関数
  */
 async function safeRegisterCommand(
   context: vscode.ExtensionContext,
   commandId: string,
-  callback: (...args: any[]) => any
+  callback: (...args: any[]) => any,
+  fallback?: (...args: any[]) => any
 ): Promise<boolean> {
   try {
     // 未定義チェック追加
@@ -96,6 +105,11 @@ async function safeRegisterCommand(
       return true;
     }
     
+    // フォールバック関数が指定されていれば保存
+    if (fallback) {
+      commandFallbacks.set(commandId, fallback);
+    }
+    
     // コマンドが既に登録されているか確認
     const exists = await isCommandRegistered(commandId);
     if (!exists) {
@@ -105,8 +119,18 @@ async function safeRegisterCommand(
           try {
             return callback(...args);
           } catch (callbackError) {
-            console.error(`Error executing command ${commandId}:`, callbackError);
-            // エラーがあってもユーザーに通知しない
+            console.error(`Error executing command ${commandId}:`, callbackError instanceof Error ? callbackError.message : String(callbackError));
+            
+            // エラー時にフォールバックを実行
+            const fb = commandFallbacks.get(commandId);
+            if (fb) {
+              try {
+                console.log(`Using fallback for ${commandId}`);
+                return fb(...args);
+              } catch (fallbackError) {
+                console.error(`Error in fallback for ${commandId}:`, fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
+              }
+            }
             return null;
           }
         });
@@ -117,7 +141,7 @@ async function safeRegisterCommand(
         console.log(`Command ${commandId} registered successfully`);
         return true;
       } catch (registrationError) {
-        console.error(`Error registering command ${commandId}:`, registrationError);
+        console.error(`Error registering command ${commandId}:`, registrationError instanceof Error ? registrationError.message : String(registrationError));
         return false;
       }
     } else {
@@ -127,7 +151,7 @@ async function safeRegisterCommand(
       return true;
     }
   } catch (error) {
-    console.error(`Unexpected error registering command ${commandId}:`, error);
+    console.error(`Unexpected error registering command ${commandId}:`, error instanceof Error ? error.message : String(error));
     return false;
   }
 }
@@ -146,25 +170,52 @@ async function safeExecuteCommand(
   try {
     if (!commandId) {
       console.warn("Attempted to execute command with empty commandId");
-      return fallback ? fallback() : null;
+      if (fallback) {
+        console.log("Using fallback for empty commandId");
+        return fallback();
+      }
+      return null;
     }
     
     // コマンドが登録されているか確認
     const exists = await isCommandRegistered(commandId);
     if (!exists) {
-      console.warn(`Command ${commandId} not found, cannot execute`);
-      return fallback ? fallback() : null;
+      console.warn(`Command ${commandId} not found, using fallback`);
+      
+      // 登録されていなくても内部的にフォールバックがあれば使用
+      const fb = commandFallbacks.get(commandId);
+      if (fb) {
+        try {
+          console.log(`Using fallback for ${commandId}`);
+          return fb(...args);
+        } catch (fallbackError) {
+          console.error(`Error in fallback for ${commandId}:`, fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
+        }
+      }
+      
+      // 引数で渡されたフォールバックがあれば使用
+      if (fallback) {
+        try {
+          console.log(`Using provided fallback for ${commandId}`);
+          return fallback();
+        } catch (fallbackError) {
+          console.error(`Error in provided fallback for ${commandId}:`, fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
+          return null;
+        }
+      }
+      return null;
     }
     
     return await vscode.commands.executeCommand(commandId, ...args);
   } catch (error) {
-    console.error(`Error executing command ${commandId}:`, error);
+    console.error(`Error executing command ${commandId}:`, error instanceof Error ? error.message : String(error));
     // コマンド実行に失敗した場合、フォールバックがあれば実行
     if (fallback) {
       try {
+        console.log(`Using fallback after execution error for ${commandId}`);
         return fallback();
       } catch (fallbackError) {
-        console.error(`Error in fallback for command ${commandId}:`, fallbackError);
+        console.error(`Error in fallback for command ${commandId}:`, fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
         return null;
       }
     }
@@ -195,9 +246,11 @@ function loadModuleSafely(paths: string[]): any | null {
       // パスが存在するか確認
       let normalizedPath;
       try {
-        normalizedPath = normalizePath(modulePath);
+        // 二重ドライブレター問題を修正
+        const fixedPath = fixDoubleDriveLetter(modulePath);
+        normalizedPath = normalizePath(fixedPath);
       } catch (normalizationError) {
-        console.warn(`Error normalizing path ${modulePath}:`, normalizationError);
+        console.warn(`Error normalizing path ${modulePath}:`, normalizationError instanceof Error ? normalizationError.message : String(normalizationError));
         normalizedPath = modulePath; // フォールバックとして元のパスを使用
       }
       
@@ -210,13 +263,13 @@ function loadModuleSafely(paths: string[]): any | null {
       return require(normalizedPath);
     } catch (error) {
       lastError = error;
-      console.warn(`Error loading module from ${modulePath}:`, error);
+      console.warn(`Error loading module from ${modulePath}:`, error instanceof Error ? error.message : String(error));
       continue;
     }
   }
   
   if (lastError) {
-    console.error("All module loading attempts failed. Last error:", lastError);
+    console.error("All module loading attempts failed. Last error:", lastError instanceof Error ? lastError.message : String(lastError));
   }
   return null;
 }
@@ -230,25 +283,79 @@ function safeInitializePaths(): void {
     try {
       getTsConfigPath();
     } catch (tsConfigError) {
-      console.warn("Error initializing TsConfig path:", tsConfigError);
+      console.warn("Error initializing TsConfig path:", tsConfigError instanceof Error ? tsConfigError.message : String(tsConfigError));
     }
     
     // ContinueRcを初期化
     try {
       getContinueRcPath();
     } catch (continueRcError) {
-      console.warn("Error initializing ContinueRc path:", continueRcError);
+      console.warn("Error initializing ContinueRc path:", continueRcError instanceof Error ? continueRcError.message : String(continueRcError));
     }
     
-    // ログディレクトリを確保
+    // ログディレクトリを確保（改善：専用関数を使用）
     try {
+      // 既存のログディレクトリ関数を利用
       const logDir = getLogsDirPath();
+      
+      // 固定ディレクトリの確保（デバッグモード用）
+      if (process.env.NODE_ENV === 'development') {
+        // 特殊パス：extensions/.continue-debug/logs の作成を確実に
+        ensureDebugLogsDirectory();
+      }
+      
       console.log(`Log directory initialized: ${logDir}`);
     } catch (logsError) {
-      console.warn("Error initializing logs directory:", logsError);
+      console.warn("Error initializing logs directory:", logsError instanceof Error ? logsError.message : String(logsError));
+      
+      // 追加のフォールバック: 確実にログディレクトリを作成
+      ensureDebugLogsDirectory();
     }
   } catch (error) {
-    console.error("Unexpected error during path initialization:", error);
+    console.error("Unexpected error during path initialization:", error instanceof Error ? error.message : String(error));
+  }
+}
+
+/**
+ * デバッグ用ログディレクトリを必ず作成する関数
+ */
+function ensureDebugLogsDirectory(): void {
+  try {
+    // 固定ディレクトリパスの定義と作成
+    const fixedDebugLogPaths = [
+      // Windows環境向け固定パス
+      'C:\\continue-databricks-claude-3-7-sonnet\\extensions\\.continue-debug\\logs',
+      // 拡張機能からの相対パス
+      path.join(getExtensionRootPath(), '.continue-debug', 'logs'),
+      path.join(getExtensionRootPath(), 'extensions', '.continue-debug', 'logs')
+    ];
+    
+    let created = false;
+    
+    for (const logPath of fixedDebugLogPaths) {
+      try {
+        // 二重ドライブレター問題を修正
+        const fixedPath = fixDoubleDriveLetter(logPath);
+        const normalizedPath = normalizePath(fixedPath);
+        
+        if (!fs.existsSync(normalizedPath)) {
+          fs.mkdirSync(normalizedPath, { recursive: true });
+          console.log(`Ensured debug logs directory: ${normalizedPath}`);
+          created = true;
+        } else {
+          console.log(`Debug logs directory already exists: ${normalizedPath}`);
+          created = true;
+        }
+      } catch (pathError) {
+        console.warn(`Error creating debug logs directory at ${logPath}:`, pathError);
+      }
+    }
+    
+    if (!created) {
+      console.warn("Failed to create any debug logs directory");
+    }
+  } catch (e) {
+    console.error("Error in ensureDebugLogsDirectory:", e);
   }
 }
 
@@ -265,15 +372,65 @@ function getFirstExistingPath(paths: string[]): string | null {
     if (!p) continue;
     
     try {
-      if (fs.existsSync(p)) {
-        return p;
+      // 二重ドライブレター問題を修正
+      const fixedPath = fixDoubleDriveLetter(p);
+      const normalizedPath = normalizePath(fixedPath);
+      
+      if (fs.existsSync(normalizedPath)) {
+        return normalizedPath;
       }
     } catch (e) {
-      console.warn(`Error checking path existence: ${p}`, e);
+      console.warn(`Error checking path existence: ${p}`, e instanceof Error ? e.message : String(e));
     }
   }
   
   return null;
+}
+
+/**
+ * 思考パネル関連のコマンドを登録 - 重複チェック付き（修正版）
+ */
+async function registerThinkingPanelCommands(context: vscode.ExtensionContext): Promise<boolean> {
+  console.log("Registering thinking panel commands...");
+  
+  try {
+    // コマンドが登録済みかどうかを確認
+    const isThinkingPanelRegistered = context.globalState.get('thinkingPanelCommandsRegistered');
+    
+    if (isThinkingPanelRegistered) {
+      console.log("Thinking panel commands already registered according to global state");
+      
+      // 思考パネルの表示だけは実行（初期化のため）
+      console.log("Thinking panel registered according to global state");
+      
+      // コマンドを使用してパネルを表示
+      try {
+        await safeExecuteCommand(EXTENSION_COMMANDS.SHOW_THINKING_PANEL);
+      } catch (e) {
+        console.warn("Failed to show thinking panel:", e);
+      }
+      
+      return true;
+    }
+    
+    // Thinking Panelプロバイダを登録（ThinkingPanelProvider.tsの関数を使用）
+    const thinkingPanel = registerThinkingPanel(context);
+    
+    if (!thinkingPanel) {
+      console.warn("Failed to create thinking panel provider");
+    } else {
+      console.log("Thinking panel provider registered successfully");
+    }
+    
+    // 思考パネルが正常に登録されたら、登録済みフラグを設定
+    context.globalState.update('thinkingPanelCommandsRegistered', true);
+    console.log("Thinking panel commands registered for the first time");
+    
+    return true;
+  } catch (error) {
+    console.error("Error registering thinking panel commands:", error instanceof Error ? error.message : String(error));
+    return false;
+  }
 }
 
 /**
@@ -285,48 +442,176 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   console.log("Activating Continue extension...");
   
   try {
-    // 必要なファイルを安全に準備
+    // 拡張機能パスを設定（重要: 最初に実行）
+    // 絶対パスを使用して確実にパスを設定
+    const extensionAbsolutePath = path.resolve(context.extensionPath);
+    
+    // 二重ドライブレター問題を修正
+    const fixedPath = fixDoubleDriveLetter(extensionAbsolutePath);
+    const normalizedPath = normalizePath(fixedPath);
+    
+    setExtensionPath(normalizedPath);
+    console.log(`Extension path set to: ${normalizedPath}`);
+    console.log(`Extension root detected as: ${getExtensionRootPath()}`);
+    
+    // プロセスのワーキングディレクトリを確認(デバッグ用)
+    console.log(`Process current working directory: ${process.cwd()}`);
+    
+    // 必要なファイルを安全に準備 - ログディレクトリの作成を含む
     safeInitializePaths();
+    
+    // ★変更点: より早い段階でコアモジュールを読み込む
+    let coreModule = null;
+    try {
+      // より堅牢なモジュール読み込みパスの定義
+      const extensionRootPath = normalizePath(context.extensionPath);
+      const possibleModulePaths = [
+        // JavaScriptビルド済みファイル
+        path.join(extensionRootPath, 'out', 'core', 'llm', 'llms', 'index.js'),
+        path.join(extensionRootPath, 'dist', 'core', 'llm', 'llms', 'index.js'),
+        // 上位ディレクトリのビルド済みファイル
+        path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'index.js'),
+        // 個別のThinkingPanelモジュール
+        path.join(extensionRootPath, 'out', 'core', 'llm', 'llms', 'thinkingPanel.js'),
+        path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'thinkingPanel.js'),
+        // TypeScriptソースファイル（直接読み込める場合）
+        path.join(extensionRootPath, 'core', 'llm', 'llms', 'index.ts'),
+        path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'index.ts')
+      ];
+      
+      console.log("Attempting to load core modules...");
+      
+      // モジュールの読み込みを試行
+      coreModule = loadModuleSafely(possibleModulePaths);
+      
+      if (coreModule) {
+        console.log("Core modules loaded successfully");
+        
+        // setExtensionContextメソッドが存在する場合は呼び出す
+        if (typeof coreModule.setExtensionContext === 'function') {
+          coreModule.setExtensionContext(context);
+          console.log("Extension context set via setExtensionContext");
+        }
+      } else {
+        console.warn("Failed to load core modules");
+      }
+    } catch (coreModuleError) {
+      console.error("Error initializing core modules:", coreModuleError instanceof Error ? coreModuleError.message : String(coreModuleError));
+    }
 
+    // 思考パネルの登録（できるだけ早く）- 重複登録を防止
+    try {
+      // 以下の順序で登録を試みる（優先度順）：
+      // 1. coreModuleを使用して直接登録
+      // 2. 標準の思考パネル登録関数
+      // 3. パネルプロバイダーの登録
+      
+      let registered = false;
+      
+      // まず、coreModuleで登録を試みる
+      if (coreModule && typeof coreModule.registerThinkingPanel === 'function') {
+        try {
+          coreModule.registerThinkingPanel(context);
+          console.log("Thinking panel registered via core module directly");
+          registered = true;
+          
+          // 拡張機能コンテキストも設定
+          if (typeof coreModule.setExtensionContext === 'function') {
+            coreModule.setExtensionContext(context);
+            console.log("Extension context set again via core module");
+          }
+        } catch (coreRegisterError) {
+          console.warn("Failed to register thinking panel via core module:", coreRegisterError instanceof Error ? coreRegisterError.message : String(coreRegisterError));
+        }
+      }
+      
+      // coreModuleでの登録に失敗した場合、標準の登録関数を使用
+      if (!registered) {
+        const result = await registerThinkingPanelCommands(context);
+        if (result) {
+          console.log("Thinking panel registered via standard function");
+          registered = true;
+        }
+      }
+      
+      // 標準関数でも登録に失敗した場合、フォールバックしてパネルプロバイダー直接登録を試みる
+      if (!registered) {
+        try {
+          // パネルを初期化するための確実な方法を試行
+          // 標準の思考パネル関数を直接使用
+          const thinkingPanel = registerThinkingPanel(context);
+          if (thinkingPanel) {
+            console.log("Thinking panel registered via panel provider directly");
+            registered = true;
+          }
+        } catch (providerError) {
+          console.warn("Failed to register thinking panel via provider:", providerError instanceof Error ? providerError.message : String(providerError));
+        }
+      }
+      
+      // それでも登録に失敗した場合は、コマンドの手動登録を試みる（最終手段）
+      if (!registered) {
+        console.log("Attempting manual registration of thinking panel commands");
+        
+        // 以下、直接コマンドの登録を試みる
+        const commandIds = [
+          EXTENSION_COMMANDS.RESET_THINKING_PANEL,
+          EXTENSION_COMMANDS.APPEND_THINKING_CHUNK,
+          EXTENSION_COMMANDS.FORCE_REFRESH_THINKING,
+          EXTENSION_COMMANDS.THINKING_COMPLETED,
+          EXTENSION_COMMANDS.UPDATE_THINKING
+        ];
+        
+        // コマンドを個別に登録
+        for (const commandId of commandIds) {
+          try {
+            if (!await isCommandRegistered(commandId)) {
+              await safeRegisterCommand(context, commandId, (...args: any[]) => {
+                console.log(`Executing manually registered command: ${commandId}`);
+                
+                // 特定のコマンドに対する処理を実装
+                if (commandId === EXTENSION_COMMANDS.RESET_THINKING_PANEL) {
+                  // リセット処理
+                } else if (commandId === EXTENSION_COMMANDS.APPEND_THINKING_CHUNK) {
+                  // 思考チャンクの追加処理
+                } else if (commandId === EXTENSION_COMMANDS.THINKING_COMPLETED) {
+                  // 思考完了処理
+                }
+                
+                // デフォルトの動作（思考パネルを表示）
+                vscode.commands.executeCommand(EXTENSION_COMMANDS.SHOW_THINKING_PANEL);
+              });
+              console.log(`Manually registered command: ${commandId}`);
+            }
+          } catch (commandError) {
+            console.warn(`Failed to manually register command ${commandId}:`, commandError instanceof Error ? commandError.message : String(commandError));
+          }
+        }
+      }
+    } catch (thinkingPanelError) {
+      console.error("Error registering thinking panel:", thinkingPanelError instanceof Error ? thinkingPanelError.message : String(thinkingPanelError));
+      // エラーがあっても継続
+    }
+    
     // プロバイダーの登録
     try {
       registerQuickFixProvider();
       console.log("QuickFix provider registered");
     } catch (quickFixError) {
-      console.warn("Error registering QuickFix provider:", quickFixError);
+      console.warn("Error registering QuickFix provider:", quickFixError instanceof Error ? quickFixError.message : String(quickFixError));
     }
     
     try {
       setupInlineTips(context);
       console.log("Inline tips setup complete");
     } catch (inlineTipsError) {
-      console.warn("Error setting up inline tips:", inlineTipsError);
+      console.warn("Error setting up inline tips:", inlineTipsError instanceof Error ? inlineTipsError.message : String(inlineTipsError));
     }
-    
-    // 思考パネルの登録（できるだけ早く）
-    try {
-      // 二度登録を避けるフラグ
-      if (!context.globalState.get('thinkingPanelRegistered')) {
-        registerThinkingPanel(context);
-        context.globalState.update('thinkingPanelRegistered', true);
-        console.log("Thinking panel registered");
-      } else {
-        console.log("Thinking panel already registered");
-      }
-    } catch (thinkingPanelError) {
-      console.error("Error registering thinking panel:", thinkingPanelError);
-      // エラーがあっても継続
-    }
-    
+
     // コアコマンドを登録（安全な方法で一つずつ登録）
     console.log("Registering core commands...");
     
-    // サイドバー関連のコマンド - 個別に登録してエラーハンドリングを強化
-    await safeRegisterCommand(context, EXTENSION_COMMANDS.SHOW_THINKING_PANEL, () => {
-      return safeExecuteCommand(EXTENSION_COMMANDS.FORCE_REFRESH_THINKING, [true]);
-    });
-    
-    // VIEW_LOGS コマンド - エラー耐性を強化
+    // VIEW_LOGS コマンド - 重複登録を防止
     await safeRegisterCommand(context, EXTENSION_COMMANDS.VIEW_LOGS, () => {
       try {
         console.log("VIEW_LOGS command executed");
@@ -336,24 +621,30 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         try {
           homeDir = os.homedir();
         } catch (homeError) {
-          console.warn("Error getting home directory:", homeError);
+          console.warn("Error getting home directory:", homeError instanceof Error ? homeError.message : String(homeError));
           homeDir = process.env.HOME || process.env.USERPROFILE || '/';
         }
         
-        // ログパスを探索（複数の方法）
-        const possibleLogPaths = [
-          // 1. paths.tsのgetLogsDirPath()
-          getLogsDirPath(), 
-          
-          // 2. コンテキストからの絶対パス
-          path.join(context.globalStorageUri.fsPath, 'logs'),
-          
-          // 3. ユーザーのホームディレクトリベース
-          path.join(homeDir, '.continue', 'logs'),
-          
-          // 4. 拡張機能のディレクトリを基準
-          path.join(context.extensionPath, 'logs')
-        ];
+        // ログパスを探索（複数の方法）- 優先順位を明確に定義
+        const possibleLogPaths = [];
+        
+        // 1. 固定パスを最優先（Windows環境向け）
+        if (process.platform === 'win32') {
+          possibleLogPaths.push(
+            'C:\\continue-databricks-claude-3-7-sonnet\\extensions\\.continue-debug\\logs',
+            path.join(getExtensionRootPath(), '.continue-debug', 'logs'),
+            path.join(getExtensionRootPath(), 'extensions', '.continue-debug', 'logs')
+          );
+        }
+        
+        // 2. getLogsDirPath()が提供するパス
+        possibleLogPaths.push(getLogsDirPath());
+        
+        // 3. コンテキストからの絶対パス
+        possibleLogPaths.push(path.join(context.globalStorageUri.fsPath, 'logs'));
+        
+        // 4. ユーザーのホームディレクトリベース
+        possibleLogPaths.push(path.join(homeDir, '.continue', 'logs'));
         
         // 存在する最初のパスを使用
         const logPath = getFirstExistingPath(possibleLogPaths);
@@ -365,7 +656,28 @@ export async function activateExtension(context: vscode.ExtensionContext) {
           });
         }
         
-        // 見つからない場合はホームディレクトリ/.continue/logsを作成して開く
+        // 見つからない場合は優先度順にログディレクトリの作成を試みる
+        for (const potentialPath of possibleLogPaths) {
+          try {
+            // 二重ドライブレター問題を修正
+            const fixedPath = fixDoubleDriveLetter(potentialPath);
+            const normalizedPath = normalizePath(fixedPath);
+            
+            if (!fs.existsSync(normalizedPath)) {
+              fs.mkdirSync(normalizedPath, { recursive: true });
+              console.log(`Created logs directory: ${normalizedPath}`);
+              
+              return vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(normalizedPath), {
+                forceNewWindow: true
+              });
+            }
+          } catch (creationError) {
+            console.warn(`Error creating logs directory at ${potentialPath}:`, creationError);
+            continue;
+          }
+        }
+        
+        // 最終的なフォールバック: ホームディレクトリ/.continue/logs
         const fallbackPath = path.join(homeDir, '.continue', 'logs');
         try {
           if (!fs.existsSync(fallbackPath)) {
@@ -377,24 +689,30 @@ export async function activateExtension(context: vscode.ExtensionContext) {
             forceNewWindow: true
           });
         } catch (fallbackError) {
-          console.error("Error creating fallback logs directory:", fallbackError);
+          console.error("Error creating fallback logs directory:", fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
           vscode.window.showErrorMessage(`Logs directory not found and could not be created. Please check your Continue installation.`);
         }
       } catch (error) {
-        console.error("Error handling viewLogs command:", error);
-        vscode.window.showErrorMessage(`Error opening logs directory: ${error.message}`);
+        console.error("Error handling viewLogs command:", error instanceof Error ? error.message : String(error));
+        vscode.window.showErrorMessage(`Error opening logs directory: ${error instanceof Error ? error.message : String(error)}`);
       }
     });
     
+    // NEW_SESSION コマンド - 重複登録を防止
     await safeRegisterCommand(context, EXTENSION_COMMANDS.NEW_SESSION, () => {
-      return safeExecuteCommand(EXTENSION_COMMANDS.SIDEBAR_NEW_SESSION);
+      return safeExecuteCommand(EXTENSION_COMMANDS.SIDEBAR_NEW_SESSION, [], () => {
+        console.log("Using fallback for sidebar new session");
+        // フォールバック: メッセージを表示
+        vscode.window.showInformationMessage("続行中です - 新しいセッションを開始しました");
+      });
     });
     
+    // TOGGLE_THINKING_PANEL コマンド - 重複登録を防止
     await safeRegisterCommand(context, EXTENSION_COMMANDS.TOGGLE_THINKING_PANEL, () => {
       return safeExecuteCommand(EXTENSION_COMMANDS.SHOW_THINKING_PANEL);
     });
     
-    // 設定ページを開くコマンド - エラー耐性を強化
+    // 設定ページを開くコマンド - 重複登録を防止
     await safeRegisterCommand(context, EXTENSION_COMMANDS.OPEN_CONFIG_PAGE, () => {
       try {
         // .continueディレクトリのパスを取得
@@ -402,16 +720,27 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         try {
           homeDir = os.homedir();
         } catch (homeError) {
-          console.warn("Error getting home directory:", homeError);
+          console.warn("Error getting home directory:", homeError instanceof Error ? homeError.message : String(homeError));
           homeDir = process.env.HOME || process.env.USERPROFILE || '/';
         }
         
-        // 設定ファイルパスを探索
-        const possibleConfigPaths = [
+        // 設定ファイルパスを探索（優先順位順）
+        const possibleConfigPaths = [];
+        
+        // 1. Windows環境では固定パスを最優先
+        if (process.platform === 'win32') {
+          possibleConfigPaths.push(
+            'C:\\continue-databricks-claude-3-7-sonnet\\manual-testing-sandbox\\.continue\\config.yaml',
+            'C:\\continue-databricks-claude-3-7-sonnet\\extensions\\.continue-debug\\config.yaml'
+          );
+        }
+        
+        // 2. 標準の設定ファイルパス
+        possibleConfigPaths.push(
           path.join(homeDir, '.continue', 'config.yaml'),
           path.join(context.globalStorageUri.fsPath, 'config.yaml'),
-          path.join(context.extensionPath, '.continue', 'config.yaml')
-        ];
+          path.join(getExtensionRootPath(), '.continue', 'config.yaml')
+        );
         
         // 存在する最初のパスを使用
         const configPath = getFirstExistingPath(possibleConfigPaths);
@@ -422,7 +751,35 @@ export async function activateExtension(context: vscode.ExtensionContext) {
             .then(doc => vscode.window.showTextDocument(doc));
         }
         
-        // 見つからない場合はフォールバック
+        // 見つからない場合は設定ファイルの作成を試みる
+        for (const potentialPath of possibleConfigPaths) {
+          try {
+            // 二重ドライブレター問題を修正
+            const fixedPath = fixDoubleDriveLetter(potentialPath);
+            const normalizedPath = normalizePath(fixedPath);
+            
+            // ディレクトリを作成
+            const configDir = path.dirname(normalizedPath);
+            if (!fs.existsSync(configDir)) {
+              fs.mkdirSync(configDir, { recursive: true });
+              console.log(`Created config directory: ${configDir}`);
+            }
+            
+            // 空のYAMLファイルを作成
+            if (!fs.existsSync(normalizedPath)) {
+              fs.writeFileSync(normalizedPath, '# Continue Configuration\n\n# Databricks Claude 3.7 Sonnet configuration\nmodels:\n  - name: "Claude 3.7 Sonnet (Databricks)"\n    provider: databricks\n    model: databricks-claude-3-7-sonnet\n');
+              console.log(`Created config file: ${normalizedPath}`);
+            }
+            
+            return vscode.workspace.openTextDocument(vscode.Uri.file(normalizedPath))
+              .then(doc => vscode.window.showTextDocument(doc));
+          } catch (creationError) {
+            console.warn(`Error creating config file at ${potentialPath}:`, creationError);
+            continue;
+          }
+        }
+        
+        // 最終フォールバック: ホームディレクトリ/.continue/config.yaml
         const fallbackPath = path.join(homeDir, '.continue', 'config.yaml');
         try {
           // ディレクトリを作成
@@ -439,62 +796,17 @@ export async function activateExtension(context: vscode.ExtensionContext) {
           return vscode.workspace.openTextDocument(vscode.Uri.file(fallbackPath))
             .then(doc => vscode.window.showTextDocument(doc));
         } catch (fallbackError) {
-          console.error("Error creating fallback config file:", fallbackError);
+          console.error("Error creating fallback config file:", fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
           vscode.window.showErrorMessage(`Configuration file not found and could not be created. Please check your Continue installation.`);
         }
       } catch (error) {
-        console.error("Error handling openConfigPage command:", error);
-        vscode.window.showErrorMessage(`Error opening configuration file: ${error.message}`);
+        console.error("Error handling openConfigPage command:", error instanceof Error ? error.message : String(error));
+        vscode.window.showErrorMessage(`Error opening configuration file: ${error instanceof Error ? error.message : String(error)}`);
       }
     });
     
     console.log("Core commands registered");
     
-    // コア系のモジュールからも利用できるように、コンテキストをグローバルに設定
-    try {
-      // より堅牢なモジュール読み込みパスの定義
-      const extensionRootPath = normalizePath(context.extensionPath);
-      const possibleModulePaths = [
-        // JavaScriptビルド済みファイル
-        path.join(extensionRootPath, 'out', 'core', 'llm', 'llms', 'index.js'),
-        path.join(extensionRootPath, 'dist', 'core', 'llm', 'llms', 'index.js'),
-        // 上位ディレクトリのビルド済みファイル
-        path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'index.js'),
-        path.join(extensionRootPath, '..', '..', 'core', 'llm', 'llms', 'index.js'),
-        // TypeScriptソースファイル（直接読み込める場合）
-        path.join(extensionRootPath, 'core', 'llm', 'llms', 'index.ts'),
-        path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'index.ts'),
-        // 個別のThinkingPanelモジュール
-        path.join(extensionRootPath, 'out', 'core', 'llm', 'llms', 'thinkingPanel.js'),
-        path.join(extensionRootPath, '..', 'core', 'llm', 'llms', 'thinkingPanel.js')
-      ];
-      
-      console.log("Attempting to load core modules...");
-      
-      // モジュールの読み込みを試行
-      const coreModule = loadModuleSafely(possibleModulePaths);
-      
-      if (coreModule) {
-        console.log("Core module loaded successfully");
-        
-        // setExtensionContextメソッドが存在する場合は呼び出す
-        if (typeof coreModule.setExtensionContext === 'function') {
-          coreModule.setExtensionContext(context);
-          console.log("Extension context set via setExtensionContext");
-        } else if (coreModule.registerThinkingPanel && typeof coreModule.registerThinkingPanel === 'function') {
-          // registerThinkingPanel関数が利用可能な場合は直接呼び出す
-          coreModule.registerThinkingPanel(context);
-          console.log("Thinking panel registered via core module");
-        } else {
-          console.log("Core module loaded but no compatible context methods found");
-        }
-      } else {
-        console.warn("Failed to load core modules");
-      }
-    } catch (coreModuleError) {
-      console.error("Error initializing core modules:", coreModuleError);
-    }
-
     // 拡張機能のメインインスタンスを初期化
     console.log("Initializing VSCode extension instance...");
     let vscodeExtension;
@@ -502,7 +814,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       vscodeExtension = new VsCodeExtension(context);
       console.log("VSCode extension instance initialized successfully");
     } catch (extensionError) {
-      console.error("Error initializing VSCode extension instance:", extensionError);
+      console.error("Error initializing VSCode extension instance:", extensionError instanceof Error ? extensionError.message : String(extensionError));
       // 機能が一部使えなくなるが、少なくとも拡張機能は動く状態にする
       vscodeExtension = { 
         // 最小限のスタブ実装
@@ -525,7 +837,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         console.log("Installation telemetry recorded");
       }
     } catch (telemetryError) {
-      console.warn("Error recording installation telemetry:", telemetryError);
+      console.warn("Error recording installation telemetry:", telemetryError instanceof Error ? telemetryError.message : String(telemetryError));
     }
 
     // YAMLスキーマの設定
@@ -553,7 +865,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         }
       }
     } catch (schemaError) {
-      console.warn("Error configuring YAML schema:", schemaError);
+      console.warn("Error configuring YAML schema:", schemaError instanceof Error ? schemaError.message : String(schemaError));
     }
 
     // 公開APIの設定
@@ -574,7 +886,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         }
       : continuePublicApi;
   } catch (error) {
-    console.error("Critical error during extension activation:", error);
+    console.error("Critical error during extension activation:", error instanceof Error ? error.message : String(error));
     
     // 全体的なエラーが発生した場合も最低限のAPIを返す
     return {

@@ -72,7 +72,9 @@ export const THINKING_COMMANDS = {
   SHOW_THINKING_PANEL: 'continue.showThinkingPanel',
   VIEW_LOGS: 'continue.viewLogs',
   NEW_SESSION: 'continue.newSession',
-  TOGGLE_THINKING_PANEL: 'continue.toggleThinkingPanel'
+  TOGGLE_THINKING_PANEL: 'continue.toggleThinkingPanel',
+  OPEN_CONFIG_PAGE: 'continue.openConfigPage',
+  UPDATE_THINKING: 'continue.updateThinking'
 };
 
 // ThinkingConfig インターフェースの定義

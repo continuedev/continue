@@ -1,16 +1,19 @@
-// Node.js環境かどうかの検出を強化 - より堅牢な実装
+// 環境検出を改善 - window/globalThis参照の安全性強化
 const isNode = typeof process !== 'undefined' && 
               typeof process.versions !== 'undefined' && 
-              typeof process.versions.node !== 'undefined' &&
-              typeof window === 'undefined'; // 明示的にwindowの存在をチェック
+              typeof process.versions.node !== 'undefined';
 
-// VSCode API初期化の安全な実装 - Node.js環境とブラウザ環境の区別を徹底
+// ブラウザ環境検出の安全実装
+const isBrowser = !isNode && typeof globalThis !== 'undefined' && 
+                (typeof globalThis.window !== 'undefined' || 
+                typeof globalThis.document !== 'undefined');
+
+// VSCode API初期化の安全な実装 - 環境別に最適化
 let vscode: any;
 
-// VSCode API初期化の安全な実装 - エラーハンドリングを強化
 if (isNode) {
   try {
-    // Node.js環境でのrequire
+    // Node.js環境でのrequire (importで置き換えない)
     vscode = require('vscode');
     console.log("VSCode API loaded in Node.js environment");
   } catch (e) {
@@ -21,24 +24,22 @@ if (isNode) {
       if (e.stack) console.warn(`  Stack: ${e.stack.split('\n')[0]}`);
     }
   }
-} else {
+} else if (isBrowser) {
   try {
-    // ブラウザ環境での初期化
-    // windowの存在を慎重にチェック
-    if (typeof globalThis !== 'undefined' && typeof globalThis.window !== 'undefined') {
-      const win = globalThis.window as any;
-      if (win.vscode) {
-        vscode = win.vscode;
-        console.log("VSCode API accessed via window.vscode");
-      } else if (typeof win.acquireVsCodeApi === 'function') {
-        try {
-          vscode = win.acquireVsCodeApi();
-          console.log("VSCode API acquired via acquireVsCodeApi");
-        } catch (apiError) {
-          console.warn("Error calling acquireVsCodeApi:", apiError);
-        }
+    // ブラウザ環境での安全なアクセス
+    const context = globalThis as any;
+    
+    if (typeof context.acquireVsCodeApi === 'function') {
+      try {
+        vscode = context.acquireVsCodeApi();
+        console.log("VSCode API acquired via acquireVsCodeApi");
+      } catch (apiError) {
+        console.warn("Error calling acquireVsCodeApi:", apiError);
       }
-    }
+    } else if (typeof context.vscode !== 'undefined') {
+      vscode = context.vscode;
+      console.log("VSCode API accessed via globalThis.vscode");
+    } 
   } catch (e) {
     console.warn("Error initializing VSCode API in browser environment:", e);
   }
@@ -125,7 +126,10 @@ const COMMANDS = {
   THINKING_COMPLETED: `${COMMAND_PREFIX}.thinkingCompleted`,
   SHOW_THINKING_PANEL: `${COMMAND_PREFIX}.showThinkingPanel`,
   VIEW_LOGS: `${COMMAND_PREFIX}.viewLogs`,
-  OPEN_CONFIG_PAGE: `${COMMAND_PREFIX}.openConfigPage` // 不足していたコマンドを追加
+  OPEN_CONFIG_PAGE: `${COMMAND_PREFIX}.openConfigPage`, // 不足していたコマンドを追加
+  UPDATE_THINKING: `${COMMAND_PREFIX}.updateThinking`,
+  NEW_SESSION: `${COMMAND_PREFIX}.newSession`,
+  TOGGLE_THINKING_PANEL: `${COMMAND_PREFIX}.toggleThinkingPanel`
 };
 
 interface ThinkingPanelMessage {
@@ -226,8 +230,11 @@ function normalizePath(pathStr: string): string {
   }
   
   try {
+    // Node.js環境チェック (process参照前に安全確認)
+    const isNodeEnv = typeof process !== 'undefined' && process && typeof process.platform === 'string';
+    
     // Windowsパスの場合の特別な処理
-    if (isNode && typeof process !== 'undefined' && process.platform === 'win32') {
+    if (isNodeEnv && process.platform === 'win32') {
       // 二重ドライブレターパターンを検出して修正（より多くのケースに対応）
       const driveLetterPatterns = [
         /^([A-Za-z]:)[\/\\]+([A-Za-z]:)[\/\\]+/i,  // C:\C:\ パターン
@@ -279,8 +286,6 @@ function normalizePath(pathStr: string): string {
       pathStr = pathStr.replace(/\/+/g, '/');
     }
     
-    // デバッグログ追加
-    console.log(`Path normalized: ${pathStr}`);
     return pathStr;
   } catch (e) {
     console.warn(`Path normalization error: ${e}`);
@@ -385,7 +390,21 @@ export function setExtensionContext(context: any): void {
   
   // コンテキストが設定されたら思考パネルを登録
   if (!isThinkingPanelRegistered) {
-    registerThinkingPanel(extensionContext);
+    // コンテキストに既に登録済みフラグがある場合はスキップ
+    const isAlreadyRegistered = context.globalState && context.globalState.get ? 
+                              context.globalState.get('thinkingPanelCommandsRegistered') : 
+                              false;
+    
+    if (isAlreadyRegistered) {
+      console.log("Thinking panel already registered according to extension context");
+      isThinkingPanelRegistered = true;
+    } else {
+      try {
+        registerThinkingPanel(extensionContext);
+      } catch (e) {
+        console.warn("Error registering thinking panel:", e);
+      }
+    }
   }
 }
 
@@ -398,7 +417,7 @@ export function getExtensionContext(): any {
 }
 
 /**
- * 耐障害性の高いコマンド登録関数
+ * 耐障害性の高いコマンド登録関数 - 重複チェック強化版
  */
 async function registerCommandSafely(
   context: any, 
@@ -410,22 +429,32 @@ async function registerCommandSafely(
     return false;
   }
   
-  if (!context || !context.subscriptions) {
-    console.warn("Invalid extension context for command registration");
+  // コンテキストの検証と修正
+  if (!context) {
+    console.warn("Null context provided to registerCommandSafely, creating temporary context");
+    context = { subscriptions: [] };
+  } else if (!context.subscriptions) {
+    console.warn("Context without subscriptions array, adding array");
+    context.subscriptions = [];
+  }
+  
+  // コンテキスト状態確認（安全処理）
+  const hasGlobalState = !!(context && context.globalState && typeof context.globalState.get === 'function');
+  
+  // コンテキストに登録済みフラグがある場合はスキップ
+  if (hasGlobalState && context.globalState.get('thinkingPanelCommandsRegistered')) {
+    console.log(`Skipping command registration for ${name} - already registered according to global state`);
     
-    // コンテキストがない場合は一時的にフェールセーフでコンテキストを作成
-    if (!context) {
-      context = { subscriptions: [] };
-      console.log("Created temporary context for command registration");
-    } else if (!context.subscriptions) {
-      context.subscriptions = [];
-      console.log("Added subscriptions array to context for command registration");
-    }
+    // 登録済みとして記録
+    registeredCommands.add(name);
+    globalRegisteredCommands.add(name);
+    
+    return true;  // 既に登録済みなら成功とみなす
   }
   
   // 既に登録済みかチェック
   if (globalRegisteredCommands.has(name) || registeredCommands.has(name)) {
-    console.log(`Command ${name} already registered`);
+    console.log(`Command ${name} already registered in local state`);
     return true;  // 既に登録済みなら成功とみなす
   }
   
@@ -435,45 +464,29 @@ async function registerCommandSafely(
       return false;
     }
     
-    // VSCodeのAPIを使用してコマンドの存在を確認
-    const commands = await vscode.commands.getCommands(true);
-    const exists = Array.isArray(commands) && commands.includes(name);
+    // VSCodeのAPIを使用してコマンドの存在を確認（安全バージョン）
+    let commands: string[] = [];
+    let exists = false;
     
-    if (!exists) {
-      // 登録されていない場合は新規登録
-      try {
-        const disposable = vscode.commands.registerCommand(name, (...args: any[]) => {
-          try {
-            return callback(...args);
-          } catch (callbackError) {
-            console.error(`Error in command ${name} callback:`, callbackError);
-            return null;
-          }
-        });
-        
-        context.subscriptions.push(disposable);
-        
-        // 登録成功を記録
-        registeredCommands.add(name);
-        globalRegisteredCommands.add(name);
-        
-        console.log(`Successfully registered command: ${name}`);
-        return true;
-      } catch (registerError) {
-        console.warn(`Failed to register command ${name}: ${registerError}`);
-        return false;
-      }
-    } else {
-      // 既に存在する場合は記録のみ
+    try {
+      commands = await vscode.commands.getCommands(true);
+      exists = Array.isArray(commands) && commands.includes(name);
+    } catch (getCommandsError) {
+      console.warn(`Error getting commands: ${getCommandsError}`);
+      // エラー時は存在しないと仮定して続行
+      exists = false;
+    }
+    
+    // 既に存在する場合は登録スキップ
+    if (exists) {
+      // 登録済みとして記録
       registeredCommands.add(name);
       globalRegisteredCommands.add(name);
-      console.log(`Command ${name} already registered in VS Code`);
+      console.log(`Command ${name} already exists in VS Code`);
       return true;
     }
-  } catch (e) {
-    console.warn(`Error checking command existence for ${name}: ${e}`);
     
-    // エラーが発生しても登録は試みる
+    // 存在しない場合は新規登録
     try {
       const disposable = vscode.commands.registerCommand(name, (...args: any[]) => {
         try {
@@ -484,7 +497,49 @@ async function registerCommandSafely(
         }
       });
       
-      context.subscriptions.push(disposable);
+      // subscriptionsに追加
+      if (context && Array.isArray(context.subscriptions)) {
+        context.subscriptions.push(disposable);
+      }
+      
+      // 登録成功を記録
+      registeredCommands.add(name);
+      globalRegisteredCommands.add(name);
+      
+      console.log(`Successfully registered command: ${name}`);
+      return true;
+    } catch (registerError) {
+      console.warn(`Failed to register command ${name}: ${registerError}`);
+      return false;
+    }
+  } catch (e) {
+    console.warn(`Error checking command existence for ${name}: ${e}`);
+    
+    // エラーが発生しても登録を再試行（フェイルセーフ）
+    try {
+      // まずコマンドの存在を再確認（より単純な方法で）
+      const exists = await isCommandRegistered(name);
+      if (exists) {
+        console.log(`Command ${name} already exists despite error`);
+        registeredCommands.add(name);
+        globalRegisteredCommands.add(name);
+        return true;
+      }
+      
+      // 存在しない場合は新規登録を試みる
+      const disposable = vscode.commands.registerCommand(name, (...args: any[]) => {
+        try {
+          return callback(...args);
+        } catch (callbackError) {
+          console.error(`Error in command ${name} callback:`, callbackError);
+          return null;
+        }
+      });
+      
+      // subscriptionsに追加
+      if (context && Array.isArray(context.subscriptions)) {
+        context.subscriptions.push(disposable);
+      }
       
       // 登録成功を記録
       registeredCommands.add(name);
@@ -661,8 +716,8 @@ function getThinkingPanelHtml(): string {
         const vscodeApi = (() => {
           try {
             // ブラウザ環境でのみ実行
-            if (typeof globalThis !== 'undefined' && typeof globalThis.acquireVsCodeApi === 'function') {
-              return globalThis.acquireVsCodeApi();
+            if (typeof acquireVsCodeApi === 'function') {
+              return acquireVsCodeApi();
             }
             // 利用不可の場合はスタブAPIを返す
             return {
@@ -702,62 +757,68 @@ function getThinkingPanelHtml(): string {
           }
         }
         
-        window.addEventListener('message', event => {
-          try {
-            if (!event || !event.data) return;
-            
-            const message = event.data;
-            if (message.command === 'appendContent') {
-              const content = document.getElementById('thinking-content');
-              if (!content) return;
-              
-              const newElement = document.createElement('div');
-              newElement.className = 'fade-in';
-              
-              // HTMLとして解釈するのではなく、テキストコンテンツとして設定
-              if (message.content && message.content.includes('<div class="thinking-complete">')) {
-                // 完了メッセージは特別な形式で表示
-                newElement.innerHTML = message.content;
-              } else if (message.raw === true && message.content) {
-                // 生のHTMLとして表示する場合（プログレスバーなど）
-                newElement.innerHTML = message.content;
-              } else {
-                // 通常のテキストとして表示（HTMLタグをエスケープ）
-                const textDiv = document.createElement('div');
-                textDiv.textContent = message.text || '';
+        if (typeof globalThis !== 'undefined' && globalThis) {
+          const win = globalThis;
+          if (win.addEventListener) {
+            win.addEventListener('message', event => {
+              try {
+                if (!event || !event.data) return;
                 
-                // フェーズ名とアイコンを設定
-                const phaseName = message.phase || '思考中...';
-                const progressValue = message.progress || 0;
-                
-                // プログレスバーのHTMLを作成
-                const progressHTML = 
-                  '<div class="thinking-header">' + phaseName + '</div>' +
-                  '<div class="thinking-progress-bar">' +
-                    '<div class="thinking-progress-value" style="width: ' + progressValue + '%;"></div>' +
-                  '</div>' +
-                  '<div class="thinking-text">' + textDiv.innerHTML + '</div>';
-                
-                // 思考パネルで囲む
-                newElement.innerHTML = '<div class="thinking-panel">' + progressHTML + '</div>';
+                const message = event.data;
+                if (message.command === 'appendContent') {
+                  const content = document.getElementById('thinking-content');
+                  if (!content) return;
+                  
+                  const newElement = document.createElement('div');
+                  newElement.className = 'fade-in';
+                  
+                  // HTMLとして解釈するのではなく、テキストコンテンツとして設定
+                  if (message.content && message.content.includes('<div class="thinking-complete">')) {
+                    // 完了メッセージは特別な形式で表示
+                    newElement.innerHTML = message.content;
+                  } else if (message.raw === true && message.content) {
+                    // 生のHTMLとして表示する場合（プログレスバーなど）
+                    newElement.innerHTML = message.content;
+                  } else {
+                    // 通常のテキストとして表示（HTMLタグをエスケープ）
+                    const textDiv = document.createElement('div');
+                    textDiv.textContent = message.text || '';
+                    
+                    // フェーズ名とアイコンを設定
+                    const phaseName = message.phase || '思考中...';
+                    const progressValue = message.progress || 0;
+                    
+                    // プログレスバーのHTMLを作成
+                    const progressHTML = 
+                      '<div class="thinking-header">' + phaseName + '</div>' +
+                      '<div class="thinking-progress-bar">' +
+                        '<div class="thinking-progress-value" style="width: ' + progressValue + '%;"></div>' +
+                      '</div>' +
+                      '<div class="thinking-text">' + textDiv.innerHTML + '</div>';
+                    
+                    // 思考パネルで囲む
+                    newElement.innerHTML = '<div class="thinking-panel">' + progressHTML + '</div>';
+                  }
+                  
+                  content.appendChild(newElement);
+                  if (typeof win.scrollTo === 'function') {
+                    win.scrollTo(0, document.body.scrollHeight);
+                  }
+                }
+              } catch (e) {
+                console.warn("Error processing message:", e);
               }
-              
-              content.appendChild(newElement);
-              window.scrollTo(0, document.body.scrollHeight);
+            });
+            
+            // DOMContentLoadedイベントを追加
+            if (typeof document !== 'undefined' && document) {
+              document.addEventListener('DOMContentLoaded', notifyReady);
             }
-          } catch (e) {
-            console.warn("Error processing message:", e);
+            
+            // ページ読み込み時と追加時に準備完了通知
+            win.addEventListener('load', notifyReady);
           }
-        });
-        
-        // DOMContentLoadedイベントを追加
-        document.addEventListener('DOMContentLoaded', notifyReady);
-        
-        // ページ読み込み時と追加時に準備完了通知
-        window.addEventListener('load', notifyReady);
-        
-        // 5秒ごとに再通知（VSCodeとの接続が確実になるよう）
-        setInterval(notifyReady, 5000);
+        }
         
         // 即時実行も追加
         notifyReady();
@@ -844,7 +905,7 @@ function appendThinkingContent(content: string, phase?: string, progress?: numbe
 }
 
 /**
- * 思考パネルを登録する拡張版関数 - エラーハンドリングを強化
+ * 思考パネルを登録する拡張版関数 - 重複防止強化版
  */
 export function registerThinkingPanel(context: any) {
   console.log("Registering thinking panel...");
@@ -859,62 +920,52 @@ export function registerThinkingPanel(context: any) {
     context.subscriptions = [];
   }
   
+  // 登録済みフラグをチェック（コンテキスト経由）
+  const hasGlobalState = !!(context && context.globalState && typeof context.globalState.get === 'function');
+  const alreadyRegistered = hasGlobalState ? context.globalState.get('thinkingPanelCommandsRegistered') : false;
+  
+  if (alreadyRegistered) {
+    console.log("Thinking panel already registered according to global state");
+    isThinkingPanelRegistered = true;
+    
+    // パネルだけ初期化する
+    try {
+      initializeThinkingPanel();
+    } catch (e) {
+      console.warn(`Error initializing thinking panel: ${e}`);
+    }
+    
+    return thinkingPanel;
+  }
+  
   // グローバル登録確認
   if (isThinkingPanelRegistered) {
     console.log("Thinking panel already registered globally");
-    return;
+    return thinkingPanel;
   }
   
   // 拡張機能コンテキストを保存
   extensionContext = context;
-  
-  // コンテキスト登録確認
-  if (context && context.registeredThinkingPanel) {
-    console.log("Thinking panel already registered in this context");
-    return;
-  }
   
   // VSCode API が使えない場合は警告してスタブ化
   if (!vscode || !vscode.commands) {
     console.warn("VSCode API not available for thinking panel registration");
     // スタブAPI初期化を確認
     if (!vscode) {
-      console.warn("Initializing VSCode API stub");
-      vscode = {
-        commands: {
-          executeCommand: (command: string, ...args: any[]) => {
-            console.log(`[STUB] Executing command: ${command}`);
-            return Promise.resolve();
-          },
-          registerCommand: (command: string, callback: Function) => {
-            console.log(`[STUB] Registering command: ${command}`);
-            return { dispose: () => {} };
-          },
-          getCommands: () => {
-            console.log(`[STUB] Getting commands`);
-            return Promise.resolve([]);
-          }
-        },
-        window: {
-          createWebviewPanel: () => ({ webview: { html: '' } }),
-          showInformationMessage: (msg: string) => console.log(`[STUB INFO] ${msg}`),
-          showErrorMessage: (msg: string) => console.error(`[STUB ERROR] ${msg}`)
-        }
-      };
+      console.warn("VSCode API not available, using stub implementation");
     }
   }
   
   try {
     // 各種登録済みフラグを設定
     isThinkingPanelRegistered = true;
-    context.registeredThinkingPanel = true;
     
     // VSCode APIの機能チェック
     const hasCommands = !!(vscode && vscode.commands);
     const hasWindow = !!(vscode && vscode.window);
     console.log(`VSCode API status - Commands: ${hasCommands}, Window: ${hasWindow}`);
     
-    // 必要なコマンドを登録
+    // 必要なコマンドを登録（各コマンドの重複登録チェック付き）
     Promise.all([
       registerCommandSafely(context, COMMANDS.RESET_THINKING_PANEL, () => {
         console.log("Resetting thinking state");
@@ -951,6 +1002,13 @@ export function registerThinkingPanel(context: any) {
       registerCommandSafely(context, COMMANDS.THINKING_COMPLETED, () => {
         console.log("Thinking completed command called");
         thinkingCompletedSent = true;
+      }),
+      
+      // UPDATE_THINKING コマンドも登録 - 不足していたため追加
+      registerCommandSafely(context, COMMANDS.UPDATE_THINKING, 
+        (content: string, phase: string, progress: number) => {
+          console.log(`Update thinking command called: ${phase} (${Math.round((progress || 0) * 100)}%)`);
+          updateThinking(content, phase, progress);
       }),
       
       // 表示コマンドの明示的登録
@@ -993,9 +1051,11 @@ export function registerThinkingPanel(context: any) {
             }
             
             // VSCodeでフォルダを開く
-            vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(logDir), {
-              forceNewWindow: true
-            });
+            if (vscode && vscode.commands && vscode.commands.executeCommand) {
+              vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(logDir), {
+                forceNewWindow: true
+              });
+            }
           } catch (e) {
             console.warn(`Error in view logs command: ${e}`);
           }
@@ -1033,7 +1093,9 @@ export function registerThinkingPanel(context: any) {
             }
             
             // VSCodeでファイルを開く
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.file(configPath));
+            if (vscode && vscode.commands && vscode.commands.executeCommand) {
+              vscode.commands.executeCommand('vscode.open', vscode.Uri.file(configPath));
+            }
           } catch (e) {
             console.warn(`Error in open config page command: ${e}`);
           }
@@ -1041,9 +1103,44 @@ export function registerThinkingPanel(context: any) {
           // ブラウザ環境ではサポート外
           console.log("Config editing is not supported in browser environment");
         }
+      }),
+
+      // NEW_SESSION コマンドの登録
+      registerCommandSafely(context, COMMANDS.NEW_SESSION, () => {
+        console.log("New session command called");
+        if (vscode && vscode.commands && vscode.commands.executeCommand) {
+          vscode.commands.executeCommand('continue.sidebar.newSession');
+        }
+      }),
+
+      // TOGGLE_THINKING_PANEL コマンドの登録
+      registerCommandSafely(context, COMMANDS.TOGGLE_THINKING_PANEL, () => {
+        console.log("Toggle thinking panel command called");
+        if (thinkingPanel) {
+          try {
+            thinkingPanel.reveal();
+          } catch (e) {
+            console.warn(`Error revealing thinking panel: ${e}`);
+            thinkingPanel = null;
+            initializeThinkingPanel();
+          }
+        } else {
+          initializeThinkingPanel();
+        }
       })
     ]).then(() => {
       console.log("All thinking panel commands registered successfully");
+      
+      // コンテキストに登録済みフラグを設定（安全に）
+      if (hasGlobalState && typeof context.globalState.update === 'function') {
+        try {
+          context.globalState.update('thinkingPanelCommandsRegistered', true);
+          console.log("Thinking panel registered flag set in global state");
+        } catch (e) {
+          console.warn(`Error updating global state: ${e}`);
+        }
+      }
+      
       // パネルを初期化
       initializeThinkingPanel();
     }).catch((error) => {
@@ -1055,10 +1152,13 @@ export function registerThinkingPanel(context: any) {
     // 状態をリセット
     resetThinkingState();
     console.log("Thinking panel registration complete");
+    
+    return thinkingPanel;
   } catch (e) {
     console.warn(`Unexpected error in thinking panel registration: ${e}`);
     // エラーが発生しても初期化を続行
     initializeThinkingPanel();
+    return thinkingPanel;
   }
 }
 

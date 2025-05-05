@@ -73,7 +73,10 @@ export class MCPManagerSingleton {
   async refreshConnection(serverId: string) {
     const connection = this.connections.get(serverId);
     if (!connection) {
-      throw new Error(`MCP Connection ${serverId} not found`);
+      console.warn(`MCP Connection ${serverId} not found, attempting to reload configs`);
+      // 再ロードを試みる
+      await this.refreshConnections(true);
+      return;
     }
     await connection.connectClient(true, this.abortController.signal);
     if (this.onConnectionsRefreshed) {
@@ -84,6 +87,37 @@ export class MCPManagerSingleton {
   async refreshConnections(force: boolean) {
     this.abortController.abort();
     this.abortController = new AbortController();
+    
+    // デバッグモードの場合、デバッグ情報を充実させる
+    if (process.env.NODE_ENV === "development") {
+      console.log(`Refreshing MCP connections (force=${force})`);
+      
+      // 現在の接続を表示
+      console.log(`Current connections: ${Array.from(this.connections.keys()).join(', ')}`);
+      
+      // manual-testing-sandboxの確認
+      try {
+        const path = require('path');
+        const fs = require('fs');
+        const os = require('os');
+        
+        // 可能性のあるパスを確認
+        const possiblePaths = [
+          path.join(process.cwd(), 'manual-testing-sandbox', '.continue', 'mcpServers', 'databricks.yaml'),
+          path.join('C:\\continue-databricks-claude-3-7-sonnet', 'manual-testing-sandbox', '.continue', 'mcpServers', 'databricks.yaml'),
+          path.join(os.homedir(), 'continue-databricks-claude-3-7-sonnet', 'manual-testing-sandbox', '.continue', 'mcpServers', 'databricks.yaml')
+        ];
+        
+        console.log('Checking manual-testing-sandbox paths:');
+        possiblePaths.forEach((p, i) => {
+          const exists = fs.existsSync(p);
+          console.log(`  [${i + 1}] ${p} - ${exists ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+        });
+      } catch (e) {
+        console.error('Error checking manual-testing-sandbox:', e);
+      }
+    }
+    
     await Promise.race([
       new Promise((resolve) => {
         this.abortController.signal.addEventListener("abort", () => {
@@ -93,7 +127,11 @@ export class MCPManagerSingleton {
       (async () => {
         await Promise.all(
           Array.from(this.connections.values()).map(async (connection) => {
-            await connection.connectClient(force, this.abortController.signal);
+            try {
+              await connection.connectClient(force, this.abortController.signal);
+            } catch (error) {
+              console.error(`Error connecting MCP client ${connection.getStatus().id}:`, error);
+            }
           }),
         );
         if (this.onConnectionsRefreshed) {
