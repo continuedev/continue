@@ -11,6 +11,7 @@ import * as vscode from "vscode";
 
 import { handleLLMError } from "../util/errorHandling";
 import { showFreeTrialLoginMessage } from "../util/messages";
+import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 import { getDefinitionsFromLsp } from "./lsp";
@@ -22,8 +23,6 @@ import {
   setupStatusBar,
   stopStatusBarLoading,
 } from "./statusBar";
-
-import type { IDE } from "core";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -61,13 +60,15 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
-  private recentlyEditedTracker = new RecentlyEditedTracker();
+  private recentlyEditedTracker: RecentlyEditedTracker;
 
   constructor(
     private readonly configHandler: ConfigHandler,
-    private readonly ide: IDE,
+    private readonly ide: VsCodeIde,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
   ) {
+    this.recentlyEditedTracker = new RecentlyEditedTracker(ide.ideUtils);
+
     async function getAutocompleteModel() {
       const { config } = await configHandler.loadConfig();
       if (!config) {
