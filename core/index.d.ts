@@ -1114,19 +1114,19 @@ export interface StdioOptions {
   command: string;
   args: string[];
   env?: Record<string, string>;
-  headers?: HeadersInit;
+  requestOptions?: RequestOptions;
 }
 
 export interface WebSocketOptions {
   type: "websocket";
   url: string;
-  headers?: HeadersInit;
+  requestOptions?: RequestOptions;
 }
 
 export interface SSEOptions {
   type: "sse";
   url: string;
-  headers?: HeadersInit;
+  requestOptions?: RequestOptions;
 }
 
 export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;

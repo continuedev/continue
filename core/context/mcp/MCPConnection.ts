@@ -76,11 +76,11 @@ class MCPConnection {
                 ...init,
                 headers: {
                   ...init?.headers,
-                  ...(options.transport.headers as Record<string, string> | undefined),
+                  ...(options.transport.requestOptions?.headers as Record<string, string> | undefined),
                 }
               }),
           },
-          requestInit: { headers: options.transport.headers }
+          requestInit: { headers: options.transport.requestOptions?.headers }
         });
       default:
         throw new Error(

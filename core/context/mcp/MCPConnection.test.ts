@@ -62,9 +62,11 @@ describe("MCPConnection", () => {
         transport: {
           type: "sse" as const,
           url: "http://test.com/events",
-          headers: {
-            "Authorization": "Bearer token123",
-            "X-Custom-Header": "custom-value"
+          requestOptions: {
+            headers: {
+              "Authorization": "Bearer token123",
+              "X-Custom-Header": "custom-value"
+            }
           }
         },
       };
