@@ -835,7 +835,8 @@ declare global {
     | "llava"
     | "gemma"
     | "granite"
-    | "llama3";
+    | "llama3"
+    | "codestral";
   
   export interface RequestOptions {
     timeout?: number;

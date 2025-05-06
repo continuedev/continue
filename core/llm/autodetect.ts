@@ -9,6 +9,7 @@ import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
+  codestralTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   graniteTemplateMessages,
@@ -295,6 +296,7 @@ function autodetectTemplateFunction(
       gemma: gemmaTemplateMessage,
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
+      codestral: codestralTemplateMessages,
       none: null,
     };
 
