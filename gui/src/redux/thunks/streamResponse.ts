@@ -89,8 +89,9 @@ export const streamResponseThunk = createAsyncThunk<
         const messageMode = getState().session.mode
 
         const baseChatOrAgentSystemMessage = getBaseSystemMessage(selectedChatModel, messageMode)
-        
+
         const messages = constructMessages(
+          messageMode,
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
           state.config.config.rules,
