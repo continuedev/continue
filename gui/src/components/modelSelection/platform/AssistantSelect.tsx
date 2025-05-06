@@ -30,7 +30,7 @@ import {
   Transition,
 } from "../../ui";
 
-import { ProfileDescription } from "core/config/ConfigHandler";
+import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useNavigate } from "react-router-dom";
 import { vscCommandCenterInactiveBorder } from "../..";
 import { cn } from "../../../util/cn";
@@ -158,7 +158,7 @@ export default function AssistantSelect() {
   const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const { profiles, session, login } = useAuth();
   const navigate = useNavigate();
@@ -287,19 +287,24 @@ export default function AssistantSelect() {
 
         <Transition>
           <ListboxOptions className="pb-0">
-            <div className="flex justify-between gap-1.5 px-2.5 py-1">
+            <div className="flex gap-1.5 px-2.5 py-1">
               <span>Assistants</span>
               <div
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  setLoading(true)
-                  await refreshProfiles()
-                  setLoading(false)
+                  setLoading(true);
+                  await refreshProfiles();
+                  setLoading(false);
                   buttonRef.current?.click();
                 }}
               >
-                <ArrowPathIcon className={cn("text-lightgray h-2.5 w-2.5", loading && 'animate-spin-slow')} />
+                <ArrowPathIcon
+                  className={cn(
+                    "text-lightgray h-2.5 w-2.5",
+                    loading && "animate-spin-slow",
+                  )}
+                />
               </div>
             </div>
 
