@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "Continue.continue",
+    "vivaxy.vscode-conventional-commits",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "YoavBls.pretty-ts-errors"
+  ]
+}
