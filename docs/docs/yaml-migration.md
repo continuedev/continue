@@ -40,7 +40,7 @@ Add all model configurations in `config.json`, including models in `models`, `ta
 
 Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](./reference.md#models)
 
-Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](./reference.md#models)
+Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](./reference.md#models). Note that for Ollama provider, `completionOptions.keepAlive` has no equivalent in `defaultCompletionOptions`. Instead, use `keep_alive` in `extraBodyProperties`.
 
 <!-- TODO - ollama autodetect supported? -->
 
@@ -77,7 +77,10 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
   "tabAutocompleteModel": {
     "title": "My Starcoder",
     "provider": "ollama",
-    "model": "starcoder2:3b"
+    "model": "starcoder2:3b",
+    "completionOptions": {
+        "keepAlive": -1,
+    }
   },
   "embeddingsProvider": {
     "provider": "openai",
@@ -122,6 +125,9 @@ models:
     model: starcoder2:3b
     roles:
       - autocomplete
+    requestOptions:
+      extraBodyProperties:
+        keep_alive: -1
 
   - name: My Ada Embedder
     provider: openai
