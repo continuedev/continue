@@ -86,7 +86,7 @@ class WatsonX extends BaseLLM {
   }
 
   _getEndpoint(endpoint: string): string {
-      return `${this.apiBase}/ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}` : ""}text/${endpoint}_stream?version=${this.apiVersion}`
+      return `${this.apiBase}/ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}/` : ""}text/${endpoint}_stream?version=${this.apiVersion}`
   }
 
   static providerName = "watsonx";
