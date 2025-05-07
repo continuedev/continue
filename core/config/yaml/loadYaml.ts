@@ -349,32 +349,7 @@ async function configYamlToContinueConfig(options: {
     }
   }
 
-  // Add transformers js to the embed models in vs code if not already added
-  // AND if no other embed models are defined
-  if (
-    ideInfo.ideType === "vscode" &&
-    !continueConfig.modelsByRole.embed.find(
-      (m) => m.providerName === "transformers.js",
-    ) &&
-    continueConfig.modelsByRole.embed.length === 0
-  ) {
-    continueConfig.modelsByRole.embed.push(
-      new TransformersJsEmbeddingsProvider(),
-    );
-  }
-
-  // Initialize the selected embed model to the first non-transformers.js model if one exists
-  if (continueConfig.modelsByRole.embed.length > 0) {
-    const nonTransformersModels = continueConfig.modelsByRole.embed.filter(
-      m => m.providerName !== "transformers.js"
-    );
-    
-    if (nonTransformersModels.length > 0) {
-      continueConfig.selectedModelByRole.embed = nonTransformersModels[0];
-    } else {
-      continueConfig.selectedModelByRole.embed = continueConfig.modelsByRole.embed[0];
-    }
-  }
+  setupEmbeddingModels(continueConfig, ideInfo, localErrors);
 
   if (allowFreeTrial) {
     // Obtain auth token (iff free trial being used)
@@ -466,6 +441,39 @@ async function configYamlToContinueConfig(options: {
   );
 
   return { config: continueConfig, errors: localErrors };
+}
+
+function setupEmbeddingModels(
+  continueConfig: ContinueConfig, 
+  ideInfo: IdeInfo, 
+  localErrors: ConfigValidationError[]
+): void {
+  // Add transformers js to the embed models in vs code if not already added
+  // AND if no other embed models are defined
+  if (
+    ideInfo.ideType === "vscode" &&
+    !continueConfig.modelsByRole.embed.find(
+      (m) => m.providerName === "transformers.js",
+    ) &&
+    continueConfig.modelsByRole.embed.length === 0
+  ) {
+    continueConfig.modelsByRole.embed.push(
+      new TransformersJsEmbeddingsProvider(),
+    );
+  }
+
+  // Initialize the selected embed model to the first non-transformers.js model if one exists
+  if (continueConfig.modelsByRole.embed.length > 0) {
+    const nonTransformersModels = continueConfig.modelsByRole.embed.filter(
+      m => m.providerName !== "transformers.js"
+    );
+    
+    if (nonTransformersModels.length > 0) {
+      continueConfig.selectedModelByRole.embed = nonTransformersModels[0];
+    } else {
+      continueConfig.selectedModelByRole.embed = continueConfig.modelsByRole.embed[0];
+    }
+  }
 }
 
 export async function loadContinueConfigFromYaml(options: {
