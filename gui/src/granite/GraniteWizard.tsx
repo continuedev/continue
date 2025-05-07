@@ -274,6 +274,26 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
   } = useWizardContext();
   const [systemErrors, setSystemErrors] = useState<string[] | undefined>();
   const serverStatus = serverState.status;
+  const hiddenLinkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    //cancel download on error
+    if (ollamaInstallationError || isOffline) {
+      cancelDownload();
+    }
+  }, [ollamaInstallationError, isOffline]);
+
+  useEffect(() => {
+    const ollamaVersion = serverState.version;
+    const sysErrors = [];
+    if (isOllamaOutdated) {
+      sysErrors.push(
+        `Ollama v${MIN_OLLAMA_VERSION} is required. Version ${ollamaVersion} is detected`,
+      );
+    }
+    setSystemErrors(sysErrors);
+  }, [serverState.version]);
+
   const handleDownload = () => {
     setCurrentStatus(WizardStatus.downloadingOllama);
     vscode.postMessage({
@@ -295,26 +315,8 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
     setOllamaInstallationProgress(0);
   };
 
-  useEffect(() => {
-    //cancel download on error
-    if (ollamaInstallationError || isOffline) {
-      cancelDownload();
-    }
-  }, [ollamaInstallationError, isOffline]);
 
-  useEffect(() => {
-    const ollamaVersion = serverState.version;
-    const sysErrors = [];
-    if (isOllamaOutdated) {
-      sysErrors.push(
-        `Ollama v${MIN_OLLAMA_VERSION} is required. Version ${ollamaVersion} is detected`,
-      );
-    }
-    setSystemErrors(sysErrors);
-  }, [serverState.version]);
-
-  const isDevspaces =
-    installationModes.length > 0 && installationModes[0].id === "devspaces";
+  const isDevspaces = installationModes.length > 0 && installationModes[0].id === "devspaces";
 
   let serverButton;
   if (
@@ -328,7 +330,6 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
       </VSCodeButton>
     );
   } else if (isDevspaces) {
-    const hiddenLinkRef = useRef<HTMLAnchorElement>(null);
     const hiddenLink = // Trick to open the link directly, avoiding calling VS Code API, which would show a security warning
       (
         <a
