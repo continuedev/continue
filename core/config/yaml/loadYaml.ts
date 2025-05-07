@@ -350,15 +350,30 @@ async function configYamlToContinueConfig(options: {
   }
 
   // Add transformers js to the embed models in vs code if not already added
+  // AND if no other embed models are defined
   if (
     ideInfo.ideType === "vscode" &&
     !continueConfig.modelsByRole.embed.find(
       (m) => m.providerName === "transformers.js",
-    )
+    ) &&
+    continueConfig.modelsByRole.embed.length === 0
   ) {
     continueConfig.modelsByRole.embed.push(
       new TransformersJsEmbeddingsProvider(),
     );
+  }
+
+  // Initialize the selected embed model to the first non-transformers.js model if one exists
+  if (continueConfig.modelsByRole.embed.length > 0) {
+    const nonTransformersModels = continueConfig.modelsByRole.embed.filter(
+      m => m.providerName !== "transformers.js"
+    );
+    
+    if (nonTransformersModels.length > 0) {
+      continueConfig.selectedModelByRole.embed = nonTransformersModels[0];
+    } else {
+      continueConfig.selectedModelByRole.embed = continueConfig.modelsByRole.embed[0];
+    }
   }
 
   if (allowFreeTrial) {

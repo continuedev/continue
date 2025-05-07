@@ -3,8 +3,8 @@ import { ModelRole } from "@continuedev/config-yaml";
 import { ContinueConfig, ILLM } from "..";
 import { LLMConfigurationStatuses } from "../llm/constants";
 import {
-  GlobalContext,
-  GlobalContextModelSelections,
+    GlobalContext,
+    GlobalContextModelSelections,
 } from "../util/GlobalContext";
 
 export function rectifySelectedModelsFromGlobalContext(
@@ -44,7 +44,20 @@ export function rectifySelectedModelsFromGlobalContext(
     }
 
     if (!newModel && continueConfig.modelsByRole[role].length > 0) {
-      newModel = continueConfig.modelsByRole[role][0];
+      // Special handling for embed role - prioritize non-transformers.js models
+      if (role === "embed" && continueConfig.modelsByRole[role].length > 1) {
+        // Find the first non-transformers.js model
+        const nonTransformersModels = continueConfig.modelsByRole[role].filter(
+          m => m.providerName !== "transformers.js"
+        );
+        if (nonTransformersModels.length > 0) {
+          newModel = nonTransformersModels[0];
+        } else {
+          newModel = continueConfig.modelsByRole[role][0];
+        }
+      } else {
+        newModel = continueConfig.modelsByRole[role][0];
+      }
     }
 
     if (!(currentSelection === (newModel?.title ?? null))) {
