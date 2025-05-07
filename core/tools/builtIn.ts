@@ -16,8 +16,6 @@ export enum BuiltInToolNames {
   ViewSubdirectory = "builtin_view_subdirectory",
 }
 
-export const CHAT_UNSAFE_TOOLS: string[] = [ BuiltInToolNames.EditExistingFile, BuiltInToolNames.CreateNewFile, BuiltInToolNames.RunTerminalCommand ];
-
 export const BUILT_IN_GROUP_NAME = "Built-In";
 
 export const CLIENT_TOOLS = [BuiltInToolNames.EditExistingFile];

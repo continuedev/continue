@@ -10,7 +10,7 @@ import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
 import { isUserOrToolMsg, messageHasToolCallId } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
-import { CHAT_UNSAFE_TOOLS } from "../tools/builtIn";
+import { BuiltInToolNames } from "../tools/builtIn";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
   "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
@@ -18,18 +18,7 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
 export const DEFAULT_AGENT_SYSTEM_MESSAGE_URL =
   "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
 
-export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
-<important_rules>
-  You are in chat mode.
-  Only use functions that are explicitly listed in the toolsConfig provided to you. Ignore any previous tools that might have been used.
-  Before making any function call, verify that the function name exists in your current toolsConfig.
-  Never attempt to use functions you've observed in context if they aren't in your current toolsConfig.
-  Ignore any examples that use unavailable functions.
-  In chat mode, only suggest changes rather than attempting to make them directly. and can't actually edit or create files.
-  You can only suggest modifictions.
-  If the user asks to make changes offer that they can switch to Agent Mode to make the suggested updates automatically.
-  If needed consisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
-
+const EDIT_MESSAGE = `\
   Always include the language and file name in the info string when you write code blocks.
   If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
 
@@ -53,15 +42,15 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 
   \`\`\`language /path/to/file
   // ... existing code ...
-  
+
   function exampleFunction() {
     // ... existing code ...
-    
+
     {{ modified code here }}
-    
+
     // ... rest of function ...
   }
-  
+
   // ... rest of code ...
   \`\`\`
 
@@ -70,51 +59,23 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   at the beginning, middle, or end of files using these "lazy" comments. Only
   provide the complete file when explicitly requested. Include a concise explanation
   of changes unless the user specifically asks for code only.
+`
+
+export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
+<important_rules>
+  You are in chat mode.
+
+  If the user asks to make changes to files offer that they can use the Apply Button on the code block, or switch to Agent Mode to make the suggested updates automatically.
+  If needed consisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
+
+${EDIT_MESSAGE}
 </important_rules>`;
 
 export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in agent mode.
-  Always include the language and file name in the info string when you write code blocks. 
-  If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
 
-  When addressing code modification requests, present a concise code snippet that
-  emphasizes only the necessary changes and uses abbreviated placeholders for
-  unmodified sections. For example:
-
-  \`\`\`language /path/to/file
-  // ... existing code ...
-
-  {{ modified code here }}
-
-  // ... existing code ...
-
-  {{ another modification }}
-
-  // ... rest of code ...
-  \`\`\`
-
-  In existing files, you should always restate the function or class that the snippet belongs to:
-
-  \`\`\`language /path/to/file
-  // ... existing code ...
-  
-  function exampleFunction() {
-    // ... existing code ...
-    
-    {{ modified code here }}
-    
-    // ... rest of function ...
-  }
-  
-  // ... rest of code ...
-  \`\`\`
-
-  Since users have access to their complete file, they prefer reading only the
-  relevant modifications. It's perfectly acceptable to omit unmodified portions
-  at the beginning, middle, or end of files using these "lazy" comments. Only
-  provide the complete file when explicitly requested. Include a concise explanation
-  of changes unless the user specifically asks for code only.
+${EDIT_MESSAGE}
 </important_rules>`;
 
 export function constructMessages(
@@ -132,19 +93,18 @@ export function constructMessages(
   for (let i = 0; i < filteredHistory.length; i++) {
     const historyItem = filteredHistory[i];
 
-    if (messageMode === "chat" && CHAT_UNSAFE_TOOLS.includes(historyItem.toolCallState?.toolCall.function.name || "")) {
-      // remove unsafe tools calls to avoid using them in chat mode.
-      // Some models ignore toolsConfig and instead use tools use in history.
+    if (messageMode === "chat") {
       if (historyItem.toolCallState?.toolCallId) {
+        // remove all tool calls from the history
         toolCallIdsToRemove.push(historyItem.toolCallState.toolCall.id);
+        continue;
       }
-      continue;
-    }
 
-    const toolMessage: ToolResultChatMessage = historyItem.message as ToolResultChatMessage;
-    if (messageMode === "chat" && toolCallIdsToRemove.includes(toolMessage.toolCallId || "")) {
-      // remove toolcall responses from the history for unsafe tools.
-      continue;
+      const toolMessage: ToolResultChatMessage = historyItem.message as ToolResultChatMessage;
+      if (toolMessage.toolCallId && toolCallIdsToRemove.includes(toolMessage.toolCallId)) {
+        // remove toolcall responses from the history
+        continue;
+      }
     }
 
     if (historyItem.message.role === "user") {
