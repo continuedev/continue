@@ -50,6 +50,6 @@
   "conventionalCommits.showNewVersionNotes": false,
   "conventionalCommits.promptBody": false,
   "conventionalCommits.promptFooter": false,
-  "conventionalCommits.promptScopes": false,
-  "conventionalCommits.scopes": []
+  "conventionalCommits.promptScopes": true,
+  "conventionalCommits.scopes": ["reg"]
 }
