@@ -73,7 +73,6 @@ export class LocalPlatformClient implements PlatformClient {
             const envContent = await this.ide.readFile(envFilePath);
             const env = dotenv.parse(envContent);
             if (fqsn.secretName in env) {
-              console.log('debug1 secretname', fqsn.secretName, 'envfilepath', envFilePath);
               return env[fqsn.secretName];
             }
           }
