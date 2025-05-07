@@ -55,6 +55,27 @@ describe("MCPConnection", () => {
       expect(conn.status).toBe("not-connected");
     });
 
+    it("should create instance with SSE transport and custom headers", () => {
+      const options = {
+        name: "test-mcp",
+        id: "test-id",
+        transport: {
+          type: "sse" as const,
+          url: "http://test.com/events",
+          requestOptions: {
+            headers: {
+              "Authorization": "Bearer token123",
+              "X-Custom-Header": "custom-value"
+            }
+          }
+        },
+      };
+
+      const conn = new MCPConnection(options);
+      expect(conn).toBeInstanceOf(MCPConnection);
+      expect(conn.status).toBe("not-connected");
+    });
+
     it("should throw on invalid transport type", () => {
       const options = {
         name: "test-mcp",
