@@ -22,6 +22,8 @@ import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
+import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
+
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -36,17 +38,15 @@ import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
-import { Battery } from "./util/battery";
-import { getMetaKeyLabel } from "./util/util";
-import { VsCodeIde } from "./VsCodeIde";
-
-import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 import {
   addCodeToContextFromRange,
   addEntireFileToContext,
   addHighlightedCodeToContext,
 } from "./util/addCode";
+import { Battery } from "./util/battery";
+import { getMetaKeyLabel } from "./util/util";
 import { openEditorAndRevealRange } from "./util/vscode";
+import { VsCodeIde } from "./VsCodeIde";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -672,6 +672,8 @@ const getCommandsMap: (
         },
         {
           label: quickPickStatusText(targetStatus),
+          description:
+            getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
         {
           label: "$(feedback) Give feedback",
