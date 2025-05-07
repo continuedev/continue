@@ -4,13 +4,13 @@ import { CompletionOptions } from "../..";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
+import { getUriPathBasename } from "../../util/uri";
 import { SnippetPayload } from "../snippets";
 import {
   AutocompleteTemplate,
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getSnippets } from "./filtering";
-import { getUriPathBasename } from "../../util/uri";
 import { formatSnippets } from "./formatting";
 import { getStopTokens } from "./getStopTokens";
 
@@ -89,6 +89,20 @@ export function renderPrompt({
     prefix = [formattedSnippets, prefix].join("\n");
   }
 
+  const resolvedCompletionOptions =
+    // Completion options can be passed as a static string or a function
+    typeof completionOptions === "function"
+      ? completionOptions(
+          prefix,
+          suffix,
+          helper.filepath,
+          reponame,
+          helper.lang.name,
+          snippets,
+          helper.workspaceUris,
+        )
+      : completionOptions;
+
   const prompt =
     // Templates can be passed as a Handlebars template string or a function
     typeof template === "string"
@@ -111,7 +125,7 @@ export function renderPrompt({
         );
 
   const stopTokens = getStopTokens(
-    completionOptions,
+    resolvedCompletionOptions,
     helper.lang,
     helper.modelName,
   );
@@ -121,7 +135,7 @@ export function renderPrompt({
     prefix,
     suffix,
     completionOptions: {
-      ...completionOptions,
+      ...resolvedCompletionOptions,
       stop: stopTokens,
     },
   };

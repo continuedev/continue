@@ -1,6 +1,7 @@
 // Fill in the middle prompts
 
 import { CompletionOptions } from "../../index.js";
+import { SourceFragment } from "../../util/sourceFragment.js";
 import {
   getLastNUriRelativePathParts,
   getShortestUniqueRelativeUriPaths,
@@ -31,7 +32,17 @@ export interface AutocompleteTemplate {
         snippets: AutocompleteSnippet[],
         workspaceUris: string[],
       ) => string);
-  completionOptions?: Partial<CompletionOptions>;
+  completionOptions?:
+    | Partial<CompletionOptions>
+    | ((
+        prefix: string,
+        suffix: string,
+        filepath: string,
+        reponame: string,
+        language: string,
+        snippets: AutocompleteSnippet[],
+        workspaceUris: string[],
+      ) => Partial<CompletionOptions>);
 }
 
 // https://huggingface.co/stabilityai/stable-code-3b
@@ -47,6 +58,86 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
       "</fim_middle>",
       "</code>",
     ],
+  },
+};
+
+const graniteCodeFimTemplate: AutocompleteTemplate = {
+  compilePrefixSuffix: (
+    prefix,
+    suffix,
+    filepath,
+    reponame,
+    snippets,
+    workspaceUris,
+  ): [string, string] => {
+    function getFileName(snippet: { uri: string; uniquePath: string }) {
+      return snippet.uri.startsWith("file://")
+        ? snippet.uniquePath
+        : snippet.uri;
+    }
+
+    const snippetPaths = [
+      ...snippets.map((snippet) =>
+        "filepath" in snippet ? snippet.filepath : "file:///Untitled.txt",
+      ),
+      filepath,
+    ];
+
+    const [currentRelativePath] = getShortestUniqueRelativeUriPaths(
+      [filepath],
+      workspaceUris,
+    );
+    const currentFilePath = getFileName(currentRelativePath);
+
+    const relativePaths = getShortestUniqueRelativeUriPaths(
+      snippetPaths,
+      workspaceUris,
+    );
+
+    const annotatedSnippets = snippets
+      .map((snippet, i) => {
+        if (snippet.type === AutocompleteSnippetType.Diff) {
+          return snippet.content;
+        }
+
+        return `<filename>${getFileName(relativePaths[i])}\n${snippet.content}`;
+      })
+      .join("\n\n");
+
+    const annotatedCurrentFile = `<filename>${currentFilePath}\n<fim_prefix>${prefix}`;
+    let annotatedPrefix = "";
+    if (annotatedSnippets.length > 0)
+      annotatedPrefix = `${annotatedSnippets}\n\n`;
+
+    annotatedPrefix +=`Complete the following snippet:\n<filename>${currentFilePath}\n<fim_prefix>${prefix}`;
+
+    return [annotatedPrefix, suffix];
+  },
+  template: (prefix: string, suffix: string): string => {
+    return `Please keep response concise and scope of response limited. If no good completion exists, do not answer:\n${prefix}<fim_suffix>${suffix}<fim_middle>`;
+  },
+  completionOptions: (prefix: string, suffix: string) => {
+    const staticStopTokenSequences = [
+      "<fim_prefix>",
+      "<fim_suffix>",
+      "<fim_middle>",
+      "<filename>",
+      "<|endoftext|>",
+    ];
+
+    // The granite models don't always stop at the suffix and instead just keep going, so extract the first non-whitespace
+    // line of the suffix and add it as a stop token sequence
+    const suffixFragment = new SourceFragment(suffix);
+    const [firstLineOfSuffix = undefined] = suffixFragment.head(1, {
+      ignoreWhitespace: true,
+    });
+
+    const stopTokenSequences = [
+      ...staticStopTokenSequences,
+      firstLineOfSuffix,
+    ].filter((sequence) => sequence !== undefined);
+
+    return { stop: stopTokenSequences };
   },
 };
 
@@ -458,12 +549,16 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     return codegeexFimTemplate;
   }
 
+  if (lowerCaseModel.includes("granite")) {
+    if (/(granite[^0-9]*3\.([0-2]))|granite-3\.([0-2])/i.test(lowerCaseModel))
+      return holeFillerTemplate;
+    return graniteCodeFimTemplate;
+  }
+
   if (
     lowerCaseModel.includes("gpt") ||
     lowerCaseModel.includes("davinci-002") ||
-    lowerCaseModel.includes("claude") ||
-    lowerCaseModel.includes("granite3") ||
-    lowerCaseModel.includes("granite-3")
+    lowerCaseModel.includes("claude")
   ) {
     return holeFillerTemplate;
   }
