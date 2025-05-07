@@ -240,10 +240,12 @@ describe("GUI Test", () => {
   });
 
   describe("Agent with tools", () => {
-    it("should render tool call", async () => {
+    beforeEach(async () => {
       await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
       await GUIActions.selectModeFromDropdown(view, "Agent");
+    });
 
+    it("should render tool call", async () => {
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
@@ -260,10 +262,6 @@ describe("GUI Test", () => {
 
     it("should call tool after approval", async () => {
       await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
-
-      await TestUtils.waitForSuccess(() =>
-        GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM"),
-      );
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -285,10 +283,6 @@ describe("GUI Test", () => {
 
     it("should cancel tool", async () => {
       await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
-
-      await TestUtils.waitForSuccess(() =>
-        GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM"),
-      );
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
