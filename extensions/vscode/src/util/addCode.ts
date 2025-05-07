@@ -1,6 +1,10 @@
-import { RangeInFileWithContents } from "core";
 import * as os from "node:os";
+
+import { RangeInFileWithContents } from "core";
 import * as vscode from "vscode";
+
+import { VsCodeIdeUtils } from "./ideUtils";
+
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export function getRangeInFileWithContents(
@@ -85,16 +89,18 @@ export async function addHighlightedCodeToContext(
 export async function addEntireFileToContext(
   uri: vscode.Uri,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
+  ideUtils: VsCodeIdeUtils
 ) {
   // If a directory, add all files in the directory
-  const stat = await vscode.workspace.fs.stat(uri);
-  if (stat.type === vscode.FileType.Directory) {
-    const files = await vscode.workspace.fs.readDirectory(uri);
+  const stat = await ideUtils.stat(uri);
+  if (stat?.type === vscode.FileType.Directory) {
+    const files = (await ideUtils.readDirectory(uri))!;//files can't be null if we reached this point
     for (const [filename, type] of files) {
       if (type === vscode.FileType.File) {
         addEntireFileToContext(
           vscode.Uri.joinPath(uri, filename),
           webviewProtocol,
+          ideUtils
         );
       }
     }
