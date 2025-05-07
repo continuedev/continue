@@ -239,9 +239,10 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
-  describe("Chat with tools", () => {
+  describe("Agent with tools", () => {
     it("should render tool call", async () => {
       await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
+      await GUIActions.selectModeFromDropdown(view, "Agent");
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
