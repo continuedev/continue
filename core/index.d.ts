@@ -6,6 +6,7 @@ import {
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
+import { Core } from "./core";
 
 declare global {
   interface Window {
@@ -972,6 +973,7 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
+  core?: Core; // Reference to the Core instance
 }
 
 export interface Tool {
