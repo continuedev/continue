@@ -1499,8 +1499,10 @@ export interface RuleWithSource {
   name?: string;
   slug?: string;
   source:
-    | "default"
+    | "default-chat"
+    | "default-agent"
     | "model-chat-options"
+    | "model-agent-options"
     | "rules-block"
     | "json-systemMessage"
     | ".continuerules";

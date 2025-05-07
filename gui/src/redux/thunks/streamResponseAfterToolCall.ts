@@ -72,6 +72,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const baseChatOrAgentSystemMessage = getBaseSystemMessage(selectedChatModel, messageMode)
         
         const messages = constructMessages(
+          messageMode,
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
           state.config.config.rules,
