@@ -8,9 +8,8 @@ import {
 } from "../";
 import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
-import { isUserOrToolMsg, messageHasToolCallId } from "./messages";
+import { isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
-import { BuiltInToolNames } from "../tools/builtIn";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
   "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
@@ -88,21 +87,14 @@ export function constructMessages(
     (item) => item.message.role !== "system",
   );
   const msgs: ChatMessage[] = [];
-  const toolCallIdsToRemove: string[] = [];
 
   for (let i = 0; i < filteredHistory.length; i++) {
     const historyItem = filteredHistory[i];
 
     if (messageMode === "chat") {
-      if (historyItem.toolCallState?.toolCallId) {
-        // remove all tool calls from the history
-        toolCallIdsToRemove.push(historyItem.toolCallState.toolCall.id);
-        continue;
-      }
-
       const toolMessage: ToolResultChatMessage = historyItem.message as ToolResultChatMessage;
-      if (toolMessage.toolCallId && toolCallIdsToRemove.includes(toolMessage.toolCallId)) {
-        // remove toolcall responses from the history
+      if (historyItem.toolCallState?.toolCallId || toolMessage.toolCallId) {
+        // remove all tool calls from the history
         continue;
       }
     }
