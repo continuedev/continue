@@ -661,63 +661,63 @@ jobs:
           cd packages/config-yaml
           npm run build
 
-          - name: Fix VSCode binary permissions and verify environment
-          run: |
-            cd extensions/vscode
+      - name: Fix VSCode binary permissions and verify environment
+        run: |
+          cd extensions/vscode
+
+          echo "VSCode storage directory structure:"
+          find e2e/storage -type d | sort
+
+          echo "Chromedriver files:"
+          find e2e/storage -name "chromedriver*" -type f
+
+          # Fix permissions for VSCode
+          if [ -f "e2e/storage/VSCode-linux-x64/code" ]; then
+            chmod +x e2e/storage/VSCode-linux-x64/code
+            echo "Fixed VSCode permissions"
+          else
+            echo "ERROR: VSCode binary not found at expected path"
+            find e2e/storage -name "code" -type f
+          fi
+
+          # Fix permissions for chromedriver and create symlink if needed
+          CHROMEDRIVER_PATH=$(find e2e/storage -name "chromedriver" -type f | head -1)
+          if [ -n "$CHROMEDRIVER_PATH" ]; then
+            chmod +x "$CHROMEDRIVER_PATH"
+            echo "Fixed chromedriver permissions at $CHROMEDRIVER_PATH"
             
-            echo "VSCode storage directory structure:"
-            find e2e/storage -type d | sort
-            
-            echo "Chromedriver files:"
-            find e2e/storage -name "chromedriver*" -type f
-            
-            # Fix permissions for VSCode
-            if [ -f "e2e/storage/VSCode-linux-x64/code" ]; then
-              chmod +x e2e/storage/VSCode-linux-x64/code
-              echo "Fixed VSCode permissions"
-            else
-              echo "ERROR: VSCode binary not found at expected path"
-              find e2e/storage -name "code" -type f
+            # Create the symlink if it's not at the expected path
+            if [ "$CHROMEDRIVER_PATH" != "e2e/storage/chromedriver" ]; then
+              ln -sf "$(pwd)/$CHROMEDRIVER_PATH" "$(pwd)/e2e/storage/chromedriver"
+              echo "Created symlink from $(pwd)/e2e/storage/chromedriver to $(pwd)/$CHROMEDRIVER_PATH"
             fi
+          else
+            echo "ERROR: No chromedriver found, looking for alternative chrome files:"
+            find e2e/storage -name "*chrome*" -type f
             
-            # Fix permissions for chromedriver and create symlink if needed
-            CHROMEDRIVER_PATH=$(find e2e/storage -name "chromedriver" -type f | head -1)
-            if [ -n "$CHROMEDRIVER_PATH" ]; then
-              chmod +x "$CHROMEDRIVER_PATH"
-              echo "Fixed chromedriver permissions at $CHROMEDRIVER_PATH"
-              
-              # Create the symlink if it's not at the expected path
-              if [ "$CHROMEDRIVER_PATH" != "e2e/storage/chromedriver" ]; then
-                ln -sf "$(pwd)/$CHROMEDRIVER_PATH" "$(pwd)/e2e/storage/chromedriver"
-                echo "Created symlink from $(pwd)/e2e/storage/chromedriver to $(pwd)/$CHROMEDRIVER_PATH"
+            # Try to find chromedriver in subdirectories
+            CHROMEDRIVER_DIR=$(find e2e/storage -name "chromedriver*" -type d | head -1)
+            if [ -n "$CHROMEDRIVER_DIR" ]; then
+              CHROMEDRIVER_IN_DIR=$(find "$CHROMEDRIVER_DIR" -name "chromedriver" -type f | head -1)
+              if [ -n "$CHROMEDRIVER_IN_DIR" ]; then
+                chmod +x "$CHROMEDRIVER_IN_DIR"
+                ln -sf "$(pwd)/$CHROMEDRIVER_IN_DIR" "$(pwd)/e2e/storage/chromedriver"
+                echo "Created symlink from $(pwd)/e2e/storage/chromedriver to $(pwd)/$CHROMEDRIVER_IN_DIR"
               fi
-            else
-              echo "ERROR: No chromedriver found, looking for alternative chrome files:"
-              find e2e/storage -name "*chrome*" -type f
-              
-              # Try to find chromedriver in subdirectories
-              CHROMEDRIVER_DIR=$(find e2e/storage -name "chromedriver*" -type d | head -1)
-              if [ -n "$CHROMEDRIVER_DIR" ]; then
-                CHROMEDRIVER_IN_DIR=$(find "$CHROMEDRIVER_DIR" -name "chromedriver" -type f | head -1)
-                if [ -n "$CHROMEDRIVER_IN_DIR" ]; then
-                  chmod +x "$CHROMEDRIVER_IN_DIR"
-                  ln -sf "$(pwd)/$CHROMEDRIVER_IN_DIR" "$(pwd)/e2e/storage/chromedriver"
-                  echo "Created symlink from $(pwd)/e2e/storage/chromedriver to $(pwd)/$CHROMEDRIVER_IN_DIR"
-                fi
-              fi
             fi
-            
-            # Create the directory structure if needed
-            mkdir -p e2e/storage
-            
-            # Verify the setup
-            echo "Final check after setup:"
-            if [ -f "e2e/storage/chromedriver" ]; then
-              echo "Chromedriver is at the expected location"
-              ls -la e2e/storage/chromedriver
-            else
-              echo "ERROR: Still could not find or create chromedriver at the expected location"
-            fi
+          fi
+
+          # Create the directory structure if needed
+          mkdir -p e2e/storage
+
+          # Verify the setup
+          echo "Final check after setup:"
+          if [ -f "e2e/storage/chromedriver" ]; then
+            echo "Chromedriver is at the expected location"
+            ls -la e2e/storage/chromedriver
+          else
+            echo "ERROR: Still could not find or create chromedriver at the expected location"
+          fi
 
       - name: Set up SSH
         env:
