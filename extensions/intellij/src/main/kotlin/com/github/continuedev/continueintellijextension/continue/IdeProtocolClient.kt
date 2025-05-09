@@ -40,6 +40,14 @@ class IdeProtocolClient(
 ) : DumbAware {
     private val ide: IDE = IntelliJIDE(project, continuePluginService)
 
+    /**
+     * Create a dispatcher with limited parallelism to prevent UI freezing.
+     * Note that there are 64 total threads available to the IDE.
+     *
+     * See this thread for details: https://github.com/continuedev/continue/issues/4098#issuecomment-2854865310
+     */
+    private val limitedDispatcher = Dispatchers.IO.limitedParallelism(4)
+
     init {
         // Setup config.json / config.ts save listeners
         VirtualFileManager.getInstance().addAsyncFileListener(
@@ -52,7 +60,7 @@ class IdeProtocolClient(
     }
 
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
-        coroutineScope.launch(Dispatchers.IO) {
+        coroutineScope.launch(limitedDispatcher) {
             val message = Gson().fromJson(msg, Message::class.java)
             val messageType = message.messageType
             val dataElement = message.data
