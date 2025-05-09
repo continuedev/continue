@@ -23,6 +23,13 @@ class IntelliJIDETest {
     }
 
     @Test
+    fun shouldHandleAuthorityComponent() {
+        val uri = "file://C:/path/to/file"
+        val file = IntelliJIDE.uriToFile(uri)
+        assertEquals(File("/C:/path/to/file"), file)
+    }
+
+    @Test
     fun testUriToFileWithSpaces() {
         val uri = "file:///path/to/file%20with%20spaces"
         val file = IntelliJIDE.uriToFile(uri)
