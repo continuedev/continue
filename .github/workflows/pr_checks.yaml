@@ -567,32 +567,7 @@ jobs:
         if: steps.storage-cache.outputs.cache-hit != 'true'
         run: |
           cd extensions/vscode
-
-          # Print the extest version to check compatibility
-          echo "Extest version:"
-          npx extest --version || echo "Could not determine extest version"
-
-          # Check package.json for VSCode and chromedriver versions
-          echo "Using VSCode/chromedriver version from package.json scripts:"
-          grep "CODE_VERSION" package.json
-
-          # Run the download
           npm run e2e:ci:download
-
-          # Check what was downloaded
-          echo "Downloaded VSCode version:"
-          if [ -f "e2e/storage/VSCode-linux-x64/code" ]; then
-            e2e/storage/VSCode-linux-x64/code --version
-          else
-            echo "VSCode binary not found"
-            ls -la e2e/storage
-          fi
-
-          echo "Downloaded chromedriver directory contents:"
-          ls -la e2e/storage/chromedriver-linux64/ || echo "chromedriver-linux64 directory not found"
-
-          echo "Looking for chromedriver executable:"
-          find e2e/storage -name "chromedriver*" -type f
 
       - name: Upload e2e dependencies
         uses: actions/upload-artifact@v4
@@ -661,63 +636,10 @@ jobs:
           cd packages/config-yaml
           npm run build
 
-      - name: Fix VSCode binary permissions and verify environment
+      - name: Fix VSCode binary permissions
         run: |
-          cd extensions/vscode
-
-          echo "VSCode storage directory structure:"
-          find e2e/storage -type d | sort
-
-          echo "Chromedriver files:"
-          find e2e/storage -name "chromedriver*" -type f
-
-          # Fix permissions for VSCode
-          if [ -f "e2e/storage/VSCode-linux-x64/code" ]; then
-            chmod +x e2e/storage/VSCode-linux-x64/code
-            echo "Fixed VSCode permissions"
-          else
-            echo "ERROR: VSCode binary not found at expected path"
-            find e2e/storage -name "code" -type f
-          fi
-
-          # Fix permissions for chromedriver and create symlink if needed
-          CHROMEDRIVER_PATH=$(find e2e/storage -name "chromedriver" -type f | head -1)
-          if [ -n "$CHROMEDRIVER_PATH" ]; then
-            chmod +x "$CHROMEDRIVER_PATH"
-            echo "Fixed chromedriver permissions at $CHROMEDRIVER_PATH"
-            
-            # Create the symlink if it's not at the expected path
-            if [ "$CHROMEDRIVER_PATH" != "e2e/storage/chromedriver" ]; then
-              ln -sf "$(pwd)/$CHROMEDRIVER_PATH" "$(pwd)/e2e/storage/chromedriver"
-              echo "Created symlink from $(pwd)/e2e/storage/chromedriver to $(pwd)/$CHROMEDRIVER_PATH"
-            fi
-          else
-            echo "ERROR: No chromedriver found, looking for alternative chrome files:"
-            find e2e/storage -name "*chrome*" -type f
-            
-            # Try to find chromedriver in subdirectories
-            CHROMEDRIVER_DIR=$(find e2e/storage -name "chromedriver*" -type d | head -1)
-            if [ -n "$CHROMEDRIVER_DIR" ]; then
-              CHROMEDRIVER_IN_DIR=$(find "$CHROMEDRIVER_DIR" -name "chromedriver" -type f | head -1)
-              if [ -n "$CHROMEDRIVER_IN_DIR" ]; then
-                chmod +x "$CHROMEDRIVER_IN_DIR"
-                ln -sf "$(pwd)/$CHROMEDRIVER_IN_DIR" "$(pwd)/e2e/storage/chromedriver"
-                echo "Created symlink from $(pwd)/e2e/storage/chromedriver to $(pwd)/$CHROMEDRIVER_IN_DIR"
-              fi
-            fi
-          fi
-
-          # Create the directory structure if needed
-          mkdir -p e2e/storage
-
-          # Verify the setup
-          echo "Final check after setup:"
-          if [ -f "e2e/storage/chromedriver" ]; then
-            echo "Chromedriver is at the expected location"
-            ls -la e2e/storage/chromedriver
-          else
-            echo "ERROR: Still could not find or create chromedriver at the expected location"
-          fi
+          chmod +x extensions/vscode/e2e/storage/VSCode-linux-x64/code
+          chmod +x extensions/vscode/e2e/storage/chromedriver-linux64/chromedriver
 
       - name: Set up SSH
         env:
@@ -748,13 +670,6 @@ jobs:
           cd extensions/vscode
           rm -rf e2e/.test-extensions/continue*
 
-      - name: Upload e2e test screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-failure-screenshots
-          path: extensions/vscode/e2e/storage/screenshots
-
       - name: Sanitize test file name
         id: sanitize_filename
         if: always()
@@ -762,6 +677,13 @@ jobs:
           FILENAME="${{ matrix.test_file }}"
           SANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion
           echo "sanitized_test_file=${SANITIZED_FILENAME}" >> $GITHUB_OUTPUT
+
+      - name: Upload e2e test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure-screenshots-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+          path: extensions/vscode/e2e/storage/screenshots
 
       - name: Find e2e log file
         if: always()
