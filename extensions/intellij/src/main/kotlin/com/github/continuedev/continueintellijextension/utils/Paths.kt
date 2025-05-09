@@ -27,7 +27,7 @@ fun getContinuePluginPath(): Path {
 fun getContinueCorePath(): String {
     val pluginPath = getContinuePluginPath()
     val corePath = Paths.get(pluginPath.toString(), "core").toString()
-    val (_, _, target) = getOsAndArch()
+    val target = getOsAndArchTarget()
     return Paths.get(corePath, target).toString()
 }
 
@@ -39,8 +39,9 @@ fun getContinueCorePath(): String {
  */
 fun getContinueBinaryPath(): String {
     val targetPath = getContinueCorePath()
-    val (os, _, _) = getOsAndArch()
-    return Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
+    val os = getOS()
+    val exeSuffix = if (os == OS.WINDOWS) ".exe" else ""
+    return Paths.get(targetPath, "continue-binary$exeSuffix").toString()
 }
 
 /**
@@ -51,6 +52,7 @@ fun getContinueBinaryPath(): String {
  */
 fun getRipgrepPath(): String {
     val targetPath = getContinueCorePath()
-    val (os, _, _) = getOsAndArch()
-    return Paths.get(targetPath, "rg" + (if (os == "win32") ".exe" else "")).toString()
+    val os = getOS()
+    val exeSuffix = if (os == OS.WINDOWS) ".exe" else ""
+    return Paths.get(targetPath, "rg$exeSuffix").toString()
 }

@@ -49,6 +49,21 @@ class IntelliJIDE(
 
     private val ripgrep: String = getRipgrepPath()
 
+    init {
+        try {
+            val os = getOS()
+            
+            if (os == OS.LINUX || os == OS.MAC) {
+                val file = File(ripgrep)
+                if (!file.canExecute()) {
+                    file.setExecutable(true)
+                }
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+    }
+
     /**
      * Updates the timestamp when a file is saved
      */

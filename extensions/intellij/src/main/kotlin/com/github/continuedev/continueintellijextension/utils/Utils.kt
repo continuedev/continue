@@ -94,20 +94,19 @@ fun Any?.getNestedOrNull(vararg keys: String): Any? {
 }
 
 /**
- * Get the OS and architecture as a string pair formatted for Continue binary.
+ * Get the target string for Continue binary.
  * The format is "$os-$arch" where:
  * - os is one of: darwin, win32, or linux
  * - arch is one of: arm64 or x64
  *
- * @return Triple of OS string, architecture string, and combined target string
+ * @return Target string in format "$os-$arch"
  */
-fun getOsAndArch(): Triple<String, String, String> {
-    val osName = System.getProperty("os.name").lowercase()
-    val os = when {
-        osName.contains("mac") || osName.contains("darwin") -> "darwin"
-        osName.contains("win") -> "win32"
-        osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
-        else -> "linux"
+fun getOsAndArchTarget(): String {
+    val os = getOS()
+    val osStr = when (os) {
+        OS.MAC -> "darwin"
+        OS.WINDOWS -> "win32"
+        OS.LINUX -> "linux"
     }
 
     val osArch = System.getProperty("os.arch").lowercase()
@@ -117,7 +116,5 @@ fun getOsAndArch(): Triple<String, String, String> {
         else -> "x64"
     }
 
-    val target = "$os-$arch"
-
-    return Triple(os, arch, target)
+    return "$osStr-$arch"
 }
