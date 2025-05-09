@@ -7,8 +7,6 @@ const AdmZip = require("adm-zip");
 
 const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}`;
 
-// Mapping from our target triplets to ripgrep release file names is now imported from targets.js
-
 /**
  * Downloads a file from a URL to a specified path
  *
