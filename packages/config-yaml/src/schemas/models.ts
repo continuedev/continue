@@ -49,6 +49,7 @@ export const completionOptionsSchema = z.object({
   n: z.number().optional(),
   reasoning: z.boolean().optional(),
   reasoningBudgetTokens: z.number().optional(),
+  promptCaching: z.boolean().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 

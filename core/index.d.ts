@@ -927,7 +927,6 @@ export interface RequestOptions {
 export interface CacheBehavior {
   cacheSystemMessage?: boolean;
   cacheConversation?: boolean;
-  cacheToolsConfig?: boolean;
 }
 
 export interface ClientCertificateOptions {
@@ -1024,6 +1023,7 @@ export interface BaseCompletionOptions {
   toolChoice?: ToolChoice;
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
+  promptCaching?: boolean;
 }
 
 export interface ModelCapability {

@@ -292,10 +292,10 @@ class Bedrock extends BaseLLM {
     const convertedMessages = this._convertMessages(messages);
 
     const shouldCacheSystemMessage =
-      !!systemMessage && this.cacheBehavior?.cacheSystemMessage;
+      !!systemMessage && this.cacheBehavior?.cacheSystemMessage || this.completionOptions.promptCaching;
     const enablePromptCaching =
-      shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation;
-    const shouldCacheToolsConfig = this.cacheBehavior?.cacheToolsConfig;
+      shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation || this.completionOptions.promptCaching;
+    const shouldCacheToolsConfig = this.completionOptions.promptCaching;
 
     // Add header for prompt caching
     if (enablePromptCaching) {
