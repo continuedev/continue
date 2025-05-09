@@ -1,10 +1,8 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import IntelliJIDE
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
-import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
@@ -518,10 +516,16 @@ class IdeProtocolClient(
                                     null
                                 ) { response ->
                                     try {
-                                        val selectedModels = response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "selectedModelByRole")
+                                        val selectedModels = response.castNestedOrNull<Map<String, Any>>(
+                                            "content",
+                                            "result",
+                                            "config",
+                                            "selectedModelByRole"
+                                        )
 
                                         // If "apply" role model is not found, try "chat" role
-                                        val applyCodeBlockModel = selectedModels?.get("apply") ?: selectedModels?.get("chat")
+                                        val applyCodeBlockModel =
+                                            selectedModels?.get("apply") ?: selectedModels?.get("chat")
 
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)

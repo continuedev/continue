@@ -43,6 +43,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
     testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
     testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
+    testImplementation("io.mockk:mockk:1.14.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
@@ -63,6 +64,7 @@ dependencies {
     // Add Log4j 2.x explicitly
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
+    testImplementation(kotlin("test"))
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for

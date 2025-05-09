@@ -1,6 +1,7 @@
+package com.github.continuedev.continueintellijextension.`continue`
+
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
-import com.github.continuedev.continueintellijextension.`continue`.GitService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
@@ -106,6 +107,24 @@ class IntelliJIDE(
 
     suspend fun enableHubContinueDev(): Boolean {
         return true
+    }
+
+    companion object {
+        fun uriToFile(uri: String): File {
+            try {
+                // Remove query parameters if present
+                val uriWithoutQuery = if (uri.contains("?")) {
+                    URI(uri.substringBefore("?"))
+                } else {
+                    URI(uri)
+                }
+
+                val file = File(uriWithoutQuery)
+                return file
+            } catch (e: Exception) {
+                throw Exception("Invalid URI: $uri ${e.message}")
+            }
+        }
     }
 
     override suspend fun getIdeSettings(): IdeSettings {
@@ -224,7 +243,7 @@ class IntelliJIDE(
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {
-            Desktop.browse(java.net.URI(url))
+            Desktop.browse(URI(url))
         }
     }
 
