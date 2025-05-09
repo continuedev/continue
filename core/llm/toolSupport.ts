@@ -148,5 +148,16 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     if(model !== "deepseek-reasoner") {
       return true;
     }
-  }
+  },
+  watsonx: (model) => {
+      if (model.toLowerCase().includes("guard")) return false;
+      if ([
+          "llama-3",
+          "llama-4",
+          "mistral",
+          "codestral",
+          "granite-3"
+          ].some((part) => model.toLowerCase().includes(part)))
+        return true;
+      }
 };
