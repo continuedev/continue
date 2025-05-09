@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension.activities
 
-import IntelliJIDE
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
