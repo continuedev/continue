@@ -563,36 +563,36 @@ jobs:
           cd packages/config-yaml
           npm run build
 
-          - name: Download Dependencies
-          if: steps.storage-cache.outputs.cache-hit != 'true'
-          run: |
-            cd extensions/vscode
-            
-            # Print the extest version to check compatibility
-            echo "Extest version:"
-            npx extest --version || echo "Could not determine extest version"
-            
-            # Check package.json for VSCode and chromedriver versions
-            echo "Using VSCode/chromedriver version from package.json scripts:"
-            grep "CODE_VERSION" package.json
-            
-            # Run the download
-            npm run e2e:ci:download
-            
-            # Check what was downloaded
-            echo "Downloaded VSCode version:"
-            if [ -f "e2e/storage/VSCode-linux-x64/code" ]; then
-              e2e/storage/VSCode-linux-x64/code --version
-            else
-              echo "VSCode binary not found"
-              ls -la e2e/storage
-            fi
-            
-            echo "Downloaded chromedriver directory contents:"
-            ls -la e2e/storage/chromedriver-linux64/ || echo "chromedriver-linux64 directory not found"
-            
-            echo "Looking for chromedriver executable:"
-            find e2e/storage -name "chromedriver*" -type f
+      - name: Download Dependencies
+        if: steps.storage-cache.outputs.cache-hit != 'true'
+        run: |
+          cd extensions/vscode
+
+          # Print the extest version to check compatibility
+          echo "Extest version:"
+          npx extest --version || echo "Could not determine extest version"
+
+          # Check package.json for VSCode and chromedriver versions
+          echo "Using VSCode/chromedriver version from package.json scripts:"
+          grep "CODE_VERSION" package.json
+
+          # Run the download
+          npm run e2e:ci:download
+
+          # Check what was downloaded
+          echo "Downloaded VSCode version:"
+          if [ -f "e2e/storage/VSCode-linux-x64/code" ]; then
+            e2e/storage/VSCode-linux-x64/code --version
+          else
+            echo "VSCode binary not found"
+            ls -la e2e/storage
+          fi
+
+          echo "Downloaded chromedriver directory contents:"
+          ls -la e2e/storage/chromedriver-linux64/ || echo "chromedriver-linux64 directory not found"
+
+          echo "Looking for chromedriver executable:"
+          find e2e/storage -name "chromedriver*" -type f
 
       - name: Upload e2e dependencies
         uses: actions/upload-artifact@v4
