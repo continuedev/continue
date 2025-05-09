@@ -1,13 +1,9 @@
 ---
 title: MCP Blocks
----
-
-title: MCP Blocks
 sidebar_label: MCP
 description: Model Context Protocol servers provide specialized functionality
 keywords: [mcp, blocks, model context protocol, integrations, tools]
 sidebar_position: 4
-
 ---
 
 Model Context Protocol servers provide specialized functionality:
