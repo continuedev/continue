@@ -1,5 +1,6 @@
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.constants.PluginConstants
 import com.github.continuedev.continueintellijextension.`continue`.GitService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -46,31 +47,7 @@ class IntelliJIDE(
 
     private val gitService = GitService(project, continuePluginService)
 
-    private val ripgrep: String
-
-    init {
-        val myPluginId = "com.github.continuedev.continueintellijextension"
-        val pluginDescriptor =
-            PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
-
-        val pluginPath = pluginDescriptor.pluginPath
-        val os = getOS()
-        ripgrep =
-            Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + if (os == OS.WINDOWS) ".exe" else "").toString()
-
-        // Make ripgrep executable if on Unix-like systems
-        try {
-            if (os == OS.LINUX || os == OS.MAC) {
-                val file = File(ripgrep)
-                if (!file.canExecute()) {
-                    file.setExecutable(true)
-                }
-            }
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
-
-    }
+    private val ripgrep: String = getRipgrepPath()
 
     /**
      * Updates the timestamp when a file is saved
@@ -91,7 +68,7 @@ class IntelliJIDE(
             remoteName = "ssh"
         }
 
-        val pluginId = "com.github.continuedev.continueintellijextension"
+        val pluginId = PluginConstants.PLUGIN_ID
         val plugin = PluginManagerCore.getPlugin(PluginId.getId(pluginId))
         val extensionVersion = plugin?.version ?: "Unknown"
 

@@ -4,7 +4,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.net.NetworkInterface
 import java.util.*
 import java.awt.event.KeyEvent.*
-
 enum class OS {
     MAC, WINDOWS, LINUX
 }
@@ -92,4 +91,33 @@ fun Any?.getNestedOrNull(vararg keys: String): Any? {
         result = (result as? Map<*, *>)?.get(key) ?: return null
     }
     return result
+}
+
+/**
+ * Get the OS and architecture as a string pair formatted for Continue binary.
+ * The format is "$os-$arch" where:
+ * - os is one of: darwin, win32, or linux
+ * - arch is one of: arm64 or x64
+ *
+ * @return Triple of OS string, architecture string, and combined target string
+ */
+fun getOsAndArch(): Triple<String, String, String> {
+    val osName = System.getProperty("os.name").lowercase()
+    val os = when {
+        osName.contains("mac") || osName.contains("darwin") -> "darwin"
+        osName.contains("win") -> "win32"
+        osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
+        else -> "linux"
+    }
+
+    val osArch = System.getProperty("os.arch").lowercase()
+    val arch = when {
+        osArch.contains("aarch64") || (osArch.contains("arm") && osArch.contains("64")) -> "arm64"
+        osArch.contains("amd64") || osArch.contains("x86_64") -> "x64"
+        else -> "x64"
+    }
+
+    val target = "$os-$arch"
+
+    return Triple(os, arch, target)
 }
