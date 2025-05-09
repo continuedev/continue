@@ -4,9 +4,12 @@ import {
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
+import {
+  fromChatCompletionChunk,
+} from "../openaiTypeConverters.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
+import { streamResponse, streamSse } from "../stream.js";
 
 let watsonxToken = {
   expiration: 0,
@@ -82,10 +85,8 @@ class WatsonX extends BaseLLM {
     }
   }
 
-  getWatsonxEndpoint(): string {
-    return this.deploymentId
-      ? `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`
-      : `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`;
+  _getEndpoint(endpoint: string): string {
+      return `${this.apiBase}/ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}/` : ""}text/${endpoint}_stream?version=${this.apiVersion}`
   }
 
   static providerName = "watsonx";
@@ -117,14 +118,10 @@ class WatsonX extends BaseLLM {
     };
   }
 
-  protected _convertModelName(model: string): string {
-    return model;
-  }
-
   protected _convertArgs(options: any, messages: ChatMessage[]) {
     const finalOptions = {
       messages: messages.map(this._convertMessage).filter(Boolean),
-      model: this._convertModelName(options.model),
+      model: options.model,
       max_tokens: options.maxTokens,
       temperature: options.temperature,
       top_p: options.topP,
@@ -185,26 +182,11 @@ class WatsonX extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    for await (const chunk of this._streamChat(
-      [{ role: "user", content: prompt }],
-      signal,
-      options,
-    )) {
-      yield renderChatMessage(chunk);
-    }
-  }
 
-  protected async *_streamChat(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions,
-  ): AsyncGenerator<ChatMessage> {
     await this.updateWatsonxToken();
 
-    const stopSequences =
-      options.stop?.slice(0, 6) ??
-      (options.model?.includes("granite") ? ["Question:"] : []);
-    const url = this.getWatsonxEndpoint();
+    const stopSequences = options.stop?.slice(0, 6) ?? [];
+    const url = this._getEndpoint("generation");
     const headers = this._getHeaders();
 
     const parameters: any = {
@@ -224,7 +206,7 @@ class WatsonX extends BaseLLM {
     }
 
     const payload: any = {
-      input: messages[messages.length - 1].content,
+      input: prompt,
       parameters: parameters,
     };
     if (!this.deploymentId) {
@@ -268,10 +250,67 @@ class WatsonX extends BaseLLM {
             }
           }
         });
-        yield {
-          role: "assistant",
-          content: generatedChunk,
-        };
+        yield generatedChunk
+      }
+    }
+  }
+
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    await this.updateWatsonxToken();
+
+    const stopSequences = options.stop?.slice(0, 6) ?? [];
+    const url = this._getEndpoint("chat");
+    const headers = this._getHeaders();
+
+    const payload: any = {
+        messages: messages,
+      max_tokens: options.maxTokens ?? 1024,
+      stop: stopSequences,
+      frequency_penalty: options.frequencyPenalty || 1,
+      presence_penalty: options.presencePenalty || 1,
+    };
+
+    if (!this.deploymentId) {
+      payload.model_id = options.model;
+      payload.project_id = this.projectId;
+    }
+
+    if (!!options.temperature) {
+      payload.temperature = options.temperature;
+     }
+    if (!!options.topP) {
+      payload.top_p = options.topP;
+    }
+    if (!!options.tools) {
+      payload.tools = options.tools;
+      if (options.toolChoice) {
+          payload.tool_choice = options.toolChoice;
+      } else {
+          payload.tool_choice_option = "auto";
+      }
+    }
+
+    var response = await this.fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(payload),
+      signal,
+    });
+
+    if (!response.ok || response.body === null) {
+      throw new Error(
+        "Something went wrong. No response received, check your connection",
+      );
+    } else {
+      for await (const value of streamSse(response)) {
+          const chunk = fromChatCompletionChunk(value);
+          if (chunk) {
+            yield chunk;
+          }
       }
     }
   }
