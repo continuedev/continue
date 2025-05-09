@@ -612,14 +612,14 @@
     "e2e:compile": "tsc -p ./tsconfig.e2e.json",
     "e2e:build": "npm --prefix ../../gui run build && npm run package",
     "e2e:create-storage": "mkdir -p ./e2e/storage",
-    "e2e:get-chromedriver": "CODE_VERSION=\"1.95.0\" extest get-chromedriver --storage ./e2e/storage",
-    "e2e:get-vscode": "CODE_VERSION=\"1.95.0\" extest get-vscode --storage ./e2e/storage",
+    "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage --code_version 1.95.0",
+    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage --code_version 1.95.0",
     "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
     "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:install-extensions": "extest install-from-marketplace ms-vscode-remote.remote-ssh --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-containers --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-wsl --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:test": "extest run-tests ${TEST_FILE:-'./e2e/_output/tests/*.test.js'} --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
-    "e2e:clean": "rm -rf ./e2e/_output",
+    "e2e:clean": "rm -rf ./e2e/_output ./e2e/storage",
     "e2e:all": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
     "e2e:recompile-extension": "npm run package && npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
     "e2e:rebuild-gui": "rm -rf gui && cp -r ../../gui/dist gui && npm run package && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
@@ -658,7 +658,7 @@
     "typescript": "^5.6.3",
     "vite": "^4.5.14",
     "vsce": "^2.15.0",
-    "vscode-extension-tester": "^8.10.0"
+    "vscode-extension-tester": "^8.14.1"
   },
   "dependencies": {
     "@continuedev/config-types": "^1.0.14",
