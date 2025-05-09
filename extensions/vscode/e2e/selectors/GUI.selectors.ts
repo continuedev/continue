@@ -67,6 +67,10 @@ export class GUISelectors {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
   }
 
+  public static getModeDropdownButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "mode-select-button");
+  }
+
   public static getFirstContextProviderDropdownItem(view: WebView) {
     return SelectorUtils.getElementByDataTestId(
       view,
@@ -99,6 +103,12 @@ export class GUISelectors {
   }
 
   public static getModelDropdownOption(view: WebView, option: string) {
+    return view.findWebElement(
+      By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
+    );
+  }
+
+  public static getModeDropdownOption(view: WebView, option: string) {
     return view.findWebElement(
       By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
     );

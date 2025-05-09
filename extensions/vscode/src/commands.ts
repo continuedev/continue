@@ -570,13 +570,14 @@ const getCommandsMap: (
           for await (const fileUri of walkDirAsync(uri.toString(), ide, {
             source: "vscode continue.selectFilesAsContext command",
           })) {
-            addEntireFileToContext(
+            await addEntireFileToContext(
               vscode.Uri.parse(fileUri),
               sidebar.webviewProtocol,
+              ide.ideUtils
             );
           }
         } else {
-          addEntireFileToContext(uri, sidebar.webviewProtocol);
+          await addEntireFileToContext(uri, sidebar.webviewProtocol, ide.ideUtils);
         }
       }
     },
