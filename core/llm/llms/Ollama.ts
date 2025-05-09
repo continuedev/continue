@@ -44,7 +44,7 @@ interface OllamaModelFileParams {
   min_p?: number;
   num_gpu?: number;
 
-  // deprecated or not directly supported here:
+  // Deprecated or not directly supported here:
   num_thread?: number;
   use_mmap?: boolean;
   num_gqa?: number;
