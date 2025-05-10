@@ -33,23 +33,22 @@ jobs:
           echo "$first_day..$last_day"
           echo "last_month=$first_day..$last_day" >> "$GITHUB_ENV"
 
-      #   - name: Run issue-metrics tool
-      #     uses: github/issue-metrics@v3
-      #     env:
-      #       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #       SEARCH_QUERY: 'repo:continuedev/continue created:${{ env.last_month }} -reason:"not planned"'
+      - name: Run issue-metrics tool
+        uses: github/issue-metrics@v3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SEARCH_QUERY: 'repo:continuedev/continue created:${{ env.last_month }} -reason:"not planned"'
 
       - name: Read metrics file content
         id: read-metrics
         run: |
-          content=$(echo "abc")
+          content=$(cat ./issue_metrics.md)
+          # This prepares the content in a way that can be used in GitHub Actions
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          # content="${content//$'\r'/'%0D'}"
           echo "metrics_content=$content" >> "$GITHUB_OUTPUT"
 
-      # content=$(cat ./issue_metrics.md)
-      # # This prepares the content in a way that can be used in GitHub Actions
-      # content="${content//'%'/'%25'}"
-      # content="${content//$'\n'/'%0A'}"
-      # content="${content//$'\r'/'%0D'}"
       - name: Post a message in a channel
         uses: slackapi/slack-github-action@v2.1.0
         with:
