@@ -7,6 +7,7 @@ import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
 import { JinaApi } from "./apis/Jina.js";
+import { LlamaCppApi } from "./apis/LlamaCpp.js";
 import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
@@ -91,6 +92,10 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "function-network":
       return openAICompatible("https://api.function.network/v1/", config);
     case "llama.cpp":
+      return new LlamaCppApi({
+        ...config,
+        apiBase: config.apiBase ?? "http://localhost:8000/",
+      });
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);
     case "lmstudio":
@@ -116,5 +121,6 @@ export {
 
 // export
 export type { BaseLlmApi } from "./apis/base.js";
+export { LlamaCppApi } from "./apis/LlamaCpp.js";
 export type { LLMConfig } from "./types.js";
 
