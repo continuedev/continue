@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface NumberInputProps {
   value: number;
@@ -13,25 +13,51 @@ const NumberInput: React.FC<NumberInputProps> = ({
   max,
   min,
 }) => {
+  const [inputValue, setInputValue] = useState(value.toString());
+
   const handleIncrement = () => {
     if (value < max) {
-      onChange(value + 1);
+      const newValue = value + 1;
+      onChange(newValue);
+      setInputValue(newValue.toString());
     }
   };
 
   const handleDecrement = () => {
     if (value > min) {
-      onChange(value - 1);
+      const newValue = value - 1;
+      onChange(newValue);
+      setInputValue(newValue.toString());
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newInputValue = e.target.value;
+    setInputValue(newInputValue);
+    
+    // Only update the actual value if it's a valid number
+    const numValue = parseInt(newInputValue, 10);
+    if (!isNaN(numValue)) {
+      // Apply min/max constraints
+      const constrainedValue = Math.min(Math.max(numValue, min), max);
+      onChange(constrainedValue);
+    }
+  };
+
+  const handleBlur = () => {
+    // When input loses focus, ensure the displayed value matches the actual value
+    // This handles cases where the user entered an invalid value
+    setInputValue(value.toString());
   };
 
   return (
     <div className="border-vsc-input-border bg-vsc-input-background flex flex-row overflow-hidden rounded-md border border-solid">
       <input
         type="text"
-        value={value}
-        readOnly
-        className="text-vsc-foreground max-w-7 border-none bg-inherit pr-1.5 text-right outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
+        value={inputValue}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
+        className="text-vsc-foreground max-w-9 border-none bg-inherit pr-1.5 text-right outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
         style={{
           appearance: "none",
           WebkitAppearance: "none",
