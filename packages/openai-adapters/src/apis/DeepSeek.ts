@@ -6,11 +6,13 @@ import { OpenAIApi } from "./OpenAI.js";
 import { FimCreateParamsStreaming } from "./base.js";
 
 export class DeepSeekApi extends OpenAIApi {
-  apiBase: string = "https://api.deepseek.com/";
+  static apiBase: string = "https://api.deepseek.com/";
+
   constructor(config: DeepseekConfig) {
     super({
       ...config,
       provider: "openai",
+      apiBase: config.apiBase ?? DeepSeekApi.apiBase,
     });
   }
 
@@ -18,7 +20,7 @@ export class DeepSeekApi extends OpenAIApi {
     body: FimCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const endpoint = new URL("beta/completions", this.apiBase);
+    const endpoint = new URL("beta/completions", DeepSeekApi.apiBase);
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
