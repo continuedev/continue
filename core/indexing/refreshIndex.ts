@@ -24,9 +24,11 @@ export function tagToString(tag: IndexTag): string {
 
 export class SqliteDb {
   static db: DatabaseConnection | null = null;
+  static closeRetries = 0;
 
   private static async createTables(db: DatabaseConnection) {
     await db.exec("PRAGMA journal_mode=WAL;");
+    await db.exec("PRAGMA busy_timeout=5000;");
 
     await db.exec(
       `CREATE TABLE IF NOT EXISTS tag_catalog (
@@ -89,6 +91,7 @@ export class SqliteDb {
     }
 
     SqliteDb.indexSqlitePath = getIndexSqlitePath();
+
     SqliteDb.db = await open({
       filename: SqliteDb.indexSqlitePath,
       driver: sqlite3.Database,
@@ -99,6 +102,41 @@ export class SqliteDb {
     await SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;
+  }
+
+  static async close() {
+    if (!SqliteDb.db) {
+      return;
+    }
+
+    try {
+      await SqliteDb.db.exec("COMMIT;");
+      console.log("Committed ongoing transactions");
+    } catch {}
+
+    try {
+      await SqliteDb.db.exec("ROLLBACK;");
+      console.log("Rolled back ongoing transactions");
+    } catch {}
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await SqliteDb.db.close();
+
+      SqliteDb.db = null;
+      SqliteDb.closeRetries = 0;
+    } catch (error) {
+      if (SqliteDb.closeRetries < 3) {
+        console.log(
+          `Error closing SqliteDb database connection... Retrying (${SqliteDb.closeRetries + 1} / 3)`,
+        );
+        SqliteDb.closeRetries = SqliteDb.closeRetries + 1;
+        await SqliteDb.close();
+      } else {
+        console.error("Error closing", error);
+        throw error;
+      }
+    }
   }
 }
 
@@ -114,6 +152,7 @@ async function getSavedItemsForTag(
     tag.artifactId,
   );
   const rows = await stmt.all();
+  await stmt.finalize();
   return rows;
 }
 
