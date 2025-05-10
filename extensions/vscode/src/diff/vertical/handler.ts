@@ -127,6 +127,11 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private incrementCurrentLineIndex() {
     this.currentLineIndex++;
     this.updateIndexLineDecorations();
+    const range = new vscode.Range(this.currentLineIndex, 0, this.currentLineIndex, 0);
+    this.editor.revealRange(
+      range,
+      vscode.TextEditorRevealType.Default,
+    );
   }
 
   private async insertTextAboveLine(index: number, text: string) {
@@ -337,6 +342,12 @@ export class VerticalDiffHandler implements vscode.Disposable {
       await this.insertDeletionBuffer();
 
       await this.reapplyWithMyersDiff(diffLines);
+
+      const range = new vscode.Range(this.startLine, 0, this.startLine, 0);
+      this.editor.revealRange(
+        range,
+        vscode.TextEditorRevealType.Default,
+      );
 
       this.options.onStatusUpdate(
         "done",
