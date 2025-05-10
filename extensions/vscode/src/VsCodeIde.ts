@@ -76,8 +76,8 @@ class VsCodeIde implements IDE {
 
   async fileExists(uri: string): Promise<boolean> {
     try {
-      await vscode.workspace.fs.stat(vscode.Uri.parse(uri));
-      return true;
+      const stat = await this.ideUtils.stat(vscode.Uri.parse(uri));
+      return stat !== null;
     } catch (error) {
       if (error instanceof vscode.FileSystemError) {
         return false;
@@ -335,10 +335,10 @@ class VsCodeIde implements IDE {
     const pathToLastModified: FileStatsMap = {};
     await Promise.all(
       files.map(async (file) => {
-        const stat = await vscode.workspace.fs.stat(vscode.Uri.parse(file));
+        const stat = await this.ideUtils.stat(vscode.Uri.parse(file), false /* No need to catch ENOPRO exceptions */);
         pathToLastModified[file] = {
-          lastModified: stat.mtime,
-          size: stat.size,
+          lastModified: stat!.mtime,
+          size: stat!.size,
         };
       }),
     );
@@ -400,7 +400,10 @@ class VsCodeIde implements IDE {
       vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
     const configs: ContinueRcJson[] = [];
     for (const workspaceDir of workspaceDirs) {
-      const files = await vscode.workspace.fs.readDirectory(workspaceDir);
+      const files = await this.ideUtils.readDirectory(workspaceDir);
+      if (files === null) {//Unlikely, but just in case...
+        continue;
+      }
       for (const [filename, type] of files) {
         if (
           (type === vscode.FileType.File ||
@@ -512,12 +515,15 @@ class VsCodeIde implements IDE {
         return openTextDocument.getText();
       }
 
-      const fileStats = await vscode.workspace.fs.stat(uri);
-      if (fileStats.size > 10 * VsCodeIde.MAX_BYTES) {
+      const fileStats = await this.ideUtils.stat(uri);
+      if (fileStats === null || fileStats.size > 10 * VsCodeIde.MAX_BYTES) {
         return "";
       }
 
-      const bytes = await vscode.workspace.fs.readFile(uri);
+      const bytes = await this.ideUtils.readFile(uri);
+      if (bytes === null) {
+        return "";
+      }
 
       // Truncate the buffer to the first MAX_BYTES
       const truncatedBytes = bytes.slice(0, VsCodeIde.MAX_BYTES);
@@ -599,7 +605,10 @@ class VsCodeIde implements IDE {
 
       const ignoreGlobs: Set<string> = new Set();
       for (const file of ignoreFiles) {
-        const content = await vscode.workspace.fs.readFile(file);
+        const content = await this.ideUtils.readFile(file);
+        if (content === null) {
+          continue;
+        }
         const filePath = vscode.workspace.asRelativePath(file);
         const fileDir = filePath
           .replace(/\\/g, "/")
@@ -743,7 +752,8 @@ class VsCodeIde implements IDE {
   }
 
   async listDir(dir: string): Promise<[string, FileType][]> {
-    return vscode.workspace.fs.readDirectory(vscode.Uri.parse(dir)) as any;
+    const entries = await this.ideUtils.readDirectory(vscode.Uri.parse(dir));
+    return entries === null? [] : entries as any;
   }
 
   private getIdeSettingsSync(): IdeSettings {

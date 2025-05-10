@@ -28,7 +28,7 @@ export function ErrorSection() {
             ) : (
               <ExclamationTriangleIcon className="mr-2 mt-1 h-3.5 w-3.5" />
             )}
-            <p className="m-0 whitespace-pre-wrap text-xs">{error.message}</p>
+            <p className="m-0 whitespace-pre-wrap text-wrap" style={{wordBreak: 'break-word'}}>{error.message}</p>
           </li>
         ))}
       </ul>

@@ -17,6 +17,9 @@
       "provider": "mock",
       "title": "TOOL MOCK LLM",
       "model": "claude-3-5-sonnet-latest",
+      "capabilities": {
+        "tools": true
+      },
       "requestOptions": {
         "extraBodyProperties": {
           "chatStream": [

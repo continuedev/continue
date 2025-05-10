@@ -88,6 +88,7 @@ const templateSchema = z.enum([
   "gemma",
   "granite",
   "llama3",
+  "codestral",
 ]);
 
 /** Prompt templates use Handlebars syntax */

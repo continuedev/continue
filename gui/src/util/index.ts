@@ -3,6 +3,7 @@ import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import _ from "lodash";
 import { KeyboardEvent } from "react";
 import { getLocalStorage } from "./localStorage";
+import { DEFAULT_CHAT_SYSTEM_MESSAGE, DEFAULT_AGENT_SYSTEM_MESSAGE } from "core/llm/constructMessages";
 
 export type Platform = "mac" | "linux" | "windows" | "unknown";
 
@@ -122,9 +123,9 @@ export function isLocalProfile(profile: ProfileDescription): boolean {
 export function getBaseSystemMessage(modelDetails: ModelDescription | null, mode: MessageModes) {
   let baseChatOrAgentSystemMessage: string|undefined
   if(mode === 'agent') {
-    baseChatOrAgentSystemMessage = modelDetails?.baseAgentSystemMessage ?? modelDetails?.baseChatSystemMessage // fallback to chat system message if agent system message is unavailable
+    baseChatOrAgentSystemMessage = modelDetails?.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
   } else {
-    baseChatOrAgentSystemMessage = modelDetails?.baseChatSystemMessage
+    baseChatOrAgentSystemMessage = modelDetails?.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
   }
   return baseChatOrAgentSystemMessage
 }

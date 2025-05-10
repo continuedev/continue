@@ -9,6 +9,7 @@ import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
+  codestralTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   graniteTemplateMessages,
@@ -78,7 +79,8 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "azure",
   "scaleway",
   "nebius",
-  "ovhcloud"
+  "ovhcloud",
+  "watsonx",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -98,6 +100,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
   "llama-3.2",
   "llama4",
+  "granite-vision",
 ];
 
 function modelSupportsTools(modelDescription: ModelDescription) {
@@ -295,6 +298,7 @@ function autodetectTemplateFunction(
       gemma: gemmaTemplateMessage,
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
+      codestral: codestralTemplateMessages,
       none: null,
     };
 
