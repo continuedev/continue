@@ -40,6 +40,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { getMCPArgsWithVariables } from "../../util";
 import { logger } from "../../util/logger";
 import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
@@ -72,7 +73,7 @@ function convertYamlMcpToContinueMcp(
       args: server.args ?? [],
       env: server.env,
     },
-    timeout: server.connectionTimeout
+    timeout: server.connectionTimeout,
   };
 }
 
@@ -241,6 +242,16 @@ async function configYamlToContinueConfig(options: {
     rootUrl: doc.rootUrl,
     faviconUrl: doc.faviconUrl,
   }));
+
+  config.mcpServers?.forEach(mcpServer => {
+    const mcpArgVariables = getMCPArgsWithVariables(mcpServer.args ?? []);
+    if(mcpArgVariables.length === 0) return; 
+    localErrors.push({
+      fatal: false,
+      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}`,
+    });
+  })
+
   continueConfig.experimental = {
     modelContextProtocolServers: config.mcpServers?.map(
       convertYamlMcpToContinueMcp,
