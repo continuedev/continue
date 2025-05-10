@@ -33,6 +33,7 @@
     "@types/jest": "^29.5.12",
     "@types/uuid": "^9.0.8",
     "@vercel/ncc": "^0.38.1",
+    "cross-env": "^7.0.3",
     "esbuild": "0.19.11",
     "jest": "^29.7.0",
     "pkg": "^5.8.1",
