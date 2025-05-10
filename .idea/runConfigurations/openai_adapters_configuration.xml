@@ -1,0 +1,25 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="openai-adapters configuration" type="JavaScriptTestRunnerJest">
+    <node-interpreter value="project" />
+    <node-options value="--experimental-vm-modules" />
+    <jest-package value="$PROJECT_DIR$/binary/node_modules/jest" />
+    <working-dir value="$PROJECT_DIR$/packages/openai-adapters" />
+    <envs />
+    <scope-kind value="SUITE" />
+    <test-file value="$PROJECT_DIR$/packages/openai-adapters/src/test/main.test.ts" />
+    <test-names>
+      <test-name value="openai configuration" />
+    </test-names>
+    <method v="2">
+      <option name="NpmBeforeRunTask" enabled="true">
+        <package-json value="$PROJECT_DIR$/packages/openai-adapters/package.json" />
+        <command value="run" />
+        <scripts>
+          <script value="build" />
+        </scripts>
+        <node-interpreter value="project" />
+        <envs />
+      </option>
+    </method>
+  </configuration>
+</component>
