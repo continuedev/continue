@@ -53,9 +53,15 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       configYaml.mcpServers = [
         {
           name: "New MCP server",
+          type: "stdio",
           command: "npx",
           args: ["-y", "<your-mcp-server>"],
           env: {},
+        },
+        {
+          name: "New MCP server",
+          type: "sse",
+          url: "https://example.org/sse"
         },
       ];
       break;
