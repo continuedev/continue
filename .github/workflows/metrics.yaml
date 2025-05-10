@@ -65,7 +65,8 @@ jobs:
                 - type: "section"
                   text:
                     type: "mrkdwn"
-                    text: "${{ steps.read-metrics.outputs.metrics_content }}"
+                    text: |
+                      ${{ steps.read-metrics.outputs.metrics_content }}
 
       - name: Upload metrics report as artifact
         uses: actions/upload-artifact@v4
