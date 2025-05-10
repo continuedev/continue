@@ -85,6 +85,12 @@ Blocks:
 You can find many examples of each of these block types on
 the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
+:::info
+Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) can read secret values:
+- globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
+- per-workspace, from a `.env` file located at the root of the current workspace.
+:::
+
 ### Inputs
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use
@@ -111,7 +117,7 @@ models:
       TEMP: 0.9
 ```
 
-Note that hub secrets can be passed as inputs, using the a similar mustache format: `secrets.SECRET_NAME`.
+Note that hub secrets can be passed as inputs, using a similar mustache format: `secrets.SECRET_NAME`.
 
 ### Overrides
 
