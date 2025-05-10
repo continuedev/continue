@@ -53,7 +53,7 @@ jobs:
       - name: Post a message in a channel
         uses: slackapi/slack-github-action@v2.1.0
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.ISSUE_PR_METRICS_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             text: "Issue / PR Metrics Report"
