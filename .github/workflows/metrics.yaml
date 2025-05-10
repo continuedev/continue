@@ -40,7 +40,7 @@ jobs:
           SEARCH_QUERY: 'repo:continuedev/continue created:${{ env.last_month }} -reason:"not planned"'
 
       - name: Upload metrics report as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: issue-metrics-report
           path: ./issue_metrics.md
