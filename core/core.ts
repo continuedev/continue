@@ -735,6 +735,7 @@ export class Core {
         tool,
         toolCallId: toolCall.id,
         onPartialOutput,
+        core: this, // Add a reference to the Core instance
       });
     });
 
@@ -1075,7 +1076,7 @@ export class Core {
     this.indexingCancellationController = undefined;
   }
 
-  private async refreshCodebaseIndexFiles(files: string[]) {
+  async refreshCodebaseIndexFiles(files: string[]) {
     // Can be cancelled by codebase index but not vice versa
     if (
       this.indexingCancellationController &&
@@ -1103,7 +1104,7 @@ export class Core {
     }
 
     this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
+      providers: "all",
     });
     this.indexingCancellationController = undefined;
   }
