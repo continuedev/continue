@@ -4,7 +4,7 @@
   "enumPropertyNaming": "UPPERCASE",
   "apiPackage": "api",
   "modelPackage": "models",
-  "npmName": "@continuedev/sdk",
+  "npmName": "@continuedev/hub-api",
   "npmVersion": "0.0.1",
   "withInterfaces": true,
   "nullSafeAdditionalProps": true,

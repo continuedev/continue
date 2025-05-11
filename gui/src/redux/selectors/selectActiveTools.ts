@@ -10,13 +10,18 @@ export const selectActiveTools = createSelector(
     (store: RootState) => store.ui.toolGroupSettings,
   ],
   (mode, tools, policies, groupPolicies): Tool[] => {
-    if (mode !== "agent") {
+    if (mode === "chat") {
       return [];
     }
-    return tools.filter(
-      (tool) =>
-        policies[tool.function.name] !== "disabled" &&
-        groupPolicies[tool.group] !== "exclude",
-    );
+    else if (mode === "agent") {
+      return tools.filter(
+        (tool) =>
+          policies[tool.function.name] !== "disabled" &&
+          groupPolicies[tool.group] !== "exclude",
+      );
+    }
+    else {
+      return [];
+    }
   },
 );

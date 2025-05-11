@@ -518,18 +518,10 @@ class IdeProtocolClient(
                                     null
                                 ) { response ->
                                     try {
-                                        val responseObject = response as Map<*, *>
-                                        val responseContent = responseObject["content"] as Map<*, *>
-                                        val result = responseContent["result"] as Map<*, *>
-                                        val config = result["config"] as Map<*, *>
-
-                                        val selectedModels = config["selectedModelByRole"] as? Map<*, *>
-                                        var applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
+                                        val selectedModels = response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "selectedModelByRole")
 
                                         // If "apply" role model is not found, try "chat" role
-                                        if (applyCodeBlockModel == null) {
-                                            applyCodeBlockModel = selectedModels?.get("chat") as? Map<*, *>
-                                        }
+                                        val applyCodeBlockModel = selectedModels?.get("apply") ?: selectedModels?.get("chat")
 
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)
@@ -596,7 +588,7 @@ class IdeProtocolClient(
                         diffStreamService.register(diffStreamHandler, editor)
 
                         diffStreamHandler.streamDiffLinesToEditor(
-                            prompt, prefix, highlighted, suffix, llmTitle
+                            prompt, prefix, highlighted, suffix, llmTitle, false
                         )
 
                         respond(null)

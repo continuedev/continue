@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.services.TelemetryService
+import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.service
@@ -59,18 +60,14 @@ class CoreMessengerManager(
         try {
             coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
 
-            coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-                val responseObject = response as Map<*, *>
-                val responseContent = responseObject["content"] as Map<*, *>
-                val result = responseContent["result"] as Map<*, *>
-                val config = result["config"] as Map<String, Any>
+        coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
+            val allowAnonymousTelemetry = response.castNestedOrNull<Boolean>("content", "result", "config", "allowAnonymousTelemetry")
 
-                val allowAnonymousTelemetry = config?.get("allowAnonymousTelemetry") as? Boolean
-                val telemetryService = service<TelemetryService>()
-                if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
-                    telemetryService.setup(getMachineUniqueID())
-                }
+            val telemetryService = service<TelemetryService>()
+            if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
+                telemetryService.setup(getMachineUniqueID())
             }
+        }
 
             // On exit, use exponential backoff to create another CoreMessenger
             coreMessenger?.onDidExit {

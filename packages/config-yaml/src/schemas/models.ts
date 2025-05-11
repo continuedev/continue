@@ -66,6 +66,7 @@ export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 
 export const chatOptionsSchema = z.object({
   baseSystemMessage: z.string().optional(),
+  baseAgentSystemMessage: z.string().optional()
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 
@@ -87,6 +88,7 @@ const templateSchema = z.enum([
   "gemma",
   "granite",
   "llama3",
+  "codestral",
 ]);
 
 /** Prompt templates use Handlebars syntax */

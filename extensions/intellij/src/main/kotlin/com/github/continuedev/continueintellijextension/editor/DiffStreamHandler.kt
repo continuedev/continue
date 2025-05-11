@@ -87,7 +87,7 @@ class DiffStreamHandler(
     }
 
     fun streamDiffLinesToEditor(
-        input: String, prefix: String, highlighted: String, suffix: String, modelTitle: String
+        input: String, prefix: String, highlighted: String, suffix: String, modelTitle: String, includeRulesInSystemMessage: Boolean
     ) {
         isRunning = true
         this.sendUpdate("streaming")
@@ -96,7 +96,7 @@ class DiffStreamHandler(
         val virtualFile = getVirtualFile()
 
         continuePluginService.coreMessenger?.request(
-            "streamDiffLines", createRequestParams(input, prefix, highlighted, suffix, virtualFile, modelTitle), null
+            "streamDiffLines", createRequestParams(input, prefix, highlighted, suffix, virtualFile, modelTitle, includeRulesInSystemMessage), null
         ) { response ->
             if (!isRunning) return@request
 
@@ -274,7 +274,8 @@ class DiffStreamHandler(
         highlighted: String,
         suffix: String,
         virtualFile: VirtualFile?,
-        modelTitle: String
+        modelTitle: String,
+        includeRulesInSystemMessage: Boolean
     ): Map<String, Any?> {
         return mapOf(
             "input" to input,
@@ -282,7 +283,8 @@ class DiffStreamHandler(
             "highlighted" to highlighted,
             "suffix" to suffix,
             "language" to virtualFile?.fileType?.name,
-            "modelTitle" to modelTitle
+            "modelTitle" to modelTitle,
+            "includeRulesInSystemMessage" to includeRulesInSystemMessage,
         )
     }
 

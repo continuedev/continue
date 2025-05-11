@@ -1,17 +1,16 @@
 import type { RenderOptions, RenderResult } from "@testing-library/react";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PropsWithChildren } from "react";
 import { Provider } from "react-redux";
 import { MemoryRouter, RouterProps } from "react-router-dom";
+import { LumpProvider } from "../../components/mainInput/Lump/LumpContext";
+import { MainEditorProvider } from "../../components/mainInput/TipTapEditor";
 import { AuthProvider } from "../../context/Auth";
 import { IdeMessengerProvider } from "../../context/IdeMessenger";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
+import ParallelListeners from "../../hooks/ParallelListeners";
 import { setupStore } from "../../redux/store";
-import { SetupListeners } from "../../App";
-import { act } from "@testing-library/react";
-import { LumpProvider } from "../../components/mainInput/Lump/LumpContext";
-import { MainEditorProvider } from "../../components/mainInput/TipTapEditor";
 // As a basic setup, import your same slice reducers
 
 // This type interface extends the default options for render from RTL, as well
@@ -55,7 +54,7 @@ export async function renderWithProviders(
             <MainEditorProvider>
               <LumpProvider>
                 {children}
-                <SetupListeners />
+                <ParallelListeners />
               </LumpProvider>
             </MainEditorProvider>
           </AuthProvider>

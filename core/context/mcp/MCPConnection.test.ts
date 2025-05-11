@@ -55,6 +55,27 @@ describe("MCPConnection", () => {
       expect(conn.status).toBe("not-connected");
     });
 
+    it("should create instance with SSE transport and custom headers", () => {
+      const options = {
+        name: "test-mcp",
+        id: "test-id",
+        transport: {
+          type: "sse" as const,
+          url: "http://test.com/events",
+          requestOptions: {
+            headers: {
+              "Authorization": "Bearer token123",
+              "X-Custom-Header": "custom-value"
+            }
+          }
+        },
+      };
+
+      const conn = new MCPConnection(options);
+      expect(conn).toBeInstanceOf(MCPConnection);
+      expect(conn.status).toBe("not-connected");
+    });
+
     it("should throw on invalid transport type", () => {
       const options = {
         name: "test-mcp",
@@ -148,6 +169,21 @@ describe("MCPConnection", () => {
       expect(conn.resources).toHaveLength(1);
       expect(conn.tools).toHaveLength(1);
       expect(conn.prompts).toHaveLength(1);
+      expect(mockConnect).toHaveBeenCalled();
+    });
+
+    it('should handle custom connection timeout', async () => {
+      const conn = new MCPConnection({ ...options, timeout: 11 });
+      const mockConnect = jest
+        .spyOn(Client.prototype, "connect")
+        .mockImplementation(
+          () => new Promise((resolve) => setTimeout(resolve, 10)),
+        );
+
+      const abortController = new AbortController();
+      await conn.connectClient(false, abortController.signal);
+
+      expect(conn.status).toBe("connected");
       expect(mockConnect).toHaveBeenCalled();
     });
 

@@ -1,82 +1,76 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { EditStatus, MessageContent } from "core";
-
+import { ApplyState, CodeToEdit, MessageModes } from "core";
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 export interface EditModeState {
-  editStatus: EditStatus;
-  previousInputs: MessageContent[];
-  fileAfterEdit?: string;
+  // Array because of previous multi-file edit functionality
+  // Keeping array to not break persisted redux for now
+  codeToEdit: CodeToEdit[];
+  applyState: ApplyState;
+  returnToMode: MessageModes;
+  lastNonEditSessionWasEmpty: boolean;
 }
 
+export const INITIAL_EDIT_APPLY_STATE: ApplyState = {
+  streamId: EDIT_MODE_STREAM_ID,
+  status: "not-started",
+};
+
 const initialState: EditModeState = {
-  editStatus: "not-started",
-  previousInputs: [],
+  applyState: INITIAL_EDIT_APPLY_STATE,
+  codeToEdit: [],
+  returnToMode: "chat",
+  lastNonEditSessionWasEmpty: false,
 };
 
 export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    focusEdit: (state) => {
-      state.editStatus = "not-started";
-      state.previousInputs = [];
-      state.fileAfterEdit = undefined;
+    setReturnToModeAfterEdit: (
+      state,
+      { payload }: PayloadAction<MessageModes>,
+    ) => {
+      state.returnToMode = payload;
     },
-    submitEdit: (state, { payload }: PayloadAction<MessageContent>) => {
-      state.previousInputs.push(payload);
-      state.editStatus = "streaming";
+    updateEditStateApplyState: (
+      state,
+      { payload }: PayloadAction<ApplyState>,
+    ) => {
+      state.applyState = {
+        ...state.applyState,
+        ...payload,
+      };
     },
-    setEditStatus: (
+    setCodeToEdit: (
       state,
       {
         payload,
-      }: PayloadAction<{ status: EditStatus; fileAfterEdit?: string }>,
+      }: PayloadAction<{
+        codeToEdit: CodeToEdit | CodeToEdit[];
+      }>,
     ) => {
-      // Only allow valid transitions
-      const currentStatus = state.editStatus;
-      if (currentStatus === "not-started" && payload.status === "streaming") {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "streaming" &&
-        payload.status === "accepting"
-      ) {
-        state.editStatus = payload.status;
-        state.fileAfterEdit = payload.fileAfterEdit;
-      } else if (currentStatus === "accepting" && payload.status === "done") {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "accepting:full-diff" &&
-        payload.status === "done"
-      ) {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "accepting" &&
-        payload.status === "accepting:full-diff"
-      ) {
-        state.editStatus = payload.status;
-      } else if (
-        currentStatus === "accepting:full-diff" &&
-        payload.status === "accepting"
-      ) {
-        state.editStatus = payload.status;
-      } else if (currentStatus === "done" && payload.status === "not-started") {
-        state.editStatus = payload.status;
-      }
+      state.codeToEdit = Array.isArray(payload.codeToEdit)
+        ? payload.codeToEdit
+        : [payload.codeToEdit];
     },
-    addPreviousInput: (state, { payload }: PayloadAction<MessageContent>) => {
-      state.previousInputs.push(payload);
+    clearCodeToEdit: (state) => {
+      state.codeToEdit = [];
     },
-    setEditDone: (state) => {
-      state.editStatus = "done";
-      state.previousInputs = [];
+    setLastNonEditSessionEmpty: (
+      state,
+      { payload }: PayloadAction<boolean>,
+    ) => {
+      state.lastNonEditSessionWasEmpty = payload;
     },
   },
+  selectors: {},
 });
 
 export const {
-  setEditStatus,
-  addPreviousInput,
-  setEditDone,
-  submitEdit,
-  focusEdit,
+  setReturnToModeAfterEdit,
+  clearCodeToEdit,
+  setCodeToEdit,
+  updateEditStateApplyState,
+  setLastNonEditSessionEmpty,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

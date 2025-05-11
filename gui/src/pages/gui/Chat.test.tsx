@@ -1,6 +1,6 @@
-import { renderWithProviders } from "../../util/test/render";
 import { screen, waitFor } from "@testing-library/dom";
-import { act, fireEvent } from "@testing-library/react";
+import { act } from "@testing-library/react";
+import { renderWithProviders } from "../../util/test/render";
 import { Chat } from "./Chat";
 
 describe("Chat page test", () => {
@@ -23,8 +23,8 @@ describe("Chat page test", () => {
       );
     });
 
-    // Check that it switched to Edit mode
-    expect(await screen.findByText("Edit")).toBeInTheDocument();
+    // Check that it switched to Agent mode
+    expect(await screen.findByText("Agent")).toBeInTheDocument();
 
     act(() => {
       document.dispatchEvent(
@@ -35,8 +35,8 @@ describe("Chat page test", () => {
       );
     });
 
-    // Check that it switched to Agent mode
-    expect(await screen.findByText("Agent")).toBeInTheDocument();
+    // Check that it switched to Edit mode
+    expect(await screen.findByText("Edit")).toBeInTheDocument();
   });
 
   it.skip("should send a message and receive a response", async () => {

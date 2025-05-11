@@ -20,7 +20,7 @@ Edit is recommended for small, targeted changes, such as
 
 ## Highlight code and activate
 
-Highlight the block of code you would like to modify and press <kbd>cmd/ctrl</kbd> + <kbd>i</kbd> to active Edit mode. You can also enter Edit mode by pressing <kbd>cmd/ctrl</kbd> + <kbd>i</kbd> with no code highlighted.
+Highlight the block of code you would like to modify and press <kbd>cmd/ctrl</kbd> + <kbd>i</kbd> to active Edit mode. You can also enter Edit mode by pressing <kbd>cmd/ctrl</kbd> + <kbd>i</kbd> with no code highlighted, which will default to editing the current file.
 
 ## Describe code changes
 
@@ -48,32 +48,6 @@ You can also reject and accept diffs using the `Reject All` and `Accept All` but
 
 Along with adding highlighted code, you can also manually add files to edit using the `Add file` combobox or by clicking the dropdown and selecting `Add all open files` to add all files that are currently open in the editor.
 
-**_Add file combobox_**
-
-![edit mode add file combobox](/img/edit-mode-add-files.png)
-
-**_Add all open files dropdown_**
-
-![edit mode add file combobox](/img/edit-mode-add-all-open-files.png)
-
-### Single File Edit
-
-If one file/range is present in `Code to Edit` on submission, Continue will prompt the Edit model and then automatically stream the diff into the editor.
-
-![Edit mode single file diffs](/img/edit-mode-single-file-diff.png)
-
-### Multi-File Edit
-
-If multiple files/ranges are present in `Code to Edit` on submission, Continue will prompt the Edit model to output codeblocks per-file, which the user can then choose to apply and accept/reject independently.
-
-**_Generated Content_**
-
-![Edit mode multi file generated content](/img/edit-mode-multi-file-generation.png)
-
-**_Diffs_**
-
-![Edit mode multi file diffs](/img/edit-mode-multi-file-diffs.png)
-
 ## Jetbrains
 
-In Jetbrains, Edit is implemented as an inline popup (see the header GIF example) for single-file edit. Multi-file edit mode is not currently implemented.
+In Jetbrains, Edit is implemented as an inline popup. See the header GIF example.

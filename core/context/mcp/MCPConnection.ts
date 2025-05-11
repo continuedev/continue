@@ -14,7 +14,7 @@ import {
   MCPTool,
 } from "../..";
 
-export const DEFAULT_MCP_TIMEOUT = 20_000; // 10 seconds
+const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
 class MCPConnection {
   public client: Client;
@@ -55,7 +55,9 @@ class MCPConnection {
   private constructTransport(options: MCPOptions): Transport {
     switch (options.transport.type) {
       case "stdio":
-        const env: Record<string, string> = options.transport.env || {};
+        const env: Record<string, string> = options.transport.env
+          ? { ...options.transport.env }
+          : {};
         if (process.env.PATH !== undefined) {
           env.PATH = process.env.PATH;
         }
@@ -67,7 +69,19 @@ class MCPConnection {
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
       case "sse":
-        return new SSEClientTransport(new URL(options.transport.url));
+        return new SSEClientTransport(new URL(options.transport.url), {
+          eventSourceInit: {
+            fetch: (input, init) =>
+              fetch(input, {
+                ...init,
+                headers: {
+                  ...init?.headers,
+                  ...(options.transport.requestOptions?.headers as Record<string, string> | undefined),
+                }
+              }),
+          },
+          requestInit: { headers: options.transport.requestOptions?.headers }
+        });
       default:
         throw new Error(
           `Unsupported transport type: ${(options.transport as any).type}`,

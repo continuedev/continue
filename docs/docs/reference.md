@@ -19,7 +19,7 @@ from [the Hub](https://hub.continue.dev/explore/assistants) or locally
   - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the \* \*[Migration Guide](./yaml-migration.md)\*\*.
+Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the **[Migration Guide](./yaml-migration.md)**.
 :::
 
 An assistant is made up of:
@@ -189,10 +189,11 @@ chat, editing, and summarizing.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
   `chat`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [
   `apply`](./customize/model-roles/apply.mdx#prompt-templating) and [
-  `autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chatTemplate` property must be a
+  `autocomplete`](./customize/model-roles/autocomplete.md#prompt-templating). The `chat` property must be a
   valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
-  - `baseSystemMessage`: Can be used to override the default system prompt.
+  - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
+  <!-- - `baseAgentSystemMessage`: Can be used to override the default system prompt for **Agent** mode. <!-- This setting is experimental and hence is undocumented. -->
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
   - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
   - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
@@ -380,6 +381,7 @@ prompts, context, and tool use. Continue supports any MCP server with the MCP co
 - `command` (**required**): The command used to start the server.
 - `args`: An optional array of arguments for the command.
 - `env`: An optional map of environment variables for the server process.
+- `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
 **Example:**
 

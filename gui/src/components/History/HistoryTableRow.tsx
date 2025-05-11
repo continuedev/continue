@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { exitEditMode } from "../../redux/thunks/editMode";
 import {
   deleteSession,
   getSession,
@@ -68,6 +69,7 @@ export function HistoryTableRow({
       data-testid={`history-row-${index}`}
       className="hover:bg-vsc-editor-background relative box-border flex cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
+        await dispatch(exitEditMode({}));
         if (sessionMetadata.sessionId !== currentSessionId) {
           await dispatch(
             loadSession({
