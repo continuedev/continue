@@ -1,7 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import * as dotenv from "dotenv";
-import { DeepSeekApi } from "../apis/DeepSeek.js";
-import { InceptionApi } from "../apis/Inception.js";
+import { DEEPSEEK_API_BASE } from "../apis/DeepSeek.js";
+import { INCEPTION_API_BASE } from "../apis/Inception.js";
 import { OpenAIApi } from "../apis/OpenAI.js";
 import { constructLlmApi } from "../index.js";
 import { getLlmApi, testChat, testCompletion, testEmbed } from "./util.js";
@@ -120,7 +120,7 @@ describe("Configuration", () => {
       apiKey: "sk-xxx",
     });
 
-    expect((deepseek as OpenAIApi).openai.baseURL).toBe(DeepSeekApi.apiBase);
+    expect((deepseek as OpenAIApi).openai.baseURL).toBe(DEEPSEEK_API_BASE);
     expect((deepseek as OpenAIApi).openai.apiKey).toBe("sk-xxx");
 
     const deepseek2 = constructLlmApi({
@@ -139,7 +139,7 @@ describe("Configuration", () => {
       apiKey: "sk-xxx",
     });
 
-    expect((inception as OpenAIApi).openai.baseURL).toBe(InceptionApi.apiBase);
+    expect((inception as OpenAIApi).openai.baseURL).toBe(INCEPTION_API_BASE);
     expect((inception as OpenAIApi).openai.apiKey).toBe("sk-xxx");
 
     const inception2 = constructLlmApi({

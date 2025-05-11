@@ -5,14 +5,13 @@ import { chatChunk, customFetch } from "../util.js";
 import { OpenAIApi } from "./OpenAI.js";
 import { FimCreateParamsStreaming } from "./base.js";
 
+export const INCEPTION_API_BASE = "https://api.inceptionlabs.ai/v1/";
 export class InceptionApi extends OpenAIApi {
-  static apiBase: string = "https://api.inceptionlabs.ai/v1/";
-
   constructor(config: InceptionConfig) {
     super({
       ...config,
       provider: "openai",
-      apiBase: config.apiBase ?? InceptionApi.apiBase,
+      apiBase: config.apiBase ?? INCEPTION_API_BASE,
     });
   }
 
@@ -20,7 +19,7 @@ export class InceptionApi extends OpenAIApi {
     body: FimCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const endpoint = new URL("completions", InceptionApi.apiBase);
+    const endpoint = new URL("completions", this.config.apiBase);
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
