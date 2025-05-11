@@ -248,7 +248,7 @@ async function configYamlToContinueConfig(options: {
     if(mcpArgVariables.length === 0) return; 
     localErrors.push({
       fatal: false,
-      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}`,
+      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
     });
   })
 
