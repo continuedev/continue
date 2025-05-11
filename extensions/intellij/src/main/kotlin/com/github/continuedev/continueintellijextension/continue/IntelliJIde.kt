@@ -109,34 +109,6 @@ class IntelliJIDE(
         return true
     }
 
-    companion object {
-        // This should probably just be "parseUri". Change that, update all the usages, then distribute and try it on the windows machine
-        // But honestly just push it to the store to test
-        fun parseUri(uri: String): URI {
-            try {
-                // Remove query parameters if present
-                val uriStr = uri.substringBefore("?")
-
-                // Handle Windows file paths with authority component
-                if (uriStr.startsWith("file://") && !uriStr.startsWith("file:///")) {
-                    val path = uriStr.substringAfter("file://")
-                    return URI("file:///$path")
-                }
-
-                // Standard URI handling for other cases
-                val uriWithoutQuery = URI(uriStr)
-                return uriWithoutQuery
-            } catch (e: Exception) {
-                println("Error parsing URI: $uri ${e.message}")
-                throw Exception("Invalid URI: $uri ${e.message}")
-            }
-        }
-
-        fun uriToFile(uri: String): File {
-            return File(parseUri(uri))
-        }
-    }
-
     override suspend fun getIdeSettings(): IdeSettings {
         val settings = service<ContinueExtensionSettings>()
 
@@ -204,7 +176,7 @@ class IntelliJIDE(
                 // Find any .continuerc.json files
                 for (file in contents) {
                     if (file.endsWith(".continuerc.json")) {
-                        val fileContent = uriToFile(file).readText()
+                        val fileContent = UriUtils.uriToFile(file).readText()
                         configs.add(fileContent)
                     }
                 }
@@ -215,12 +187,12 @@ class IntelliJIDE(
     }
 
     override suspend fun fileExists(filepath: String): Boolean {
-        val file = uriToFile(filepath)
+        val file = UriUtils.uriToFile(filepath)
         return file.exists()
     }
 
     override suspend fun writeFile(path: String, contents: String) {
-        val file = uriToFile(path)
+        val file = UriUtils.uriToFile(path)
         file.parentFile?.mkdirs()
         file.writeText(contents)
     }
@@ -238,7 +210,7 @@ class IntelliJIDE(
 
     override suspend fun openFile(path: String) {
         // Convert URI path to absolute file path
-        val filePath = uriToFile(path).absolutePath
+        val filePath = UriUtils.uriToFile(path).absolutePath
         // Find the file using the absolute path
         val file = withContext(Dispatchers.IO) {
             LocalFileSystem.getInstance().refreshAndFindFileByPath(filePath)
@@ -263,7 +235,8 @@ class IntelliJIDE(
 
     override suspend fun saveFile(filepath: String) {
         ApplicationManager.getApplication().invokeLater {
-            val file = LocalFileSystem.getInstance().findFileByPath(parseUri(filepath).path) ?: return@invokeLater
+            val file =
+                LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path) ?: return@invokeLater
             val fileDocumentManager = FileDocumentManager.getInstance()
             val document = fileDocumentManager.getDocument(file)
 
@@ -276,7 +249,7 @@ class IntelliJIDE(
     override suspend fun readFile(filepath: String): String {
         return try {
             val content = ApplicationManager.getApplication().runReadAction<String?> {
-                val virtualFile = LocalFileSystem.getInstance().findFileByPath(parseUri(filepath).path)
+                val virtualFile = LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path)
                 if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
                     return@runReadAction FileDocumentManager.getInstance().getDocument(virtualFile)?.text
                 }
@@ -286,7 +259,7 @@ class IntelliJIDE(
             if (content != null) {
                 content
             } else {
-                val file = uriToFile(filepath)
+                val file = UriUtils.uriToFile(filepath)
                 if (!file.exists() || file.isDirectory) return ""
                 withContext(Dispatchers.IO) {
                     FileInputStream(file).use { fis ->
@@ -539,7 +512,7 @@ class IntelliJIDE(
         return withContext(Dispatchers.IO) {
             try {
                 val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-                builder.directory(uriToFile(dir))
+                builder.directory(UriUtils.uriToFile(dir))
                 val process = builder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 val output = reader.readLine()
@@ -569,7 +542,7 @@ class IntelliJIDE(
 
     override suspend fun getRepoName(dir: String): String? {
         return withContext(Dispatchers.IO) {
-            val directory = uriToFile(dir)
+            val directory = UriUtils.uriToFile(dir)
             val targetDir = if (directory.isFile) directory.parentFile else directory
             val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
             builder.directory(targetDir)
@@ -633,7 +606,7 @@ class IntelliJIDE(
     override suspend fun getGitRootPath(dir: String): String? {
         return withContext(Dispatchers.IO) {
             val builder = ProcessBuilder("git", "rev-parse", "--show-toplevel")
-            builder.directory(uriToFile(dir))
+            builder.directory(UriUtils.uriToFile(dir))
             val process = builder.start()
 
             val reader = BufferedReader(InputStreamReader(process.inputStream))
@@ -644,7 +617,7 @@ class IntelliJIDE(
     }
 
     override suspend fun listDir(dir: String): List<List<Any>> {
-        val files = uriToFile(dir).listFiles()?.map {
+        val files = UriUtils.uriToFile(dir).listFiles()?.map {
             listOf(it.name, if (it.isDirectory) FileType.DIRECTORY.value else FileType.FILE.value)
         } ?: emptyList()
 
@@ -653,7 +626,7 @@ class IntelliJIDE(
 
     override suspend fun getFileStats(files: List<String>): Map<String, FileStats> {
         return files.associateWith { file ->
-            FileStats(uriToFile(file).lastModified(), uriToFile(file).length())
+            FileStats(UriUtils.uriToFile(file).lastModified(), UriUtils.uriToFile(file).length())
         }
     }
 
@@ -671,7 +644,7 @@ class IntelliJIDE(
     }
 
     private fun setFileOpen(filepath: String, open: Boolean = true) {
-        val file = LocalFileSystem.getInstance().findFileByPath(uriToFile(filepath).path)
+        val file = LocalFileSystem.getInstance().findFileByPath(UriUtils.uriToFile(filepath).path)
 
         file?.let {
             if (open) {
