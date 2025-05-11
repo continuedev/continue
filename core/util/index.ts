@@ -211,8 +211,3 @@ export function splitCamelCaseAndNonAlphaNumeric(value: string) {
     .filter(t => t.length > 0)
     .map(t => t.toLowerCase());
 }
-
-export function getMCPArgsWithVariables(args: string[]) {
-  const isVariableRegex = /\$\{\{ (.*?) \}\}/;
-  return args.filter((arg) => isVariableRegex.test(arg));
-}

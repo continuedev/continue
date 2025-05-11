@@ -9,6 +9,7 @@ import {
   PackageIdentifier,
   RegistryClient,
   Rule,
+  TEMPLATE_VAR_REGEX,
   unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
@@ -40,7 +41,6 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { getMCPArgsWithVariables } from "../../util";
 import { logger } from "../../util/logger";
 import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
@@ -244,7 +244,7 @@ async function configYamlToContinueConfig(options: {
   }));
 
   config.mcpServers?.forEach(mcpServer => {
-    const mcpArgVariables = getMCPArgsWithVariables(mcpServer.args ?? []);
+    const mcpArgVariables = mcpServer.args?.filter(arg=> TEMPLATE_VAR_REGEX.test(arg)) ?? []
     if(mcpArgVariables.length === 0) return; 
     localErrors.push({
       fatal: false,
