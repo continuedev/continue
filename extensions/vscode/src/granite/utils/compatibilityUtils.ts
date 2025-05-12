@@ -53,3 +53,22 @@ export function setupExtensionCheck(
   });
   context.subscriptions.push(disposable);
 }
+
+/**
+ * Move Granite.Code into the default view container of Copilot, and move Copilot to our spare view container
+ */
+export function replaceCopilotWithGraniteCode() {
+  // Move Copilot to the spare activity sidebar container we created
+  vscode.commands
+    .executeCommand("vscode.moveViews", {
+      viewIds: ["workbench.panel.chat.view.copilot"],
+      destinationId: "workbench.view.extension.graniteMoveChatDestination",
+    })
+    .then(() => {
+      // Move Granite.Code to Copilot's default container
+      vscode.commands.executeCommand("vscode.moveViews", {
+        viewIds: ["continue.continueGUIView"],
+        destinationId: "workbench.panel.chat",
+      });
+    });
+}
