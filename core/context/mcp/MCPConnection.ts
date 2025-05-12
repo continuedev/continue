@@ -17,7 +17,15 @@ import {
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
 // Commands that are batch scripts on Windows and need cmd.exe to execute
-const WINDOWS_BATCH_COMMANDS = ["npx", "uv", "uvx"];
+const WINDOWS_BATCH_COMMANDS = [
+  "npx",
+  "uv",
+  "uvx",
+  "pnpx",
+  "dlx",
+  "nx",
+  "bunx",
+];
 
 class MCPConnection {
   public client: Client;
@@ -272,7 +280,7 @@ class MCPConnection {
           ]);
         } catch (error) {
           // Otherwise it's a connection error
-          let errorMessage = `Failed to connect to MCP server "${this.options.name}"\n`;
+          let errorMessage = `Failed to connect to "${this.options.name}"\n`;
           if (error instanceof Error) {
             const msg = error.message.toLowerCase();
             if (msg.includes("spawn") && msg.includes("enoent")) {
