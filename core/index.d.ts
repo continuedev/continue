@@ -1515,3 +1515,13 @@ export interface RuleWithSource {
   description?: string;
   ruleFile?: string;
 }
+
+export type ExtensionInfo = {
+  id: string;
+  name: string;
+};
+
+export type ExtensionConflictReport = {
+  currentExtension: ExtensionInfo;
+  conflictingExtensions: ExtensionInfo[];
+};

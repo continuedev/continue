@@ -1,3 +1,4 @@
+import { ExtensionConflictReport } from "core";
 import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -18,9 +19,9 @@ import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
+import IncompatibleExtensionsOverlay from "./IncompatibleExtensionsOverlay";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
-import IncompatibleExtensionsOverlay from "./IncompatibleExtensionsOverlay";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
@@ -52,8 +53,8 @@ const Layout = () => {
   const showDialog = useAppSelector((state) => state.ui.showDialog);
   const mode = useAppSelector((state) => state.session.mode);
 
-  const [conflictsWithOtherExtensions, setConflictsWithOtherExtensions] =
-    useState(false);
+  const [conflictingInfo, setConflictingInfo] =
+    useState<ExtensionConflictReport | null>(null);
 
   useWebviewListener(
     "newSession",
@@ -172,7 +173,7 @@ const Layout = () => {
   );
 
   useWebviewListener("updateIncompatibleExtensions", async (data) => {
-    setConflictsWithOtherExtensions(data);
+    setConflictingInfo(data);
   });
 
   useEffect(() => {
@@ -197,14 +198,16 @@ const Layout = () => {
 
   // Check if there are any incompatible extension enabled when the webview is on mount
   useEffect(() => {
-    ideMessenger.post("checkForIncompatibleExtensions", undefined)
+    ideMessenger.post("checkForIncompatibleExtensions", undefined);
   }, []);
 
   return showGraniteOnboardingCard ? (
     <GraniteOnboardingCard />
   ) : (
     <>
-    {conflictsWithOtherExtensions && <IncompatibleExtensionsOverlay />}
+    {conflictingInfo !== null && (
+      <IncompatibleExtensionsOverlay conflictingInfo={conflictingInfo} />
+    )}
     <LocalStorageProvider>
       <AuthProvider>
         <LayoutTopDiv>

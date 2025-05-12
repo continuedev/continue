@@ -4,6 +4,7 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 import type {
   ApplyState,
   CodeToEdit,
+  ExtensionConflictReport,
   MessageContent,
   RangeInFileWithContents,
 } from "../";
@@ -92,5 +93,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
   setShowGraniteOnboardingCard: [boolean, void];
-  updateIncompatibleExtensions: [boolean, void];
+  updateIncompatibleExtensions: [ExtensionConflictReport | null, void];
 };
