@@ -116,6 +116,49 @@ export class DataLogger {
     }
   }
 
+  async parseEventData(
+    event: DevDataLogEvent,
+    schema: string,
+    level: "all" | "noCode",
+  ) {
+    const versionSchemas = devDataVersionedSchemas[schema];
+    if (!versionSchemas) {
+      throw new Error(
+        `Attempting to log dev data to non-existent version ${schema}`,
+      );
+    }
+
+    const levelSchemas = versionSchemas[level];
+    if (!levelSchemas) {
+      throw new Error(
+        `Attempting to log dev data at level ${level} for version ${schema} which does not exist`,
+      );
+    }
+
+    const zodSchema = levelSchemas[event.name];
+    if (!zodSchema) {
+      throw new Error(
+        `Attempting to log dev data for event ${event.name} at level ${level} for version ${schema}: no schema found`,
+      );
+    }
+
+    const eventDataWithBaseValues = await this.addBaseValues(
+      event.data,
+      event.name,
+      schema,
+      zodSchema,
+    );
+
+    const parsed = zodSchema.safeParse(eventDataWithBaseValues);
+    if (!parsed.success) {
+      throw new Error(
+        `Failed to parse event data for event ${event.name} and schema ${schema}\n:${parsed.error.toString()}`,
+      );
+    }
+
+    return parsed.data;
+  }
+
   async logToOneDestination(
     dataConfig: NonNullable<ContinueConfig["data"]>[number],
     event: DevDataLogEvent,
@@ -127,7 +170,6 @@ export class DataLogger {
 
       // First extract the data schema based on the version and level
       const { schema } = dataConfig;
-
       const level = dataConfig.level ?? DEFAULT_DEV_DATA_LEVEL;
 
       // Skip event if `events` is specified and does not include the event
@@ -136,40 +178,8 @@ export class DataLogger {
         return;
       }
 
-      const versionSchemas = devDataVersionedSchemas[schema];
-      if (!versionSchemas) {
-        throw new Error(
-          `Attempting to log dev data to non-existent version ${schema}`,
-        );
-      }
-
-      const levelSchemas = versionSchemas[level];
-      if (!levelSchemas) {
-        throw new Error(
-          `Attempting to log dev data at level ${level} for version ${schema} which does not exist`,
-        );
-      }
-
-      const zodSchema = levelSchemas[event.name];
-      if (!zodSchema) {
-        throw new Error(
-          `Attempting to log dev data for event ${event.name} at level ${level} for version ${schema}: no schema found`,
-        );
-      }
-
-      const eventDataWithBaseValues = await this.addBaseValues(
-        event.data,
-        event.name,
-        schema,
-        zodSchema,
-      );
-
-      const parsed = zodSchema.safeParse(eventDataWithBaseValues);
-      if (!parsed.success) {
-        throw new Error(
-          `Failed to parse event data for event ${event.name} and schema ${schema}\n:${parsed.error.toString()}`,
-        );
-      }
+      // Parse the event data, throwing if it fails
+      const parsed = await this.parseEventData(event, schema, level);
 
       const uriComponents = URI.parse(dataConfig.destination);
 
@@ -197,7 +207,7 @@ export class DataLogger {
             headers,
             body: JSON.stringify({
               name: event.name,
-              data: parsed.data,
+              data: parsed,
               schema,
               level,
               profileId,
