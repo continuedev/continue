@@ -47,7 +47,7 @@ const statusBarItemText = (
   error?: boolean,
 ) => {
   if (error) {
-    return "$(alert) Granite.Code (FATAL ERROR)";
+    return "$(alert) Granite.Code (config error)";
   }
 
   switch (status) {

@@ -9,6 +9,7 @@ export const viewDiffTool: Tool = {
   isCurrently: "getting the git diff",
   hasAlready: "viewed the git diff",
   readonly: true,
+  isInstant: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.ViewDiff,

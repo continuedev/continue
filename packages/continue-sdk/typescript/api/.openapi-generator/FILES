@@ -1,0 +1,15 @@
+.gitignore
+.npmignore
+README.md
+package.json
+src/apis/DefaultApi.ts
+src/apis/index.ts
+src/index.ts
+src/models/ListAssistants200ResponseInner.ts
+src/models/ListAssistants200ResponseInnerConfigResult.ts
+src/models/ListAssistants401Response.ts
+src/models/ListAssistants404Response.ts
+src/models/index.ts
+src/runtime.ts
+tsconfig.esm.json
+tsconfig.json

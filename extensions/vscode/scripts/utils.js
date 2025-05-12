@@ -10,7 +10,20 @@ const {
 
 const continueDir = path.join(__dirname, "..", "..", "..");
 
+function generateConfigYamlSchema() {
+  process.chdir(path.join(continueDir, "packages", "config-yaml"));
+  execCmdSync("npm install");
+  execCmdSync("npm run build");
+  execCmdSync("npm run generate-schema");
+  fs.copyFileSync(
+    path.join("schema", "config-yaml-schema.json"),
+    path.join(continueDir, "extensions", "vscode", "config-yaml-schema.json"),
+  );
+  console.log("[info] Generated config.yaml schema");
+}
+
 function copyConfigSchema() {
+  process.chdir(path.join(continueDir, "extensions", "vscode"));
   // Modify and copy for .continuerc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
   schema.$defs.SerializedContinueConfig.properties.mergeBehavior = {
@@ -288,6 +301,9 @@ async function copyNodeModules() {
     ),
   );
 
+  // delete esbuild/bin because platform-specific @esbuild is downloaded
+  fs.rmdirSync(`out/node_modules/esbuild/bin`, {recursive: true});
+
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 }
 
@@ -526,6 +542,7 @@ function writeBuildTimestamp() {
 }
 
 module.exports = {
+  generateConfigYamlSchema,
   copyConfigSchema,
   installNodeModules,
   buildGui,

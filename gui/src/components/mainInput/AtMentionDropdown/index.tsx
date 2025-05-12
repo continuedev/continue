@@ -4,8 +4,8 @@ import {
   ChatBubbleLeftIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { Editor } from "@tiptap/react";
-import { RangeInFile } from "core";
+import type { Editor } from "@tiptap/react";
+import type { RangeInFile } from "core";
 import {
   forwardRef,
   useContext,
@@ -25,8 +25,6 @@ import {
   vscQuickInputBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useAppSelector } from "../../../redux/hooks";
-import { selectSelectedChatModel } from "../../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import FileIcon from "../../FileIcon";
@@ -34,7 +32,7 @@ import SafeImg from "../../SafeImg";
 import AddDocsDialog from "../../dialogs/AddDocsDialog";
 import HeaderButtonWithToolTip from "../../gui/HeaderButtonWithToolTip";
 import { NAMED_ICONS } from "../icons";
-import { ComboBoxItem, ComboBoxItemType } from "../types";
+import type { ComboBoxItem, ComboBoxItemType } from "../types";
 
 export function getIconFromDropdownItem(
   id: string | undefined,
@@ -162,8 +160,6 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
 
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const selectedModelTitle = useAppSelector(selectSelectedChatModel);
-
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
@@ -191,7 +187,6 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
         query,
         fullInput: "",
         selectedCode,
-        selectedModelTitle: selectedModelTitle?.title ?? "",
       },
     );
 
@@ -204,7 +199,6 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
     // Check if the context item exceeds the context length of the selected model
     const result = await ideMessenger.request("isItemTooBig", {
       item,
-      selectedModelTitle: selectedModelTitle?.title,
     });
 
     if (result.status === "error") {
@@ -251,7 +245,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
           modal: true,
           detail:
             fileSize > 0
-              ? `'${item.title}' is ${formatFileSize(fileSize)} which exceeds the allowed context length and connot be processed by the model`
+              ? `'${item.title}' is ${formatFileSize(fileSize)} which exceeds the allowed context length and cannot be processed by the model`
               : `'${item.title}' could not be loaded. Please check if the file exists and has the correct permissions.`,
         },
       );
@@ -515,7 +509,9 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
                       ) : (
                         <DropdownIcon item={item} className="mr-2" />
                       )}
-                      <span title={item.id}>{item.title}</span>
+                      <span title={item.id} className="whitespace-nowrap">
+                        {item.title}
+                      </span>
                       {"  "}
                     </div>
                     <span
@@ -523,7 +519,12 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
                         color: lightGray,
                         float: "right",
                         textAlign: "right",
-                        opacity: isSelected ? 1 : 0,
+                        opacity:
+                          subMenuTitle || item.type !== "contextProvider"
+                            ? 1
+                            : isSelected
+                              ? 1
+                              : 0,
                         minWidth: "30px",
                       }}
                       className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap"
@@ -562,7 +563,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
               );
             })
           ) : (
-            <ItemDiv className="item">No results</ItemDiv>
+            <ItemDiv className="item whitespace-nowrap">No results</ItemDiv>
           )}
         </>
       )}

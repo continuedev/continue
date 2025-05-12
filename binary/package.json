@@ -23,6 +23,7 @@
   "scripts": {
     "test": "jest",
     "build": "node build.js",
+    "rebuild": "node build.js --esbuild-only",
     "build:darwin-x64": "node build.js --os darwin-x64"
   },
   "license": "Apache-2.0",
@@ -41,6 +42,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^20.0.2",
+    "adm-zip": "^0.5.16",
     "commander": "^12.0.0",
     "core": "file:../core",
     "follow-redirects": "^1.15.5",
@@ -49,6 +51,7 @@
     "node-fetch": "^3.3.2",
     "posthog-node": "^3.6.3",
     "system-ca": "^1.0.2",
+    "tar": "^7.4.3",
     "uuid": "^9.0.1",
     "vectordb": "^0.4.20",
     "win-ca": "^3.5.1"

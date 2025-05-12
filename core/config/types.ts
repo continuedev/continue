@@ -235,10 +235,6 @@ declare global {
     loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
   }
   
-  export interface Checkpoint {
-    [filepath: string]: string;
-  }
-  
   export interface Session {
     sessionId: string;
     title: string;
@@ -403,6 +399,7 @@ declare global {
     | "generated"
     | "calling"
     | "done"
+    | "errored"
     | "canceled";
   
   // Will exist only on "assistant" messages with tool calls
@@ -422,8 +419,6 @@ declare global {
     promptLogs?: PromptLog[];
     toolCallState?: ToolCallState;
     isGatheringContext?: boolean;
-    checkpoint?: Checkpoint;
-    isBeforeCheckpoint?: boolean;
   }
   
   export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -660,7 +655,6 @@ declare global {
     remoteConfigServerUrl: string | undefined;
     remoteConfigSyncPeriod: number;
     userToken: string;
-    enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
     localModelSize: LocalModelSize;
   }
@@ -844,7 +838,8 @@ declare global {
     | "llava"
     | "gemma"
     | "granite"
-    | "llama3";
+    | "llama3"
+    | "codestral";
   
   export interface RequestOptions {
     timeout?: number;
@@ -934,6 +929,7 @@ declare global {
     numThreads?: number;
     useMmap?: boolean;
     keepAlive?: number;
+    numGpu?: number;
     raw?: boolean;
     stream?: boolean;
     prediction?: Prediction;
@@ -961,7 +957,7 @@ declare global {
     cacheBehavior?: CacheBehavior;
   }
   
-  export interface EmbedOptions {
+  export interface JSONEmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;
@@ -1052,13 +1048,6 @@ declare global {
     applyCodeBlock?: string;
     repoMapFileSelection?: string;
   }
-  
-  export type EditStatus =
-    | "not-started"
-    | "streaming"
-    | "accepting"
-    | "accepting:full-diff"
-    | "done";
   
   export type ApplyStateStatus =
     | "streaming" // Changes are being applied to the file

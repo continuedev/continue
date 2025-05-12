@@ -22,15 +22,9 @@ import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
-import {
-  addCodeToEdit,
-  selectHasCodeToEdit,
-  selectIsInEditMode,
-} from "../../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../../redux/store";
-import { exitEditMode } from "../../../../redux/thunks";
-import { loadLastSession } from "../../../../redux/thunks/session";
-import { getFontSize } from "../../../../util";
+import { exitEditMode } from "../../../../redux/thunks/editMode";
+import { getFontSize, isJetBrains } from "../../../../util";
 import * as ContinueExtensions from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import { handleImageFile } from "./imageUtils";
@@ -87,15 +81,14 @@ export function createEditorConfig(options: {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
-  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
+  const mode = useAppSelector((store) => store.session.mode);
+  const modeRef = useUpdatingRef(mode);
+  const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
   const defaultModelRef = useUpdatingRef(defaultModel);
   const isStreamingRef = useUpdatingRef(isStreaming);
-  const isInEditModeRef = useUpdatingRef(isInEditMode);
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
     props.availableContextProviders,
@@ -267,18 +260,23 @@ export function createEditorConfig(options: {
               return false;
             },
             Escape: () => {
-              if (inDropdownRef.current || !isInEditModeRef.current) {
-                ideMessenger.post("focusEditor", undefined);
+              if (inDropdownRef.current) {
+                return false;
+              }
+              // In JetBrains, this is how we close the sidebar when the input box is focused
+              if (isJetBrains()) {
+                ideMessenger.post("closeSidebar", undefined);
                 return true;
               }
-              (async () => {
-                await dispatch(
-                  loadLastSession({
-                    saveCurrentSession: false,
+
+              if (modeRef.current === "edit") {
+                dispatch(
+                  exitEditMode({
+                    openNewSession: false,
                   }),
                 );
-                dispatch(exitEditMode());
-              })();
+              }
+              ideMessenger.post("focusEditor", undefined);
 
               return true;
             },
@@ -319,42 +317,6 @@ export function createEditorConfig(options: {
           ideMessenger,
         ),
       }),
-      ContinueExtensions.AddCodeToEdit.configure({
-        suggestion: {
-          ...getContextProviderDropdownOptions(
-            availableContextProvidersRef,
-            getSubmenuContextItemsRef,
-            enterSubmenu,
-            onClose,
-            onOpen,
-            inSubmenuRef,
-            ideMessenger,
-          ),
-          allow: () => isInEditModeRef.current,
-          command: async ({ editor, range, props }) => {
-            editor.chain().focus().insertContentAt(range, "").run();
-            const filepath = props.id;
-            const contents = await ideMessenger.ide.readFile(filepath);
-            dispatch(
-              addCodeToEdit({
-                filepath,
-                contents,
-              }),
-            );
-          },
-          items: async ({ query }) => {
-            // Only display files in the dropdown
-            const results = getSubmenuContextItemsRef.current("file", query);
-            return results.map((result) => ({
-              ...result,
-              label: result.title,
-              type: "file",
-              query: result.id,
-              icon: result.icon,
-            }));
-          },
-        },
-      }),
       ContinueExtensions.SlashCommand.configure({
         suggestion: getSlashCommandDropdownOptions(
           availableSlashCommandsRef,
@@ -383,7 +345,7 @@ export function createEditorConfig(options: {
       if (!editor) {
         return;
       }
-      if (isStreaming || isEditModeAndNoCodeToEdit) {
+      if (isStreaming || (codeToEdit.length === 0 && mode === "edit")) {
         return;
       }
 
@@ -400,7 +362,7 @@ export function createEditorConfig(options: {
 
       props.onEnter(json, modifiers, editor);
     },
-    [props.onEnter, editor, props.isMainInput],
+    [props.onEnter, editor, props.isMainInput, codeToEdit, mode],
   );
 
   return { editor, onEnterRef };

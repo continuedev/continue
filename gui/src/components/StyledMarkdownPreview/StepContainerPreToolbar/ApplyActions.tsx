@@ -3,6 +3,8 @@ import { ApplyState } from "core";
 import { useEffect, useState } from "react";
 import { getMetaKeyLabel } from "../../../util";
 import Spinner from "../../gui/Spinner";
+import { ToolTip } from "../../gui/Tooltip";
+import HoverItem from "../../mainInput/InputToolbar/HoverItem";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {
@@ -35,21 +37,38 @@ export function ApplyActions(props: ApplyActionsProps) {
   }
 
   const applyButton = (text: string) => (
-    <button
-      className="text-lightgray text-[${vscForeground}] flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
-      onClick={props.onClickApply}
+    <HoverItem
+      data-tooltip-id="codeblock-apply-code-button-tooltip"
+      className="!p-0"
     >
-      <div className="text-lightgray flex items-center gap-1">
-        <PlayIcon className="h-3.5 w-3.5" />
-        <span className="xs:inline hidden">{text}</span>
-      </div>
-    </button>
+      <button
+        data-testid="codeblock-toolbar-apply"
+        className="text-lightgray text-[${vscForeground}] flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
+        onClick={props.onClickApply}
+      >
+        <div className="text-lightgray flex items-center gap-1">
+          <PlayIcon className="h-3.5 w-3.5" />
+          <span className="xs:inline hidden">{text}</span>
+        </div>
+      </button>
+      <ToolTip id="codeblock-apply-code-button-tooltip" place="top">
+        {text} Code
+      </ToolTip>
+    </HoverItem>
   );
 
   switch (props.applyState ? props.applyState.status : null) {
+    case "not-started":
+      return (
+        <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">
+          <span className="text-lightgray inline-flex w-min items-center gap-2 text-center text-xs">
+            Pending
+          </span>
+        </div>
+      );
     case "streaming":
       return (
-        <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
+        <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">
           <span className="text-lightgray inline-flex w-min items-center gap-2 text-center text-xs">
             Applying
             <Spinner />
@@ -58,13 +77,14 @@ export function ApplyActions(props: ApplyActionsProps) {
       );
     case "done":
       return (
-        <div className="flex items-center rounded bg-zinc-700 px-1.5 sm:gap-1">
+        <div className="flex select-none items-center rounded bg-zinc-700 px-1.5 sm:gap-1">
           <span className="max-xs:hidden text-lightgray text-center text-xs">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
           </span>
 
           <div className="flex">
             <ToolbarButtonWithTooltip
+              data-testid="codeblock-toolbar-reject"
               onClick={onClickReject}
               tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
             >
@@ -72,6 +92,7 @@ export function ApplyActions(props: ApplyActionsProps) {
             </ToolbarButtonWithTooltip>
 
             <ToolbarButtonWithTooltip
+              data-testid="codeblock-toolbar-accept"
               onClick={props.onClickAccept}
               tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
             >
@@ -81,17 +102,14 @@ export function ApplyActions(props: ApplyActionsProps) {
         </div>
       );
     case "closed":
-      if (!hasRejected && props.applyState?.numDiffs === 0) {
-        if (showApplied) {
+      if (isSuccessful) {
+        if (showApplied || props.disableManualApply) {
           return (
-            <span className="flex items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
+            <span className="flex select-none items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
               <span className="max-sm:hidden">Applied</span>
               <CheckIcon className="h-3.5 w-3.5 hover:brightness-125 sm:px-1" />
             </span>
           );
-        }
-        if (props.disableManualApply) {
-          return null;
         }
         return applyButton("Reapply");
       }

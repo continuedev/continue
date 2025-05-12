@@ -1,4 +1,4 @@
-import { LlamaAsyncEncoder, GPTAsyncEncoder } from "./asyncEncoder";
+import { GPTAsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder";
 
 describe("llama encoder", () => {
   var tokenizer: LlamaAsyncEncoder;
@@ -8,7 +8,7 @@ describe("llama encoder", () => {
   });
 
   afterAll(() => {
-    tokenizer.close();
+    tokenizer.close().catch((e) => {});
   });
 
   test("hello world", async () => {
@@ -30,7 +30,7 @@ describe("tiktoken encoder", () => {
   });
 
   afterAll(() => {
-    tokenizer.close();
+    tokenizer.close().catch((e) => {});
   });
 
   test("hello world", async () => {

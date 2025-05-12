@@ -4,7 +4,7 @@ import {
   ControlPlaneClient,
   ControlPlaneSessionInfo,
 } from "../control-plane/client.js";
-import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
+import { getControlPlaneEnv } from "../control-plane/env.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -16,8 +16,12 @@ import {
 import { GlobalContext } from "../util/GlobalContext.js";
 import { writeContinueConfig } from "./load.js";
 
-import { getAllAssistantFiles } from "./loadLocalAssistants.js";
-import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
+import { logger } from "../util/logger.js";
+import {
+  ASSISTANTS,
+  getAllDotContinueYamlFiles,
+  LoadAssistantFilesOptions,
+} from "./loadLocalAssistants.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
@@ -131,16 +135,11 @@ export class ConfigHandler {
     const userId = await this.controlPlaneClient.userId;
     if (userId) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
-      if (await useHub(this.ideSettingsPromise)) {
-        const personalHubOrg = await this.getPersonalHubOrg();
-        const hubOrgs = await Promise.all(
-          orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
-        );
-        return [...hubOrgs, personalHubOrg];
-      } else {
-        // Should only ever be one teams org. Will be removed soon anyways
-        return await Promise.all(orgDescs.map((org) => this.getTeamsOrg(org)));
-      }
+      const personalHubOrg = await this.getPersonalHubOrg();
+      const hubOrgs = await Promise.all(
+        orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+      );
+      return [...hubOrgs, personalHubOrg];
     } else {
       return [await this.getLocalOrg()];
     }
@@ -187,7 +186,11 @@ export class ConfigHandler {
   private async getNonPersonalHubOrg(
     org: OrganizationDescription,
   ): Promise<OrgWithProfiles> {
-    const profiles = await this.getHubProfiles(org.id);
+    const localProfiles = await this.getLocalProfiles({
+      includeGlobal: false,
+      includeWorkspace: true,
+    });
+    const profiles = [...(await this.getHubProfiles(org.id)), ...localProfiles];
     return this.rectifyProfilesForOrg(org, profiles);
   }
 
@@ -198,33 +201,21 @@ export class ConfigHandler {
     slug: undefined,
   };
   private async getPersonalHubOrg() {
-    const allLocalProfiles = await this.getAllLocalProfiles();
+    const localProfiles = await this.getLocalProfiles({
+      includeGlobal: true,
+      includeWorkspace: true,
+    });
     const hubProfiles = await this.getHubProfiles(null);
-    const profiles = [...hubProfiles, ...allLocalProfiles];
+    const profiles = [...hubProfiles, ...localProfiles];
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, profiles);
   }
 
   private async getLocalOrg() {
-    const allLocalProfiles = await this.getAllLocalProfiles();
-    return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, allLocalProfiles);
-  }
-
-  async getTeamsOrg(org: OrganizationDescription): Promise<OrgWithProfiles> {
-    const workspaces = await this.controlPlaneClient.listWorkspaces();
-    const profiles = await this.getAllLocalProfiles();
-    workspaces.forEach((workspace) => {
-      const profileLoader = new ControlPlaneProfileLoader(
-        workspace.id,
-        workspace.name,
-        this.controlPlaneClient,
-        this.ide,
-        this.llmLogger,
-        this.reloadConfig.bind(this),
-      );
-
-      profiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
+    const localProfiles = await this.getLocalProfiles({
+      includeGlobal: true,
+      includeWorkspace: true,
     });
-    return this.rectifyProfilesForOrg(org, profiles);
+    return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, localProfiles);
   }
 
   private async rectifyProfilesForOrg(
@@ -271,23 +262,37 @@ export class ConfigHandler {
     };
   }
 
-  async getAllLocalProfiles() {
+  async getLocalProfiles(options: LoadAssistantFilesOptions) {
     /**
      * Users can define as many local assistants as they want in a `.continue/assistants` folder
      */
-    const assistantFiles = await getAllAssistantFiles(this.ide);
-    const profiles = assistantFiles.map((assistant) => {
-      return new LocalProfileLoader(
+    const localProfiles: ProfileLifecycleManager[] = [];
+
+    if (options.includeGlobal) {
+      localProfiles.push(this.globalLocalProfileManager);
+    }
+
+    if (options.includeWorkspace) {
+      const assistantFiles = await getAllDotContinueYamlFiles(
         this.ide,
-        this.controlPlaneClient,
-        this.llmLogger,
-        assistant,
+        options,
+        ASSISTANTS,
       );
-    });
-    const localAssistantProfiles = profiles.map(
-      (profile) => new ProfileLifecycleManager(profile, this.ide),
-    );
-    return [this.globalLocalProfileManager, ...localAssistantProfiles];
+      const profiles = assistantFiles.map((assistant) => {
+        return new LocalProfileLoader(
+          this.ide,
+          this.controlPlaneClient,
+          this.llmLogger,
+          assistant,
+        );
+      });
+      const localAssistantProfiles = profiles.map(
+        (profile) => new ProfileLifecycleManager(profile, this.ide),
+      );
+      localProfiles.push(...localAssistantProfiles);
+    }
+
+    return localProfiles;
   }
 
   //////////////////
@@ -336,7 +341,7 @@ export class ConfigHandler {
     this.currentOrg = org;
 
     if (profileId) {
-      this.setSelectedProfileId(profileId);
+      await this.setSelectedProfileId(profileId);
     } else {
       this.currentProfile = org.currentProfile;
       await this.reloadConfig();
@@ -448,10 +453,15 @@ export class ConfigHandler {
         configLoadInterrupted: true,
       };
     }
-    return this.currentProfile.loadConfig(
+    const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
       this.ideSettingsPromise,
     );
+
+    if (config.errors?.length) {
+      logger.warn("Errors loading config: ", config.errors);
+    }
+    return config;
   }
 
   async openConfigProfile(profileId?: string) {

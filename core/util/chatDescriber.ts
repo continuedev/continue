@@ -4,6 +4,7 @@ import { removeCodeBlocksAndTrim, removeQuotesAndEscapes } from ".";
 
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
+import { renderChatMessage } from "./messageContent";
 
 export class ChatDescriber {
   static maxTokens = 12;
@@ -42,7 +43,7 @@ export class ChatDescriber {
     );
 
     // Set the title
-    return removeQuotesAndEscapes(titleResponse.content.toString());
+    return removeQuotesAndEscapes(renderChatMessage(titleResponse));
   }
 
   //   // TODO: Allow the user to manually set specific/tailored prompts to generate their titles

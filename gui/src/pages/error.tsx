@@ -1,12 +1,12 @@
-import { useDispatch } from "react-redux";
-import { useNavigate, useRouteError } from "react-router-dom";
-import { newSession } from "../redux/slices/sessionSlice";
-import { GithubIcon } from "../components/svg/GithubIcon";
-import { useContext, useEffect, useState } from "react";
-import { IdeMessengerContext } from "../context/IdeMessenger";
-import { Button, SecondaryButton } from "../components";
 import { ArrowPathIcon, FlagIcon } from "@heroicons/react/24/outline";
 import { GITHUB_LINK } from "core/util/constants";
+import { useContext, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate, useRouteError } from "react-router-dom";
+import { Button, SecondaryButton } from "../components";
+import { GithubIcon } from "../components/svg/GithubIcon";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { newSession } from "../redux/slices/sessionSlice";
 
 const ErrorPage: React.FC = () => {
   const error: any = useRouteError();
@@ -56,14 +56,12 @@ const ErrorPage: React.FC = () => {
         Continue
       </Button>
 
-      <p className="mb-0 mt-6 text-lg">
-        Report the issue on GitHub :
-      </p>
+      <p className="mb-0 mt-6 text-lg">Report the issue on GitHub :</p>
 
-      <div className="flex space-x-4">
+      <div className="mt-2 flex flex-row flex-wrap justify-center gap-2">
         <SecondaryButton
           onClick={() => openUrl(GITHUB_LINK)}
-          className="flex w-full items-center justify-center space-x-2 rounded-lg px-4 py-2 text-base text-white"
+          className="flex items-center justify-center space-x-2 rounded-lg px-4 py-2 text-base text-white"
         >
           <GithubIcon size={20} /> <span className="ml-2">GitHub</span>
         </SecondaryButton>

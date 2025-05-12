@@ -39,7 +39,6 @@
 //     const ideSettingsPromise = Promise.resolve({
 //       remoteConfigSyncPeriod: 60,
 //       userToken: "",
-//       enableControlServerBeta: false,
 //       continueTestEnvironment: "none" as const,
 //       pauseCodebaseIndexOnStart: false,
 //       ideSettings: {} as any,

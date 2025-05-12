@@ -1,18 +1,21 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Tool } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
 } from "../../components/OnboardingCard";
 import { getLocalStorage, LocalStorageKey } from "../../util/localStorage";
 
-type ToolSetting =
+export type ToolPolicy =
   | "allowedWithPermission"
   | "allowedWithoutPermission"
   | "disabled";
 
-type ToolGroupSetting = "include" | "exclude";
+export type ToolGroupPolicy = "include" | "exclude";
+
+export type ToolPolicies = { [toolName: string]: ToolPolicy };
+export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
 
 type UIState = {
   showDialog: boolean;
@@ -22,12 +25,12 @@ type UIState = {
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
   shouldAddFileForEditing: boolean;
-  toolSettings: { [toolName: string]: ToolSetting };
-  toolGroupSettings: { [toolGroupName: string]: ToolGroupSetting };
+  toolSettings: ToolPolicies;
+  toolGroupSettings: ToolGroupPolicies;
   ttsActive: boolean;
 };
 
-export const DEFAULT_TOOL_SETTING: ToolSetting = "allowedWithPermission";
+export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
 
 export const uiSlice = createSlice({
   name: "ui",
@@ -52,9 +55,10 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
       [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
+      [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
     },
     toolGroupSettings: {
-      BUILT_IN_GROUP_NAME: "include",
+      [BUILT_IN_GROUP_NAME]: "include",
     },
   } as UIState,
   reducers: {

@@ -91,6 +91,20 @@ export class GUIActions {
     await dropdownOption.click();
   };
 
+  public static selectModeFromDropdown = async (
+    view: WebView,
+    option: string,
+  ) => {
+    const dropdownButton = await GUISelectors.getModeDropdownButton(view);
+    await dropdownButton.click();
+
+    const dropdownOption = await TestUtils.waitForSuccess(() => {
+      return GUISelectors.getModeDropdownOption(view, option);
+    });
+
+    await dropdownOption.click();
+  };
+
   public static async sendMessage({
     view,
     message,
@@ -115,5 +129,25 @@ export class GUIActions {
       .sendKeys("l")
       .keyUp(TestUtils.osControlKey)
       .perform();
+  }
+
+  public static async toggleToolPolicy(
+    view: WebView,
+    toolName: string,
+    n: number,
+  ) {
+    const toolButton = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getToolButton(view),
+    );
+    await toolButton.click();
+    const toolPolicyButton = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getToolPolicyButton(view, toolName),
+    );
+    await TestUtils.waitForTimeout(500);
+
+    // Enabled -> Excluded -> Ask first
+    for (let i = 0; i < n; i++) {
+      await TestUtils.waitForSuccess(() => toolPolicyButton.click());
+    }
   }
 }

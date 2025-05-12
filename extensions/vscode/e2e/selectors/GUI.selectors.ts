@@ -38,8 +38,37 @@ export class GUISelectors {
     );
   }
 
+  public static getRejectToolCallButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "reject-tool-call-button",
+    );
+  }
+
+  public static getToolCallStatusMessage(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "toggle-div-title");
+  }
+
+  public static getToolButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `block-settings-toolbar-icon-tools`,
+    );
+  }
+
+  public static getToolPolicyButton(view: WebView, toolName: string) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `tool-policy-item-${toolName}`,
+    );
+  }
+
   public static getModelDropdownButton(view: WebView) {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
+  }
+
+  public static getModeDropdownButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "mode-select-button");
   }
 
   public static getFirstContextProviderDropdownItem(view: WebView) {
@@ -74,6 +103,12 @@ export class GUISelectors {
   }
 
   public static getModelDropdownOption(view: WebView, option: string) {
+    return view.findWebElement(
+      By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
+    );
+  }
+
+  public static getModeDropdownOption(view: WebView, option: string) {
     return view.findWebElement(
       By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
     );

@@ -12,7 +12,8 @@
     // "plugin:react/recommended"
   ],
   "rules": {
-    "@typescript-eslint/naming-convention": "off"
+    "@typescript-eslint/naming-convention": "off",
+    "@typescript-eslint/no-floating-promises": "warn"
   },
   "overrides": [
     {

@@ -1,3 +1,4 @@
+import { Mutex } from "async-mutex";
 import { spawn } from "child_process";
 import { LLMOptions, ModelInstaller } from "../../index.js";
 import OpenAI from "./OpenAI.js";
@@ -47,6 +48,9 @@ class Docker extends OpenAI implements ModelInstaller {
     "deepseek-r1-distill-llama-8B-Q4": "ai/deepseek-r1-distill-llama:8B-Q4_K_M",
   };
 
+  private static modelsBeingInstalled: Set<string> = new Set();
+  private static modelsBeingInstalledMutex = new Mutex();
+
   constructor(options: LLMOptions) {
     super(options);
 
@@ -56,7 +60,7 @@ class Docker extends OpenAI implements ModelInstaller {
     }
 
     // Check if Docker Model Runner is active and enable it if needed
-    this.ensureModelRunnerEnabled();
+    this.ensureModelRunnerEnabled().catch((e) => {});
   }
 
   /**
@@ -164,6 +168,16 @@ class Docker extends OpenAI implements ModelInstaller {
   ): Promise<any> {
     const targetModel = this.modelMap[modelName] || modelName;
 
+    const release = await Docker.modelsBeingInstalledMutex.acquire();
+    try {
+      if (Docker.modelsBeingInstalled.has(modelName)) {
+        throw new Error(`Model '${modelName}' is already being installed.`);
+      }
+      Docker.modelsBeingInstalled.add(modelName);
+    } finally {
+      release();
+    }
+
     try {
       // Report starting the installation
       progressReporter?.(`Installing Docker model ${targetModel}`, 0, 100);
@@ -190,6 +204,22 @@ class Docker extends OpenAI implements ModelInstaller {
       throw new Error(
         `Failed to install Docker model ${targetModel}: ${errorMessage}`,
       );
+    } finally {
+      const release = await Docker.modelsBeingInstalledMutex.acquire();
+      try {
+        Docker.modelsBeingInstalled.delete(modelName);
+      } finally {
+        release();
+      }
+    }
+  }
+
+  public async isInstallingModel(modelName: string): Promise<boolean> {
+    const release = await Docker.modelsBeingInstalledMutex.acquire();
+    try {
+      return Docker.modelsBeingInstalled.has(modelName);
+    } finally {
+      release();
     }
   }
 }

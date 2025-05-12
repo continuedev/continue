@@ -4,6 +4,7 @@ import { InputModifiers } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
+import { getBaseSystemMessage } from "../../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   submitEditorAndInitAtIndex,
@@ -85,9 +86,15 @@ export const streamResponseThunk = createAsyncThunk<
 
         // Construct messages from updated history
         const updatedHistory = getState().session.history;
+        const messageMode = getState().session.mode
+
+        const baseChatOrAgentSystemMessage = getBaseSystemMessage(selectedChatModel, messageMode)
+
         const messages = constructMessages(
+          messageMode,
           [...updatedHistory],
-          selectedChatModel?.baseChatSystemMessage,
+          baseChatOrAgentSystemMessage,
+          state.config.config.rules,
         );
 
         posthog.capture("step run", {

@@ -8,3 +8,20 @@ export const selectCurrentToolCall = createSelector(
     return findCurrentToolCall(history);
   },
 );
+
+export const selectCurrentToolCallApplyState = createSelector(
+  [
+    (store: RootState) => store.session.history,
+    (store: RootState) => store.session.codeBlockApplyStates,
+  ],
+  (history, applyStates) => {
+    const currentToolCall = findCurrentToolCall(history);
+    if (!currentToolCall) {
+      return undefined;
+    }
+    return applyStates.states.find(
+      (state) =>
+        state.toolCallId && state.toolCallId === currentToolCall.toolCallId,
+    );
+  },
+);

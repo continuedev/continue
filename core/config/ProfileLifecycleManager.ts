@@ -102,7 +102,10 @@ export class ProfileLifecycleManager {
       try {
         result = await this.profileLoader.doLoadConfig(ideSettingsPromise);
       } catch (e) {
-        const message = e instanceof Error ? e.message : "Error loading config";
+        const message =
+          e instanceof Error
+            ? `${e.message}\n${e.stack ? e.stack : ""}`
+            : "Error loading config";
         result = {
           errors: [
             {

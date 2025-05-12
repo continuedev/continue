@@ -1,5 +1,5 @@
 ---
-description: Learn how to customize the system prompt with a `.continuerules` file
+description: Rules are used to provide instructions to the model for Chat, Edit, and Agent requests.
 keywords: [rules, .continuerules, system, prompt, message]
 ---
 
@@ -7,7 +7,7 @@ keywords: [rules, .continuerules, system, prompt, message]
 
 Rules are used to provide instructions to the model for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Agent](../../agent/how-to-use-it.md) requests.
 
-Rules are **_NOT_** included in most other requests, such as [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
+Rules are not included in most other requests, such as [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
 
 You can view the current rules by clicking the pen icon above the main toolbar:
 
@@ -17,24 +17,39 @@ To form the system message, rules are joined with new lines, in the order they a
 
 ## `rules` blocks
 
-Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
+Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
 
-These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally. Rules blocks can be simple text, or have the following properties:
+:::info Automatically create local rule blocks
+When in Agent mode, you can simply prompt the agent to create a rule for you using the `builtin_create_rule_block` tool if enabled.
+
+For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
+:::
+
+### Syntax
+
+Rules blocks can be simple text, or have the following properties:
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule
-
-Examples:
+- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
 ```yaml title="config.yaml"
 rules:
+  - Always annotate Python functions with their parameter and return types
+
+  - name: TypeScript best practices
+    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
+    globs: "**/*.{ts,tsx}"
+
+  - name: TypeScript test patterns
+    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
+    globs:
+      - "src/**/*.test.ts"
+      - "tests/**/*.ts"
+
   - uses: myprofile/my-mood-setter
     with:
-      TONE: consise
-  - Always annotate Python functions with their parameter and return types
-  - Always write Google style docstrings for functions and classes
-  - name: Server-side components
-    rule: When writing Next.js React components, use server-side components where possible instead of client components.
+      TONE: concise
 ```
 
 ## Chat System Message

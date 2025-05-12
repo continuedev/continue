@@ -1,4 +1,4 @@
-import { ChatMessage, DiffLine, ILLM } from "core";
+import { ChatMessage, DiffLine, ILLM, RuleWithSource } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
@@ -259,8 +259,13 @@ export class VerticalDiffManager {
       this.enableDocumentChangeListener();
     } catch (e) {
       this.disableDocumentChangeListener();
-      if (!handleLLMError(e)) {
-        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      const handled = await handleLLMError(e);
+      if (!handled) {
+        let message = "Error streaming diffs";
+        if (e instanceof Error) {
+          message += `: ${e.message}`;
+        }
+        throw new Error(message);
       }
     } finally {
       vscode.commands.executeCommand(
@@ -271,16 +276,27 @@ export class VerticalDiffManager {
     }
   }
 
-  async streamEdit(
-    input: string,
-    llm: ILLM,
-    streamId?: string,
-    onlyOneInsertion?: boolean,
-    quickEdit?: string,
-    range?: vscode.Range,
-    newCode?: string,
-    toolCallId?: string,
-  ): Promise<string | undefined> {
+  async streamEdit({
+    input,
+    llm,
+    streamId,
+    onlyOneInsertion,
+    quickEdit,
+    range,
+    newCode,
+    toolCallId,
+    rulesToInclude,
+  }: {
+    input: string;
+    llm: ILLM;
+    streamId?: string;
+    onlyOneInsertion?: boolean;
+    quickEdit?: string;
+    range?: vscode.Range;
+    newCode?: string;
+    toolCallId?: string;
+    rulesToInclude: undefined | RuleWithSource[];
+  }): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     let editor = vscode.window.activeTextEditor;
@@ -333,11 +349,11 @@ export class VerticalDiffManager {
       // startLine += effectiveLineDelta;
       // endLine += effectiveLineDelta;
 
-      existingHandler.clear(false);
+      await existingHandler.clear(false);
     }
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 200);
+      setTimeout(resolve, 150);
     });
 
     // Create new handler with determined start/end
@@ -427,16 +443,17 @@ export class VerticalDiffManager {
       const streamedLines: string[] = [];
 
       async function* recordedStream() {
-        const stream = streamDiffLines(
+        const stream = streamDiffLines({
+          highlighted: rangeContent,
           prefix,
-          rangeContent,
           suffix,
           llm,
+          rulesToInclude,
           input,
-          getMarkdownLanguageTagForFile(fileUri),
-          !!onlyOneInsertion,
+          language: getMarkdownLanguageTagForFile(fileUri),
+          onlyOneInsertion: !!onlyOneInsertion,
           overridePrompt,
-        );
+        });
 
         for await (const line of stream) {
           if (line.type === "new" || line.type === "same") {
@@ -454,10 +471,14 @@ export class VerticalDiffManager {
       return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {
       this.disableDocumentChangeListener();
-      if (!handleLLMError(e)) {
-        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      const handled = await handleLLMError(e);
+      if (!handled) {
+        let message = "Error streaming edit diffs";
+        if (e instanceof Error) {
+          message += `: ${e.message}`;
+        }
+        throw new Error(message);
       }
-      return undefined;
     } finally {
       vscode.commands.executeCommand(
         "setContext",

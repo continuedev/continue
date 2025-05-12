@@ -14,6 +14,7 @@ import {
   Model,
 } from "openai/resources/index";
 
+import { v4 as uuidv4 } from "uuid";
 import { GeminiConfig } from "../types.js";
 import {
   chatChunk,
@@ -21,7 +22,12 @@ import {
   customFetch,
   embedding,
 } from "../util.js";
-import { GeminiToolFunctionDeclaration } from "../util/gemini-types.js";
+import {
+  convertOpenAIToolToGeminiFunction,
+  GeminiChatContent,
+  GeminiChatContentPart,
+  GeminiToolFunctionDeclaration,
+} from "../util/gemini-types.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -48,9 +54,15 @@ export class GeminiApi implements BaseLlmApi {
   }
 
   private _oaiPartToGeminiPart(
-    part: OpenAI.Chat.Completions.ChatCompletionContentPart,
-  ) {
+    part:
+      | OpenAI.Chat.Completions.ChatCompletionContentPart
+      | OpenAI.Chat.Completions.ChatCompletionContentPartRefusal,
+  ): GeminiChatContentPart {
     switch (part.type) {
+      case "refusal":
+        return {
+          text: part.refusal,
+        };
       case "text":
         return {
           text: part.text,
@@ -88,21 +100,30 @@ export class GeminiApi implements BaseLlmApi {
     const isV1API = url.includes("/v1/");
 
     const toolCallIdToNameMap = new Map<string, string>();
-    const contents = oaiBody.messages
+    oaiBody.messages.forEach((msg) => {
+      if (msg.role === "assistant" && msg.tool_calls) {
+        msg.tool_calls.forEach((call) => {
+          toolCallIdToNameMap.set(call.id, call.function.name);
+        });
+      }
+    });
+
+    const contents: (GeminiChatContent | null)[] = oaiBody.messages
       .map((msg) => {
         if (msg.role === "system" && !isV1API) {
           return null; // Don't include system message in contents
         }
 
-        if (msg.role == "assistant" && msg.tool_calls?.length) {
+        if (msg.role === "assistant" && msg.tool_calls?.length) {
           for (const toolCall of msg.tool_calls) {
             toolCallIdToNameMap.set(toolCall.id, toolCall.function.name);
           }
 
           return {
-            role: "model",
+            role: "model" as const,
             parts: msg.tool_calls.map((toolCall) => ({
               functionCall: {
+                id: toolCall.id,
                 name: toolCall.function.name,
                 args: JSON.parse(toolCall.function.arguments || "{}"),
               },
@@ -111,14 +132,15 @@ export class GeminiApi implements BaseLlmApi {
         }
 
         if (msg.role === "tool") {
+          const functionName = toolCallIdToNameMap.get(msg.tool_call_id);
           return {
-            role: "user",
+            role: "user" as const,
             parts: [
               {
                 functionResponse: {
-                  name: msg.tool_call_id,
+                  id: msg.tool_call_id,
+                  name: functionName ?? "unknown",
                   response: {
-                    name: toolCallIdToNameMap.get(msg.tool_call_id),
                     content:
                       typeof msg.content === "string"
                         ? msg.content
@@ -135,12 +157,12 @@ export class GeminiApi implements BaseLlmApi {
         }
 
         return {
-          role: msg.role === "assistant" ? "model" : "user",
+          role:
+            msg.role === "assistant" ? ("model" as const) : ("user" as const),
           parts:
             typeof msg.content === "string"
               ? [{ text: msg.content }]
-              : // @ts-ignore
-                msg.content.map(this._oaiPartToGeminiPart),
+              : msg.content.map(this._oaiPartToGeminiPart),
         };
       })
       .filter((c) => c !== null);
@@ -149,7 +171,7 @@ export class GeminiApi implements BaseLlmApi {
     const finalBody: any = {
       generationConfig,
       contents,
-      // if this.systemMessage is defined, reformat it for Gemini API
+      // if there is a system message, reformat it for Gemini API
       ...(sysMsg &&
         !isV1API && {
           systemInstruction: { parts: [{ text: sysMsg.content }] },
@@ -164,71 +186,15 @@ export class GeminiApi implements BaseLlmApi {
         // Same difference
         const functions: GeminiToolFunctionDeclaration[] = [];
         oaiBody.tools.forEach((tool) => {
-          if (tool.function.description && tool.function.name) {
-            const fn: GeminiToolFunctionDeclaration = {
-              description: tool.function.description,
-              name: tool.function.name,
-            };
-
-            if (
-              tool.function.parameters &&
-              "type" in tool.function.parameters
-              // && typeof tool.function.parameters.type === "string"
-            ) {
-              if (tool.function.parameters.type === "object") {
-                // Gemini can't take an empty object
-                // So if empty object param is present just don't add parameters
-                if (
-                  JSON.stringify(tool.function.parameters.properties) === "{}"
-                ) {
-                  functions.push(fn);
-                  return;
-                }
-              }
-              // Helper function to recursively clean JSON Schema objects
-              const cleanJsonSchema = (schema: any): any => {
-                if (!schema || typeof schema !== "object") return schema;
-
-                if (Array.isArray(schema)) {
-                  return schema.map(cleanJsonSchema);
-                }
-
-                const {
-                  $schema,
-                  additionalProperties,
-                  default: defaultValue,
-                  ...rest
-                } = schema;
-
-                // Recursively clean nested properties
-                if (rest.properties) {
-                  rest.properties = Object.entries(rest.properties).reduce(
-                    (acc, [key, value]) => ({
-                      ...acc,
-                      [key]: cleanJsonSchema(value),
-                    }),
-                    {},
-                  );
-                }
-
-                // Clean items in arrays
-                if (rest.items) {
-                  rest.items = cleanJsonSchema(rest.items);
-                }
-
-                return rest;
-              };
-
-              // Clean the parameters and convert type to uppercase
-              const cleanedParams = cleanJsonSchema(tool.function.parameters);
-              fn.parameters = {
-                ...cleanedParams,
-                type: (tool.function.parameters as any)?.type?.toUpperCase(),
-              };
-            }
-            functions.push(fn);
+          try {
+            functions.push(convertOpenAIToolToGeminiFunction(tool));
+          } catch (e) {
+            console.warn(
+              `Failed to convert tool to gemini function definition. Skipping: ${JSON.stringify(tool, null, 2)}`,
+            );
           }
         });
+
         if (functions.length) {
           finalBody.tools = [
             {
@@ -336,7 +302,7 @@ export class GeminiApi implements BaseLlmApi {
                   tool_calls: [
                     {
                       index: 0,
-                      id: "", // Not supported by Gemini
+                      id: part.functionCall.id ?? uuidv4(),
                       type: "function",
                       function: {
                         name: part.functionCall.name,

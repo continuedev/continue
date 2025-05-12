@@ -15,14 +15,17 @@ import {
 import { stripImages } from "core/util/messageContent";
 import * as vscode from "vscode";
 
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
-import { checkForIncompatibleExtensions } from "../granite/utils/compatibilityUtil";
+import { checkForIncompatibleExtensions } from "../granite/utils/compatibilityUtils";
+import { addCurrentSelectionToEdit } from "../quickEdit/AddCurrentSelection";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { handleLLMError } from "../util/errorHandling";
 import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
@@ -192,6 +195,15 @@ export class VsCodeMessenger {
         );
       });
     });
+    this.onWebview("edit/addCurrentSelection", async (msg) => {
+      const verticalDiffManager = await this.verticalDiffManagerPromise;
+      await addCurrentSelectionToEdit({
+        args: undefined,
+        editDecorationManager,
+        webviewProtocol: this.webviewProtocol,
+        verticalDiffManager,
+      });
+    });
     this.onWebview("edit/sendPrompt", async (msg) => {
       const prompt = msg.data.prompt;
       const { start, end } = msg.data.range.range;
@@ -200,6 +212,10 @@ export class VsCodeMessenger {
       const configHandler = await configHandlerPromise;
       const { config } = await configHandler.loadConfig();
 
+      if (!config) {
+        throw new Error("Edit: Failed to load config");
+      }
+
       const model =
         config?.selectedModelByRole.edit ?? config?.selectedModelByRole.chat;
 
@@ -207,32 +223,20 @@ export class VsCodeMessenger {
         throw new Error("No Edit or Chat model selected");
       }
 
-      const fileAfterEdit = await verticalDiffManager.streamEdit(
-        stripImages(prompt),
-        model,
-        "edit",
-        undefined,
-        undefined,
-        new vscode.Range(
+      const fileAfterEdit = await verticalDiffManager.streamEdit({
+        input: stripImages(prompt),
+        llm: model,
+        streamId: EDIT_MODE_STREAM_ID,
+        range: new vscode.Range(
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
-      );
-
-      void this.webviewProtocol.request("setEditStatus", {
-        status: "accepting",
-        fileAfterEdit,
+        rulesToInclude: config.rules,
       });
+      return fileAfterEdit;
     });
-    this.onWebview("edit/exit", async (msg) => {
-      if (msg.data.shouldFocusEditor) {
-        const activeEditor = vscode.window.activeTextEditor;
 
-        if (activeEditor) {
-          vscode.window.showTextDocument(activeEditor.document);
-        }
-      }
-
+    this.onWebview("edit/clearDecorations", async (msg) => {
       editDecorationManager.clear();
     });
     this.onWebview("checkForIncompatibleExtensions", async (msg) => {
@@ -414,6 +418,10 @@ export class VsCodeMessenger {
 
     this.onWebviewOrCore("getUniqueId", async (msg) => {
       return await ide.getUniqueId();
+    });
+
+    this.onWebviewOrCore("reportError", async (msg) => {
+      await handleLLMError(msg.data);
     });
   }
 }

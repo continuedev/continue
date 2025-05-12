@@ -1,31 +1,28 @@
-import { useEffect, useMemo, useState, useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { AuthProvider } from "../context/Auth";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import GraniteOnboardingCard from "../granite/GraniteOnboardingCard";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
-import {
-  addCodeToEdit,
-  newSession,
-  selectIsInEditMode,
-  setMode,
-} from "../redux/slices/sessionSlice";
+import { setCodeToEdit } from "../redux/slices/editModeState";
 import { setShowDialog } from "../redux/slices/uiSlice";
-import { exitEditMode } from "../redux/thunks";
-import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
+import { enterEditMode, exitEditMode } from "../redux/thunks/editMode";
+import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
+import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
+import { LumpProvider } from "./mainInput/Lump/LumpContext";
+import { useMainEditor } from "./mainInput/TipTapEditor";
 import IncompatibleExtensionsOverlay from "./IncompatibleExtensionsOverlay";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
-import { IdeMessengerContext } from "../context/IdeMessenger";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -48,33 +45,32 @@ const Layout = () => {
   const ideMessenger = useContext(IdeMessengerContext);
   const [showGraniteOnboardingCard, setShowGraniteOnboardingCard] =
     useState<boolean>(window.showGraniteCodeOnboarding ?? false);
-  const { pathname } = useLocation();
 
-  const configError = useAppSelector((state) => state.config.configError);
-
-  const hasFatalErrors = useMemo(() => {
-    return configError?.some((error) => error.fatal);
-  }, [configError]);
-
+  const { mainEditor } = useMainEditor();
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
+  const mode = useAppSelector((state) => state.session.mode);
 
-  const [conflictsWithOtherExtensions, setConflictsWithOtherExtensions] = useState(false);
+  const [conflictsWithOtherExtensions, setConflictsWithOtherExtensions] =
+    useState(false);
 
   useWebviewListener(
     "newSession",
     async () => {
       navigate(ROUTES.HOME);
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-          generateTitle: true,
-        }),
-      );
-      dispatch(exitEditMode());
+      if (mode === "edit") {
+        await dispatch(exitEditMode({}));
+      } else {
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: true,
+            generateTitle: true,
+          }),
+        );
+      }
     },
-    [],
+    [mode],
   );
 
   useWebviewListener(
@@ -90,15 +86,22 @@ const Layout = () => {
     "focusContinueInputWithNewSession",
     async () => {
       navigate(ROUTES.HOME);
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-          generateTitle: true,
-        }),
-      );
-      dispatch(exitEditMode());
+      if (mode === "edit") {
+        await dispatch(
+          exitEditMode({
+            openNewSession: true,
+          }),
+        );
+      } else {
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: true,
+            generateTitle: true,
+          }),
+        );
+      }
     },
-    [location.pathname],
+    [location.pathname, mode],
     location.pathname === ROUTES.HOME,
   );
 
@@ -133,47 +136,21 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: false,
-          // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
-          generateTitle: false,
-        }),
-      );
-      dispatch(newSession());
-      dispatch(focusEdit());
-      dispatch(setMode("edit"));
+      await ideMessenger.request("edit/addCurrentSelection", undefined);
+      await dispatch(enterEditMode({}));
+      mainEditor?.commands.focus();
     },
-    [],
+    [ideMessenger, mainEditor],
   );
 
   useWebviewListener(
-    "focusEditWithoutClear",
-    async () => {
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-          generateTitle: true,
-        }),
-      );
-      dispatch(focusEdit());
-      dispatch(setMode("edit"));
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "addCodeToEdit",
+    "setCodeToEdit",
     async (payload) => {
-      dispatch(addCodeToEdit(payload));
-    },
-    [navigate],
-  );
-
-  useWebviewListener(
-    "setEditStatus",
-    async ({ status, fileAfterEdit }) => {
-      dispatch(setEditStatus({ status, fileAfterEdit }));
+      dispatch(
+        setCodeToEdit({
+          codeToEdit: payload,
+        }),
+      );
     },
     [],
   );
@@ -186,21 +163,12 @@ const Layout = () => {
     [],
   );
 
-  const isInEditMode = useAppSelector(selectIsInEditMode);
   useWebviewListener(
     "exitEditMode",
     async () => {
-      if (!isInEditMode) {
-        return;
-      }
-      dispatch(
-        loadLastSession({
-          saveCurrentSession: false,
-        }),
-      );
-      dispatch(exitEditMode());
+      await dispatch(exitEditMode({}));
     },
-    [isInEditMode],
+    [],
   );
 
   useWebviewListener("updateIncompatibleExtensions", async (data) => {
@@ -230,16 +198,17 @@ const Layout = () => {
   // Check if there are any incompatible extension enabled when the webview is on mount
   useEffect(() => {
     ideMessenger.post("checkForIncompatibleExtensions", undefined)
-  }, [])
+  }, []);
 
   return showGraniteOnboardingCard ? (
     <GraniteOnboardingCard />
   ) : (
     <>
-      {conflictsWithOtherExtensions && <IncompatibleExtensionsOverlay />}
-      <LocalStorageProvider>
-        <AuthProvider>
-          <LayoutTopDiv>
+    {conflictsWithOtherExtensions && <IncompatibleExtensionsOverlay />}
+    <LocalStorageProvider>
+      <AuthProvider>
+        <LayoutTopDiv>
+          <LumpProvider>
             <OSRContextMenu />
             <div
               style={{
@@ -263,27 +232,15 @@ const Layout = () => {
               <GridDiv className="">
                 <PostHogPageView />
                 <Outlet />
-
-                {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-                  <div
-                    className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-                    role="alert"
-                    onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-                  >
-                    <strong className="font-bold">Error!</strong>{" "}
-                    <span className="block sm:inline">
-                      Could not load config
-                    </span>
-                    <div className="mt-2 underline">Learn More</div>
-                  </div>
-                )}
+                <FatalErrorIndicator />
                 <Footer />
               </GridDiv>
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-          </LayoutTopDiv>
-        </AuthProvider>
-      </LocalStorageProvider>
+          </LumpProvider>
+        </LayoutTopDiv>
+      </AuthProvider>
+    </LocalStorageProvider>
     </>
   );
 };

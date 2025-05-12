@@ -1,10 +1,12 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
+import { getUriPathBasename } from "core/util/uri";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { exitEditMode } from "../../redux/thunks/editMode";
 import {
   deleteSession,
   getSession,
@@ -12,10 +14,6 @@ import {
   updateSession,
 } from "../../redux/thunks/session";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import {
-  getLastNUriRelativePathParts,
-  getUriPathBasename,
-} from "core/util/uri";
 
 export function HistoryTableRow({
   sessionMetadata,
@@ -65,52 +63,49 @@ export function HistoryTableRow({
   };
 
   return (
-    <tr>
-      <td
-        data-testid={`history-row-${index}`}
-        className="p-1"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <div
-          className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
-          onClick={async () => {
-            if (sessionMetadata.sessionId !== currentSessionId) {
-              await dispatch(
-                loadSession({
-                  sessionId: sessionMetadata.sessionId,
-                  saveCurrentSession: true,
-                }),
-              );
-            }
-            navigate("/");
-          }}
-        >
-          <div className="flex-1 cursor-pointer space-y-1">
-            {editing ? (
-              <div className="text-md">
-                <Input
-                  type="text"
-                  className="w-full"
-                  ref={(titleInput) => titleInput && titleInput.focus()}
-                  value={sessionTitleEditValue}
-                  onChange={(e) => setSessionTitleEditValue(e.target.value)}
-                  onKeyUp={(e) => handleKeyUp(e)}
-                  onBlur={() => setEditing(false)}
-                />
-              </div>
-            ) : (
-              <span className="text-md block max-w-80 truncate text-base font-semibold">
-                {sessionMetadata.title}
-              </span>
-            )}
+    <tr
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      data-testid={`history-row-${index}`}
+      className="hover:bg-vsc-editor-background relative box-border flex cursor-pointer overflow-hidden rounded-lg p-3"
+      onClick={async () => {
+        await dispatch(exitEditMode({}));
+        if (sessionMetadata.sessionId !== currentSessionId) {
+          await dispatch(
+            loadSession({
+              sessionId: sessionMetadata.sessionId,
+              saveCurrentSession: true,
+            }),
+          );
+        }
+        navigate("/");
+      }}
+    >
+      <div className="flex-1 cursor-pointer space-y-1">
+        {editing ? (
+          <div className="text-md">
+            <Input
+              type="text"
+              className="w-full"
+              ref={(titleInput) => titleInput && titleInput.focus()}
+              value={sessionTitleEditValue}
+              onChange={(e) => setSessionTitleEditValue(e.target.value)}
+              onKeyUp={(e) => handleKeyUp(e)}
+              onBlur={() => setEditing(false)}
+            />
+          </div>
+        ) : (
+          <span className="line-clamp-1 break-all text-base font-semibold">
+            {sessionMetadata.title}
+          </span>
+        )}
 
-            <div className="flex" style={{ color: "#9ca3af" }}>
-              <span>
-                {getUriPathBasename(sessionMetadata.workspaceDirectory || "")}
-              </span>
-              {/* Uncomment to show the date */}
-              {/* <span className="inline-block ml-auto">
+        <div className="flex" style={{ color: "#9ca3af" }}>
+          <span className="line-clamp-1 break-all">
+            {getUriPathBasename(sessionMetadata.workspaceDirectory || "")}
+          </span>
+          {/* Uncomment to show the date */}
+          {/* <span className="inline-block ml-auto">
                 {date.toLocaleString("en-US", {
                   year: "2-digit",
                   month: "2-digit",
@@ -120,33 +115,31 @@ export function HistoryTableRow({
                   hour12: true,
                 })}
               </span> */}
-            </div>
-          </div>
-
-          {hovered && !editing && (
-            <div className="bg-vsc-background absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-2 rounded-full py-1.5 pl-4 pr-4 shadow-md">
-              <HeaderButtonWithToolTip
-                text="Edit"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  setEditing(true);
-                }}
-              >
-                <PencilSquareIcon width="1.3em" height="1.3em" />
-              </HeaderButtonWithToolTip>
-              <HeaderButtonWithToolTip
-                text="Delete"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  await dispatch(deleteSession(sessionMetadata.sessionId));
-                }}
-              >
-                <TrashIcon width="1.3em" height="1.3em" />
-              </HeaderButtonWithToolTip>
-            </div>
-          )}
         </div>
-      </td>
+      </div>
+
+      {hovered && !editing && (
+        <div className="bg-vsc-background absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-2 rounded-full py-1.5 pl-4 pr-4 shadow-md">
+          <HeaderButtonWithToolTip
+            text="Edit"
+            onClick={async (e) => {
+              e.stopPropagation();
+              setEditing(true);
+            }}
+          >
+            <PencilSquareIcon width="1.3em" height="1.3em" />
+          </HeaderButtonWithToolTip>
+          <HeaderButtonWithToolTip
+            text="Delete"
+            onClick={async (e) => {
+              e.stopPropagation();
+              await dispatch(deleteSession(sessionMetadata.sessionId));
+            }}
+          >
+            <TrashIcon width="1.3em" height="1.3em" />
+          </HeaderButtonWithToolTip>
+        </div>
+      )}
     </tr>
   );
 }

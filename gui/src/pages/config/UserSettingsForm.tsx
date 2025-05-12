@@ -8,7 +8,6 @@ import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
-import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
@@ -17,7 +16,6 @@ import { getFontSize } from "../../util";
 export function UserSettingsForm() {
   /////// User settings section //////
   const dispatch = useAppDispatch();
-  const { controlServerBetaEnabled } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
 
@@ -118,7 +116,7 @@ export function UserSettingsForm() {
           </SecondaryButton>
         </div>
       ) : null} */}
-      {!controlServerBetaEnabled || hubEnabled ? (
+      {hubEnabled ? (
         <div className="flex flex-col gap-4 py-4">
           <div>
             <h2 className="mb-2 mt-0 p-0">User settings</h2>

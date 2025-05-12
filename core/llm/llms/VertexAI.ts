@@ -1,7 +1,7 @@
 import { GoogleAuth } from "google-auth-library";
 
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse, streamSse } from "../stream.js";
 
@@ -11,7 +11,7 @@ import Gemini from "./Gemini.js";
 class VertexAI extends BaseLLM {
   static providerName = "vertexai";
   declare apiBase: string;
-  declare vertexProvider: string;
+  declare vertexProvider: "mistral" | "anthropic" | "gemini" | "unknown";
   declare anthropicInstance: Anthropic;
   declare geminiInstance: Gemini;
 
@@ -22,7 +22,11 @@ class VertexAI extends BaseLLM {
 
   private clientPromise = new GoogleAuth({
     scopes: "https://www.googleapis.com/auth/cloud-platform",
-  }).getClient();
+  })
+    .getClient()
+    .catch((e) => {
+      console.warn(`Failed to load credentials for Vertex AI: ${e.message}`);
+    });
 
   private static getDefaultApiBaseFrom(options: LLMOptions) {
     const { region, projectId } = options;
@@ -60,8 +64,8 @@ class VertexAI extends BaseLLM {
 
   async fetch(url: RequestInfo | URL, init?: RequestInit) {
     const client = await this.clientPromise;
-    const { token } = await client.getAccessToken();
-    if (!token) {
+    const result = await client?.getAccessToken();
+    if (!result?.token) {
       throw new Error(
         "Could not get an access token. Set up your Google Application Default Credentials.",
       );
@@ -70,7 +74,7 @@ class VertexAI extends BaseLLM {
       ...init,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${result.token}`,
         ...init?.headers,
       },
     });
@@ -92,13 +96,13 @@ class VertexAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage =
-      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const filteredSystemMessages : ChatMessage[] = messages.filter((m) => m.role === "system");
-    let systemMessage: string = "";
-    if(filteredSystemMessages.length > 0) {
-      systemMessage = renderChatMessage(filteredSystemMessages[0]);
-    }
+    const systemMessage = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
+    );
+
     const apiURL = new URL(
       `publishers/anthropic/models/${options.model}:streamRawPredict`,
       this.apiBase,
@@ -118,7 +122,7 @@ class VertexAI extends BaseLLM {
           ? [
               {
                 type: "text",
-                text: this.systemMessage,
+                text: systemMessage,
                 cache_control: { type: "ephemeral" },
               },
             ]
@@ -142,8 +146,7 @@ class VertexAI extends BaseLLM {
     }
   }
 
-  //Gemini
-
+  // Gemini
   private async *streamChatGemini(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -306,7 +309,7 @@ class VertexAI extends BaseLLM {
     yield (await resp.json()).predictions[0].content;
   }
 
-  //Manager functions
+  // Manager functions
 
   protected async *_streamChat(
     messages: ChatMessage[],
@@ -328,6 +331,8 @@ class VertexAI extends BaseLLM {
     } else {
       if (options.model.includes("bison")) {
         yield* this.streamChatBison(convertedMsgs, options);
+      } else {
+        throw new Error(`Unsupported model: ${options.model}`);
       }
     }
   }
@@ -369,8 +374,8 @@ class VertexAI extends BaseLLM {
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
     const client = await this.clientPromise;
-    const { token } = await client.getAccessToken();
-    if (!token) {
+    const result = await client?.getAccessToken();
+    if (!result?.token) {
       throw new Error(
         "Could not get an access token. Set up your Google Application Default Credentials.",
       );
@@ -385,7 +390,7 @@ class VertexAI extends BaseLLM {
         }),
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${result.token}`,
         },
       },
     );
@@ -399,10 +404,6 @@ class VertexAI extends BaseLLM {
       (prediction: any) => prediction.embeddings.values,
     );
   }
-}
-
-async function delay(seconds: number) {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
 export default VertexAI;

@@ -34,33 +34,11 @@ describe("ChatDescriber", () => {
       const message = "Test message";
       const completionOptions: LLMFullCompletionOptions = { temperature: 0.7 };
 
-      testLLM.chat = jest.fn().mockResolvedValue({ content: "Test response" });
+      testLLM.chatStreams = [[{ role: "assistant", content: "Test response" }]];
 
       await ChatDescriber.describe(testLLM, completionOptions, message);
 
       expect(completionOptions.maxTokens).toBe(ChatDescriber.maxTokens);
-    });
-
-    it("should call model.chat with correct parameters", async () => {
-      const message = "Test message";
-      const cleanedMessage = "Test message";
-      const expectedPrompt = ChatDescriber.prompt + cleanedMessage;
-      const completionOptions: LLMFullCompletionOptions = {};
-
-      testLLM.chat = jest.fn().mockResolvedValue({ content: "Test response" });
-
-      await ChatDescriber.describe(testLLM, completionOptions, message);
-
-      expect(testLLM.chat).toHaveBeenCalledWith(
-        [
-          {
-            role: "user",
-            content: expectedPrompt,
-          },
-        ],
-        expect.any(AbortSignal),
-        completionOptions,
-      );
     });
 
     it("should return processed content from the model response", async () => {
@@ -68,9 +46,9 @@ describe("ChatDescriber", () => {
       const modelResponseContent = "Model response content";
       const expectedResult = "Model response content";
 
-      testLLM.chat = jest
-        .fn()
-        .mockResolvedValue({ content: modelResponseContent });
+      testLLM.chatStreams = [
+        [{ role: "assistant", content: modelResponseContent }],
+      ];
 
       const result = await ChatDescriber.describe(testLLM, {}, message);
 
@@ -81,11 +59,11 @@ describe("ChatDescriber", () => {
       const message = "Test message";
       const completionOptions: LLMFullCompletionOptions = {};
 
-      testLLM.chat = jest.fn().mockRejectedValue(new Error("Chat error"));
+      testLLM.chatStreams = [["ERROR"]];
 
       await expect(
         ChatDescriber.describe(testLLM, completionOptions, message),
-      ).rejects.toThrow("Chat error");
+      ).rejects.toThrow();
     });
   });
 });
