@@ -52,15 +52,26 @@ export const completionOptionsSchema = z.object({
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
+export const embeddingTasksSchema = z.union([
+  z.literal("chunk"),
+  z.literal("query")
+]);
+export type EmbeddingTasks = z.infer<typeof embeddingTasksSchema>;
+
+export const embeddingPrefixesSchema = z.record(embeddingTasksSchema, z.string());
+export type EmbeddingPrefixes = z.infer<typeof embeddingPrefixesSchema>;
+
 export const cacheBehaviorSchema = z.object({
   cacheSystemMessage: z.boolean().optional(),
   cacheConversation: z.boolean().optional(),
 });
 export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
 
+
 export const embedOptionsSchema = z.object({
   maxChunkSize: z.number().optional(),
   maxBatchSize: z.number().optional(),
+  embeddingPrefixes: embeddingPrefixesSchema.optional(),
 });
 export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 
