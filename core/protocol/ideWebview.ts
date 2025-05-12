@@ -54,6 +54,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     void,
   ];
   "edit/exit": [{ shouldFocusEditor: boolean }, void];
+  checkForIncompatibleExtensions: [undefined, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
@@ -93,4 +94,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusEdit: [undefined, void];
   focusEditWithoutClear: [undefined, void];
   setShowGraniteOnboardingCard: [boolean, void];
+  updateIncompatibleExtensions: [boolean, void];
 };

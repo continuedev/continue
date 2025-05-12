@@ -66,6 +66,11 @@ body {
   animation: fadeIn 0.3s ease-in-out;
 }
 
+.fade-in-overlay {
+  animation: fadeIn 0.7s ease-in-out;
+  background-color: var(--vscode-sideBar-background);
+}
+
 .thin-scrollbar {
   scrollbar-width: thin;
 }
