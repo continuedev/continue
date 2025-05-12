@@ -5,12 +5,13 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { startLocalOllama } from "core/util/ollamaHelper";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
+import { handleLLMError } from "../util/errorHandling";
 import { showFreeTrialLoginMessage } from "../util/messages";
+import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 import { getDefinitionsFromLsp } from "./lsp";
@@ -23,9 +24,6 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import type { IDE } from "core";
-import { handleLLMError } from "../util/errorHandling";
-
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
   position: vscode.Position;
@@ -34,8 +32,8 @@ interface VsCodeCompletionInput {
 
 export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider {
-  private onError(e: any) {
-    if (handleLLMError(e)) {
+  private async onError(e: any) {
+    if (await handleLLMError(e)) {
       return;
     }
     let message = e.message;
@@ -62,13 +60,15 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
-  private recentlyEditedTracker = new RecentlyEditedTracker();
+  private recentlyEditedTracker: RecentlyEditedTracker;
 
   constructor(
     private readonly configHandler: ConfigHandler,
-    private readonly ide: IDE,
+    private readonly ide: VsCodeIde,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
   ) {
+    this.recentlyEditedTracker = new RecentlyEditedTracker(ide.ideUtils);
+
     async function getAutocompleteModel() {
       const { config } = await configHandler.loadConfig();
       if (!config) {

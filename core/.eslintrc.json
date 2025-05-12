@@ -7,16 +7,17 @@
   "rules": {
     "quotes": ["off", "double", {}],
     "@typescript-eslint/naming-convention": "off",
-    "@typescript-eslint/no-floating-promises": "off",
+    // This is important: when floating promises cause unhandled rejections, the JetBrains binary blows up
+    "@typescript-eslint/no-floating-promises": "error",
     "import/order": "off",
     "curly": "off",
     "@typescript-eslint/semi": "off",
     "eqeqeq": "error",
-    "complexity": ["error", { "max": 38 }],
-    "max-lines-per-function": ["error", { "max": 996 }],
-    "max-statements": ["error", { "max": 114 }],
+    "complexity": ["error", { "max": 36 }],
+    "max-lines-per-function": ["error", { "max": 500 }],
+    "max-statements": ["error", { "max": 108 }],
     "max-depth": ["error", { "max": 6 }],
     "max-nested-callbacks": ["error", { "max": 4 }],
-    "max-params": ["error", { "max": 11 }]
+    "max-params": ["error", { "max": 8 }]
   }
 }

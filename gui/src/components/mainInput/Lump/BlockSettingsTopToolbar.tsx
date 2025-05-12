@@ -4,19 +4,26 @@ import {
   ChevronLeftIcon,
   CubeIcon,
   EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
   PencilIcon,
   Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { vscBadgeBackground, vscBadgeForeground } from "../..";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { toggleBlockSettingsToolbar } from "../../../redux/slices/uiSlice";
-import { fontSize } from "../../../util";
+import { ReactNode } from "react";
+import { vscBadgeForeground } from "../..";
+import { useAppSelector } from "../../../redux/hooks";
+import { ToolTip } from "../../gui/Tooltip";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
-import HoverItem from "../InputToolbar/bottom/HoverItem";
+import { useFontSize } from "../../ui/font";
+import HoverItem from "../InputToolbar/HoverItem";
+import { useLump } from "./LumpContext";
+import { ErrorsSectionTooltip } from "./sections/errors/ErrorsSectionTooltip";
+import { McpSectionTooltip } from "./sections/mcp/MCPTooltip";
+import { ToolsSectionTooltip } from "./sections/tool-policies/ToolPoliciesSectionTooltip";
 
 interface BlockSettingsToolbarIcon {
-  tooltip: string;
+  title: string;
+  tooltip: ReactNode;
   icon: React.ComponentType<any>;
   itemCount?: number;
   onClick: () => void;
@@ -26,111 +33,173 @@ interface BlockSettingsToolbarIcon {
 
 interface Section {
   id: string;
-  tooltip: string;
+  title: string;
+  tooltip: ReactNode;
   icon: React.ComponentType<any>;
 }
 
 const sections: Section[] = [
-  { id: "models", tooltip: "Models", icon: CubeIcon },
-  { id: "rules", tooltip: "Rules", icon: PencilIcon },
-  { id: "docs", tooltip: "Docs", icon: BookOpenIcon },
-  { id: "prompts", tooltip: "Prompts", icon: ChatBubbleLeftIcon },
-  { id: "tools", tooltip: "Tools", icon: WrenchScrewdriverIcon },
-  { id: "mcp", tooltip: "MCP", icon: Squares2X2Icon },
+  { id: "models", title: "Models", tooltip: "Models", icon: CubeIcon },
+  { id: "rules", title: "Rules", tooltip: "Rules", icon: PencilIcon },
+  { id: "docs", title: "Docs", tooltip: "Docs", icon: BookOpenIcon },
+  {
+    id: "prompts",
+    title: "Prompts",
+    tooltip: "Prompts",
+    icon: ChatBubbleLeftIcon,
+  },
+  {
+    id: "tools",
+    title: "Tools",
+    tooltip: <ToolsSectionTooltip />,
+    icon: WrenchScrewdriverIcon,
+  },
+  {
+    id: "mcp",
+    title: "MCP",
+    tooltip: <McpSectionTooltip />,
+    icon: Squares2X2Icon,
+  },
+  {
+    id: "error",
+    title: "Errors",
+    tooltip: <ErrorsSectionTooltip />,
+    icon: ExclamationTriangleIcon,
+  },
 ];
 
-function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
+function BlockSettingsToolbarIcon(
+  props: BlockSettingsToolbarIcon & { sectionId?: string },
+) {
+  const isErrorSection = props.sectionId === "error";
+
+  const id = `block-settings-toolbar-icon-${props.sectionId}`;
+
+  const fontSize = useFontSize(-3);
   return (
-    <HoverItem px={0} onClick={props.onClick}>
-      <div
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            props.onClick();
-          }
-        }}
-        style={{
-          backgroundColor: props.isSelected ? vscBadgeBackground : undefined,
-        }}
-        className={`relative flex select-none items-center rounded-full px-1 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${props.className || ""}`}
+    <>
+      <HoverItem
+        px={0}
+        onClick={props.onClick}
+        data-testid={id}
+        data-tooltip-id={id}
       >
-        <props.icon
-          className="h-3 w-3 hover:brightness-125"
-          style={{
-            color: props.isSelected ? vscBadgeForeground : undefined,
-          }}
-          aria-hidden="true"
-        />
         <div
-          style={{ fontSize: fontSize(-3) }}
-          className={`overflow-hidden transition-all duration-200 ${
-            props.isSelected ? "ml-1 w-auto opacity-100" : "w-0 opacity-0"
-          }`}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              props.onClick();
+            }
+          }}
+          className={`${
+            props.isSelected
+              ? isErrorSection
+                ? "bg-red-600"
+                : "bg-badge"
+              : undefined
+          } relative flex select-none items-center rounded-full px-[3px] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
         >
-          <span
-            className="whitespace-nowrap"
-            style={{ color: vscBadgeForeground }}
+          <props.icon
+            className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
+              isErrorSection ? "text-red-600" : ""
+            }`}
+            style={{
+              color: props.isSelected ? vscBadgeForeground : undefined,
+            }}
+            aria-hidden="true"
+          />
+          <div
+            style={{ fontSize }}
+            className={`overflow-hidden transition-all duration-200 ${
+              props.isSelected ? "ml-1 w-auto opacity-100" : "w-0 opacity-0"
+            }`}
           >
-            {props.tooltip}
-          </span>
+            <span
+              className="whitespace-nowrap"
+              style={{ color: vscBadgeForeground }}
+            >
+              {props.title}
+            </span>
+          </div>
         </div>
-      </div>
-    </HoverItem>
+      </HoverItem>
+      <ToolTip delayShow={700} id={id}>
+        {props.tooltip}
+      </ToolTip>
+    </>
   );
 }
 
-interface BlockSettingsTopToolbarProps {
-  selectedSection: string | null;
-  setSelectedSection: (value: string | null) => void;
-}
+export function BlockSettingsTopToolbar() {
+  const {
+    isToolbarExpanded,
+    toggleToolbar,
+    selectedSection,
+    setSelectedSection,
+  } = useLump();
 
-export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
-  const isExpanded = useAppSelector(
-    (state) => state.ui.isBlockSettingsToolbarExpanded,
-  );
-  const dispatch = useAppDispatch();
+  const configError = useAppSelector((store) => store.config.configError);
+
   const handleEllipsisClick = () => {
-    if (isExpanded) {
-      props.setSelectedSection(null);
+    if (isToolbarExpanded) {
+      setSelectedSection(null);
     }
-    dispatch(toggleBlockSettingsToolbar());
+    toggleToolbar();
   };
 
+  const visibleSections = sections.filter(
+    (section) =>
+      section.id !== "error" ||
+      (section.id === "error" && configError && configError?.length > 0),
+  );
+
   return (
-    <div className="flex w-full items-center justify-between">
-      <div className="xs:flex hidden items-center justify-center text-gray-400">
-        <BlockSettingsToolbarIcon
-          className="-ml-1.5"
-          icon={isExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-          tooltip={isExpanded ? "Collapse sections" : "Expand sections"}
-          isSelected={false}
-          onClick={handleEllipsisClick}
-        />
-        <div
-          className="flex overflow-hidden transition-all duration-200"
-          style={{ width: isExpanded ? `160px` : "0px" }}
-        >
-          <div className="flex">
-            {sections.map((section) => (
-              <BlockSettingsToolbarIcon
-                key={section.id}
-                icon={section.icon}
-                tooltip={section.tooltip}
-                isSelected={props.selectedSection === section.id}
-                onClick={() =>
-                  props.setSelectedSection(
-                    props.selectedSection === section.id ? null : section.id,
-                  )
-                }
-              />
-            ))}
+    <div className="flex flex-1 items-center justify-between gap-2">
+      <div className="flex flex-row">
+        <div className="xs:flex hidden items-center justify-center text-gray-400">
+          <BlockSettingsToolbarIcon
+            className="-ml-1.5"
+            icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
+            tooltip={isToolbarExpanded ? "Collapse Toolbar" : "Expand Toolbar"}
+            title=""
+            isSelected={false}
+            onClick={handleEllipsisClick}
+          />
+          <div
+            className={`${isToolbarExpanded ? "w-min" : "w-0"} flex overflow-hidden transition-all duration-200`}
+          >
+            <div className="flex">
+              {visibleSections.map((section) => (
+                <BlockSettingsToolbarIcon
+                  key={section.id}
+                  sectionId={section.id}
+                  icon={section.icon}
+                  tooltip={section.tooltip}
+                  title={section.title}
+                  isSelected={selectedSection === section.id}
+                  onClick={() =>
+                    setSelectedSection(
+                      selectedSection === section.id ? null : section.id,
+                    )
+                  }
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-      <div className="ml-auto">
-        <AssistantSelect />
+      <div className="flex gap-0.5">
+        <HoverItem
+          data-tooltip-id="assistant-select-tooltip"
+          className="!m-0 !p-0"
+        >
+          <AssistantSelect />
+          <ToolTip id="assistant-select-tooltip" place="top">
+            Select Assistant
+          </ToolTip>
+        </HoverItem>
       </div>
     </div>
   );

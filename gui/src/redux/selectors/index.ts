@@ -1,5 +1,8 @@
 import { createSelector } from "@reduxjs/toolkit";
-import { ComboBoxItemType } from "../../components/mainInput/types";
+import {
+  ComboBoxItem,
+  ComboBoxItemType,
+} from "../../components/mainInput/types";
 import { RootState } from "../store";
 
 export const selectSlashCommandComboBoxInputs = createSelector(
@@ -8,10 +11,11 @@ export const selectSlashCommandComboBoxInputs = createSelector(
     return (
       slashCommands?.map((cmd) => {
         return {
-          title: `${cmd.name}`,
+          title: cmd.name,
           description: cmd.description,
           type: "slashCommand" as ComboBoxItemType,
-        };
+          content: cmd.prompt,
+        } as ComboBoxItem;
       }) || []
     );
   },
@@ -41,9 +45,4 @@ export const selectDefaultContextProviders = createSelector(
 export const selectUseActiveFile = createSelector(
   [(state: RootState) => state.config.config.experimental?.defaultContext],
   (defaultContext) => defaultContext?.includes("activeFile" as any),
-);
-
-export const selectUseHub = createSelector(
-  [(state: RootState) => state.config.config.usePlatform],
-  (usePlatform) => usePlatform,
 );

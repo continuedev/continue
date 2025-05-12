@@ -32,6 +32,16 @@ export interface OrganizationDescription {
   slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
 }
 
+export type OrgWithProfiles = OrganizationDescription & {
+  profiles: ProfileLifecycleManager[];
+  currentProfile: ProfileLifecycleManager | null;
+};
+
+export type SerializedOrgWithProfiles = OrganizationDescription & {
+  profiles: ProfileDescription[];
+  selectedProfileId: string | null;
+};
+
 export class ProfileLifecycleManager {
   private savedConfigResult: ConfigResult<ContinueConfig> | undefined;
   private savedBrowserConfigResult?: ConfigResult<BrowserSerializedContinueConfig>;
@@ -85,7 +95,10 @@ export class ProfileLifecycleManager {
       try {
         result = await this.profileLoader.doLoadConfig();
       } catch (e) {
-        const message = e instanceof Error ? e.message : "Error loading config";
+        const message =
+          e instanceof Error
+            ? `${e.message}\n${e.stack ? e.stack : ""}`
+            : "Error loading config";
         result = {
           errors: [
             {

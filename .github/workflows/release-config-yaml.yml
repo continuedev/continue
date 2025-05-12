@@ -1,0 +1,46 @@
+name: Release @continuedev/config-yaml
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/config-yaml/**"
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install dependencies
+        run: |
+          cd packages/config-yaml
+          npm ci
+
+      - name: Build
+        run: |
+          cd packages/config-yaml
+          npm run build
+
+      - name: Run tests
+        run: |
+          cd packages/config-yaml
+          npm test
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/config-yaml
+          npx semantic-release

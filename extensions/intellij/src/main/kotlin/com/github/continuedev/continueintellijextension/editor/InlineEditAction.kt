@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.editor
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
 import com.intellij.openapi.Disposable
@@ -130,11 +131,11 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val modelTitles = mutableListOf<String>()
 
     continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val content = (response as Map<String, Any>)["content"] as Map<String, Any>
-        val result = content["result"] as Map<String, Any>
-        val config = result["config"] as Map<String, Any>
-        val models = config["models"] as List<Map<String, Any>>
-        modelTitles.addAll(models.map { it["title"] as String })
+        val modelsByRole = response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "modelsByRole") ?: return@request
+        val role = if (modelsByRole.containsKey("edit")) "edit" else "chat"
+        modelsByRole.castNestedOrNull<List<*>>(role)
+            ?.mapNotNull { it.castNestedOrNull<String>("title") }
+            ?.let(modelTitles::addAll)
     }
 
     // This is a hacky way to not complicate getting model titles with coroutines
@@ -207,7 +208,10 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                 textArea.document.insertString(textArea.caretPosition, ", ", null)
                 textArea.requestFocus()
                 customPanelRef.get().finish()
-            })
+            },
+            null,
+            null
+        )
 
     val diffStreamService = project.service<DiffStreamService>()
     diffStreamService.register(diffStreamHandler, editor)
@@ -218,7 +222,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(DOWN_ARROW)
         customPanelRef.get().enter()
         diffStreamHandler.streamDiffLinesToEditor(
-            textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret
+            textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret, true
         )
     }
 

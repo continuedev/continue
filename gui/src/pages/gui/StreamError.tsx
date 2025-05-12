@@ -1,6 +1,9 @@
-import { Cog8ToothIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowTopRightOnSquareIcon,
+  Cog8ToothIcon,
+} from "@heroicons/react/24/outline";
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { Button, SecondaryButton } from "../../components";
 import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
@@ -8,22 +11,41 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { selectSelectedProfile } from "../../redux/";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseHub } from "../../redux/selectors";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { isLocalProfile } from "../../util";
 import { providers } from "../AddNewModel/configs/providers";
+import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
 
 interface StreamErrorProps {
   error: unknown;
 }
+
+function parseErrorMessage(fullErrMsg: string): string {
+  if (!fullErrMsg.includes("\n\n")) {
+    return fullErrMsg;
+  }
+
+  const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
+  try {
+    const parsed = JSON.parse(msg);
+    return JSON.stringify(parsed.error ?? parsed.message ?? msg);
+  } catch (e) {
+    return msg;
+  }
+}
+
 const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const selectedModel = useAppSelector(selectDefaultModel);
-  const hubEnabled = useAppSelector(selectUseHub);
+  const selectedModel = useAppSelector(selectSelectedChatModel);
   const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
+
+  const parsedError = useMemo<string>(
+    () => parseErrorMessage((error as any)?.message || ""),
+    [error],
+  );
 
   const handleRefreshProfiles = () => {
     refreshProfiles();
@@ -103,6 +125,12 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </SecondaryButton>
   );
 
+  if (
+    parsedError === "You have exceeded the chat limit for the Models Add-On."
+  ) {
+    return <ModelsAddOnLimitDialog />;
+  }
+
   let errorContent: React.ReactNode = <></>;
 
   // Display components for specific errors
@@ -154,17 +182,14 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (statusCode === 401) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        {hubEnabled &&
-          session &&
-          selectedProfile &&
-          !isLocalProfile(selectedProfile) && (
-            <div className="flex flex-col gap-1">
-              <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
-              <SecondaryButton onClick={handleRefreshProfiles}>
-                Refresh assistant secrets
-              </SecondaryButton>
-            </div>
-          )}
+        {session && selectedProfile && !isLocalProfile(selectedProfile) && (
+          <div className="flex flex-col gap-1">
+            <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+            <SecondaryButton onClick={handleRefreshProfiles}>
+              Refresh assistant secrets
+            </SecondaryButton>
+          </div>
+        )}
         <span>{`It's possible that your API key is invalid.`}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {checkKeysButton}
@@ -206,19 +231,24 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   }
 
   return (
-    <div className={`flex flex-col gap-1 px-3 pb-2 pt-2`}>
-      <p className="m-0 p-0 text-lg text-red-500">{`${statusCode ? statusCode + " " : ""}Error`}</p>
+    <div className={`flex flex-col gap-1 px-3 pb-2 pt-3`}>
+      <p className="m-0 p-0 text-lg text-red-500">
+        {statusCode ? `Error (status code ${statusCode})` : "Error"}
+      </p>
 
       {message ? (
-        <div className="mt-2 flex flex-col gap-0 rounded-sm border border-solid">
-          <code className="max-h-20 overflow-y-auto px-1 py-1">{message}</code>
+        <div className="mt-2 flex flex-col gap-0 rounded-sm">
+          <code className="max-h-20 overflow-y-auto p-2 font-mono">
+            {parsedError}
+          </code>
           <div
-            className="flex cursor-pointer flex-row justify-end px-1 py-1 hover:underline"
+            className="flex cursor-pointer flex-row items-center justify-end px-1 py-1 text-gray-500 hover:underline"
             onClick={() => {
               ideMessenger.post("toggleDevTools", undefined);
             }}
           >
             <span className="px-2">View Logs</span>
+            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
           </div>
         </div>
       ) : null}
@@ -245,16 +275,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             <DiscordIcon className="h-5 w-5" />
             <span className="xs:flex hidden">Discord</span>
           </SecondaryButton>
-        </div>
-        <div className="flex flex-row justify-end">
-          <Button
-            onClick={() => {
-              dispatch(setDialogMessage(undefined));
-              dispatch(setShowDialog(false));
-            }}
-          >
-            Close
-          </Button>
         </div>
       </div>
     </div>

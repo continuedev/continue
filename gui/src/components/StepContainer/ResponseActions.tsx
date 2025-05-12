@@ -1,12 +1,9 @@
 import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { renderChatMessage } from "core/util/messageContent";
+import FeedbackButtons from "../FeedbackButtons";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import EditActions from "./EditActions";
-import FeedbackButtons from "./FeedbackButtons";
-import { useAppSelector } from "../../redux/hooks";
-import { selectIsInEditMode } from "../../redux/slices/sessionSlice";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -23,12 +20,6 @@ export default function ResponseActions({
   isTruncated,
   onDelete,
 }: ResponseActionsProps) {
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-
-  if (isInEditMode) {
-    return <EditActions index={index} item={item} />;
-  }
-
   return (
     <div className="mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs text-gray-400">
       {isTruncated && (

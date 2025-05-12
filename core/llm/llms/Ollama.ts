@@ -1,4 +1,6 @@
+import { Mutex } from "async-mutex";
 import { JSONSchema7, JSONSchema7Object } from "json-schema";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   ChatMessage,
@@ -40,12 +42,12 @@ interface OllamaModelFileParams {
   top_k?: number;
   top_p?: number;
   min_p?: number;
+  num_gpu?: number;
 
-  // deprecated or not directly supported here:
+  // Deprecated or not directly supported here:
   num_thread?: number;
   use_mmap?: boolean;
   num_gqa?: number;
-  num_gpu?: number;
   num_keep?: number;
   typical_p?: number;
   presence_penalty?: number;
@@ -89,10 +91,10 @@ type OllamaBaseResponse = {
   model: string;
   created_at: string;
 } & (
-    | {
+  | {
       done: false;
     }
-    | {
+  | {
       done: true;
       done_reason: string;
       total_duration: number; // Time spent generating the response in nanoseconds
@@ -103,7 +105,7 @@ type OllamaBaseResponse = {
       eval_duration: number; // Time spent generating the response in nanoseconds
       context: number[]; // An encoding of the conversation used in this response; can be sent in the next request to keep conversational memory
     }
-  );
+);
 
 type OllamaErrorResponse = {
   error: string;
@@ -112,14 +114,14 @@ type OllamaErrorResponse = {
 type OllamaRawResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-    response: string; // the generated response
-  });
+      response: string; // the generated response
+    });
 
 type OllamaChatResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-    message: OllamaChatMessage;
-  });
+      message: OllamaChatMessage;
+    });
 
 interface OllamaTool {
   type: "function";
@@ -137,6 +139,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
     model: "codellama-7b",
     maxEmbeddingBatchSize: 64,
   };
+
+  private static modelsBeingInstalled: Set<string> = new Set();
+  private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
 
@@ -276,6 +281,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
       min_p: options.minP,
+      num_gpu: options.numGpu,
     };
   }
 
@@ -365,7 +371,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
             if ("error" in j) {
               throw new Error(j.error);
             }
-            j.response ??= ''
+            j.response ??= "";
             yield j.response;
           } catch (e) {
             throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
@@ -434,6 +440,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
           // But ollama returns the full object in one response with no streaming
           chatMessage.toolCalls = res.message.tool_calls.map((tc) => ({
             type: "function",
+            id: `tc_${uuidv4()}`, // Generate a proper UUID with a prefix
             function: {
               name: tc.function.name,
               arguments: JSON.stringify(tc.function.arguments),
@@ -592,33 +599,62 @@ class Ollama extends BaseLLM implements ModelInstaller {
     if (!modelInfo) {
       throw new Error(`'${modelName}' not found in the Ollama registry!`);
     }
-    const response = await fetch(this.getEndpoint("api/pull"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({ name: modelName }),
-      signal,
-    });
 
-    const reader = response.body?.getReader();
-    //TODO: generate proper progress based on modelInfo size
-    while (true) {
-      const { done, value } = (await reader?.read()) || {
-        done: true,
-        value: undefined,
-      };
-      if (done) {
-        break;
+    const release = await Ollama.modelsBeingInstalledMutex.acquire();
+    try {
+      if (Ollama.modelsBeingInstalled.has(modelName)) {
+        throw new Error(`Model '${modelName}' is already being installed.`);
       }
+      Ollama.modelsBeingInstalled.add(modelName);
+    } finally {
+      release();
+    }
 
-      const chunk = new TextDecoder().decode(value);
-      const lines = chunk.split("\n").filter(Boolean);
-      for (const line of lines) {
-        const data = JSON.parse(line);
-        progressReporter?.(data.status, data.completed, data.total);
+    try {
+      const response = await fetch(this.getEndpoint("api/pull"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({ name: modelName }),
+        signal,
+      });
+
+      const reader = response.body?.getReader();
+      //TODO: generate proper progress based on modelInfo size
+      while (true) {
+        const { done, value } = (await reader?.read()) || {
+          done: true,
+          value: undefined,
+        };
+        if (done) {
+          break;
+        }
+
+        const chunk = new TextDecoder().decode(value);
+        const lines = chunk.split("\n").filter(Boolean);
+        for (const line of lines) {
+          const data = JSON.parse(line);
+          progressReporter?.(data.status, data.completed, data.total);
+        }
       }
+    } finally {
+      const release = await Ollama.modelsBeingInstalledMutex.acquire();
+      try {
+        Ollama.modelsBeingInstalled.delete(modelName);
+      } finally {
+        release();
+      }
+    }
+  }
+
+  public async isInstallingModel(modelName: string): Promise<boolean> {
+    const release = await Ollama.modelsBeingInstalledMutex.acquire();
+    try {
+      return Ollama.modelsBeingInstalled.has(modelName);
+    } finally {
+      release();
     }
   }
 }

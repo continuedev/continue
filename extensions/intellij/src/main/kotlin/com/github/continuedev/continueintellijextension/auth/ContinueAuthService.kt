@@ -48,19 +48,16 @@ class ContinueAuthService {
     }
 
     init {
-        val settings = service<ContinueExtensionSettings>()
-        if (settings.continueState.enableContinueTeamsBeta) {
-            setupRefreshTokenInterval()
-        }
+        setupRefreshTokenInterval()
     }
 
     fun startAuthFlow(project: Project, useOnboarding: Boolean) {
         // Open login page
-        openSignInPage(project, useOnboarding)
+        val url = openSignInPage(project, useOnboarding)
 
         // Open a dialog where the user should paste their sign-in token
         ApplicationManager.getApplication().invokeLater {
-            val dialog = ContinueAuthDialog(useOnboarding) { token ->
+            val dialog = ContinueAuthDialog(useOnboarding, url) { token ->
                 // Store the token
                 updateRefreshToken(token)
             }
@@ -74,6 +71,9 @@ class ContinueAuthService {
         setRefreshToken("")
         setAccountId("")
         setAccountLabel("")
+
+        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
+            .handleUpdatedSessionInfo(null)
     }
 
     private fun updateRefreshToken(token: String) {
@@ -144,18 +144,31 @@ class ContinueAuthService {
     }
 
 
-    private fun openSignInPage(project: Project, useOnboarding: Boolean) {
+    private fun openSignInPage(project: Project, useOnboarding: Boolean): String? {
+        var authUrl: String? = null
         val coreMessenger = project.service<ContinuePluginService>().coreMessenger
+
+        // Use a blocking approach to get the URL
+        val latch = java.util.concurrent.CountDownLatch(1)
+
         coreMessenger?.request(
             "auth/getAuthUrl", mapOf(
                 "useOnboarding" to useOnboarding
             ), null
         ) { response ->
-            val authUrl = ((response as? Map<*, *>)?.get("content") as? Map<*, *>)?.get("url") as? String
-            if (authUrl != null) {
-                Desktop.browse(java.net.URI(authUrl))
-            }
+            authUrl = ((response as? Map<*, *>)?.get("content") as? Map<*, *>)?.get("url") as? String
+            latch.countDown()
         }
+
+        // Wait for the response with a reasonable timeout
+        latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
+
+        // Still open the URL in the browser (keeping existing behavior)
+        if (authUrl != null) {
+            Desktop.browse(java.net.URI(authUrl))
+        }
+
+        return authUrl
     }
 
     private fun retrieveSecret(key: String): String? {

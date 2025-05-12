@@ -1,12 +1,11 @@
 import {
+  BlockType,
   ConfigResult,
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
-import { ProfileDescription } from "../config/ConfigHandler";
-import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -32,6 +31,8 @@ import type {
   SlashCommandDescription,
   ToolCall,
 } from "../";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -50,6 +51,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
+  "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
@@ -59,6 +61,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
@@ -66,15 +69,22 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+      organizations: SerializedOrgWithProfiles[];
+      selectedOrgId: string;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/listProfiles": [
-    undefined,
-    { profiles: ProfileDescription[] | null; selectedProfileId: string | null },
+  "config/refreshProfiles": [
+    (
+      | undefined
+      | {
+          selectOrgId?: string;
+          selectProfileId?: string;
+        }
+    ),
+    void,
   ];
-  "config/refreshProfiles": [undefined, void];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
@@ -91,7 +101,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
-      selectedModelTitle: string;
     },
     ContextItemWithId[],
   ];
@@ -141,12 +150,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       input: string;
       language: string | undefined;
       modelTitle: string | undefined;
+      includeRulesInSystemMessage: boolean;
     },
     AsyncGenerator<DiffLine>,
   ];
   "chatDescriber/describe": [
     {
-      selectedModelTitle: string;
       text: string;
     },
     string | undefined,
@@ -193,10 +202,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
-    { toolCall: ToolCall; selectedModelTitle: string },
-    { contextItems: ContextItem[] },
+    { toolCall: ToolCall },
+    { contextItems: ContextItem[]; errorMessage?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
-  "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
+  isItemTooBig: [{ item: ContextItemWithId }, boolean];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
+  "process/markAsBackgrounded": [{ toolCallId: string }, void];
+  "process/isBackgrounded": [{ toolCallId: string }, boolean];
 };

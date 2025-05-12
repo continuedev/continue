@@ -5,15 +5,22 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
-import { InputModifiers, RangeInFileWithContents } from "core";
+import { InputModifiers } from "core";
 import { streamResponse } from "core/llm/stream";
-import { renderChatMessage, stripImages } from "core/util/messageContent";
+import { renderChatMessage } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
-import CodeToEditCard from "../../components/CodeToEditCard";
+import AcceptRejectAllButtons from "../../components/AcceptRejectAllButtons";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
@@ -21,22 +28,19 @@ import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
 import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
-import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseHub } from "../../redux/selectors";
-import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
-import { submitEdit } from "../../redux/slices/editModeState";
+import {
+  selectCurrentToolCall,
+  selectCurrentToolCallApplyState,
+} from "../../redux/selectors/selectCurrentToolCall";
 import {
   newSession,
-  selectIsInEditMode,
-  selectIsSingleRangeEditOrInsertion,
+  updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
@@ -44,22 +48,21 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import { streamEditThunk } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
-import { isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
-import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
+
+import CodeToEditCard from "../../components/mainInput/CodeToEditCard";
+import EditModeDetails from "../../components/mainInput/EditModeDetails";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import ConfigErrorIndicator from "./ConfigError";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
-import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
-import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { useAutoScroll } from "./useAutoScroll";
 
 const StepsDiv = styled.div`
@@ -74,6 +77,8 @@ const StepsDiv = styled.div`
     margin: 0px 0px 0px 1px;
   }
 `;
+
+export const MAIN_EDITOR_INPUT_ID = "main-editor-input";
 
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
@@ -103,7 +108,9 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const selectedModels = useAppSelector(
+    (store) => store.config?.config.selectedModelByRole,
+  );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -112,31 +119,27 @@ export function Chat() {
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
-  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
+  const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
+  const mode = useAppSelector((store) => store.session.mode);
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
   );
-  const pendingApplyStates = applyStates.filter(
-    (state) => state.status === "done",
-  );
-  const hasPendingApplies = pendingApplyStates.length > 0;
-  const isInEditMode = useAppSelector(selectIsInEditMode);
-  const isSingleRangeEditOrInsertion = useAppSelector(
-    selectIsSingleRangeEditOrInsertion,
-  );
+
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const useHub = useAppSelector(selectUseHub);
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const jetbrains = useMemo(() => {
+    return isJetBrains();
+  }, []);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
     const listener = (e: any) => {
       if (
         e.key === "Backspace" &&
-        isMetaEquivalentKeyPressed(e) &&
+        (jetbrains ? e.altKey : isMetaEquivalentKeyPressed(e)) &&
         !e.shiftKey
       ) {
         dispatch(cancelStream());
@@ -147,9 +150,13 @@ export function Chat() {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [isStreaming]);
+  }, [isStreaming, jetbrains]);
 
   const { widget, highlights } = useFindWidget(stepsDivRef);
+
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
+  );
 
   const sendInput = useCallback(
     (
@@ -163,7 +170,28 @@ export function Chat() {
           "Cannot submit message while awaiting tool confirmation",
         );
       }
-      if (defaultModel?.provider === "free-trial") {
+      if (
+        currentToolCallApplyState &&
+        currentToolCallApplyState.status !== "closed"
+      ) {
+        return console.error(
+          "Cannot submit message while awaiting tool call apply",
+        );
+      }
+
+      const model =
+        mode === "edit"
+          ? (selectedModels?.edit ?? selectedModels?.chat)
+          : selectedModels?.chat;
+      if (!model) {
+        return;
+      }
+
+      if (mode === "edit" && codeToEdit.length === 0) {
+        return;
+      }
+
+      if (model.provider === "free-trial") {
         const newCount = incrementFreeTrialCount();
 
         if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
@@ -190,21 +218,19 @@ export function Chat() {
         }
       }
 
-      if (isSingleRangeEditOrInsertion) {
-        handleSingleRangeEditOrInsertion(editorState);
-        return;
-      }
+      if (mode === "edit") {
+        dispatch(
+          streamEditThunk({
+            editorState,
+            codeToEdit,
+          }),
+        );
+      } else {
+        dispatch(streamResponseThunk({ editorState, modifiers, index }));
 
-      const promptPreamble = isInEditMode
-        ? getMultifileEditPrompt(codeToEdit)
-        : undefined;
-
-      dispatch(
-        streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
-      );
-
-      if (editorToClearOnSend) {
-        editorToClearOnSend.commands.clearContent();
+        if (editorToClearOnSend) {
+          editorToClearOnSend.commands.clearContent();
+        }
       }
 
       // Increment localstorage counter for popup
@@ -220,46 +246,8 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [
-      history,
-      defaultModel,
-      streamResponse,
-      isSingleRangeEditOrInsertion,
-      codeToEdit,
-      toolCallState,
-    ],
+    [history, selectedModels, streamResponse, mode, codeToEdit, toolCallState],
   );
-
-  async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    if (!defaultModel) {
-      console.error("No selected chat model");
-      return;
-    }
-    const [contextItems, __, userInstructions] = await resolveEditorContent({
-      editorState,
-      modifiers: {
-        noContext: true,
-        useCodebase: false,
-      },
-      ideMessenger,
-      defaultContextProviders: [],
-      dispatch,
-      selectedModelTitle: defaultModel.title,
-    });
-
-    const prompt = [
-      ...contextItems.map((item) => item.content),
-      stripImages(userInstructions),
-    ].join("\n\n");
-
-    ideMessenger.post("edit/sendPrompt", {
-      prompt,
-      range: codeToEdit[0] as RangeInFileWithContents,
-      selectedModelTitle: defaultModel.title,
-    });
-
-    dispatch(submitEdit(prompt));
-  }
 
   useWebviewListener(
     "newSession",
@@ -268,6 +256,21 @@ export function Chat() {
       mainTextInputRef.current?.focus?.();
     },
     [mainTextInputRef],
+  );
+
+  // Handle partial tool call output for streaming updates
+  useWebviewListener(
+    "toolCallPartialOutput",
+    async (data) => {
+      // Update tool call output in Redux store
+      dispatch(
+        updateToolCallOutput({
+          toolCallId: data.toolCallId,
+          contextItems: data.contextItems,
+        }),
+      );
+    },
+    [dispatch],
   );
 
   const isLastUserInput = useCallback(
@@ -283,17 +286,15 @@ export function Chat() {
 
   useAutoScroll(stepsDivRef, history);
 
-  const showPageHeader = isInEditMode || useHub;
-
   return (
     <>
       {widget}
 
-      {!!showSessionTabs && <TabBar />}
+      {!!showSessionTabs && mode !== "edit" && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-[2px] overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`mt-3 overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -311,9 +312,7 @@ export function Chat() {
             >
               {item.message.role === "user" ? (
                 <>
-                  {isInEditMode && index === 0 && <CodeToEditCard />}
                   <ContinueInputBox
-                    isEditMode={isInEditMode}
                     onEnter={(editorState, modifiers) =>
                       sendInput(editorState, modifiers, index)
                     }
@@ -324,12 +323,8 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? (
-                <ToolOutput
-                  contextItems={item.contextItems}
-                  toolCallId={item.message.toolCallId}
-                />
-              ) : item.message.role === "assistant" &&
+              ) : item.message.role === "tool" ? null : item.message.role === // /> //   toolCallId={item.message.toolCallId} //   contextItems={item.contextItems} // <ToolOutput
+                  "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
@@ -339,6 +334,8 @@ export function Chat() {
                         <ToolCallDiv
                           toolCallState={item.toolCallState!}
                           toolCall={toolCall}
+                          output={history[index + 1]?.contextItems}
+                          historyIndex={index}
                         />
                       </div>
                     );
@@ -392,21 +389,24 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        {toolCallState?.status === "generated" && <ToolCallButtons />}
-
-        {isInEditMode && history.length === 0 && <CodeToEditCard />}
-
-        {isInEditMode && history.length > 0 ? null : (
+        <>
+          {!isStreaming && mode !== "edit" && (
+            <AcceptRejectAllButtons
+              applyStates={applyStates}
+              onAcceptOrReject={async () => {}}
+            />
+          )}
+          {mode === "edit" && <CodeToEditCard />}
           <ContinueInputBox
             isMainInput
-            isEditMode={isInEditMode}
             isLastUserInput={false}
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
-            inputId={"main-editor"}
+            inputId={MAIN_EDITOR_INPUT_ID}
           />
-        )}
+          <EditModeDetails />
+        </>
 
         <div
           style={{
@@ -415,7 +415,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {history.length === 0 && lastSessionId && !isInEditMode && (
+              {history.length === 0 && lastSessionId && mode !== "edit" && (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
@@ -433,32 +433,10 @@ export function Chat() {
                 </div>
               )}
             </div>
-            <ConfigErrorIndicator />
           </div>
-
-          {hasPendingApplies && isSingleRangeEditOrInsertion && (
-            <AcceptRejectAllButtons
-              pendingApplyStates={pendingApplyStates}
-              onAcceptOrReject={async (outcome) => {
-                if (outcome === "acceptDiff") {
-                  await dispatch(
-                    loadLastSession({
-                      saveCurrentSession: false,
-                    }),
-                  );
-                  dispatch(exitEditMode());
-                }
-              }}
-            />
-          )}
-
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-
           {history.length === 0 && (
-            <EmptyChatBody
-              useHub={useHub}
-              showOnboardingCard={onboardingCard.show}
-            />
+            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
           )}
         </div>
       </div>

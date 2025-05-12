@@ -1,192 +1,127 @@
 import { useMemo } from "react";
-import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscForeground,
-} from "../../components";
-import { ToolTip } from "../../components/gui/Tooltip";
-import { getPlatform, isJetBrains } from "../../util";
-
-const StyledKeyDiv = styled.div`
-  border: 0.5px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  padding: 2px;
-  color: ${vscForeground};
-
-  width: 16px;
-  height: 16px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const keyToName: { [key: string]: string } = {
-  "⌘": "Cmd",
-  "⌃": "Ctrl",
-  "⇧": "Shift",
-  "⏎": "Enter",
-  "⌫": "Backspace",
-  "⌥": "Option",
-  "⎇": "Alt",
-};
-
-function KeyDiv({ text }: { text: string }) {
-  return (
-    <>
-      <StyledKeyDiv data-tooltip-id={`header_button_${text}`}>
-        {text}
-      </StyledKeyDiv>
-
-      <ToolTip id={`header_button_${text}`} place="bottom">
-        {keyToName[text]}
-      </ToolTip>
-    </>
-  );
-}
+import Shortcut from "../../components/gui/Shortcut";
+import { isJetBrains } from "../../util";
 
 interface KeyboardShortcutProps {
-  mac: string;
-  windows: string;
+  shortcut: string;
   description: string;
+  isEven: boolean;
 }
 
 function KeyboardShortcut(props: KeyboardShortcutProps) {
-  const shortcut = getPlatform() === "mac" ? props.mac : props.windows;
   return (
-    <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1">
-      <span className="max-w-60 text-xs">{props.description}:</span>
-      <div className="flex flex-1 flex-row items-center justify-end gap-1.5">
-        {shortcut.split(" ").map((key, i) => {
-          return <KeyDiv key={i} text={key}></KeyDiv>;
-        })}
+    <div
+      className={`flex flex-col items-start p-2 py-2 sm:flex-row sm:items-center ${props.isEven ? "bg-list-active" : ""}`}
+    >
+      <div className="w-full flex-grow pb-1 pr-4 sm:w-auto sm:pb-0">
+        <span className="block break-words text-xs">{props.description}:</span>
+      </div>
+      <div className="flex-shrink-0 whitespace-nowrap">
+        <Shortcut>{props.shortcut}</Shortcut>
       </div>
     </div>
   );
 }
 
-const vscodeShortcuts: KeyboardShortcutProps[] = [
+// Shortcut strings will be rendered correctly based on the platform by the Shortcut component
+const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
-    mac: "⌘ '",
-    windows: "⌃ '",
+    shortcut: "cmd '",
     description: "Toggle Selected Model",
   },
   {
-    mac: "⌘ I",
-    windows: "⌃ I",
+    shortcut: "cmd I",
     description: "Edit highlighted code",
   },
   {
-    mac: "⌘ L",
-    windows: "⌃ L",
+    shortcut: "cmd L",
     description:
       "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⌫",
-    windows: "⌃ ⌫",
+    shortcut: "cmd backspace",
     description: "Cancel response",
   },
   {
-    mac: "⌘ ⇧ I",
-    windows: "⌃ ⇧ I",
+    shortcut: "cmd shift I",
     description: "Toggle inline edit focus",
   },
   {
-    mac: "⌘ ⇧ L",
-    windows: "⌃ ⇧ L",
+    shortcut: "cmd shift L",
     description:
       "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⇧ R",
-    windows: "⌃ ⇧ R",
+    shortcut: "cmd shift R",
     description: "Debug Terminal",
   },
   {
-    mac: "⌘ ⇧ ⌫",
-    windows: "⌃ ⇧ ⌫",
+    shortcut: "cmd shift backspace",
     description: "Reject Diff",
   },
   {
-    mac: "⌘ ⇧ ⏎",
-    windows: "⌃ ⇧ ⏎",
+    shortcut: "cmd shift enter",
     description: "Accept Diff",
   },
   {
-    mac: "⌥ ⌘ N",
-    windows: "Alt ⌃ N",
+    shortcut: "alt cmd N",
     description: "Reject Top Change in Diff",
   },
   {
-    mac: "⌥ ⌘ Y",
-    windows: "Alt ⌃ Y",
+    shortcut: "alt cmd Y",
     description: "Accept Top Change in Diff",
   },
   {
-    mac: "⌘ K ⌘ A",
-    windows: "⌃ K ⌃ A",
+    shortcut: "cmd K cmd A",
     description: "Toggle Autocomplete Enabled",
   },
   {
-    mac: "⌘ K ⌘ M",
-    windows: "⌃ K ⌃ M",
+    shortcut: "cmd K cmd M",
     description: "Toggle Full Screen",
   },
 ];
 
-const jetbrainsShortcuts: KeyboardShortcutProps[] = [
+const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
-    mac: "⌘ '",
-    windows: "⌃ '",
+    shortcut: "cmd '",
     description: "Toggle Selected Model",
   },
   {
-    mac: "⌘ I",
-    windows: "⌃ I",
+    shortcut: "cmd I",
     description: "Edit highlighted code",
   },
   {
-    mac: "⌘ J",
-    windows: "⌃ J",
+    shortcut: "cmd J",
     description:
       "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⌫",
-    windows: "⌃ ⌫",
+    shortcut: "cmd backspace",
     description: "Cancel response",
   },
   {
-    mac: "⌘ ⇧ I",
-    windows: "⌃ ⇧ I",
+    shortcut: "cmd shift I",
     description: "Toggle inline edit focus",
   },
   {
-    mac: "⌘ ⇧ J",
-    windows: "⌃ ⇧ J",
+    shortcut: "cmd shift J",
     description:
       "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⇧ ⌫",
-    windows: "⌃ ⇧ ⌫",
+    shortcut: "cmd shift backspace",
     description: "Reject Diff",
   },
   {
-    mac: "⌘ ⇧ ⏎",
-    windows: "⌃ ⇧ ⏎",
+    shortcut: "cmd shift enter",
     description: "Accept Diff",
   },
   {
-    mac: "⌥ ⇧ J",
-    windows: "Alt ⇧ J",
+    shortcut: "alt shift J",
     description: "Quick Input",
   },
   {
-    mac: "⌥ ⌘ J",
-    windows: "Alt ⌃ J",
+    shortcut: "alt cmd J",
     description: "Toggle Sidebar",
   },
 ];
@@ -197,16 +132,16 @@ function KeyboardShortcuts() {
   }, []);
 
   return (
-    <div className="flex max-w-[400px] flex-col">
-      <h3 className="mb-2 text-xl">Keyboard shortcuts</h3>
-      <div className="flex flex-col items-center justify-center gap-x-3 gap-y-3 p-1">
+    <div className="h-full overflow-auto p-5">
+      <h3 className="mb-5 text-xl">Keyboard shortcuts</h3>
+      <div>
         {shortcuts.map((shortcut, i) => {
           return (
             <KeyboardShortcut
               key={i}
-              mac={shortcut.mac}
-              windows={shortcut.windows}
+              shortcut={shortcut.shortcut}
               description={shortcut.description}
+              isEven={i % 2 === 0}
             />
           );
         })}

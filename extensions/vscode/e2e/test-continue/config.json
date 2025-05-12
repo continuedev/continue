@@ -17,6 +17,9 @@
       "provider": "mock",
       "title": "TOOL MOCK LLM",
       "model": "claude-3-5-sonnet-latest",
+      "capabilities": {
+        "tools": true
+      },
       "requestOptions": {
         "extraBodyProperties": {
           "chatStream": [
@@ -33,8 +36,7 @@
                     "id": "test_id",
                     "type": "function",
                     "function": {
-                      "name": "builtin_exact_search",
-                      "arguments": "{\"query\": \"\\\" won't be matched because of escaped quotes \\\"\"}"
+                      "name": "builtin_view_diff"
                     }
                   }
                 ]

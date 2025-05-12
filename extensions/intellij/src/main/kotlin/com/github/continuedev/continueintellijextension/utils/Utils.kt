@@ -4,7 +4,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.net.NetworkInterface
 import java.util.*
 import java.awt.event.KeyEvent.*
-
 enum class OS {
     MAC, WINDOWS, LINUX
 }
@@ -81,3 +80,41 @@ fun uuid(): String {
 }
 
 fun VirtualFile.toUriOrNull(): String? = fileSystem.getNioPath(this)?.toUri()?.toString()?.removeSuffix("/")
+
+inline fun <reified T> Any?.castNestedOrNull(vararg keys: String): T? {
+    return getNestedOrNull(*keys) as? T
+}
+
+fun Any?.getNestedOrNull(vararg keys: String): Any? {
+    var result = this
+    for (key in keys) {
+        result = (result as? Map<*, *>)?.get(key) ?: return null
+    }
+    return result
+}
+
+/**
+ * Get the target string for Continue binary.
+ * The format is "$os-$arch" where:
+ * - os is one of: darwin, win32, or linux
+ * - arch is one of: arm64 or x64
+ *
+ * @return Target string in format "$os-$arch"
+ */
+fun getOsAndArchTarget(): String {
+    val os = getOS()
+    val osStr = when (os) {
+        OS.MAC -> "darwin"
+        OS.WINDOWS -> "win32"
+        OS.LINUX -> "linux"
+    }
+
+    val osArch = System.getProperty("os.arch").lowercase()
+    val arch = when {
+        osArch.contains("aarch64") || (osArch.contains("arm") && osArch.contains("64")) -> "arm64"
+        osArch.contains("amd64") || osArch.contains("x86_64") -> "x64"
+        else -> "x64"
+    }
+
+    return "$osStr-$arch"
+}

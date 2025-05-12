@@ -1,16 +1,16 @@
+import { ILLM } from "core";
+import { isModelInstaller } from "core/llm";
 import * as vscode from "vscode";
-
-function supportSpecialHandling(error: any): boolean {
-  let message: string | undefined = error.message;
-  return message !== undefined && message.toLowerCase().includes("ollama");
-}
 
 /**
  * @param error Handles common LLM errors. Currently only handles Ollama-related errors.
  * @returns true if error is handled, false otherwise
  */
-export function handleLLMError(error: any): boolean {
-  if (!supportSpecialHandling(error)) {
+export async function handleLLMError(error: unknown): Promise<boolean> {
+  if (!error || !(error instanceof Error) || !error.message) {
+    return false;
+  }
+  if (!error.message.toLowerCase().includes("ollama")) {
     return false;
   }
   let message: string = error.message;
@@ -20,9 +20,14 @@ export function handleLLMError(error: any): boolean {
     options = ["Download Ollama"];
   } else if (message.includes("Ollama may not be running")) {
     options = ["Start Ollama"]; // We want "Start" to be the only choice
-  } else if (message.includes("ollama run") && error.llm) {
+  } else if (message.includes("ollama run") && "llm" in error) {
     //extract model name from error message matching the pattern "ollama run <model-name>"
     modelName = message.match(/`ollama run (.*)`/)?.[1];
+    const llm = error.llm as ILLM;
+    if (isModelInstaller(llm) && (await llm.isInstallingModel(modelName!))) {
+      console.log(`${llm.providerName} already installing ${modelName}`);
+      return false;
+    }
     message = `Model "${modelName}" is not found in Ollama. You need to install it.`;
     options = [`Install Model`];
   }
@@ -36,7 +41,7 @@ export function handleLLMError(error: any): boolean {
       vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
     } else if (val === "Start Ollama") {
       vscode.commands.executeCommand("continue.startLocalOllama");
-    } else if (val === "Install Model" && error.llm) {
+    } else if (val === "Install Model" && "llm" in error) {
       //Eventually, we might be able to support installing models for other LLM providers than Ollama
       vscode.commands.executeCommand(
         "continue.installModel",

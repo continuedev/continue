@@ -4,10 +4,11 @@ import { useMemo } from "react";
 import { themeIcons } from "seti-file-icons";
 
 export interface FileIconProps {
+  height: `${number}px`;
+  width: `${number}px`;
   filename: string;
-  height: string;
-  width: string;
 }
+
 export default function FileIcon({ filename, height, width }: FileIconProps) {
   const file = useMemo(() => {
     if (filename.includes(" (")) {
@@ -45,7 +46,7 @@ export default function FileIcon({ filename, height, width }: FileIconProps) {
         height: height,
         fill: color,
         flexShrink: 0,
-        display: "block",
+        display: "flex",
       }}
     />
   );

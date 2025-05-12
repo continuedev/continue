@@ -11,9 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useSelector } from "react-redux";
 import { HeaderButton, Input } from "..";
-import { RootState } from "../../redux/store";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useAppSelector } from "../../redux/hooks";
 

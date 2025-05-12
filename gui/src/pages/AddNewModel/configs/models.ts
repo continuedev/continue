@@ -174,6 +174,7 @@ export const models: { [key: string]: ModelPackage } = {
       "llama.cpp",
       "replicate",
       "cerebras",
+      "ovhcloud",
       "nebius",
       "scaleway",
     ],
@@ -371,6 +372,7 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
+      "ovhcloud",
       "llama.cpp",
       "replicate",
       "nebius",
@@ -511,7 +513,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 65536,
     },
     icon: "meta.png",
-    providerOptions: [],
+    providerOptions: ["ovhcloud"],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -524,7 +526,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway", "nebius"],
+    providerOptions: ["groq", "ovhcloud", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama31405bChat: {
@@ -635,6 +637,7 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
+      "ovhcloud",
       "llama.cpp",
       "replicate",
       "nebius",
@@ -753,7 +756,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 256_000,
     },
     icon: "mistral.png",
-    providerOptions: ["mistral"],
+    providerOptions: ["ovhcloud", "mistral"],
     isOpenSource: true,
   },
   mistral7b: {
@@ -881,6 +884,62 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Gemini 2.0 Flash",
       model: "gemini-2.0-flash",
       contextLength: 1_000_000,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini20FlashLite: {
+    title: "Gemini 2.0 Flash Lite",
+    description:
+      "A more efficient version of Gemini 2.0 Flash optimized for faster responses and lower resource usage.",
+    params: {
+      title: "Gemini 2.0 Flash Lite",
+      model: "gemini-2.0-flash-lite",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini20FlashImageGeneration: {
+    title: "Gemini 2.0 Flash Image Generation",
+    description:
+      "A version of Gemini 2.0 Flash optimized for image generation capabilities.",
+    params: {
+      title: "Gemini 2.0 Flash Image Generation",
+      model: "gemini-2.0-flash-exp-image-generation",
+      contextLength: 32_768,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini25ProExp: {
+    title: "Gemini 2.5 Pro Experimental",
+    description:
+      "Experimental version of Gemini 2.5 Pro with enhanced capabilities and larger output limits.",
+    params: {
+      title: "Gemini 2.5 Pro Experimental",
+      model: "gemini-2.5-pro-exp-03-25",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini25Pro: {
+    title: "Gemini 2.5 Pro",
+    description:
+      "Google's thinking by default Pro model with up to 64k output context. Best for complex tasks involving reasoning.",
+    params: {
+      title: "Gemini 2.5 Pro",
+      model: "gemini-2.5-pro",
+      contextLength: 1_048_576,
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
@@ -1400,7 +1459,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32_000,
     },
     icon: "qwen.png",
-    providerOptions: ["scaleway", "nebius", "ncompass"],
+    providerOptions: ["scaleway", "nebius", "ovhcloud", "ncompass"],
     isOpenSource: true,
   },
   grokBeta: {
@@ -1523,13 +1582,37 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["siliconflow"],
     isOpenSource: true,
   },
+  llama4Scout: {
+    title: "Llama 4 Scout Instruct",
+    description: "A model from Meta, fine-tuned for chat",
+    params: {
+      title: "Llama 4 Scout Instruct",
+      model: "Llama-4-Scout-17B-16E-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama4Maverick: {
+    title: "Llama 4 Maverick Instruct",
+    description: "A model from Meta, fine-tuned for chat",
+    params: {
+      title: "Llama 4 Maverick Instruct",
+      model: "Llama-4-Maverick-17B-128E-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
   llama3370BInstruct: {
     title: "Llama 3.3 70B Instruct",
     description: "A model from Meta, fine-tuned for chat",
     params: {
       title: "Llama 3.3 70B instruct",
       model: "Meta-Llama-3.3-70B-Instruct",
-      contextLength: 16_000,
+      contextLength: 128_000,
     },
     icon: "meta.png",
     providerOptions: ["sambanova"],
@@ -1548,19 +1631,6 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
-  llama3170BInstruct: {
-    title: "Llama3.1 70B",
-    description: "A model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama 3.1 70B Instruct",
-      model: "Meta-Llama-3.1-70B-Instruct",
-      contextLength: 128_000,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
   llama31405BInstruct: {
     title: "Llama3.1 405B",
     description: "A model from Meta, fine-tuned for chat",
@@ -1571,19 +1641,6 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 16_000,
     },
     icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  llama31Tulu3405B: {
-    title: "Llama3.1 Tulu 3405B",
-    description: "A model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama 3.1 Tulu 3 405B",
-      model: "Llama-3.1-Tulu-3-405B",
-      contextLength: 16_000,
-    },
-    icon: "allenai.png",
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
@@ -1613,65 +1670,13 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
-  llama3211BInstruct: {
-    title: "Llama3.2 11B",
-    description: "A model from Meta, fine-tuned for multimodal chat with images",
-    refUrl: "",
-    params: {
-      title: "Llama 3.2 11B Vision Instruct",
-      model: "Llama-3.2-11B-Vision-Instruct",
-      contextLength: 4096,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  llama3290BInstruct: {
-    title: "Llama3.2 90B",
-    description: "A model from Meta, fine-tuned for multimodal chat with images",
-    refUrl: "",
-    params: {
-      title: "Llama 3.2 90B Vision Instruct",
-      model: "Llama-3.2-90B-Vision-Instruct",
-      contextLength: 4096,
-    },
-    icon: "meta.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  qwen25Coder32BInstruct: {
-    title: "Qwen 2.5 Coder 32B",
+  qwq32B: {
+    title: "QwQ 32B",
     description:
-      "Qwen 2.5 coder is an auto-regressive language model that uses an optimized transformer architecture, fine-tuned for coding tasks.",
+      "QwQ-32B is Qwen's latest experimental research model, focusing on improving AI reasoning capabilities.",
     params: {
-      title: "Qwen2.5 Coder 32B Instruct",
-      model: "Qwen2.5-Coder-32B-Instruct",
-      contextLength: 16_000,
-    },
-    icon: "qwen.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  qwen2572BInstruct: {
-    title: "Qwen 2.5 72B",
-    description:
-      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
-    params: {
-      title: "Qwen2.5 72B Instruct",
-      model: "Qwen2.5-72B-Instruct",
-      contextLength: 16_000,
-    },
-    icon: "qwen.png",
-    providerOptions: ["sambanova"],
-    isOpenSource: true,
-  },
-  qwq32BPreview: {
-    title: "QwQ 32B Preview",
-    description:
-      "QwQ-32B-Preview is Qwen's latest experimental research model, focusing on improving AI reasoning capabilities.",
-    params: {
-      title: "QwQ 32B Preview",
-      model: "QwQ-32B-Preview",
+      title: "QwQ 32B",
+      model: "QwQ-32B",
       contextLength: 16_000,
     },
     icon: "qwen.png",
@@ -1688,7 +1693,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32_000,
     },
     icon: "deepseek.png",
-    providerOptions: ["sambanova"],
+    providerOptions: ["ovhcloud", "sambanova"],
     isOpenSource: true,
   },
   deepseekR1: {
@@ -1698,6 +1703,19 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "DeepSeek R1",
       model: "DeepSeek-R1",
+      contextLength: 8192,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  deepseekV3: {
+    title: "DeepSeek V3",
+    description:
+      "DeekSeek V3 reasoning model from DeepSeek",
+    params: {
+      title: "DeepSeek V3",
+      model: "DeepSeek-V3-0324",
       contextLength: 8192,
     },
     icon: "deepseek.png",

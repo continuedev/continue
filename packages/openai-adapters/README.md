@@ -52,6 +52,7 @@ They are concerned with:
 - [x] OpenRouter
 - [x] OpenAI
 - [ ] !Ollama
+- [x] OVHCLoud
 - [ ] Replicate
 - [ ] SageMaker
 - [x] SambaNova

@@ -37,13 +37,14 @@ models:
                 - id: test_id
                   type: function
                   function:
-                    name: builtin_exact_search
-                    arguments: '{"query": "test query"}'
+                    name: builtin_view_diff
           - REPEAT_LAST_MSG
     roles:
       - chat
       - edit
       - apply
+    capabilities:
+      - tool_use
 
   - name: SYSTEM MESSAGE MOCK LLM
     provider: mock

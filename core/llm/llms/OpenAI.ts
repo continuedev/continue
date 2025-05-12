@@ -31,26 +31,10 @@ const NON_CHAT_MODELS = [
   "ada",
 ];
 
-const CHAT_ONLY_MODELS = [
-  "gpt-3.5-turbo",
-  "gpt-3.5-turbo-0613",
-  "gpt-3.5-turbo-16k",
-  "gpt-4",
-  "gpt-4-turbo",
-  "gpt-4o",
-  "gpt-35-turbo-16k",
-  "gpt-35-turbo-0613",
-  "gpt-35-turbo",
-  "gpt-4-32k",
-  "gpt-4-turbo-preview",
-  "gpt-4-vision",
-  "gpt-4-0125-preview",
-  "gpt-4-1106-preview",
-  "gpt-4o-mini",
-  "o1-preview",
-  "o1-mini",
-  "o3-mini",
-];
+function isChatOnlyModel(model: string): boolean {
+  // gpt and o-series models
+  return model.startsWith("gpt") || model.startsWith("o");
+}
 
 const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
   return messages?.map((message: any) => {
@@ -102,7 +86,12 @@ class OpenAI extends BaseLLM {
   }
 
   protected supportsPrediction(model: string): boolean {
-    const SUPPORTED_MODELS = ["gpt-4o-mini", "gpt-4o", "mistral-large"];
+    const SUPPORTED_MODELS = [
+      "gpt-4o-mini",
+      "gpt-4o",
+      "mistral-large",
+      "Fast-Apply",
+    ];
     return SUPPORTED_MODELS.some((m) => model.includes(m));
   }
 
@@ -288,7 +277,10 @@ class OpenAI extends BaseLLM {
       // To ensure schema adherence: https://platform.openai.com/docs/guides/function-calling#parallel-function-calling-and-structured-outputs
       // In practice, setting this to true and asking for multiple tool calls
       // leads to "arguments" being something like '{"file": "test.ts"}{"file": "test.js"}'
-      body.parallel_tool_calls = false;
+      // o3 does not support this
+      if (!body.model.startsWith("o3")) {
+        body.parallel_tool_calls = false;
+      }
     }
 
     return body;
@@ -327,7 +319,7 @@ class OpenAI extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (
-      !CHAT_ONLY_MODELS.includes(options.model) &&
+      !isChatOnlyModel(options.model) &&
       this.supportsCompletions() &&
       (NON_CHAT_MODELS.includes(options.model) ||
         this.useLegacyCompletionsEndpoint ||

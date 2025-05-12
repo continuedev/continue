@@ -65,21 +65,6 @@ class CoreMessenger(
 
         // Forward to webview
         if (MessageTypes.PASS_THROUGH_TO_WEBVIEW.contains(messageType)) {
-            // TODO: Currently we aren't set up to receive a response back from the webview
-            // Can circumvent for getDefaultsModelTitle here for now
-            if (messageType == "getDefaultModelTitle") {
-                val continueSettingsService = service<ContinueExtensionSettings>()
-                val defaultModelTitle = continueSettingsService.continueState.lastSelectedInlineEditModel
-                val message =
-                    gson.toJson(
-                        mapOf(
-                            "messageId" to messageId,
-                            "messageType" to messageType,
-                            "data" to defaultModelTitle
-                        )
-                    )
-                write(message)
-            }
             val continuePluginService = project.service<ContinuePluginService>()
             continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }
@@ -98,9 +83,9 @@ class CoreMessenger(
     private fun setPermissions(destination: String) {
         val osName = System.getProperty("os.name").toLowerCase()
         if (osName.contains("mac") || osName.contains("darwin")) {
-            ProcessBuilder("xattr", "-dr", "com.apple.quarantine", destination).start()
+            ProcessBuilder("xattr", "-dr", "com.apple.quarantine", destination).start().waitFor()
             setFilePermissions(destination, "rwxr-xr-x")
-        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("mac")) {
+        } else if (osName.contains("nix") || osName.contains("nux")) {
             setFilePermissions(destination, "rwxr-xr-x")
         }
     }
@@ -161,9 +146,11 @@ class CoreMessenger(
                 e.printStackTrace()
             }
         } else {
-            // Set proper permissions
-            coroutineScope.launch(Dispatchers.IO) { setPermissions(continueCorePath) }
-
+            // Set proper permissions synchronously
+            runBlocking(Dispatchers.IO) {
+                setPermissions(continueCorePath)
+            }
+            
             // Start the subprocess
             val processBuilder =
                 ProcessBuilder(continueCorePath).directory(File(continueCorePath).parentFile)

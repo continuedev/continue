@@ -161,6 +161,40 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     packages: [models.llama31Chat, models.deepseek],
     apiKeyUrl: "https://function.network/join-waitlist",
   },
+  ovhcloud: {
+    title: "OVHcloud",
+    provider: "ovhcloud",
+    refPage: "ovhcloud",
+    description:
+      "OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR.",
+    longDescription: `To get started, create an API key on the OVHcloud [AI Endpoints website](https://endpoints.ai.cloud.ovh.net/). For more information, including pricing, visit the OVHcloud [AI Endpoints product page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/).`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API key",
+        placeholder: "Enter your AI Endpoints API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "ovhcloud.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [
+      models.llama318bChat,
+      models.llama3170bChat,
+      models.llama3370bChat,
+      models.codestralMamba,
+      models.mistralOs,
+      models.mistralNemo,
+      models.Qwen25Coder32b,
+      models.deepseekR1DistillLlama70B,
+    ],
+    apiKeyUrl: "https://endpoints.ai.cloud.ovh.net/",
+  },
   scaleway: {
     title: "Scaleway",
     provider: "scaleway",
@@ -495,6 +529,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     packages: [
       models.gemini20Flash,
+      models.gemini20FlashLite,
+      models.gemini20FlashImageGeneration,
+      models.gemini25ProExp,
       models.gemini15Pro,
       models.geminiPro,
       models.gemini15Flash,
@@ -745,7 +782,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     refPage: "sambanova",
     description: "Use SambaNova Cloud for fast inference performance",
     icon: "sambanova.png",
-    longDescription: `The SambaNova Cloud is a cloud platform for running large open source AI models with the world record performance and zero data retention. You can sign up [here](https://cloud.sambanova.ai/)`,
+    longDescription: `The SambaNova Cloud is a cloud platform for running large open source AI models with the world record performance and zero data retention. You can sign up [here](http://cloud.sambanova.ai?utm_source=continue&utm_medium=external&utm_campaign=cloud_signup)`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     params: {
       apiKey: "",
@@ -761,20 +798,17 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       ...completionParamsInputsConfigs,
     ],
     packages:[
-      models.qwen25Coder32BInstruct,
+      models.llama4Scout,
+      models.llama4Maverick,
       models.llama3370BInstruct,
       models.llama318BInstruct,
-      models.llama3170BInstruct,
       models.llama31405BInstruct,
-      models.llama31Tulu3405B,
       models.llama321BInstruct,
       models.llama323BInstruct,
-      models.llama3211BInstruct,
-      models.llama3290BInstruct,
-      models.qwen2572BInstruct,
-      models.qwq32BPreview,
+      models.qwq32B,
       models.deepseekR1DistillLlama70B,
       models.deepseekR1,
+      models.deepseekV3
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
@@ -962,4 +996,24 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
   },
+  venice: {
+    title: "Venice",
+    provider: "venice",
+    icon: "venice.png",
+    description: "Venice.",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Venice API key",
+        required: true,
+      },
+    ],
+    packages: [
+      {...models.AUTODETECT}
+    ],
+    apiKeyUrl: "https://venice.ai/chat"
+  }
 };
