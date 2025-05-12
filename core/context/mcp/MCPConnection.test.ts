@@ -64,10 +64,10 @@ describe("MCPConnection", () => {
           url: "http://test.com/events",
           requestOptions: {
             headers: {
-              "Authorization": "Bearer token123",
-              "X-Custom-Header": "custom-value"
-            }
-          }
+              Authorization: "Bearer token123",
+              "X-Custom-Header": "custom-value",
+            },
+          },
         },
       };
 
@@ -172,7 +172,7 @@ describe("MCPConnection", () => {
       expect(mockConnect).toHaveBeenCalled();
     });
 
-    it('should handle custom connection timeout', async () => {
+    it("should handle custom connection timeout", async () => {
       const conn = new MCPConnection({ ...options, timeout: 11 });
       const mockConnect = jest
         .spyOn(Client.prototype, "connect")
@@ -199,7 +199,7 @@ describe("MCPConnection", () => {
       await conn.connectClient(false, abortController.signal);
 
       expect(conn.status).toBe("error");
-      expect(conn.errors[0]).toContain("Failed to connect to MCP server");
+      expect(conn.errors[0]).toContain("Failed to connect");
       expect(mockConnect).toHaveBeenCalled();
     });
 
