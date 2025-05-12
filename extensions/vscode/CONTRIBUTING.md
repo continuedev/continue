@@ -12,7 +12,3 @@ See [Environment Setup](../../CONTRIBUTING.md#environment-setup)
 # How to run and debug tests
 
 After following the setup in [Environment Setup](../../CONTRIBUTING.md#environment-setup) you can run the `Extension (VSCode)` launch configuration in VS Code.
-
-## Notes
-
-- We require vscode engine `^1.67.0` and use `@types/vscode` version `1.67.0` because this is the earliest version that doesn't break any of the APIs we are using. If you go back to `1.66.0`, then it will break `vscode.window.tabGroups`.
