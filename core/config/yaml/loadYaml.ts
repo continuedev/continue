@@ -243,14 +243,19 @@ async function configYamlToContinueConfig(options: {
     faviconUrl: doc.faviconUrl,
   }));
 
-  config.mcpServers?.forEach(mcpServer => {
-    const mcpArgVariables = mcpServer.args?.filter(arg=> TEMPLATE_VAR_REGEX.test(arg)) ?? []
-    if(mcpArgVariables.length === 0) return; 
+  config.mcpServers?.forEach((mcpServer) => {
+    const mcpArgVariables =
+      mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
+
+    if (mcpArgVariables.length === 0) {
+      return;
+    }
+
     localErrors.push({
       fatal: false,
-      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
+      message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
     });
-  })
+  });
 
   continueConfig.experimental = {
     modelContextProtocolServers: config.mcpServers?.map(
@@ -456,7 +461,7 @@ async function configYamlToContinueConfig(options: {
         args: [],
         ...server,
       },
-      timeout: server.connectionTimeout
+      timeout: server.connectionTimeout,
     })),
     false,
   );
