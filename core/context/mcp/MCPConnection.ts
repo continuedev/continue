@@ -277,9 +277,9 @@ class MCPConnection {
             const msg = error.message.toLowerCase();
             if (msg.includes("spawn") && msg.includes("enoent")) {
               const command = msg.split(" ")[1];
-              errorMessage += `: command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
+              errorMessage += `Error: command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
             } else {
-              errorMessage += ": " + error.message;
+              errorMessage += "Error: " + error.message;
             }
           }
 
