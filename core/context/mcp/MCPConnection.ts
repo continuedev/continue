@@ -16,6 +16,9 @@ import {
 
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
+// Commands that are batch scripts on Windows and need cmd.exe to execute
+const WINDOWS_BATCH_COMMANDS = ["npx", "npm", "uv", "uvx"];
+
 class MCPConnection {
   public client: Client;
   private transport: Transport;
@@ -52,18 +55,53 @@ class MCPConnection {
     await this.transport.close();
   }
 
+  /**
+   * Resolves the command and arguments for the current platform
+   * On Windows, batch script commands need to be executed via cmd.exe
+   * @param originalCommand The original command
+   * @param originalArgs The original command arguments
+   * @returns An object with the resolved command and arguments
+   */
+  private resolveCommandForPlatform(
+    originalCommand: string,
+    originalArgs: string[],
+  ): { command: string; args: string[] } {
+    // If not on Windows or not a batch command, return as-is
+    if (
+      process.platform !== "win32" ||
+      !WINDOWS_BATCH_COMMANDS.includes(originalCommand)
+    ) {
+      return { command: originalCommand, args: originalArgs };
+    }
+
+    // On Windows, we need to execute batch commands via cmd.exe
+    // Format: cmd.exe /c command [args]
+    return {
+      command: "cmd.exe",
+      args: ["/c", originalCommand, ...originalArgs],
+    };
+  }
+
   private constructTransport(options: MCPOptions): Transport {
     switch (options.transport.type) {
       case "stdio":
         const env: Record<string, string> = options.transport.env
           ? { ...options.transport.env }
           : {};
+
         if (process.env.PATH !== undefined) {
           env.PATH = process.env.PATH;
         }
+
+        // Resolve the command and args for the current platform
+        const { command, args } = this.resolveCommandForPlatform(
+          options.transport.command,
+          options.transport.args || [],
+        );
+
         return new StdioClientTransport({
-          command: options.transport.command,
-          args: options.transport.args,
+          command,
+          args,
           env,
         });
       case "websocket":
@@ -76,11 +114,13 @@ class MCPConnection {
                 ...init,
                 headers: {
                   ...init?.headers,
-                  ...(options.transport.requestOptions?.headers as Record<string, string> | undefined),
-                }
+                  ...(options.transport.requestOptions?.headers as
+                    | Record<string, string>
+                    | undefined),
+                },
               }),
           },
-          requestInit: { headers: options.transport.requestOptions?.headers }
+          requestInit: { headers: options.transport.requestOptions?.headers },
         });
       default:
         throw new Error(
@@ -232,12 +272,12 @@ class MCPConnection {
           ]);
         } catch (error) {
           // Otherwise it's a connection error
-          let errorMessage = `Failed to connect to MCP server ${this.options.name}`;
+          let errorMessage = `Failed to connect to MCP server "${this.options.name}"\n`;
           if (error instanceof Error) {
             const msg = error.message.toLowerCase();
             if (msg.includes("spawn") && msg.includes("enoent")) {
               const command = msg.split(" ")[1];
-              errorMessage += `command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
+              errorMessage += `: command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
             } else {
               errorMessage += ": " + error.message;
             }
