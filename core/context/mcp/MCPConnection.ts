@@ -17,7 +17,7 @@ import {
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
 // Commands that are batch scripts on Windows and need cmd.exe to execute
-const WINDOWS_BATCH_COMMANDS = ["npx", "npm", "uv", "uvx"];
+const WINDOWS_BATCH_COMMANDS = ["npx", "uv", "uvx"];
 
 class MCPConnection {
   public client: Client;
