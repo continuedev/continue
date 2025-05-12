@@ -62,16 +62,41 @@ function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
   }
 }
 
-function convertYamlMcpToContinueMcp(
+export function convertYamlMcpToContinueMcp(
   server: MCPServer,
 ): ExperimentalMCPOptions {
+  const transportConfig = (() => {
+    switch (server.type) {
+      case "stdio":
+        return {
+          type: "stdio" as const,
+          command: server.command,
+          args: server.args ?? [],
+          env: server.env,
+        };
+      case "sse":
+        return {
+          type: "sse" as const,
+          url: server.url,
+        };
+      case "websocket":
+        return {
+          type: "websocket" as const,
+          url: server.url,
+        };
+      default:
+        // Default to stdio for backward compatibility
+        return {
+          type: "stdio" as const,
+          command: (server as any).command,
+          args: (server as any).args ?? [],
+          env: (server as any).env,
+        };
+    }
+  })();
+
   return {
-    transport: {
-      type: "stdio",
-      command: server.command,
-      args: server.args ?? [],
-      env: server.env,
-    },
+    transport: transportConfig,
     timeout: server.connectionTimeout
   };
 }
@@ -441,7 +466,6 @@ async function configYamlToContinueConfig(options: {
       id: server.name,
       name: server.name,
       transport: {
-        type: "stdio",
         args: [],
         ...server,
       },
