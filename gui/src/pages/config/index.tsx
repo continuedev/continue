@@ -14,6 +14,7 @@ import { HelpCenterSection } from "./HelpCenterSection";
 import { IndexingSettingsSection } from "./IndexingSettingsSection";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import { UserSettingsForm } from "./UserSettingsForm";
+import { BoltIcon } from "@heroicons/react/16/solid";
 
 type TabOption = {
   id: string;
@@ -52,7 +53,7 @@ function ConfigPage() {
       id: "shortcuts",
       label: "Shortcuts",
       component: <KeyboardShortcuts />,
-      icon: <AcademicCapIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+      icon: <BoltIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
     },
   ];
 
