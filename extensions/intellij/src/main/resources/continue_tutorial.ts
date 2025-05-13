@@ -38,7 +38,7 @@ function sortingAlgorithm(x: number[]): number[] {
 //                    Chat makes it easy to ask for help from an LLM without needing to leave the IDE.
 
 // 1. Highlight the code below
-// 2. Press [Cmd/Ctrl + L] to add to Chat
+// 2. Press [Cmd/Ctrl + J] to add to Chat
 // 3. Try asking Continue "what sorting algorithm is this?"
 function sortingAlgorithm2(x: number[]): number[] {
   for (let i = 0; i < x.length; i++) {
@@ -58,6 +58,6 @@ function sortingAlgorithm2(x: number[]): number[] {
 //              the model to make decisions and save you the work of manually finding context and performing actions.
 
 // 1. Switch from "Chat" to "Agent" mode using the dropdown in the bottom left of the input box
-// 2. Try asking Continue "Write unit tests for this code in a new file and run the test"
+// 2. Try asking Continue "Write unit tests for this code in a new file"
 
 // ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ——————————————————— //

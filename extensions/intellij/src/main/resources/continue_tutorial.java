@@ -38,7 +38,7 @@ public static int[] sortingAlgorithm(int[] x) {
 //                    Chat makes it easy to ask for help from an LLM without needing to leave the IDE.
 
 // 1. Highlight the code below
-// 2. Press [Cmd/Ctrl + L] to add to Chat
+// 2. Press [Cmd/Ctrl + J] to add to Chat
 // 3. Try asking Continue "what sorting algorithm is this?"
 public static int[] sortingAlgorithm2(int[] x) {
     for (int i = 0; i < x.length; i++) {
