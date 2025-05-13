@@ -22,3 +22,9 @@ rules:
 
       7. Run tests from within the specific package directory (e.g., `cd core`
       for core module tests)
+
+      8. Write tests as top-level `test()` functions - DO NOT use `describe()`
+      blocks
+
+      9. Include the function name being tested in the test description for
+      clarity
