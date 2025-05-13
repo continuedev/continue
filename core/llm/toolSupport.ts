@@ -165,4 +165,71 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     )
       return true;
   },
+  openrouter: (model) => {
+    // https://openrouter.ai/models?fmt=cards&supported_parameters=tools
+    if (
+      ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
+        (part) => model.toLowerCase().includes(part),
+      )
+    ) {
+      return false;
+    }
+
+    const supportedPrefixes = [
+      "openai/gpt-3.5",
+      "openai/gpt-4",
+      "openai/o1",
+      "openai/o3",
+      "openai/o4",
+      "anthropic/claude-3",
+      "microsoft/phi-3",
+      "google/gemini-flash-1.5",
+      "google/gemini-2",
+      "google/gemini-pro",
+      "x-ai/grok",
+      "qwen/qwen3",
+      "qwen/qwen-",
+      "cohere/command-r",
+      "ai21/jamba-1.6",
+      "mistralai/mistral",
+      "mistralai/ministral",
+      "mistralai/codestral",
+      "mistralai/mixtral",
+      "mistral/ministral",
+      "mistralai/pixtral",
+      "meta-llama/llama-3.3",
+      "amazon/nova",
+      "deepseek/deepseek-r1",
+      "deepseek/deepseek-chat",
+      "meta-llama/llama-4",
+      "all-hands/openhands-lm-32b",
+    ];
+    for (const prefix of supportedPrefixes) {
+      if (model.toLowerCase().startsWith(prefix)) {
+        return true;
+      }
+    }
+
+    const specificModels = [
+      "qwen/qwq-32b",
+      "qwen/qwen-2.5-72b-instruct",
+      "meta-llama/llama-3.2-3b-instruct",
+      "meta-llama/llama-3-8b-instruct",
+      "meta-llama/llama-3-70b-instruct",
+      "arcee-ai/caller-large",
+      "nousresearch/hermes-3-llama-3.1-70b",
+    ];
+    for (const model of specificModels) {
+      if (model.toLowerCase() === model) {
+        return true;
+      }
+    }
+
+    const supportedContains = ["llama-3.1"];
+    for (const model of supportedContains) {
+      if (model.toLowerCase().includes(model)) {
+        return true;
+      }
+    }
+  },
 };
