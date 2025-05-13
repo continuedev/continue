@@ -164,7 +164,9 @@ For more details about this requirement, see the [LanceDB issue #2195](https://g
 
 ### How do I reset the state of the extension?
 
-In cases when you like to clean reset the plugin, you would need to delete the `~/.continue` directory (or `%USERPROFILE%\.continue` on Windows). This will remove all your local settings, sessions, and other customizations. After this you may want to reinstall the plugin.
+Continue stores it's data in the `~/.continue` directory (%USERPROFILE%\.continue` on Windows).
+
+If you'd like to perform a clean reset of the extension, including removing all configuration files, indices, etc, you can remove this directory, uninstall, and then reinstall. 
 
 ## Still having trouble?
 
