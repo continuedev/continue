@@ -54,8 +54,8 @@ public static int[] sortingAlgorithm2(int[] x) {
 }
 
 // —————————————————————————————————————————————————     Agent      ————————————————————————————————————————————————— //
-//         Agent equips the Chat model with the tools needed to handle a wide range of coding tasks,
-//         allowing the model to make decisions and save you the work of manually finding context and performing actions.
+//            Agent equips the Chat model with the tools needed to handle a wide range of coding tasks, allowing
+//            the model to make decisions and save you the work of manually finding context and performing actions.
 
 // 1. Switch from "Chat" to "Agent" mode using the dropdown in the bottom left of the input box
 // 2. Try asking Continue "Write unit tests for this code in a new file and run the test"
