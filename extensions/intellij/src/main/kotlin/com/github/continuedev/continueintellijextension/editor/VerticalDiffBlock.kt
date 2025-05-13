@@ -27,13 +27,14 @@ class VerticalDiffBlock(
 ) {
     val deletedLines: MutableList<String> = mutableListOf()
     val addedLines: MutableList<String> = mutableListOf()
+    private var editorUtils = EditorUtils(editor)
     private val acceptButton: JButton
     private val rejectButton: JButton
     private var deletionInlay: Disposable? = null
     private var textArea: JTextArea? = null // Used for calculation of the text area height when rendering buttons
     private var hasRenderedDiffBlock: Boolean = false
     private val editorComponentInlaysManager = EditorComponentInlaysManager.from(editor, false)
-    private val greenKey = createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00, editor)
+    private val greenKey = editorUtils.createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00)
 
     init {
         val (acceptBtn, rejectBtn) = createButtons()

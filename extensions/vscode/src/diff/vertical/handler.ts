@@ -9,36 +9,30 @@ import {
   indexDecorationType,
 } from "./decorations";
 
-import type { ApplyState, DiffLine } from "core";
+import type { UpdateApplyStatePayload, DiffLine } from "core";
 import type { VerticalDiffCodeLens } from "./manager";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
   instant?: boolean;
   onStatusUpdate: (
-    status?: ApplyState["status"],
-    numDiffs?: ApplyState["numDiffs"],
-    fileContent?: ApplyState["fileContent"],
+    status?: UpdateApplyStatePayload["status"],
+    numDiffs?: UpdateApplyStatePayload["numDiffs"],
+    fileContent?: UpdateApplyStatePayload["fileContent"],
   ) => void;
 }
 
 export class VerticalDiffHandler implements vscode.Disposable {
+  public insertedInCurrentBlock = 0;
+  disposables: vscode.Disposable[] = [];
   private currentLineIndex: number;
   private cancelled = false;
   private newLinesAdded = 0;
   private deletionBuffer: string[] = [];
   private removedLineDecorations: RemovedLineDecorationManager;
   private addedLineDecorations: AddedLineDecorationManager;
-
-  private get fileUri() {
-    return this.editor.document.uri.toString();
-  }
-  public insertedInCurrentBlock = 0;
-  public get range(): vscode.Range {
-    const startLine = Math.min(this.startLine, this.endLine);
-    const endLine = Math.max(this.startLine, this.endLine);
-    return new vscode.Range(startLine, 0, endLine, Number.MAX_SAFE_INTEGER);
-  }
+  private _diffLinesQueue: DiffLine[] = [];
+  private _queueLock = false;
 
   constructor(
     private startLine: number,
@@ -77,6 +71,308 @@ export class VerticalDiffHandler implements vscode.Disposable {
       }
     });
     this.disposables.push(disposable);
+  }
+
+  public get range(): vscode.Range {
+    const startLine = Math.min(this.startLine, this.endLine);
+    const endLine = Math.max(this.startLine, this.endLine);
+    return new vscode.Range(startLine, 0, endLine, Number.MAX_SAFE_INTEGER);
+  }
+
+  get isCancelled() {
+    return this.cancelled;
+  }
+
+  private get fileUri() {
+    return this.editor.document.uri.toString();
+  }
+
+  async clear(accept: boolean) {
+    vscode.commands.executeCommand(
+      "setContext",
+      "continue.streamingDiff",
+      false,
+    );
+
+    const removedRanges = this.removedLineDecorations.ranges;
+    if (accept) {
+      // Accept all: delete all the red ranges and clear green decorations
+      await this.deleteRangeLines(removedRanges.map((r) => r.range));
+    } else {
+      // Reject all: Re-insert red lines, delete green ones
+      for (const r of removedRanges) {
+        await this.deleteRangeLines([r.range]);
+        await this.insertTextAboveLine(r.range.start.line, r.line);
+      }
+      await this.deleteRangeLines(this.addedLineDecorations.ranges);
+    }
+
+    this.clearDecorations();
+
+    this.options.onStatusUpdate(
+      "closed",
+      this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
+      this.editor.document.getText(),
+    );
+
+    this.cancelled = true;
+    this.refreshCodeLens();
+    this.dispose();
+  }
+
+  dispose() {
+    this.disposables.forEach((disposable) => disposable.dispose());
+  }
+
+  async queueDiffLine(diffLine: DiffLine | undefined) {
+    if (diffLine) {
+      this._diffLinesQueue.push(diffLine);
+    }
+
+    if (this._queueLock || this.editor !== vscode.window.activeTextEditor) {
+      return;
+    }
+
+    this._queueLock = true;
+
+    while (this._diffLinesQueue.length) {
+      const line = this._diffLinesQueue.shift();
+      if (!line) {
+        break;
+      }
+
+      try {
+        await this._handleDiffLine(line);
+      } catch (e) {
+        // If editor is switched between calling _handleDiffLine and the edit actually being executed
+        this._diffLinesQueue.push(line);
+        break;
+      }
+    }
+
+    this._queueLock = false;
+  }
+
+  async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
+    let diffLines = [];
+
+    try {
+      // As an indicator of loading
+      this.updateIndexLineDecorations();
+
+      for await (const diffLine of diffLineGenerator) {
+        if (this.isCancelled) {
+          return;
+        }
+        diffLines.push(diffLine);
+        await this.queueDiffLine(diffLine);
+      }
+
+      // Clear deletion buffer
+      await this.insertDeletionBuffer();
+
+      await this.reapplyWithMyersDiff(diffLines);
+
+      const range = new vscode.Range(this.startLine, 0, this.startLine, 0);
+      this.editor.revealRange(
+        range,
+        vscode.TextEditorRevealType.Default,
+      );
+
+      this.options.onStatusUpdate(
+        "done",
+        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
+        this.editor.document.getText(),
+      );
+
+      // Reject on user typing
+      // const listener = vscode.workspace.onDidChangeTextDocument((e) => {
+      //   if (URI.equal(e.document.uri.toString(), this.fileUri)) {
+      //     this.clear(false);
+      //     listener.dispose();
+      //   }
+      // });
+    } catch (e) {
+      this.clearForFileUri(this.fileUri, false);
+      throw e;
+    }
+    return diffLines;
+  }
+
+  async acceptRejectBlock(
+    accept: boolean,
+    startLine: number,
+    numGreen: number,
+    numRed: number,
+    skipStatusUpdate?: boolean,
+  ) {
+    if (numGreen > 0) {
+      // Delete the editor decoration
+      this.addedLineDecorations.deleteRangeStartingAt(startLine + numRed);
+      if (!accept) {
+        // Delete the actual lines
+        await this.deleteLinesAt(startLine + numRed, numGreen);
+      }
+    }
+
+    if (numRed > 0) {
+      const deleted =
+        this.removedLineDecorations.deleteRangesStartingAt(startLine);
+
+      await this.deleteLinesAt(startLine, numRed);
+      if (deleted && !accept) {
+        await this.insertTextAboveLine(
+          startLine,
+          deleted.map((r) => r.line).join("\n"),
+        );
+      }
+    }
+
+    // Shift everything below upward
+    const offset = -(accept ? numRed : numGreen);
+
+    this.removedLineDecorations.shiftDownAfterLine(startLine, offset);
+    this.addedLineDecorations.shiftDownAfterLine(startLine, offset);
+
+    // Shift the codelens objects
+    this.shiftCodeLensObjects(startLine, offset);
+
+    if (!skipStatusUpdate) {
+      const numDiffs =
+        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
+
+      const status = numDiffs === 0 ? "closed" : undefined;
+
+      this.options.onStatusUpdate(
+        status,
+        numDiffs,
+        this.editor.document.getText(),
+      );
+    }
+  }
+
+  public updateLineDelta(
+    fileUri: string,
+    startLine: number,
+    lineDelta: number,
+  ) {
+    // Retrieve the diff blocks for the given file
+    const blocks = this.editorToVerticalDiffCodeLens.get(fileUri);
+    if (!blocks) {
+      return;
+    }
+
+    // Update decorations
+    this.removedLineDecorations.shiftDownAfterLine(startLine, lineDelta);
+    this.addedLineDecorations.shiftDownAfterLine(startLine, lineDelta);
+
+    // Update code lens
+    this.shiftCodeLensObjects(startLine, lineDelta);
+  }
+
+  public hasDiffForCurrentFile(): boolean {
+    const diffBlocks = this.editorToVerticalDiffCodeLens.get(this.fileUri);
+    return diffBlocks !== undefined && diffBlocks.length > 0;
+  }
+
+  clearDecorations() {
+    this.removedLineDecorations.clear();
+    this.addedLineDecorations.clear();
+    this.clearIndexLineDecorations();
+    this.editorToVerticalDiffCodeLens.delete(this.fileUri);
+    this.refreshCodeLens();
+  }
+
+  /**
+   * This method is used to apply diff decorations after the intiial stream.
+   * This is to handle scenarios where we miscalculate the original diff blocks,
+   * and decide to follow up with a deterministic algorithm like Myers Diff once
+   * we have received all of the diff lines.
+   */
+  async reapplyWithMyersDiff(diffLines: DiffLine[]) {
+    // Diff is messed up without this delay.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // First, we reset the original diff by rejecting all pending diff blocks
+    const blocks = this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
+    for (const block of blocks.reverse()) {
+      await this.acceptRejectBlock(
+        false,
+        block.start,
+        block.numGreen,
+        block.numRed,
+        true,
+      );
+    }
+
+    this.clearDecorations();
+
+    // Then, get our old/new file content based on the original lines
+    // We need the input to be "newline terminated" rather than
+    // newline separated, because myersDiff() would consider
+    // ["A"] => "A" and ["A", ""] => "A\n" to be the same single line.
+    // "A\n" and "A\n\n" are unambiguous.
+    const oldFileContent =
+      diffLines
+        .filter((line) => line.type === "same" || line.type === "old")
+        .map((line) => line.line)
+        .join("\n") + "\n";
+
+    const newFileContent =
+      diffLines
+        .filter((line) => line.type === "same" || line.type === "new")
+        .map((line) => line.line)
+        .join("\n") + "\n";
+
+    const myersDiffs = myersDiff(oldFileContent, newFileContent);
+
+    const replaceContent = myersDiffs
+      .map((diff) => (diff.type === "old" ? "" : diff.line))
+      .join("\n");
+
+    // Then, we insert our diff lines
+    await this.editor.edit((editBuilder) => {
+      editBuilder.replace(this.range, replaceContent),
+        {
+          undoStopAfter: false,
+          undoStopBefore: false,
+        };
+    });
+
+    // Lastly, we apply decorations
+    let numRed = 0;
+    let numGreen = 0;
+
+    const codeLensBlocks: VerticalDiffCodeLens[] = [];
+
+    myersDiffs.forEach((diff, index) => {
+      if (diff.type === "old") {
+        this.removedLineDecorations.addLine(this.startLine + index, diff.line);
+        numRed++;
+      } else if (diff.type === "new") {
+        this.addedLineDecorations.addLine(this.startLine + index);
+        numGreen++;
+      } else if (diff.type === "same" && (numRed > 0 || numGreen > 0)) {
+        codeLensBlocks.push({
+          numRed,
+          numGreen,
+          start: this.startLine + index - numRed - numGreen,
+        });
+        numRed = 0;
+        numGreen = 0;
+      }
+    });
+
+    if (numRed > 0 || numGreen > 0) {
+      codeLensBlocks.push({
+        numGreen,
+        numRed,
+        start: this.startLine + myersDiffs.length - numRed - numGreen,
+      });
+    }
+
+    this.editorToVerticalDiffCodeLens.set(this.fileUri, codeLensBlocks);
+    this.refreshCodeLens();
   }
 
   private async insertDeletionBuffer() {
@@ -229,81 +525,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
     this.editor.setDecorations(indexDecorationType, []);
   }
 
-  async clear(accept: boolean) {
-    vscode.commands.executeCommand(
-      "setContext",
-      "continue.streamingDiff",
-      false,
-    );
-
-    const removedRanges = this.removedLineDecorations.ranges;
-    if (accept) {
-      // Accept all: delete all the red ranges and clear green decorations
-      await this.deleteRangeLines(removedRanges.map((r) => r.range));
-    } else {
-      // Reject all: Re-insert red lines, delete green ones
-      for (const r of removedRanges) {
-        await this.deleteRangeLines([r.range]);
-        await this.insertTextAboveLine(r.range.start.line, r.line);
-      }
-      await this.deleteRangeLines(this.addedLineDecorations.ranges);
-    }
-
-    this.clearDecorations();
-
-    this.options.onStatusUpdate(
-      "closed",
-      this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
-      this.editor.document.getText(),
-    );
-
-    this.cancelled = true;
-    this.refreshCodeLens();
-    this.dispose();
-  }
-
-  disposables: vscode.Disposable[] = [];
-
-  dispose() {
-    this.disposables.forEach((disposable) => disposable.dispose());
-  }
-
-  get isCancelled() {
-    return this.cancelled;
-  }
-
-  private _diffLinesQueue: DiffLine[] = [];
-  private _queueLock = false;
-
-  async queueDiffLine(diffLine: DiffLine | undefined) {
-    if (diffLine) {
-      this._diffLinesQueue.push(diffLine);
-    }
-
-    if (this._queueLock || this.editor !== vscode.window.activeTextEditor) {
-      return;
-    }
-
-    this._queueLock = true;
-
-    while (this._diffLinesQueue.length) {
-      const line = this._diffLinesQueue.shift();
-      if (!line) {
-        break;
-      }
-
-      try {
-        await this._handleDiffLine(line);
-      } catch (e) {
-        // If editor is switched between calling _handleDiffLine and the edit actually being executed
-        this._diffLinesQueue.push(line);
-        break;
-      }
-    }
-
-    this._queueLock = false;
-  }
-
   private async _handleDiffLine(diffLine: DiffLine) {
     switch (diffLine.type) {
       case "same":
@@ -323,104 +544,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
     }
   }
 
-  async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
-    let diffLines = [];
-
-    try {
-      // As an indicator of loading
-      this.updateIndexLineDecorations();
-
-      for await (const diffLine of diffLineGenerator) {
-        if (this.isCancelled) {
-          return;
-        }
-        diffLines.push(diffLine);
-        await this.queueDiffLine(diffLine);
-      }
-
-      // Clear deletion buffer
-      await this.insertDeletionBuffer();
-
-      await this.reapplyWithMyersDiff(diffLines);
-
-      const range = new vscode.Range(this.startLine, 0, this.startLine, 0);
-      this.editor.revealRange(
-        range,
-        vscode.TextEditorRevealType.Default,
-      );
-
-      this.options.onStatusUpdate(
-        "done",
-        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
-        this.editor.document.getText(),
-      );
-
-      // Reject on user typing
-      // const listener = vscode.workspace.onDidChangeTextDocument((e) => {
-      //   if (URI.equal(e.document.uri.toString(), this.fileUri)) {
-      //     this.clear(false);
-      //     listener.dispose();
-      //   }
-      // });
-    } catch (e) {
-      this.clearForFileUri(this.fileUri, false);
-      throw e;
-    }
-    return diffLines;
-  }
-
-  async acceptRejectBlock(
-    accept: boolean,
-    startLine: number,
-    numGreen: number,
-    numRed: number,
-    skipStatusUpdate?: boolean,
-  ) {
-    if (numGreen > 0) {
-      // Delete the editor decoration
-      this.addedLineDecorations.deleteRangeStartingAt(startLine + numRed);
-      if (!accept) {
-        // Delete the actual lines
-        await this.deleteLinesAt(startLine + numRed, numGreen);
-      }
-    }
-
-    if (numRed > 0) {
-      const deleted =
-        this.removedLineDecorations.deleteRangesStartingAt(startLine);
-
-      await this.deleteLinesAt(startLine, numRed);
-      if (deleted && !accept) {
-        await this.insertTextAboveLine(
-          startLine,
-          deleted.map((r) => r.line).join("\n"),
-        );
-      }
-    }
-
-    // Shift everything below upward
-    const offset = -(accept ? numRed : numGreen);
-
-    this.removedLineDecorations.shiftDownAfterLine(startLine, offset);
-    this.addedLineDecorations.shiftDownAfterLine(startLine, offset);
-
-    // Shift the codelens objects
-    this.shiftCodeLensObjects(startLine, offset);
-
-    if (!skipStatusUpdate) {
-      const numDiffs =
-        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
-
-      const status = numDiffs === 0 ? "closed" : undefined;
-
-      this.options.onStatusUpdate(
-        status,
-        numDiffs,
-        this.editor.document.getText(),
-      );
-    }
-  }
-
   private shiftCodeLensObjects(startLine: number, offset: number) {
     // Shift the codelens objects
     const blocks =
@@ -435,130 +558,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
         }) || [];
     this.editorToVerticalDiffCodeLens.set(this.fileUri, blocks);
 
-    this.refreshCodeLens();
-  }
-
-  public updateLineDelta(
-    fileUri: string,
-    startLine: number,
-    lineDelta: number,
-  ) {
-    // Retrieve the diff blocks for the given file
-    const blocks = this.editorToVerticalDiffCodeLens.get(fileUri);
-    if (!blocks) {
-      return;
-    }
-
-    // Update decorations
-    this.removedLineDecorations.shiftDownAfterLine(startLine, lineDelta);
-    this.addedLineDecorations.shiftDownAfterLine(startLine, lineDelta);
-
-    // Update code lens
-    this.shiftCodeLensObjects(startLine, lineDelta);
-  }
-
-  public hasDiffForCurrentFile(): boolean {
-    const diffBlocks = this.editorToVerticalDiffCodeLens.get(this.fileUri);
-    return diffBlocks !== undefined && diffBlocks.length > 0;
-  }
-
-  clearDecorations() {
-    this.removedLineDecorations.clear();
-    this.addedLineDecorations.clear();
-    this.clearIndexLineDecorations();
-    this.editorToVerticalDiffCodeLens.delete(this.fileUri);
-    this.refreshCodeLens();
-  }
-
-  /**
-   * This method is used to apply diff decorations after the intiial stream.
-   * This is to handle scenarios where we miscalculate the original diff blocks,
-   * and decide to follow up with a deterministic algorithm like Myers Diff once
-   * we have received all of the diff lines.
-   */
-  async reapplyWithMyersDiff(diffLines: DiffLine[]) {
-    // Diff is messed up without this delay.
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // First, we reset the original diff by rejecting all pending diff blocks
-    const blocks = this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
-    for (const block of blocks.reverse()) {
-      await this.acceptRejectBlock(
-        false,
-        block.start,
-        block.numGreen,
-        block.numRed,
-        true,
-      );
-    }
-
-    this.clearDecorations();
-
-    // Then, get our old/new file content based on the original lines
-    // We need the input to be "newline terminated" rather than
-    // newline separated, because myersDiff() would consider
-    // ["A"] => "A" and ["A", ""] => "A\n" to be the same single line.
-    // "A\n" and "A\n\n" are unambiguous.
-    const oldFileContent =
-      diffLines
-        .filter((line) => line.type === "same" || line.type === "old")
-        .map((line) => line.line)
-        .join("\n") + "\n";
-
-    const newFileContent =
-      diffLines
-        .filter((line) => line.type === "same" || line.type === "new")
-        .map((line) => line.line)
-        .join("\n") + "\n";
-
-    const myersDiffs = myersDiff(oldFileContent, newFileContent);
-
-    const replaceContent = myersDiffs
-      .map((diff) => (diff.type === "old" ? "" : diff.line))
-      .join("\n");
-
-    // Then, we insert our diff lines
-    await this.editor.edit((editBuilder) => {
-      editBuilder.replace(this.range, replaceContent),
-        {
-          undoStopAfter: false,
-          undoStopBefore: false,
-        };
-    });
-
-    // Lastly, we apply decorations
-    let numRed = 0;
-    let numGreen = 0;
-
-    const codeLensBlocks: VerticalDiffCodeLens[] = [];
-
-    myersDiffs.forEach((diff, index) => {
-      if (diff.type === "old") {
-        this.removedLineDecorations.addLine(this.startLine + index, diff.line);
-        numRed++;
-      } else if (diff.type === "new") {
-        this.addedLineDecorations.addLine(this.startLine + index);
-        numGreen++;
-      } else if (diff.type === "same" && (numRed > 0 || numGreen > 0)) {
-        codeLensBlocks.push({
-          numRed,
-          numGreen,
-          start: this.startLine + index - numRed - numGreen,
-        });
-        numRed = 0;
-        numGreen = 0;
-      }
-    });
-
-    if (numRed > 0 || numGreen > 0) {
-      codeLensBlocks.push({
-        numGreen,
-        numRed,
-        start: this.startLine + myersDiffs.length - numRed - numGreen,
-      });
-    }
-
-    this.editorToVerticalDiffCodeLens.set(this.fileUri, codeLensBlocks);
     this.refreshCodeLens();
   }
 }

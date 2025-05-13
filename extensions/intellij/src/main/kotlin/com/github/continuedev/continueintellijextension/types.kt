@@ -213,3 +213,35 @@ data class Message(
 data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 
 data class DeleteAtIndex(val index: Int)
+
+enum class ApplyStateStatus {
+    NOT_STARTED, // Apply state created but not necessarily streaming
+    STREAMING,   // Changes are being applied to the file
+    DONE,        // All changes have been applied, awaiting user to accept/reject
+    CLOSED;      // All changes have been applied. Note that for new files, we immediately set the status to "closed"
+
+    companion object {
+        fun toString(status: ApplyStateStatus): String = when (status) {
+            NOT_STARTED -> "not-started"
+            STREAMING -> "streaming"
+            DONE -> "done"
+            CLOSED -> "closed"
+        }
+    }
+}
+
+data class UpdateApplyStatePayload(
+    val streamId: String,
+    val status: ApplyStateStatus? = null,
+    val numDiffs: Int? = null,
+    val filepath: String? = null,
+    val fileContent: String? = null,
+    val toolCallId: String? = null
+)
+
+data class HighlightedCodePayload(
+    val rangeInFileWithContents: RangeInFileWithContents,
+    val prompt: String? = null,
+    val shouldRun: Boolean? = null
+)
+

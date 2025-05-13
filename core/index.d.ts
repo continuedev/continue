@@ -197,15 +197,14 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
-
-  loadSubmenuItems?: (
-    args: LoadSubmenuItemsArgs,
-  ) => Promise<ContextSubmenuItem[]>;
 }
 
 export interface ContextSubmenuItem {
@@ -1167,6 +1166,7 @@ export interface MCPResource {
   description?: string;
   mimeType?: string;
 }
+
 export interface MCPTool {
   name: string;
   description?: string;
@@ -1220,13 +1220,19 @@ export type ApplyStateStatus =
   | "done" // All changes have been applied, awaiting user to accept/reject
   | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
 
-export interface ApplyState {
+export interface UpdateApplyStatePayload {
   streamId: string;
   status?: ApplyStateStatus;
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
   toolCallId?: string;
+}
+
+export interface HighlightedCodePayload {
+  rangeInFileWithContents: RangeInFileWithContents;
+  prompt?: string;
+  shouldRun?: boolean;
 }
 
 export interface RangeInFileWithContents {
@@ -1238,7 +1244,7 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
  * Represents the configuration for a quick action in the Code Lens.

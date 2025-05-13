@@ -1,12 +1,12 @@
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { ApplyState } from "core";
+import { UpdateApplyStatePayload } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { getMetaKeyLabel } from "../util";
 import { useFontSize } from "./ui/font";
 
 export interface AcceptRejectAllButtonsProps {
-  applyStates: ApplyState[];
+  applyStates: UpdateApplyStatePayload[];
   onAcceptOrReject?: (outcome: AcceptOrRejectOutcome) => void;
 }
 
@@ -22,6 +22,7 @@ export default function AcceptRejectAllButtons({
   const ideMessenger = useContext(IdeMessengerContext);
 
   const tinyFont = useFontSize(-3);
+
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
     for (const { filepath = "", streamId } of pendingApplyStates) {
       ideMessenger.post(status, {
