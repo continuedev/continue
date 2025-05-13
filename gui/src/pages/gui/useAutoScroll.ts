@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
+import { ChatHistoryItemWithMessageId } from "../../redux/slices/sessionSlice";
 
 export const useAutoScroll = (
   ref: React.RefObject<HTMLDivElement>,
-  history: unknown[],
+  history: ChatHistoryItemWithMessageId[],
 ) => {
   const [userHasScrolled, setUserHasScrolled] = useState(false);
+  const [numUserMsgs, setNumUserMsgs] = useState(0);
 
   useEffect(() => {
-    if (history.length) {
+    const newNumUserMsgs = history.filter(
+      (msg) => msg.message.role === "user",
+    ).length;
+
+    if (newNumUserMsgs > numUserMsgs) {
       setUserHasScrolled(false);
     }
+
+    setNumUserMsgs(newNumUserMsgs);
   }, [history.length]);
 
   useEffect(() => {
