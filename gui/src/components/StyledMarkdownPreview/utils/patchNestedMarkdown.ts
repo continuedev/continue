@@ -7,6 +7,8 @@
 
     Note, this was benchmarked at sub-millisecond
 */
+import { headerIsMarkdown } from './headerIsMarkdown';
+
 export const patchNestedMarkdown = (source: string): string => {
   // Early return if no markdown codeblock pattern is found (including GitHub variants)
   if (!source.match(/```(\w*|.*)(md|markdown|gfm|github-markdown)/)) return source;
@@ -14,10 +16,10 @@ export const patchNestedMarkdown = (source: string): string => {
   let nestCount = 0;
   const lines = source.split("\n");
   const trimmedLines = lines.map((l) => l.trim());
-  
+
   for (let i = 0; i < trimmedLines.length; i++) {
     const line = trimmedLines[i];
-    
+
     if (nestCount > 0) {
       // Inside a markdown block
       if (line.match(/^`+$/)) {
@@ -34,21 +36,10 @@ export const patchNestedMarkdown = (source: string): string => {
       // Not inside a markdown block yet
       if (line.startsWith("```")) {
         const header = line.replaceAll("`", "");
-        
+
         // Check if this is a markdown codeblock using a consolidated approach (including GitHub-specific variants)
-        const isMarkdown = 
-          header === "md" || 
-          header === "markdown" || 
-          header === "gfm" || 
-          header === "github-markdown" ||
-          header.includes(" md") || 
-          header.includes(" markdown") || 
-          header.includes(" gfm") || 
-          header.includes(" github-markdown") || 
-          (header.split(" ")[0]?.split(".").pop() === "md") ||
-          (header.split(" ")[0]?.split(".").pop() === "markdown") ||
-          (header.split(" ")[0]?.split(".").pop() === "gfm");
-          
+        const isMarkdown = headerIsMarkdown(header);
+
         if (isMarkdown) {
           nestCount = 1;
           lines[i] = lines[i].replaceAll("`", "~");
@@ -56,6 +47,6 @@ export const patchNestedMarkdown = (source: string): string => {
       }
     }
   }
-  
+
   return lines.join("\n");
 };

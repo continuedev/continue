@@ -344,28 +344,37 @@ export async function* removeTrailingWhitespace(
  */
 export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
   let seenFirstFence = false;
+  // nestCount is set to 1 when the entire code block is wrapped with ``` or START blocks. It's then incremented
+  // when an inner code block is discovered to avoid exiting the function prematurly. The function will exit early
+  // when all blocks are matched. When no outer fence is discovered the function will always continue to the end.
   let nestCount = 0;
 
   for await (const line of rawLines) {
 
-    // Filter out starting ``` or START
+    
     if (!seenFirstFence) {
       if (shouldRemoveLineBeforeStart(line)) {
+        // Filter out starting ``` or START block
         continue
       }
+      // Regardless of a fence or START block start tracking the nesting level
       seenFirstFence = true;
       nestCount = 1;
     }
 
     if (nestCount > 0) {
-      // Inside a block
+      // Inside a block including the outer block
       const changedEndLine = shouldChangeLineAndStop(line);
       if (typeof changedEndLine === "string") {
         // Ending a block with just backticks (```) or STOP
         nestCount--;
         if (nestCount === 0) {
+          // if we are closing the outer block then exit early
+          // only exit early if the outer block was started with a block
+          // it it was text, we will never exit early
           return;
         } else {
+          // otherwise just yield the line
           yield line;
         }
       } else if (line.startsWith("```")) {
@@ -373,6 +382,7 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
         nestCount++;
         yield line;
       } else {
+        // otherwise just yield the line
         yield line;
       }
     }
