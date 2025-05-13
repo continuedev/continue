@@ -11,14 +11,15 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useIdeMessengerRequest } from "../../../hooks";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
+import { selectCurrentToolCallApplyState } from "../../../redux/selectors/selectCurrentToolCall";
 import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
+import Spinner from "../../gui/Spinner";
 import { isTerminalCodeBlock } from "../utils";
 import { ApplyActions } from "./ApplyActions";
 import { CopyButton } from "./CopyButton";
 import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
-import { GeneratingCodeLoader } from "./GeneratingCodeLoader";
 import { InsertButton } from "./InsertButton";
 import { RunInTerminalButton } from "./RunInTerminalButton";
 
@@ -49,8 +50,9 @@ export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
   language: string | null;
   relativeFilepath?: string;
-  isFinalCodeblock: boolean;
+  itemIndex?: number;
   codeBlockIndex: number; // To track which codeblock we are applying
+  isLastCodeblock: boolean;
   codeBlockStreamId: string;
   range?: string;
   children: any;
@@ -62,8 +64,9 @@ export function StepContainerPreToolbar({
   codeBlockContent,
   language,
   relativeFilepath,
-  isFinalCodeblock,
+  itemIndex,
   codeBlockIndex,
+  isLastCodeblock,
   codeBlockStreamId,
   range,
   children,
@@ -71,6 +74,7 @@ export function StepContainerPreToolbar({
   disableManualApply,
 }: StepContainerPreToolbarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const history = useAppSelector((state) => state.session.history);
   const [isExpanded, setIsExpanded] = useState(expanded ?? true);
 
   const [relativeFilepathUri, setRelativeFilepathUri] = useState<string | null>(
@@ -95,6 +99,9 @@ export function StepContainerPreToolbar({
   const applyState = useAppSelector((state) =>
     selectApplyStateByStreamId(state, codeBlockStreamId),
   );
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
+  );
 
   /**
    * In the case where `relativeFilepath` is defined, this will just be `relativeFilepathUri`.
@@ -110,7 +117,12 @@ export function StepContainerPreToolbar({
     relativeFilepath && /\.[0-9a-z]+$/i.test(relativeFilepath);
 
   const isStreaming = useAppSelector((store) => store.session.isStreaming);
-  const isGeneratingCodeBlock = isFinalCodeblock && isStreaming;
+
+  const isLastItem = useMemo(() => {
+    return itemIndex === history.length - 1;
+  }, [history.length, itemIndex]);
+
+  const isGeneratingCodeBlock = isLastItem && isLastCodeblock && isStreaming;
 
   // If we are creating a file, we already render that in the button
   // so we don't want to dispaly it twice here
@@ -221,6 +233,32 @@ export function StepContainerPreToolbar({
   }
 
   const renderActionButtons = () => {
+    const isPendingToolCall =
+      currentToolCallApplyState &&
+      currentToolCallApplyState.streamId === applyState?.streamId &&
+      currentToolCallApplyState.status === "not-started";
+
+    if (isGeneratingCodeBlock || isPendingToolCall) {
+      const numLines = codeBlockContent.split("\n").length;
+      const plural = numLines === 1 ? "" : "s";
+      if (isGeneratingCodeBlock) {
+        return (
+          <span className="text-lightgray inline-flex w-min items-center gap-2">
+            {!isExpanded ? `${numLines} line${plural}` : "Generating"}{" "}
+            <div>
+              <Spinner />
+            </div>
+          </span>
+        );
+      } else {
+        return (
+          <span className="text-lightgray inline-flex w-min items-center gap-2">
+            {`${numLines} line${plural} pending`}
+          </span>
+        );
+      }
+    }
+
     if (isTerminalCodeBlock(language, codeBlockContent)) {
       return <RunInTerminalButton command={codeBlockContent} />;
     }
@@ -281,17 +319,7 @@ export function StepContainerPreToolbar({
             </div>
           )}
 
-          {isGeneratingCodeBlock || applyState?.status === "not-started" ? (
-            <GeneratingCodeLoader
-              showLineCount={!isExpanded}
-              codeBlockContent={codeBlockContent}
-              isPending={
-                applyState?.status === "not-started" && !isGeneratingCodeBlock
-              }
-            />
-          ) : (
-            renderActionButtons()
-          )}
+          {renderActionButtons()}
         </div>
       </ToolbarDiv>
 
