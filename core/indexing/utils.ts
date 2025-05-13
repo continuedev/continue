@@ -3,6 +3,9 @@ import { IndexTag } from "..";
 // Maximum length for table names to stay under OS filename limits
 const MAX_TABLE_NAME_LENGTH = 240;
 
+// Leave room for branch and artifactId
+const MAX_DIR_LENGTH = 200;
+
 /**
  * Converts an IndexTag to a string representation, safely handling long paths.
  *
@@ -15,7 +18,8 @@ const MAX_TABLE_NAME_LENGTH = 240;
  *
  * To handle long paths:
  * 1. First tries the full string - most backwards compatible
- * 2. If too long, truncates directory to 200 chars to leave room for branch and artifactId
+ * 2. If too long, truncates directory from the beginning to maintain uniqueness
+ *    (since final parts of paths are more unique than prefixes)
  * 3. Finally ensures entire string stays under MAX_TABLE_NAME_LENGTH for OS compatibility
  *
  * @param tag The tag containing directory, branch, and artifactId
@@ -28,10 +32,10 @@ export function tagToString(tag: IndexTag): string {
     return result;
   }
 
-  const maxDirLength = 200; // Leave room for branch and artifactId
+  // Truncate from the beginning of directory path to preserve the more unique end parts
   const dir =
-    tag.directory.length > maxDirLength
-      ? tag.directory.slice(0, maxDirLength)
+    tag.directory.length > MAX_DIR_LENGTH
+      ? tag.directory.slice(tag.directory.length - MAX_DIR_LENGTH)
       : tag.directory;
 
   return `${dir}::${tag.branch}::${tag.artifactId}`.slice(

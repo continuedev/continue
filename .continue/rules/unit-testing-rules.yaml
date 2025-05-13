@@ -1,0 +1,24 @@
+name: unit-testing-rules
+version: 0.0.1
+schema: v1
+rules:
+  - name: unit-testing-rules
+    rule: >-
+      For unit testing in this project:
+
+
+      1. The project uses Jest as the testing framework
+
+      2. Run tests using `npm test` from within the specific package/module
+      directory
+
+      3. Command structure: `cd [directory] && npm test -- [test file path]`
+
+      4. The test script uses experimental VM modules via NODE_OPTIONS flag
+
+      5. Test files follow the pattern `*.test.ts`
+
+      6. Tests must import Jest with `import { jest } from "@jest/globals";`
+
+      7. Run tests from within the specific package directory (e.g., `cd core`
+      for core module tests)
