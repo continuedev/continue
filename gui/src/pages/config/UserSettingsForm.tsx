@@ -65,6 +65,7 @@ export function UserSettingsForm() {
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
+  const autoAcceptEditToolDiffs = config.ui?.autoAcceptEditToolDiffs ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
 
@@ -162,7 +163,15 @@ export function UserSettingsForm() {
               }
               text="Text-to-Speech Output"
             />
-
+            <ToggleSwitch
+              isToggled={autoAcceptEditToolDiffs}
+              onToggle={() =>
+                handleUpdate({
+                  autoAcceptEditToolDiffs: !autoAcceptEditToolDiffs,
+                })
+              }
+              text="Auto-Accept Agent Edits"
+            />
             {/* <ToggleSwitch
                     isToggled={useChromiumForDocsCrawling}
                     onToggle={() =>

@@ -25,6 +25,13 @@ export const editToolImpl: ClientToolImpl = async (
   if (apply.status === "error") {
     throw new Error(apply.error);
   }
+  const state = extras.getState();
+  if (state.config.config.ui?.autoAcceptEditToolDiffs) {
+    await extras.ideMessenger.request("acceptDiff", {
+      streamId: extras.streamId,
+      filepath: firstUriMatch,
+    });
+  }
 
   return {
     respondImmediately: false,
