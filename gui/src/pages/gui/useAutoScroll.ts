@@ -9,15 +9,18 @@ export const useAutoScroll = (
   const [numUserMsgs, setNumUserMsgs] = useState(0);
 
   useEffect(() => {
+    /**
+     * Only reset scroll state when a new user message is added to the chat.
+     * We don't want to auto-scroll on new tool response messages.
+     */
     const newNumUserMsgs = history.filter(
       (msg) => msg.message.role === "user",
     ).length;
 
     if (newNumUserMsgs > numUserMsgs) {
       setUserHasScrolled(false);
+      setNumUserMsgs(newNumUserMsgs);
     }
-
-    setNumUserMsgs(newNumUserMsgs);
   }, [history.length]);
 
   useEffect(() => {
