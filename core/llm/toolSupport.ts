@@ -166,6 +166,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
   },
   openrouter: (model) => {
+    // https://openrouter.ai/models?fmt=cards&supported_parameters=tools
     if (
       ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
         (part) => model.toLowerCase().includes(part),
