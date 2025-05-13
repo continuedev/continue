@@ -19,7 +19,7 @@ export function EditFile(props: EditToolCallProps) {
   const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes ?? ""}\n\`\`\``;
 
   const dispatch = useAppDispatch();
-
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const applyState = useAppSelector((state) =>
     selectApplyStateByToolCallId(state, props.toolCallId),
   );
