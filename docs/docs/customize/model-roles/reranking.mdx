@@ -27,12 +27,9 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: My Voyage Reranker
-      provider: voyage
-      apiKey: <YOUR_VOYAGE_API_KEY>
-      model: rerank-2
-      roles:
-        - rerank
+    - uses: voyageai/rerank-2
+      with:
+        VOYAGE_API_KEY: <YOUR_VOYAGE_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -62,12 +59,9 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Cohere Reranker
-      provider: cohere
-      model: rerank-english-v3.0
-      apiKey: <YOUR_COHERE_API_KEY>
-      roles:
-        - rerank
+    - uses: cohere/rerank-english-v3.0
+      with:
+        COHER_API_KEY: <YOUR_COHERE_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">

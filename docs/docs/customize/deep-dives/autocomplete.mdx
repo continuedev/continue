@@ -17,12 +17,9 @@ If you want to have the best autocomplete experience, we recommend using Codestr
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Codestral
-      provider: mistral
-      model: codestral-latest
-      apiKey: <YOUR_CODESTRAL_API_KEY>
-      roles:
-        - autocomplete
+    - uses: mistral/codestral
+      with:
+        MISTRAL_API_KEY: <YOUR_CODESTRAL_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -60,11 +57,7 @@ Then, add the model to your configuration:
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Qwen 1.5b Autocomplete Model
-      provider: ollama
-      model: qwen2.5-coder:1.5b
-      roles:
-        - autocomplete
+    - uses: ollama/qwen2.5-coder-1.5b
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
