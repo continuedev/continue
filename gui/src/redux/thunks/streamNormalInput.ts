@@ -63,7 +63,6 @@ export const streamNormalInput = createAsyncThunk<
         dispatch(abortStream());
         break;
       }
-
       dispatch(streamUpdate(next.value));
       next = await gen.next();
     }

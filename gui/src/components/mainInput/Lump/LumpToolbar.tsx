@@ -57,11 +57,11 @@ export function LumpToolbar() {
       if (metaKey && event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
-        dispatch(callCurrentTool());
+        void dispatch(callCurrentTool());
       } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
-        dispatch(cancelCurrentToolCall());
+        void dispatch(cancelCurrentToolCall());
       }
     }
   };

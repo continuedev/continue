@@ -27,8 +27,8 @@ function FunctionSpecificToolCallDiv({
     case BuiltInToolNames.EditExistingFile:
       return (
         <EditFile
-          relativeFilePath={args.filepath}
-          changes={args.changes}
+          relativeFilePath={args.filepath ?? ""}
+          changes={args.changes ?? ""}
           toolCallId={toolCall.id}
           historyIndex={historyIndex}
         />
