@@ -55,8 +55,8 @@ function shouldChangeLineAndStop(line: string): string | undefined {
     return line;
   }
 
-  if (line.includes(CODE_START_BLOCK)) {
-    return line.split(CODE_START_BLOCK)[0].trimEnd();
+  if (line.includes(CODE_STOP_BLOCK)) {
+    return line.split(CODE_STOP_BLOCK)[0].trimEnd();
   }
 
   return undefined;
@@ -71,9 +71,9 @@ function isUselessLine(line: string): boolean {
   return hasUselessLine || trimmed.startsWith("// end");
 }
 
-export const USELESS_LINES = ["", "```"];
+export const USELESS_LINES = [""];
 export const CODE_KEYWORDS_ENDING_IN_SEMICOLON = ["def"];
-export const CODE_START_BLOCK = "[/CODE]";
+export const CODE_STOP_BLOCK = "[/CODE]";
 export const BRACKET_ENDING_CHARS = [")", "]", "}", ";"];
 export const PREFIXES_TO_SKIP = ["<COMPLETION>"];
 export const LINES_TO_STOP_AT = ["# End of file.", "<STOP EDITING HERE"];
@@ -343,34 +343,48 @@ export async function* removeTrailingWhitespace(
  * 4. Yields processed lines that are part of the actual code block content.
  */
 export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
-  let seenValidLine = false;
-  let waitingToSeeIfLineIsLast = undefined;
+  let seenFirstFence = false;
+  // nestCount is set to 1 when the entire code block is wrapped with ``` or START blocks. It's then incremented
+  // when an inner code block is discovered to avoid exiting the function prematurly. The function will exit early
+  // when all blocks are matched. When no outer fence is discovered the function will always continue to the end.
+  let nestCount = 0;
 
   for await (const line of rawLines) {
-    // Filter out starting ```
-    if (!seenValidLine) {
+
+    
+    if (!seenFirstFence) {
       if (shouldRemoveLineBeforeStart(line)) {
-        continue;
+        // Filter out starting ``` or START block
+        continue
       }
-      seenValidLine = true;
+      // Regardless of a fence or START block start tracking the nesting level
+      seenFirstFence = true;
+      nestCount = 1;
     }
 
-    // Filter out ending ```
-    if (typeof waitingToSeeIfLineIsLast !== "undefined") {
-      yield waitingToSeeIfLineIsLast;
-      waitingToSeeIfLineIsLast = undefined;
-    }
-
-    const changedEndLine = shouldChangeLineAndStop(line);
-    if (typeof changedEndLine === "string") {
-      yield changedEndLine;
-      return;
-    }
-
-    if (line.startsWith("```")) {
-      waitingToSeeIfLineIsLast = line;
-    } else {
-      yield line;
+    if (nestCount > 0) {
+      // Inside a block including the outer block
+      const changedEndLine = shouldChangeLineAndStop(line);
+      if (typeof changedEndLine === "string") {
+        // Ending a block with just backticks (```) or STOP
+        nestCount--;
+        if (nestCount === 0) {
+          // if we are closing the outer block then exit early
+          // only exit early if the outer block was started with a block
+          // it it was text, we will never exit early
+          return;
+        } else {
+          // otherwise just yield the line
+          yield line;
+        }
+      } else if (line.startsWith("```")) {
+        // Going into a nested codeblock
+        nestCount++;
+        yield line;
+      } else {
+        // otherwise just yield the line
+        yield line;
+      }
     }
   }
 }
