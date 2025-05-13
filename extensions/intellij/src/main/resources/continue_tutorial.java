@@ -4,22 +4,23 @@
 //                               / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
 //                               \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/
 //
-//                                        Chat, Edit, and Autocomplete tutorial
+//                                 Autocomplete, Edit, Chat, and Agent tutorial
 //
 
-// ————————————————————————————————————————————————     Setup      ————————————————————————————————————————————————-
+// —————————————————————————————————————————————     Autocomplete     —————————————————————————————————————————————— //
+//                            Autocomplete provides inline code suggestions as you type.
 
-// First, open the Continue sidebar by pressing [Cmd + L] or clicking the Continue icon.
+// 1. Place cursor after `sortingAlgorithm:` below and press [Enter]
+// 2. Press [Tab] to accept the Autocomplete suggestion
 
-// See an example at https://docs.continue.dev/getting-started/install
+// Basic assertion for sortingAlgorithm:
 
-// Follow the instructions in the sidebar to set up a Chat/Edit modela and an Autocomplete model.
+// —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— //
+//                   Edit is a convenient way to make quick changes to specific code and files.
 
-// —————————————————————————————————————————————————     Chat      —————————————————————————————————————————————————
-
-// Highlight the code below
-// Press [Cmd + L] to add to Chat
-// Try asking Continue "what sorting algorithm is this?"
+// 1. Highlight the code below
+// 2. Press [Cmd/Ctrl + I] to Edit
+// 3. Try asking Continue to "make this more readable"
 public static int[] sortingAlgorithm(int[] x) {
     for (int i = 0; i < x.length; i++) {
         for (int j = 0; j < x.length - 1; j++) {
@@ -33,14 +34,12 @@ public static int[] sortingAlgorithm(int[] x) {
     return x;
 }
 
-// [Cmd + L] always starts a new chat. Now, try the same thing using [Cmd + Shift + L].
-// This will add the code into the current chat
+// —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— //
+//                    Chat makes it easy to ask for help from an LLM without needing to leave the IDE.
 
-// —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— 
-
-// Highlight the code below
-// Press [Cmd + I] to Edit
-// Try asking Continue to "make this more readable"
+// 1. Highlight the code below
+// 2. Press [Cmd/Ctrl + L] to add to Chat
+// 3. Try asking Continue "what sorting algorithm is this?"
 public static int[] sortingAlgorithm2(int[] x) {
     for (int i = 0; i < x.length; i++) {
         for (int j = 0; j < x.length - 1; j++) {
@@ -54,15 +53,11 @@ public static int[] sortingAlgorithm2(int[] x) {
     return x;
 }
 
-// —————————————————————————————————————————————     Autocomplete     ——————————————————————————————————————————————
+// —————————————————————————————————————————————————     Agent      ————————————————————————————————————————————————— //
+//         Agent equips the Chat model with the tools needed to handle a wide range of coding tasks,
+//         allowing the model to make decisions and save you the work of manually finding context and performing actions.
 
-// Place cursor after `sortingAlgorithm:` below and press [Enter]
-// Press [Tab] to accept the Autocomplete suggestion
+// 1. Switch from "Chat" to "Agent" mode using the dropdown in the bottom left of the input box
+// 2. Try asking Continue "Write unit tests for this code in a new file and run the test"
 
-// Basic assertion for sortingAlgorithm:
-
-
-
-// —————————————————————————————————————————————-     Learn More     -——————————————————————————————————————————————
-
-// Visit the Continue Docs at https://docs.continue.dev/getting-started/overview
+// ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ——————————————————— //
