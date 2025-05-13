@@ -72,6 +72,7 @@ export async function renderWithProviders(
   return {
     user,
     store,
+    ideMessenger,
     ...rendered!,
   };
 }

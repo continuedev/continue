@@ -73,8 +73,7 @@ class VerticalDiffBlock(
 
         deletedLines.add(deletedText.trimEnd())
 
-        // Unable to ensure that text length has not changed, so we need to get it again
-        editor.document.deleteString(startOffset, min(endOffset, editor.document.textLength))
+        editor.document.deleteString(startOffset, endOffset)
     }
 
 

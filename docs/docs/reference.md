@@ -19,7 +19,7 @@ from [the Hub](https://hub.continue.dev/explore/assistants) or locally
   - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the \* \*[Migration Guide](./yaml-migration.md)\*\*.
+Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the **[Migration Guide](./yaml-migration.md)**.
 :::
 
 An assistant is made up of:
@@ -46,10 +46,6 @@ are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other
 `uses` clauses or explicit blocks of that type.
-
-:::info
-Note that local assistants cannot use blocks that require organization-level secrets.
-:::
 
 For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
 

@@ -910,7 +910,8 @@ export type TemplateType =
   | "llava"
   | "gemma"
   | "granite"
-  | "llama3";
+  | "llama3"
+  | "codestral";
 
 export interface RequestOptions {
   timeout?: number;
@@ -1022,6 +1023,7 @@ export interface BaseCompletionOptions {
   toolChoice?: ToolChoice;
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
+  promptCaching?: boolean;
 }
 
 export interface ModelCapability {
@@ -1089,6 +1091,7 @@ export interface TabAutocompleteOptions {
   disable: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
+  modelTimeout: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
   transform?: boolean;
@@ -1114,16 +1117,19 @@ export interface StdioOptions {
   command: string;
   args: string[];
   env?: Record<string, string>;
+  requestOptions?: RequestOptions;
 }
 
 export interface WebSocketOptions {
   type: "websocket";
   url: string;
+  requestOptions?: RequestOptions;
 }
 
 export interface SSEOptions {
   type: "sse";
   url: string;
+  requestOptions?: RequestOptions;
 }
 
 export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
@@ -1495,8 +1501,10 @@ export interface RuleWithSource {
   name?: string;
   slug?: string;
   source:
-    | "default"
+    | "default-chat"
+    | "default-agent"
     | "model-chat-options"
+    | "model-agent-options"
     | "rules-block"
     | "json-systemMessage"
     | ".continuerules";

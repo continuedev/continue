@@ -1,5 +1,7 @@
 import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { vscForeground } from "../..";
+import { ToolTip } from "../../gui/Tooltip";
+import HoverItem from "../../mainInput/InputToolbar/HoverItem";
 
 interface CreateFileButtonProps {
   onClick: () => void;
@@ -7,7 +9,10 @@ interface CreateFileButtonProps {
 
 export function CreateFileButton({ onClick }: CreateFileButtonProps) {
   return (
-    <>
+    <HoverItem
+      data-tooltip-id="codeblock-create-file-button-tooltip"
+      className="!p-0"
+    >
       <button
         data-testid="codeblock-toolbar-create"
         className={`text-lightgray flex items-center border-none bg-transparent pl-0 text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
@@ -20,6 +25,9 @@ export function CreateFileButton({ onClick }: CreateFileButtonProps) {
           </span>
         </div>
       </button>
-    </>
+      <ToolTip id="codeblock-create-file-button-tooltip" place="top">
+        Create File with Code
+      </ToolTip>
+    </HoverItem>
   );
 }

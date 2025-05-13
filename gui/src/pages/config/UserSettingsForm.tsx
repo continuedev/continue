@@ -77,6 +77,10 @@ export function UserSettingsForm() {
   // const codeBlockToolbarPosition = config.ui?.codeBlockToolbarPosition ?? "top";
   const useAutocompleteMultilineCompletions =
     config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
+  const modelTimeout = 
+    config.tabAutocompleteOptions?.modelTimeout ?? 150;
+  const debounceDelay = 
+    config.tabAutocompleteOptions?.debounceDelay ?? 250;
   const fontSize = getFontSize();
 
   const cancelChangeDisableAutocomplete = () => {
@@ -218,7 +222,7 @@ export function UserSettingsForm() {
                     }
                     text="Use Autocomplete Cache"
                   /> */}
-
+            
             <label className="flex items-center justify-between gap-3">
               <span className="text-left">Font Size</span>
               <NumberInput
@@ -232,28 +236,52 @@ export function UserSettingsForm() {
                 max={50}
               />
             </label>
-
-            <label className="flex items-center justify-between gap-3">
-              <span className="line-clamp-1 text-left">
-                Multiline Autocompletions
-              </span>
-              <Select
-                value={useAutocompleteMultilineCompletions}
-                onChange={(e) =>
-                  handleUpdate({
-                    useAutocompleteMultilineCompletions: e.target.value as
-                      | "auto"
-                      | "always"
-                      | "never",
-                  })
-                }
-              >
-                <option value="auto">Auto</option>
-                <option value="always">Always</option>
-                <option value="never">Never</option>
-              </Select>
-            </label>
-
+                <label className="flex items-center justify-between gap-3">
+                  <span className="lines lines-1 text-left">
+                    Multiline Autocompletions
+                  </span>
+                  <Select
+                    value={useAutocompleteMultilineCompletions}
+                    onChange={(e) =>
+                      handleUpdate({
+                        useAutocompleteMultilineCompletions: e.target.value as
+                          | "auto"
+                          | "always"
+                          | "never",
+                      })
+                    }
+                  >
+                    <option value="auto">Auto</option>
+                    <option value="always">Always</option>
+                    <option value="never">Never</option>
+                  </Select>
+                </label>
+                <label className="flex items-center justify-between gap-3">
+                    <span className="text-left">Model Timeout (ms)</span>
+                    <NumberInput
+                      value={modelTimeout}
+                      onChange={(val) =>
+                        handleUpdate({
+                          modelTimeout: val,
+                        })
+                      }
+                      min={100}
+                      max={5000}
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-3">
+                    <span className="text-left">Model Debounce (ms)</span>
+                    <NumberInput
+                      value={debounceDelay}
+                      onChange={(val) =>
+                        handleUpdate({
+                          debounceDelay: val,
+                        })
+                      }
+                      min={0}
+                      max={2500}
+                    />
+                  </label>
             <form
               className="flex flex-col gap-1"
               onSubmit={(e) => {
