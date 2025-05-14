@@ -7,7 +7,7 @@ import { clearCodeToEdit } from "../../../redux/slices/editModeState";
 import { setNewestToolbarPreviewForInput } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
-import { CodeBlock, PromptBlock } from "./extensions";
+import { CodeBlock, Mention, PromptBlock } from "./extensions";
 
 /**
  * Hook for setting up main editor specific webview listeners
@@ -177,5 +177,29 @@ export function useMainEditorWebviewListeners({
       );
     },
     [],
+  );
+
+  useWebviewListener(
+    "configUpdate",
+    async (data) => {
+      const currentFileProvider = data.result.config?.contextProviders.find(
+        (provider) => provider.title === "currentFile",
+      );
+      
+      if (currentFileProvider && editor) {
+        const node = editor.schema.nodes[Mention.name].create({
+          name: currentFileProvider.displayTitle,
+          description: currentFileProvider.description,
+          id: currentFileProvider.title,
+          label: currentFileProvider.displayTitle,
+          renderInlineAs: currentFileProvider.renderInlineAs,
+          type: currentFileProvider.type,
+          itemType: 'contextProvider'
+        });
+
+        editor.chain().insertContent(node.toJSON()).run();
+      }
+    },
+    [editor],
   );
 }
