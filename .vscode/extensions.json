@@ -5,6 +5,7 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "bradlc.vscode-tailwindcss",
-    "YoavBls.pretty-ts-errors"
+    "YoavBls.pretty-ts-errors",
+    "github.vscode-github-actions"
   ]
 }

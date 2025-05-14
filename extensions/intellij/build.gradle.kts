@@ -6,7 +6,6 @@ fun environment(key: String) = providers.environmentVariable(key)
 
 fun Sync.prepareSandbox() {
     from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
-    from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
 }
 
 val remoteRobotVersion = "0.11.23"
