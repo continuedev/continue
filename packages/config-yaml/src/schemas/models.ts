@@ -107,7 +107,7 @@ const templateSchema = z.enum([
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
   chat: templateSchema.optional(),
-  edit: z.string().optional(),
+  edit: z.string().optional(), 
   autocomplete: z.string().optional(),
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
@@ -117,6 +117,7 @@ const baseModelFields = {
   model: z.string(),
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
+  maxStopWords: z.number().optional(),
   roles: modelRolesSchema.array().optional(),
   capabilities: modelCapabilitySchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
