@@ -1,11 +1,12 @@
 import { Editor, JSONContent } from "@tiptap/react";
-import { ContextItemWithId, InputModifiers } from "core";
+import { ContextItemWithId, InputModifiers, RuleWithSource } from "core";
 import { useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
+import { RulesPeek } from "./belowMainInput/RulesPeek";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
@@ -20,6 +21,7 @@ interface ContinueInputBoxProps {
   ) => void;
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
+  appliedRules?: RuleWithSource[];
   hidden?: boolean;
   inputId: string; // used to keep track of things per input in redux
 }
@@ -146,6 +148,10 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       <ContextItemsPeek
         contextItems={props.contextItems}
         isCurrentContextPeek={props.isLastUserInput}
+      />
+      <RulesPeek
+        appliedRules={props.appliedRules}
+        isCurrentRulesPeek={props.isLastUserInput}
       />
     </div>
   );
