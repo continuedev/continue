@@ -704,6 +704,7 @@ export interface IdeSettings {
   userToken: string;
   continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
+  addFileContext: boolean
 }
 
 export interface FileStats {

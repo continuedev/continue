@@ -54,6 +54,7 @@ class FileSystemIde implements IDE {
       userToken: "",
       continueTestEnvironment: "none",
       pauseCodebaseIndexOnStart: false,
+      addFileContext: false
     };
   }
   async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {

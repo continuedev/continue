@@ -1,7 +1,8 @@
 import { Editor } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
-import { MutableRefObject } from "react";
+import { MutableRefObject, useContext } from "react";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
 import { clearCodeToEdit } from "../../../redux/slices/editModeState";
@@ -185,12 +186,14 @@ export function useMainEditorWebviewListeners({
     (state) => state.config.config.contextProviders,
   );
   const mode = useAppSelector(state=>state.session.mode);
+  const ideContext = useContext(IdeMessengerContext)
 
   useWebviewListener(
     "newSession",
     async () => {
-      // do not insert current file context mention if we are in edit mode
-      if(!editor || mode === 'edit') return;
+      // do not insert current file context mention if we are in edit mode or if addFileContext is disabled
+      const settings = await ideContext.ide.getIdeSettings()
+      if(!editor || mode === 'edit' || !settings.addFileContext) return;
       insertCurrentFileContextMention(editor, activeContextProviders);
     },
     [editor, activeContextProviders, mode],

@@ -774,6 +774,7 @@ class VsCodeIde implements IDE {
         "pauseCodebaseIndexOnStart",
         false,
       ),
+      addFileContext: settings.get<boolean>("addFileContext", false),
     };
     return ideSettings;
   }
