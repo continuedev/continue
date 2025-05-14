@@ -10,9 +10,9 @@ The **User Settings page** can be accessed by clicking the gear icon in the head
 
 ![slash-commands](/img/header-buttons.png)
 
-Which takes you to this page:
+Which takes you to this page (select the "Settings" tab):
 
-![User Settings Page](/img/settings-page.png)
+![User Settings Page](/img/settings-page.jpg)
 
 Below that, the following settings which are not part of a configuration file are available:
 
@@ -27,7 +27,7 @@ Below that, the following settings which are not part of a configuration file ar
 - `Enable Indexing`: Enables indexing of the codebase for the @codebase and @code context providers. **On** by default.
 - `Font Size`: Specifies base font size for UI elements
 - `Multiline Autocompletions`: Controls multiline completions for autocomplete. Can be set to `always`, `never`, or `auto`. Defaults to `auto`
-- `Disable autocomplete in files`: List of comma-separated glob pattern to disable autocomplete in matching files. E.g., "\_/.md, \*/.txt"
+- `Disable autocomplete in files`: List of comma-separated glob pattern to disable autocomplete in matching files. E.g., `**/*.{txt,md}`
 
 <!-- - `Use autocomplete cache`: If on, caches completions. -->
 <!-- - `Use Chromium for Docs Crawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to ~/.continue/.utils. Off by default -->
