@@ -29,11 +29,12 @@ async function callHttpTool(
     }),
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error(`Failed to call tool: ${url}`);
+    throw new Error(`Failed to call tool at ${url}:\n${JSON.stringify(data)}`);
   }
 
-  const data = await response.json();
   return data.output;
 }
 
@@ -84,7 +85,7 @@ async function callToolFromUri(
       });
 
       if (response.isError === true) {
-        throw new Error(`Failed to call tool: ${toolName}`);
+        throw new Error(JSON.stringify(response.content));
       }
 
       const contextItems: ContextItem[] = [];
@@ -141,43 +142,46 @@ export async function callTool(
   contextItems: ContextItem[];
   errorMessage: string | undefined;
 }> {
-  const args = JSON.parse(callArgs || "{}");
-  const uri = tool.uri ?? tool.function.name;
   try {
+    const args = JSON.parse(callArgs || "{}");
     let contextItems: ContextItem[] = [];
-    switch (uri) {
-      case BuiltInToolNames.ReadFile:
-        contextItems = await readFileImpl(args, extras);
-        break;
-      case BuiltInToolNames.CreateNewFile:
-        contextItems = await createNewFileImpl(args, extras);
-        break;
-      case BuiltInToolNames.GrepSearch:
-        contextItems = await grepSearchImpl(args, extras);
-        break;
-      case BuiltInToolNames.FileGlobSearch:
-        contextItems = await fileGlobSearchImpl(args, extras);
-        break;
-      case BuiltInToolNames.RunTerminalCommand:
-        contextItems = await runTerminalCommandImpl(args, extras);
-        break;
-      case BuiltInToolNames.SearchWeb:
-        contextItems = await searchWebImpl(args, extras);
-        break;
-      case BuiltInToolNames.ViewDiff:
-        contextItems = await viewDiffImpl(args, extras);
-        break;
-      case BuiltInToolNames.LSTool:
-        contextItems = await lsToolImpl(args, extras);
-        break;
-      case BuiltInToolNames.ReadCurrentlyOpenFile:
-        contextItems = await readCurrentlyOpenFileImpl(args, extras);
-        break;
-      case BuiltInToolNames.CreateRuleBlock:
-        contextItems = await createRuleBlockImpl(args, extras);
-        break;
-      default:
-        contextItems = await callToolFromUri(uri, args, extras);
+    if (tool.uri) {
+      contextItems = await callToolFromUri(tool.uri, args, extras);
+    } else {
+      switch (tool.function.name) {
+        case BuiltInToolNames.ReadFile:
+          contextItems = await readFileImpl(args, extras);
+          break;
+        case BuiltInToolNames.CreateNewFile:
+          contextItems = await createNewFileImpl(args, extras);
+          break;
+        case BuiltInToolNames.GrepSearch:
+          contextItems = await grepSearchImpl(args, extras);
+          break;
+        case BuiltInToolNames.FileGlobSearch:
+          contextItems = await fileGlobSearchImpl(args, extras);
+          break;
+        case BuiltInToolNames.RunTerminalCommand:
+          contextItems = await runTerminalCommandImpl(args, extras);
+          break;
+        case BuiltInToolNames.SearchWeb:
+          contextItems = await searchWebImpl(args, extras);
+          break;
+        case BuiltInToolNames.ViewDiff:
+          contextItems = await viewDiffImpl(args, extras);
+          break;
+        case BuiltInToolNames.LSTool:
+          contextItems = await lsToolImpl(args, extras);
+          break;
+        case BuiltInToolNames.ReadCurrentlyOpenFile:
+          contextItems = await readCurrentlyOpenFileImpl(args, extras);
+          break;
+        case BuiltInToolNames.CreateRuleBlock:
+          contextItems = await createRuleBlockImpl(args, extras);
+          break;
+        default:
+          throw new Error(`Tool "${tool.function.name}" not found`);
+      }
     }
     if (tool.faviconUrl) {
       contextItems.forEach((item) => {
