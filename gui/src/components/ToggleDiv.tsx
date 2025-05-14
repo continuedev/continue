@@ -6,9 +6,15 @@ interface ToggleProps {
   children: React.ReactNode;
   title: React.ReactNode;
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
+  testId?: string;
 }
 
-function ToggleDiv({ children, title, icon: Icon }: ToggleProps) {
+function ToggleDiv({
+  children,
+  title,
+  icon: Icon,
+  testId = "context-items-peek",
+}: ToggleProps) {
   const [open, setOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -24,7 +30,7 @@ function ToggleDiv({ children, title, icon: Icon }: ToggleProps) {
         onClick={() => setOpen((prev) => !prev)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        data-testid="context-items-peek"
+        data-testid={testId}
       >
         <div className="relative mr-1 h-4 w-4">
           {Icon && !isHovered && !open ? (

@@ -92,6 +92,7 @@ export function RulesPeek({
     <ToggleDiv
       icon={icon}
       title={`${rules.length} rule${rules.length > 1 ? "s" : ""}`}
+      testId="rules-peek"
     >
       {globalRules.length > 0 && (
         <div className="mb-1 ml-2 text-xs font-semibold text-gray-400">

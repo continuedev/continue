@@ -89,6 +89,14 @@ export class GUISelectors {
     );
   }
 
+  public static getRulesPeek(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "rules-peek");
+  }
+
+  public static getFirstRulesPeekItem(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "rules-peek-item");
+  }
+
   public static getNthHistoryTableRow(view: WebView, index: number) {
     return SelectorUtils.getElementByDataTestId(view, `history-row-${index}`);
   }
