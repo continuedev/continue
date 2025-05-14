@@ -186,30 +186,34 @@ class Anthropic extends BaseLLM {
     );
 
     const msgs = this.convertMessages(messages);
+
+    // Set anthropic-beta headers directly into this.requestOptions
+    this.setBetaHeaders(shouldCacheSystemMessage);
+
+    // Create the request body
+    const requestBody = {
+      ...this.convertArgs(options),
+      messages: msgs,
+      system: shouldCacheSystemMessage
+        ? [
+          {
+            type: "text",
+            text: this.systemMessage,
+            cache_control: { type: "ephemeral" },
+          },
+        ]
+        : systemMessage,
+    };
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
         "anthropic-version": "2023-06-01",
-        "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
-          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-          : {}),
+        "x-api-key": this.apiKey as string
       },
-      body: JSON.stringify({
-        ...this.convertArgs(options),
-        messages: msgs,
-        system: shouldCacheSystemMessage
-          ? [
-              {
-                type: "text",
-                text: systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
-          : systemMessage,
-      }),
+      body: JSON.stringify(requestBody),
       signal,
     });
 
@@ -298,6 +302,29 @@ class Anthropic extends BaseLLM {
         default:
           break;
       }
+    }
+  }
+
+  private setBetaHeaders(shouldCacheSystemMessage: boolean | undefined) {
+    if (!this.requestOptions) this.requestOptions = {};
+    if (!this.requestOptions.headers) this.requestOptions.headers = {};
+
+    const betaValues = new Set<string>();
+
+    const existingBetaHeaders = this.requestOptions.headers["anthropic-beta"];
+    if (existingBetaHeaders) {
+      existingBetaHeaders
+        .split(",")
+        .map((v) => v.trim())
+        .forEach((v) => betaValues.add(v));
+    }
+
+    if (shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation) {
+      betaValues.add("prompt-caching-2024-07-31");
+    }
+
+    if (betaValues.size > 0) {
+      this.requestOptions.headers["anthropic-beta"] = Array.from(betaValues).join(",");
     }
   }
 }
