@@ -96,6 +96,9 @@ export function LumpToolbar() {
         <StopButton
           className="text-gray-400"
           onClick={() => {
+            if (toolCallState?.status === "calling" || toolCallState?.status === "generating") {
+              dispatch(cancelCurrentToolCall);
+            }
             dispatch(cancelStream());
           }}
         >

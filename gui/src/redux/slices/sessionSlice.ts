@@ -107,15 +107,21 @@ export const sessionSlice = createSlice({
       if (state.history.length < 2) {
         return;
       }
-      const lastMessage = state.history[state.history.length - 1];
 
-      // Only clear in the case of an empty message
-      if (!lastMessage.message.content.length) {
-        state.mainEditorContentTrigger =
-          state.history[state.history.length - 2].editorState;
-        state.history = state.history.slice(0, -2);
-        // TODO is this logic correct for tool use conversations?
-        // Maybe slice at last index of "user" role message?
+      // Find the index of the last user message
+      let lastUserIndex = -1;
+      for (let i = state.history.length - 1; i >= 0; i--) {
+        if (state.history[i].message.role === "user") {
+          lastUserIndex = i;
+          break;
+        }
+      }
+
+      // If we find a user message, set the editor state to the last user messsage
+      // and slice the history to remove it and all the messages after it
+      if (lastUserIndex >= 0) {
+        state.mainEditorContentTrigger = state.history[lastUserIndex].editorState;
+        state.history = state.history.slice(0, lastUserIndex);
       }
     },
     // Trigger value picked up by editor with isMainInput to set its content
