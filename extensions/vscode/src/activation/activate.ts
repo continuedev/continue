@@ -9,6 +9,7 @@ import { isGraniteOnboardingComplete } from "../granite/utils/extensionUtils";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 
+import { GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY } from "core/granite/commons/constants";
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
@@ -52,14 +53,19 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);
-  const showOnboarding = !isGraniteOnboardingComplete(context);
-  vscode.commands.executeCommand(
+  const graniteOnboardingComplete = isGraniteOnboardingComplete(context);
+  await vscode.commands.executeCommand(
     "setContext",
     "granite.initialized",
-    !showOnboarding,
+    graniteOnboardingComplete,
   );
-  if (showOnboarding) {
-    await vscode.commands.executeCommand("granite.setup");
+
+  const initialActivationCompleted = context.globalState.get<boolean>(GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY, false);
+  if (!initialActivationCompleted) {
+    if (!graniteOnboardingComplete) {
+      await vscode.commands.executeCommand("granite.setup");
+    }
+    await context.globalState.update(GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY, true);
   }
 
   registerModelUpdater(context);

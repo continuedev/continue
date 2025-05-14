@@ -1,4 +1,4 @@
-import { isTestMode, SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
+import { GRANITE_ONBOARDING_INCOMPLETE_KEY, isTestMode } from "core/granite/commons/constants";
 import { ExtensionContext } from "vscode";
 
 /**
@@ -8,6 +8,6 @@ import { ExtensionContext } from "vscode";
  * @returns True if the Granite onboarding has been completed. Always returns true in test mode.
  */
 export function isGraniteOnboardingComplete(context: ExtensionContext): boolean {
-    const showOnboarding = context.globalState.get<boolean>(SHOW_GRANITE_ONBOARDING_CARD_KEY, true);
-    return (!showOnboarding || isTestMode === true);
+    const isOnboardingIncomplete = context.globalState.get<boolean>(GRANITE_ONBOARDING_INCOMPLETE_KEY, true);
+    return (!isOnboardingIncomplete || isTestMode === true);
 }
