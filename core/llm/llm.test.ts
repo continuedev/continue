@@ -22,6 +22,20 @@ const COMPLETION_OPTIONS: Partial<CompletionOptions> = {
   // maxTokens: 5,
 };
 
+/**
+ * Retries a test function if it fails on the first attempt
+ * @param testFn The test function to run
+ * @returns A function that will retry once if the test fails
+ */
+const retryOnce = (testFn: () => Promise<any>) => async () => {
+  try {
+    return await testFn();
+  } catch (error) {
+    console.log("Test failed on first attempt, retrying once...");
+    return await testFn();
+  }
+};
+
 function testLLM(
   llm: BaseLLM,
   {
@@ -47,7 +61,7 @@ function testLLM(
   describe(llm.providerName + "/" + llm.model, () => {
     test(
       "Stream Chat works",
-      async () => {
+      retryOnce(async () => {
         let total = "";
         for await (const chunk of llm.streamChat(
           [{ role: "user", content: "Hi" }],
@@ -58,13 +72,13 @@ function testLLM(
 
         expect(total.length).toBeGreaterThan(0);
         return;
-      },
+      }),
       timeout,
     );
 
     test(
       "Stream Complete works",
-      async () => {
+      retryOnce(async () => {
         let total = "";
         for await (const chunk of llm.streamComplete(
           "Hi",
@@ -75,13 +89,13 @@ function testLLM(
 
         expect(total.length).toBeGreaterThan(0);
         return;
-      },
+      }),
       timeout,
     );
 
     test(
       "Complete works",
-      async () => {
+      retryOnce(async () => {
         const completion = await llm.complete(
           "Hi",
           new AbortController().signal,
@@ -89,14 +103,14 @@ function testLLM(
 
         expect(completion.length).toBeGreaterThan(0);
         return;
-      },
+      }),
       timeout,
     );
 
     if (testFim) {
       test(
         "FIM works",
-        async () => {
+        retryOnce(async () => {
           let total = "";
           for await (const chunk of llm.streamFim(
             "Hi",
@@ -108,7 +122,7 @@ function testLLM(
 
           expect(total.length).toBeGreaterThan(0);
           return;
-        },
+        }),
         timeout,
       );
     }
@@ -116,7 +130,7 @@ function testLLM(
     if (testToolCall) {
       test(
         "Tool Call works",
-        async () => {
+        retryOnce(async () => {
           let args = "";
           let isFirstChunk = true;
           for await (const chunk of llm.streamChat(
@@ -175,7 +189,7 @@ function testLLM(
 
           const parsedArgs = JSON.parse(args);
           expect(parsedArgs.name).toBe("Nate");
-        },
+        }),
         timeout,
       );
     }
