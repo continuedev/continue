@@ -65,7 +65,7 @@ export function ToolCallStatusMessage({
     message = futureMessage;
   }
   return (
-    <div className="block">
+    <div className="line-clamp-6">
       <span>Continue</span> {intro} {message}
     </div>
   );

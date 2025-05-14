@@ -26,8 +26,8 @@ export function ToolCallDisplay({
     <>
       <div className="relative flex flex-col justify-center p-4 pb-0">
         <div className="mb-4 flex flex-col">
-          <div className="flex flex-row items-center justify-between gap-3">
-            <div className="flex flex-row gap-2">
+          <div className="flex flex-row items-center justify-between gap-1.5">
+            <div className="flex flex-row items-center gap-2">
               <div className="mt-[1px] h-4 w-4 flex-shrink-0 font-semibold">
                 {icon}
               </div>
