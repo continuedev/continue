@@ -26,15 +26,23 @@ export const editToolImpl: ClientToolImpl = async (
     throw new Error(apply.error);
   }
   const state = extras.getState();
-  if (state.config.config.ui?.autoAcceptEditToolDiffs) {
-    await extras.ideMessenger.request("acceptDiff", {
+  const autoAccept = !!state.config.config.ui?.autoAcceptEditToolDiffs;
+  if (autoAccept) {
+    const out = await extras.ideMessenger.request("acceptDiff", {
       streamId: extras.streamId,
       filepath: firstUriMatch,
     });
+    if (out.status === "error") {
+      throw new Error(out.error);
+    }
+    return {
+      respondImmediately: true,
+      output: undefined, // TODO - feed edit results back to model (also in parallel listeners)
+    };
+  } else {
+    return {
+      respondImmediately: false,
+      output: undefined, // No immediate output.
+    };
   }
-
-  return {
-    respondImmediately: false,
-    output: undefined, // No immediate output.
-  };
 };
