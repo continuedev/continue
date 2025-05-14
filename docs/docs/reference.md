@@ -206,7 +206,6 @@ chat, editing, and summarizing.
   - `topP`: The cumulative probability for nucleus sampling.
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
-  - `n`: Number of completions to generate.
   - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
   - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 - `requestOptions`: HTTP request options specific to the model.
