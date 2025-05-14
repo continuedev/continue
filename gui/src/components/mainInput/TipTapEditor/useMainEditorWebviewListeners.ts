@@ -3,11 +3,13 @@ import { InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { MutableRefObject } from "react";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
+import { useAppSelector } from "../../../redux/hooks";
 import { clearCodeToEdit } from "../../../redux/slices/editModeState";
 import { setNewestToolbarPreviewForInput } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
-import { CodeBlock, Mention, PromptBlock } from "./extensions";
+import { CodeBlock, PromptBlock } from "./extensions";
+import { insertCurrentFileContextMention } from "./utils/insertContent";
 
 /**
  * Hook for setting up main editor specific webview listeners
@@ -179,27 +181,18 @@ export function useMainEditorWebviewListeners({
     [],
   );
 
-  useWebviewListener(
-    "configUpdate",
-    async (data) => {
-      const currentFileProvider = data.result.config?.contextProviders.find(
-        (provider) => provider.title === "currentFile",
-      );
-      
-      if (currentFileProvider && editor) {
-        const node = editor.schema.nodes[Mention.name].create({
-          name: currentFileProvider.displayTitle,
-          description: currentFileProvider.description,
-          id: currentFileProvider.title,
-          label: currentFileProvider.displayTitle,
-          renderInlineAs: currentFileProvider.renderInlineAs,
-          type: currentFileProvider.type,
-          itemType: 'contextProvider'
-        });
+  const activeContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
+  );
+  const mode = useAppSelector(state=>state.session.mode);
 
-        editor.chain().insertContent(node.toJSON()).run();
-      }
+  useWebviewListener(
+    "newSession",
+    async () => {
+      // do not insert current file context mention if we are in edit mode
+      if(!editor || mode === 'edit') return;
+      insertCurrentFileContextMention(editor, activeContextProviders);
     },
-    [editor],
+    [editor, activeContextProviders, mode],
   );
 }
