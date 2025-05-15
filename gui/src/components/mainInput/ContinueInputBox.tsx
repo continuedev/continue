@@ -145,11 +145,11 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           />
         </GradientBorder>
       </div>
+      <RulesPeek appliedRules={props.appliedRules} />
       <ContextItemsPeek
         contextItems={props.contextItems}
         isCurrentContextPeek={props.isLastUserInput}
       />
-      <RulesPeek appliedRules={props.appliedRules} />
     </div>
   );
 }
