@@ -20,7 +20,7 @@ function ToggleDiv({
 
   return (
     <div
-      className={`pl-2 pt-2`}
+      className={`pl-2`}
       style={{
         backgroundColor: vscBackground,
       }}
