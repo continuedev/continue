@@ -80,7 +80,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
         </div>
       </div>
       <div
-        className={`mt-1 whitespace-normal pl-6 pr-2 text-xs italic text-gray-300`}
+        className={`mt-1 whitespace-pre-line pl-6 pr-2 text-xs italic text-gray-300`}
         title={
           isRuleLong ? (expanded ? "Click to collapse" : "Click to expand") : ""
         }
