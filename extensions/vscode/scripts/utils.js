@@ -301,6 +301,9 @@ async function copyNodeModules() {
     ),
   );
 
+  // delete esbuild/bin because platform-specific @esbuild is downloaded
+  fs.rmdirSync(`out/node_modules/esbuild/bin`, {recursive: true});
+
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 }
 

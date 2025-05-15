@@ -31,6 +31,8 @@ export const sharedConfigSchema = z
     useAutocompleteCache: z.boolean(),
     useAutocompleteMultilineCompletions: z.enum(["always", "never", "auto"]),
     disableAutocompleteInFiles: z.array(z.string()),
+    modelTimeout: z.number(),
+    debounceDelay: z.number(),
   })
   .partial();
 
@@ -102,6 +104,14 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.disableAutocompleteInFiles !== undefined) {
     configCopy.tabAutocompleteOptions.disableInFiles =
       sharedConfig.disableAutocompleteInFiles;
+  }
+  if (sharedConfig.modelTimeout !== undefined) {
+    configCopy.tabAutocompleteOptions.modelTimeout =
+      sharedConfig.modelTimeout;
+  }
+  if (sharedConfig.debounceDelay !== undefined) {
+    configCopy.tabAutocompleteOptions.debounceDelay =
+      sharedConfig.debounceDelay;
   }
 
   configCopy.ui = {
