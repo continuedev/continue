@@ -105,7 +105,7 @@ export function RulesPeek({
 
       {fileSpecificRules.length > 0 && (
         <div className="mb-1 ml-2 mt-2 text-xs font-semibold text-gray-400">
-          File-Specific Rules
+          Dynamic Rules
         </div>
       )}
       {fileSpecificRules.map((rule, idx) => (
