@@ -11,7 +11,7 @@ describe("Chat page test", () => {
 
   it("should be able to toggle modes", async () => {
     await renderWithProviders(<Chat />);
-    expect(screen.getByText("Chat")).toBeInTheDocument();
+    expect(screen.getByText("Agent")).toBeInTheDocument();
 
     // Simulate cmd+. keyboard shortcut to toggle modes
     act(() => {
@@ -24,7 +24,7 @@ describe("Chat page test", () => {
     });
 
     // Check that it switched to Agent mode
-    expect(await screen.findByText("Agent")).toBeInTheDocument();
+    expect(await screen.findByText("Chat")).toBeInTheDocument();
 
     act(() => {
       document.dispatchEvent(
