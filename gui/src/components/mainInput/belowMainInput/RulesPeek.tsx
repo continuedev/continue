@@ -108,31 +108,14 @@ export function RulesPeek({ appliedRules, icon }: RulesPeekProps) {
     return null;
   }
 
-  const globalRules = rules.filter((r) => !r.globs);
-  const fileSpecificRules = rules.filter((r) => r.globs);
-
   return (
     <ToggleDiv
       icon={icon}
       title={`${rules.length} rule${rules.length > 1 ? "s" : ""}`}
       testId="rules-peek"
     >
-      {globalRules.length > 0 && (
-        <div className="mb-1 ml-2 text-xs font-semibold text-gray-400">
-          Always Applied
-        </div>
-      )}
-      {globalRules.map((rule, idx) => (
-        <RulesPeekItem key={`global-${idx}`} rule={rule} />
-      ))}
-
-      {fileSpecificRules.length > 0 && (
-        <div className="mb-1 ml-2 mt-2 text-xs font-semibold text-gray-400">
-          Dynamic Rules
-        </div>
-      )}
-      {fileSpecificRules.map((rule, idx) => (
-        <RulesPeekItem key={`file-${idx}`} rule={rule} />
+      {rules.map((rule, idx) => (
+        <RulesPeekItem key={`rule-${idx}`} rule={rule} />
       ))}
     </ToggleDiv>
   );
