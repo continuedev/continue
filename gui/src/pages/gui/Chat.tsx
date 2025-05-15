@@ -320,6 +320,7 @@ export function Chat() {
                     isMainInput={false}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
+                    appliedRules={item.appliedRules}
                     inputId={item.message.id}
                   />
                 </>
