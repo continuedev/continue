@@ -1,3 +1,12 @@
 {
-   "signedContributors": []
+  "signedContributors": [
+    {
+      "name": "sestinj",
+      "id": 33237525,
+      "comment_id": 2881866228,
+      "created_at": "2025-05-15T00:08:50Z",
+      "repoId": 644686905,
+      "pullRequestNo": 5584
+    }
+  ]
 }
