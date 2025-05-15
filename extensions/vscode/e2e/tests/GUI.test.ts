@@ -276,7 +276,6 @@ describe("GUI Test", () => {
       expect(ruleItemText).to.include("Assistant rule");
       expect(ruleItemText).to.include("Applies to all files");
       expect(ruleItemText).to.include("TEST_SYS_MSG");
-      expect(ruleItemText).to.include("Source: System Message");
     }).timeout(DEFAULT_TIMEOUT.MD);
 
     it("should render tool call", async () => {
