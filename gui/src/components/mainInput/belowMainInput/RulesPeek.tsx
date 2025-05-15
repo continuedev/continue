@@ -1,6 +1,6 @@
 import { DocumentTextIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { RuleSource, RuleWithSource } from "core";
-import { ComponentType, useMemo } from "react";
+import { ComponentType, useMemo, useState } from "react";
 import ToggleDiv from "../../ToggleDiv";
 
 interface RulesPeekProps {
@@ -36,6 +36,23 @@ const getSourceLabel = (source: RuleSource): string => {
 
 export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   const isGlobal = !rule.globs;
+  const [expanded, setExpanded] = useState(false);
+
+  // Define maximum length for rule text display
+  const maxRuleLength = 120;
+  const isRuleLong = rule.rule.length > maxRuleLength;
+
+  // Get the displayed rule text based on expanded state
+  const displayedRule =
+    isRuleLong && !expanded
+      ? `${rule.rule.slice(0, maxRuleLength)}...`
+      : rule.rule;
+
+  const toggleExpand = () => {
+    if (isRuleLong) {
+      setExpanded(!expanded);
+    }
+  };
 
   return (
     <div
@@ -61,8 +78,19 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
           </div>
         </div>
       </div>
-      <div className="mt-1 whitespace-normal pl-6 pr-2 text-xs italic text-gray-300">
-        {rule.rule}
+      <div
+        className={`mt-1 whitespace-normal pl-6 pr-2 text-xs italic text-gray-300 ${isRuleLong ? "cursor-pointer hover:text-gray-200" : ""}`}
+        onClick={toggleExpand}
+        title={
+          isRuleLong ? (expanded ? "Click to collapse" : "Click to expand") : ""
+        }
+      >
+        {displayedRule}
+        {isRuleLong && (
+          <span className="ml-1 block text-gray-400 opacity-0 transition-opacity group-hover:opacity-100">
+            {expanded ? "(collapse)" : "(expand)"}
+          </span>
+        )}
       </div>
       <div className="mt-1 pl-6 pr-2 text-xs text-gray-500">
         Source: {getSourceLabel(rule.source)}
