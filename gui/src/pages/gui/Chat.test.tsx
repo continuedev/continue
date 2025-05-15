@@ -23,8 +23,8 @@ describe("Chat page test", () => {
       );
     });
 
-    // Check that it switched to Agent mode
-    expect(await screen.findByText("Chat")).toBeInTheDocument();
+    // Check that it switched to Edit mode
+    expect(await screen.findByText("Edit")).toBeInTheDocument();
 
     act(() => {
       document.dispatchEvent(
@@ -35,8 +35,8 @@ describe("Chat page test", () => {
       );
     });
 
-    // Check that it switched to Edit mode
-    expect(await screen.findByText("Edit")).toBeInTheDocument();
+    // Check that it switched to Chat mode
+    expect(await screen.findByText("Chat")).toBeInTheDocument();
   });
 
   it.skip("should send a message and receive a response", async () => {
