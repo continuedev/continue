@@ -152,6 +152,17 @@ export class VsCodeMessenger {
       await vscode.commands.executeCommand("granite.setup");
     });
 
+    this.onWebview("openExtensionSettings", async (msg) => {
+      const extensionIds = msg.data.extensions;
+      if (extensionIds.length === 0) {
+        //nothing to do
+        return;
+      }
+      await vscode.commands.executeCommand('workbench.extensions.search', extensionIds.join(" "));
+      // Open the 1st extension's page
+      await vscode.env.openExternal(vscode.Uri.parse(`vscode:extension/${extensionIds[0]}`));
+    });
+
     this.onWebview(
       "overwriteFile",
       async ({ data: { prevFileContent, filepath } }) => {

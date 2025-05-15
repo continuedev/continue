@@ -1,16 +1,14 @@
+import { ExtensionConflictReport, ExtensionInfo } from "core";
 import * as vscode from "vscode";
 
-import { ExtensionConflictReport, ExtensionInfo } from "core";
 import type { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
-const extensionNameLookup = new Map<string, string>([
-  ["redhat.granitecode" /* no-transform */, "Granite.Code" /* no-transform */],
-  ["Continue.continue" /* no-transform */, "Continue" /* no-transform */],
+const incompatibleExtensionIds = new Set<string>([
+  "redhat.granitecode" /* no-transform */,
+  "Continue.continue" /* no-transform */,
 ]);
 
-// We have to omit this file while building, otherwise it would not work properly
-const incompatibleExtensionIds = new Set(extensionNameLookup.keys());
-let currentExtensionId = null;
+let currentExtension: ExtensionInfo | undefined;
 
 export function checkForIncompatibleExtensions(): ExtensionConflictReport | null {
   const extensions = vscode.extensions.all;
@@ -19,21 +17,16 @@ export function checkForIncompatibleExtensions(): ExtensionConflictReport | null
     .map((e) => {
       return {
         id: e.id,
-        name: extensionNameLookup.get(e.id)!,
+        name: e.packageJSON.displayName ?? e.packageJSON.name,
       };
     });
 
-  if (conflictingExtensions.length === 0) {
-    return null;
-  } else {
-    return {
-      currentExtension: {
-        id: currentExtensionId!,
-        name: extensionNameLookup.get(currentExtensionId!)!,
-      },
-      conflictingExtensions,
-    };
-  }
+  return conflictingExtensions.length === 0
+    ? null
+    : {
+        currentExtension: currentExtension!,
+        conflictingExtensions,
+      };
 }
 
 export function setupExtensionCheck(
@@ -41,7 +34,13 @@ export function setupExtensionCheck(
   webviewMessenger: VsCodeWebviewProtocol,
 ) {
   // Grab current extension id during activation
-  currentExtensionId = context.extension.id;
+  const currentExtensionId = context.extension.id;
+  currentExtension = {
+    id: currentExtensionId,
+    name:
+      context.extension.packageJSON.displayName ??
+      context.extension.packageJSON.name,
+  };
   // Remove current extension id from the incompatible list
   incompatibleExtensionIds.delete(currentExtensionId);
 
