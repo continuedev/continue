@@ -282,7 +282,7 @@ describe("GUI Test", () => {
       // Verify the rule content
       const ruleItemText = await ruleItem.getText();
       expect(ruleItemText).to.include("Assistant rule");
-      expect(ruleItemText).to.include("Applies to all files");
+      expect(ruleItemText).to.include("Always applied");
       expect(ruleItemText).to.include("TEST_SYS_MSG");
     }).timeout(DEFAULT_TIMEOUT.MD);
 

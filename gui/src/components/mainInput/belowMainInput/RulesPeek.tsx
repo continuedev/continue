@@ -73,7 +73,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
 
           <div className="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400">
             {isGlobal
-              ? "Applies to all files"
+              ? "Always applied"
               : `Pattern: ${typeof rule.globs === "string" ? rule.globs : Array.isArray(rule.globs) ? rule.globs.join(", ") : ""}`}
           </div>
         </div>
