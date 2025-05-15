@@ -56,8 +56,9 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
 
   return (
     <div
-      className="group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10 ${isRuleLong ? "cursor-pointer hover:text-gray-200" : ""}`}
       data-testid="rules-peek-item"
+      onClick={toggleExpand}
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
@@ -79,15 +80,14 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
         </div>
       </div>
       <div
-        className={`mt-1 whitespace-normal pl-6 pr-2 text-xs italic text-gray-300 ${isRuleLong ? "cursor-pointer hover:text-gray-200" : ""}`}
-        onClick={toggleExpand}
+        className={`mt-1 whitespace-normal pl-6 pr-2 text-xs italic text-gray-300`}
         title={
           isRuleLong ? (expanded ? "Click to collapse" : "Click to expand") : ""
         }
       >
         {displayedRule}
         {isRuleLong && (
-          <span className="ml-1 block text-gray-400 opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="ml-1 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100">
             {expanded ? "(collapse)" : "(expand)"}
           </span>
         )}
