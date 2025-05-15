@@ -1229,6 +1229,16 @@ export interface UpdateApplyStatePayload {
   toolCallId?: string;
 }
 
+export interface StreamDiffLinesPayload {
+  prefix: string;
+  highlighted: string;
+  suffix: string;
+  input: string;
+  language: string | undefined;
+  modelTitle: string | undefined;
+  includeRulesInSystemMessage: boolean;
+}
+
 export interface HighlightedCodePayload {
   rangeInFileWithContents: RangeInFileWithContents;
   prompt?: string;

@@ -98,7 +98,7 @@ class VerticalDiffBlock(
             return
         }
 
-        if (deletedLines.size > 0) {
+        if (deletedLines.isNotEmpty()) {
             renderDeletedLinesInlay()
         }
 

@@ -26,7 +26,6 @@ class ApplyToFileHandlerTest {
     private val mockEditorUtils = mockk<EditorUtils>(relaxed = true)
     private val mockDiffStreamService = mockk<DiffStreamService>(relaxed = true)
     private val mockEditor = mockk<Editor>(relaxed = true)
-    private val mockCoreMessenger = mockk<CoreMessenger>(relaxed = true)
 
     // Test subject
     private lateinit var handler: ApplyToFileHandler
@@ -43,7 +42,6 @@ class ApplyToFileHandlerTest {
     fun setUp() {
         // Common setup
         every { mockEditorUtils.editor } returns mockEditor
-        every { mockContinuePluginService.coreMessenger } returns mockCoreMessenger
 
         // Create the handler with mocked dependencies
         handler = ApplyToFileHandler(
@@ -67,28 +65,5 @@ class ApplyToFileHandlerTest {
         // Then
         verify { mockEditorUtils.insertTextIntoEmptyDocument(testParams.text) }
         verify(exactly = 0) { mockDiffStreamService.register(any(), any()) } // Ensure no diff streaming happened
-
-        // Verify notifications sent
-        verify {
-            mockContinuePluginService.sendToWebview(
-                eq("updateApplyState"),
-                withArg { payload ->
-                    assert(payload is UpdateApplyStatePayload)
-                    assert((payload as UpdateApplyStatePayload).status == ApplyStateStatus.STREAMING)
-                },
-                any()
-            )
-        }
-
-        verify {
-            mockContinuePluginService.sendToWebview(
-                eq("updateApplyState"),
-                withArg { payload ->
-                    assert(payload is UpdateApplyStatePayload)
-                    assert((payload as UpdateApplyStatePayload).status == ApplyStateStatus.CLOSED)
-                },
-                any()
-            )
-        }
     }
 }

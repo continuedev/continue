@@ -1,7 +1,5 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.continuedev.continueintellijextension.UpdateApplyStatePayload
-import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.IDE
 import com.github.continuedev.continueintellijextension.ToastType
 import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
@@ -29,54 +27,26 @@ class ApplyToFileHandler(
 ) {
 
     suspend fun handleApplyToFile() {
-        // Notify webview that we're starting to stream
-        notifyStreamStarted()
 
         if (editorUtils == null) {
             ide.showToast(ToastType.ERROR, "No active editor to apply edits to")
-            notifyStreamClosed()
             return
         }
 
         if (editorUtils.isDocumentEmpty()) {
             editorUtils.insertTextIntoEmptyDocument(params.text)
-            notifyStreamClosed()
             return
         }
 
         // Get the LLM configuration for applying edits
         val llm = fetchApplyLLMConfig() ?: run {
             ide.showToast(ToastType.ERROR, "Failed to fetch model configuration")
-            notifyStreamClosed()
             return
         }
 
         setupAndStreamDiffs(editorUtils, llm)
     }
 
-    private fun notifyStreamStarted() {
-        sendApplyStateUpdate(ApplyStateStatus.STREAMING)
-    }
-
-    private fun notifyStreamClosed(numDiffs: Int? = 0) {
-        sendApplyStateUpdate(ApplyStateStatus.CLOSED, numDiffs)
-    }
-
-    private fun sendApplyStateUpdate(
-        status: ApplyStateStatus,
-        numDiffs: Int? = null
-    ) {
-        val payload = UpdateApplyStatePayload(
-            streamId = params.streamId,
-            status = status,
-            numDiffs = numDiffs,
-            filepath = params.filepath,
-            fileContent = params.text,
-            toolCallId = params.toolCallId.toString()
-        )
-
-        continuePluginService.sendToWebview("updateApplyState", payload)
-    }
 
     private suspend fun fetchApplyLLMConfig(): Any? {
         return try {

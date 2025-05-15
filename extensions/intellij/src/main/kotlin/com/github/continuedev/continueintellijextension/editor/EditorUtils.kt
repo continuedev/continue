@@ -16,6 +16,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBColor
+import com.intellij.openapi.editor.ScrollType
 
 /**
  * Utility class for working with Editor instances.
@@ -60,6 +61,18 @@ class EditorUtils(val editor: Editor) {
     fun insertTextIntoEmptyDocument(text: String) {
         insertTextAtPos(0, text)
     }
+
+
+    /**
+     * Scrolls the editor to make the specified line visible
+     */
+    fun scrollToLine(lineNumber: Int) {
+        val safeLineNumber = lineNumber.coerceIn(0, editor.document.lineCount - 1)
+        val lineStartOffset = editor.document.getLineStartOffset(safeLineNumber)
+        val logicalPosition = editor.offsetToLogicalPosition(lineStartOffset)
+        editor.scrollingModel.scrollTo(logicalPosition, ScrollType.CENTER_UP)
+    }
+
 
     /**
      * Extracts code ranges from the editor: (prefix, highlighted/selected text, suffix)
@@ -141,7 +154,7 @@ class EditorUtils(val editor: Editor) {
             val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
             return EditorUtils(editor)
         }
-        
+
         /**
          * Gets or opens an editor for the specified filepath and returns an EditorUtils instance
          */
