@@ -463,10 +463,7 @@ class IdeProtocolClient(
                             project,
                             continuePluginService,
                             ide,
-                            params.filepath,
-                            params.streamId,
-                            params.toolCallId.toString(),
-                            params.text
+                            params
                         )
                         respond(null)
                     }

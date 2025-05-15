@@ -7,9 +7,9 @@ import com.github.continuedev.continueintellijextension.ToastType
 import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
+import com.github.continuedev.continueintellijextension.protocol.ApplyToFileParams
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
-import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,17 +23,14 @@ class ApplyToFileHandler(
     private val project: Project,
     private val continuePluginService: ContinuePluginService,
     private val ide: IDE,
-    private val streamId: String,
-    private val toolCallId: String,
-    private val text: String,
-    private val filepath: String?,
+    private val params: ApplyToFileParams,
+    private val editorUtils: EditorUtils?,
+    private val diffStreamService: DiffStreamService
 ) {
 
     suspend fun handleApplyToFile() {
         // Notify webview that we're starting to stream
         notifyStreamStarted()
-
-        val editorUtils = EditorUtils.getOrOpenEditor(project, filepath)
 
         if (editorUtils == null) {
             ide.showToast(ToastType.ERROR, "No active editor to apply edits to")
@@ -42,7 +39,7 @@ class ApplyToFileHandler(
         }
 
         if (editorUtils.isDocumentEmpty()) {
-            editorUtils.insertTextIntoEmptyDocument(text)
+            editorUtils.insertTextIntoEmptyDocument(params.text)
             notifyStreamClosed()
             return
         }
@@ -70,12 +67,12 @@ class ApplyToFileHandler(
         numDiffs: Int? = null
     ) {
         val payload = UpdateApplyStatePayload(
-            streamId = streamId,
+            streamId = params.streamId,
             status = status,
             numDiffs = numDiffs,
-            filepath = filepath,
-            fileContent = text,
-            toolCallId = toolCallId
+            filepath = params.filepath,
+            fileContent = params.text,
+            toolCallId = params.toolCallId.toString()
         )
 
         continuePluginService.sendToWebview("updateApplyState", payload)
@@ -117,8 +114,6 @@ class ApplyToFileHandler(
     }
 
     private fun setupAndStreamDiffs(editorUtils: EditorUtils, llm: Any) {
-        val diffStreamService = project.service<DiffStreamService>()
-        
         // Clear all diff blocks before running the diff stream
         diffStreamService.reject(editorUtils.editor)
 
@@ -144,7 +139,7 @@ class ApplyToFileHandler(
     }
 
     private fun buildApplyPrompt(): String {
-        return "The following code was suggested as an edit:\n```\n${text}\n```\nPlease apply it to the previous code."
+        return "The following code was suggested as an edit:\n```\n${params.text}\n```\nPlease apply it to the previous code."
     }
 
     private fun createDiffStreamHandler(
@@ -159,8 +154,8 @@ class ApplyToFileHandler(
             endLine,
             {},
             {},
-            streamId,
-            toolCallId
+            params.streamId,
+            params.toolCallId.toString()
         )
     }
 
@@ -172,20 +167,18 @@ class ApplyToFileHandler(
             project: Project,
             continuePluginService: ContinuePluginService,
             ide: IDE,
-            filepath: String?,
-            streamId: String,
-            toolCallId: String,
-            text: String
+            params: ApplyToFileParams
         ) {
+            val editorUtils = EditorUtils.getOrOpenEditor(project, params.filepath)
+            val diffStreamService = project.getService(DiffStreamService::class.java)
 
             val handler = ApplyToFileHandler(
                 project,
                 continuePluginService,
                 ide,
-                streamId,
-                toolCallId,
-                text,
-                filepath,
+                params,
+                editorUtils,
+                diffStreamService
             )
 
             handler.handleApplyToFile()
