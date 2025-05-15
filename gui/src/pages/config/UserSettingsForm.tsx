@@ -77,6 +77,8 @@ export function UserSettingsForm() {
   // const codeBlockToolbarPosition = config.ui?.codeBlockToolbarPosition ?? "top";
   const useAutocompleteMultilineCompletions =
     config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
+  const modelTimeout = config.tabAutocompleteOptions?.modelTimeout ?? 150;
+  const debounceDelay = config.tabAutocompleteOptions?.debounceDelay ?? 250;
   const fontSize = getFontSize();
 
   const cancelChangeDisableAutocomplete = () => {
@@ -99,7 +101,7 @@ export function UserSettingsForm() {
   }, [ideMessenger]);
 
   return (
-    <div className="flex flex-col pt-3">
+    <div className="flex flex-col">
       {/* {selectedProfile && isLocalProfile(selectedProfile) ? (
         <div className="flex items-center justify-center">
           <SecondaryButton
@@ -232,9 +234,8 @@ export function UserSettingsForm() {
                 max={50}
               />
             </label>
-
             <label className="flex items-center justify-between gap-3">
-              <span className="line-clamp-1 text-left">
+              <span className="lines lines-1 text-left">
                 Multiline Autocompletions
               </span>
               <Select
@@ -253,7 +254,32 @@ export function UserSettingsForm() {
                 <option value="never">Never</option>
               </Select>
             </label>
-
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-left">Model Timeout (ms)</span>
+              <NumberInput
+                value={modelTimeout}
+                onChange={(val) =>
+                  handleUpdate({
+                    modelTimeout: val,
+                  })
+                }
+                min={100}
+                max={5000}
+              />
+            </label>
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-left">Model Debounce (ms)</span>
+              <NumberInput
+                value={debounceDelay}
+                onChange={(val) =>
+                  handleUpdate({
+                    debounceDelay: val,
+                  })
+                }
+                min={0}
+                max={2500}
+              />
+            </label>
             <form
               className="flex flex-col gap-1"
               onSubmit={(e) => {

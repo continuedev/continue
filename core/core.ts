@@ -61,6 +61,7 @@ import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { StreamAbortManager } from "./util/abortManager";
 
 export class Core {
   configHandler: ConfigHandler;
@@ -77,15 +78,15 @@ export class Core {
   );
 
   private messageAbortControllers = new Map<string, AbortController>();
-  private addMessageAbortController(messageId: string): AbortController {
+  private addMessageAbortController(id: string): AbortController {
     const controller = new AbortController();
-    this.messageAbortControllers.set(messageId, controller);
+    this.messageAbortControllers.set(id, controller);
     controller.signal.addEventListener("abort", () => {
-      this.messageAbortControllers.delete(messageId);
+      this.messageAbortControllers.delete(id);
     });
     return controller;
   }
-  private abortMessage(messageId: string) {
+  private abortById(messageId: string) {
     this.messageAbortControllers.get(messageId)?.abort();
   }
 
@@ -256,7 +257,7 @@ export class Core {
     });
 
     on("abort", (msg) => {
-      this.abortMessage(msg.messageId);
+      this.abortById(msg.data ?? msg.messageId);
     });
 
     on("ping", (msg) => {
@@ -437,16 +438,16 @@ export class Core {
     });
 
     on("llm/complete", async (msg) => {
-      const model = (await this.configHandler.loadConfig()).config
-        ?.selectedModelByRole.chat;
-
+      const { config } = await this.configHandler.loadConfig();
+      const model = config?.selectedModelByRole.chat;
       if (!model) {
         throw new Error("No chat model selected");
       }
+      const abortController = this.addMessageAbortController(msg.messageId);
 
       const completion = await model.complete(
         msg.data.prompt,
-        new AbortController().signal,
+        abortController.signal,
         msg.data.completionOptions,
       );
       return completion;
@@ -489,31 +490,45 @@ export class Core {
     });
 
     on("streamDiffLines", async (msg) => {
-      const abortController = this.addMessageAbortController(msg.messageId);
-
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
         throw new Error("Failed to load config");
       }
 
-      const llm = config.selectedModelByRole.chat;
+      const { data } = msg;
+
+      // Title can be an edit, chat, or apply model
+      // Fall back to chat
+      const llm =
+        config.modelsByRole.edit.find((m) => m.title === data.modelTitle) ??
+        config.modelsByRole.apply.find((m) => m.title === data.modelTitle) ??
+        config.modelsByRole.chat.find((m) => m.title === data.modelTitle) ??
+        config.selectedModelByRole.chat;
+
       if (!llm) {
-        throw new Error("No chat model selected");
+        throw new Error("No model selected");
       }
 
-      const { data } = msg;
       return streamDiffLines({
         highlighted: data.highlighted,
         prefix: data.prefix,
         suffix: data.suffix,
         llm,
-        rules: config.rules,
+        // rules included for edit, NOT apply
+        rulesToInclude: data.includeRulesInSystemMessage
+          ? config.rules
+          : undefined,
         input: data.input,
         language: data.language,
         onlyOneInsertion: false,
         overridePrompt: undefined,
-        abortController,
+        abortControllerId: data.fileUri ?? "current-file-stream", // not super important since currently cancelling apply will cancel all streams it's one file at a time
       });
+    });
+
+    on("cancelApply", async (msg) => {
+      const abortManager = StreamAbortManager.getInstance();
+      abortManager.clear();
     });
 
     on("completeOnboarding", this.handleCompleteOnboarding.bind(this));

@@ -143,6 +143,7 @@ export function Chat() {
         !e.shiftKey
       ) {
         dispatch(cancelStream());
+        ideMessenger.post("cancelApply", undefined); // just always cancel, if not in applying won't matter
       }
     };
     window.addEventListener("keydown", listener);
@@ -290,7 +291,7 @@ export function Chat() {
     <>
       {widget}
 
-      {!!showSessionTabs && <TabBar />}
+      {!!showSessionTabs && mode !== "edit" && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}

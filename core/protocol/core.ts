@@ -45,6 +45,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
   abort: [undefined, void];
+  cancelApply: [undefined, void];
 
   // History
   "history/list": [ListHistoryOptions, SessionMetadata[]];
@@ -150,6 +151,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       input: string;
       language: string | undefined;
       modelTitle: string | undefined;
+      includeRulesInSystemMessage: boolean;
+      fileUri?: string;
     },
     AsyncGenerator<DiffLine>,
   ];

@@ -1,7 +1,7 @@
 {
-  "name": "@continuedev/sdk",
+  "name": "@continuedev/hub-api",
   "version": "0.0.1",
-  "description": "OpenAPI client for @continuedev/sdk",
+  "description": "OpenAPI client for @continuedev/hub-api",
   "author": "OpenAPI-Generator",
   "repository": {
     "type": "git",

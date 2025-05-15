@@ -226,7 +226,7 @@ export class VsCodeMessenger {
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
-        rules: config.rules,
+        rulesToInclude: config.rules,
       });
       return fileAfterEdit;
     });
@@ -413,7 +413,7 @@ export class VsCodeMessenger {
     });
 
     this.onWebviewOrCore("reportError", async (msg) => {
-      handleLLMError(msg.data);
+      await handleLLMError(msg.data);
     });
   }
 }
