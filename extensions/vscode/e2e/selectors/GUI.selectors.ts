@@ -46,7 +46,7 @@ export class GUISelectors {
   }
 
   public static getToolCallStatusMessage(view: WebView) {
-    return SelectorUtils.getElementByDataTestId(view, "toggle-div-title");
+    return SelectorUtils.getElementByDataTestId(view, "tool-call-title");
   }
 
   public static getToolButton(view: WebView) {

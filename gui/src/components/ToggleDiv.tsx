@@ -50,10 +50,7 @@ function ToggleDiv({
             </>
           )}
         </div>
-        <span
-          className="ml-1 text-xs text-gray-400 transition-colors duration-200"
-          data-testid="toggle-div-title"
-        >
+        <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
           {title}
         </span>
       </div>
