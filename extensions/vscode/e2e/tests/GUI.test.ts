@@ -271,6 +271,14 @@ describe("GUI Test", () => {
         GUISelectors.getFirstRulesPeekItem(view),
       );
 
+      await TestUtils.waitForSuccess(async () => {
+        const text = await ruleItem.getText();
+        if (!text || text.trim() === "") {
+          throw new Error("Rule item text is empty");
+        }
+        return ruleItem;
+      });
+
       // Verify the rule content
       const ruleItemText = await ruleItem.getText();
       expect(ruleItemText).to.include("Assistant rule");
