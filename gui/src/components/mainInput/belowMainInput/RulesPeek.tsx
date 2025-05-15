@@ -74,7 +74,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
 
           <div className="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500">
             {isGlobal
-              ? "Applies to all files"
+              ? ""
               : `Pattern: ${typeof rule.globs === "string" ? rule.globs : Array.isArray(rule.globs) ? rule.globs.join(", ") : ""}`}
           </div>
         </div>
@@ -119,7 +119,7 @@ export function RulesPeek({ appliedRules, icon }: RulesPeekProps) {
     >
       {globalRules.length > 0 && (
         <div className="mb-1 ml-2 text-xs font-semibold text-gray-400">
-          Global Rules
+          Always Applied
         </div>
       )}
       {globalRules.map((rule, idx) => (
