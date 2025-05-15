@@ -235,10 +235,11 @@ jobs:
           cd packages/config-yaml
           npm run build
 
-      - name: Type check
+      - name: Type check and lint
         run: |
           cd gui
           npx tsc --noEmit
+          npm run lint
 
   binary-checks:
     needs: [install-root, install-core, install-config-yaml]
@@ -670,13 +671,6 @@ jobs:
           cd extensions/vscode
           rm -rf e2e/.test-extensions/continue*
 
-      - name: Upload e2e test screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-failure-screenshots
-          path: extensions/vscode/e2e/storage/screenshots
-
       - name: Sanitize test file name
         id: sanitize_filename
         if: always()
@@ -684,6 +678,13 @@ jobs:
           FILENAME="${{ matrix.test_file }}"
           SANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion
           echo "sanitized_test_file=${SANITIZED_FILENAME}" >> $GITHUB_OUTPUT
+
+      - name: Upload e2e test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure-screenshots-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+          path: extensions/vscode/e2e/storage/screenshots
 
       - name: Find e2e log file
         if: always()

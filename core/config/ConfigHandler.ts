@@ -255,7 +255,7 @@ export class ConfigHandler {
     if (currentProfile) {
       this.globalContext.update("lastSelectedProfileForWorkspace", {
         ...selectedProfiles,
-        [profileKey]: selectedProfiles.id ?? null,
+        [profileKey]: currentProfile.profileDescription.id,
       });
     }
 

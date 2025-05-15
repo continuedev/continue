@@ -459,6 +459,7 @@ export interface ChatHistoryItem {
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
+  appliedRules?: RuleWithSource[];
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -1023,6 +1024,7 @@ export interface BaseCompletionOptions {
   toolChoice?: ToolChoice;
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
+  promptCaching?: boolean;
 }
 
 export interface ModelCapability {
@@ -1090,6 +1092,7 @@ export interface TabAutocompleteOptions {
   disable: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
+  modelTimeout: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
   transform?: boolean;
@@ -1495,17 +1498,19 @@ export interface TerminalOptions {
   waitForCompletion?: boolean;
 }
 
+export type RuleSource =
+  | "default-chat"
+  | "default-agent"
+  | "model-chat-options"
+  | "model-agent-options"
+  | "rules-block"
+  | "json-systemMessage"
+  | ".continuerules";
+
 export interface RuleWithSource {
   name?: string;
   slug?: string;
-  source:
-    | "default-chat"
-    | "default-agent"
-    | "model-chat-options"
-    | "model-agent-options"
-    | "rules-block"
-    | "json-systemMessage"
-    | ".continuerules";
+  source: RuleSource;
   globs?: string | string[];
   rule: string;
   description?: string;
