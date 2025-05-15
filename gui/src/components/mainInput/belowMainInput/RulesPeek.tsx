@@ -39,7 +39,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   const [expanded, setExpanded] = useState(false);
 
   // Define maximum length for rule text display
-  const maxRuleLength = 120;
+  const maxRuleLength = 100;
   const isRuleLong = rule.rule.length > maxRuleLength;
 
   // Get the displayed rule text based on expanded state
@@ -71,9 +71,9 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
             {rule.name || "Assistant rule"}
           </div>
 
-          <div className="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400">
+          <div className="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500">
             {isGlobal
-              ? "Always applied"
+              ? "Applies to all files"
               : `Pattern: ${typeof rule.globs === "string" ? rule.globs : Array.isArray(rule.globs) ? rule.globs.join(", ") : ""}`}
           </div>
         </div>
