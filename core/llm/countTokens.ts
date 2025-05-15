@@ -355,7 +355,7 @@ function compileChatMessages({
     lastToolCallsMsg = msgsCopy.pop();
     if (!messageHasToolCallId(lastToolCallsMsg, lastUserOrToolMsg.toolCallId)) {
       throw new Error(
-        `Error parsing chat history: tool call found to match tool output for id ${lastUserOrToolMsg.toolCallId}`,
+        `Error parsing chat history: no tool call found to match tool output for id "${lastUserOrToolMsg.toolCallId}"`,
       );
     }
   }

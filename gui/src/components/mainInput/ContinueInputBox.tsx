@@ -5,13 +5,12 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import ContextItemsPeek from "./belowMainInput/ContextItemsPeek";
+import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
 
 interface ContinueInputBoxProps {
-  isEditMode?: boolean;
   isLastUserInput: boolean;
   isMainInput?: boolean;
   onEnter: (
@@ -82,36 +81,40 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useAppSelector(
     (state) => state.config.config.contextProviders,
   );
+  const mode = useAppSelector((store) => store.session.mode);
   const editModeState = useAppSelector((state) => state.editModeState);
 
-  const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
+  const filteredSlashCommands = useMemo(() => {
+    return mode === "edit" ? [] : availableSlashCommands;
+  }, [mode, availableSlashCommands]);
+
   const filteredContextProviders = useMemo(() => {
-    if (!props.isEditMode) {
-      return availableContextProviders ?? [];
+    if (mode === "edit") {
+      return (
+        availableContextProviders?.filter(
+          (provider) =>
+            !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
+        ) ?? []
+      );
     }
 
-    return (
-      availableContextProviders?.filter(
-        (provider) =>
-          !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
-      ) ?? []
-    );
-  }, [availableContextProviders]);
+    return availableContextProviders ?? [];
+  }, [availableContextProviders, mode]);
 
-  const historyKey = props.isEditMode ? "edit" : "chat";
-  const placeholder = props.isEditMode
-    ? "Describe changes, '#' to add files"
-    : undefined;
+  const historyKey = mode === "edit" ? "edit" : "chat";
+  const placeholder = mode === "edit" ? "Describe changes" : undefined;
 
-  const toolbarOptions: ToolbarOptions = props.isEditMode
-    ? {
-        hideAddContext: false,
-        hideImageUpload: false,
-        hideUseCodebase: true,
-        hideSelectModel: false,
-        enterText: editModeState.editStatus === "accepting" ? "Retry" : "Edit",
-      }
-    : {};
+  const toolbarOptions: ToolbarOptions =
+    mode === "edit"
+      ? {
+          hideAddContext: false,
+          hideImageUpload: false,
+          hideUseCodebase: true,
+          hideSelectModel: false,
+          enterText:
+            editModeState.applyState.status === "done" ? "Retry" : "Edit",
+        }
+      : {};
 
   return (
     <div

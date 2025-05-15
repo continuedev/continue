@@ -91,6 +91,20 @@ export class GUIActions {
     await dropdownOption.click();
   };
 
+  public static selectModeFromDropdown = async (
+    view: WebView,
+    option: string,
+  ) => {
+    const dropdownButton = await GUISelectors.getModeDropdownButton(view);
+    await dropdownButton.click();
+
+    const dropdownOption = await TestUtils.waitForSuccess(() => {
+      return GUISelectors.getModeDropdownOption(view, option);
+    });
+
+    await dropdownOption.click();
+  };
+
   public static async sendMessage({
     view,
     message,

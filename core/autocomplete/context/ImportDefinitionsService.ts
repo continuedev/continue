@@ -22,7 +22,13 @@ export class ImportDefinitionsService {
 
   constructor(private readonly ide: IDE) {
     ide.onDidChangeActiveTextEditor((filepath) => {
-      this.cache.initKey(filepath);
+      this.cache
+        .initKey(filepath)
+        .catch((e) =>
+          console.warn(
+            `Failed to initialize ImportDefinitionService: ${e.message}`,
+          ),
+        );
     });
   }
 

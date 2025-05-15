@@ -3,6 +3,8 @@ import { ApplyState } from "core";
 import { useEffect, useState } from "react";
 import { getMetaKeyLabel } from "../../../util";
 import Spinner from "../../gui/Spinner";
+import { ToolTip } from "../../gui/Tooltip";
+import HoverItem from "../../mainInput/InputToolbar/HoverItem";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {
@@ -35,27 +37,27 @@ export function ApplyActions(props: ApplyActionsProps) {
   }
 
   const applyButton = (text: string) => (
-    <button
-      data-testid="codeblock-toolbar-apply"
-      className="text-lightgray text-[${vscForeground}] flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
-      onClick={props.onClickApply}
+    <HoverItem
+      data-tooltip-id="codeblock-apply-code-button-tooltip"
+      className="!p-0"
     >
-      <div className="text-lightgray flex items-center gap-1">
-        <PlayIcon className="h-3.5 w-3.5" />
-        <span className="xs:inline hidden">{text}</span>
-      </div>
-    </button>
+      <button
+        data-testid="codeblock-toolbar-apply"
+        className="text-lightgray text-[${vscForeground}] flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
+        onClick={props.onClickApply}
+      >
+        <div className="text-lightgray flex items-center gap-1">
+          <PlayIcon className="h-3.5 w-3.5" />
+          <span className="xs:inline hidden">{text}</span>
+        </div>
+      </button>
+      <ToolTip id="codeblock-apply-code-button-tooltip" place="top">
+        {text} Code
+      </ToolTip>
+    </HoverItem>
   );
 
   switch (props.applyState ? props.applyState.status : null) {
-    case "not-started":
-      return (
-        <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">
-          <span className="text-lightgray inline-flex w-min items-center gap-2 text-center text-xs">
-            Pending
-          </span>
-        </div>
-      );
     case "streaming":
       return (
         <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">

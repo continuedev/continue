@@ -64,7 +64,7 @@ const isWinTarget = target?.startsWith("win");
 const isLinuxTarget = target?.startsWith("linux");
 const isMacTarget = target?.startsWith("darwin");
 
-(async () => {
+void (async () => {
   console.log("[info] Packaging extension for target ", target);
 
   // Generate and copy over config-yaml-schema.json
@@ -464,6 +464,9 @@ const isMacTarget = target?.startsWith("darwin");
     ),
   );
 
+  // delete esbuild/bin because platform-specific @esbuild is downloaded
+  fs.rmdirSync(`out/node_modules/esbuild/bin`, { recursive: true });
+
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 
   // Copy over any worker files
@@ -530,6 +533,5 @@ const isMacTarget = target?.startsWith("darwin");
     }`,
     `out/node_modules/@lancedb/vectordb-${target}${isWinTarget ? "-msvc" : ""}${isLinuxTarget ? "-gnu" : ""}/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
-    `out/node_modules/esbuild/bin/esbuild`,
   ]);
 })();

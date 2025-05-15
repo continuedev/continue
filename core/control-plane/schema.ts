@@ -16,6 +16,7 @@ const modelDescriptionSchema = z.object({
     "sagemaker",
     "cloudflare",
     "azure",
+    "ovhcloud",
     "nebius",
     "siliconflow",
     "scaleway",
@@ -43,6 +44,7 @@ const modelDescriptionSchema = z.object({
       "llava",
       "gemma",
       "llama3",
+      "codestral",
     ])
     .optional(),
   completionOptions: z
@@ -59,6 +61,7 @@ const modelDescriptionSchema = z.object({
       numThreads: z.number().optional(),
       useMmap: z.boolean().optional(),
       keepAlive: z.number().optional(),
+      numGpu: z.number().optional(),
       raw: z.boolean().optional(),
       stream: z.boolean().optional(),
     })
@@ -86,6 +89,7 @@ const embeddingsProviderSchema = z.object({
     "cohere",
     "free-trial",
     "gemini",
+    "ovhcloud",
     "nebius",
     "siliconflow",
     "scaleway",

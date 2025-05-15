@@ -279,10 +279,7 @@ export class ConfigHandler {
     if (options.includeWorkspace) {
       const assistantFiles = await getAllDotContinueYamlFiles(
         this.ide,
-        {
-          ...options,
-          includeGlobal: false, // Because the global comes from above
-        },
+        options,
         ASSISTANTS,
       );
       const profiles = assistantFiles.map((assistant) => {
@@ -349,7 +346,7 @@ export class ConfigHandler {
     this.currentOrg = org;
 
     if (profileId) {
-      this.setSelectedProfileId(profileId);
+      await this.setSelectedProfileId(profileId);
     } else {
       this.currentProfile = org.currentProfile;
       await this.reloadConfig();

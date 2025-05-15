@@ -4,8 +4,9 @@ import { ToolImpl } from ".";
 import { joinPathsToUri } from "../../util/uri";
 
 export interface CreateRuleBlockArgs {
-  rule_name: string;
-  rule_content: string;
+  name: string;
+  rule: string;
+  globs?: string;
 }
 
 export const createRuleBlockImpl: ToolImpl = async (
@@ -13,22 +14,24 @@ export const createRuleBlockImpl: ToolImpl = async (
   extras,
 ) => {
   // Sanitize rule name for use in filename (remove special chars, replace spaces with dashes)
-  const safeRuleName = args.rule_name
+  const safeRuleName = args.name
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
 
-  const ruleBlock: ConfigYaml = {
-    name: args.rule_name,
-    version: "0.0.1",
-    rules: [
-      // This can be either a string or an object with {name, rule}
-      // Since we want a simple rule, we use the string format
-      args.rule_content,
-    ],
+  const ruleObject = {
+    name: args.name,
+    rule: args.rule,
+    ...(args.globs ? { globs: args.globs.trim() } : {}),
   };
 
-  // Convert the rule block to YAML
+  const ruleBlock: ConfigYaml = {
+    name: args.name,
+    version: "0.0.1",
+    schema: "v1",
+    rules: [ruleObject],
+  };
+
   const ruleYaml = YAML.stringify(ruleBlock);
 
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
@@ -44,9 +47,13 @@ export const createRuleBlockImpl: ToolImpl = async (
 
   return [
     {
-      name: "Rule Block Created",
-      description: `Created ${args.rule_name} rule`,
-      content: ruleYaml,
+      name: "New Rule Block",
+      description: "", // No description throws an error in the GUI
+      uri: {
+        type: "file",
+        value: rulesDirUri,
+      },
+      content: "Rule created successfully",
     },
   ];
 };

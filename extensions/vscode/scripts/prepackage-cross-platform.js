@@ -209,10 +209,9 @@ async function package(target, os, arch, exe) {
         : `${target}${os === "linux" ? "-gnu" : ""}`
     }/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
-    `out/node_modules/esbuild/bin/esbuild`,
   ]);
 }
 
-(async () => {
+void (async () => {
   await package(target, os, arch, exe);
 })();

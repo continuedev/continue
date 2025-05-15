@@ -1,7 +1,6 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
-import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import styled from "styled-components";
@@ -22,6 +21,7 @@ import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
+import { rehypeHighlightPlugin } from "./rehypeHighlightPlugin";
 import { StepContainerPreToolbar } from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
@@ -193,11 +193,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     };
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
-
-  const isLastItem = useMemo(() => {
-    return props.itemIndex === history.length - 1;
-  }, [history.length, props.itemIndex]);
-  const isLastItemRef = useUpdatingRef(isLastItem);
+  const itemIndexRef = useUpdatingRef(props.itemIndex);
 
   const codeblockStreamIds = useRef<string[]>([]);
   useEffect(() => {
@@ -221,7 +217,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
         visit(tree, "code", (node: any) => {
           if (!node.lang) {
-            node.lang = "javascript";
+            node.lang = "";
           } else if (node.lang.includes(".")) {
             node.lang = node.lang.split(".").slice(-1)[0];
           }
@@ -243,14 +239,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypePlugins: [
       rehypeKatex as any,
       {},
-      rehypeHighlight as any,
+      rehypeHighlightPlugin(),
       // Note: An empty obj is the default behavior, but leaving this here for scaffolding to
       // add unsupported languages in the future. We will need to install the `lowlight` package
       // to use the `common` language set in addition to unsupported languages.
       // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
-      {
-        // languages: {},
-      } as Options,
       () => {
         let codeBlockIndex = 0;
         return (tree) => {
@@ -299,8 +292,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
-          const isFinalCodeblock =
-            preChildProps["data-islastcodeblock"] && isLastItemRef.current;
+          const isLastCodeblock = preChildProps["data-islastcodeblock"];
 
           if (codeblockStreamIds.current[codeBlockIndex] === undefined) {
             codeblockStreamIds.current[codeBlockIndex] =
@@ -310,10 +302,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
+              itemIndex={itemIndexRef.current}
               codeBlockIndex={codeBlockIndex}
               language={language}
               relativeFilepath={relativeFilePath}
-              isFinalCodeblock={isFinalCodeblock}
+              isLastCodeblock={isLastCodeblock}
               range={range}
               codeBlockStreamId={codeblockStreamIds.current[codeBlockIndex]}
               expanded={props.expandCodeblocks}
