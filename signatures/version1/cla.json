@@ -47,6 +47,14 @@
       "created_at": "2025-05-15T17:02:30Z",
       "repoId": 644686905,
       "pullRequestNo": 5481
+    },
+    {
+      "name": "tomasz-stefaniak",
+      "id": 7911227,
+      "comment_id": 2884594232,
+      "created_at": "2025-05-15T17:39:37Z",
+      "repoId": 644686905,
+      "pullRequestNo": 5677
     }
   ]
 }
