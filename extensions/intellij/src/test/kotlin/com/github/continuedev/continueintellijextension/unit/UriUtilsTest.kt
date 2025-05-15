@@ -49,4 +49,18 @@ class UriUtilsTest {
         val file = UriUtils.uriToFile(uri)
         assertEquals(File("/path/to/file"), file)
     }
+
+    @Test
+    fun testUriToFileWithWSLPath() {
+        val uri = "file:///wsl$/Ubuntu/home/user/file.txt"
+        val file = UriUtils.uriToFile(uri)
+        assertEquals(File("/wsl$/Ubuntu/home/user/file.txt"), file)
+    }
+
+    @Test
+    fun testUriToFileWithWSLLocalhostPath() {
+        val uri = "file:///wsl.localhost/Ubuntu/home/user/file.txt"
+        val file = UriUtils.uriToFile(uri)
+        assertEquals(File("/wsl.localhost/Ubuntu/home/user/file.txt"), file)
+    }
 }
