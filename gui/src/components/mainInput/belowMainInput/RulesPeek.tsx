@@ -5,7 +5,6 @@ import ToggleDiv from "../../ToggleDiv";
 
 interface RulesPeekProps {
   appliedRules?: RuleWithSource[];
-  isCurrentRulesPeek: boolean;
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
@@ -72,11 +71,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   );
 }
 
-export function RulesPeek({
-  appliedRules,
-  isCurrentRulesPeek,
-  icon,
-}: RulesPeekProps) {
+export function RulesPeek({ appliedRules, icon }: RulesPeekProps) {
   const rules = useMemo(() => {
     return appliedRules ?? [];
   }, [appliedRules]);

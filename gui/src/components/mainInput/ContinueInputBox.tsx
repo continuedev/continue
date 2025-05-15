@@ -149,10 +149,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         contextItems={props.contextItems}
         isCurrentContextPeek={props.isLastUserInput}
       />
-      <RulesPeek
-        appliedRules={props.appliedRules}
-        isCurrentRulesPeek={props.isLastUserInput}
-      />
+      <RulesPeek appliedRules={props.appliedRules} />
     </div>
   );
 }
