@@ -131,6 +131,37 @@ async function callToolFromUri(
   }
 }
 
+async function callBuiltInTool(
+  functionName: string,
+  args: any,
+  extras: ToolExtras,
+): Promise<ContextItem[]> {
+  switch (functionName) {
+    case BuiltInToolNames.ReadFile:
+      return await readFileImpl(args, extras);
+    case BuiltInToolNames.CreateNewFile:
+      return await createNewFileImpl(args, extras);
+    case BuiltInToolNames.GrepSearch:
+      return await grepSearchImpl(args, extras);
+    case BuiltInToolNames.FileGlobSearch:
+      return await fileGlobSearchImpl(args, extras);
+    case BuiltInToolNames.RunTerminalCommand:
+      return await runTerminalCommandImpl(args, extras);
+    case BuiltInToolNames.SearchWeb:
+      return await searchWebImpl(args, extras);
+    case BuiltInToolNames.ViewDiff:
+      return await viewDiffImpl(args, extras);
+    case BuiltInToolNames.LSTool:
+      return await lsToolImpl(args, extras);
+    case BuiltInToolNames.ReadCurrentlyOpenFile:
+      return await readCurrentlyOpenFileImpl(args, extras);
+    case BuiltInToolNames.CreateRuleBlock:
+      return await createRuleBlockImpl(args, extras);
+    default:
+      throw new Error(`Tool "${functionName}" not found`);
+  }
+}
+
 // Handles calls for core/non-client tools
 // Returns an error context item if the tool call fails
 // Note: Edit tool is handled on client
@@ -144,45 +175,9 @@ export async function callTool(
 }> {
   try {
     const args = JSON.parse(callArgs || "{}");
-    let contextItems: ContextItem[] = [];
-    if (tool.uri) {
-      contextItems = await callToolFromUri(tool.uri, args, extras);
-    } else {
-      switch (tool.function.name) {
-        case BuiltInToolNames.ReadFile:
-          contextItems = await readFileImpl(args, extras);
-          break;
-        case BuiltInToolNames.CreateNewFile:
-          contextItems = await createNewFileImpl(args, extras);
-          break;
-        case BuiltInToolNames.GrepSearch:
-          contextItems = await grepSearchImpl(args, extras);
-          break;
-        case BuiltInToolNames.FileGlobSearch:
-          contextItems = await fileGlobSearchImpl(args, extras);
-          break;
-        case BuiltInToolNames.RunTerminalCommand:
-          contextItems = await runTerminalCommandImpl(args, extras);
-          break;
-        case BuiltInToolNames.SearchWeb:
-          contextItems = await searchWebImpl(args, extras);
-          break;
-        case BuiltInToolNames.ViewDiff:
-          contextItems = await viewDiffImpl(args, extras);
-          break;
-        case BuiltInToolNames.LSTool:
-          contextItems = await lsToolImpl(args, extras);
-          break;
-        case BuiltInToolNames.ReadCurrentlyOpenFile:
-          contextItems = await readCurrentlyOpenFileImpl(args, extras);
-          break;
-        case BuiltInToolNames.CreateRuleBlock:
-          contextItems = await createRuleBlockImpl(args, extras);
-          break;
-        default:
-          throw new Error(`Tool "${tool.function.name}" not found`);
-      }
-    }
+    const contextItems = tool.uri
+      ? await callToolFromUri(tool.uri, args, extras)
+      : await callBuiltInTool(tool.function.name, args, extras);
     if (tool.faviconUrl) {
       contextItems.forEach((item) => {
         item.icon = tool.faviconUrl;
