@@ -230,7 +230,7 @@ enum class ApplyStateStatus {
     }
 }
 
-data class UpdateApplyStatePayload(
+data class ApplyState(
     val streamId: String,
     val status: ApplyStateStatus? = null,
     val numDiffs: Int? = null,

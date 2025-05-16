@@ -7,7 +7,7 @@ import {
 } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
-  UpdateApplyStatePayload,
+  ApplyState,
   ChatHistoryItem,
   ChatMessage,
   ContextItem,
@@ -48,7 +48,7 @@ type SessionState = {
   symbols: FileSymbolMap;
   mode: MessageModes;
   codeBlockApplyStates: {
-    states: UpdateApplyStatePayload[];
+    states: ApplyState[];
     curIndex: number;
   };
   newestToolbarPreviewForInput: Record<string, string>;
@@ -535,10 +535,7 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    updateApplyState: (
-      state,
-      { payload }: PayloadAction<UpdateApplyStatePayload>,
-    ) => {
+    updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(
         (state) => state.streamId === payload.streamId,
       );

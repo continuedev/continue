@@ -2,7 +2,7 @@ package com.github.continuedev.continueintellijextension.unit
 
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.IDE
-import com.github.continuedev.continueintellijextension.UpdateApplyStatePayload
+import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.`continue`.ApplyToFileHandler
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
@@ -73,8 +73,8 @@ class ApplyToFileHandlerTest {
             mockContinuePluginService.sendToWebview(
                 eq("updateApplyState"),
                 withArg { payload ->
-                    assert(payload is UpdateApplyStatePayload)
-                    assert((payload as UpdateApplyStatePayload).status == ApplyStateStatus.STREAMING)
+                    assert(payload is ApplyState)
+                    assert((payload as ApplyState).status == ApplyStateStatus.STREAMING)
                 },
                 any()
             )
@@ -84,8 +84,8 @@ class ApplyToFileHandlerTest {
             mockContinuePluginService.sendToWebview(
                 eq("updateApplyState"),
                 withArg { payload ->
-                    assert(payload is UpdateApplyStatePayload)
-                    assert((payload as UpdateApplyStatePayload).status == ApplyStateStatus.CLOSED)
+                    assert(payload is ApplyState)
+                    assert((payload as ApplyState).status == ApplyStateStatus.CLOSED)
                 },
                 any()
             )

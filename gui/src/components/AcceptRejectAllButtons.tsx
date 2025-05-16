@@ -1,12 +1,12 @@
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { UpdateApplyStatePayload } from "core";
+import { ApplyState } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { getMetaKeyLabel } from "../util";
 import { useFontSize } from "./ui/font";
 
 export interface AcceptRejectAllButtonsProps {
-  applyStates: UpdateApplyStatePayload[];
+  applyStates: ApplyState[];
   onAcceptOrReject?: (outcome: AcceptOrRejectOutcome) => void;
 }
 

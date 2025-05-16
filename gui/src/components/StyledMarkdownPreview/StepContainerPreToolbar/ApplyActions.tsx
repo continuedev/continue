@@ -1,5 +1,5 @@
 import { CheckIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { UpdateApplyStatePayload } from "core";
+import { ApplyState } from "core";
 import { useEffect, useState } from "react";
 import { getMetaKeyLabel } from "../../../util";
 import Spinner from "../../gui/Spinner";
@@ -9,7 +9,7 @@ import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {
   disableManualApply?: boolean;
-  applyState?: UpdateApplyStatePayload;
+  applyState?: ApplyState;
   onClickAccept: () => void;
   onClickReject: () => void;
   onClickApply: () => void;

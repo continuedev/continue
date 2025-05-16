@@ -1,6 +1,6 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.continuedev.continueintellijextension.UpdateApplyStatePayload
+import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.IDE
 import com.github.continuedev.continueintellijextension.ToastType
@@ -66,7 +66,7 @@ class ApplyToFileHandler(
         status: ApplyStateStatus,
         numDiffs: Int? = null
     ) {
-        val payload = UpdateApplyStatePayload(
+        val payload = ApplyState(
             streamId = params.streamId,
             status = status,
             numDiffs = numDiffs,

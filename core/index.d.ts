@@ -1221,7 +1221,7 @@ export type ApplyStateStatus =
   | "done" // All changes have been applied, awaiting user to accept/reject
   | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
 
-export interface UpdateApplyStatePayload {
+export interface ApplyState {
   streamId: string;
   status?: ApplyStateStatus;
   numDiffs?: number;
