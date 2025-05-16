@@ -46,6 +46,7 @@ class IdeProtocolClient(
      *
      * See this thread for details: https://github.com/continuedev/continue/issues/4098#issuecomment-2854865310
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val limitedDispatcher = Dispatchers.IO.limitedParallelism(4)
 
     init {
@@ -526,10 +527,16 @@ class IdeProtocolClient(
                                     null
                                 ) { response ->
                                     try {
-                                        val selectedModels = response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "selectedModelByRole")
+                                        val selectedModels = response.castNestedOrNull<Map<String, Any>>(
+                                            "content",
+                                            "result",
+                                            "config",
+                                            "selectedModelByRole"
+                                        )
 
                                         // If "apply" role model is not found, try "chat" role
-                                        val applyCodeBlockModel = selectedModels?.get("apply") ?: selectedModels?.get("chat")
+                                        val applyCodeBlockModel =
+                                            selectedModels?.get("apply") ?: selectedModels?.get("chat")
 
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)

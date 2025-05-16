@@ -166,7 +166,11 @@ function ModelSelect() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "'" && isMetaEquivalentKeyPressed(event as any)) {
+      if (
+        event.key === "'" &&
+        isMetaEquivalentKeyPressed(event as any) &&
+        !event.shiftKey // To prevent collisions w/ assistant toggle logic
+      ) {
         if (!selectedProfile) {
           return;
         }
@@ -179,7 +183,7 @@ function ModelSelect() {
         if (nextIndex < 0) nextIndex = options.length - 1;
         const newModelTitle = options[nextIndex].value;
 
-        dispatch(
+        void dispatch(
           updateSelectedModelByRole({
             selectedProfile,
             role: "chat",
@@ -219,7 +223,7 @@ function ModelSelect() {
     <Listbox
       onChange={async (val: string) => {
         if (val === selectedModel?.title) return;
-        dispatch(
+        void dispatch(
           updateSelectedModelByRole({
             selectedProfile,
             role: mode === "edit" ? "edit" : "chat",
