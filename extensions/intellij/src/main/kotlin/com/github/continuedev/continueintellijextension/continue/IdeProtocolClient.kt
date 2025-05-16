@@ -1,10 +1,8 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import IntelliJIDE
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
-import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService

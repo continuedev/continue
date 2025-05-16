@@ -7,9 +7,7 @@ import com.intellij.openapi.project.guessProjectDir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
-import java.net.URI
 
 class GitService(
     private val project: Project,
@@ -52,7 +50,7 @@ class GitService(
             } else {
                 ProcessBuilder("git", "diff", "--cached")
             }
-            builder.directory(File(URI(workspaceDir)))
+            builder.directory(UriUtils.uriToFile(workspaceDir))
             val process = withContext(Dispatchers.IO) {
                 builder.start()
             }
