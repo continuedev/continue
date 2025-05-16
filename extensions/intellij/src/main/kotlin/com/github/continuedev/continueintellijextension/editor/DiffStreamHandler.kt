@@ -69,9 +69,9 @@ class DiffStreamHandler(
     }
 
     fun acceptAll() {
-        editor.markupModel.removeAllHighlighters();
-        sendUpdate(ApplyStateStatus.CLOSED)
-        resetState()
+        ApplicationManager.getApplication().invokeLater {
+            diffBlocks.toList().forEach { it.handleAccept() }
+        }
     }
 
     fun rejectAll() {
@@ -79,12 +79,16 @@ class DiffStreamHandler(
         // to our changes. However, if the user has accepted or rejected one or more diff blocks, there isn't a simple
         // way to undo our changes without also undoing the diff that the user accepted or rejected.
         if (hasAcceptedOrRejectedBlock) {
-            diffBlocks.forEach { it.handleReject() }
+            ApplicationManager.getApplication().invokeLater {
+                val blocksToReject = diffBlocks.toList()
+                blocksToReject.toList().forEach { it.handleReject() }
+            }
         } else {
             undoChanges()
+            // We have to manually call `handleClosedState`, but above,
+            // this is done by invoking the button handlers
+            setClosed()
         }
-        sendUpdate(ApplyStateStatus.CLOSED)
-        resetState()
     }
 
     fun streamDiffLinesToEditor(
@@ -170,11 +174,10 @@ class DiffStreamHandler(
         }
 
         if (diffBlocks.isEmpty()) {
-            sendUpdate(ApplyStateStatus.CLOSED)
-            onClose()
+            setClosed()
         } else {
             // TODO: It's confusing that we pass `DONE` here. What we're doing is updating the UI with the latest
-            // diff count. We should have a dedicated status for
+            // diff count. We should have a dedicated status for this.
             sendUpdate(ApplyStateStatus.DONE)
         }
     }
@@ -268,11 +271,11 @@ class DiffStreamHandler(
 
 
     private fun undoChanges() {
-        WriteCommandAction.runWriteCommandAction(project) {
-            if (virtualFile == null) {
-                return@runWriteCommandAction
-            }
+        if (virtualFile == null) {
+            return
+        }
 
+        WriteCommandAction.runWriteCommandAction(project) {
             val undoManager = UndoManager.getInstance(project)
             val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile) as TextEditor
 
@@ -296,7 +299,11 @@ class DiffStreamHandler(
             onFinish()
             cleanupProgressHighlighters()
 
-            sendUpdate(if (diffBlocks.isEmpty()) ApplyStateStatus.CLOSED else ApplyStateStatus.DONE)
+            if (diffBlocks.isEmpty()) {
+                setClosed()
+            } else {
+                sendUpdate(ApplyStateStatus.DONE)
+            }
         }
     }
 
@@ -325,5 +332,11 @@ class DiffStreamHandler(
             "old" -> DiffLineType.OLD
             else -> throw Exception("Unknown diff line type: $type")
         }
+    }
+
+    private fun setClosed() {
+        sendUpdate(ApplyStateStatus.CLOSED)
+        resetState()
+        onClose()
     }
 }

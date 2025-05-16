@@ -240,3 +240,8 @@ data class StreamDiffLinesPayload(
     val modelTitle: String?,
     val includeRulesInSystemMessage: Boolean
 )
+
+data class AcceptOrRejectDiffPayload(
+    val filepath: String,
+    val streamId: String? = null
+)

@@ -1245,6 +1245,11 @@ export interface HighlightedCodePayload {
   shouldRun?: boolean;
 }
 
+export interface AcceptOrRejectDiffPayload {
+  filepath: string;
+  streamId?: string;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {

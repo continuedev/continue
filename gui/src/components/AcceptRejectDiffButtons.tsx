@@ -1,5 +1,6 @@
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { UpdateApplyStatePayload } from "core";
+import { ToIdeFromWebviewProtocol } from "core/protocol/ideWebview";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { getMetaKeyLabel } from "../util";
@@ -10,9 +11,12 @@ export interface AcceptRejectAllButtonsProps {
   onAcceptOrReject?: (outcome: AcceptOrRejectOutcome) => void;
 }
 
-export type AcceptOrRejectOutcome = "acceptDiff" | "rejectDiff";
+export type AcceptOrRejectOutcome = keyof Pick<
+  ToIdeFromWebviewProtocol,
+  "acceptDiff" | "rejectDiff"
+>;
 
-export default function AcceptRejectAllButtons({
+export default function AcceptRejectDiffButtons({
   applyStates,
   onAcceptOrReject,
 }: AcceptRejectAllButtonsProps) {
@@ -24,6 +28,7 @@ export default function AcceptRejectAllButtons({
   const tinyFont = useFontSize(-3);
 
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
+    debugger;
     for (const { filepath = "", streamId } of pendingApplyStates) {
       ideMessenger.post(status, {
         filepath,
@@ -53,7 +58,6 @@ export default function AcceptRejectAllButtons({
         <div className="flex flex-row items-center gap-1">
           <XMarkIcon className="h-4 w-4 text-red-600" />
           <span>Reject</span>
-          <span className="xs:inline-block hidden">All</span>
         </div>
 
         <span
@@ -73,7 +77,6 @@ export default function AcceptRejectAllButtons({
         <div className="flex flex-row items-center gap-1">
           <CheckIcon className="h-4 w-4 text-green-600" />
           <span>Accept</span>
-          <span className="xs:inline-block hidden">All</span>
         </div>
         <span
           className="xs:inline-block hidden text-gray-400"
