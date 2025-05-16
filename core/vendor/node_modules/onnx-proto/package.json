@@ -1,0 +1,25 @@
+{
+  "name": "onnx-proto",
+  "version": "4.0.4",
+  "description": "Onnx Protobuf definition for JavaScript",
+  "main": "dist/onnx.js",
+  "types": "dist/onnx.d.ts",
+  "unpkg": "dist/onnx.min.js",
+  "scripts": {
+    "build": "sh scripts/run.sh",
+    "publish-npm": "npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chaosmail/onnx-proto.git"
+  },
+  "keywords": [
+    "onnx",
+    "protobuf"
+  ],
+  "author": "Christoph Koerner",
+  "license": "MIT",
+  "dependencies": {
+    "protobufjs": "^6.8.8"
+  }
+}

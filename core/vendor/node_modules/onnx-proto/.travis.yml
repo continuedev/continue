@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - "7"
+
+script:
+  - npm run build
+
+deploy:
+  provider: npm
+  email: office@chaosmail.at
+  api_key:
+    secure: azlX/Y7Yw62oFt4ABQTLT3OlXCKQene3lQ3JSVi+QgYQYGVVxwE7HFp43VX9E/ZYr45MVy93+mw5xWAFuTmN3cAvnDOoI/kQ3XeRVD/CaKM4zm8nihmOXnXe2+89Q+F2I0saVDCfskQQKMDvMOAdyYB6xz7YnkIs1P7duimvNQnGQ1IY7NPkYWbDMkJdIn2LGnHW1ac5pRwo6rWJ9+4yCIhgBtbEa13eBF7Uxb4ZF0rMmKuVB64yvrRTSxli6rupQdih6gaiwxSmRkjqVtXMz9HZWVbqB202PTCwvcdJeMGTRuBGHio5ZUKKNB3b4K281EMOSa0FwAeSy/bwIXbp/xbUd0ekdYjw/wV1DTmnCpgGd5wGrQV0T9kRAeiNIwdEUHT02fJn2IxrQWslyHF3e2EITcbMoidmzT4FGo3FJUek3aXZDDhD7KtqtitNn8uPZ4bciQkONfRp3n2TTvDhMQ58sKDHbqMAxKy29U4NnZE9jiQvKzASfUyeQTvU1AwbUw90gLK/AdZtxpfaTekJOJG7FMNU1NyRMe74vJt9mWXDncLsB7gbLq/+JTWyUuy8r1rBWvngNsBJIppQ0driaou6x0RUtVs9KoITHGv9OWI//DaObA8ld66asDtLYG04kVICni29lE3ewVUDcp0LccG0VOIcFqKC6UvpUYMkxCw=
+  skip_cleanup: true
+  on:
+    branch: master

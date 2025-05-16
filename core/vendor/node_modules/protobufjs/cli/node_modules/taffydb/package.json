@@ -1,0 +1,47 @@
+{
+  "author": {
+    "name": "Ian Smith"
+  },
+  "contributors": [
+    {
+      "name": "Ian Smith"
+    },
+    {
+      "name": "Todd Chambery",
+      "email": "todd.chambery@gmail.com"
+    },
+    {
+      "name": "Daniel Ruf",
+      "email": "kontakt@daniel-ruf.de"
+    },
+    {
+      "name": "Michael Mikowski",
+      "email": "mmikowski@snaplogic.com"
+    },
+    {
+      "name": "Matthew Chase Whittemore",
+      "email": "mcwhittemore@gmail.com"
+    }
+  ],
+  "name": "taffydb",
+  "main": "./taffy",
+  "description": "TaffyDB is an opensouce library that brings database features into your JavaScript applications.",
+  "version": "2.6.2",
+  "homepage": "http://taffydb.com/",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/typicaljoe/taffydb.git"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "maintainers": [
+    {
+      "name": "chambery",
+      "email": "todd.chambery@gmail.com"
+    },
+    {
+      "name": "mcwhittemore",
+      "email": "mcwhittemore@gmail.com"
+    }
+  ]
+}

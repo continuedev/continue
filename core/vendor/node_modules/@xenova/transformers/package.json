@@ -1,0 +1,85 @@
+{
+  "name": "@xenova/transformers",
+  "version": "2.14.0",
+  "description": "State-of-the-art Machine Learning for the web. Run 🤗 Transformers directly in your browser, with no need for a server!",
+  "main": "./src/transformers.js",
+  "types": "./types/transformers.d.ts",
+  "type": "module",
+  "scripts": {
+    "typegen": "tsc ./src/transformers.js --allowJs --declaration --emitDeclarationOnly --declarationMap --outDir types",
+    "dev": "webpack serve --no-client-overlay",
+    "build": "webpack && npm run typegen",
+    "generate-tests": "python -m tests.generate_tests",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose --maxConcurrency 1",
+    "readme": "python ./docs/scripts/build_readme.py",
+    "docs-api": "node ./docs/scripts/generate.js",
+    "docs-preview": "doc-builder preview transformers.js ./docs/source/ --not_python_module",
+    "docs-build": "doc-builder build transformers.js ./docs/source/ --not_python_module --build_dir ./docs/build/ --repo_owner xenova"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xenova/transformers.js.git"
+  },
+  "keywords": [
+    "transformers",
+    "transformers.js",
+    "huggingface",
+    "hugging face",
+    "machine learning",
+    "deep learning",
+    "artificial intelligence",
+    "AI",
+    "ML"
+  ],
+  "author": "Xenova",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/xenova/transformers.js/issues"
+  },
+  "homepage": "https://github.com/xenova/transformers.js#readme",
+  "dependencies": {
+    "onnxruntime-web": "1.14.0",
+    "sharp": "^0.32.0",
+    "@huggingface/jinja": "^0.1.0"
+  },
+  "optionalDependencies": {
+    "onnxruntime-node": "1.14.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.1",
+    "catharsis": "github:xenova/catharsis",
+    "copy-webpack-plugin": "^11.0.0",
+    "jest": "^29.5.0",
+    "jest-environment-node": "^29.5.0",
+    "jsdoc-to-markdown": "^8.0.0",
+    "typescript": "^5.2.2",
+    "wavefile": "^11.0.0",
+    "webpack": "^5.80.0",
+    "webpack-cli": "^5.0.2",
+    "webpack-dev-server": "^4.13.3"
+  },
+  "overrides": {
+    "semver": "^7.5.4",
+    "protobufjs": "^7.2.4"
+  },
+  "files": [
+    "src",
+    "dist",
+    "types",
+    "README.md",
+    "LICENSE"
+  ],
+  "browser": {
+    "fs": false,
+    "path": false,
+    "url": false,
+    "sharp": false,
+    "onnxruntime-node": false,
+    "stream/web": false
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "jsdelivr": "./dist/transformers.min.js",
+  "unpkg": "./dist/transformers.min.js"
+}
