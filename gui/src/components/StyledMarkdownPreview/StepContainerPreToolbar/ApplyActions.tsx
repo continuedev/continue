@@ -1,6 +1,5 @@
 import { CheckIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
-import { useEffect, useState } from "react";
 import { getMetaKeyLabel } from "../../../util";
 import Spinner from "../../gui/Spinner";
 import { ToolTip } from "../../gui/Tooltip";
@@ -16,46 +15,9 @@ interface ApplyActionsProps {
 }
 
 export function ApplyActions(props: ApplyActionsProps) {
-  const [hasRejected, setHasRejected] = useState(false);
-  const [showApplied, setShowApplied] = useState(false);
-  const isClosed = props.applyState?.status === "closed";
-  const isSuccessful = !hasRejected && props.applyState?.numDiffs === 0;
-
-  useEffect(() => {
-    if (isClosed && isSuccessful) {
-      setShowApplied(true);
-      const timer = setTimeout(() => {
-        setShowApplied(false);
-      }, 3_000);
-      return () => clearTimeout(timer);
-    }
-  }, [isClosed, isSuccessful]);
-
   function onClickReject() {
     props.onClickReject();
-    setHasRejected(true);
   }
-
-  const applyButton = (text: string) => (
-    <HoverItem
-      data-tooltip-id="codeblock-apply-code-button-tooltip"
-      className="!p-0"
-    >
-      <button
-        data-testid="codeblock-toolbar-apply"
-        className="text-lightgray text-[${vscForeground}] flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
-        onClick={props.onClickApply}
-      >
-        <div className="text-lightgray flex items-center gap-1">
-          <PlayIcon className="h-3.5 w-3.5" />
-          <span className="xs:inline hidden">{text}</span>
-        </div>
-      </button>
-      <ToolTip id="codeblock-apply-code-button-tooltip" place="top">
-        {text} Code
-      </ToolTip>
-    </HoverItem>
-  );
 
   switch (props.applyState ? props.applyState.status : null) {
     case "streaming":
@@ -94,21 +56,30 @@ export function ApplyActions(props: ApplyActionsProps) {
         </div>
       );
     case "closed":
-      if (isSuccessful) {
-        if (showApplied || props.disableManualApply) {
-          return (
-            <span className="flex select-none items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
-              <span className="max-sm:hidden">Applied</span>
-              <CheckIcon className="h-3.5 w-3.5 hover:brightness-125 sm:px-1" />
-            </span>
-          );
-        }
-        return applyButton("Reapply");
-      }
     default:
       if (props.disableManualApply) {
         return null;
       }
-      return applyButton("Apply");
+
+      return (
+        <HoverItem
+          data-tooltip-id="codeblock-apply-code-button-tooltip"
+          className="!p-0"
+        >
+          <button
+            data-testid="codeblock-toolbar-apply"
+            className="text-lightgray text-[${vscForeground}] flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
+            onClick={props.onClickApply}
+          >
+            <div className="text-lightgray flex items-center gap-1">
+              <PlayIcon className="h-3.5 w-3.5" />
+              <span className="xs:inline hidden">Apply</span>
+            </div>
+          </button>
+          <ToolTip id="codeblock-apply-code-button-tooltip" place="top">
+            Apply Code
+          </ToolTip>
+        </HoverItem>
+      );
   }
 }

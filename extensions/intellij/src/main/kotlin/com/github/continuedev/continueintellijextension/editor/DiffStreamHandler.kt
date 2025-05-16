@@ -1,9 +1,9 @@
 package com.github.continuedev.continueintellijextension.editor
 
-import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.StreamDiffLinesPayload
-import com.github.continuedev.continueintellijextension.UpdateApplyStatePayload
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.command.undo.UndoManager
@@ -56,7 +56,7 @@ class DiffStreamHandler(
         }
 
         // Define a single payload and use it for sending
-        val payload = UpdateApplyStatePayload(
+        val payload = ApplyState(
             streamId = streamId,
             status = status.status,
             numDiffs = diffBlocks.size,

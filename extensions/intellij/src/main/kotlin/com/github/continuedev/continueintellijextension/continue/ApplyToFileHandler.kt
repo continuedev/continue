@@ -68,7 +68,7 @@ class ApplyToFileHandler(
     ) {
         val payload = ApplyState(
             streamId = params.streamId,
-            status = status,
+            status = status.status,
             numDiffs = numDiffs,
             filepath = params.filepath,
             fileContent = params.text,
