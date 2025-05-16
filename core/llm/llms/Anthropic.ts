@@ -214,8 +214,7 @@ class Anthropic extends BaseLLM {
     });
 
     if (response.status === 499) {
-      // Aborted by user
-      return;
+      return; // Aborted by user
     }
 
     if (!response.ok) {
