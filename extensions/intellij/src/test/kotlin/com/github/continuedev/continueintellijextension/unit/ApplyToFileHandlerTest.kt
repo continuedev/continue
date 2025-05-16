@@ -74,7 +74,7 @@ class ApplyToFileHandlerTest {
                 eq("updateApplyState"),
                 withArg { payload ->
                     assert(payload is ApplyState)
-                    assert((payload as ApplyState).status == ApplyStateStatus.STREAMING)
+                    assert((payload as ApplyState).status == ApplyStateStatus.STREAMING.status)
                 },
                 any()
             )
@@ -85,7 +85,7 @@ class ApplyToFileHandlerTest {
                 eq("updateApplyState"),
                 withArg { payload ->
                     assert(payload is ApplyState)
-                    assert((payload as ApplyState).status == ApplyStateStatus.CLOSED)
+                    assert((payload as ApplyState).status == ApplyStateStatus.CLOSED.status)
                 },
                 any()
             )
