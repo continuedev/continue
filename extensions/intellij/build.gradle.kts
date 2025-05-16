@@ -165,9 +165,10 @@ tasks {
         // This is to ensure we load the GUI with OSR enabled. We have logic that
         // renders with OSR disabled below a particular IDE version.
         // See ContinueExtensionSettingsService.kt for more info.
-        intellij {
-            version.set("2024.1")
-        }
+        // Currently commented out however since test fail in CI with this version
+//        intellij {
+//            version.set("2024.1")
+//        }
     }
 
     signPlugin {
