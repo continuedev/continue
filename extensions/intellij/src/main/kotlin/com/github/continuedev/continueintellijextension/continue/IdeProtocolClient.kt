@@ -40,6 +40,7 @@ class IdeProtocolClient(
      *
      * See this thread for details: https://github.com/continuedev/continue/issues/4098#issuecomment-2854865310
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val limitedDispatcher = Dispatchers.IO.limitedParallelism(4)
 
     init {

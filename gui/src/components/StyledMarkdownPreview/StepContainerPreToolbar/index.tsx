@@ -243,7 +243,7 @@ export function StepContainerPreToolbar({
       const plural = numLines === 1 ? "" : "s";
       if (isGeneratingCodeBlock) {
         return (
-          <span className="text-lightgray inline-flex w-min items-center gap-2">
+          <span className="text-lightgray inline-flex items-center gap-2 text-right">
             {!isExpanded ? `${numLines} line${plural}` : "Generating"}{" "}
             <div>
               <Spinner />
@@ -252,7 +252,7 @@ export function StepContainerPreToolbar({
         );
       } else {
         return (
-          <span className="text-lightgray inline-flex w-min items-center gap-2">
+          <span className="text-lightgray inline-flex items-center gap-2 text-right">
             {`${numLines} line${plural} pending`}
           </span>
         );

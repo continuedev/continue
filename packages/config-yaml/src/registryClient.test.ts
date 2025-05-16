@@ -3,6 +3,7 @@ import * as http from "node:http";
 import { AddressInfo } from "node:net";
 import * as os from "node:os";
 import * as path from "node:path";
+import { pathToFileURL } from "url";
 import { PackageIdentifier } from "./interfaces/slugs.js";
 import { RegistryClient } from "./registryClient.js";
 
@@ -134,12 +135,18 @@ describe("RegistryClient", () => {
 
   describe("getContentFromFilePath", () => {
     let absoluteFilePath: string;
+    let fileUrl: string;
     let relativeFilePath: string;
 
     beforeEach(() => {
       // Create test files
       absoluteFilePath = path.join(tempDir, "absolute-path.yaml");
       fs.writeFileSync(absoluteFilePath, "absolute file content", "utf8");
+
+      const urlFilePath = path.join(tempDir, "file-url-path.yaml");
+      fs.writeFileSync(urlFilePath, "file:// file content", "utf8");
+      const url = pathToFileURL(urlFilePath);
+      fileUrl = url.toString();
 
       // Create a subdirectory and file in the temp directory
       const subDir = path.join(tempDir, "sub");
@@ -158,6 +165,14 @@ describe("RegistryClient", () => {
       const result = (client as any).getContentFromFilePath(absoluteFilePath);
 
       expect(result).toBe("absolute file content");
+    });
+
+    it("should read from local file url directly", () => {
+      const client = new RegistryClient();
+
+      const result = (client as any).getContentFromFilePath(fileUrl);
+
+      expect(result).toBe("file:// file content");
     });
 
     it("should use rootPath for relative paths when provided", () => {
