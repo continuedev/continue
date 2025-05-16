@@ -105,6 +105,10 @@ export class RelaceApi implements BaseLlmApi {
       signal,
     });
 
+    if (response.status === 499) {
+      return; // Aborted by user
+    }
+
     const result = (await response.json()) as any;
     const mergedCode = result.mergedCode;
 

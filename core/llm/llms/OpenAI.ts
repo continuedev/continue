@@ -352,6 +352,10 @@ class OpenAI extends BaseLLM {
 
     // Handle non-streaming response
     if (body.stream === false) {
+      if (response.status === 499) {
+        // Aborted by user
+        return;
+      }
       const data = await response.json();
       yield data.choices[0].message;
       return;

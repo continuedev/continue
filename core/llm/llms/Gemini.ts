@@ -438,6 +438,10 @@ class Gemini extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
+    if (response.status === 499) {
+      // Aborted by user
+      return;
+    }
     const data = await response.json();
     yield { role: "assistant", content: data.candidates[0].content };
   }

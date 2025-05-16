@@ -84,6 +84,10 @@ class Cohere extends BaseLLM {
       signal,
     });
 
+    if (resp.status === 499) {
+      return; // Aborted by user
+    }
+
     if (options.stream === false) {
       const data = await resp.json();
       yield { role: "assistant", content: data.text };

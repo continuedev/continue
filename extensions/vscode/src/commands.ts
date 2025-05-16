@@ -97,6 +97,7 @@ async function processDiff(
   action: "accept" | "reject",
   sidebar: ContinueGUIWebviewViewProvider,
   ide: VsCodeIde,
+  core: Core,
   verticalDiffManager: VerticalDiffManager,
   newFileUri?: string,
   streamId?: string,
@@ -121,6 +122,9 @@ async function processDiff(
 
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
+  if (action === "reject") {
+    core.invoke("cancelApply", undefined);
+  }
 
   if (streamId) {
     const fileContent = await ide.readFile(newOrCurrentUri);
@@ -236,6 +240,7 @@ const getCommandsMap: (
         "accept",
         sidebar,
         ide,
+        core,
         verticalDiffManager,
         newFileUri,
         streamId,
@@ -246,6 +251,7 @@ const getCommandsMap: (
         "reject",
         sidebar,
         ide,
+        core,
         verticalDiffManager,
         newFileUri,
         streamId,

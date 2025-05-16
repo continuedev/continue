@@ -213,6 +213,11 @@ class Anthropic extends BaseLLM {
       signal,
     });
 
+    if (response.status === 499) {
+      // Aborted by user
+      return;
+    }
+
     if (!response.ok) {
       const json = await response.json();
       if (json.type === "error") {
