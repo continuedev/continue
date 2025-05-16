@@ -67,7 +67,6 @@ const StyledMarkdown = styled.div<{
     max-width: calc(100vw - 24px);
     overflow-x: scroll;
     overflow-y: hidden;
-
     padding: 8px;
   }
 
@@ -115,6 +114,13 @@ const StyledMarkdown = styled.div<{
 
   > *:last-child {
     margin-bottom: 0;
+  }
+  * {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  } 
+  p, span, div {
+    white-space: pre-wrap;
   }
 `;
 
