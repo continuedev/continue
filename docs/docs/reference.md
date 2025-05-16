@@ -188,6 +188,7 @@ chat, editing, and summarizing.
   not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on
   provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
   `chat`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [
   `apply`](./customize/model-roles/apply.mdx#prompt-templating) and [
