@@ -2,7 +2,6 @@ package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.Position
 import com.github.continuedev.continueintellijextension.Range
-import com.github.continuedev.continueintellijextension.RangeInFileWithContents
 import com.github.continuedev.continueintellijextension.utils.toUriOrNull
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
@@ -84,10 +83,12 @@ class EditorUtils(val editor: Editor) {
             // If no highlight, use the whole document as highlighted
             Triple("", editor.document.text, "")
         } else {
-            val prefix = editor.document.getText(TextRange(0, rif.range.start.character))
+            // Use the RangeInFileWithContents to get absolute offsets
+            val startOffset = rif.getStartOffset(editor.document)
+            val endOffset = rif.getEndOffset(editor.document)
+            val prefix = editor.document.getText(TextRange(0, startOffset))
             val highlighted = rif.contents
-            val suffix =
-                editor.document.getText(TextRange(rif.range.end.character, editor.document.textLength))
+            val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
 
             // Remove the selection after processing
             ApplicationManager.getApplication().invokeLater {
@@ -107,11 +108,8 @@ class EditorUtils(val editor: Editor) {
             val virtualFile =
                 FileDocumentManager.getInstance().getFile(editor.document) ?: return@runReadAction null
 
-            // Get the selection range and content
+            // Get the selection range
             val selectionModel: SelectionModel = editor.selectionModel
-            val selectedText = selectionModel.selectedText ?: ""
-
-            val document = editor.document
             val startOffset = selectionModel.selectionStart
             val endOffset = selectionModel.selectionEnd
 
@@ -119,18 +117,12 @@ class EditorUtils(val editor: Editor) {
                 return@runReadAction null
             }
 
-            val startLine = document.getLineNumber(startOffset)
-            val endLine = document.getLineNumber(endOffset)
-
-            val startChar = startOffset - document.getLineStartOffset(startLine)
-            val endChar = endOffset - document.getLineStartOffset(endLine)
-
             return@runReadAction virtualFile.toUriOrNull()?.let {
-                RangeInFileWithContents(
-                    it, Range(
-                        Position(startLine, startChar),
-                        Position(endLine, endChar)
-                    ), selectedText
+                RangeInFileWithContents.fromSelection(
+                    it,
+                    editor.document,
+                    startOffset,
+                    endOffset
                 )
             }
         }

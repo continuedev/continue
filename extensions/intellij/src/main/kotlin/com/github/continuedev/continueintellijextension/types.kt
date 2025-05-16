@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension
 
+import com.github.continuedev.continueintellijextension.editor.RangeInFileWithContents
 import com.google.gson.JsonElement
 
 enum class ToastType(val value: String) {
@@ -54,12 +55,6 @@ data class Location(
 data class RangeInFile(
     val filepath: String,
     val range: Range
-)
-
-data class RangeInFileWithContents(
-    val filepath: String,
-    val range: Range,
-    val contents: String
 )
 
 data class ControlPlaneSessionInfo(
