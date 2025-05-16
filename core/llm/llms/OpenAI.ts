@@ -176,6 +176,7 @@ class OpenAI extends BaseLLM {
       "Content-Type": "application/json",
       Authorization: `Bearer ${this.apiKey}`,
       "api-key": this.apiKey ?? "", // For Azure
+      Connection: "keep-alive", // Keep the connection open for streaming
     };
   }
 
