@@ -173,17 +173,24 @@ function ModeSelect() {
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
 
-          <ListboxOption value="agent" disabled={!agentModeSupported}>
+          <ListboxOption
+            value="agent"
+            disabled={!agentModeSupported}
+            className={"gap-1"}
+          >
             <div className="flex flex-row items-center gap-1.5">
               <SparklesIcon className="h-3 w-3" />
               <span className="">Agent</span>
             </div>
-            {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
-            {!agentModeSupported && <span> (Not supported)</span>}
+            {agentModeSupported ? (
+              mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />
+            ) : (
+              <span>(Not supported)</span>
+            )}
           </ListboxOption>
 
           <div className="text-lightgray px-2 py-1">
-            {metaKeyLabel}. for next mode
+            {`${metaKeyLabel} . for next mode`}
           </div>
         </ListboxOptions>
       </div>

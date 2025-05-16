@@ -173,6 +173,12 @@ to run.
 ./gradlew test
 ```
 
+Run a single test
+
+```sh
+./gradlew test --tests "com.github.continuedev.continueintellijextension.e2e.TESTNAME"
+```
+
 #### Identifying selectors
 
 While the `runIdeForUiTests` task is running, you can visit the following URL

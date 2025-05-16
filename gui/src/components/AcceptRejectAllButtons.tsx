@@ -22,6 +22,7 @@ export default function AcceptRejectAllButtons({
   const ideMessenger = useContext(IdeMessengerContext);
 
   const tinyFont = useFontSize(-3);
+
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
     for (const { filepath = "", streamId } of pendingApplyStates) {
       ideMessenger.post(status, {

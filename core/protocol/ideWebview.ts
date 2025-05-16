@@ -1,9 +1,10 @@
 import { ToIdeFromWebviewOrCoreProtocol } from "./ide";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 
-import type {
+import {
   ApplyState,
-  CodeToEdit,
+  SetCodeToEditPayload,
+  HighlightedCodePayload,
   MessageContent,
   RangeInFileWithContents,
 } from "../";
@@ -63,15 +64,8 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusContinueInput: [undefined, void];
   focusContinueInputWithoutClear: [undefined, void];
   focusContinueInputWithNewSession: [undefined, void];
-  highlightedCode: [
-    {
-      rangeInFileWithContents: RangeInFileWithContents;
-      prompt?: string;
-      shouldRun?: boolean;
-    },
-    void,
-  ];
-  setCodeToEdit: [CodeToEdit, void];
+  highlightedCode: [HighlightedCodePayload, void];
+  setCodeToEdit: [SetCodeToEditPayload, void];
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 

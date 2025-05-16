@@ -35,6 +35,7 @@ class DiffStreamHandler(
         var index: Int, var highlighter: RangeHighlighter? = null, var diffBlock: VerticalDiffBlock? = null
     )
 
+    private var editorUtils = EditorUtils(editor)
     private var curLine = CurLineState(startLine)
     private var isRunning: Boolean = false
     private var hasAcceptedOrRejectedBlock: Boolean = false
@@ -42,27 +43,29 @@ class DiffStreamHandler(
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
     private val diffBlocks: MutableList<VerticalDiffBlock> = mutableListOf()
 
-    private val curLineKey = createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE", 0x40888888, editor)
-    private val unfinishedKey = createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE", 0x20888888, editor)
+    private val curLineKey = editorUtils.createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE", 0x40888888)
+    private val unfinishedKey = editorUtils.createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE", 0x20888888)
 
     init {
         initUnfinishedRangeHighlights()
     }
 
     private fun sendUpdate(status: String) {
-        if(this.streamId == null) {
+        if (this.streamId == null) {
             return
         }
         val virtualFile = getVirtualFile()
         val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
-        continuePluginService.sendToWebview("updateApplyState", mapOf(
-            "numDiffs" to this.diffBlocks.size,
-            "streamId" to this.streamId,
-            "status" to status,
-            "fileContent" to "not implemented",
-            "toolCallId" to this.toolCallId,
-            "filepath" to virtualFile?.url
-        ))
+        continuePluginService.sendToWebview(
+            "updateApplyState", mapOf(
+                "numDiffs" to this.diffBlocks.size,
+                "streamId" to this.streamId,
+                "status" to status,
+                "fileContent" to "not implemented",
+                "toolCallId" to this.toolCallId,
+                "filepath" to virtualFile?.url
+            )
+        )
     }
 
     fun acceptAll() {
@@ -87,7 +90,12 @@ class DiffStreamHandler(
     }
 
     fun streamDiffLinesToEditor(
-        input: String, prefix: String, highlighted: String, suffix: String, modelTitle: String, includeRulesInSystemMessage: Boolean
+        input: String,
+        prefix: String,
+        highlighted: String,
+        suffix: String,
+        modelTitle: String,
+        includeRulesInSystemMessage: Boolean
     ) {
         isRunning = true
         this.sendUpdate("streaming")
@@ -96,7 +104,17 @@ class DiffStreamHandler(
         val virtualFile = getVirtualFile()
 
         continuePluginService.coreMessenger?.request(
-            "streamDiffLines", createRequestParams(input, prefix, highlighted, suffix, virtualFile, modelTitle, includeRulesInSystemMessage), null
+            "streamDiffLines",
+            createRequestParams(
+                input,
+                prefix,
+                highlighted,
+                suffix,
+                virtualFile,
+                modelTitle,
+                includeRulesInSystemMessage
+            ),
+            null
         ) { response ->
             if (!isRunning) return@request
 
@@ -104,7 +122,7 @@ class DiffStreamHandler(
 
             if (response["done"] as? Boolean == true) {
                 handleFinishedResponse()
-                sendUpdate(if (diffBlocks.isEmpty()) "closed"  else "done")
+                sendUpdate(if (diffBlocks.isEmpty()) "closed" else "done")
                 return@request
             }
 

@@ -1,6 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
-import { CodeToEdit, MessageModes, RangeInFileWithContents } from "core";
+import {
+  SetCodeToEditPayload,
+  MessageModes,
+  RangeInFileWithContents,
+} from "core";
 import { stripImages } from "core/util/messageContent";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import {
@@ -18,7 +22,7 @@ export const streamEditThunk = createAsyncThunk<
   void,
   {
     editorState: JSONContent;
-    codeToEdit: CodeToEdit[];
+    codeToEdit: SetCodeToEditPayload[];
   },
   ThunkApiType
 >(
