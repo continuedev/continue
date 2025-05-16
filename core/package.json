@@ -50,7 +50,7 @@
     "@continuedev/config-yaml": "file:../packages/config-yaml",
     "@continuedev/fetch": "^1.0.6",
     "@continuedev/llm-info": "^1.0.8",
-    "@continuedev/openai-adapters": "^1.0.19",
+    "@continuedev/openai-adapters": "^1.0.22",
     "@modelcontextprotocol/sdk": "^1.5.0",
     "@mozilla/readability": "^0.5.0",
     "@octokit/rest": "^20.1.1",
