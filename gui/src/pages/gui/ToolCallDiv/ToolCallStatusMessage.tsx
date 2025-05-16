@@ -1,6 +1,8 @@
 import { Tool, ToolCallState } from "core";
 import Mustache from "mustache";
 import { ReactNode } from "react";
+import { getFontSize } from "../../../util";
+import { useFontSize } from "../../../components/ui/font";
 
 interface ToolCallStatusMessageProps {
   tool: Tool | undefined;
@@ -11,6 +13,7 @@ export function ToolCallStatusMessage({
   tool,
   toolCallState,
 }: ToolCallStatusMessageProps) {
+  const fontSize = useFontSize();
   if (!tool) return "Agent tool use";
 
   const defaultToolDescription = (
@@ -65,7 +68,7 @@ export function ToolCallStatusMessage({
     message = futureMessage;
   }
   return (
-    <div className="block">
+    <div className="block" style={{ fontSize }}>
       <span>Continue</span> {intro} {message}
     </div>
   );
