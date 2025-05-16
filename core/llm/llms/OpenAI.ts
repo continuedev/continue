@@ -3,6 +3,7 @@ import {
   ChatCompletionMessageParam,
 } from "openai/resources/index";
 
+import { streamSse } from "@continuedev/fetch";
 import {
   ChatMessage,
   CompletionOptions,
@@ -16,7 +17,6 @@ import {
   LlmApiRequestType,
   toChatBody,
 } from "../openaiTypeConverters.js";
-import { streamSse } from "../stream.js";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",

@@ -1,3 +1,4 @@
+import { streamJSON } from "@continuedev/fetch";
 import {
   ChatMessage,
   Chunk,
@@ -6,7 +7,6 @@ import {
 } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamJSON } from "../stream.js";
 
 class Cohere extends BaseLLM {
   static providerName = "cohere";

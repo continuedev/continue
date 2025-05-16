@@ -1,3 +1,4 @@
+import { streamResponse, streamSse } from "@continuedev/fetch";
 import {
   ChatMessage,
   Chunk,
@@ -6,7 +7,6 @@ import {
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { fromChatCompletionChunk } from "../openaiTypeConverters.js";
-import { streamResponse, streamSse } from "../stream.js";
 
 let watsonxToken = {
   expiration: 0,

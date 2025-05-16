@@ -1,9 +1,9 @@
 import { GoogleAuth } from "google-auth-library";
 
+import { streamResponse, streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse, streamSse } from "../stream.js";
 
 import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
