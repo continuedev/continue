@@ -12,7 +12,7 @@ import * as URI from "uri-js";
 import { fileURLToPath } from "url";
 import { AnyZodObject } from "zod";
 import { Core } from "../core.js";
-import { IdeInfo, IdeSettings } from "../index.js";
+import { ContinueConfig, IdeInfo, IdeSettings } from "../index.js";
 import { getDevDataFilePath } from "../util/paths.js";
 import { joinPathsToUri } from "../util/uri.js";
 
@@ -68,8 +68,7 @@ export class DataLogger {
     return newBody;
   }
 
-  async logDevData(event: DevDataLogEvent) {
-    // Local logs (always on for all levels)
+  async logLocalData(event: DevDataLogEvent) {
     try {
       const filepath: string = getDevDataFilePath(
         event.name,
@@ -100,126 +99,144 @@ export class DataLogger {
     } catch (error) {
       console.error("Error logging local dev data:", error);
     }
+  }
+
+  async logDevData(event: DevDataLogEvent) {
+    // Local logs (always on for all levels)
+    await this.logLocalData(event);
 
     // Remote logs
     const config = (await this.core?.configHandler.loadConfig())?.config;
     if (config?.data?.length) {
       await Promise.allSettled(
-        config.data.map(async (dataConfig) => {
-          try {
-            // First extract the data schema based on the version and level
-            const { schema } = dataConfig;
+        config.data.map((dataConfig) =>
+          this.logToOneDestination(dataConfig, event),
+        ),
+      );
+    }
+  }
 
-            const level = dataConfig.level ?? DEFAULT_DEV_DATA_LEVEL;
+  async parseEventData(
+    event: DevDataLogEvent,
+    schema: string,
+    level: "all" | "noCode",
+  ) {
+    const versionSchemas = devDataVersionedSchemas[schema];
+    if (!versionSchemas) {
+      throw new Error(
+        `Attempting to log dev data to non-existent version ${schema}`,
+      );
+    }
 
-            // Skip event if `events` is specified and does not include the event
-            const events = dataConfig.events ?? allDevEventNames;
-            if (!events.includes(event.name)) {
-              return;
-            }
+    const levelSchemas = versionSchemas[level];
+    if (!levelSchemas) {
+      throw new Error(
+        `Attempting to log dev data at level ${level} for version ${schema} which does not exist`,
+      );
+    }
 
-            const versionSchemas = devDataVersionedSchemas[schema];
-            if (!versionSchemas) {
-              throw new Error(
-                `Attempting to log dev data to non-existent version ${schema}`,
-              );
-            }
+    const zodSchema = levelSchemas[event.name];
+    if (!zodSchema) {
+      throw new Error(
+        `Attempting to log dev data for event ${event.name} at level ${level} for version ${schema}: no schema found`,
+      );
+    }
 
-            const levelSchemas = versionSchemas[level];
-            if (!levelSchemas) {
-              throw new Error(
-                `Attempting to log dev data at level ${level} for version ${schema} which does not exist`,
-              );
-            }
+    const eventDataWithBaseValues = await this.addBaseValues(
+      event.data,
+      event.name,
+      schema,
+      zodSchema,
+    );
 
-            const zodSchema = levelSchemas[event.name];
-            if (!zodSchema) {
-              throw new Error(
-                `Attempting to log dev data for event ${event.name} at level ${level} for version ${schema}: no schema found`,
-              );
-            }
+    const parsed = zodSchema.safeParse(eventDataWithBaseValues);
+    if (!parsed.success) {
+      throw new Error(
+        `Failed to parse event data for event ${event.name} and schema ${schema}\n:${parsed.error.toString()}`,
+      );
+    }
 
-            const eventDataWithBaseValues = await this.addBaseValues(
-              event.data,
-              event.name,
+    return parsed.data;
+  }
+
+  async logToOneDestination(
+    dataConfig: NonNullable<ContinueConfig["data"]>[number],
+    event: DevDataLogEvent,
+  ) {
+    try {
+      if (!dataConfig) {
+        return;
+      }
+
+      // First extract the data schema based on the version and level
+      const { schema } = dataConfig;
+      const level = dataConfig.level ?? DEFAULT_DEV_DATA_LEVEL;
+
+      // Skip event if `events` is specified and does not include the event
+      const events = dataConfig.events ?? allDevEventNames;
+      if (!events.includes(event.name)) {
+        return;
+      }
+
+      // Parse the event data, throwing if it fails
+      const parsed = await this.parseEventData(event, schema, level);
+
+      const uriComponents = URI.parse(dataConfig.destination);
+
+      // Send to remote server
+      if (uriComponents.scheme === "https" || uriComponents.scheme === "http") {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        // If an API key is provided, use it, otherwise use the Continue access token
+        if (dataConfig.apiKey) {
+          headers["Authorization"] = `Bearer ${dataConfig.apiKey}`;
+        } else {
+          const accessToken =
+            await this.core?.configHandler.controlPlaneClient.getAccessToken();
+          headers["Authorization"] = `Bearer ${accessToken}`;
+        }
+
+        const profileId =
+          this.core?.configHandler.currentProfile?.profileDescription.id ?? "";
+        const response = await fetchwithRequestOptions(
+          dataConfig.destination,
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              name: event.name,
+              data: parsed,
               schema,
-              zodSchema,
-            );
+              level,
+              profileId,
+            }),
+          },
+          dataConfig.requestOptions,
+        );
+        if (!response.ok) {
+          throw new Error(
+            `Post request failed. ${response.status}: ${response.statusText}`,
+          );
+        }
+      } else if (uriComponents.scheme === "file") {
+        // Write to jsonc file for local file URIs
+        const dirUri = joinPathsToUri(dataConfig.destination, schema);
+        const dirPath = fileURLToPath(dirUri);
 
-            const parsed = zodSchema.safeParse(eventDataWithBaseValues);
-            if (!parsed.success) {
-              throw new Error(
-                `Failed to parse event data for event ${event.name} and schema ${schema}\n:${parsed.error.toString()}`,
-              );
-            }
-
-            const uriComponents = URI.parse(dataConfig.destination);
-
-            // Send to remote server
-            if (
-              uriComponents.scheme === "https" ||
-              uriComponents.scheme === "http"
-            ) {
-              const headers: Record<string, string> = {
-                "Content-Type": "application/json",
-              };
-              if (dataConfig.apiKey) {
-                headers["Authorization"] = `Bearer ${dataConfig.apiKey}`;
-              }
-
-              // For events going to Continue, overwrite the access token
-              if (
-                uriComponents.host?.endsWith(".continue.dev") ||
-                uriComponents.host === "continue.dev"
-              ) {
-                //
-                const accessToken =
-                  await this.core?.configHandler.controlPlaneClient.getAccessToken();
-                headers["Authorization"] = `Bearer ${accessToken}`;
-              }
-              const profileId =
-                this.core?.configHandler.currentProfile?.profileDescription
-                  .id ?? "";
-              const response = await fetchwithRequestOptions(
-                dataConfig.destination,
-                {
-                  method: "POST",
-                  headers,
-                  body: JSON.stringify({
-                    name: event.name,
-                    data: parsed.data,
-                    schema,
-                    level,
-                    profileId,
-                  }),
-                },
-                dataConfig.requestOptions,
-              );
-              if (!response.ok) {
-                throw new Error(
-                  `Post request failed. ${response.status}: ${response.statusText}`,
-                );
-              }
-            } else if (uriComponents.scheme === "file") {
-              // Write to jsonc file for local file URIs
-              const dirUri = joinPathsToUri(dataConfig.destination, schema);
-              const dirPath = fileURLToPath(dirUri);
-
-              if (!fs.existsSync(dirPath)) {
-                fs.mkdirSync(dirPath, { recursive: true });
-              }
-              const filepath = path.join(dirPath, `${event.name}.jsonl`);
-              const jsonLine = JSON.stringify(event.data);
-              fs.writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
-            } else {
-              throw new Error(`Unsupported URI scheme ${uriComponents.scheme}`);
-            }
-          } catch (error) {
-            console.error(
-              `Error logging data to ${dataConfig.destination}: ${error instanceof Error ? error.message : error}`,
-            );
-          }
-        }),
+        if (!fs.existsSync(dirPath)) {
+          fs.mkdirSync(dirPath, { recursive: true });
+        }
+        const filepath = path.join(dirPath, `${event.name}.jsonl`);
+        const jsonLine = JSON.stringify(event.data);
+        fs.writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
+      } else {
+        throw new Error(`Unsupported URI scheme ${uriComponents.scheme}`);
+      }
+    } catch (error) {
+      console.error(
+        `Error logging data to ${dataConfig.destination}: ${error instanceof Error ? error.message : error}`,
       );
     }
   }
