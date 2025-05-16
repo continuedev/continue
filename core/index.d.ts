@@ -197,15 +197,14 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
-
-  loadSubmenuItems?: (
-    args: LoadSubmenuItemsArgs,
-  ) => Promise<ContextSubmenuItem[]>;
 }
 
 export interface ContextSubmenuItem {
@@ -1168,6 +1167,7 @@ export interface MCPResource {
   description?: string;
   mimeType?: string;
 }
+
 export interface MCPTool {
   name: string;
   description?: string;
@@ -1230,6 +1230,12 @@ export interface ApplyState {
   toolCallId?: string;
 }
 
+export interface HighlightedCodePayload {
+  rangeInFileWithContents: RangeInFileWithContents;
+  prompt?: string;
+  shouldRun?: boolean;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1239,7 +1245,7 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
  * Represents the configuration for a quick action in the Code Lens.

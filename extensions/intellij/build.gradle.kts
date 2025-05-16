@@ -47,6 +47,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.automation-remarks:video-recorder-junit5:2.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
 
     // Exclude vulnerable Log4j from all dependencies
@@ -164,6 +165,7 @@ tasks {
         // This is to ensure we load the GUI with OSR enabled. We have logic that
         // renders with OSR disabled below a particular IDE version.
         // See ContinueExtensionSettingsService.kt for more info.
+        // Currently commented out however since test fail in CI with this version
 //        intellij {
 //            version.set("2024.1")
 //        }
