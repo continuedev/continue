@@ -1,9 +1,9 @@
 name: "CLA Assistant"
 on:
   issue_comment:
-    types: [ created ]
+    types: [created]
   pull_request_target:
-    types: [ opened, closed, synchronize ]
+    types: [opened, closed, synchronize]
 
 permissions:
   actions: write
@@ -27,3 +27,4 @@ jobs:
           path-to-document: "https://github.com/continuedev/continue/blob/main/docs/docs/CLA.md"
           branch: cla-signatures
           allowlist: dependabot[bot]
+          signed-commit-message: "CLA signed in $pullRequestNo"
