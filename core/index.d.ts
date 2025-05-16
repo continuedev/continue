@@ -458,6 +458,7 @@ export interface ChatHistoryItem {
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
+  appliedRules?: RuleWithSource[];
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -1220,7 +1221,7 @@ export type ApplyStateStatus =
   | "done" // All changes have been applied, awaiting user to accept/reject
   | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
 
-export interface UpdateApplyStatePayload {
+export interface ApplyState {
   streamId: string;
   status?: ApplyStateStatus;
   numDiffs?: number;
@@ -1518,17 +1519,19 @@ export interface TerminalOptions {
   waitForCompletion?: boolean;
 }
 
+export type RuleSource =
+  | "default-chat"
+  | "default-agent"
+  | "model-chat-options"
+  | "model-agent-options"
+  | "rules-block"
+  | "json-systemMessage"
+  | ".continuerules";
+
 export interface RuleWithSource {
   name?: string;
   slug?: string;
-  source:
-    | "default-chat"
-    | "default-agent"
-    | "model-chat-options"
-    | "model-agent-options"
-    | "rules-block"
-    | "json-systemMessage"
-    | ".continuerules";
+  source: RuleSource;
   globs?: string | string[];
   rule: string;
   description?: string;

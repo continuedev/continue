@@ -38,11 +38,9 @@ export class RegistryClient implements Registry {
 
   private getContentFromFilePath(filepath: string): string {
     if (filepath.startsWith("file://")) {
-      const pathWithoutProtocol = filepath.slice(7);
-
       // For Windows file:///C:/path/to/file, we need to handle it properly
       // On other systems, we might have file:///path/to/file
-      return fs.readFileSync(decodeURIComponent(pathWithoutProtocol), "utf8");
+      return fs.readFileSync(new URL(filepath), "utf8");
     } else if (path.isAbsolute(filepath)) {
       return fs.readFileSync(filepath, "utf8");
     } else if (this.rootPath) {

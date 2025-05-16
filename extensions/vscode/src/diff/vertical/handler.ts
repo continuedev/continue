@@ -9,16 +9,16 @@ import {
   indexDecorationType,
 } from "./decorations";
 
-import type { UpdateApplyStatePayload, DiffLine } from "core";
+import type { ApplyState, DiffLine } from "core";
 import type { VerticalDiffCodeLens } from "./manager";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
   instant?: boolean;
   onStatusUpdate: (
-    status?: UpdateApplyStatePayload["status"],
-    numDiffs?: UpdateApplyStatePayload["numDiffs"],
-    fileContent?: UpdateApplyStatePayload["fileContent"],
+    status?: ApplyState["status"],
+    numDiffs?: ApplyState["numDiffs"],
+    fileContent?: ApplyState["fileContent"],
   ) => void;
 }
 

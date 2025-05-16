@@ -132,6 +132,8 @@ export function Chat() {
     return isJetBrains();
   }, []);
 
+  useAutoScroll(stepsDivRef, history);
+
   useEffect(() => {
     // Cmd + Backspace to delete current step
     const listener = (e: any) => {
@@ -282,8 +284,6 @@ export function Chat() {
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
-  useAutoScroll(stepsDivRef, history);
-
   return (
     <>
       {widget}
@@ -299,7 +299,7 @@ export function Chat() {
           <div
             key={item.message.id}
             style={{
-              minHeight: index === history.length - 1 ? "25vh" : 0,
+              minHeight: index === history.length - 1 ? "200px" : 0,
             }}
           >
             <ErrorBoundary
@@ -318,6 +318,7 @@ export function Chat() {
                     isMainInput={false}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
+                    appliedRules={item.appliedRules}
                     inputId={item.message.id}
                   />
                 </>

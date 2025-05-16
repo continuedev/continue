@@ -7,7 +7,7 @@ import {
   getQueryForFile,
 } from "../util/treeSitter";
 
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
@@ -29,6 +29,7 @@ import {
   getLastNUriRelativePathParts,
   getUriPathBasename,
 } from "../util/uri";
+import { tagToString } from "./utils";
 
 type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 

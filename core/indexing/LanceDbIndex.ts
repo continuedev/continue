@@ -14,7 +14,7 @@ import { getUriPathBasename } from "../util/uri";
 
 import { basicChunker } from "./chunk/basic.js";
 import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
+import { DatabaseConnection, SqliteDb } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -24,6 +24,7 @@ import {
 } from "./types";
 
 import type * as LanceType from "vectordb";
+import { tagToString } from "./utils";
 
 interface LanceDbRow {
   uuid: string;

@@ -7,7 +7,7 @@ import {
 } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
-  UpdateApplyStatePayload,
+  ApplyState,
   ChatHistoryItem,
   ChatMessage,
   ContextItem,
@@ -15,6 +15,7 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
+  RuleWithSource,
   Session,
   SessionMetadata,
   ToolCallDelta,
@@ -31,7 +32,7 @@ import { findCurrentToolCall, findToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
-type ChatHistoryItemWithMessageId = ChatHistoryItem & {
+export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
 
@@ -47,7 +48,7 @@ type SessionState = {
   symbols: FileSymbolMap;
   mode: MessageModes;
   codeBlockApplyStates: {
-    states: UpdateApplyStatePayload[];
+    states: ApplyState[];
     curIndex: number;
   };
   newestToolbarPreviewForInput: Record<string, string>;
@@ -246,6 +247,19 @@ export const sessionSlice = createSlice({
         ...historyItem.contextItems,
         ...payload.contextItems,
       ];
+    },
+    setAppliedRulesAtIndex: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        index: number;
+        appliedRules: RuleWithSource[];
+      }>,
+    ) => {
+      if (state.history[payload.index]) {
+        state.history[payload.index].appliedRules = payload.appliedRules;
+      }
     },
     setInactive: (state) => {
       const curMessage = state.history.at(-1);
@@ -521,10 +535,7 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    updateApplyState: (
-      state,
-      { payload }: PayloadAction<UpdateApplyStatePayload>,
-    ) => {
+    updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(
         (state) => state.streamId === payload.streamId,
       );
@@ -701,6 +712,7 @@ export const {
   updateFileSymbols,
   setContextItemsAtIndex,
   addContextItemsAtIndex,
+  setAppliedRulesAtIndex,
   setInactive,
   streamUpdate,
   newSession,

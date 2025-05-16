@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension
 
-import com.github.continuedev.continueintellijextension.editor.RangeInFileWithContents
 import com.google.gson.JsonElement
 
 enum class ToastType(val value: String) {
@@ -57,6 +56,12 @@ data class RangeInFile(
     val range: Range
 )
 
+data class RangeInFileWithContents(
+    val filepath: String,
+    val range: Range,
+    val contents: String
+)
+
 data class ControlPlaneSessionInfo(
     val accessToken: String,
     val account: Account
@@ -83,6 +88,7 @@ data class IdeSettings(
 data class ContinueRcJson(
     val mergeBehavior: ConfigMergeType
 )
+
 
 interface IDE {
     suspend fun getIdeInfo(): IdeInfo
@@ -208,17 +214,25 @@ data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 
 data class DeleteAtIndex(val index: Int)
 
-enum class ApplyStateStatus(val status: String) {
-    NOT_STARTED("not-started"),
-    STREAMING("streaming"),
-    DONE("done"),
-    CLOSED("closed");
+enum class ApplyStateStatus {
+    NOT_STARTED, // Apply state created but not necessarily streaming
+    STREAMING,   // Changes are being applied to the file
+    DONE,        // All changes have been applied, awaiting user to accept/reject
+    CLOSED;      // All changes have been applied. Note that for new files, we immediately set the status to "closed"
+
+    companion object {
+        fun toString(status: ApplyStateStatus): String = when (status) {
+            NOT_STARTED -> "not-started"
+            STREAMING -> "streaming"
+            DONE -> "done"
+            CLOSED -> "closed"
+        }
+    }
 }
 
-
-data class UpdateApplyStatePayload(
+data class ApplyState(
     val streamId: String,
-    val status: String,
+    val status: ApplyStateStatus? = null,
     val numDiffs: Int? = null,
     val filepath: String? = null,
     val fileContent: String? = null,
@@ -231,17 +245,3 @@ data class HighlightedCodePayload(
     val shouldRun: Boolean? = null
 )
 
-data class StreamDiffLinesPayload(
-    val prefix: String,
-    val highlighted: String,
-    val suffix: String,
-    val input: String,
-    val language: String?,
-    val modelTitle: String?,
-    val includeRulesInSystemMessage: Boolean
-)
-
-data class AcceptOrRejectDiffPayload(
-    val filepath: String,
-    val streamId: String? = null
-)

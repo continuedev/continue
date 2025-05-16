@@ -2,7 +2,7 @@ package com.github.continuedev.continueintellijextension.unit
 
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.IDE
-import com.github.continuedev.continueintellijextension.UpdateApplyStatePayload
+import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.`continue`.ApplyToFileHandler
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
@@ -26,6 +26,7 @@ class ApplyToFileHandlerTest {
     private val mockEditorUtils = mockk<EditorUtils>(relaxed = true)
     private val mockDiffStreamService = mockk<DiffStreamService>(relaxed = true)
     private val mockEditor = mockk<Editor>(relaxed = true)
+    private val mockCoreMessenger = mockk<CoreMessenger>(relaxed = true)
 
     // Test subject
     private lateinit var handler: ApplyToFileHandler
@@ -42,6 +43,7 @@ class ApplyToFileHandlerTest {
     fun setUp() {
         // Common setup
         every { mockEditorUtils.editor } returns mockEditor
+        every { mockContinuePluginService.coreMessenger } returns mockCoreMessenger
 
         // Create the handler with mocked dependencies
         handler = ApplyToFileHandler(
@@ -65,5 +67,28 @@ class ApplyToFileHandlerTest {
         // Then
         verify { mockEditorUtils.insertTextIntoEmptyDocument(testParams.text) }
         verify(exactly = 0) { mockDiffStreamService.register(any(), any()) } // Ensure no diff streaming happened
+
+        // Verify notifications sent
+        verify {
+            mockContinuePluginService.sendToWebview(
+                eq("updateApplyState"),
+                withArg { payload ->
+                    assert(payload is ApplyState)
+                    assert((payload as ApplyState).status == ApplyStateStatus.STREAMING)
+                },
+                any()
+            )
+        }
+
+        verify {
+            mockContinuePluginService.sendToWebview(
+                eq("updateApplyState"),
+                withArg { payload ->
+                    assert(payload is ApplyState)
+                    assert((payload as ApplyState).status == ApplyStateStatus.CLOSED)
+                },
+                any()
+            )
+        }
     }
 }

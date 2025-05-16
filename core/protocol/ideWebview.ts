@@ -2,7 +2,7 @@ import { ToIdeFromWebviewOrCoreProtocol } from "./ide";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 
 import {
-  UpdateApplyStatePayload,
+  ApplyState,
   SetCodeToEditPayload,
   HighlightedCodePayload,
   MessageContent,
@@ -81,7 +81,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   incrementFtc: [undefined, void];
   openOnboardingCard: [undefined, void];
   applyCodeFromChat: [undefined, void];
-  updateApplyState: [UpdateApplyStatePayload, void];
+  updateApplyState: [ApplyState, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
 };
