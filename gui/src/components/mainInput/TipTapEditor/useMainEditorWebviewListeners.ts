@@ -1,13 +1,16 @@
 import { Editor } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
-import { MutableRefObject } from "react";
+import { MutableRefObject, useContext } from "react";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
+import { useAppSelector } from "../../../redux/hooks";
 import { clearCodeToEdit } from "../../../redux/slices/editModeState";
 import { setNewestToolbarPreviewForInput } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
 import { CodeBlock, PromptBlock } from "./extensions";
+import { insertCurrentFileContextMention } from "./utils/insertContent";
 
 /**
  * Hook for setting up main editor specific webview listeners
@@ -177,5 +180,22 @@ export function useMainEditorWebviewListeners({
       );
     },
     [],
+  );
+
+  const activeContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
+  );
+  const mode = useAppSelector(state=>state.session.mode);
+  const ideContext = useContext(IdeMessengerContext)
+
+  useWebviewListener(
+    "newSession",
+    async () => {
+      // do not insert current file context mention if we are in edit mode or if addFileContext is disabled
+      const settings = await ideContext.ide.getIdeSettings()
+      if(!editor || mode === 'edit' || !settings.addFileContext) return;
+      insertCurrentFileContextMention(editor, activeContextProviders);
+    },
+    [editor, activeContextProviders, mode],
   );
 }
