@@ -1,6 +1,6 @@
+import { streamSse } from "@continuedev/fetch";
 import { CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
-import { streamSse } from "../stream.js";
 
 class HuggingFaceTGI extends BaseLLM {
   private static MAX_STOP_TOKENS = 4;

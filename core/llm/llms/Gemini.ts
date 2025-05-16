@@ -1,3 +1,4 @@
+import { streamResponse } from "@continuedev/fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
@@ -10,7 +11,6 @@ import {
 } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
 import {
   GeminiChatContent,
   GeminiChatContentPart,
@@ -438,6 +438,9 @@ class Gemini extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
+    if (response.status === 499) {
+      return; // Aborted by user
+    }
     const data = await response.json();
     yield { role: "assistant", content: data.candidates[0].content };
   }

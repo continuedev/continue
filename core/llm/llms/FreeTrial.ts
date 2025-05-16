@@ -1,3 +1,4 @@
+import { streamResponse } from "@continuedev/fetch";
 import { TRIAL_FIM_MODEL } from "../../config/onboarding.js";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
@@ -8,7 +9,6 @@ import {
   LLMOptions,
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
 
 class FreeTrial extends BaseLLM {
   static providerName = "free-trial";

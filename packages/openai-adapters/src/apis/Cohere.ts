@@ -15,6 +15,7 @@ import {
 } from "openai/resources/index";
 import { CohereConfig } from "../types.js";
 import { chatCompletion, customFetch, embedding } from "../util.js";
+import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -76,6 +77,10 @@ export class CohereApi implements BaseLlmApi {
         signal,
       },
     );
+
+    if (resp.status === 499) {
+      return EMPTY_CHAT_COMPLETION;
+    }
 
     const data = (await resp.json()) as any;
     const { input_tokens, output_tokens } = data.meta.tokens;

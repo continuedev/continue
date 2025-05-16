@@ -132,12 +132,16 @@ class Flowise extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const requestBody = this._getRequestBody(messages, options);
     const { socket, socketInfo } = await this._initializeSocket();
-    const request = this.fetch(this._getChatUrl(), {
+    const response = await this.fetch(this._getChatUrl(), {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({ ...requestBody, socketIOClientId: socket.id }),
       signal,
-    }).then((res) => res.json());
+    });
+
+    if (response.status === 499) {
+      return; // Aborted by user
+    }
 
     while (await socketInfo.hasNextToken()) {
       yield { role: "assistant", content: socketInfo.getCurrentMessage() };
@@ -145,7 +149,7 @@ class Flowise extends BaseLLM {
     if (socketInfo.error) {
       socket.disconnect();
       try {
-        yield { role: "assistant", content: (await request).text };
+        yield { role: "assistant", content: await response.text() };
       } catch (error: any) {
         yield { role: "assistant", content: (error as Error).message ?? error };
       }

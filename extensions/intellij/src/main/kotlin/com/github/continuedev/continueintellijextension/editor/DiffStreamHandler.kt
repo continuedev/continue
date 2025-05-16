@@ -285,6 +285,7 @@ class DiffStreamHandler(
             "language" to virtualFile?.fileType?.name,
             "modelTitle" to modelTitle,
             "includeRulesInSystemMessage" to includeRulesInSystemMessage,
+            "fileUri" to virtualFile?.url,
         )
     }
 

@@ -24,7 +24,6 @@ export interface VerticalDiffHandlerOptions {
 
 export class VerticalDiffHandler implements vscode.Disposable {
   private currentLineIndex: number;
-  private cancelled = false;
   private newLinesAdded = 0;
   private deletionBuffer: string[] = [];
   private removedLineDecorations: RemovedLineDecorationManager;
@@ -127,11 +126,13 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private incrementCurrentLineIndex() {
     this.currentLineIndex++;
     this.updateIndexLineDecorations();
-    const range = new vscode.Range(this.currentLineIndex, 0, this.currentLineIndex, 0);
-    this.editor.revealRange(
-      range,
-      vscode.TextEditorRevealType.Default,
+    const range = new vscode.Range(
+      this.currentLineIndex,
+      0,
+      this.currentLineIndex,
+      0,
     );
+    this.editor.revealRange(range, vscode.TextEditorRevealType.Default);
   }
 
   private async insertTextAboveLine(index: number, text: string) {
@@ -257,7 +258,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.editor.document.getText(),
     );
 
-    this.cancelled = true;
     this.refreshCodeLens();
     this.dispose();
   }
@@ -266,10 +266,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
   dispose() {
     this.disposables.forEach((disposable) => disposable.dispose());
-  }
-
-  get isCancelled() {
-    return this.cancelled;
   }
 
   private _diffLinesQueue: DiffLine[] = [];
@@ -331,9 +327,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.updateIndexLineDecorations();
 
       for await (const diffLine of diffLineGenerator) {
-        if (this.isCancelled) {
-          return;
-        }
         diffLines.push(diffLine);
         await this.queueDiffLine(diffLine);
       }
@@ -344,10 +337,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       await this.reapplyWithMyersDiff(diffLines);
 
       const range = new vscode.Range(this.startLine, 0, this.startLine, 0);
-      this.editor.revealRange(
-        range,
-        vscode.TextEditorRevealType.Default,
-      );
+      this.editor.revealRange(range, vscode.TextEditorRevealType.Default);
 
       this.options.onStatusUpdate(
         "done",
