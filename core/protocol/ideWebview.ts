@@ -7,6 +7,7 @@ import {
   HighlightedCodePayload,
   MessageContent,
   RangeInFileWithContents,
+  AcceptOrRejectDiffPayload,
 } from "../";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
@@ -43,8 +44,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "jetbrains/getColors": [undefined, Record<string, string>];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
-  acceptDiff: [{ filepath: string; streamId?: string }, void];
-  rejectDiff: [{ filepath: string; streamId?: string }, void];
+  acceptDiff: [AcceptOrRejectDiffPayload, void];
+  rejectDiff: [AcceptOrRejectDiffPayload, void];
   "edit/sendPrompt": [
     {
       prompt: MessageContent;

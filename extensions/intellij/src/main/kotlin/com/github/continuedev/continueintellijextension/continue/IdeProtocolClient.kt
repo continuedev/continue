@@ -14,7 +14,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAware
@@ -32,6 +31,8 @@ class IdeProtocolClient(
     private val project: Project
 ) : DumbAware {
     private val ide: IDE = IntelliJIDE(project, continuePluginService)
+    private val diffStreamService = project.service<DiffStreamService>()
+
 
     /**
      * Create a dispatcher with limited parallelism to prevent UI freezing.
@@ -441,7 +442,13 @@ class IdeProtocolClient(
                         )
                         val filepath = params.filepath;
 
-                        acceptOrRejectDiff(filepath, true)
+                        val editor = EditorUtils.getOrOpenEditor(project, filepath)?.editor
+
+                        if (editor != null) {
+                            diffStreamService.accept(editor)
+                        }
+
+                        respond(null)
                     }
 
                     "rejectDiff" -> {
@@ -450,7 +457,13 @@ class IdeProtocolClient(
                             RejectDiffParams::class.java
                         )
                         val filepath = params.filepath;
-                        acceptOrRejectDiff(filepath, false)
+
+                        val editor = EditorUtils.getOrOpenEditor(project, filepath)?.editor
+                        if (editor != null) {
+                            diffStreamService.reject(editor)
+                        }
+                        respond(null)
+
                     }
 
                     "applyToFile" -> {
@@ -496,28 +509,6 @@ class IdeProtocolClient(
         continuePluginService.sendToWebview("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
     }
 
-    fun acceptOrRejectDiff(filepath: String, accepted: Boolean) {
-        val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
-
-        if (virtualFile != null) {
-            ApplicationManager.getApplication().invokeAndWait {
-                val openedEditor =
-                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
-                if (openedEditor != null) {
-                    val editor: Editor? = FileEditorManager.getInstance(project).selectedTextEditor
-
-                    if (editor != null) {
-                        val diffStreamService = project.service<DiffStreamService>()
-                        if (accepted) {
-                            diffStreamService.accept(editor)
-                        } else {
-                            diffStreamService.reject(editor)
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     fun deleteAtIndex(index: Int) {
         continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())

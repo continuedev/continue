@@ -64,7 +64,7 @@ async function buildWithEsbuild() {
     format: "cjs",
     platform: "node",
     sourcemap: true,
-    minify: true,
+    minify: !esbuildOnly,
     treeShaking: true,
     loader: {
       // eslint-disable-next-line @typescript-eslint/naming-convention

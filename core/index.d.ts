@@ -1230,10 +1230,25 @@ export interface ApplyState {
   toolCallId?: string;
 }
 
+export interface StreamDiffLinesPayload {
+  prefix: string;
+  highlighted: string;
+  suffix: string;
+  input: string;
+  language: string | undefined;
+  modelTitle: string | undefined;
+  includeRulesInSystemMessage: boolean;
+}
+
 export interface HighlightedCodePayload {
   rangeInFileWithContents: RangeInFileWithContents;
   prompt?: string;
   shouldRun?: boolean;
+}
+
+export interface AcceptOrRejectDiffPayload {
+  filepath: string;
+  streamId?: string;
 }
 
 export interface RangeInFileWithContents {
