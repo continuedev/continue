@@ -49,7 +49,7 @@ export function ExploreBlocksButton(props: { blockType: string }) {
 
   return (
     <GhostButton
-      className="w-full cursor-pointer rounded px-2 py-0.5 text-center text-gray-400 hover:text-gray-300"
+      className="w-full cursor-pointer rounded px-2 py-0.5 text-center"
       style={{
         fontSize: fontSize(-3),
       }}
