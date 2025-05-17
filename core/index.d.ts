@@ -842,6 +842,7 @@ export interface SlashCommand {
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
+  promptFile?: string
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
