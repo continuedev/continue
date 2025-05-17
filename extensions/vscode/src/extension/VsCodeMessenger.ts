@@ -231,15 +231,17 @@ export class VsCodeMessenger {
       });
 
       // Log dev data
-      await DataLogger.getInstance().logDevData({
-        name: "editInteraction",
-        data: {
-          prompt: stripImages(prompt),
-          completion: fileAfterEdit ?? "",
-          modelProvider: model.providerName,
-          modelTitle: model.title ?? "",
-        },
-      });
+      try {
+        await DataLogger.getInstance().logDevData({
+          name: "editInteraction",
+          data: {
+            prompt: stripImages(prompt),
+            completion: fileAfterEdit ?? "",
+            modelProvider: model.providerName,
+            modelTitle: model.title ?? "",
+          },
+        });
+      } catch (e) {}
 
       return fileAfterEdit;
     });
