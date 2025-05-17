@@ -1,10 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ApplyState, CodeToEdit, MessageModes } from "core";
+import { ApplyState, SetCodeToEditPayload, MessageModes } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
+
 export interface EditModeState {
   // Array because of previous multi-file edit functionality
   // Keeping array to not break persisted redux for now
-  codeToEdit: CodeToEdit[];
+  codeToEdit: SetCodeToEditPayload[];
   applyState: ApplyState;
   returnToMode: MessageModes;
   lastNonEditSessionWasEmpty: boolean;
@@ -46,7 +47,7 @@ export const editModeStateSlice = createSlice({
       {
         payload,
       }: PayloadAction<{
-        codeToEdit: CodeToEdit | CodeToEdit[];
+        codeToEdit: SetCodeToEditPayload | SetCodeToEditPayload[];
       }>,
     ) => {
       state.codeToEdit = Array.isArray(payload.codeToEdit)

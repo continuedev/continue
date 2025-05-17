@@ -162,5 +162,8 @@ extensions/.continue-debug/
 
 *.vsix
 
+# intellij module library files
+*.iml
+
 .continuerules
 **/.continue/assistants/

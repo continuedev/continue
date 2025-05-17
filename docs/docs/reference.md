@@ -19,7 +19,7 @@ from [the Hub](https://hub.continue.dev/explore/assistants) or locally
   - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the \* \*[Migration Guide](./yaml-migration.md)\*\*.
+Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the **[Migration Guide](./yaml-migration.md)**.
 :::
 
 An assistant is made up of:
@@ -46,10 +46,6 @@ are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other
 `uses` clauses or explicit blocks of that type.
-
-:::info
-Note that local assistants cannot use blocks that require organization-level secrets.
-:::
 
 For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
 
@@ -85,6 +81,12 @@ Blocks:
 You can find many examples of each of these block types on
 the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
+:::info
+Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) can read secret values:
+- globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
+- per-workspace, from a `.env` file located at the root of the current workspace.
+:::
+
 ### Inputs
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use
@@ -111,7 +113,7 @@ models:
       TEMP: 0.9
 ```
 
-Note that hub secrets can be passed as inputs, using the a similar mustache format: `secrets.SECRET_NAME`.
+Note that hub secrets can be passed as inputs, using a similar mustache format: `secrets.SECRET_NAME`.
 
 ### Overrides
 
@@ -204,7 +206,6 @@ chat, editing, and summarizing.
   - `topP`: The cumulative probability for nucleus sampling.
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
-  - `n`: Number of completions to generate.
   - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
   - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 - `requestOptions`: HTTP request options specific to the model.

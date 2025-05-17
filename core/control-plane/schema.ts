@@ -44,6 +44,7 @@ const modelDescriptionSchema = z.object({
       "llava",
       "gemma",
       "llama3",
+      "codestral",
     ])
     .optional(),
   completionOptions: z
