@@ -1,0 +1,30 @@
+{
+  "version": "0.9.0",
+  "name": "catharsis",
+  "description": "A JavaScript parser for Google Closure Compiler and JSDoc type expressions.",
+  "author": "Jeff Williams <jeffrey.l.williams@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hegemonic/catharsis"
+  },
+  "bugs": "https://github.com/hegemonic/catharsis/issues",
+  "main": "catharsis.js",
+  "dependencies": {
+    "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "ajv": "^6.12.2",
+    "mocha": "^8.0.1",
+    "pegjs": "^0.10.0",
+    "should": "^13.2.3",
+    "should-equal": "^2.0.0"
+  },
+  "engines": {
+    "node": ">= 10"
+  },
+  "scripts": {
+    "prepare": "./node_modules/pegjs/bin/pegjs ./lib/parser.pegjs",
+    "test": "./node_modules/mocha/bin/mocha"
+  },
+  "license": "MIT"
+}

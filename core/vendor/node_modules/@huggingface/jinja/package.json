@@ -1,0 +1,55 @@
+{
+  "name": "@huggingface/jinja",
+  "packageManager": "pnpm@8.10.5",
+  "version": "0.1.2",
+  "description": "A minimalistic JavaScript implementation of the Jinja templating engine, specifically designed for parsing and rendering ML chat templates.",
+  "repository": "https://github.com/huggingface/huggingface.js.git",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "source": "src/index.ts",
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "keywords": [
+    "huggingface",
+    "jinja",
+    "templates",
+    "hugging",
+    "face"
+  ],
+  "author": "Hugging Face",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.2",
+    "@xenova/transformers": "^2.9.0",
+    "@huggingface/hub": "^0.12.3"
+  },
+  "scripts": {
+    "lint": "eslint --quiet --fix --ext .cjs,.ts .",
+    "lint:check": "eslint --ext .cjs,.ts .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "tsup src/index.ts --format cjs,esm --clean --dts",
+    "test": "vitest run",
+    "test:browser": "vitest run --browser.name=chrome --browser.headless",
+    "check": "tsc"
+  }
+}

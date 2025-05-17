@@ -1,0 +1,32 @@
+{
+  "name": "b4a",
+  "version": "1.6.4",
+  "description": "Bridging the gap between buffers and typed arrays",
+  "main": "index.js",
+  "files": [
+    "browser.js",
+    "index.js",
+    "lib"
+  ],
+  "browser": {
+    "./index.js": "./browser.js"
+  },
+  "scripts": {
+    "test": "standard && brittle test/*.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/b4a.git"
+  },
+  "author": "Kasper Isager Dalsgarð <kasper@funktionel.co>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/holepunchto/b4a/issues"
+  },
+  "homepage": "https://github.com/holepunchto/b4a#readme",
+  "devDependencies": {
+    "brittle": "^1.3.5",
+    "nanobench": "^2.1.1",
+    "standard": "^16.0.3"
+  }
+}

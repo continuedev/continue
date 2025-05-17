@@ -1,0 +1,92 @@
+{
+    "all": "any type",
+    "application": {
+        "array": "<%= prefix %> <%= codeTagOpen %>Array<%= codeTagClose %> of <%= application %> <%= suffix %>",
+        "object": "<%= prefix %> <%= codeTagOpen %>Object<%= codeTagClose %> with <%= application %> properties <%= suffix %>",
+        "objectNonString": "<%= prefix %> <%= codeTagOpen %>Object<%= codeTagClose %> with <%= keyApplication %> keys and <%= application %> properties <%= suffix %>",
+        "other": "<%= prefix %> <%= codeTagOpen %><%= type %> containing <%= application %> <%= suffix %>"
+    },
+    "function": {
+        "extended": {
+            "new": "Returns <%= functionNew %> when called with <%= codeTagOpen %>new<%= codeTagClose %>.",
+            "returns": "Returns <%= type %>.",
+            "signature": "function(<%= functionParams %>)",
+            "this": "Within the function, <%= codeTagOpen %>this<%= codeTagClose %> refers to <%= functionThis %>."
+        },
+        "simple": {
+            "new": "constructs <%= functionNew %>",
+            "returns": "returns <%= type %>",
+            "signature": "<%= prefix %> function(<%= functionParams %>) <%= functionReturns %>",
+            "this": "<%= codeTagOpen %>this<%= codeTagClose %> = <%= functionThis %>"
+        }
+    },
+    "modifiers": {
+        "extended": {
+            "nonNullable": "Must not be null.",
+            "nullable": "May be null.",
+            "optional": "Optional.",
+            "prefix": "",
+            "repeatable": "May be provided more than once.",
+            "suffix": ""
+        },
+        "simple": {
+            "nonNullable": "non-null",
+            "nullable": "nullable",
+            "optional": "optional",
+            "prefix": "<%= optional %> <%= nullable %> <%= repeatable %>",
+            "repeatable": "repeatable",
+            "suffix": ""
+        }
+    },
+    "name": "<%= codeTagOpen %>{{ name }}<%= codeTagClose %> <%= suffix %>",
+    "null": "null",
+    "params": {
+        "first": {
+            "one": "<%= param %>",
+            "two": "<%= param %>, ",
+            "many": "<%= param %>, "
+        },
+        "middle": {
+            "many": "<%= param %>, "
+        },
+        "last": {
+            "two": "<%= param %>",
+            "many": "<%= param %>"
+        }
+    },
+    "record": {
+        "first": {
+            "one": "<%= prefix %> {<%= field %>} <%= suffix %>",
+            "two": "<%= prefix %> {<%= field %>, ",
+            "many": "<%= prefix %> {<%= field %>, "
+        },
+        "middle": {
+            "many": "<%= field %>, "
+        },
+        "last": {
+            "two": "<%= field %>} <%= suffix %>",
+            "many": "<%= field %>} <%= suffix %>"
+        }
+    },
+    "field": {
+        "typed": "<%= name %>: <%= type %>",
+        "untyped": "<%= name %>"
+    },
+    "type": "<%= prefix %> <%= codeTagOpen %><%= type %><%= codeTagClose %> <%= suffix %>",
+    "undefined": "undefined",
+    "union": {
+        "first": {
+            "one": "<%= prefix %> <%= element %> <%= suffix %>",
+            "two": "<%= prefix %> (<%= element %> ",
+            "many": "<%= prefix %> (<%= element %>, "
+        },
+        "middle": {
+            "many": "<%= element %>, "
+        },
+        "last": {
+            "two": "or <%= element %>) <%= suffix %>",
+            "many": "or <%= element %>) <%= suffix %>"
+        }
+    },
+    "unknown": "unknown"
+}

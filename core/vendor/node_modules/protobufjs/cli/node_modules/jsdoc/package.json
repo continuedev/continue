@@ -1,0 +1,80 @@
+{
+  "name": "jsdoc",
+  "version": "3.6.11",
+  "revision": "1658338843387",
+  "description": "An API documentation generator for JavaScript.",
+  "keywords": [
+    "documentation",
+    "javascript"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsdoc/jsdoc"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.9.4",
+    "@types/markdown-it": "^12.2.3",
+    "bluebird": "^3.7.2",
+    "catharsis": "^0.9.0",
+    "escape-string-regexp": "^2.0.0",
+    "js2xmlparser": "^4.0.2",
+    "klaw": "^3.0.0",
+    "markdown-it": "^12.3.2",
+    "markdown-it-anchor": "^8.4.1",
+    "marked": "^4.0.10",
+    "mkdirp": "^1.0.4",
+    "requizzle": "^0.2.3",
+    "strip-json-comments": "^3.1.0",
+    "taffydb": "2.6.2",
+    "underscore": "~1.13.2"
+  },
+  "devDependencies": {
+    "ajv": "^6.12.0",
+    "gulp": "^4.0.2",
+    "gulp-eslint": "^6.0.0",
+    "gulp-json-editor": "^2.5.6",
+    "nyc": "^15.1.0"
+  },
+  "resolutions": {
+    "ansi-regex": "5.0.1",
+    "fsevents": "2.3.2",
+    "glob-parent": "6.0.2",
+    "ini": "1.3.6",
+    "set-value": "4.0.1",
+    "tar": "6.1.11",
+    "trim-newlines": "4.0.2",
+    "trim-off-newlines": "1.0.3"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "scripts": {
+    "test": "gulp lint; gulp test"
+  },
+  "bin": {
+    "jsdoc": "./jsdoc.js"
+  },
+  "greenkeeper": {
+    "ignore": [
+      "taffydb"
+    ]
+  },
+  "bugs": "https://github.com/jsdoc/jsdoc/issues",
+  "author": {
+    "name": "Michael Mathews",
+    "email": "micmath@gmail.com"
+  },
+  "contributors": [
+    {
+      "name": "The JSDoc Contributors",
+      "url": "https://github.com/jsdoc/jsdoc/graphs/contributors"
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "Jeff Williams",
+      "email": "jeffrey.l.williams@gmail.com"
+    }
+  ]
+}

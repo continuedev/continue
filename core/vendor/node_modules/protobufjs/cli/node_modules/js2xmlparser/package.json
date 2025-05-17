@@ -1,0 +1,65 @@
+{
+    "name": "js2xmlparser",
+    "version": "4.0.2",
+    "description": "Parses JavaScript objects into XML",
+    "keywords": [
+        "convert",
+        "converter",
+        "javascript",
+        "js",
+        "json",
+        "object",
+        "objects",
+        "parse",
+        "parser",
+        "xml"
+    ],
+    "license": "Apache-2.0",
+    "author": {
+        "name": "Michael Kourlas",
+        "email": "michael@kourlas.com"
+    },
+    "files": [
+        "lib",
+        "CHANGES.md",
+        "LICENSE",
+        "NOTICE",
+        "package.json",
+        "README.md"
+    ],
+    "main": "./lib/main.js",
+    "typings": "./lib/main",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/michaelkourlas/node-js2xmlparser.git"
+    },
+    "scripts": {
+        "build": "npm run-script prod && npm run-script test-prod && npm run-script docs",
+        "clean": "rimraf lib",
+        "clean-docs": "rimraf docs",
+        "clean-test": "rimraf test/lib",
+        "dev": "npm run-script clean && npm run-script format && npm run-script lint && tsc -p tsconfig.json --sourceMap",
+        "docs": "npm run-script clean-docs && typedoc --out docs --excludePrivate src/main.ts",
+        "format": "prettier --write .",
+        "lint": "eslint . --ext .ts",
+        "prod": "npm run-script clean && npm run-script format && npm run-script lint && tsc -p tsconfig.json",
+        "test-dev": "npm run-script clean-test && tsc -p test/tsconfig.json --sourceMap && mocha --recursive test/lib",
+        "test-prod": "npm run-script clean-test && tsc -p test/tsconfig.json && mocha --recursive test/lib"
+    },
+    "dependencies": {
+        "xmlcreate": "^2.0.4"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.2.22",
+        "@types/mocha": "^9.0.0",
+        "@typescript-eslint/eslint-plugin": "^5.2.0",
+        "@typescript-eslint/parser": "^5.2.0",
+        "chai": "^4.3.4",
+        "eslint": "^8.1.0",
+        "mocha": "^9.1.3",
+        "prettier": "^2.4.1",
+        "rimraf": "^3.0.2",
+        "typedoc": "^0.22.7",
+        "typescript": "^4.4.4"
+    }
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>taffy test</title>
+
+  <script src="./taffy.js"></script>
+
+  <script>
+  // recursive object compare, for future use
+  Object.prototype.equals = function (x) {
+    var p;
+    for(p in this) {
+      if(typeof(x[p])=='undefined') {return false;}
+    }
+
+    for(p in this) {
+      if (this[p]) {
+        switch(typeof(this[p])) {
+          case 'object':
+            if (! this[p].equals(x[p])) { return false; }
+          break;
+          case 'function':
+            if (typeof(x[p])=='undefined' ||
+              (p != 'equals' && this[p].toString() != x[p].toString())
+            ){ return false; }
+            break;
+          default:
+            if (this[p] != x[p]) { return false; }
+        }
+      }
+      else {
+        if (x[p]){ return false; }
+      }
+    }
+
+    for(p in x) {
+      if(typeof(this[p])=='undefined') {return false;}
+    }
+
+    return true;
+  };
+
+
+
+  var key_name, data_val, friends_table, taffy_map;
+  friends_table = TAFFY([
+    {"id":1,"gender":"M","first":"John","last":"Smith","city":"Seattle, WA","status":"Active"},
+    {"id":2,"gender":"F","first":"Kelly","last":"Ruth","city":"Dallas, TX","status":"Active"},
+    {"id":3,"gender":"M","first":"Jeff","last":"Stevenson","city":"Washington, D.C.","status":"Active"},
+    {"id":4,"gender":"F","first":"Jennifer","last":"Gill","city":"Seattle, WA","status":"Active"}  
+  ]);
+
+  taffy_map = {
+    t_by_city       : friends_table({city:"Seattle, WA"}),
+    t_by_id         : friends_table({id:1}),
+    t_by_id_f       : friends_table({id:'1'}),
+    t_by_name       : friends_table({first:'John',last:'Smith'}),
+    kelly_by_id     : friends_table({id:2}).first(),
+    kelly_last_name : friends_table({id:2}).first().last,
+    id_list         : friends_table().select('id'),
+    city_list       : friends_table().distinct('city'),
+  };
+
+  for ( key_name in taffy_map ){
+    if ( taffy_map.hasOwnProperty(key_name) ){
+      data_val = taffy_map[key_name];
+      console.warn(key_name, data_val);
+      if ( data_val.hasOwnProperty('get') ){
+        console.warn(JSON.stringify(data_val.get()));
+      }
+      console.warn('----------------');
+    }
+  }
+  </script>
+</head>
+<body>
+<div>
+Please open your javascript console to see test results
+</div>
+</body>
+</html>
+
+
