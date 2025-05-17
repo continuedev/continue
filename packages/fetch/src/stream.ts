@@ -50,7 +50,8 @@ export async function* streamResponse(
   }
 }
 
-function parseDataLine(line: string): any {
+// Export for testing purposes
+export function parseDataLine(line: string): any {
   const json = line.startsWith("data: ")
     ? line.slice("data: ".length)
     : line.slice("data:".length);
@@ -63,6 +64,14 @@ function parseDataLine(line: string): any {
 
     return data;
   } catch (e) {
+    // If the error was thrown by our error check, rethrow it
+    if (
+      e instanceof Error &&
+      e.message.startsWith("Error streaming response:")
+    ) {
+      throw e;
+    }
+    // Otherwise it's a JSON parsing error
     throw new Error(`Malformed JSON sent from server: ${json}`);
   }
 }
