@@ -62,7 +62,7 @@ const initialState: SessionState = {
   id: uuidv4(),
   streamAborter: new AbortController(),
   symbols: {},
-  mode: "chat",
+  mode: "agent",
   codeBlockApplyStates: {
     states: [],
     curIndex: 0,
