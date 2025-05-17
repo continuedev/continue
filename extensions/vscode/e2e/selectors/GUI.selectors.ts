@@ -148,6 +148,14 @@ export class GUISelectors {
   }
 
   public static getThreadMessageByText(view: WebView, text: string) {
+    void view.findElement(By.xpath(`//*[@class="thread-message"]`)).then(e=>{
+      console.log('debug1 thread element: ', e);
+    });
+
+    void view.findElement(By.xpath(`//*[@class="thread-message"]`)).getText().then(e=>{
+      console.log('debug1 thread message: ', e);
+    });
+    
     return view.findWebElement(
       By.xpath(`//*[@class="thread-message"]//*[contains(text(), "${text}")]`),
     );

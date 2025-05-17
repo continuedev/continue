@@ -1037,3 +1037,10 @@ body[data-color-mode*="light"] {
 .token.entity {
   cursor: help;
 }
+/* 
+.markdown-table th {
+  background-color: var(--color-fg-muted);
+}
+.markdown-table td {
+  background-color: var(--color-fg-subtle);
+} */
