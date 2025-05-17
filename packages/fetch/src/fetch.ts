@@ -107,19 +107,30 @@ export async function fetchwithRequestOptions(
   }
 
   // fetch the request with the provided options
-  const resp = await fetch(url, {
-    ...init,
-    body: updatedBody ?? init?.body,
-    headers: headers,
-    agent: agent,
-  });
+  try {
+    const resp = await fetch(url, {
+      ...init,
+      body: updatedBody ?? init?.body,
+      headers: headers,
+      agent: agent,
+    });
 
-  if (!resp.ok) {
-    const requestId = resp.headers.get("x-request-id");
-    if (requestId) {
-      console.log(`Request ID: ${requestId}, Status: ${resp.status}`);
+    if (!resp.ok) {
+      const requestId = resp.headers.get("x-request-id");
+      if (requestId) {
+        console.log(`Request ID: ${requestId}, Status: ${resp.status}`);
+      }
     }
-  }
 
-  return resp;
+    return resp;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      // Return a Response object that streamResponse etc can handle
+      return new Response(null, {
+        status: 499, // Client Closed Request
+        statusText: "Client Closed Request",
+      });
+    }
+    throw error;
+  }
 }
