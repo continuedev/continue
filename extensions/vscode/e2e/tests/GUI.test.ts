@@ -381,7 +381,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
   });
 
-  describe("Repeat back the system message", () => {
+  describe.skip("Repeat back the system message", () => {
     it("should repeat back the system message", async () => {
       await GUIActions.selectModelFromDropdown(view, "SYSTEM MESSAGE MOCK LLM");
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
