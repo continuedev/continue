@@ -8,10 +8,11 @@ import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
+import { useFontSize } from "../../components/ui/font";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
-import { getFontSize } from "../../util";
+import { setLocalStorage } from "../../util/localStorage";
 
 export function UserSettingsForm() {
   /////// User settings section //////
@@ -65,6 +66,7 @@ export function UserSettingsForm() {
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
+  const autoAcceptEditToolDiffs = config.ui?.autoAcceptEditToolDiffs ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
 
@@ -79,7 +81,7 @@ export function UserSettingsForm() {
     config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
   const modelTimeout = config.tabAutocompleteOptions?.modelTimeout ?? 150;
   const debounceDelay = config.tabAutocompleteOptions?.debounceDelay ?? 250;
-  const fontSize = getFontSize();
+  const fontSize = useFontSize();
 
   const cancelChangeDisableAutocomplete = () => {
     setFormDisableAutocomplete(disableAutocompleteInFiles);
@@ -163,6 +165,20 @@ export function UserSettingsForm() {
               text="Text-to-Speech Output"
             />
 
+            <div className="flex flex-col gap-1">
+              <ToggleSwitch
+                isToggled={autoAcceptEditToolDiffs}
+                onToggle={() =>
+                  handleUpdate({
+                    autoAcceptEditToolDiffs: !autoAcceptEditToolDiffs,
+                  })
+                }
+                text="Auto-Accept Agent Edits"
+                onWarningText={
+                  "Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point"
+                }
+              />
+            </div>
             {/* <ToggleSwitch
                     isToggled={useChromiumForDocsCrawling}
                     onToggle={() =>
@@ -225,11 +241,12 @@ export function UserSettingsForm() {
               <span className="text-left">Font Size</span>
               <NumberInput
                 value={fontSize}
-                onChange={(val) =>
+                onChange={(val) => {
+                  setLocalStorage("fontSize", val);
                   handleUpdate({
                     fontSize: val,
-                  })
-                }
+                  });
+                }}
                 min={7}
                 max={50}
               />

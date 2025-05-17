@@ -26,6 +26,7 @@ export const sharedConfigSchema = z
     codeWrap: z.boolean(),
     displayRawMarkdown: z.boolean(),
     showChatScrollbar: z.boolean(),
+    autoAcceptEditToolDiffs: z.boolean(),
 
     // `tabAutocompleteOptions` in `ContinueConfig`
     useAutocompleteCache: z.boolean(),
@@ -106,8 +107,7 @@ export function modifyAnyConfigWithSharedConfig<
       sharedConfig.disableAutocompleteInFiles;
   }
   if (sharedConfig.modelTimeout !== undefined) {
-    configCopy.tabAutocompleteOptions.modelTimeout =
-      sharedConfig.modelTimeout;
+    configCopy.tabAutocompleteOptions.modelTimeout = sharedConfig.modelTimeout;
   }
   if (sharedConfig.debounceDelay !== undefined) {
     configCopy.tabAutocompleteOptions.debounceDelay =
@@ -133,6 +133,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.showChatScrollbar !== undefined) {
     configCopy.ui.showChatScrollbar = sharedConfig.showChatScrollbar;
+  }
+  if (sharedConfig.autoAcceptEditToolDiffs !== undefined) {
+    configCopy.ui.autoAcceptEditToolDiffs =
+      sharedConfig.autoAcceptEditToolDiffs;
   }
 
   if (sharedConfig.allowAnonymousTelemetry !== undefined) {
