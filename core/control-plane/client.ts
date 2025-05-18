@@ -99,22 +99,6 @@ export class ControlPlaneClient {
     return resp;
   }
 
-  public async listWorkspaces(): Promise<ControlPlaneWorkspace[]> {
-    const userId = await this.userId;
-    if (!userId) {
-      return [];
-    }
-
-    try {
-      const resp = await this.request("workspaces", {
-        method: "GET",
-      });
-      return (await resp.json()) as any;
-    } catch (e) {
-      return [];
-    }
-  }
-
   public async listAssistants(organizationId: string | null): Promise<
     {
       configResult: ConfigResult<AssistantUnrolled>;
@@ -182,17 +166,5 @@ export class ControlPlaneClient {
     } catch (e) {
       return null;
     }
-  }
-
-  async getSettingsForWorkspace(workspaceId: string): Promise<ConfigJson> {
-    const userId = await this.userId;
-    if (!userId) {
-      throw new Error("No user id");
-    }
-
-    const resp = await this.request(`workspaces/${workspaceId}`, {
-      method: "GET",
-    });
-    return ((await resp.json()) as any).settings;
   }
 }
