@@ -191,6 +191,21 @@ export class ContinueCompletionProvider
 
       const selectedCompletionInfo = context.selectedCompletionInfo;
 
+      // Special case that helps completion with the Granite models:
+      //
+      // If the displayed completion in the autocompletion widget is a property,
+      // and the result from Granite starts with spaces before the property dot,
+      // remove those spaces.
+      if (
+        selectedCompletionInfo &&
+        selectedCompletionInfo.text.startsWith(".")
+      ) {
+        const trimmedCompletion = outcome.completion.trimStart();
+        if (trimmedCompletion.startsWith(".")) {
+          outcome.completion = trimmedCompletion;
+        }
+      }
+
       // Construct the range/text to show
       let range = new vscode.Range(position, position);
       let completionText = outcome.completion;
