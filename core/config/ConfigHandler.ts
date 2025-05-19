@@ -270,6 +270,13 @@ export class ConfigHandler {
     /**
      * Users can define as many local assistants as they want in a `.continue/assistants` folder
      */
+
+    // Local customization disabled for on-premise deployments
+    const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+    if (env.AUTH_TYPE === AuthType.OnPrem) {
+      return [];
+    }
+
     const localProfiles: ProfileLifecycleManager[] = [];
 
     if (options.includeGlobal) {
