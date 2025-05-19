@@ -270,7 +270,7 @@ async function configYamlToContinueConfig(options: {
 
   config.mcpServers?.forEach((mcpServer) => {
     const mcpArgVariables =
-      mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) ?? [];
+      (mcpServer.type === "stdio" ? mcpServer.args?.filter((arg) => TEMPLATE_VAR_REGEX.test(arg)) : []) ?? [];
 
     if (mcpArgVariables.length === 0) {
       return;
