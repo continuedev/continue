@@ -52,6 +52,22 @@ export function validateLicenseKey(licenseKey: string): boolean {
   }
 }
 
+function extractConfigFromArray(config: any[]): Record<string, string> {
+  const configObj: Record<string, string> = {};
+
+  for (let i = 0; i < config.length; i += 2) {
+    if (i + 1 < config.length) {
+      const key = config[i];
+      const value = config[i + 1];
+      if (typeof key === "string") {
+        configObj[key] = value as string;
+      }
+    }
+  }
+
+  return configObj;
+}
+
 function readMdmKeysMacOS(): MdmKeys | undefined {
   try {
     // MDM configuration is typically stored in /Library/Managed Preferences/ on macOS
@@ -79,18 +95,7 @@ function readMdmKeysMacOS(): MdmKeys | undefined {
           // Extract the relevant fields from the config
           // Config is an array of alternating keys and values
           if (Array.isArray(config)) {
-            const configObj: Record<string, string> = {};
-
-            // Convert array format [key1, value1, key2, value2, ...] to object
-            for (let i = 0; i < config.length; i += 2) {
-              if (i + 1 < config.length) {
-                const key = config[i];
-                const value = config[i + 1];
-                if (typeof key === "string") {
-                  configObj[key] = value as string;
-                }
-              }
-            }
+            const configObj = extractConfigFromArray(config);
 
             // Check if required keys are present
             if (configObj.licenseKey && configObj.apiUrl) {
