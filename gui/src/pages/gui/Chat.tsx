@@ -120,6 +120,9 @@ export function Chat() {
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
+  const warningMessage = useAppSelector(
+    (state) => state.session.warningMessage,
+  );
 
   useAutoScroll(stepsDivRef, history);
 

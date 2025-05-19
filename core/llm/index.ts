@@ -20,6 +20,7 @@ import {
   ILLMLogger,
   LLMFullCompletionOptions,
   LLMOptions,
+  MessageOption,
   ModelCapability,
   ModelInstaller,
   PromptLog,
@@ -850,6 +851,23 @@ export abstract class BaseLLM implements ILLM {
     return { role: "assistant" as const, content: completion };
   }
 
+  compileChatMessages(
+    message: ChatMessage[],
+    options: LLMFullCompletionOptions,
+  ) {
+    let { completionOptions } = this._parseCompletionOptions(options);
+    completionOptions = this._modifyCompletionOptions(completionOptions);
+
+    return compileChatMessages({
+      modelName: completionOptions.model,
+      msgs: message,
+      contextLength: this.contextLength,
+      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+      supportsImages: this.supportsImages(),
+      tools: options.tools,
+    });
+  }
+
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
   ): ChatCompletionCreateParams {
@@ -874,6 +892,7 @@ export abstract class BaseLLM implements ILLM {
     _messages: ChatMessage[],
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
+    messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
@@ -884,14 +903,21 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = compileChatMessages({
-      modelName: completionOptions.model,
-      msgs: _messages,
-      contextLength: this.contextLength,
-      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
-      supportsImages: this.supportsImages(),
-      tools: options.tools,
-    });
+    let messages = _messages;
+
+    // If not precompiled, compile the chat messages
+    if (!messageOptions || messageOptions.precompiled === false) {
+      const { compiledChatMessages } = compileChatMessages({
+        modelName: completionOptions.model,
+        msgs: _messages,
+        contextLength: this.contextLength,
+        maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+        supportsImages: this.supportsImages(),
+        tools: options.tools,
+      });
+
+      messages = compiledChatMessages;
+    }
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)

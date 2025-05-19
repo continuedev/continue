@@ -106,6 +106,7 @@ class MessageTypes {
             "llm/complete",
             "llm/streamChat",
             "llm/listModels",
+            "llm/compileChat",
             "streamDiffLines",
             "chatDescriber/describe",
             "stats/getTokensPerDay",

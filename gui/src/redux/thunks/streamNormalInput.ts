@@ -12,6 +12,7 @@ import {
   setAppliedRulesAtIndex,
   setInactive,
   setToolGenerated,
+  setWarningMessage,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -84,6 +85,41 @@ export const streamNormalInput = createAsyncThunk<
     );
 
     dispatch(setActive());
+    // Remove the warning message before each compileChat call
+    dispatch(setWarningMessage(undefined));
+    const precompiledRes = await extra.ideMessenger.request("llm/compileChat", {
+      messages,
+      options: completionOptions,
+    });
+
+    if (precompiledRes.status === "error") {
+      throw new Error(precompiledRes.error);
+    }
+
+    const { compiledChatMessages, pruningStatus } = precompiledRes.content;
+
+    switch (pruningStatus) {
+      case "pruned":
+        dispatch(
+          setWarningMessage({
+            message: `Chat history exceeds model's context length (${state.config.config.selectedModelByRole.chat?.contextLength} tokens). Old messages will not be included.`,
+            level: "warning",
+            category: "exceeded-context-length",
+          }),
+        );
+        break;
+      case "deleted-last-input":
+        dispatch(
+          setWarningMessage({
+            message:
+              "The provided context items are too large. Please trim the context item to fit the model's context length or increase the model's context length by editing the configuration.",
+            level: "fatal",
+            category: "deleted-last-input",
+          }),
+        );
+        dispatch(setInactive());
+        return;
+    }
 
     // Send request and stream response
     const streamAborter = state.session.streamAborter;
@@ -91,8 +127,9 @@ export const streamNormalInput = createAsyncThunk<
       {
         completionOptions,
         title: selectedChatModel.title,
-        messages: messages,
+        messages: compiledChatMessages,
         legacySlashCommandData,
+        messageOptions: { precompiled: true },
       },
       streamAborter.signal,
     );
