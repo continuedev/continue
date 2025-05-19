@@ -26,6 +26,8 @@ Below that, the following settings which are not part of a configuration file ar
 - `Enable Indexing`: Enables indexing of the codebase for the @codebase and @code context providers. **On** by default.
 - `Font Size`: Specifies base font size for UI elements
 - `Multiline Autocompletions`: Controls multiline completions for autocomplete. Can be set to `always`, `never`, or `auto`. Defaults to `auto`
+- `Autocomplete timeout`: Maximum time in milliseconds for autocomplete request/retreival. Defaults to 150
+- `Autocomplete debounce`: Minimum time in milliseconds to trigger an autocomplete request after a change. Defaults to 250
 - `Disable autocomplete in files`: List of comma-separated glob pattern to disable autocomplete in matching files. E.g., `**/*.{txt,md}`
 
 ### Experimental settings

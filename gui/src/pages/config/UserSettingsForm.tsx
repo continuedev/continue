@@ -262,7 +262,7 @@ export function UserSettingsForm() {
               </Select>
             </label>
             <label className="flex items-center justify-between gap-3">
-              <span className="text-left">Model Timeout (ms)</span>
+              <span className="text-left">Autocomplete Timeout (ms)</span>
               <NumberInput
                 value={modelTimeout}
                 onChange={(val) =>
@@ -275,7 +275,7 @@ export function UserSettingsForm() {
               />
             </label>
             <label className="flex items-center justify-between gap-3">
-              <span className="text-left">Model Debounce (ms)</span>
+              <span className="text-left">Autocomplete Debounce (ms)</span>
               <NumberInput
                 value={debounceDelay}
                 onChange={(val) =>
