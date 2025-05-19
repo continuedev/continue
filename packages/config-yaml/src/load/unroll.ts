@@ -1,4 +1,5 @@
 import * as YAML from "yaml";
+import { fromError } from "zod-validation-error";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
@@ -30,13 +31,9 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
     if (result.success) {
       return result.data;
     }
-    throw new Error(
-      result.error.errors
-        .map((e) => `${e.path.join(".")}: ${e.message}`)
-        .join(""),
-    );
-  } catch (e) {
-    console.log("Failed to parse rolled assistant:", configYaml);
+    throw fromError(result.error);
+  } catch (e : any) {
+    console.log("Failed to parse rolled assistant:", configYaml, e.message);
     throw new Error(
       `Failed to parse assistant:\n${e instanceof Error ? e.message : e}`,
     );
