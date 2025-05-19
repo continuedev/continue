@@ -34,7 +34,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newInputValue = e.target.value;
     setInputValue(newInputValue);
-    
+
     // Only update the actual value if it's a valid number
     const numValue = parseInt(newInputValue, 10);
     if (!isNaN(numValue)) {
@@ -63,10 +63,12 @@ const NumberInput: React.FC<NumberInputProps> = ({
           WebkitAppearance: "none",
           MozAppearance: "none",
         }}
+        min={min}
+        max={max}
       />
       <div className="flex flex-col">
         <button
-          style={{ fontSize: "10px" }}
+          style={{ fontSize: "9px" }}
           onClick={handleIncrement}
           disabled={value >= max}
           className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80"
@@ -74,7 +76,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
           ▲
         </button>
         <button
-          style={{ fontSize: "10px" }}
+          style={{ fontSize: "9px" }}
           className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80"
           onClick={handleDecrement}
           disabled={value <= min}

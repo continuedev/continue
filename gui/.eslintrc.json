@@ -3,7 +3,7 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "eslint-plugin-react"],
   "parserOptions": {
-    "project": "gui/tsconfig.json"
+    "project": ["tsconfig.json", "tsconfig.node.json"]
   },
   "extends": [
     // "eslint:recommended",

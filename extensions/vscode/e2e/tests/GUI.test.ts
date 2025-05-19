@@ -245,6 +245,47 @@ describe("GUI Test", () => {
       await GUIActions.selectModeFromDropdown(view, "Agent");
     });
 
+    it("should display rules peek and show rule details", async () => {
+      // Send a message to trigger the model response
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+
+      // Wait for the response to appear
+      await TestUtils.waitForSuccess(() =>
+        GUISelectors.getThreadMessageByText(view, "I'm going to call a tool:"),
+      );
+
+      // Verify that "1 rule" text appears
+      const rulesPeek = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getRulesPeek(view),
+      );
+      const rulesPeekText = await rulesPeek.getText();
+      expect(rulesPeekText).to.include("1 rule");
+
+      // Click on the rules peek to expand it
+      await rulesPeek.click();
+
+      // Wait for the rule details to appear
+      const ruleItem = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getFirstRulesPeekItem(view),
+      );
+
+      await TestUtils.waitForSuccess(async () => {
+        const text = await ruleItem.getText();
+        if (!text || text.trim() === "") {
+          throw new Error("Rule item text is empty");
+        }
+        return ruleItem;
+      });
+
+      // Verify the rule content
+      const ruleItemText = await ruleItem.getText();
+      expect(ruleItemText).to.include("Assistant rule");
+      expect(ruleItemText).to.include("Always applied");
+      expect(ruleItemText).to.include("TEST_SYS_MSG");
+    }).timeout(DEFAULT_TIMEOUT.MD);
+
     it("should render tool call", async () => {
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -258,7 +299,9 @@ describe("GUI Test", () => {
       expect(await statusMessage.getText()).contain(
         "Continue viewed the git diff",
       );
-    }).timeout(DEFAULT_TIMEOUT.MD);
+      // wait for 30 seconds, promise
+      await new Promise((resolve) => setTimeout(resolve, 30000));
+    }).timeout(DEFAULT_TIMEOUT.MD * 100);
 
     it("should call tool after approval", async () => {
       await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);

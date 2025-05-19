@@ -1,8 +1,6 @@
 import {
   ArrowLeftIcon,
   ChatBubbleOvalLeftIcon,
-  CodeBracketSquareIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
@@ -20,7 +18,6 @@ import {
 import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
-import AcceptRejectAllButtons from "../../components/AcceptRejectAllButtons";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
@@ -50,7 +47,7 @@ import {
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { streamEditThunk } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
-import { streamResponseThunk } from "../../redux/thunks/streamResponse";
+import { streamResponseThunk } from "../../redux/thunks";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
@@ -64,6 +61,7 @@ import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { useAutoScroll } from "./useAutoScroll";
+import AcceptRejectDiffButtons from "../../components/AcceptRejectDiffButtons";
 
 const StepsDiv = styled.div`
   position: relative;
@@ -74,7 +72,7 @@ const StepsDiv = styled.div`
   }
 
   .thread-message {
-    margin: 0px 0px 0px 1px;
+    margin: 0 0 0 1px;
   }
 `;
 
@@ -112,7 +110,7 @@ export function Chat() {
     (store) => store.config?.config.selectedModelByRole,
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
+  const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const history = useAppSelector((state) => state.session.history);
@@ -133,6 +131,8 @@ export function Chat() {
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
+
+  useAutoScroll(stepsDivRef, history);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -200,7 +200,7 @@ export function Chat() {
         if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
           // Show this message whether using platform or not
           // So that something happens if in new chat
-          ideMessenger.ide.showToast(
+          void ideMessenger.ide.showToast(
             "error",
             "You've reached the free trial limit. Please configure a model to continue.",
           );
@@ -284,8 +284,6 @@ export function Chat() {
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
-  useAutoScroll(stepsDivRef, history);
-
   return (
     <>
       {widget}
@@ -301,7 +299,7 @@ export function Chat() {
           <div
             key={item.message.id}
             style={{
-              minHeight: index === history.length - 1 ? "25vh" : 0,
+              minHeight: index === history.length - 1 ? "200px" : 0,
             }}
           >
             <ErrorBoundary
@@ -320,6 +318,7 @@ export function Chat() {
                     isMainInput={false}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
+                    appliedRules={item.appliedRules}
                     inputId={item.message.id}
                   />
                 </>
@@ -355,23 +354,11 @@ export function Chat() {
                   <TimelineItem
                     item={item}
                     iconElement={
-                      false ? (
-                        <CodeBracketSquareIcon width="16px" height="16px" />
-                      ) : false ? (
-                        <ExclamationTriangleIcon
-                          width="16px"
-                          height="16px"
-                          color="red"
-                        />
-                      ) : (
-                        <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                      )
+                      <ChatBubbleOvalLeftIcon width="16px" height="16px" />
                     }
                     open={
                       typeof stepsOpen[index] === "undefined"
-                        ? false
-                          ? false
-                          : true
+                        ? true
                         : stepsOpen[index]!
                     }
                     onToggle={() => {}}
@@ -391,7 +378,7 @@ export function Chat() {
       <div className={"relative"}>
         <>
           {!isStreaming && mode !== "edit" && (
-            <AcceptRejectAllButtons
+            <AcceptRejectDiffButtons
               applyStates={applyStates}
               onAcceptOrReject={async () => {}}
             />

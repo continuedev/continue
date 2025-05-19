@@ -46,7 +46,7 @@ export class GUISelectors {
   }
 
   public static getToolCallStatusMessage(view: WebView) {
-    return SelectorUtils.getElementByDataTestId(view, "toggle-div-title");
+    return SelectorUtils.getElementByDataTestId(view, "tool-call-title");
   }
 
   public static getToolButton(view: WebView) {
@@ -87,6 +87,14 @@ export class GUISelectors {
       view,
       "context-items-peek-item",
     );
+  }
+
+  public static getRulesPeek(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "rules-peek");
+  }
+
+  public static getFirstRulesPeekItem(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "rules-peek-item");
   }
 
   public static getNthHistoryTableRow(view: WebView, index: number) {

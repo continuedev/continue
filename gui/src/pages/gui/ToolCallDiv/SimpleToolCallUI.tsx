@@ -1,7 +1,6 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId, Tool, ToolCallState } from "core";
 import { ComponentType, useMemo, useState } from "react";
-import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 
@@ -58,8 +57,8 @@ export function SimpleToolCallUI({
             />
           </div>
           <div
-            className="flex bg-blue-200 text-xs text-gray-400 transition-colors duration-200"
-            data-testid="toggle-div-title"
+            className="ml-1 text-xs text-gray-400 transition-colors duration-200"
+            data-testid="tool-call-title"
           >
             <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </div>
@@ -74,7 +73,7 @@ export function SimpleToolCallUI({
         ) : null}
       </div>
       <ArgsItems args={args} isShowing={showingArgs} />
-      <div
+      {/* <div
         className={`mt-2 overflow-y-auto transition-all duration-300 ease-in-out ${
           open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
         }`}
@@ -88,7 +87,7 @@ export function SimpleToolCallUI({
             No tool call output
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

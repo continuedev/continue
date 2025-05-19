@@ -1,12 +1,14 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
-import { InputModifiers } from "core";
+import { InputModifiers, ToolResultChatMessage, UserChatMessage } from "core";
 import { constructMessages } from "core/llm/constructMessages";
+import { getApplicableRules } from "core/llm/rules/getSystemMessageWithRules";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
 import { getBaseSystemMessage } from "../../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
+  setAppliedRulesAtIndex,
   submitEditorAndInitAtIndex,
   updateHistoryItemAtIndex,
 } from "../slices/sessionSlice";
@@ -84,17 +86,41 @@ export const streamResponseThunk = createAsyncThunk<
           }),
         );
 
-        // Construct messages from updated history
+        // Get updated history after the update
         const updatedHistory = getState().session.history;
-        const messageMode = getState().session.mode
 
-        const baseChatOrAgentSystemMessage = getBaseSystemMessage(selectedChatModel, messageMode)
+        // Determine which rules apply to this message
+        const userMsg = updatedHistory[inputIndex].message;
+        const rules = getState().config.config.rules;
+
+        // Calculate applicable rules once
+        // We need to check the message type to match what getApplicableRules expects
+        const applicableRules = getApplicableRules(
+          userMsg.role === "user" || userMsg.role === "tool"
+            ? (userMsg as UserChatMessage | ToolResultChatMessage)
+            : undefined,
+          rules,
+        );
+
+        // Store in history for UI display
+        dispatch(
+          setAppliedRulesAtIndex({
+            index: inputIndex,
+            appliedRules: applicableRules,
+          }),
+        );
+
+        const messageMode = getState().session.mode;
+        const baseChatOrAgentSystemMessage = getBaseSystemMessage(
+          selectedChatModel,
+          messageMode,
+        );
 
         const messages = constructMessages(
           messageMode,
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
-          state.config.config.rules,
+          applicableRules,
         );
 
         posthog.capture("step run", {

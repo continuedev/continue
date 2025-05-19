@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { vscButtonBackground } from "..";
 
 type ToggleSwitchProps = {
@@ -6,6 +6,7 @@ type ToggleSwitchProps = {
   onToggle: () => void;
   text: string;
   size?: number;
+  showIfToggled?: ReactNode;
 };
 
 const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
@@ -13,11 +14,13 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   onToggle,
   text,
   size = 16,
+  showIfToggled,
 }) => {
   return (
     <div className="flex cursor-pointer select-none items-center justify-between gap-3">
       <span className="truncate-right">{text}</span>
-      <div>
+      <div className="flex flex-row items-center gap-1">
+        {isToggled && !!showIfToggled && showIfToggled}
         <div
           className={`border-vsc-input-border bg-vsc-input-background flex items-center rounded-full border border-solid`}
           onClick={onToggle}
