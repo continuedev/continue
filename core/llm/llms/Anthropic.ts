@@ -191,6 +191,7 @@ class Anthropic extends BaseLLM {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        Connection: "keep-alive", // Keep the connection open for streaming
         "anthropic-version": "2023-06-01",
         "x-api-key": this.apiKey as string,
         ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
