@@ -1,4 +1,8 @@
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
@@ -19,6 +23,7 @@ export function UserSettingsForm() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
+  const [showExperimental, setShowExperimental] = useState(false);
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -164,21 +169,6 @@ export function UserSettingsForm() {
               }
               text="Text-to-Speech Output"
             />
-
-            <div className="flex flex-col gap-1">
-              <ToggleSwitch
-                isToggled={autoAcceptEditToolDiffs}
-                onToggle={() =>
-                  handleUpdate({
-                    autoAcceptEditToolDiffs: !autoAcceptEditToolDiffs,
-                  })
-                }
-                text="Auto-Accept Agent Edits"
-                onWarningText={
-                  "Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point"
-                }
-              />
-            </div>
             {/* <ToggleSwitch
                     isToggled={useChromiumForDocsCrawling}
                     onToggle={() =>
@@ -342,6 +332,40 @@ export function UserSettingsForm() {
                 Comma-separated list of path matchers
               </span>
             </form>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div
+              className="flex cursor-pointer items-center gap-2 text-left text-sm font-semibold"
+              onClick={() => setShowExperimental(!showExperimental)}
+            >
+              <ChevronRightIcon
+                className={`h-4 w-4 transition-transform ${
+                  showExperimental ? "rotate-90" : ""
+                }`}
+              />
+              <span>Experimental Settings</span>
+            </div>
+            <div
+              className={`duration-400 overflow-hidden transition-all ease-in-out ${
+                showExperimental ? "max-h-40" : "max-h-0"
+              }`}
+            >
+              <div className="flex flex-col gap-1 pl-6">
+                <ToggleSwitch
+                  isToggled={autoAcceptEditToolDiffs}
+                  onToggle={() =>
+                    handleUpdate({
+                      autoAcceptEditToolDiffs: !autoAcceptEditToolDiffs,
+                    })
+                  }
+                  text="Auto-Accept Agent Edits"
+                  onWarningText={
+                    "Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point"
+                  }
+                />
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
