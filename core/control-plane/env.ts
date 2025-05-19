@@ -5,6 +5,7 @@ import {
   getStagingEnvironmentDotFilePath,
 } from "../util/paths";
 import { AuthType, ControlPlaneEnv } from "./AuthTypes";
+import { getMdmKeys } from "./mdm";
 
 export const EXTENSION_NAME = "continue";
 
@@ -57,6 +58,18 @@ export async function getControlPlaneEnv(
 export function getControlPlaneEnvSync(
   ideTestEnvironment: IdeSettings["continueTestEnvironment"],
 ): ControlPlaneEnv {
+  // MDM override
+  const mdmKeys = getMdmKeys();
+  if (mdmKeys) {
+    const { apiUrl } = mdmKeys;
+    return {
+      AUTH_TYPE: AuthType.OnPrem,
+      DEFAULT_CONTROL_PLANE_PROXY_URL: apiUrl,
+      CONTROL_PLANE_URL: apiUrl,
+      APP_URL: "https://hub.continue.dev/",
+    };
+  }
+
   // Note .local overrides .staging
   if (fs.existsSync(getLocalEnvironmentDotFilePath())) {
     return LOCAL_ENV;
