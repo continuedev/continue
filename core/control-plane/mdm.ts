@@ -119,8 +119,65 @@ function readMdmKeysMacOS(): MdmKeys | undefined {
 }
 
 function readMdmKeysWindows(): MdmKeys | undefined {
-  // Windows typically uses registry or special folders for MDM configurations
-  throw new Error("MDM keys for Windows not implemented yet");
+  try {
+    // For Windows, we need to read from the registry
+    // Using regedit or another synchronous registry access module
+    const { execSync } = require("child_process");
+
+    // Path to the registry where MDM configuration is stored
+    const regPath = "HKLM\\Software\\Continue\\MDM";
+    const userRegPath = "HKCU\\Software\\Continue\\MDM";
+
+    // Try to read from HKEY_LOCAL_MACHINE first
+    try {
+      // Use REG QUERY command to read registry values
+      const licenseKeyCmd = `reg query "${regPath}" /v licenseKey`;
+      const apiUrlCmd = `reg query "${regPath}" /v apiUrl`;
+
+      const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
+      const apiUrlOutput = execSync(apiUrlCmd, { encoding: "utf8" });
+
+      // Extract values from command output
+      const licenseKey = extractRegValue(licenseKeyOutput);
+      const apiUrl = extractRegValue(apiUrlOutput);
+
+      if (licenseKey && apiUrl) {
+        return { licenseKey, apiUrl };
+      }
+    } catch (error) {
+      // Registry key might not exist, fallback to HKEY_CURRENT_USER
+    }
+
+    // Try HKEY_CURRENT_USER if not found in HKEY_LOCAL_MACHINE
+    try {
+      const licenseKeyCmd = `reg query "${userRegPath}" /v licenseKey`;
+      const apiUrlCmd = `reg query "${userRegPath}" /v apiUrl`;
+
+      const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
+      const apiUrlOutput = execSync(apiUrlCmd, { encoding: "utf8" });
+
+      // Extract values from command output
+      const licenseKey = extractRegValue(licenseKeyOutput);
+      const apiUrl = extractRegValue(apiUrlOutput);
+
+      if (licenseKey && apiUrl) {
+        return { licenseKey, apiUrl };
+      }
+    } catch (error) {
+      // Registry key might not exist in HKCU either
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("Error reading Windows MDM keys:", error);
+    return undefined;
+  }
+}
+
+// Helper function to extract registry values from reg query output
+function extractRegValue(output: string): string | undefined {
+  const match = output.match(/REG_SZ\s+(.+)$/m);
+  return match ? match[1].trim() : undefined;
 }
 
 function readMdmKeysLinux(): MdmKeys | undefined {
