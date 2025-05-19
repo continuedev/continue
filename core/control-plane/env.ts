@@ -4,44 +4,17 @@ import {
   getLocalEnvironmentDotFilePath,
   getStagingEnvironmentDotFilePath,
 } from "../util/paths";
-
-export interface HubEnv {
-  DEFAULT_CONTROL_PLANE_PROXY_URL: string;
-  CONTROL_PLANE_URL: string;
-  AUTH_TYPE: string;
-  WORKOS_CLIENT_ID: string;
-  APP_URL: string;
-}
-
-export interface OnPremEnv {
-  AUTH_TYPE: "on-prem";
-  DEFAULT_CONTROL_PLANE_PROXY_URL: string;
-  CONTROL_PLANE_URL: string;
-  APP_URL: string;
-}
-
-export type ControlPlaneEnv = HubEnv | OnPremEnv;
-
-export function isHubEnv(env: ControlPlaneEnv): env is HubEnv {
-  return (
-    "AUTH_TYPE" in env &&
-    env.AUTH_TYPE !== "on-prem" &&
-    "WORKOS_CLIENT_ID" in env
-  );
-}
+import { AuthType, ControlPlaneEnv } from "./AuthTypes";
 
 export const EXTENSION_NAME = "continue";
 
 const WORKOS_CLIENT_ID_PRODUCTION = "client_01J0FW6XN8N2XJAECF7NE0Y65J";
 const WORKOS_CLIENT_ID_STAGING = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ";
 
-const WORKOS_ENV_ID_PRODUCTION = "continue";
-const WORKOS_ENV_ID_STAGING = "continue-staging";
-
 const PRODUCTION_HUB_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api.continue.dev/",
   CONTROL_PLANE_URL: "https://api.continue.dev/",
-  AUTH_TYPE: WORKOS_ENV_ID_PRODUCTION,
+  AUTH_TYPE: AuthType.WorkOsProd,
   WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_PRODUCTION,
   APP_URL: "https://hub.continue.dev/",
 };
@@ -49,7 +22,7 @@ const PRODUCTION_HUB_ENV: ControlPlaneEnv = {
 const STAGING_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api.continue-stage.tools/",
   CONTROL_PLANE_URL: "https://api.continue-stage.tools/",
-  AUTH_TYPE: WORKOS_ENV_ID_STAGING,
+  AUTH_TYPE: AuthType.WorkOsStaging,
   WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
   APP_URL: "https://hub.continue-stage.tools/",
 };
@@ -57,7 +30,7 @@ const STAGING_ENV: ControlPlaneEnv = {
 const TEST_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api-test.continue.dev/",
   CONTROL_PLANE_URL: "https://api-test.continue.dev/",
-  AUTH_TYPE: WORKOS_ENV_ID_STAGING,
+  AUTH_TYPE: AuthType.WorkOsStaging,
   WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
   APP_URL: "https://app-test.continue.dev/",
 };
@@ -65,7 +38,7 @@ const TEST_ENV: ControlPlaneEnv = {
 const LOCAL_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "http://localhost:3001/",
   CONTROL_PLANE_URL: "http://localhost:3001/",
-  AUTH_TYPE: WORKOS_ENV_ID_STAGING,
+  AUTH_TYPE: AuthType.WorkOsStaging,
   WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
   APP_URL: "http://localhost:3000/",
 };

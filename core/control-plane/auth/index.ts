@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { IdeSettings } from "../..";
-import { getControlPlaneEnv, isHubEnv } from "../env";
+import { isHubEnv } from "../AuthTypes";
+import { getControlPlaneEnv } from "../env";
 
 export async function getAuthUrlForTokenPage(
   ideSettingsPromise: Promise<IdeSettings>,

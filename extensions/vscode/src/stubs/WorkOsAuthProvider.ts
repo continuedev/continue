@@ -1,11 +1,6 @@
 import crypto from "crypto";
 
-import { ControlPlaneSessionInfo } from "core/control-plane/client";
-import {
-  getControlPlaneEnvSync,
-  HubEnv,
-  isHubEnv,
-} from "core/control-plane/env";
+import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -22,6 +17,12 @@ import {
   window,
 } from "vscode";
 
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+  HubEnv,
+  isHubEnv,
+} from "core/control-plane/AuthTypes";
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
 import { UriEventHandler } from "./uriHandler";
@@ -507,11 +508,7 @@ export async function getControlPlaneSessionInfo(
 ): Promise<ControlPlaneSessionInfo | undefined> {
   if (!isHubEnv(controlPlaneEnv)) {
     return {
-      accessToken: "", // TODO: Could make a discriminated union type instead of doing this
-      account: {
-        id: "",
-        label: "",
-      },
+      AUTH_TYPE: AuthType.OnPrem,
     };
   }
 
@@ -529,6 +526,7 @@ export async function getControlPlaneSessionInfo(
       return undefined;
     }
     return {
+      AUTH_TYPE: controlPlaneEnv.AUTH_TYPE,
       accessToken: session.accessToken,
       account: {
         id: session.account.id,

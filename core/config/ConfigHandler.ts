@@ -1,10 +1,6 @@
 import { ConfigResult } from "@continuedev/config-yaml";
 
-import {
-  ControlPlaneClient,
-  ControlPlaneSessionInfo,
-} from "../control-plane/client.js";
-import { getControlPlaneEnv } from "../control-plane/env.js";
+import { ControlPlaneClient } from "../control-plane/client.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -15,6 +11,11 @@ import {
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+} from "../control-plane/AuthTypes.js";
+import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
 import {
   ASSISTANTS,
@@ -136,8 +137,7 @@ export class ConfigHandler {
   }
 
   private async getOrgs(): Promise<OrgWithProfiles[]> {
-    const userId = await this.controlPlaneClient.userId;
-    if (userId) {
+    if (await this.controlPlaneClient.isSignedIn()) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
       const personalHubOrg = await this.getPersonalHubOrg();
       const hubOrgs = await Promise.all(
