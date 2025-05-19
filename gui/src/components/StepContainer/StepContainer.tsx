@@ -23,6 +23,9 @@ export default function StepContainer(props: StepContainerProps) {
   const historyItemAfterThis = useAppSelector(
     (state) => state.session.history[props.index + 1],
   );
+  const warningMessage = useAppSelector(
+    (state) => state.session.warningMessage,
+  );
   const uiConfig = useAppSelector(selectUIConfig);
 
   const isNextMsgAssistantOrThinking =
