@@ -210,17 +210,20 @@ export class ContinueCompletionProvider
       let range = new vscode.Range(position, position);
       let completionText = outcome.completion;
       const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
+      // When the completion widget is up, changing the range will
+      // result in our inline completion not being shown.
+      const mayChangeRange = selectedCompletionInfo === undefined;
 
       if (isSingleLineCompletion) {
-        const lastLineOfCompletionText = completionText.split("\n").pop() || "";
-        const currentText = document
+        const currentLineRemainder = document
           .lineAt(position)
           .text.substring(position.character);
 
         const result = processSingleLineCompletion(
-          lastLineOfCompletionText,
-          currentText,
+          outcome.completion,
+          currentLineRemainder,
           position.character,
+          mayChangeRange,
         );
 
         if (result === undefined) {
@@ -235,8 +238,34 @@ export class ContinueCompletionProvider
           );
         }
       } else {
-        // Extend the range to the end of the line for multiline completions
-        range = new vscode.Range(position, document.lineAt(position).range.end);
+        if (mayChangeRange) {
+          // Extend the range to the end of the line for multiline completionsq
+          range = new vscode.Range(
+            position,
+            document.lineAt(position).range.end,
+          );
+        } else {
+          // Since we can't change the range, try to shorten the completion
+          // into a single-line insertion
+
+          const currentLineRemainder = document
+            .lineAt(position)
+            .text.substring(position.character);
+
+          if (currentLineRemainder !== "") {
+            const firstLineOfCompletion = outcome.completion.split("\n")[0];
+            const remainderLocation =
+              firstLineOfCompletion.lastIndexOf(currentLineRemainder);
+            if (remainderLocation !== -1) {
+              completionText = firstLineOfCompletion.slice(
+                0,
+                remainderLocation,
+              );
+            } else {
+              return null;
+            }
+          }
+        }
       }
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
