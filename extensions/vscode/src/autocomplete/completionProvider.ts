@@ -31,7 +31,8 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider {
+  implements vscode.InlineCompletionItemProvider
+{
   private async onError(e: any) {
     if (await handleLLMError(e)) {
       return;
@@ -87,7 +88,6 @@ export class ContinueCompletionProvider
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
-
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
