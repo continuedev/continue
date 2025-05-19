@@ -189,9 +189,45 @@ export class ContinueCompletionProvider
         return null;
       }
 
+      const selectedCompletionInfo = context.selectedCompletionInfo;
+
+      // Construct the range/text to show
+      let range = new vscode.Range(position, position);
+      let completionText = outcome.completion;
+      const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
+
+      if (isSingleLineCompletion) {
+        const lastLineOfCompletionText = completionText.split("\n").pop() || "";
+        const currentText = document
+          .lineAt(position)
+          .text.substring(position.character);
+
+        const result = processSingleLineCompletion(
+          lastLineOfCompletionText,
+          currentText,
+          position.character,
+        );
+
+        if (result === undefined) {
+          return undefined;
+        }
+
+        completionText = result.completionText;
+        if (result.range) {
+          range = new vscode.Range(
+            new vscode.Position(position.line, result.range.start),
+            new vscode.Position(position.line, result.range.end),
+          );
+        }
+      } else {
+        // Extend the range to the end of the line for multiline completions
+        range = new vscode.Range(position, document.lineAt(position).range.end);
+      }
+
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
-      // We should first always make sure we have a valid completion, but if it goes wrong we
-      // want telemetry to be correct
+      // We first adjust our range/text to match what they expect, but if that isn't
+      // possible (because our completion is going in a different direction than the
+      // selected item), but if it goes wrong we want telemetry to be correct
       /**
        * Provides information about the currently selected item in the autocomplete widget if it is visible.
        *
@@ -202,14 +238,24 @@ export class ContinueCompletionProvider
        *
        * Inline completion providers are requested again whenever the selected item changes.
        */
+
       if (selectedCompletionInfo) {
-        outcome.completion = selectedCompletionInfo.text + outcome.completion;
+        if (range.start.isEqual(selectedCompletionInfo.range.end)) {
+          range = new vscode.Range(
+            selectedCompletionInfo.range.start,
+            range.end,
+          );
+          const existingText = document.getText(selectedCompletionInfo.range);
+          completionText = existingText + completionText;
+        }
       }
+
       const willDisplay = this.willDisplay(
         document,
         selectedCompletionInfo,
         signal,
-        outcome,
+        range,
+        completionText,
       );
       if (!willDisplay) {
         return null;
@@ -218,41 +264,6 @@ export class ContinueCompletionProvider
       // Mark displayed
       this.completionProvider.markDisplayed(input.completionId, outcome);
       this._lastShownCompletion = outcome;
-
-      // Construct the range/text to show
-      const startPos = selectedCompletionInfo?.range.start ?? position;
-      let range = new vscode.Range(startPos, startPos);
-      let completionText = outcome.completion;
-      const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
-
-      if (isSingleLineCompletion) {
-        const lastLineOfCompletionText = completionText.split("\n").pop() || "";
-        const currentText = document
-          .lineAt(startPos)
-          .text.substring(startPos.character);
-
-        const result = processSingleLineCompletion(
-          lastLineOfCompletionText,
-          currentText,
-          startPos.character
-        );
-
-        if (result === undefined) {
-          return undefined;
-        }
-
-        completionText = result.completionText;
-        if (result.range) {
-          range = new vscode.Range(
-            new vscode.Position(startPos.line, result.range.start),
-            new vscode.Position(startPos.line, result.range.end)
-          );
-        }
-
-      } else {
-        // Extend the range to the end of the line for multiline completions
-        range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
-      }
 
       const completionItem = new vscode.InlineCompletionItem(
         completionText,
@@ -275,15 +286,15 @@ export class ContinueCompletionProvider
     document: vscode.TextDocument,
     selectedCompletionInfo: vscode.SelectedCompletionInfo | undefined,
     abortSignal: AbortSignal,
-    outcome: AutocompleteOutcome,
+    range: vscode.Range,
+    completionText: string,
   ): boolean {
     if (selectedCompletionInfo) {
-      const { text, range } = selectedCompletionInfo;
-      if (!outcome.completion.startsWith(text)) {
-        console.log(
-          `Won't display completion because text doesn't match: ${text}, ${outcome.completion}`,
-          range,
-        );
+      if (!range.isEqual(selectedCompletionInfo.range)) {
+        return false;
+      }
+
+      if (!completionText.startsWith(selectedCompletionInfo.text)) {
         return false;
       }
     }
