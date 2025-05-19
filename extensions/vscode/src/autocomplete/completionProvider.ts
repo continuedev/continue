@@ -112,25 +112,6 @@ export class ContinueCompletionProvider
       return null;
     }
 
-    const selectedCompletionInfo = context.selectedCompletionInfo;
-
-    // This code checks if there is a selected completion suggestion in the given context and ensures that it is valid
-    // To improve the accuracy of suggestions it checks if the user has typed at least 4 characters
-    // This helps refine and filter out irrelevant autocomplete options
-    if (selectedCompletionInfo) {
-      const { text, range } = selectedCompletionInfo;
-      const typedText = document.getText(range);
-
-      const typedLength = range.end.character - range.start.character;
-
-      if (typedLength < 4) {
-        return null;
-      }
-
-      if (!text.startsWith(typedText)) {
-        return null;
-      }
-    }
     let injectDetails: string | undefined = undefined;
 
     try {
