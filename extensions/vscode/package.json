@@ -661,7 +661,7 @@
   },
   "dependencies": {
     "@continuedev/config-types": "^1.0.14",
-    "@continuedev/fetch": "^1.0.7",
+    "@continuedev/fetch": "^1.0.10",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/node-fetch": "^2.6.11",
