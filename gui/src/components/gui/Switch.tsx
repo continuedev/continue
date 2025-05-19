@@ -1,14 +1,12 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import React from "react";
+import React, { ReactNode } from "react";
 import { vscButtonBackground } from "..";
-import { ToolTip } from "./Tooltip";
 
 type ToggleSwitchProps = {
   isToggled: boolean;
   onToggle: () => void;
   text: string;
   size?: number;
-  onWarningText?: string;
+  showIfToggled?: ReactNode;
 };
 
 const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
@@ -16,25 +14,13 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   onToggle,
   text,
   size = 16,
-  onWarningText,
+  showIfToggled,
 }) => {
   return (
     <div className="flex cursor-pointer select-none items-center justify-between gap-3">
       <span className="truncate-right">{text}</span>
       <div className="flex flex-row items-center gap-1">
-        {isToggled && !!onWarningText && (
-          <>
-            <ExclamationTriangleIcon
-              data-tooltip-id={`${text}-warning-tooltip`}
-              className="text-yellow-500"
-              style={{
-                height: size,
-                width: size,
-              }}
-            />
-            <ToolTip id={`${text}-warning-tooltip`}>{onWarningText}</ToolTip>
-          </>
-        )}
+        {isToggled && !!showIfToggled && showIfToggled}
         <div
           className={`border-vsc-input-border bg-vsc-input-background flex items-center rounded-full border border-solid`}
           onClick={onToggle}

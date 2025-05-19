@@ -39,10 +39,9 @@ export const editToolImpl: ClientToolImpl = async (
       respondImmediately: true,
       output: undefined, // TODO - feed edit results back to model (also in parallel listeners)
     };
-  } else {
-    return {
-      respondImmediately: false,
-      output: undefined, // No immediate output.
-    };
   }
+  return {
+    respondImmediately: false,
+    output: undefined, // No immediate output.
+  };
 };

@@ -1,6 +1,7 @@
 import {
   CheckIcon,
   ChevronRightIcon,
+  ExclamationTriangleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -12,6 +13,7 @@ import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
+import { ToolTip } from "../../components/gui/Tooltip";
 import { useFontSize } from "../../components/ui/font";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -360,8 +362,16 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Auto-Accept Agent Edits"
-                  onWarningText={
-                    "Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point"
+                  showIfToggled={
+                    <>
+                      <ExclamationTriangleIcon
+                        data-tooltip-id={`auto-accept-diffs-warning-tooltip`}
+                        className="h-3 w-3 text-yellow-500"
+                      />
+                      <ToolTip id={`auto-accept-diffs-warning-tooltip`}>
+                        {`Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point`}
+                      </ToolTip>
+                    </>
                   }
                 />
               </div>
