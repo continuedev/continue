@@ -23,6 +23,29 @@ const matchesGlobs = (
   return false;
 };
 
+/**
+ * Filters rules that apply to the given message
+ */
+export const getApplicableRules = (
+  userMessage: UserChatMessage | ToolResultChatMessage | undefined,
+  rules: RuleWithSource[],
+): RuleWithSource[] => {
+  const filePathsFromMessage = userMessage
+    ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
+    : [];
+
+  return rules.filter((rule) => {
+    // A rule is active if it has no globs (applies to all files)
+    // or if at least one file path matches its globs
+    const hasNoGlobs = !rule.globs;
+    const matchesAnyFilePath = filePathsFromMessage.some((path) =>
+      matchesGlobs(path, rule.globs),
+    );
+
+    return hasNoGlobs || matchesAnyFilePath;
+  });
+};
+
 export const getSystemMessageWithRules = ({
   baseSystemMessage,
   userMessage,
@@ -32,23 +55,11 @@ export const getSystemMessageWithRules = ({
   userMessage: UserChatMessage | ToolResultChatMessage | undefined;
   rules: RuleWithSource[];
 }) => {
-  const filePathsFromMessage = userMessage
-    ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
-    : [];
-
+  const applicableRules = getApplicableRules(userMessage, rules);
   let systemMessage = baseSystemMessage ?? "";
 
-  for (const rule of rules) {
-    // A rule is active if it has no globs (applies to all files)
-    // or if at least one file path matches its globs
-    const hasNoGlobs = !rule.globs;
-    const matchesAnyFilePath = filePathsFromMessage.some((path) =>
-      matchesGlobs(path, rule.globs),
-    );
-
-    if (hasNoGlobs || matchesAnyFilePath) {
-      systemMessage += `\n\n${rule.rule}`;
-    }
+  for (const rule of applicableRules) {
+    systemMessage += `\n\n${rule.rule}`;
   }
 
   return systemMessage;

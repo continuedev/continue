@@ -3,13 +3,14 @@ import { RETRIEVAL_PARAMS } from "../util/parameters";
 import { getUriPathBasename } from "../util/uri";
 
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
   type CodebaseIndex,
 } from "./types";
+import { tagToString } from "./utils";
 
 export interface RetrieveConfig {
   tags: BranchAndDir[];
@@ -97,11 +98,14 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      await db.run(`
+      await db.run(
+        `
         DELETE FROM fts WHERE rowid IN (
           SELECT id FROM fts_metadata WHERE path = ? AND cacheKey = ?
         )
-      `,[item.path, item.cacheKey]);
+      `,
+        [item.path, item.cacheKey],
+      );
       await db.run("DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?", [
         item.path,
         item.cacheKey,

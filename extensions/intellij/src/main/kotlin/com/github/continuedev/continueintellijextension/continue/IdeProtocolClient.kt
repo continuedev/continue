@@ -1,13 +1,11 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import IntelliJIDE
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
-import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
-import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
+import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.*
 import com.github.continuedev.continueintellijextension.utils.*
@@ -16,21 +14,15 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
-import java.lang.IllegalStateException
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 
 class IdeProtocolClient(
@@ -39,6 +31,8 @@ class IdeProtocolClient(
     private val project: Project
 ) : DumbAware {
     private val ide: IDE = IntelliJIDE(project, continuePluginService)
+    private val diffStreamService = project.service<DiffStreamService>()
+
 
     /**
      * Create a dispatcher with limited parallelism to prevent UI freezing.
@@ -46,6 +40,7 @@ class IdeProtocolClient(
      *
      * See this thread for details: https://github.com/continuedev/continue/issues/4098#issuecomment-2854865310
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val limitedDispatcher = Dispatchers.IO.limitedParallelism(4)
 
     init {
@@ -447,7 +442,13 @@ class IdeProtocolClient(
                         )
                         val filepath = params.filepath;
 
-                        acceptOrRejectDiff(filepath, true)
+                        val editor = EditorUtils.getOrOpenEditor(project, filepath)?.editor
+
+                        if (editor != null) {
+                            diffStreamService.accept(editor)
+                        }
+
+                        respond(null)
                     }
 
                     "rejectDiff" -> {
@@ -456,7 +457,13 @@ class IdeProtocolClient(
                             RejectDiffParams::class.java
                         )
                         val filepath = params.filepath;
-                        acceptOrRejectDiff(filepath, false)
+
+                        val editor = EditorUtils.getOrOpenEditor(project, filepath)?.editor
+                        if (editor != null) {
+                            diffStreamService.reject(editor)
+                        }
+                        respond(null)
+
                     }
 
                     "applyToFile" -> {
@@ -464,141 +471,13 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             ApplyToFileParams::class.java
                         )
-                        val filepath = params.filepath
 
-                        continuePluginService.sendToWebview(
-                            "updateApplyState", mapOf(
-                                "streamId" to params.streamId,
-                                "status" to "streaming",
-                                "fileContent" to params.text,
-                                "toolCallId" to params.toolCallId,
-                                "filepath" to filepath
-                            )
+                        ApplyToFileHandler.apply(
+                            project,
+                            continuePluginService,
+                            ide,
+                            params
                         )
-
-
-                        fun closeStream() {
-                            continuePluginService.sendToWebview(
-                                "updateApplyState", mapOf(
-                                    "numDiffs" to 0,
-                                    "streamId" to params.streamId,
-                                    "status" to "closed",
-                                    "fileContent" to params.text,
-                                    "toolCallId" to params.toolCallId,
-                                    "filepath" to filepath
-                                )
-                            )
-                        }
-
-                        var editor: Editor? = null;
-
-                        if (!filepath.isNullOrEmpty()) {
-                            val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
-                            if (virtualFile != null) {
-                                ApplicationManager.getApplication().invokeAndWait {
-                                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
-                                }
-                            }
-                        }
-                        editor = FileEditorManager.getInstance(project).selectedTextEditor
-
-                        if (editor == null) {
-                            ide.showToast(ToastType.ERROR, "No active editor to apply edits to")
-                            closeStream()
-                            respond(null)
-                            return@launch
-                        }
-
-                        if (editor.document.text.trim().isEmpty()) {
-                            WriteCommandAction.runWriteCommandAction(project) {
-                                editor.document.insertString(0, params.text)
-                            }
-                            closeStream()
-                            respond(null)
-                            return@launch
-                        }
-
-                        val llm: Any = try {
-                            suspendCancellableCoroutine { continuation ->
-                                continuePluginService.coreMessenger?.request(
-                                    "config/getSerializedProfileInfo",
-                                    null,
-                                    null
-                                ) { response ->
-                                    try {
-                                        val selectedModels = response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "selectedModelByRole")
-
-                                        // If "apply" role model is not found, try "chat" role
-                                        val applyCodeBlockModel = selectedModels?.get("apply") ?: selectedModels?.get("chat")
-
-                                        if (applyCodeBlockModel != null) {
-                                            continuation.resume(applyCodeBlockModel)
-                                        } else {
-                                            // If neither "apply" nor "chat" models are available, return with exception
-                                            continuation.resumeWithException(IllegalStateException("No 'apply' or 'chat' model found in configuration."))
-                                        }
-                                    } catch (e: Exception) {
-                                        continuation.resumeWithException(e)
-                                    }
-                                }
-                            }
-                        } catch (e: Exception) {
-                            launch {
-                                ide.showToast(
-                                    ToastType.ERROR, "Failed to fetch model configuration"
-                                )
-                            }
-                            closeStream()
-                            respond(null)
-                            return@launch
-                        }
-
-                        val diffStreamService = project.service<DiffStreamService>()
-                        // Clear all diff blocks before running the diff stream
-                        diffStreamService.reject(editor)
-
-                        val llmTitle = (llm as? Map<*, *>)?.get("title") as? String ?: ""
-
-                        val prompt =
-                            "The following code was suggested as an edit:\n```\n${params.text}\n```\nPlease apply it to the previous code."
-
-                        val rif = getHighlightedCode()
-
-                        val (prefix, highlighted, suffix) = if (rif == null) {
-                            // If no highlight, use the whole document as highlighted
-                            Triple("", editor.document.text, "")
-                        } else {
-                            val prefix = editor.document.getText(TextRange(0, rif.range.start.character))
-                            val highlighted = rif.contents
-                            val suffix =
-                                editor.document.getText(TextRange(rif.range.end.character, editor.document.textLength))
-
-                            // Remove the selection after processing
-                            ApplicationManager.getApplication().invokeLater {
-                                editor.selectionModel.removeSelection()
-                            }
-
-                            Triple(prefix, highlighted, suffix)
-                        }
-
-                        val diffStreamHandler =
-                            DiffStreamHandler(
-                                project,
-                                editor,
-                                rif?.range?.start?.line ?: 0,
-                                rif?.range?.end?.line ?: (editor.document.lineCount - 1),
-                                {},
-                                {},
-                                params.streamId,
-                                params.toolCallId
-                            )
-
-                        diffStreamService.register(diffStreamHandler, editor)
-
-                        diffStreamHandler.streamDiffLinesToEditor(
-                            prompt, prefix, highlighted, suffix, llmTitle, false
-                        )
-
                         respond(null)
                     }
 
@@ -612,52 +491,15 @@ class IdeProtocolClient(
         }
     }
 
-    private fun getHighlightedCode(): RangeInFileWithContents? {
-        val result = ApplicationManager.getApplication().runReadAction<RangeInFileWithContents?> {
-            // Get the editor instance for the currently active editor window
-            val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@runReadAction null
-            val virtualFile =
-                editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return@runReadAction null
-
-            // Get the selection range and content
-            val selectionModel: SelectionModel = editor.selectionModel
-            val selectedText = selectionModel.selectedText ?: ""
-
-            val document = editor.document
-            val startOffset = selectionModel.selectionStart
-            val endOffset = selectionModel.selectionEnd
-
-            if (startOffset == endOffset) {
-                return@runReadAction null
-            }
-
-            val startLine = document.getLineNumber(startOffset)
-            val endLine = document.getLineNumber(endOffset)
-
-            val startChar = startOffset - document.getLineStartOffset(startLine)
-            val endChar = endOffset - document.getLineStartOffset(endLine)
-
-            return@runReadAction virtualFile.toUriOrNull()?.let {
-                RangeInFileWithContents(
-                    it, Range(
-                        Position(startLine, startChar),
-                        Position(endLine, endChar)
-                    ), selectedText
-                )
-            }
-        }
-
-        return result
-    }
-
     fun sendHighlightedCode(edit: Boolean = false) {
-        val rif = getHighlightedCode() ?: return
+        val editor = EditorUtils.getEditor(project)
+        val rif = editor?.getHighlightedCode() ?: return
 
         continuePluginService.sendToWebview(
             "highlightedCode",
-            mapOf(
-                "rangeInFileWithContents" to rif,
-                "edit" to edit
+            HighlightedCodePayload(
+                rangeInFileWithContents = rif,
+                shouldRun = edit
             )
         )
     }
@@ -667,28 +509,6 @@ class IdeProtocolClient(
         continuePluginService.sendToWebview("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
     }
 
-    fun acceptOrRejectDiff(filepath: String, accepted: Boolean) {
-        val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
-
-        if (virtualFile != null) {
-            ApplicationManager.getApplication().invokeAndWait {
-                val openedEditor =
-                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
-                if (openedEditor != null) {
-                    val editor: Editor? = FileEditorManager.getInstance(project).selectedTextEditor
-
-                    if (editor != null) {
-                        val diffStreamService = project.service<DiffStreamService>()
-                        if (accepted) {
-                            diffStreamService.accept(editor)
-                        } else {
-                            diffStreamService.reject(editor)
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     fun deleteAtIndex(index: Int) {
         continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
