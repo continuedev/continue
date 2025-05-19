@@ -77,8 +77,8 @@ class OpenAI extends BaseLLM {
     return model;
   }
 
-  private isO3orO1Model(model?: string): boolean {
-    return !!model && (model.startsWith("o1") || model.startsWith("o3"));
+  private isOSeriesModel(model?: string): boolean {
+    return !!model && model.match(/^o[0-9]+/);
   }
 
   private isFireworksAiModel(model?: string): boolean {
@@ -139,7 +139,7 @@ class OpenAI extends BaseLLM {
     finalOptions.stop = options.stop?.slice(0, this.getMaxStopWords());
 
     // OpenAI o1-preview and o1-mini or o3-mini:
-    if (this.isO3orO1Model(options.model)) {
+    if (this.isOSeriesModel(options.model)) {
       // a) use max_completion_tokens instead of max_tokens
       finalOptions.max_completion_tokens = options.maxTokens;
       finalOptions.max_tokens = undefined;
@@ -241,7 +241,7 @@ class OpenAI extends BaseLLM {
     body.stop = body.stop?.slice(0, this.getMaxStopWords());
 
     // OpenAI o1-preview and o1-mini or o3-mini:
-    if (this.isO3orO1Model(body.model)) {
+    if (this.isOSeriesModel(body.model)) {
       // a) use max_completion_tokens instead of max_tokens
       body.max_completion_tokens = body.max_tokens;
       body.max_tokens = undefined;
