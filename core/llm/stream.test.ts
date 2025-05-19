@@ -1,29 +1,72 @@
-import { parseSseLine } from "./stream";
+import { Readable } from "stream";
+import { streamSse } from "./stream";
 
-// Jest unit tests
-describe('parseSseLine', () => {
-    it('should return done:true and data:undefined for line starting with "data:[DONE]"', () => {
-      const result = parseSseLine('data:[DONE]');
-      expect(result).toEqual({ done: true, data: undefined });
-    });
+function createMockResponse(sseLines: string[]): Response {
+  // Create a Readable stream that emits the SSE lines
+  const stream = new Readable({
+    read() {
+      for (const line of sseLines) {
+        this.push(line + "\n\n");
+      }
+      this.push(null); // End of stream
+    }
+  }) as any;
 
-    it('should return done:true and data:undefined for line starting with "data: [DONE]"', () => {
-      const result = parseSseLine('data: [DONE]');
-      expect(result).toEqual({ done: true, data: undefined });
-    });
+  // Minimal Response mock
+  return {
+    status: 200,
+    body: stream,
+    text: async () => "",
+  } as unknown as Response;
+}
 
-    it('should return done:false and parsed data for line starting with "data:"', () => {
-      const result = parseSseLine('data:Hello World');
-      expect(result).toEqual({ done: false, data: 'Hello World' });
-    });
+describe("streamSse", () => {
+  it("yields parsed SSE data objects that ends with `data:[DONE]`", async () => {
+    const sseLines = [
+      'data: {"foo": "bar"}',
+      'data: {"baz": 42}',
+      'data:[DONE]'
+    ];
+    const response = createMockResponse(sseLines);
 
-    it('should return done:true and data:undefined for line starting with ": ping"', () => {
-      const result = parseSseLine(': ping');
-      expect(result).toEqual({ done: true, data: undefined });
-    });
+    const results = [];
+    for await (const data of streamSse(response)) {
+      results.push(data);
+    }
 
-    it('should return done:false and data:undefined for line not starting with specific prefixes', () => {
-      const result = parseSseLine('random line');
-      expect(result).toEqual({ done: false, data: undefined });
-    });
+    expect(results).toEqual([
+      { foo: "bar" },
+      { baz: 42 }
+    ]);
   });
+
+  it("yields parsed SSE data objects that ends with `data: [DONE]` (with a space before [DONE]", async () => {
+    const sseLines = [
+      'data: {"foo": "bar"}',
+      'data: {"baz": 42}',
+      'data: [DONE]'
+    ];
+    const response = createMockResponse(sseLines);
+
+    const results = [];
+    for await (const data of streamSse(response)) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([
+      { foo: "bar" },
+      { baz: 42 }
+    ]);
+  });
+
+  it("throws on malformed JSON", async () => {
+    const sseLines = [
+      'data: {"foo": "bar"',
+      'data:[DONE]'
+    ];
+    const response = createMockResponse(sseLines);
+
+    const iterator = streamSse(response)[Symbol.asyncIterator]();
+    await expect(iterator.next()).rejects.toThrow(/Malformed JSON/);
+  });
+});
