@@ -78,18 +78,17 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(
 export const blockOrSchema = <T extends z.AnyZodObject>(
   schema: T,
   usesSchema: z.ZodTypeAny = defaultUsesSchema,
-) => z.union([schema, blockItemWrapperSchema(schema, usesSchema)]);
-
-export const blockOrDiscriminatedUnionSchema = <T extends z.ZodType>(
-  schema: T,
-  usesSchema: z.ZodTypeAny = defaultUsesSchema,
-) => z.union([schema, z.object({
-  uses: usesSchema,
-  with: z.record(z.string()).optional(),
-  // For a discriminated union, we can't easily create a partial version
-  // So we'll use any for the override
-  override: z.any().optional(),
-})]);
+  isDiscriminatedUnion?: boolean,
+) => {
+  if (isDiscriminatedUnion) {
+    return z.union([schema, z.object({
+      uses: usesSchema,
+      with: z.record(z.string()).optional(),
+      override: z.any().optional(),
+    })]);
+  }
+  return z.union([schema, blockItemWrapperSchema(schema, usesSchema)]);
+};
 
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
@@ -126,7 +125,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
     .optional(),
   context: z.array(blockOrSchema(contextSchema)).optional(),
   data: z.array(blockOrSchema(dataSchema)).optional(),
-  mcpServers: z.array(blockOrDiscriminatedUnionSchema(mcpServerSchema)).optional(),
+  mcpServers: z.array(blockOrSchema(mcpServerSchema as any, defaultUsesSchema, true)).optional(),
   rules: z
     .array(
       z.union([
