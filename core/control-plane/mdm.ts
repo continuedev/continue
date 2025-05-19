@@ -119,8 +119,44 @@ function readMdmKeysWindows(): MdmKeys | undefined {
 }
 
 function readMdmKeysLinux(): MdmKeys | undefined {
-  // Linux might use specific directories in /etc or other paths
-  throw new Error("MDM keys for Linux not implemented yet");
+  try {
+    // Common locations for MDM configurations in Linux systems
+    const mdmPaths = [
+      // System-wide configuration
+      "/etc/continue/mdm.json",
+      "/var/lib/continue/mdm.json",
+      // User-specific configuration
+      path.join(os.homedir(), ".config/continue/mdm.json"),
+    ];
+
+    // Try to find a valid MDM configuration file
+    for (const mdmPath of mdmPaths) {
+      if (fs.existsSync(mdmPath)) {
+        // Read the file content
+        const fileContent = fs.readFileSync(mdmPath, "utf8");
+
+        try {
+          // Parse the JSON configuration file
+          const config = JSON.parse(fileContent);
+
+          // Check if required keys are present
+          if (config.licenseKey && config.apiUrl) {
+            return {
+              licenseKey: config.licenseKey,
+              apiUrl: config.apiUrl,
+            };
+          }
+        } catch (parseError) {
+          console.error(`Error parsing Linux MDM configuration: ${parseError}`);
+        }
+      }
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("Error reading Linux MDM keys:", error);
+    return undefined;
+  }
 }
 
 function readMdmKeys(): MdmKeys | undefined {
