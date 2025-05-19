@@ -379,7 +379,7 @@ prompts, context, and tool use. Continue supports any MCP server with the MCP co
 **Properties:**
 
 - `name` (**required**): The name of the MCP server.
-- `type"` (**required**): The type of the MCP server. Can be "stdio", "sse", or "websocket.
+- `type"` (**required**): The type of the MCP server. Can be "stdio", "sse", or "websocket".
 
 **Stdio type**
 
