@@ -340,7 +340,7 @@ export abstract class BaseLLM implements ILLM {
       name: "tokensGenerated",
       data: {
         model: model,
-        provider: this.providerName,
+        provider: this.underlyingProviderName,
         promptTokens: promptTokens,
         generatedTokens: generatedTokens,
       },
