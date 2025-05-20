@@ -1,6 +1,7 @@
 import {
   ContinueProperties,
   decodeSecretLocation,
+  parseProxyModelName,
   SecretType,
 } from "@continuedev/config-yaml";
 
@@ -42,6 +43,11 @@ class ContinueProxy extends OpenAI {
   static defaultOptions: Partial<LLMOptions> = {
     useLegacyCompletionsEndpoint: false,
   };
+
+  get underlyingProviderName(): string {
+    const { provider } = parseProxyModelName(this.model);
+    return provider;
+  }
 
   protected extraBodyProperties(): Record<string, any> {
     const continueProperties: ContinueProperties = {

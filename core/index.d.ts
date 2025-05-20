@@ -93,6 +93,7 @@ export interface ILLM
   extends Omit<LLMOptions, RequiredLLMOptions>,
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
+  get underlyingProviderName(): string;
 
   complete(
     prompt: string,
@@ -842,7 +843,7 @@ export interface SlashCommand {
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
-  promptFile?: string
+  promptFile?: string;
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
