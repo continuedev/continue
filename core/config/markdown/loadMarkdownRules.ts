@@ -1,14 +1,12 @@
-import { IDE, RuleWithSource } from "../..";
-import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
-import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
 import { ConfigValidationError } from "@continuedev/config-yaml";
+import { IDE, RuleWithSource } from "../..";
+import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
+import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
 
 /**
  * Loads rules from markdown files in the .continue/rules directory
  */
-export async function loadMarkdownRules(
-  ide: IDE
-): Promise<{
+export async function loadMarkdownRules(ide: IDE): Promise<{
   rules: RuleWithSource[];
   errors: ConfigValidationError[];
 }> {
@@ -17,14 +15,14 @@ export async function loadMarkdownRules(
 
   try {
     // Get all .md files from .continue/rules
-    const markdownFiles = await getAllDotContinueYamlFiles(
+    const markdownFiles = await getAllDotContinueDefinitionFiles(
       ide,
       { includeGlobal: true, includeWorkspace: true },
-      "rules"
+      "rules",
     );
 
     // Filter to just .md files
-    const mdFiles = markdownFiles.filter(file => file.path.endsWith('.md'));
+    const mdFiles = markdownFiles.filter((file) => file.path.endsWith(".md"));
 
     // Process each markdown file
     for (const file of mdFiles) {
@@ -34,14 +32,14 @@ export async function loadMarkdownRules(
       } catch (e) {
         errors.push({
           fatal: false,
-          message: `Failed to parse markdown rule file ${file.path}: ${e instanceof Error ? e.message : e}`
+          message: `Failed to parse markdown rule file ${file.path}: ${e instanceof Error ? e.message : e}`,
         });
       }
     }
   } catch (e) {
     errors.push({
       fatal: false,
-      message: `Error loading markdown rule files: ${e instanceof Error ? e.message : e}`
+      message: `Error loading markdown rule files: ${e instanceof Error ? e.message : e}`,
     });
   }
 

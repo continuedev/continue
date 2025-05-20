@@ -21,7 +21,7 @@ export function isLocalAssistantFile(uri: string): boolean {
   return normalizedUri.includes(`/${ASSISTANTS_FOLDER}/`);
 }
 
-export async function listYamlFilesInDir(
+async function getDefinitionFilesInDir(
   ide: IDE,
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
@@ -86,7 +86,7 @@ export function getDotContinueSubDirs(
  * This method searches in both ~/.continue and workspace .continue
  * for all YAML files in the specified subdirctory, for example .continue/assistants or .continue/prompts
  */
-export async function getAllDotContinueYamlFiles(
+export async function getAllDotContinueDefinitionFiles(
   ide: IDE,
   options: LoadAssistantFilesOptions,
   subDirName: string,
@@ -103,7 +103,7 @@ export async function getAllDotContinueYamlFiles(
 
   // Get all assistant files from the directories
   const assistantFiles = (
-    await Promise.all(fullDirs.map((dir) => listYamlFilesInDir(ide, dir)))
+    await Promise.all(fullDirs.map((dir) => getDefinitionFilesInDir(ide, dir)))
   ).flat();
 
   return await Promise.all(
