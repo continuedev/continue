@@ -71,6 +71,21 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
   },
 };
 
+const seedCoderFimTemplate: AutocompleteTemplate = {
+  template: "<[fim-prefix]>{{{prefix}}}<[fim-suffix]>{{{suffix}}}<[fim-middle]>",
+  completionOptions: {
+    stop: [
+      "<[end▁of▁sentence]>",
+      "<[fim-prefix]>",
+      "<[fim-middle]>",
+      "<[fim-suffix]>",
+      "<[PAD▁TOKEN]>",
+      "<[SEP▁TOKEN]>",
+      "<[begin▁of▁sentence]>",
+    ],
+  },
+};
+
 const codestralFimTemplate: AutocompleteTemplate = {
   template: "[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
   completionOptions: {
@@ -424,6 +439,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
 
   if (lowerCaseModel.includes("qwen") && lowerCaseModel.includes("coder")) {
     return qwenCoderFimTemplate;
+  }
+
+  if (lowerCaseModel.includes("seed") && lowerCaseModel.includes("coder")) {
+    return seedCoderFimTemplate;
   }
 
   if (

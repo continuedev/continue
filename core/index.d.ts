@@ -197,15 +197,14 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
-
-  loadSubmenuItems?: (
-    args: LoadSubmenuItemsArgs,
-  ) => Promise<ContextSubmenuItem[]>;
 }
 
 export interface ContextSubmenuItem {
@@ -459,6 +458,7 @@ export interface ChatHistoryItem {
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
+  appliedRules?: RuleWithSource[];
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -1168,6 +1168,7 @@ export interface MCPResource {
   description?: string;
   mimeType?: string;
 }
+
 export interface MCPTool {
   name: string;
   description?: string;
@@ -1230,6 +1231,27 @@ export interface ApplyState {
   toolCallId?: string;
 }
 
+export interface StreamDiffLinesPayload {
+  prefix: string;
+  highlighted: string;
+  suffix: string;
+  input: string;
+  language: string | undefined;
+  modelTitle: string | undefined;
+  includeRulesInSystemMessage: boolean;
+}
+
+export interface HighlightedCodePayload {
+  rangeInFileWithContents: RangeInFileWithContents;
+  prompt?: string;
+  shouldRun?: boolean;
+}
+
+export interface AcceptOrRejectDiffPayload {
+  filepath: string;
+  streamId?: string;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1239,7 +1261,7 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
  * Represents the configuration for a quick action in the Code Lens.
@@ -1498,17 +1520,19 @@ export interface TerminalOptions {
   waitForCompletion?: boolean;
 }
 
+export type RuleSource =
+  | "default-chat"
+  | "default-agent"
+  | "model-chat-options"
+  | "model-agent-options"
+  | "rules-block"
+  | "json-systemMessage"
+  | ".continuerules";
+
 export interface RuleWithSource {
   name?: string;
   slug?: string;
-  source:
-    | "default-chat"
-    | "default-agent"
-    | "model-chat-options"
-    | "model-agent-options"
-    | "rules-block"
-    | "json-systemMessage"
-    | ".continuerules";
+  source: RuleSource;
   globs?: string | string[];
   rule: string;
   description?: string;

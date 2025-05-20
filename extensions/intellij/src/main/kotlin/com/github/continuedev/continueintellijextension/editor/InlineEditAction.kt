@@ -120,7 +120,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     if (project == null) return
 
     // Don't open in terminal
-    if (EditorUtils().isTerminal(editor)) {
+    if (EditorUtils(editor).isTerminal()) {
         return
     }
 
@@ -131,7 +131,8 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val modelTitles = mutableListOf<String>()
 
     continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val modelsByRole = response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "modelsByRole") ?: return@request
+        val modelsByRole =
+            response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "modelsByRole") ?: return@request
         val role = if (modelsByRole.containsKey("edit")) "edit" else "chat"
         modelsByRole.castNestedOrNull<List<*>>(role)
             ?.mapNotNull { it.castNestedOrNull<String>("title") }
