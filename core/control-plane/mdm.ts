@@ -52,12 +52,29 @@ export function validateLicenseKey(licenseKey: string): boolean {
   }
 }
 
+function extractConfigFromArray(config: any[]): Record<string, string> {
+  const configObj: Record<string, string> = {};
+
+  for (let i = 0; i < config.length; i += 2) {
+    if (i + 1 < config.length) {
+      const key = config[i];
+      const value = config[i + 1];
+      if (typeof key === "string") {
+        configObj[key] = value as string;
+      }
+    }
+  }
+
+  return configObj;
+}
+
 const MACOS_MDM_PATHS = [
   // Organization-specific MDM plist
   "/Library/Managed Preferences/dev.continue.app.plist",
   // User-specific MDM plist
   path.join(os.homedir(), "Library/Managed Preferences/dev.continue.app.plist"),
 ];
+
 function readMdmKeysMacOS(): MdmKeys | undefined {
   try {
     // MDM configuration is typically stored in /Library/Managed Preferences/ on macOS
@@ -76,18 +93,7 @@ function readMdmKeysMacOS(): MdmKeys | undefined {
           // Extract the relevant fields from the config
           // Config is an array of alternating keys and values
           if (Array.isArray(config)) {
-            const configObj: Record<string, string> = {};
-
-            // Convert array format [key1, value1, key2, value2, ...] to object
-            for (let i = 0; i < config.length; i += 2) {
-              if (i + 1 < config.length) {
-                const key = config[i];
-                const value = config[i + 1];
-                if (typeof key === "string") {
-                  configObj[key] = value as string;
-                }
-              }
-            }
+            const configObj = extractConfigFromArray(config);
 
             // Check if required keys are present
             if (configObj.licenseKey && configObj.apiUrl) {
@@ -111,8 +117,65 @@ function readMdmKeysMacOS(): MdmKeys | undefined {
 }
 
 function readMdmKeysWindows(): MdmKeys | undefined {
-  // Windows typically uses registry or special folders for MDM configurations
-  throw new Error("MDM keys for Windows not implemented yet");
+  try {
+    // For Windows, we need to read from the registry
+    // Using regedit or another synchronous registry access module
+    const { execSync } = require("child_process");
+
+    // Path to the registry where MDM configuration is stored
+    const regPath = "HKLM\\Software\\Continue\\MDM";
+    const userRegPath = "HKCU\\Software\\Continue\\MDM";
+
+    // Try to read from HKEY_LOCAL_MACHINE first
+    try {
+      // Use REG QUERY command to read registry values
+      const licenseKeyCmd = `reg query "${regPath}" /v licenseKey`;
+      const apiUrlCmd = `reg query "${regPath}" /v apiUrl`;
+
+      const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
+      const apiUrlOutput = execSync(apiUrlCmd, { encoding: "utf8" });
+
+      // Extract values from command output
+      const licenseKey = extractRegValue(licenseKeyOutput);
+      const apiUrl = extractRegValue(apiUrlOutput);
+
+      if (licenseKey && apiUrl) {
+        return { licenseKey, apiUrl };
+      }
+    } catch (error) {
+      // Registry key might not exist, fallback to HKEY_CURRENT_USER
+    }
+
+    // Try HKEY_CURRENT_USER if not found in HKEY_LOCAL_MACHINE
+    try {
+      const licenseKeyCmd = `reg query "${userRegPath}" /v licenseKey`;
+      const apiUrlCmd = `reg query "${userRegPath}" /v apiUrl`;
+
+      const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
+      const apiUrlOutput = execSync(apiUrlCmd, { encoding: "utf8" });
+
+      // Extract values from command output
+      const licenseKey = extractRegValue(licenseKeyOutput);
+      const apiUrl = extractRegValue(apiUrlOutput);
+
+      if (licenseKey && apiUrl) {
+        return { licenseKey, apiUrl };
+      }
+    } catch (error) {
+      // Registry key might not exist in HKCU either
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("Error reading Windows MDM keys:", error);
+    return undefined;
+  }
+}
+
+// Helper function to extract registry values from reg query output
+function extractRegValue(output: string): string | undefined {
+  const match = output.match(/REG_SZ\s+(.+)$/m);
+  return match ? match[1].trim() : undefined;
 }
 
 // Common locations for MDM configurations in Linux systems
