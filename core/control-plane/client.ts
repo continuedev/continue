@@ -38,7 +38,7 @@ export class ControlPlaneClient {
     fqsns: FQSN[],
     orgScopeId: string | null,
   ): Promise<(SecretResult | undefined)[]> {
-    if (!this.isSignedIn()) {
+    if (!(await this.isSignedIn())) {
       return fqsns.map((fqsn) => ({
         found: false,
         fqsn,
@@ -105,7 +105,7 @@ export class ControlPlaneClient {
       rawYaml: string;
     }[]
   > {
-    if (!this.isSignedIn()) {
+    if (!(await this.isSignedIn())) {
       return [];
     }
 
@@ -124,7 +124,7 @@ export class ControlPlaneClient {
   }
 
   public async listOrganizations(): Promise<Array<OrganizationDescription>> {
-    if (!this.isSignedIn()) {
+    if (!(await this.isSignedIn())) {
       return [];
     }
 
@@ -142,7 +142,7 @@ export class ControlPlaneClient {
   public async listAssistantFullSlugs(
     organizationId: string | null,
   ): Promise<FullSlug[] | null> {
-    if (!this.isSignedIn()) {
+    if (!(await this.isSignedIn())) {
       return null;
     }
 
