@@ -7,16 +7,11 @@ import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.ActionUpdateThread
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.Ref
@@ -40,8 +35,45 @@ import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTextArea
 
 const val MAIN_FONT_SIZE = 13
-
 const val DOWN_ARROW = " ▾"
+const val MAX_MODEL_WAIT_TIME = 1500
+
+/**
+ * Fetches and combines available model titles from both "edit" and "chat" roles.
+ * Edit models are prioritized and appear first in the returned list.
+ * Handles duplicate models by only including them once (prioritizing edit role).
+ *
+ * @param continuePluginService The service used to fetch config information
+ * @return List of model titles with edit models first, duplicates removed
+ * @throws No exceptions, but will return empty list if request fails or times out after 1.5 seconds
+ */
+fun getModelTitles(continuePluginService: ContinuePluginService): List<String> {
+    val modelTitles = mutableListOf<String>()
+
+    continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
+        val modelsByRole =
+            response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "modelsByRole") ?: return@request
+
+        // Get edit models first
+        val editModels = modelsByRole.castNestedOrNull<List<*>>("edit")
+            ?.mapNotNull { it.castNestedOrNull<String>("title") } ?: emptyList()
+
+        // Then get chat models
+        val chatModels = modelsByRole.castNestedOrNull<List<*>>("chat")
+            ?.mapNotNull { it.castNestedOrNull<String>("title") } ?: emptyList()
+
+        // Add edit models first, then chat models (avoiding duplicates)
+        modelTitles.addAll(editModels)
+        modelTitles.addAll(chatModels.filter { it !in editModels })
+    }
+
+    val startTime = System.currentTimeMillis()
+    while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < MAX_MODEL_WAIT_TIME) {
+        Thread.sleep(20)
+    }
+
+    return modelTitles
+}
 
 fun makeTextArea(): JTextArea {
     val textArea =
@@ -128,27 +160,8 @@ fun openInlineEdit(project: Project?, editor: Editor) {
 
     val manager = EditorComponentInlaysManager.from(editor, true)
 
-    // Get list of model titles
     val continuePluginService = project.service<ContinuePluginService>()
-    val modelTitles = mutableListOf<String>()
-
-    continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val modelsByRole =
-            response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "modelsByRole") ?: return@request
-        val role = if (modelsByRole.containsKey("edit")) "edit" else "chat"
-        modelsByRole.castNestedOrNull<List<*>>(role)
-            ?.mapNotNull { it.castNestedOrNull<String>("title") }
-            ?.let(modelTitles::addAll)
-    }
-
-    // This is a hacky way to not complicate getting model titles with coroutines
-    // 1500 feels like way upper limit of "would be weird if panel showed up after that long"
-    // And should always allow enough time to load config
-    val maxWaitTime = 1500
-    val startTime = System.currentTimeMillis()
-    while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
-        Thread.sleep(20)
-    }
+    val modelTitles = getModelTitles(continuePluginService)
 
     val highlightedRIF = editorUtils.getHighlightedRIF() ?: return
     val (startLineNumber, endLineNumber) = highlightedRIF.lines
@@ -271,18 +284,29 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                             }
                         }
                     }
+
+//                    KeyEvent.VK_DELETE, KeyEvent.VK_BACK_SPACE -> {  // Add this section
+//                        if ((e.modifiersEx and KeyEvent.META_DOWN_MASK) != 0 &&
+//                            (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK) != 0
+//                        ) {
+//                            diffStreamService.reject(editor)
+//                            inlayRef.get().dispose()
+//                            e.consume()
+//                        }
+//                    }
                 }
             }
 
+            // TODO: Uncomment, this isnt the problem
             // We need this because backspace/delete is not registering properly on keyPressed for an
             // unknown reason
-            override fun keyReleased(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_BACK_SPACE || e.keyCode == KeyEvent.VK_DELETE) {
-                    if (customPanelRef.get().isFinished) {
-                        customPanelRef.get().setup()
-                    }
-                }
-            }
+//            override fun keyReleased(e: KeyEvent) {
+//                if (e.keyCode == KeyEvent.VK_BACK_SPACE || e.keyCode == KeyEvent.VK_DELETE) {
+//                    if (customPanelRef.get().isFinished) {
+//                        customPanelRef.get().setup()
+//                    }
+//                }
+//            }
         })
 
     // Listen for changes to textarea line count
@@ -314,26 +338,6 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     textArea.requestFocus()
 }
 
-/**
- * Adapted from
- * https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/InlineEditAction.kt
- */
-class InlineEditAction : AnAction(), DumbAware {
-    override fun update(e: AnActionEvent) {
-        e.presentation.isEnabled = true
-        e.presentation.isVisible = true
-    }
-
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.EDT
-    }
-
-    override fun actionPerformed(e: AnActionEvent) {
-        val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
-        val project = e.getData(PlatformDataKeys.PROJECT) ?: return
-        openInlineEdit(project, editor)
-    }
-}
 
 class CustomPanel(
     layout: MigLayout,
