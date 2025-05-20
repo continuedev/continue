@@ -1,12 +1,19 @@
 package com.github.continuedev.continueintellijextension.actions
 
+import com.github.continuedev.continueintellijextension.autocomplete.AutocompleteService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.openInlineEdit
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.PlatformDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Caret
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.actionSystem.EditorAction
+import com.intellij.openapi.editor.actionSystem.EditorActionHandler
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAware
 
@@ -125,3 +132,18 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 }
 
+class AcceptAutocompleteAction : EditorAction(object : EditorActionHandler() {
+    override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext?) {
+        ApplicationManager.getApplication().runWriteAction {
+            editor.project?.service<AutocompleteService>()?.accept()
+        }
+    }
+
+    override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?): Boolean {
+        val autocompleteService = editor.project?.service<AutocompleteService>();
+        val enabled = editor == autocompleteService?.pendingCompletion?.editor
+//                && caret.offset == autocompleteService.pendingCompletion?.offset
+                && autocompleteService.pendingCompletion?.text != null
+        return enabled
+    }
+})

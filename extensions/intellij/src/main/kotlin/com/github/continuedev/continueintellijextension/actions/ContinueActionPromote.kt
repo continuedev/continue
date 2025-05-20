@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension.actions
 
-import com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.intellij.openapi.actionSystem.ActionPromoter
 import com.intellij.openapi.actionSystem.AnAction
@@ -19,12 +18,7 @@ class ContinueActionPromote : ActionPromoter {
             }
         }
 
-        // For RejectDiffAction
-        val rejectDiffActions = actions.filter { action ->
-            action.javaClass.name.contains("RejectDiffAction") ||
-                    (action.toString().contains("continue.rejectDiff"))
-        }
-
+        val rejectDiffActions = actions.filterIsInstance<RejectDiffAction>()
         if (rejectDiffActions.isNotEmpty()) {
             return rejectDiffActions
         }
