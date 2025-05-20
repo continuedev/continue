@@ -704,7 +704,6 @@ export interface IdeSettings {
   userToken: string;
   continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
-  addFileContext: boolean
 }
 
 export interface FileStats {
@@ -1316,6 +1315,11 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   modelContextProtocolServers?: ExperimentalMCPOptions[];
+
+  /**
+   * If enabled, will add the current file as context.
+   */
+  useCurrentFileAsContext?: boolean;
 }
 
 export interface AnalyticsConfig {

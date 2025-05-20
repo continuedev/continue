@@ -67,6 +67,8 @@ export function UserSettingsForm() {
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
+  const useCurrentFileAsContext =
+    config.experimental?.useCurrentFileAsContext ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -209,6 +211,16 @@ export function UserSettingsForm() {
                 })
               }
               text="Enable Indexing"
+            />
+
+            <ToggleSwitch
+              isToggled={useCurrentFileAsContext}
+              onToggle={() =>
+                handleUpdate({
+                  useCurrentFileAsContext: !useCurrentFileAsContext,
+                })
+              }
+              text="Add Current File by Default"
             />
 
             {/* <ToggleSwitch

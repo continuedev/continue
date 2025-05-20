@@ -18,6 +18,7 @@ export const sharedConfigSchema = z
     useChromiumForDocsCrawling: z.boolean(),
     readResponseTTS: z.boolean(),
     promptPath: z.string(),
+    useCurrentFileAsContext: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -106,8 +107,7 @@ export function modifyAnyConfigWithSharedConfig<
       sharedConfig.disableAutocompleteInFiles;
   }
   if (sharedConfig.modelTimeout !== undefined) {
-    configCopy.tabAutocompleteOptions.modelTimeout =
-      sharedConfig.modelTimeout;
+    configCopy.tabAutocompleteOptions.modelTimeout = sharedConfig.modelTimeout;
   }
   if (sharedConfig.debounceDelay !== undefined) {
     configCopy.tabAutocompleteOptions.debounceDelay =
@@ -161,6 +161,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.readResponseTTS !== undefined) {
     configCopy.experimental.readResponseTTS = sharedConfig.readResponseTTS;
+  }
+  if (sharedConfig.useCurrentFileAsContext !== undefined) {
+    configCopy.experimental.useCurrentFileAsContext =
+      sharedConfig.useCurrentFileAsContext;
   }
 
   return configCopy;
