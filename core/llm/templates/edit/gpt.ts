@@ -64,6 +64,8 @@ export const gptEditPrompt: PromptTemplateFunction = (history, otherData) => {
         \`\`\`
 
         The user's request is: "${otherData.userInput}"
+        
+        DO NOT output any natural language, only output the code changes.
 
         Here is the rewritten code:`);
 

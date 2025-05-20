@@ -1,0 +1,10 @@
+name: IntelliJ Test Standards
+version: 0.0.1
+schema: v1
+rules:
+  - name: IntelliJ Test Standards
+    rule: When writing tests for the IntelliJ plugin, use the mockk library for
+      mocking. Prefer mockk's idiomatic syntax for creating and verifying mocks.
+      Always structure tests with clear Arrange-Act-Assert patterns and use
+      descriptive test names that indicate the scenario being tested.
+    globs: "**/test/**/*.kt"

@@ -21,6 +21,15 @@ export function HelpCenterSection() {
       <h3 className="mb-4 mt-0 text-xl">Help center</h3>
       <div className="-mx-4 flex flex-col">
         <MoreHelpRow
+          title="Continue Hub"
+          description="Visit hub.continue.dev to explore custom assistants and blocks"
+          Icon={ArrowTopRightOnSquareIcon}
+          onClick={() =>
+            ideMessenger.post("openUrl", "https://hub.continue.dev/")
+          }
+        />
+
+        <MoreHelpRow
           title="Documentation"
           description="Learn how to configure and use Continue"
           Icon={ArrowTopRightOnSquareIcon}

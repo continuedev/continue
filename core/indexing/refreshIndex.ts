@@ -18,10 +18,6 @@ import {
 
 export type DatabaseConnection = Database<sqlite3.Database>;
 
-export function tagToString(tag: IndexTag): string {
-  return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
-}
-
 export class SqliteDb {
   static db: DatabaseConnection | null = null;
 

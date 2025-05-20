@@ -17,6 +17,13 @@ past and future “Contributions” submitted to **Continue (the “Project”)*
 
 ## 2. Copyright License
 
+You grant **Continue Dev, Inc.** and all recipients of software distributed by the
+Project a perpetual, worldwide, non‑exclusive, royalty‑free, irrevocable
+license to reproduce, prepare derivative works of, publicly display, publicly
+perform, sublicense, and distribute Your Contributions and derivative works.
+
+## 3. Patent License  
+
 You grant **Continue Dev, Inc.** and all recipients of the Project a perpetual,
 worldwide, non‑exclusive, royalty‑free, irrevocable (except as below) patent
 license to make, have made, use, sell, offer to sell, import, and otherwise
