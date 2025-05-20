@@ -32,6 +32,7 @@ export function remarkTables() {
         /((?:\| *[^|\r\n]+ *)+\|)(?:\r?\n)((?:\|[ :]?-+[ :]?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
       //// header                // newline // |:---|----:|      // new line  // table rows
 
+      // prevent modifying if no markdown tables are present
       if(!buffer.match(tableRegex)) {
         return;
       }
