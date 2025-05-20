@@ -29,6 +29,14 @@ export function useMainEditorWebviewListeners({
   inputId: string;
   editorFocusedRef: MutableRefObject<boolean | undefined>;
 }) {
+  const activeContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
+  );
+  const useCurrentFileAsContext = useAppSelector(
+    (state) => state.config.config.experimental?.useCurrentFileAsContext,
+  );
+  const mode = useAppSelector((state) => state.session.mode);
+
   useWebviewListener(
     "isContinueInputFocused",
     async () => {
@@ -180,16 +188,6 @@ export function useMainEditorWebviewListeners({
     },
     [],
   );
-
-  const activeContextProviders = useAppSelector(
-    (state) => state.config.config.contextProviders,
-  );
-  const useCurrentFileAsContext = useAppSelector(
-    (state) => state.config.config.experimental?.useCurrentFileAsContext,
-  );
-  const mode = useAppSelector((state) => state.session.mode);
-
-  console.log("debug1 current file", useCurrentFileAsContext);
 
   useWebviewListener(
     "newSession",
