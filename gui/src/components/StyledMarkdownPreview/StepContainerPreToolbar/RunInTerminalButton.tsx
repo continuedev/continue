@@ -18,14 +18,38 @@ export function RunInTerminalButton({ command }: RunInTerminalButtonProps) {
 
   // Extract just the command line (the line after $ or the first line)
   function extractCommand(cmd: string): string {
-    // If the command contains a $ prompt, extract the line after it
+    // First handle the $ prompt case, extract the line after it
     if (cmd.includes("$")) {
       const match = cmd.match(/\$\s*([^\n]+)/);
-      return match ? match[1].trim() : "";
+      if (match) {
+        return match[1].trim();
+      }
     }
 
-    // Otherwise, just take the first line
-    return cmd.split("\n")[0].trim();
+    // Process all lines, filtering out comments and empty lines
+    const lines = cmd.split("\n")
+      .map(line => line.trim())
+      .filter(line => 
+        line && 
+        !line.startsWith("#") && 
+        !line.startsWith("//") && 
+        !line.startsWith("/*")
+      );
+
+    // Handle multi-line commands
+    let result = "";
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      result += line;
+      
+      // Add space for command continuation
+      if (line.endsWith("&&") || line.endsWith("|") || line.endsWith("\\")) {
+        result += " ";
+      } else if (i < lines.length - 1) {
+        result += " ";
+      }
+    }
+    return result.trim();
   }
 
   function runInTerminal() {
