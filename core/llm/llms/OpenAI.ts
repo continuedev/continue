@@ -77,7 +77,7 @@ class OpenAI extends BaseLLM {
     return model;
   }
 
-  private isOSeriesModel(model?: string): boolean {
+  public isOSeriesModel(model?: string): boolean {
     return !!model && !!model.match(/^o[0-9]+/);
   }
 
