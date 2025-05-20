@@ -217,11 +217,13 @@ export default function AssistantSelect() {
   }, [currentOrg, selectedProfile]);
 
   const cycleOrgs = () => {
+    if (!session) {
+      void login(false);
+      return;
+    }
+
     const orgIds = orgs.map((org) => org.id);
     if (orgIds.length < 2) {
-      if (!session) {
-        void login(false);
-      }
       return;
     }
     let nextId = orgIds[0];
