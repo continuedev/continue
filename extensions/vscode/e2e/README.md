@@ -1,4 +1,6 @@
-### Setup
+# E2E Tests
+
+## Setup
 
 When running e2e tests for the first time
 
@@ -6,7 +8,7 @@ When running e2e tests for the first time
 npm run e2e:all
 ```
 
-### Run
+## Run
 
 Depending on what code you update, you can use a faster loop to test your changes:
 
@@ -14,7 +16,7 @@ Depending on what code you update, you can use a faster loop to test your change
 - If you update the extension code, you can run `npm run e2e:recompile`
 - If you update the gui code, you can run `npm run e2e:rebuild-gui`
 
-### Writing tests
+## Writing tests
 
 All e2e tests are separated (by folder) into
 

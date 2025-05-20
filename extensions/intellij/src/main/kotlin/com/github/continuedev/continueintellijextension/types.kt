@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension
 
+import com.github.continuedev.continueintellijextension.editor.RangeInFileWithContents
 import com.google.gson.JsonElement
 
 enum class ToastType(val value: String) {
@@ -213,3 +214,40 @@ data class Message(
 data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 
 data class DeleteAtIndex(val index: Int)
+
+enum class ApplyStateStatus(val status: String) {
+    NOT_STARTED("not-started"),
+    STREAMING("streaming"),
+    DONE("done"),
+    CLOSED("closed");
+}
+
+data class ApplyState(
+    val streamId: String,
+    val status: String,
+    val numDiffs: Int? = null,
+    val filepath: String? = null,
+    val fileContent: String? = null,
+    val toolCallId: String? = null
+)
+
+data class HighlightedCodePayload(
+    val rangeInFileWithContents: RangeInFileWithContents,
+    val prompt: String? = null,
+    val shouldRun: Boolean? = null
+)
+
+data class StreamDiffLinesPayload(
+    val prefix: String,
+    val highlighted: String,
+    val suffix: String,
+    val input: String,
+    val language: String?,
+    val modelTitle: String?,
+    val includeRulesInSystemMessage: Boolean
+)
+
+data class AcceptOrRejectDiffPayload(
+    val filepath: String,
+    val streamId: String? = null
+)

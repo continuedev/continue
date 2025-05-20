@@ -1,0 +1,15 @@
+name: IntelliJ Plugin Test Execution
+version: 0.0.1
+schema: v1
+rules:
+  - name: IntelliJ Plugin Test Execution
+    rule: |-
+      Run IntelliJ plugin tests using Gradle with the fully qualified test class or method name:
+      ```bash
+      # Run test class
+      ./gradlew test --tests "com.github.continuedev.continueintellijextension.unit.ApplyToFileHandlerTest"
+
+      # Run specific test method
+      ./gradlew test --tests "com.github.continuedev.continueintellijextension.unit.ApplyToFileHandlerTest.should*"
+      ```
+    globs: extensions/intellij/**/*Test.kt

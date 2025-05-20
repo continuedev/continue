@@ -1,6 +1,7 @@
 // Feel free to add more!
 // See gui/node_modules/highlight.js/lib/languages for the full available list
 import clojure from "highlight.js/lib/languages/clojure";
+import delphi from "highlight.js/lib/languages/delphi";
 import elixir from "highlight.js/lib/languages/elixir";
 import julia from "highlight.js/lib/languages/julia";
 import lisp from "highlight.js/lib/languages/lisp";
@@ -19,6 +20,7 @@ export function rehypeHighlightPlugin() {
       languages: {
         ...common,
         clojure,
+        delphi,
         elixir,
         julia,
         protobuf,

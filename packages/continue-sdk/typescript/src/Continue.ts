@@ -7,8 +7,9 @@ import { createOpenAIClient } from "./createOpenAIClient.js";
 export interface ContinueClientOptions {
   /**
    * The assistant identifier in the format owner-slug/package-slug
+   * If not provided, only the Continue API client will be returned
    */
-  assistant: string;
+  assistant?: string;
 
   /**
    * API Key Authentication
@@ -51,17 +52,51 @@ export type ContinueClient = {
   assistant: Assistant;
 };
 
+export type ContinueClientBase = {
+  /**
+   * The Continue API client
+   */
+  api: DefaultApi;
+};
+
 export class Continue {
   /**
-   * Create a Continue instance with pre-configured OpenAI client and assistant
+   * Create a Continue instance with a specific assistant
    *
-   * @param options - Configuration options
-   * @returns Object containing Continue client, OpenAI client, and assistant config
+   * When you provide an assistant name, this returns a full client with:
+   * - Continue API access
+   * - A configured OpenAI-compatible client
+   * - Assistant configuration and helper methods
+   *
+   * @param options - Configuration including your API key and assistant name
+   * @returns Full Continue environment with API client, LLM client, and assistant config
    */
-  static async from(options: ContinueClientOptions): Promise<ContinueClient> {
+  static async from(
+    options: ContinueClientOptions & { assistant: string },
+  ): Promise<ContinueClient>;
+
+  /**
+   * Create a simple Continue API client
+   *
+   * When you don't specify an assistant, this returns just the Continue API client
+   * for making direct API calls.
+   *
+   * @param options - Configuration including your API key
+   * @returns Just the Continue API client
+   */
+  static async from(
+    options: ContinueClientOptions & { assistant?: undefined },
+  ): Promise<ContinueClientBase>;
+
+  /**
+   * Internal implementation
+   */
+  static async from(
+    options: ContinueClientOptions,
+  ): Promise<ContinueClientBase | ContinueClient> {
     const baseURL = options.baseURL || "https://api.continue.dev/";
 
-    const api = new DefaultApi(
+    const continueClient = new DefaultApi(
       new Configuration({
         basePath: baseURL,
         accessToken: options.apiKey
@@ -70,6 +105,10 @@ export class Continue {
       }),
     );
 
+    if (!options.assistant) {
+      return { api: continueClient };
+    }
+
     const { ownerSlug, packageSlug } = decodePackageSlug(options.assistant);
     if (!ownerSlug || !packageSlug) {
       throw new Error(
@@ -77,7 +116,7 @@ export class Continue {
       );
     }
 
-    const assistants = await api.listAssistants({
+    const assistants = await continueClient.listAssistants({
       organizationId: options.organizationId,
       alwaysUseProxy: "true",
     });
@@ -100,7 +139,7 @@ export class Continue {
     });
 
     return {
-      api,
+      api: continueClient,
       client,
       assistant,
     };

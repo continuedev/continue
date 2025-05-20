@@ -72,7 +72,8 @@ export class StreamTransformPipeline {
       fullStop,
     );
 
-    const timeoutValue = helper.options.showWhateverWeHaveAtXMs;
+    const timeoutValue = helper.options.modelTimeout;
+
 
     lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, timeoutValue!);
 

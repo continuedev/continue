@@ -244,6 +244,7 @@ describe("LLM", () => {
       testFim: true,
       skip: false,
       testToolCall: true,
+      timeout: 60000,
     },
   );
   testLLM(

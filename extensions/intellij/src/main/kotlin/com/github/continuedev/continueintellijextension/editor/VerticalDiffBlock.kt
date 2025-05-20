@@ -32,8 +32,6 @@ class VerticalDiffBlock(
     private var deletionInlay: Disposable? = null
     private var textArea: JTextArea? = null // Used for calculation of the text area height when rendering buttons
     private var hasRenderedDiffBlock: Boolean = false
-    private val editorComponentInlaysManager = EditorComponentInlaysManager.from(editor, false)
-    private val greenKey = createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00, editor)
 
     init {
         val (acceptBtn, rejectBtn) = createButtons()
@@ -73,12 +71,13 @@ class VerticalDiffBlock(
 
         deletedLines.add(deletedText.trimEnd())
 
-        // Unable to ensure that text length has not changed, so we need to get it again
-        editor.document.deleteString(startOffset, min(endOffset, editor.document.textLength))
+        editor.document.deleteString(startOffset, endOffset)
     }
 
 
     fun addNewLine(text: String, line: Int) {
+        val greenKey = EditorUtils(editor).createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00)
+
         if (line == editor.document.lineCount) {
             editor.document.insertString(editor.document.textLength, "\n")
         }
@@ -98,7 +97,7 @@ class VerticalDiffBlock(
             return
         }
 
-        if (deletedLines.size > 0) {
+        if (deletedLines.isNotEmpty()) {
             renderDeletedLinesInlay()
         }
 
@@ -108,9 +107,19 @@ class VerticalDiffBlock(
     }
 
     fun handleReject() {
-        revertDiff()
+        // Note that the logic for clearing editor UI state assumes that we do it
+        //  prior to undoing the diff changes, changing this order will break things
         clearEditorUI()
+        revertDiff()
+
+        onAcceptReject(this@VerticalDiffBlock, false)
     }
+
+    fun handleAccept() {
+        clearEditorUI()
+        onAcceptReject(this@VerticalDiffBlock, true)
+    }
+
 
     private fun refreshEditor() {
         editor.contentComponent.revalidate()
@@ -118,10 +127,12 @@ class VerticalDiffBlock(
     }
 
     private fun renderDeletedLinesInlay() {
-        val textArea = createDeletionTextArea(deletedLines.joinToString("\n"))
-        this.textArea = textArea
+        val editorComponentInlaysManager = EditorComponentInlaysManager.from(editor, false)
+        val newTextArea = createDeletionTextArea(deletedLines.joinToString("\n"))
 
-        val disposable = editorComponentInlaysManager.insert(startLine, textArea, true)
+        textArea = newTextArea
+
+        val disposable = editorComponentInlaysManager.insert(startLine, newTextArea, true)
         deletionInlay = disposable
     }
 
@@ -159,7 +170,6 @@ class VerticalDiffBlock(
             ).apply {
                 addActionListener {
                     handleReject()
-                    onAcceptReject(this@VerticalDiffBlock, false)
                 }
 
             }
@@ -172,7 +182,6 @@ class VerticalDiffBlock(
             ).apply {
                 addActionListener {
                     handleAccept()
-                    onAcceptReject(this@VerticalDiffBlock, true)
                 }
             }
 
@@ -186,9 +195,6 @@ class VerticalDiffBlock(
         refreshEditor()
     }
 
-    private fun handleAccept() {
-        clearEditorUI()
-    }
 
     private fun revertDiff() {
         WriteCommandAction.runWriteCommandAction(project) {

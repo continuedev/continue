@@ -8,6 +8,8 @@ import { RuleWithSource } from "core";
 import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
+  DEFAULT_AGENT_SYSTEM_MESSAGE,
+  DEFAULT_AGENT_SYSTEM_MESSAGE_URL
 } from "core/llm/constructMessages";
 import { useContext, useMemo } from "react";
 import { defaultBorderRadius, vscCommandCenterActiveBorder } from "../../..";
@@ -18,7 +20,6 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../redux/slices/uiSlice";
-import { getBaseSystemMessage } from "../../../../util";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 import { useFontSize } from "../../../ui/font";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
@@ -30,6 +31,7 @@ interface RuleCardProps {
 const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+  const mode = useAppSelector((store) => store.session.mode);
 
   const handleOpen = async () => {
     if (rule.slug) {
@@ -41,8 +43,10 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       ideMessenger.post("openFile", {
         path: rule.ruleFile,
       });
-    } else if (rule.source === "default") {
+    } else if (rule.source === "default-chat" && mode === "chat") {
       ideMessenger.post("openUrl", DEFAULT_CHAT_SYSTEM_MESSAGE_URL);
+    } else if (rule.source === "default-agent" && mode === "agent") {
+      ideMessenger.post("openUrl", DEFAULT_AGENT_SYSTEM_MESSAGE_URL);
     } else {
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
@@ -56,10 +60,14 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     } else {
       if (rule.source === ".continuerules") {
         return "Project rules";
-      } else if (rule.source === "default") {
+      } else if (rule.source === "default-chat") {
         return "Default chat system message";
+      } else if (rule.source === "default-agent") {
+        return "Default agent system message";
       } else if (rule.source === "json-systemMessage") {
         return "JSON systemMessage)";
+      } else if (rule.source === "model-agent-options") {
+        return "Base System Agent Message";
       } else if (rule.source === "model-chat-options") {
         return "Base System Chat Message";
       } else {
@@ -104,7 +112,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
               <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
             </HeaderButtonWithToolTip>{" "}
-            {rule.source === "default" ? (
+            {rule.source === "default-chat" || rule.source === "default-agent" ? (
               <HeaderButtonWithToolTip onClick={handleOpen} text="View">
                 <EyeIcon className="h-3 w-3 text-gray-400" />
               </HeaderButtonWithToolTip>
@@ -181,19 +189,30 @@ export function RulesSection() {
         );
       }
     }
-    // Add a displayed rule for the base system chat message when in chat mode
-    if (mode === "chat" || mode === "agent") {
-      const baseMessage = getBaseSystemMessage(config.selectedModelByRole.chat, mode)
-      if (baseMessage) {
+
+    if (mode === "agent") {
+      if (config.selectedModelByRole.chat?.baseAgentSystemMessage) {
         rules.unshift({
-          rule: baseMessage,
+          rule: config.selectedModelByRole.chat?.baseAgentSystemMessage,
+          source: "model-agent-options",
+        })
+      } else {
+        rules.unshift({
+          rule: DEFAULT_AGENT_SYSTEM_MESSAGE,
+          source: "default-agent",
+        })
+      }
+    } else {
+      if (config.selectedModelByRole.chat?.baseChatSystemMessage) {
+        rules.unshift({
+          rule: config.selectedModelByRole.chat?.baseChatSystemMessage,
           source: "model-chat-options",
-        });
+        })
       } else {
         rules.unshift({
           rule: DEFAULT_CHAT_SYSTEM_MESSAGE,
-          source: "default",
-        });
+          source: "default-chat",
+        })
       }
     }
 

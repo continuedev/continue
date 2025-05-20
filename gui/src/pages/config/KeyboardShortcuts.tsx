@@ -11,13 +11,10 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   return (
     <div
-      className="sm:flex-row flex-col flex items-start sm:items-center py-2"
-      style={{
-        backgroundColor: props.isEven ? '#1e1e1e' : 'transparent',
-      }}
+      className={`flex flex-col items-start p-2 py-2 sm:flex-row sm:items-center ${props.isEven ? "" : "bg-table-odd-rows"}`}
     >
-      <div className="flex-grow pr-4 pb-1 sm:pb-0 w-full sm:w-auto">
-        <span className="text-xs block break-words">{props.description}:</span>
+      <div className="w-full flex-grow pb-1 pr-4 sm:w-auto sm:pb-0">
+        <span className="block break-words text-xs">{props.description}:</span>
       </div>
       <div className="flex-shrink-0 whitespace-nowrap">
         <Shortcut>{props.shortcut}</Shortcut>
@@ -27,7 +24,7 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
 }
 
 // Shortcut strings will be rendered correctly based on the platform by the Shortcut component
-const vscodeShortcuts: Omit<KeyboardShortcutProps, 'isEven'>[] = [
+const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd '",
     description: "Toggle Selected Model",
@@ -84,7 +81,7 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, 'isEven'>[] = [
   },
 ];
 
-const jetbrainsShortcuts: Omit<KeyboardShortcutProps, 'isEven'>[] = [
+const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd '",
     description: "Toggle Selected Model",
@@ -135,7 +132,7 @@ function KeyboardShortcuts() {
   }, []);
 
   return (
-    <div className="p-5 h-full overflow-auto">
+    <div className="h-full overflow-auto p-5">
       <h3 className="mb-5 text-xl">Keyboard shortcuts</h3>
       <div>
         {shortcuts.map((shortcut, i) => {
@@ -154,4 +151,3 @@ function KeyboardShortcuts() {
 }
 
 export default KeyboardShortcuts;
-

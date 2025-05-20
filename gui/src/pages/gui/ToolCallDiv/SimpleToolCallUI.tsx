@@ -61,7 +61,7 @@ export function SimpleToolCallUI({
           </div>
           <span
             className="ml-1 text-xs text-gray-400 transition-colors duration-200"
-            data-testid="toggle-div-title"
+            data-testid="tool-call-title"
           >
             <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </span>

@@ -1,5 +1,5 @@
 import {
-  AcademicCapIcon,
+  BoltIcon,
   CircleStackIcon,
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
@@ -52,7 +52,7 @@ function ConfigPage() {
       id: "shortcuts",
       label: "Shortcuts",
       component: <KeyboardShortcuts />,
-      icon: <AcademicCapIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+      icon: <BoltIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
     },
   ];
 
@@ -67,14 +67,14 @@ function ConfigPage() {
         />
 
         {/* Tab Headers */}
-        <div className="grid grid-cols-2 border-0 border-b-[1px] border-solid border-b-zinc-700 p-0.5 sm:flex sm:justify-center md:gap-x-2">
+        <div className="bg-vsc-input-background grid cursor-pointer grid-cols-2 border-0 border-b-[1px] border-solid border-b-zinc-700 p-0.5 sm:flex sm:justify-center md:gap-x-2">
           {tabs.map((tab) => (
             <div
               style={{
                 fontSize: fontSize(-2),
               }}
               key={tab.id}
-              className={`hover:bg-vsc-input-background flex cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 py-2 ${
+              className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 py-2 hover:brightness-125 ${
                 activeTab === tab.id ? "" : "text-gray-400"
               }`}
               onClick={() => setActiveTab(tab.id)}
