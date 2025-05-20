@@ -1,6 +1,7 @@
 import { Editor, EditorContent, JSONContent } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
+import { improvePrompt } from "../../../../core/llm/utils/improvePrompt";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
@@ -135,10 +136,24 @@ export function TipTapEditor(props: TipTapEditorProps) {
 
   const { handleKeyUp, handleKeyDown } = useEditorEventHandlers({
     editor,
-    isOSREnabled: isOSREnabled,
+    isOSREnabled,
     editorFocusedRef,
     setActiveKey,
   });
+
+  const handleImprovePrompt = async () => {
+    if (!editor) {
+      return;
+    }
+    try {
+      const currentText = editor.getText();
+      const improvedText = await improvePrompt(currentText);
+      editor.commands.setContent(improvedText, true);
+      editor.commands.focus();
+    } catch (error) {
+      console.error("Error improving prompt:", error);
+    }
+  };
 
   const blurTimeout = useRef<NodeJS.Timeout | null>(null);
   const cancelBlurTimeout = useCallback(() => {
@@ -244,6 +259,7 @@ export function TipTapEditor(props: TipTapEditorProps) {
           hidden={shouldHideToolbar && !props.isMainInput}
           onAddContextItem={() => insertCharacterWithWhitespace("@")}
           onEnter={onEnterRef.current}
+          onImprovePrompt={props.isMainInput ? handleImprovePrompt : undefined}
           onImageFileSelected={(file) => {
             handleImageFile(ideMessenger, file).then((result) => {
               if (!editor) {

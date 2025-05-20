@@ -21,6 +21,7 @@ import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
 import { useFontSize } from "../ui/font";
 import { EnterButton } from "./InputToolbar/EnterButton";
+import { default as ImprovePromptButton } from "./InputToolbar/ImprovePromptButton";
 import HoverItem from "./InputToolbar/HoverItem";
 
 export interface ToolbarOptions {
@@ -36,6 +37,7 @@ interface InputToolbarProps {
   onAddContextItem?: () => void;
   onClick?: () => void;
   onImageFileSelected?: (file: File) => void;
+  onImprovePrompt?: () => void;
   hidden?: boolean;
   activeKey: string | null;
   toolbarOptions?: ToolbarOptions;
@@ -196,6 +198,10 @@ function InputToolbar(props: InputToolbarProps) {
                 <i>Esc</i> to exit
               </span>
             </HoverItem>
+          )}
+
+          {props.onImprovePrompt && (
+            <ImprovePromptButton onClick={props.onImprovePrompt} />
           )}
 
           <EnterButton
