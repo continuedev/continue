@@ -41,7 +41,6 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { logger } from "../../util/logger";
 import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -115,9 +114,9 @@ async function loadConfigYaml(options: {
       ? dirname(getCleanUriPath(packageIdentifier.filePath))
       : undefined;
 
-  logger.info(
-    `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
-  );
+  // logger.info(
+  //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
+  // );
 
   let config =
     overrideConfigYaml ??
