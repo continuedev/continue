@@ -244,7 +244,7 @@ data class StreamDiffLinesPayload(
     val input: String,
     val language: String?,
     val modelTitle: String?,
-    val includeRulesInSystemMessage: Boolean
+    val includeRulesInSystemMessage: Boolean,
     val fileUri: String?
 )
 
