@@ -13,7 +13,7 @@ export const createRuleBlock: Tool = {
   function: {
     name: BuiltInToolNames.CreateRuleBlock,
     description:
-      "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently.",
+      "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently. To modify existing rules, use the edit tool instead.",
     parameters: {
       type: "object",
       required: ["name", "rule"],

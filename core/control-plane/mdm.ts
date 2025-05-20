@@ -68,22 +68,20 @@ function extractConfigFromArray(config: any[]): Record<string, string> {
   return configObj;
 }
 
+const MACOS_MDM_PATHS = [
+  // Organization-specific MDM plist
+  "/Library/Managed Preferences/dev.continue.app.plist",
+  // User-specific MDM plist
+  path.join(os.homedir(), "Library/Managed Preferences/dev.continue.app.plist"),
+];
+
 function readMdmKeysMacOS(): MdmKeys | undefined {
   try {
     // MDM configuration is typically stored in /Library/Managed Preferences/ on macOS
     // The filename is often the bundle identifier of the application
-    const mdmPaths = [
-      // Organization-specific MDM plist
-      "/Library/Managed Preferences/dev.continue.app.plist",
-      // User-specific MDM plist
-      path.join(
-        os.homedir(),
-        "Library/Managed Preferences/dev.continue.app.plist",
-      ),
-    ];
 
     // Try to find a valid MDM configuration file
-    for (const mdmPath of mdmPaths) {
+    for (const mdmPath of MACOS_MDM_PATHS) {
       if (fs.existsSync(mdmPath)) {
         // Read the file content
         const fileContent = fs.readFileSync(mdmPath, "utf8");
@@ -180,19 +178,19 @@ function extractRegValue(output: string): string | undefined {
   return match ? match[1].trim() : undefined;
 }
 
+// Common locations for MDM configurations in Linux systems
+const LINUX_MDM_PATHS = [
+  // System-wide configuration
+  "/etc/continue/mdm.json",
+  "/var/lib/continue/mdm.json",
+  // User-specific configuration
+  path.join(os.homedir(), ".config/continue/mdm.json"),
+];
+
 function readMdmKeysLinux(): MdmKeys | undefined {
   try {
-    // Common locations for MDM configurations in Linux systems
-    const mdmPaths = [
-      // System-wide configuration
-      "/etc/continue/mdm.json",
-      "/var/lib/continue/mdm.json",
-      // User-specific configuration
-      path.join(os.homedir(), ".config/continue/mdm.json"),
-    ];
-
     // Try to find a valid MDM configuration file
-    for (const mdmPath of mdmPaths) {
+    for (const mdmPath of LINUX_MDM_PATHS) {
       if (fs.existsSync(mdmPath)) {
         // Read the file content
         const fileContent = fs.readFileSync(mdmPath, "utf8");
