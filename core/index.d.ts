@@ -1036,6 +1036,7 @@ export interface ModelCapability {
 export interface ModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
 
@@ -1329,6 +1330,7 @@ export interface AnalyticsConfig {
 export interface JSONModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
   apiBase?: string;

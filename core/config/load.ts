@@ -620,6 +620,7 @@ async function intermediateToFinalConfig({
 function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
   return {
     provider: llm.providerName,
+    underlyingProviderName: llm.underlyingProviderName,
     model: llm.model,
     title: llm.title ?? llm.model,
     apiKey: llm.apiKey,
@@ -970,6 +971,5 @@ export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadContinueConfigFromJson,
-  type BrowserSerializedContinueConfig
+  type BrowserSerializedContinueConfig,
 };
-
