@@ -9,7 +9,7 @@ import { setNewestToolbarPreviewForInput } from "../../../redux/slices/sessionSl
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
 import { CodeBlock, PromptBlock } from "./extensions";
-import { insertCurrentFileContextMention } from "./utils/insertContent";
+import { insertCurrentFileContextMention } from "./utils/insertCurrentFileContextMention";
 
 /**
  * Hook for setting up main editor specific webview listeners
