@@ -47,7 +47,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
-import { cancelStream } from "../../redux/thunks/cancelStream";
+import { cancelButton } from "../../redux/thunks/cancelButton";
 import { streamEditThunk } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
@@ -142,7 +142,7 @@ export function Chat() {
         (jetbrains ? e.altKey : isMetaEquivalentKeyPressed(e)) &&
         !e.shiftKey
       ) {
-        dispatch(cancelStream());
+        dispatch(cancelButton());
       }
     };
     window.addEventListener("keydown", listener);

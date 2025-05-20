@@ -345,6 +345,13 @@ export interface ToolResultChatMessage {
   toolCallId: string;
 }
 
+export interface ToolResultChatMessageWithId {
+  id: string,
+  role: "tool";
+  content: string;
+  toolCallId: string;
+}
+
 export interface UserChatMessage {
   role: "user";
   content: MessageContent;
@@ -362,6 +369,7 @@ export interface AssistantChatMessage {
   role: "assistant";
   content: MessageContent;
   toolCalls?: ToolCallDelta[];
+  toolCallId?: string,
 }
 
 export interface SystemChatMessage {

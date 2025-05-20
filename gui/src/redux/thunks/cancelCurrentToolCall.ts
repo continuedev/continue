@@ -16,18 +16,14 @@ export const cancelCurrentToolCall = createAsyncThunk<
     return;
   }
 
-  if (toolCallState.status !== "generated") {
-    return;
-  }
-
   const { toolCallId } = toolCallState;
-  dispatch(
+  await dispatch(
     cancelToolCall({
       toolCallId,
     }),
   );
 
-  dispatch(
+  await dispatch(
     updateToolCallOutput({
       toolCallId,
       contextItems: [
@@ -35,7 +31,7 @@ export const cancelCurrentToolCall = createAsyncThunk<
           name: "Tool Cancelled",
           description: "Tool Cancelled",
           content:
-            "The tool call was cancelled by the user. Please try something else or request further instructions.",
+            "The tool call was cancelled by the user. Ask for further instructions.",
           hidden: true,
         },
       ],
