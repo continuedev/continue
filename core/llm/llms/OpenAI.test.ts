@@ -23,12 +23,12 @@ describe("OpenAI", () => {
     });
     expect(openai.isOSeriesModel("gpt-o4-mini")).toBeFalsy();
     expect(openai.isOSeriesModel("gpt-4.5")).toBeFalsy();
-    expect(openai.isOSeriesModel("gpt-4.5")).toBeFalsy();
+    expect(openai.isOSeriesModel("gpt-4.1")).toBeFalsy();
 
     // artificially wrong samples
     expect(openai.isOSeriesModel("os1")).toBeFalsy();
     expect(openai.isOSeriesModel("so1")).toBeFalsy();
-    expect(openai.isOSeriesModel("o3s1")).toBeFalsy();
-    expect(openai.isOSeriesModel("os1")).toBeFalsy();
+    expect(openai.isOSeriesModel("ao31")).toBeFalsy();
+    expect(openai.isOSeriesModel("1os")).toBeFalsy();
   });
 });
