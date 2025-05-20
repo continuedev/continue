@@ -32,6 +32,10 @@ export function remarkTables() {
         /((?:\| *[^|\r\n]+ *)+\|)(?:\r?\n)((?:\|[ :]?-+[ :]?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
       //// header                // newline // |:---|----:|      // new line  // table rows
 
+      if(!buffer.match(tableRegex)) {
+        return;
+      }
+
       let match: RegExpExecArray | null;
       let lastIndex = 0;
       const newNodes = [];
