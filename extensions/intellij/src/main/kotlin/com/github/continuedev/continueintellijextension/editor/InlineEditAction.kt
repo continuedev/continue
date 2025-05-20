@@ -119,8 +119,10 @@ fun makePanel(
 fun openInlineEdit(project: Project?, editor: Editor) {
     if (project == null) return
 
+    val editorUtils = EditorUtils(editor)
+
     // Don't open in terminal
-    if (EditorUtils(editor).isTerminal()) {
+    if (editorUtils.isTerminal()) {
         return
     }
 
@@ -148,34 +150,15 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         Thread.sleep(20)
     }
 
-    // Get highlighted range
-    val selectionModel = editor.selectionModel
-    val startOffset = selectionModel.selectionStart
-    val endOffset = selectionModel.selectionEnd
-    val startLineNumber = editor.document.getLineNumber(startOffset)
-    var endLineNumber = editor.document.getLineNumber(endOffset)
+    val highlightedRIF = editorUtils.getHighlightedRIF() ?: return
+    val (startLineNumber, endLineNumber) = highlightedRIF.lines
+    val (highlightedStartOffset, highlightedEndOffset) = highlightedRIF.offsets
 
-    // Doesn't seem to be any built-in methods to check for a line selection that contains trailing
-    // newlines.
-    // The only case this matters is when a user double-clicks to highlight a full line. Without this
-    // check.
-    // the highlighted range will continue to the following line.
-    val isSingleLineSelection =
-        endLineNumber > startLineNumber &&
-                endLineNumber < editor.document.lineCount &&
-                editor.document.getLineStartOffset(endLineNumber) == endOffset
 
-    if (isSingleLineSelection) {
-        endLineNumber--
-    }
-
-    val prefix = editor.document.getText(TextRange(0, startOffset))
-    val highlighted = editor.document.getText(TextRange(startOffset, endOffset))
-    val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
+    val (prefix, highlighted, suffix) = editorUtils.getHighlightedRangeTriplet()
     val lineNumber = if (startLineNumber == 0) 0 else max(0, startLineNumber - 1)
 
-    // Un-highlight the selected text
-    selectionModel.removeSelection()
+    editorUtils.removeSelection()
 
     // Get indentation width in pixels
     val indentationLineNum = if (startLineNumber == 0) 0 else lineNumber + 1
@@ -239,7 +222,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
             { onEnter() },
             {
                 diffStreamService.reject(editor)
-                selectionModel.setSelection(startOffset, endOffset)
+                editorUtils.editor.selectionModel.setSelection(highlightedStartOffset, highlightedEndOffset)
             },
             {
                 diffStreamService.accept(editor)
@@ -270,7 +253,10 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                 when (e.keyCode) {
                     KeyEvent.VK_ESCAPE -> {
                         diffStreamService.reject(editor)
-                        selectionModel.setSelection(startOffset, endOffset)
+                        editorUtils.editor.selectionModel.setSelection(
+                            highlightedStartOffset,
+                            highlightedEndOffset
+                        )
                     }
 
                     KeyEvent.VK_ENTER -> {
