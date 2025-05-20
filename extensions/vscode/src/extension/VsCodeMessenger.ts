@@ -238,6 +238,7 @@ export class VsCodeMessenger {
           completion: fileAfterEdit ?? "",
           modelProvider: model.underlyingProviderName,
           modelTitle: model.title ?? "",
+          filepath: msg.data.range.filepath,
         },
       });
 
