@@ -13,7 +13,7 @@ export const ASSISTANTS = "assistants";
 export const ASSISTANTS_FOLDER = `.continue/${ASSISTANTS}`;
 
 export function isLocalAssistantFile(uri: string): boolean {
-  if (!uri.endsWith(".yaml") && !uri.endsWith(".yml")) {
+  if (!uri.endsWith(".yaml") && !uri.endsWith(".yml") && !uri.endsWith(".md")) {
     return false;
   }
 
@@ -41,7 +41,7 @@ export async function listYamlFilesInDir(
       source: "get assistant files",
     });
     const assistantFilePaths = uris.filter(
-      (p) => p.endsWith(".yaml") || p.endsWith(".yml"),
+      (p) => p.endsWith(".yaml") || p.endsWith(".yml") || p.endsWith(".md"),
     );
     const results = assistantFilePaths.map(async (uri) => {
       const content = await ide.readFile(uri); // make a try catch
