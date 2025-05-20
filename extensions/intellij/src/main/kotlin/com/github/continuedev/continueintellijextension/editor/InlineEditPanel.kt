@@ -284,29 +284,18 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                             }
                         }
                     }
-
-//                    KeyEvent.VK_DELETE, KeyEvent.VK_BACK_SPACE -> {  // Add this section
-//                        if ((e.modifiersEx and KeyEvent.META_DOWN_MASK) != 0 &&
-//                            (e.modifiersEx and KeyEvent.SHIFT_DOWN_MASK) != 0
-//                        ) {
-//                            diffStreamService.reject(editor)
-//                            inlayRef.get().dispose()
-//                            e.consume()
-//                        }
-//                    }
                 }
             }
 
-            // TODO: Uncomment, this isnt the problem
             // We need this because backspace/delete is not registering properly on keyPressed for an
             // unknown reason
-//            override fun keyReleased(e: KeyEvent) {
-//                if (e.keyCode == KeyEvent.VK_BACK_SPACE || e.keyCode == KeyEvent.VK_DELETE) {
-//                    if (customPanelRef.get().isFinished) {
-//                        customPanelRef.get().setup()
-//                    }
-//                }
-//            }
+            override fun keyReleased(e: KeyEvent) {
+                if (e.keyCode == KeyEvent.VK_BACK_SPACE || e.keyCode == KeyEvent.VK_DELETE) {
+                    if (customPanelRef.get().isFinished) {
+                        customPanelRef.get().setup()
+                    }
+                }
+            }
         })
 
     // Listen for changes to textarea line count

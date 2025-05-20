@@ -115,35 +115,5 @@ class OpenLogsAction : AnAction() {
     }
 }
 
-class InlineEditAction : AnAction(), DumbAware {
-    override fun update(e: AnActionEvent) {
-        e.presentation.isEnabled = true
-        e.presentation.isVisible = true
-    }
 
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.EDT
-    }
 
-    override fun actionPerformed(e: AnActionEvent) {
-        val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
-        val project = e.getData(PlatformDataKeys.PROJECT) ?: return
-        openInlineEdit(project, editor)
-    }
-}
-
-class AcceptAutocompleteAction : EditorAction(object : EditorActionHandler() {
-    override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext?) {
-        ApplicationManager.getApplication().runWriteAction {
-            editor.project?.service<AutocompleteService>()?.accept()
-        }
-    }
-
-    override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?): Boolean {
-        val autocompleteService = editor.project?.service<AutocompleteService>();
-        val enabled = editor == autocompleteService?.pendingCompletion?.editor
-//                && caret.offset == autocompleteService.pendingCompletion?.offset
-                && autocompleteService.pendingCompletion?.text != null
-        return enabled
-    }
-})

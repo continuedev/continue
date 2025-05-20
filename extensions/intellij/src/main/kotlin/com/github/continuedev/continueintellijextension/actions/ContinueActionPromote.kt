@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.actions
 
+import com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.intellij.openapi.actionSystem.ActionPromoter
 import com.intellij.openapi.actionSystem.AnAction
