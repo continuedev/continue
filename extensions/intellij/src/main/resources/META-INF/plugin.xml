@@ -53,7 +53,7 @@
     </extensions>
 
     <actions>
-        <action class="com.github.continuedev.continueintellijextension.actions.InlineEditAction"
+        <action class="com.github.continuedev.continueintellijextension.editor.InlineEditAction"
                 id="continue.inlineEdit"
                 description="Inline Edit"
                 text="Inline Edit">
