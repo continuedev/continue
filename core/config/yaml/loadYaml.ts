@@ -42,7 +42,7 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { getCleanUriPath } from "../../util/uri";
-import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
+import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
 
@@ -96,7 +96,7 @@ async function loadConfigYaml(options: {
   // Add local .continue blocks
   const allLocalBlocks: PackageIdentifier[] = [];
   for (const blockType of BLOCK_TYPES) {
-    const localBlocks = await getAllDotContinueYamlFiles(
+    const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
       { includeGlobal: true, includeWorkspace: true },
       blockType,

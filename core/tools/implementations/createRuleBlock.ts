@@ -7,6 +7,7 @@ export interface CreateRuleBlockArgs {
   name: string;
   rule: string;
   globs?: string;
+  format?: "yaml" | "markdown"; // Add format option with yaml as default
 }
 
 export const createRuleBlockImpl: ToolImpl = async (
@@ -19,30 +20,54 @@ export const createRuleBlockImpl: ToolImpl = async (
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
 
+  // Default to YAML format
+  const format = args.format ?? "yaml";
+  const fileExtension = format === "markdown" ? "md" : "yaml";
+
   const ruleObject = {
     name: args.name,
     rule: args.rule,
     ...(args.globs ? { globs: args.globs.trim() } : {}),
   };
 
-  const ruleBlock: ConfigYaml = {
-    name: args.name,
-    version: "0.0.1",
-    schema: "v1",
-    rules: [ruleObject],
-  };
+  let fileContent: string;
 
-  const ruleYaml = YAML.stringify(ruleBlock);
+  if (format === "markdown") {
+    // Generate markdown format with frontmatter
+    const frontmatter = {
+      ...(args.globs ? { globs: args.globs.trim() } : {}),
+    };
+
+    const frontmatterYaml = YAML.stringify(frontmatter).trim();
+    fileContent = `---
+${frontmatterYaml}
+---
+
+# ${args.name}
+
+${args.rule}
+`;
+  } else {
+    // Generate YAML format
+    const ruleBlock: ConfigYaml = {
+      name: args.name,
+      version: "0.0.1",
+      schema: "v1",
+      rules: [ruleObject],
+    };
+
+    fileContent = YAML.stringify(ruleBlock);
+  }
 
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
   const rulesDirUri = joinPathsToUri(
     localContinueDir,
     ".continue",
     "rules",
-    `${safeRuleName}.yaml`,
+    `${safeRuleName}.${fileExtension}`,
   );
 
-  await extras.ide.writeFile(rulesDirUri, ruleYaml);
+  await extras.ide.writeFile(rulesDirUri, fileContent);
   await extras.ide.openFile(rulesDirUri);
 
   return [
@@ -53,7 +78,7 @@ export const createRuleBlockImpl: ToolImpl = async (
         type: "file",
         value: rulesDirUri,
       },
-      content: "Rule created successfully",
+      content: `Rule created successfully in ${format} format`,
     },
   ];
 };
