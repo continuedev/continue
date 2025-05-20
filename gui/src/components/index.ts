@@ -158,7 +158,7 @@ export const GhostButton = styled.button`
 
   border: none;
   color: ${vscForeground};
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(128, 128, 128, 0.4);
   &:disabled {
     color: gray;
     pointer-events: none;
