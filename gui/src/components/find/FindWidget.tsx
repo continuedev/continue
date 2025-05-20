@@ -12,8 +12,8 @@ import {
   useState,
 } from "react";
 import { HeaderButton, Input } from "..";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useAppSelector } from "../../redux/hooks";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 interface SearchMatch {
   index: number;
@@ -64,7 +64,11 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
 
     Container must have relative positioning
 */
-export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
+export const useFindWidget = (
+  searchRef: RefObject<HTMLDivElement>,
+  headerRef: RefObject<HTMLDivElement>,
+  dependencies: React.DependencyList,
+) => {
   // Search input, debounced
   const [input, setInput] = useState<string>("");
   const debouncedInput = useRef<string>("");
@@ -159,13 +163,21 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     });
 
     resizeObserver.observe(searchRef.current);
+    if (headerRef.current) {
+      resizeObserver.observe(headerRef.current);
+    }
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      if (searchRef.current) resizeObserver.unobserve(searchRef.current);
+      if (searchRef.current) {
+        resizeObserver.unobserve(searchRef.current);
+      }
+      if (headerRef.current) {
+        resizeObserver.unobserve(headerRef.current);
+      }
     };
-  }, [searchRef.current]);
+  }, [searchRef, headerRef]);
 
   // Main function for finding matches and generating highlight overlays
   const refreshSearch = useCallback(
@@ -173,9 +185,10 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
       if (clearFirst) setMatches([]);
 
       const searchContainer = searchRef.current;
+      const header = headerRef.current;
 
       const _query = debouncedInput.current; // trimStart - decided no because spaces should be fully searchable
-      if (!searchContainer || !_query) {
+      if (!searchContainer || !_query || !header) {
         setMatches([]);
         return;
       }
@@ -232,8 +245,13 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
           range.detach();
           startIndex = endIndex;
 
+          const headerHeight = header.clientHeight;
+
           const top =
-            rect.top + searchContainer.clientTop + searchContainer.scrollTop;
+            rect.top +
+            searchContainer.clientTop +
+            searchContainer.scrollTop -
+            headerHeight;
           const left =
             rect.left + searchContainer.clientLeft + searchContainer.scrollLeft;
 
@@ -304,7 +322,15 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         }
       }
     },
-    [searchRef.current, debouncedInput, scrollToMatch, caseSensitive, useRegex],
+    [
+      headerRef.current,
+      searchRef.current,
+      debouncedInput,
+      scrollToMatch,
+      caseSensitive,
+      useRegex,
+      ...dependencies,
+    ],
   );
 
   // Triggers that should cause immediate refresh of results to closest search value:
@@ -349,8 +375,8 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
 
   useEffect(() => {
     if (active || isResizing) setMatches([]);
-    else refreshSearch("none");
-  }, [refreshSearch, active]);
+    else setTimeout(() => refreshSearch("none"), 300); // this gives plenty of time for resizing to finish
+  }, [refreshSearch, active, isResizing]);
 
   useEffect(() => {
     if (!open) setMatches([]);

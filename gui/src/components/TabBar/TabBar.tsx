@@ -1,5 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius } from "..";
@@ -143,7 +143,7 @@ const NewTabButton = styled.button`
   }
 `;
 
-export function TabBar() {
+export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
   const dispatch = useDispatch<AppDispatch>();
   const currentSession = useSelector((state: RootState) => state.session);
   const currentSessionId = useSelector((state: RootState) => state.session.id);
@@ -160,7 +160,6 @@ export function TabBar() {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
   }, []);
 
-  // Handle session changes
   useEffect(() => {
     if (!currentSessionId) return;
 
@@ -246,7 +245,7 @@ export function TabBar() {
   return tabs.length === 1 ? (
     <></>
   ) : (
-    <TabBarContainer>
+    <TabBarContainer ref={ref}>
       {tabs.map((tab) => (
         <Tab
           key={tab.id}
@@ -272,4 +271,4 @@ export function TabBar() {
       </TabBarSpace>
     </TabBarContainer>
   );
-}
+});

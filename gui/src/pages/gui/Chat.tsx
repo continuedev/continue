@@ -44,16 +44,17 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
+import { streamResponseThunk } from "../../redux/thunks";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { streamEditThunk } from "../../redux/thunks/editMode";
 import { loadLastSession } from "../../redux/thunks/session";
-import { streamResponseThunk } from "../../redux/thunks";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
 
+import AcceptRejectDiffButtons from "../../components/AcceptRejectDiffButtons";
 import CodeToEditCard from "../../components/mainInput/CodeToEditCard";
 import EditModeDetails from "../../components/mainInput/EditModeDetails";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
@@ -61,7 +62,6 @@ import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { useAutoScroll } from "./useAutoScroll";
-import AcceptRejectDiffButtons from "../../components/AcceptRejectDiffButtons";
 
 const StepsDiv = styled.div`
   position: relative;
@@ -113,6 +113,7 @@ export function Chat() {
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const history = useAppSelector((state) => state.session.history);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
@@ -152,7 +153,7 @@ export function Chat() {
     };
   }, [isStreaming, jetbrains]);
 
-  const { widget, highlights } = useFindWidget(stepsDivRef);
+  const { widget, highlights } = useFindWidget(stepsDivRef, tabsRef, [history]);
 
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
@@ -286,13 +287,12 @@ export function Chat() {
 
   return (
     <>
+      {!!showSessionTabs && mode !== "edit" && <TabBar ref={tabsRef} />}
       {widget}
-
-      {!!showSessionTabs && mode !== "edit" && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-3 overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
