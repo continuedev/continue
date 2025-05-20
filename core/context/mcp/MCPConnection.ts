@@ -13,6 +13,7 @@ import {
   MCPServerStatus,
   MCPTool,
 } from "../..";
+import { getEnvPathFromUserShell } from "../../util/shellPath";
 
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
@@ -29,17 +30,14 @@ const WINDOWS_BATCH_COMMANDS = [
 
 class MCPConnection {
   public client: Client;
-  private transport: Transport;
-
-  private connectionPromise: Promise<unknown> | null = null;
   public abortController: AbortController;
-
   public status: MCPConnectionStatus = "not-connected";
   public errors: string[] = [];
-
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
+  private transport: Transport;
+  private connectionPromise: Promise<unknown> | null = null;
 
   constructor(public options: MCPOptions) {
     this.transport = this.constructTransport(options);
@@ -61,80 +59,6 @@ class MCPConnection {
     this.abortController.abort();
     await this.client.close();
     await this.transport.close();
-  }
-
-  /**
-   * Resolves the command and arguments for the current platform
-   * On Windows, batch script commands need to be executed via cmd.exe
-   * @param originalCommand The original command
-   * @param originalArgs The original command arguments
-   * @returns An object with the resolved command and arguments
-   */
-  private resolveCommandForPlatform(
-    originalCommand: string,
-    originalArgs: string[],
-  ): { command: string; args: string[] } {
-    // If not on Windows or not a batch command, return as-is
-    if (
-      process.platform !== "win32" ||
-      !WINDOWS_BATCH_COMMANDS.includes(originalCommand)
-    ) {
-      return { command: originalCommand, args: originalArgs };
-    }
-
-    // On Windows, we need to execute batch commands via cmd.exe
-    // Format: cmd.exe /c command [args]
-    return {
-      command: "cmd.exe",
-      args: ["/c", originalCommand, ...originalArgs],
-    };
-  }
-
-  private constructTransport(options: MCPOptions): Transport {
-    switch (options.transport.type) {
-      case "stdio":
-        const env: Record<string, string> = options.transport.env
-          ? { ...options.transport.env }
-          : {};
-
-        if (process.env.PATH !== undefined) {
-          env.PATH = process.env.PATH;
-        }
-
-        // Resolve the command and args for the current platform
-        const { command, args } = this.resolveCommandForPlatform(
-          options.transport.command,
-          options.transport.args || [],
-        );
-
-        return new StdioClientTransport({
-          command,
-          args,
-          env,
-        });
-      case "websocket":
-        return new WebSocketClientTransport(new URL(options.transport.url));
-      case "sse":
-        return new SSEClientTransport(new URL(options.transport.url), {
-          eventSourceInit: {
-            fetch: (input, init) =>
-              fetch(input, {
-                ...init,
-                headers: {
-                  ...init?.headers,
-                  ...(options.transport.requestOptions?.headers as
-                    | Record<string, string>
-                    | undefined),
-                },
-              }),
-          },
-          requestInit: { headers: options.transport.requestOptions?.headers },
-        });
-      default:
-        throw new Error(
-          `Unsupported transport type: ${(options.transport as any).type}`,
-        );
-    }
   }
 
   getStatus(): MCPServerStatus {
@@ -301,6 +225,93 @@ class MCPConnection {
     ]);
 
     await this.connectionPromise;
+  }
+
+  /**
+   * Resolves the command and arguments for the current platform
+   * On Windows, batch script commands need to be executed via cmd.exe
+   * @param originalCommand The original command
+   * @param originalArgs The original command arguments
+   * @returns An object with the resolved command and arguments
+   */
+  private resolveCommandForPlatform(
+    originalCommand: string,
+    originalArgs: string[],
+  ): { command: string; args: string[] } {
+    // If not on Windows or not a batch command, return as-is
+    if (
+      process.platform !== "win32" ||
+      !WINDOWS_BATCH_COMMANDS.includes(originalCommand)
+    ) {
+      return { command: originalCommand, args: originalArgs };
+    }
+
+    // On Windows, we need to execute batch commands via cmd.exe
+    // Format: cmd.exe /c command [args]
+    return {
+      command: "cmd.exe",
+      args: ["/c", originalCommand, ...originalArgs],
+    };
+  }
+
+  private constructTransport(options: MCPOptions): Transport {
+    switch (options.transport.type) {
+      case "stdio":
+        const env: Record<string, string> = options.transport.env
+          ? { ...options.transport.env }
+          : {};
+
+        if (process.env.PATH !== undefined) {
+          // Set the initial PATH from process.env
+          env.PATH = process.env.PATH;
+
+          // For non-Windows platforms, try to get the PATH from user shell
+          if (process.platform !== "win32") {
+            try {
+              const shellEnvPath = getEnvPathFromUserShell();
+              if (shellEnvPath && shellEnvPath !== process.env.PATH) {
+                env.PATH = shellEnvPath;
+              }
+            } catch (err) {
+              console.error("Error getting PATH:", err);
+            }
+          }
+        }
+
+        // Resolve the command and args for the current platform
+        const { command, args } = this.resolveCommandForPlatform(
+          options.transport.command,
+          options.transport.args || [],
+        );
+
+        return new StdioClientTransport({
+          command,
+          args,
+          env,
+        });
+      case "websocket":
+        return new WebSocketClientTransport(new URL(options.transport.url));
+      case "sse":
+        return new SSEClientTransport(new URL(options.transport.url), {
+          eventSourceInit: {
+            fetch: (input, init) =>
+              fetch(input, {
+                ...init,
+                headers: {
+                  ...init?.headers,
+                  ...(options.transport.requestOptions?.headers as
+                    | Record<string, string>
+                    | undefined),
+                },
+              }),
+          },
+          requestInit: { headers: options.transport.requestOptions?.headers },
+        });
+      default:
+        throw new Error(
+          `Unsupported transport type: ${(options.transport as any).type}`,
+        );
+    }
   }
 }
 
