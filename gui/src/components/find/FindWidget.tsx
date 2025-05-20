@@ -101,7 +101,7 @@ export const useFindWidget = (
         behavior: "smooth",
       });
     },
-    [searchRef.current],
+    [searchRef],
   );
 
   const nextMatch = useCallback(() => {
@@ -188,7 +188,7 @@ export const useFindWidget = (
       const header = headerRef.current;
 
       const _query = debouncedInput.current; // trimStart - decided no because spaces should be fully searchable
-      if (!searchContainer || !_query || !header) {
+      if (!searchContainer || !_query) {
         setMatches([]);
         return;
       }
@@ -245,7 +245,7 @@ export const useFindWidget = (
           range.detach();
           startIndex = endIndex;
 
-          const headerHeight = header.clientHeight;
+          const headerHeight = header?.clientHeight ?? 0;
 
           const top =
             rect.top +
@@ -323,8 +323,8 @@ export const useFindWidget = (
       }
     },
     [
-      headerRef.current,
-      searchRef.current,
+      headerRef,
+      searchRef,
       debouncedInput,
       scrollToMatch,
       caseSensitive,
@@ -367,7 +367,7 @@ export const useFindWidget = (
     return () => {
       searchContainer.removeEventListener("click", handleSearchRefClick);
     };
-  }, [searchRef.current, refreshSearch, open]);
+  }, [searchRef, refreshSearch, open]);
 
   // Triggers that should cause results to temporarily disappear and then reload
   // Active = LLM is generating, etc.
