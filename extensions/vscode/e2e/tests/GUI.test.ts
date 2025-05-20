@@ -389,7 +389,7 @@ describe("GUI Test", () => {
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
       await TestUtils.waitForSuccess(() =>
-        GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
+        GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG2"),
       );
     });
   });

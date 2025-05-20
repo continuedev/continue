@@ -22,11 +22,8 @@ import { visit } from "unist-util-visit";
 */
 export function remarkTables() {
   return (tree: any) => {
-    visit(tree, "paragraph", (paragraphNode, index, parentOfParagraphNode) => {
-      let buffer = "";
-      visit(paragraphNode, "text", (textNode) => {
-        buffer += textNode.value;
-      });
+    visit(tree, "text", (node, index, parent) => {
+      const { value } = node;
 
       const tableRegex =
         /((?:\| *[^|\r\n]+ *)+\|)(?:\r?\n)((?:\|[ :]?-+[ :]?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
@@ -36,8 +33,7 @@ export function remarkTables() {
       let lastIndex = 0;
       const newNodes = [];
       let failed = false;
-
-      while ((match = tableRegex.exec(buffer)) !== null) {
+      while ((match = tableRegex.exec(value)) !== null) {
         const fullTableString = match[0];
         const headerGroup = match[1];
         const separatorGroup = match[2];
@@ -66,11 +62,6 @@ export function remarkTables() {
           const tableNode = {
             type: "table",
             align: alignments,
-            data: {
-              hProperties: {
-                class: "markdown-table",
-              },
-            },
             children: [
               {
                 type: "tableRow",
@@ -86,6 +77,7 @@ export function remarkTables() {
                   type: "tableRow",
                   data: {
                     hProperties: {
+                      class: "markdown-table",
                       key: i,
                     },
                   },
@@ -103,7 +95,7 @@ export function remarkTables() {
           if (match.index > lastIndex) {
             newNodes.push({
               type: "text",
-              value: buffer.slice(lastIndex, match.index),
+              value: value.slice(lastIndex, match.index),
             });
           }
 
@@ -125,16 +117,16 @@ export function remarkTables() {
       }
 
       // Add any remaining text after the last table
-      if (lastIndex < buffer.length) {
+      if (lastIndex < value.length) {
         newNodes.push({
           type: "text",
-          value: buffer.slice(lastIndex),
+          value: value.slice(lastIndex),
         });
       }
 
-      // Replace the original paragraph node with the new nodes
+      // Replace the original text node with the new nodes
       if (newNodes.length > 0) {
-        parentOfParagraphNode.children.splice(index, 1, ...newNodes);
+        parent.children.splice(index, 1, ...newNodes);
       }
     });
   };
