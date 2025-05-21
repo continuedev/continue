@@ -93,7 +93,7 @@ module.exports = {
         },
 
         // DEPRECATED, slowly remove usages of these ide-named or explicit colors
-        lightgray: "#999998", // use border, description, or description-muted instead
+        lightgray: "#999998", // use border, description, or description-muted instead - AVOID AVOID AVOID
         "vsc-input-background": varWithFallback("input-background"), // use "input-background" instead
         "vsc-background": varWithFallback("background"), // use "background" instead
         "vsc-foreground": varWithFallback("foreground"), // use "foreground" instead // NOTE - might want to use editor-foreground

@@ -1,17 +1,18 @@
 // All vscode variables https://gist.github.com/estruyf/ba49203e1a7d6868e9320a4ea480c27a
 // Examples for vscode https://github.com/githubocto/tailwind-vscode/blob/main/index.js
+
 export const THEME_COLORS = {
   background: {
     var: "--vscode-sideBar-background",
-    default: "#141c2d",
+    default: "#1e1e1e",
   },
   foreground: {
     var: "--vscode-sideBar-foreground", // --vscode-editor-foreground
-    default: "rgba(243, 239, 245, 0.8)",
+    default: "rgba(243, 239, 245)",
   },
   editor: {
     var: "--vscode-editor-background",
-    default: "#0e131f",
+    default: "#1e1e1e",
   },
   "editor-foreground": {
     var: "--vscode-editor-foreground",
@@ -19,7 +20,7 @@ export const THEME_COLORS = {
   },
   "primary-background": {
     var: "--vscode-button-background",
-    default: "#1bbe84",
+    default: "#1b3ebe",
   },
   "primary-foreground": {
     var: "--vscode-button-foreground",
@@ -27,7 +28,7 @@ export const THEME_COLORS = {
   },
   "primary-hover": {
     var: "--vscode-button-hoverBackground",
-    default: "#24dfe8",
+    default: "#2847ad",
   },
   secondary: {
     var: "--vscode-button-secondaryBackground",
@@ -77,7 +78,7 @@ export const THEME_COLORS = {
   },
   "input-background": {
     var: "--vscode-input-background",
-    default: "#0d1217",
+    default: "#2d2d2d",
   },
   "input-foreground": {
     var: "--vscode-input-foreground",
@@ -85,7 +86,7 @@ export const THEME_COLORS = {
   },
   "input-border": {
     var: "--vscode-input-border",
-    default: "#242d34",
+    default: "#999998",
   },
   "input-placeholder": {
     var: "--vscode-input-placeholderForeground",
@@ -101,7 +102,7 @@ export const THEME_COLORS = {
   },
   "badge-foreground": {
     var: "--vscode-badge-foreground",
-    default: "#fff",
+    default: "#ffffff",
   },
   success: {
     var: "--vscode-notebookStatusSuccessIcon-foreground", // "var(--vscode-testing-iconPassed, #1bbe84)" // --vscode-charts-green
@@ -145,61 +146,9 @@ export const THEME_COLORS = {
   },
 };
 
-// Consider defaults
-// export const vscInputBackground = `var(${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
-// export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, ${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
-// export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
-// export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
-// export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
-// export const vscButtonForeground = `var(${VSC_BUTTON_FOREGROUND_VAR}, #ffffff)`;
-// export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
-// export const vscListActiveBackground = `var(${VSC_LIST_SELECTION_BACKGROUND_VAR}, #1bbe84)`;
-// export const vscFocusBorder = `var(${VSC_FOCUS_BORDER_VAR}, #1bbe84)`;
-// export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, ${VSC_FOREGROUND_VAR})`;
-// export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
-// export const vscInputBorderFocus = `var(${VSC_FOCUS_BORDER_VAR}, ${lightGray})`;
-// export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
-// export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #ffffff)`;
-// export const vscCommandCenterActiveBorder = `var(${VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR}, #1bbe84)`;
-// export const vscCommandCenterInactiveBorder = `var(${VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR}, #1bbe84)`;
-// export const vscFindMatchSelected = `var(${VSC_FIND_MATCH_SELECTED_VAR}, rgba(255, 223, 0))`;
-
-// Fonts:
-// --vscode - editor - font - family;
-// --vscode - font - family;
-
-// Current list of CSS variables needed (e.g. for jetbrains to send!)
-// --vscode-sideBar-background
-// --vscode-sideBar-foreground
-// --vscode-editor-background
-// --vscode-editor-foreground
-// --vscode-button-background
-// --vscode-button-foreground
-// --vscode-button-secondaryBackground
-// --vscode-button-secondaryForeground
-// --vscode-sideBar-border
-// --vscode-focusBorder
-// --vscode-commandCenter-background
-// --vscode-commandCenter-foreground
-// --vscode-commandCenter-inactiveBorder
-// --vscode-commandCenter-activeBorder
-// --vscode-descriptionForeground
-// --vscode-list-deemphasizedForeground
-// --vscode-input-background
-// --vscode-input-foreground
-// --vscode-input-border
-// --vscode-input-placeholderForeground
-// --vscode-tree-tableOddRowsBackground
-// --vscode-badge-background
-// --vscode-badge-foreground
-// --vscode-notebookStatusSuccessIcon-foreground
-// --vscode-editorWarning-foreground
-// --vscode-editorError-foreground
-// --vscode-editor-findMatchBackground
-// --vscode-editor-findMatchHighlightBackground
-// --vscode-list-hoverBackground
-// --vscode-list-activeSelectionBackground
-// --vscode-list-activeSelectionForeground
+// TODO: add fonts - GUI fonts in jetbrains differ from IDE:
+// --vscode-editor-font-family;
+// --vscode-font-family;
 
 export const THEME_CSS_VARS = Object.values(THEME_COLORS).map(
   (value) => value.var,
