@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { lightGray, vscForeground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { isJetBrains } from "../../../util";
+import { extractCommand } from "../utils/commandExtractor";
 
 interface RunInTerminalButtonProps {
   command: string;
@@ -14,42 +15,6 @@ export function RunInTerminalButton({ command }: RunInTerminalButtonProps) {
   if (isJetBrains()) {
     // JetBrains plugin doesn't currently have a way to run the command in the terminal for the user
     return null;
-  }
-
-  // Extract just the command line (the line after $ or the first line)
-  function extractCommand(cmd: string): string {
-    // First handle the $ prompt case, extract the line after it
-    if (cmd.includes("$")) {
-      const match = cmd.match(/\$\s*([^\n]+)/);
-      if (match) {
-        return match[1].trim();
-      }
-    }
-
-    // Process all lines, filtering out comments and empty lines
-    const lines = cmd.split("\n")
-      .map(line => line.trim())
-      .filter(line => 
-        line && 
-        !line.startsWith("#") && 
-        !line.startsWith("//") && 
-        !line.startsWith("/*")
-      );
-
-    // Handle multi-line commands
-    let result = "";
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      result += line;
-      
-      // Add space for command continuation
-      if (line.endsWith("&&") || line.endsWith("|") || line.endsWith("\\")) {
-        result += " ";
-      } else if (i < lines.length - 1) {
-        result += " ";
-      }
-    }
-    return result.trim();
   }
 
   function runInTerminal() {
