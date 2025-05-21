@@ -1,11 +1,11 @@
+import { parseProxyModelName } from "@continuedev/config-yaml";
+
 export const PROVIDER_TOOL_SUPPORT: Record<
   string,
   (model: string) => boolean | undefined
 > = {
   "continue-proxy": (model) => {
-    // see getContinueProxyModelName
-    const provider = model.split("/")[2];
-    const _model = model.split("/")[3];
+    const { provider, model: _model } = parseProxyModelName(model);
     if (provider && _model && provider !== "continue-proxy") {
       const fn = PROVIDER_TOOL_SUPPORT[provider];
       if (fn) {
