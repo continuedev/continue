@@ -104,7 +104,7 @@ function ThemePage() {
         onClick={() => navigate(ROUTES.HOME)}
       >
         <span className="">←</span>
-        Back to Settings
+        Back to Chat
       </span>
       <h2 className="mb-2 mt-0 p-0 text-center text-xl font-semibold">
         Theme Tester
@@ -214,7 +214,7 @@ function ThemePage() {
           <span className="font-bold">CSS Var</span>
         </div>
         <div className="p-1">
-          <span className="font-bold">Fallback</span>
+          <span className="font-bold">Default</span>
         </div>
         {Object.entries(THEME_COLORS).map(([colorName, val]) => (
           <ThemeTailwindClassExample

@@ -86,7 +86,7 @@ class GetTheme {
             val inputBackground = namedColor("TextField.background")
             val inputForeground = namedColor("TextField.foreground")
             val inputPlaceholder = namedColor("TextField.inactiveForeground")
-
+            // list hover is too aggressive, primary hover is too much of a change, secondary seems useless, normal -> description -> muted doesn't grok consistently
             val listHoverBackground = namedColor("List.hoverBackground") ?: namedColor("List.dropLineColor")
             val actionHoverBackground = namedColor("ActionButton.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
 
