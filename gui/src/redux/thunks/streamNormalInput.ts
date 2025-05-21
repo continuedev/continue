@@ -1,8 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, LLMFullCompletionOptions } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
-import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -37,13 +35,13 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     let completionOptions: LLMFullCompletionOptions = {};
-    const activeTools = selectActiveTools(state);
-    const toolsSupported = modelSupportsTools(selectedChatModel);
-    if (toolsSupported && activeTools.length > 0) {
-      completionOptions = {
-        tools: activeTools,
-      };
-    }
+    // const activeTools = selectActiveTools(state);
+    // const toolsSupported = modelSupportsTools(selectedChatModel);
+    // if (toolsSupported && activeTools.length > 0) {
+    //   completionOptions = {
+    //     tools: activeTools,
+    //   };
+    // }
 
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(

@@ -6,6 +6,7 @@ import { getApplicableRules } from "core/llm/rules/getSystemMessageWithRules";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
 import { getBaseSystemMessage } from "../../util";
+import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   setAppliedRulesAtIndex,
@@ -110,10 +111,13 @@ export const streamResponseThunk = createAsyncThunk<
           }),
         );
 
-        const messageMode = getState().session.mode;
+        const newState = getState();
+        const messageMode = newState.session.mode;
+        const activeTools = selectActiveTools(newState);
         const baseChatOrAgentSystemMessage = getBaseSystemMessage(
           selectedChatModel,
           messageMode,
+          activeTools,
         );
 
         const messages = constructMessages(

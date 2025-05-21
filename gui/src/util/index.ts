@@ -1,9 +1,13 @@
-import { MessageModes, ModelDescription } from "core";
+import { MessageModes, ModelDescription, Tool } from "core";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
+import {
+  DEFAULT_AGENT_SYSTEM_MESSAGE,
+  DEFAULT_CHAT_SYSTEM_MESSAGE,
+} from "core/llm/constructMessages";
 import _ from "lodash";
 import { KeyboardEvent } from "react";
 import { getLocalStorage } from "./localStorage";
-import { DEFAULT_CHAT_SYSTEM_MESSAGE, DEFAULT_AGENT_SYSTEM_MESSAGE } from "core/llm/constructMessages";
+import { generateNonNativeToolSystemMessage } from "./non-native-tools";
 
 export type Platform = "mac" | "linux" | "windows" | "unknown";
 
@@ -120,12 +124,23 @@ export function isLocalProfile(profile: ProfileDescription): boolean {
 /**
  * Get the base system message for the agent or chat mode from the model description.
  */
-export function getBaseSystemMessage(modelDetails: ModelDescription | null, mode: MessageModes) {
-  let baseChatOrAgentSystemMessage: string|undefined
-  if(mode === 'agent') {
-    baseChatOrAgentSystemMessage = modelDetails?.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
+export function getBaseSystemMessage(
+  modelDetails: ModelDescription | null,
+  mode: MessageModes,
+  tools: Tool[],
+) {
+  let baseChatOrAgentSystemMessage: string | undefined;
+  if (mode === "agent") {
+    baseChatOrAgentSystemMessage =
+      modelDetails?.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
+    if (tools.length > 0) {
+      const toolsSystemMessage = generateNonNativeToolSystemMessage(tools);
+      baseChatOrAgentSystemMessage += `\n\n${toolsSystemMessage}`;
+    }
   } else {
-    baseChatOrAgentSystemMessage = modelDetails?.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
+    baseChatOrAgentSystemMessage =
+      modelDetails?.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
   }
-  return baseChatOrAgentSystemMessage
+
+  return baseChatOrAgentSystemMessage;
 }
