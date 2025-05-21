@@ -27,10 +27,9 @@ Basic authentication can be done with any provider using the `apiKey` field:
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Ollama
-      provider: ollama
-      model: llama2-7b
-      apiKey: <YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>
+    - uses: ollama/deepseek-r1-8b
+      override:
+        apiKey: <YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -57,12 +56,11 @@ If you need to send custom headers for authentication, you may use the `requestO
     <TabItem value="yaml" label="YAML">
     ```yaml title="config.yaml"
     models:
-      - name: Ollama
-        provider: ollama
-        model: llama2-7b
-        requestOptions:
-          headers:
-            X-Auth-Token: xxx
+      - uses: ollama/deepseek-r1-8b
+        override:
+          requestOptions:
+            headers:
+              X-Auth-Token: xxx
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
@@ -91,14 +89,13 @@ Similarly if your model requires a Certificate for authentication, you may use t
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Ollama
-      provider: ollama
-      model: llama2-7b
-      requestOptions:
-        clientCertificate:
-          cert: C:\tempollama.pem
-          key: C:\tempollama.key
-          passphrase: c0nt!nu3
+    - uses: ollama/deepseek-r1-8b
+      override:
+        requestOptions:
+          clientCertificate:
+            cert: C:\tempollama.pem
+            key: C:\tempollama.key
+            passphrase: c0nt!nu3
   ```
   </TabItem>
   <TabItem value="json" label="JSON">

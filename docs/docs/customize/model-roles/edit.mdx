@@ -17,12 +17,12 @@ In Continue, you can add `edit` to a model's roles to specify that it can be use
   Use model roles.
   ```yaml title="config.yaml"
   models:
-    - name: Claude 3.5 Sonnet
-      provider: anthropic
-      model: claude-3-5-sonnet-latest
-      apiKey: <YOUR_ANTHROPIC_API_KEY>
-      roles:
-        - edit
+    - uses: anthropic/claude-3-7-sonnet
+      with:
+        ANTHROPIC_API_KEY: <YOUR_ANTHROPIC_API_KEY>
+      override:
+        roles:
+          - edit
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -65,18 +65,17 @@ Example:
 
 ```yaml
 models:
-  - name: My Custom Edit Template
-    provider: openai
-    model: gpt-4o
-    promptTemplates:
-      edit: |
-        `Here is the code before editing:
-        \`\`\`{{{language}}}
-        {{{codeToEdit}}}
-        \`\`\`
+  - uses: openai/gpt-4o
+    override:
+      promptTemplates:
+        edit: |
+          `Here is the code before editing:
+          \`\`\`{{{language}}}
+          {{{codeToEdit}}}
+          \`\`\`
 
-        Here is the edit requested:
-        "{{{userInput}}}"
+          Here is the edit requested:
+          "{{{userInput}}}"
 
-        Here is the code after editing:`
+          Here is the code after editing:`
 ```
