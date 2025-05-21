@@ -842,6 +842,7 @@ export interface SlashCommand {
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
+  promptFile?: string
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
@@ -1193,6 +1194,7 @@ export interface ContinueUIConfig {
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
   showSessionTabs?: boolean;
+  autoAcceptEditToolDiffs?: boolean;
 }
 
 export interface ContextMenuConfig {
