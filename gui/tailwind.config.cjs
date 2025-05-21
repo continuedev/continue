@@ -33,7 +33,7 @@ module.exports = {
         background: varWithFallback("background"),
         foreground: varWithFallback("foreground"),
         editor: {
-          DEFAULT: varWithFallback("editor"),
+          DEFAULT: varWithFallback("editor-background"),
           foreground: varWithFallback("editor-foreground"),
         },
         primary: {
@@ -42,7 +42,7 @@ module.exports = {
           hover: varWithFallback("primary-hover"),
         },
         secondary: {
-          DEFAULT: varWithFallback("secondary"),
+          DEFAULT: varWithFallback("secondary-background"),
           foreground: varWithFallback("secondary-foreground"),
           hover: varWithFallback("secondary-hover"),
         },
@@ -51,7 +51,7 @@ module.exports = {
           focus: varWithFallback("border-focus"),
         },
         command: {
-          DEFAULT: varWithFallback("command"),
+          DEFAULT: varWithFallback("command-background"),
           foreground: varWithFallback("command-foreground"),
           border: {
             DEFAULT: varWithFallback("command-border"),
@@ -72,7 +72,7 @@ module.exports = {
           oddRow: varWithFallback("table-oddRow"),
         },
         badge: {
-          DEFAULT: varWithFallback("badge"),
+          DEFAULT: varWithFallback("badge-background"),
           foreground: varWithFallback("badge-foreground"),
         },
         success: varWithFallback("success"),
@@ -97,7 +97,7 @@ module.exports = {
         "vsc-input-background": varWithFallback("input-background"), // use "input-background" instead
         "vsc-background": varWithFallback("background"), // use "background" instead
         "vsc-foreground": varWithFallback("foreground"), // use "foreground" instead // NOTE - might want to use editor-foreground
-        "vsc-editor-background": varWithFallback("editor"), // use "editor" instead
+        "vsc-editor-background": varWithFallback("editor-background"), // use "editor" instead
         "vsc-input-border": varWithFallback("input-border"), // use "input-border" instead
       },
     },

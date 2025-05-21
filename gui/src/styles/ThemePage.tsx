@@ -3,18 +3,27 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { THEME_COLORS } from "./theme";
+import { Button } from "../components";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { isJetBrains } from "../util";
+import {
+  clearThemeLocalCache,
+  setDocumentStylesFromTheme,
+  THEME_COLORS,
+} from "./theme";
 
 const ThemeTailwindClassExample = ({
   className,
   varName,
   defaultColor,
+  isMissing,
 }: {
   className: string;
   varName: string;
   defaultColor: string;
+  isMissing?: boolean;
 }) => {
   return (
     <>
@@ -22,7 +31,7 @@ const ThemeTailwindClassExample = ({
         {className}
       </div>
       <div
-        className={`line-clamp-1 break-all p-1 text-[9px]`}
+        className={`line-clamp-1 break-all p-1 text-[9px] ${isMissing ? "text-error" : ""}`}
         style={{
           backgroundColor: `var(${varName})`,
         }}
@@ -44,6 +53,37 @@ const ThemeTailwindClassExample = ({
 function ThemePage() {
   const navigate = useNavigate();
   const [listToggled, setListToggled] = useState(false);
+  const ideMessenger = useContext(IdeMessengerContext);
+  const jetbrains = useMemo(() => {
+    return isJetBrains();
+  }, []);
+
+  const refreshJetbrainsColors = () => {
+    ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
+      console.log(result);
+      if (result.status === "success") {
+        setDocumentStylesFromTheme(result.content);
+      }
+    });
+  };
+
+  const [missingVars, setMissingVars] = useState<string[]>([]);
+  const checkMissingClasses = () => {
+    const missingVars: string[] = [];
+    Object.entries(THEME_COLORS).forEach(([colorName, themeVals]) => {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(
+        themeVals.var,
+      );
+      if (!value) {
+        missingVars.push(`${colorName}`); //: ${themeVals.var}`);
+      }
+    });
+    setMissingVars(missingVars);
+  };
+  useEffect(() => {
+    checkMissingClasses();
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col gap-3 px-2 py-2">
       <span
@@ -110,6 +150,38 @@ function ThemePage() {
           <span>Editor</span>
         </div>
       </div>
+      <div className="flex flex-col gap-2">
+        <h2 className="mb-2 mt-6 text-xl font-semibold">
+          Missing Theme Variables
+        </h2>
+        {missingVars.length > 0 ? (
+          <div className="flex flex-col gap-1">
+            {missingVars.map((varName) => (
+              <div key={varName} className="text-error">
+                {varName}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-success">No missing variables</div>
+        )}
+        <Button onClick={checkMissingClasses}>
+          Re-check Missing Theme Vars
+        </Button>
+      </div>
+      {jetbrains ? (
+        <>
+          <h2 className="mb-2 mt-6 text-xl font-semibold">
+            Manage Jetbrains Theme
+          </h2>
+          <div className="flex flex-col flex-wrap gap-2">
+            <Button onClick={refreshJetbrainsColors}>
+              Refresh Jetbrains Theme
+            </Button>
+            <Button onClick={clearThemeLocalCache}>Clear Theme Cache</Button>
+          </div>
+        </>
+      ) : null}
       <h2 className="mb-2 mt-6 text-xl font-semibold">All Theme Colors</h2>
       <div className="grid grid-cols-3">
         <div className="p-1">
@@ -121,10 +193,11 @@ function ThemePage() {
         <div className="p-1">
           <span className="font-bold">Fallback</span>
         </div>
-        {Object.entries(THEME_COLORS).map(([key, val]) => (
+        {Object.entries(THEME_COLORS).map(([colorName, val]) => (
           <ThemeTailwindClassExample
-            key={key}
-            className={key}
+            isMissing={missingVars.includes(colorName)}
+            key={colorName}
+            className={colorName}
             defaultColor={val.default}
             varName={val.var}
           />

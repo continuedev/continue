@@ -38,64 +38,117 @@ class GetTheme {
         return globalScheme.getColor(EditorColors.MODIFIED_TAB_ICON_COLOR) ?: globalScheme.defaultForeground
     }
 
-    fun getTheme(): Map<String, String> {
-        fun toHex(color: Color): String {
-            return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+    fun toHex(color: Color?): String? {
+        if(color == null) {
+            return null
         }
+        return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+    }
+
+    fun namedColor(name: String): Color? {
+        // JB Color named color will fall back to a default unless we give it a fallback
+        // We want defaults to be handled on the GUI side, so we give it this filler color
+        // Which has a very low chance of conflicting with a real one
+        // And return undefined if it gets the skip color
+        val SKIP_COLOR = Color (18, 52, 86) // Hex #123456
+        val color = JBColor.namedColor(name, SKIP_COLOR)
+        if(toHex(color) == "#123456") {
+            return null
+        }
+        return color
+    }
+
+    fun getTheme(): Map<String, String?> {
         try {
+            // IDE colors
             val background = JBColor.background()
             val foreground = JBColor.foreground()
 
-            val buttonBackground = JBColor.namedColor("Button.background", Color(230, 230, 230))
-            val buttonForeground = JBColor.namedColor("Button.foreground", Color(0, 0, 0))
-
-            val badgeBackground = JBColor.namedColor("Badge.background", Color(150, 150, 150))
-            val badgeForeground = JBColor.namedColor("Badge.foreground", Color(0, 0, 0))
-
-            val inputBackground = JBColor.namedColor("TextField.background", Color(255, 255, 255))
-
             val border = JBColor.border()
-            val focusBorder = JBColor.namedColor("Focus.borderColor", Color(100, 100, 255))
+            val focusBorder = namedColor("Focus.borderColor") ?: namedColor("Component.focusedBorderColor")
+
+            val buttonBackground = namedColor("Button.background")
+            val buttonForeground = namedColor("Button.foreground")
+            val buttonHoverBackground = namedColor("Button.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
+
+            val badgeBackground = namedColor("Badge.background")
+            val badgeForeground = namedColor("Badge.foreground")
+
+            val commandBackground = namedColor("CommandButton.background") ?: namedColor("ToolWindow.background")
+            val commandForeground = namedColor("CommandButton.foreground") ?: namedColor("ToolWindow.foreground")
+
+            val inputBackground = namedColor("TextField.background")
+            val inputForeground = namedColor("TextField.foreground")
+            val inputPlaceholder = namedColor("TextField.inactiveForeground")
+
+            val listHoverBackground = namedColor("List.hoverBackground") ?: namedColor("List.dropLineColor")
+            val actionHoverBackground = namedColor("ActionButton.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
+            val hoverBackground = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor") ?: namedColor("List.dropLineColor")
+            val listSelectionForeground = namedColor("List.selectionForeground")
+
+
+            val description = namedColor("Label.infoForeground") ?: namedColor("ToolTip.foreground")
+            val mutedDescription = namedColor("Label.disabledForeground")
+
+            val link = namedColor("Link.activeForeground")
+
+            val successColor = namedColor("Notification.Success.background") ?: namedColor("ProgressBar.progressColor")
+            val warningColor = namedColor("Notification.Warning.background") ?: namedColor("ProgressBar.warningColor")
+            val errorColor = namedColor("ErrorBackground") ?: namedColor("Notification.Error.background") ?: namedColor("ProgressBar.errorColor")
+            val accentColor = namedColor("Focus.defaultButtonBorderColor") ?: namedColor("Button.default.focusedBorderColor") ?: namedColor("Button.focusedBorderColor")
+
+            // Editor colors
             val editorScheme = EditorColorsManager.getInstance().globalScheme
 
             val editorBackground = editorScheme.defaultBackground
             val editorForeground = editorScheme.defaultForeground
 
-            val actionHoverBackground = JBColor.namedColor("ActionButton.hoverBackground", Color(220, 220, 220))
+            val findMatchBackground = editorScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)?.backgroundColor
 
-            val findMatchBackground = editorScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)?.backgroundColor ?: Color(255, 221, 0)
-
+            val findMatchSelectedBackground = namedColor("SearchMatch.selectedBackground") ?:
+            editorScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)?.backgroundColor
+            
+            // These should match the keys in GUI's theme.ts
             val theme = mapOf(
-                "--vscode-editor-foreground" to toHex(editorForeground),
-                "--vscode-editor-background" to toHex(editorBackground),
-
-                "--vscode-button-background" to toHex(buttonBackground),
-                "--vscode-button-foreground" to toHex(buttonForeground),
-
-                "--vscode-list-activeSelectionBackground" to toHex(actionHoverBackground) + "50",
-
-                "--vscode-quickInputList-focusForeground" to toHex(foreground),
-                "--vscode-quickInput-background" to toHex(inputBackground),
-
-                "--vscode-badge-background" to toHex(badgeBackground),
-                "--vscode-badge-foreground" to toHex(badgeForeground),
-
-                "--vscode-input-background" to toHex(inputBackground),
-                "--vscode-input-border" to toHex(border),
-                "--vscode-sideBar-background" to toHex(background),
-                "--vscode-sideBar-border" to toHex(border),
-                "--vscode-focusBorder" to toHex(focusBorder),
-
-                "--vscode-commandCenter-activeBorder" to toHex(focusBorder),
-                "--vscode-commandCenter-inactiveBorder" to toHex(border),
-
-                "--vscode-editor-findMatchHighlightBackground" to toHex(findMatchBackground) + "40"
+                "background" to toHex(background),
+                "foreground" to toHex(foreground),
+                "editor-background" to toHex(editorBackground),
+                "editor-foreground" to toHex(editorForeground),
+                "primary-background" to toHex(buttonBackground),
+                "primary-foreground" to toHex(buttonForeground),
+                "primary-hover" to toHex(buttonHoverBackground),
+                "secondary-background" to toHex(getSecondaryDark()),
+                "secondary-foreground" to toHex(foreground),
+                "secondary-hover" to toHex(hoverBackground),
+                "border" to toHex(border),
+                "border-focus" to toHex(focusBorder),
+                "command-background" to toHex(commandBackground),
+                "command-foreground" to toHex(commandForeground),
+                "command-border" to toHex(border), // make command specific
+                "command-border-focus" to toHex(focusBorder), // make command specific
+                "description" to toHex(description),
+                "description-muted" to toHex(mutedDescription),
+                "input-background" to toHex(inputBackground),
+                "input-foreground" to toHex(inputForeground),
+                "input-border" to toHex(border),
+                "input-placeholder" to toHex(inputPlaceholder),
+                "table-oddRow" to toHex(hoverBackground),
+                "badge-background" to toHex(badgeBackground),
+                "badge-foreground" to toHex(badgeForeground),
+                "success" to toHex(successColor),
+                "warning" to toHex(warningColor),
+                "error" to toHex(errorColor),
+                "link" to toHex(link),
+                "accent" to toHex(accentColor),
+                "find-match" to toHex(findMatchBackground) + "40",
+                "find-match-selected" to toHex(findMatchSelectedBackground),
+                "list-hover" to toHex(listHoverBackground),
+                "list-active" to toHex(actionHoverBackground) + "50",
+                "list-active-foreground" to toHex(listSelectionForeground)
             )
-
             return theme
         } catch (error: Error) {
             return mapOf()
         }
-
     }
 }

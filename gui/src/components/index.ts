@@ -12,7 +12,7 @@ export const vscBackground = varWithFallback("background");
 export const vscForeground = varWithFallback("foreground");
 export const vscButtonBackground = varWithFallback("primary-background");
 export const vscButtonForeground = varWithFallback("primary-foreground");
-export const vscEditorBackground = varWithFallback("editor");
+export const vscEditorBackground = varWithFallback("editor-background");
 export const vscListActiveBackground = varWithFallback("list-active");
 export const vscFocusBorder = varWithFallback("border-focus");
 export const vscListActiveForeground = varWithFallback(
@@ -20,7 +20,7 @@ export const vscListActiveForeground = varWithFallback(
 );
 export const vscInputBorder = varWithFallback("input-border");
 export const vscInputBorderFocus = varWithFallback("border-focus");
-export const vscBadgeBackground = varWithFallback("badge");
+export const vscBadgeBackground = varWithFallback("badge-background");
 export const vscBadgeForeground = varWithFallback("badge-foreground");
 export const vscCommandCenterActiveBorder = varWithFallback(
   "command-border-focus",

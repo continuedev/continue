@@ -28,7 +28,10 @@ import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
-import { THEME_COLORS } from "../styles/theme";
+import {
+  setDocumentStylesFromLocalStorage,
+  setDocumentStylesFromTheme,
+} from "../styles/theme";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -139,34 +142,13 @@ function ParallelListeners() {
     dispatch(cancelStream());
 
     const jetbrains = isJetBrains();
-    for (const [colorName, themeVals] of Object.entries(THEME_COLORS)) {
-      const cssVarName = themeVals.var;
-      if (jetbrains) {
-        const cached = localStorage.getItem(colorName);
-        if (cached) {
-          document.body.style.setProperty(cssVarName, cached);
-        }
-      }
-
-      // Remove alpha channel from colors
-      const value = getComputedStyle(document.documentElement).getPropertyValue(
-        cssVarName,
-      );
-      if (value.startsWith("#") && value.length > 7) {
-        document.body.style.setProperty(cssVarName, value.slice(0, 7));
-      }
-    }
+    setDocumentStylesFromLocalStorage(jetbrains);
 
     if (jetbrains) {
       // Save theme colors to local storage for immediate loading in JetBrains
       ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
         if (result.status === "success") {
-          Object.entries(result.content).forEach(([colorName, value]) => {
-            const cssVarName =
-              THEME_COLORS[colorName as keyof typeof THEME_COLORS]?.var;
-            document.body.style.setProperty(cssVarName, value);
-            document.documentElement.style.setProperty(cssVarName, value);
-          });
+          setDocumentStylesFromTheme(result.content);
         }
       });
 
@@ -183,24 +165,13 @@ function ParallelListeners() {
         (window as any).vscMachineId = msg.vscMachineId;
         (window as any).vscMediaUrl = msg.vscMediaUrl;
       });
-
-      for (const [colorName, themeVals] of Object.entries(THEME_COLORS)) {
-        const currentVal = document.body.style.getPropertyValue(themeVals.var);
-        if (currentVal) {
-          localStorage.setItem(colorName, currentVal);
-        }
-      }
     }
   }, []);
 
   useWebviewListener(
     "jetbrains/setColors",
     async (data) => {
-      Object.entries(data).forEach(([key, value]) => {
-        const cssVarName = THEME_COLORS[key as keyof typeof THEME_COLORS]?.var;
-        document.body.style.setProperty(cssVarName, value);
-        document.documentElement.style.setProperty(cssVarName, value);
-      });
+      setDocumentStylesFromTheme(data);
     },
     [],
   );
