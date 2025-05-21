@@ -4,7 +4,7 @@ import { readAllGlobalPromptFiles } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
 import { DEFAULT_PROMPTS_FOLDER_V1 } from "../v1";
 
-export const DEFAULT_PROMPTS_FOLDER_V2 = ".continue/prompts";
+export const DEFAULT_PROMPTS_FOLDER_V2 = ".sasva/prompts";
 export async function getPromptFilesFromDir(
   ide: IDE,
   dir: string,

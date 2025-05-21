@@ -75,7 +75,7 @@ export async function createNewWorkspaceBlockFile(
     );
   }
 
-  const baseDirUri = joinPathsToUri(workspaceDirs[0], `.continue/${blockType}`);
+  const baseDirUri = joinPathsToUri(workspaceDirs[0], `.sasva/${blockType}`);
 
   // Find the first available filename
   let counter = 0;
