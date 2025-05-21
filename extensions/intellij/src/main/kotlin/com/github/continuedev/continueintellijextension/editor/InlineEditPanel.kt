@@ -478,13 +478,17 @@ class CustomPanel(
             val leftButton =
                 CustomButton("Reject All (${getMetaKeyLabel()}${getShiftKeyLabel()}⌫)") { onReject() }
                     .apply {
-                        background = JBColor(0x30FF0000, 0x30FF0000)
+                        foreground = JBColor(0xFFFFFF, 0xFFFFFF)
+                        background = JBColor(0xFF0000, 0xFF0000)
+
+
                     }
 
             val rightButton =
                 CustomButton("Accept All (${getMetaKeyLabel()}${getShiftKeyLabel()}⏎)") { onAccept() }
                     .apply {
-                        background = JBColor(0x3000FF00, 0x3000FF00)
+                        foreground = JBColor(0xFFFFFF, 0xFFFFFF)
+                        background = JBColor(0x00BB00, 0x00BB00)
                     }
 
             val rightPanel =
