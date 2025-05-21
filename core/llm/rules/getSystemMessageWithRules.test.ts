@@ -25,6 +25,14 @@ describe("getSystemMessageWithRules", () => {
     source: "rules-block",
   };
 
+  // JavaScript rule
+  const jsRule: RuleWithSource = {
+    name: "JavaScript Rule",
+    rule: "Follow JavaScript best practices",
+    globs: "**/*.js",
+    source: "rules-block",
+  };
+
   it("should not include pattern-matched rules when no file paths are mentioned", () => {
     const result = getSystemMessageWithRules({
       baseSystemMessage,
@@ -197,5 +205,62 @@ describe("getSystemMessageWithRules", () => {
 
     // Should not match any file paths
     expect(result).toBe(baseSystemMessage);
+  });
+
+  // New test for code block with filename only (no language)
+  it("should handle code blocks with filename only (no language identifier)", () => {
+    const userMessage: UserChatMessage = {
+      role: "user",
+      content: "```test.js\nclass Calculator { /* code */ }\n```",
+    };
+
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage,
+      rules: [jsRule, tsRule, generalRule],
+    });
+
+    // Should include JS rule and general rule
+    const expected = `${baseSystemMessage}\n\n${jsRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  // New test for code blocks with line ranges
+  it("should handle code blocks with line ranges", () => {
+    const userMessage: UserChatMessage = {
+      role: "user",
+      content: "```js test.js (19-25)\ndivide(number) { /* code */ }\n```",
+    };
+
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage,
+      rules: [jsRule, tsRule, generalRule],
+    });
+
+    // Should include JS rule and general rule
+    const expected = `${baseSystemMessage}\n\n${jsRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  // New test for mixed code block formats
+  it("should handle mixed code block formats in the same message", () => {
+    const userMessage: UserChatMessage = {
+      role: "user",
+      content:
+        "```test.js\nclass Calculator { /* code */ }\n```\n" +
+        "```js utils.js (19-25)\ndivide(number) { /* code */ }\n```\n" +
+        "```ts config/settings.ts\nconst config = {};\n```",
+    };
+
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage,
+      rules: [jsRule, tsRule, generalRule],
+    });
+
+    // Should include JS rule, TS rule, and general rule
+    const expected = `${baseSystemMessage}\n\n${jsRule.rule}\n\n${tsRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
   });
 });
