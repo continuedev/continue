@@ -41,26 +41,29 @@ function diffPatternMatches(
 type DiffPartType = "+" | "-" | "=";
 
 export function processSingleLineCompletion(
-    lastLineOfCompletionText: string,
+    completionText: string,
     currentText: string,
-    cursorPosition: number
+    cursorPosition: number,
+    mayChangeRange: boolean
 ): SingleLineCompletionResult | undefined {
-    const diffs: DiffType[] = Diff.diffWords(currentText, lastLineOfCompletionText);
+    const diffs: DiffType[] = Diff.diffWords(currentText, completionText);
 
     if (diffPatternMatches(diffs, ["+"])) {
         // Just insert, we're already at the end of the line
         return {
-            completionText: lastLineOfCompletionText,
+            completionText,
         };
     }
 
     if (
-        diffPatternMatches(diffs, ["+", "="]) ||
+        mayChangeRange &&
         diffPatternMatches(diffs, ["+", "=", "+"])
     ) {
-        // The model repeated the text after the cursor to the end of the line
+        // The model inserted something after the cursor and something at the
+        // end of the line; if we can change the range, we can replace the entire
+        // rest of the line.
         return {
-            completionText: lastLineOfCompletionText,
+            completionText,
             range: {
                 start: cursorPosition,
                 end: currentText.length + cursorPosition,
@@ -74,7 +77,7 @@ export function processSingleLineCompletion(
     ) {
         // We are midline and the model just inserted without repeating to the end of the line
         return {
-            completionText: lastLineOfCompletionText,
+            completionText,
         };
     }
 
@@ -87,6 +90,6 @@ export function processSingleLineCompletion(
 
     // Default case: treat as simple insertion
     return {
-        completionText: lastLineOfCompletionText,
+        completionText,
     };
 }

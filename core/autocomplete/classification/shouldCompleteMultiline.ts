@@ -23,11 +23,6 @@ export function shouldCompleteMultiline(helper: HelperVars) {
       break;
   }
 
-  // Always single-line if an intellisense option is selected
-  if (helper.input.selectedCompletionInfo) {
-    return true;
-  }
-
   // // Don't complete multi-line if you are mid-line
   // if (isMidlineCompletion(helper.fullPrefix, helper.fullSuffix)) {
   //   return false;
