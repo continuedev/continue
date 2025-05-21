@@ -8,35 +8,39 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { isJetBrains } from "../util";
+import { ROUTES } from "../util/navigation";
 import {
   clearThemeLocalCache,
   setDocumentStylesFromTheme,
   THEME_COLORS,
+  varWithFallback,
 } from "./theme";
 
 const ThemeTailwindClassExample = ({
-  className,
-  varName,
+  colorName,
+  varNames,
   defaultColor,
   isMissing,
 }: {
-  className: string;
-  varName: string;
+  colorName: string;
+  varNames: string[];
   defaultColor: string;
   isMissing?: boolean;
 }) => {
   return (
     <>
       <div className={`line-clamp-1 break-all px-2 text-right`}>
-        {className}
+        {colorName}
       </div>
       <div
         className={`line-clamp-1 break-all p-1 text-[9px] ${isMissing ? "text-error" : ""}`}
         style={{
-          backgroundColor: `var(${varName})`,
+          backgroundColor: varWithFallback(
+            colorName as keyof typeof THEME_COLORS,
+          ),
         }}
       >
-        {varName}
+        {varNames.join(", ")}
       </div>
       <div
         className={`line-clamp-1 break-all p-1 text-[9px]`}
@@ -71,11 +75,17 @@ function ThemePage() {
   const checkMissingClasses = () => {
     const missingVars: string[] = [];
     Object.entries(THEME_COLORS).forEach(([colorName, themeVals]) => {
-      const value = getComputedStyle(document.documentElement).getPropertyValue(
-        themeVals.var,
-      );
-      if (!value) {
-        missingVars.push(`${colorName}`); //: ${themeVals.var}`);
+      let found = false;
+      themeVals.vars.forEach((cssVar) => {
+        const value = getComputedStyle(
+          document.documentElement,
+        ).getPropertyValue(cssVar);
+        if (value) {
+          found = true;
+        }
+      });
+      if (!found) {
+        missingVars.push(colorName);
       }
     });
     setMissingVars(missingVars);
@@ -88,7 +98,7 @@ function ThemePage() {
     <div className="flex flex-1 flex-col gap-3 px-2 py-2">
       <span
         className="flex cursor-pointer flex-row items-center gap-2"
-        onClick={() => navigate("/more")}
+        onClick={() => navigate(ROUTES.HOME)}
       >
         <span className="">←</span>
         Back to Settings
@@ -117,7 +127,7 @@ function ThemePage() {
         </div>
 
         <input
-          className="bg-input text-input-foreground border-input-border focus:border-border-focus active:border-border-focus active:ring-border-focus placeholder:text-input-placeholder focus:bg-input-focus focus:text-input-focus-foreground rounded-md border border-solid p-2 focus:ring-0"
+          className="bg-input text-input-foreground border-input-border placeholder:text-input-placeholder focus:border-border-focus rounded-md border border-solid p-2 focus:outline-none"
           placeholder="Input example"
         />
 
@@ -125,29 +135,48 @@ function ThemePage() {
           <span className="px-2">Badge</span>
         </div>
 
-        <div className="flex gap-3">
-          <div className="flex items-center gap-2">
-            <CheckCircleIcon className="text-success h-4 w-4" />
-            <span className="text-success">Success</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExclamationCircleIcon className="text-warning h-4 w-4" />
-            <span className="text-warning">Warning</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExclamationTriangleIcon className="text-error h-4 w-4" />
-            <span className="text-error">Error</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <CheckCircleIcon className="text-success h-4 w-4" />
+          <span className="text-success">Success</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <ExclamationCircleIcon className="text-warning h-4 w-4" />
+          <span className="text-warning">Warning</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <ExclamationTriangleIcon className="text-error h-4 w-4" />
+          <span className="text-error">Error</span>
         </div>
 
         <div
           onClick={() => setListToggled(!listToggled)}
           className={`cursor-pointer p-2 ${listToggled ? "bg-list-active text-list-active-foreground" : "bg-background text-foreground hover:bg-list-hover"}`}
         >
-          List item (click to select)
+          List item (clickable)
         </div>
         <div className="bg-editor text-editor-foreground border-border rounded-sm border border-solid p-2">
           <span>Editor</span>
+        </div>
+        <table>
+          <tbody>
+            <tr>
+              <td className="border-border border-b border-solid p-2">
+                <span>even table row</span>
+              </td>
+            </tr>
+            <tr className="bg-table-oddRow">
+              <td className="border-border border-b border-solid p-2">
+                <span>odd table row</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div>
+          <span className="text-link">Link</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="bg-findMatch">find match</span>
+          <span className="bg-findMatch-selected">current match</span>
         </div>
       </div>
       <div className="flex flex-col gap-2">
@@ -197,9 +226,9 @@ function ThemePage() {
           <ThemeTailwindClassExample
             isMissing={missingVars.includes(colorName)}
             key={colorName}
-            className={colorName}
+            colorName={colorName}
             defaultColor={val.default}
-            varName={val.var}
+            varNames={val.vars}
           />
         ))}
       </div>

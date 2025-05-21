@@ -22,8 +22,8 @@ const tabBackgroundVar = varWithFallback("background"); // --vscode-tab-inactive
 const tabForegroundVar = varWithFallback("foreground"); // --vscode-tab-inactiveForeground
 const tabHoverBackgroundVar = varWithFallback("list-hover"); // --vscode-tab-hoverBackground
 const tabHoverForegroundVar = varWithFallback("foreground"); // --vscode-tab-hoverForeground
-const tabSelectedBackgroundVar = varWithFallback("list-hover"); // --vscode-tab-activeBackground
-const tabSelectedForegroundVar = varWithFallback("list-active-foreground"); // --vscode-tab-activeForeground
+const tabSelectedBackgroundVar = varWithFallback("background"); // --vscode-tab-activeBackground
+const tabSelectedForegroundVar = varWithFallback("foreground"); // --vscode-tab-activeForeground
 const tabAccentVar = varWithFallback("accent"); // --vscode-tab-activeBorderTop
 
 const TabBarContainer = styled.div`
