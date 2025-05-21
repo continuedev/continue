@@ -102,8 +102,8 @@ class GetTheme {
                 ?: EditorColorsManager.getInstance().globalScheme.getAttributes(CodeInsightColors.WARNINGS_ATTRIBUTES)?.effectColor
                 ?: namedColor("Component.warningForeground")
                 ?: namedColor("Label.warningForeground")
-
             val errorColor = namedColor("ValidationError.errorColor") ?: namedColor("Component.errorForeground") ?: namedColor("Label.errorForeground")
+
             val accentColor = namedColor("Focus.defaultButtonBorderColor") ?: namedColor("Button.default.focusedBorderColor") ?: namedColor("Button.focusedBorderColor")
 
             val editorBackground = editorScheme.defaultBackground

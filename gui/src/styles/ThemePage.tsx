@@ -62,36 +62,39 @@ function ThemePage() {
     return isJetBrains();
   }, []);
 
-  const refreshJetbrainsColors = () => {
-    ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
-      console.log(result);
-      if (result.status === "success") {
-        setDocumentStylesFromTheme(result.content);
-      }
-    });
+  const [missingVars, setMissingVars] = useState<string[]>([]);
+  const refreshColors = () => {
+    if (jetbrains) {
+      // Jetbrains: get colors and check which ones are missing from theme
+      void ideMessenger
+        .request("jetbrains/getColors", undefined)
+        .then((result) => {
+          console.log(result);
+          if (result.status === "success") {
+            const missingColors = setDocumentStylesFromTheme(result.content);
+            setMissingVars(missingColors);
+          }
+        });
+    } else {
+      // VS Code: find actual missing CSS variables
+      const notFound: string[] = [];
+      Object.entries(THEME_COLORS).forEach(([colorName, themeVals], idx) => {
+        let found = false;
+        themeVals.vars.forEach((cssVar) => {
+          const value = getComputedStyle(
+            document.documentElement,
+          ).getPropertyValue(cssVar);
+          if (!value) {
+            notFound.push(`cssVar (choice #${idx + 1} for color ${colorName}`);
+          }
+        });
+      });
+      setMissingVars(notFound);
+    }
   };
 
-  const [missingVars, setMissingVars] = useState<string[]>([]);
-  const checkMissingClasses = () => {
-    const missingVars: string[] = [];
-    Object.entries(THEME_COLORS).forEach(([colorName, themeVals]) => {
-      let found = false;
-      themeVals.vars.forEach((cssVar) => {
-        const value = getComputedStyle(
-          document.documentElement,
-        ).getPropertyValue(cssVar);
-        if (value) {
-          found = true;
-        }
-      });
-      if (!found) {
-        missingVars.push(colorName);
-      }
-    });
-    setMissingVars(missingVars);
-  };
   useEffect(() => {
-    checkMissingClasses();
+    refreshColors();
   }, []);
 
   return (
@@ -185,37 +188,22 @@ function ThemePage() {
           <div className="bg-accent h-3 w-3" />
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
-          Missing Theme Variables
-        </h2>
-        {missingVars.length > 0 ? (
-          <div className="flex flex-col gap-1">
-            {missingVars.map((varName) => (
-              <div key={varName} className="text-error">
-                {varName}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-success">No missing variables</div>
-        )}
-        <Button onClick={checkMissingClasses}>
-          Re-check Missing Theme Vars
-        </Button>
-      </div>
+      <h2 className="mb-2 mt-6 text-xl font-semibold">Manage Theme</h2>
+      <h2 className="mb-2 text-lg font-semibold">Missing Theme Colors</h2>
+      {missingVars.length > 0 ? (
+        <div className="flex flex-col gap-1">
+          {missingVars.map((varName) => (
+            <div key={varName} className="">
+              {varName}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="">No missing variables</div>
+      )}
+      <Button onClick={refreshColors}>Refresh Missing Colors</Button>
       {jetbrains ? (
-        <>
-          <h2 className="mb-2 mt-6 text-xl font-semibold">
-            Manage Jetbrains Theme
-          </h2>
-          <div className="flex flex-col flex-wrap gap-2">
-            <Button onClick={refreshJetbrainsColors}>
-              Refresh Jetbrains Theme
-            </Button>
-            <Button onClick={clearThemeLocalCache}>Clear Theme Cache</Button>
-          </div>
-        </>
+        <Button onClick={clearThemeLocalCache}>Clear Theme Cache</Button>
       ) : null}
       <h2 className="mb-2 mt-6 text-xl font-semibold">All Theme Colors</h2>
       <div className="grid grid-cols-3">

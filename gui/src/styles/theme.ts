@@ -117,15 +117,23 @@ export const THEME_COLORS = {
     default: "#ffffff", // white
   },
   success: {
-    vars: ["--vscode-notebookStatusSuccessIcon-foreground"], // "var(--vscode-testing-iconPassed, #1bbe84)" // --vscode-charts-green
+    vars: [
+      "--vscode-notebookStatusSuccessIcon-foreground",
+      "--vscode-testing-iconPassed",
+      "--vscode-gitDecoration-addedResourceForeground",
+      "--vscode-charts-green",
+    ],
     default: "#4caf50", // green
   },
   warning: {
-    vars: ["--vscode-editorWarning-foreground"], // --vscode-list-warningForeground
+    vars: [
+      "--vscode-editorWarning-foreground",
+      "--vscode-list-warningForeground",
+    ],
     default: "#ffb74d", // amber/yellow
   },
   error: {
-    vars: ["--vscode-editorError-foreground"], // --vscode-list-errorForeground
+    vars: ["--vscode-editorError-foreground", "--vscode-list-errorForeground"],
     default: "#f44336", // red
   },
   link: {
@@ -187,7 +195,7 @@ export const THEME_DEFAULTS = Object.entries(THEME_COLORS).reduce(
 // Generates recursive CSS variable fallback for a given color name
 // e.g. var(--vscode-button-background, var(--vscode-button-foreground, #ffffff))
 export const getRecursiveVar = (vars: string[], defaultColor: string) => {
-  return vars.reverse().reduce((curr, varName) => {
+  return [...vars].reverse().reduce((curr, varName) => {
     return `var(${varName}, ${curr})`;
   }, defaultColor);
 };
@@ -203,44 +211,43 @@ export const varWithFallback = (colorName: keyof typeof THEME_COLORS) => {
 export const setDocumentStylesFromTheme = (
   theme: Record<string, string | undefined | null>,
 ) => {
-  // Check for missing theme items
-  const themeKeys = Object.keys(THEME_COLORS);
-  const missingKeys = themeKeys.filter(
-    (key) => !Object.keys(theme).includes(key),
-  );
-  if (missingKeys.length > 0) {
-    console.warn(
-      `Missing theme keys: ${missingKeys.join(", ")}. Please check theme`,
-    );
-  }
-  // Write each theme color to the document
+  // Check for extraneous theme items
   Object.entries(theme).forEach(([colorName, value]) => {
-    if (value) {
-      const themeVals = THEME_COLORS[colorName as keyof typeof THEME_COLORS];
-      if (!themeVals) {
-        console.warn(
-          `Receieved theme color ${colorName} which is not used by the theme`,
-        );
-        return;
-      }
-
-      // Remove alpha channel from all hex colors (seems to cause bad colors)
-      let colorVal = value;
-      if (colorVal.startsWith("#") && value.length > 7) {
-        colorVal = colorVal.slice(0, 7);
-      }
-
-      localStorage.setItem(colorName, colorVal);
-      for (const cssVar of themeVals.vars) {
-        document.body.style.setProperty(cssVar, colorVal);
-        document.documentElement.style.setProperty(cssVar, colorVal);
-      }
-    } else {
+    const themeVals = THEME_COLORS[colorName as keyof typeof THEME_COLORS];
+    if (!themeVals) {
       console.warn(
-        `Theme color ${colorName} is undefined or null. Please check theme. Falling back to defaults.`,
+        `Receieved theme color ${colorName} which is not used by the theme`,
       );
+      return;
     }
   });
+
+  // Write theme values to document
+  const missingColors: string[] = [];
+  Object.entries(THEME_COLORS).forEach(([colorName, settings]) => {
+    let colorVal = settings.default;
+    const newColor = theme[colorName];
+    if (newColor) {
+      colorVal = newColor;
+      // Remove alpha channel from all hex colors (seems to cause bad colors)
+      if (newColor.startsWith("#") && newColor.length > 7) {
+        colorVal = colorVal.slice(0, 7);
+      }
+    } else {
+      missingColors.push(colorName);
+      // console.warn(
+      //   `Missing theme color: ${colorName}. Falling back to default ${colorVal}`,
+      // );
+    }
+
+    localStorage.setItem(colorName, colorVal);
+    for (const cssVar of settings.vars) {
+      document.body.style.setProperty(cssVar, colorVal);
+      document.documentElement.style.setProperty(cssVar, colorVal);
+    }
+  });
+
+  return missingColors;
 };
 
 export const setDocumentStylesFromLocalStorage = (checkCache: boolean) => {
