@@ -155,6 +155,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("pixtral-12b-2409")).toBe(true);
       expect(supportsFn("pixtral-large-latest")).toBe(true);
       expect(supportsFn("open-mistral-nemo")).toBe(true);
+      expect(supportsFn("devstral-latest")).toBe(true);
     });
 
     it("should return false for other unsupported models", () => {
@@ -170,6 +171,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("CODESTRAL-LATEST")).toBe(true);
       expect(supportsFn("MINISTRAL-8B-LATEST")).toBe(true);
       expect(supportsFn("PIXTRAL-12B-2409")).toBe(true);
+      expect(supportsFn("DEVSTRAL-LATEST")).toBe(true);
     });
   });
 
@@ -192,6 +194,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("aya-expanse")).toBe(true);
       expect(supportsFn("firefunction-v2")).toBe(true);
       expect(supportsFn("mistral-7b")).toBe(true);
+      expect(supportsFn("devstral-24b")).toBe(true);
     });
 
     it("should return false for explicitly unsupported models", () => {
