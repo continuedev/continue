@@ -251,3 +251,7 @@ data class AcceptOrRejectDiffPayload(
     val filepath: String,
     val streamId: String? = null
 )
+
+data class ShowFilePayload(
+    val filepath: String
+)
