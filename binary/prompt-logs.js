@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const logDirPath = path.join(__dirname, '..', 'extensions', '.continue-debug', 'logs');
+const logDirPath = path.join(__dirname, '..', 'extensions', '.sasva-debug', 'logs');
 const logFilePath = path.join(logDirPath, "prompt.log");
 
 // Ensure the log directory exists

@@ -130,7 +130,7 @@ class OpenConfigAction : AnAction() {
 class OpenLogsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val logFile = java.io.File(System.getProperty("user.home") + "/.continue/logs/core.log")
+        val logFile = java.io.File(System.getProperty("user.home") + "/.sasva/logs/core.log")
         if (logFile.exists()) {
             val virtualFile = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByIoFile(logFile)
             if (virtualFile != null) {

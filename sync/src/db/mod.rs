@@ -57,7 +57,7 @@ pub fn text_to_embedding(text: String) -> Result<Vec<f32>, &'static str> {
 fn get_conn() -> Connection {
     let path = dirs::home_dir()
         .unwrap()
-        .join(".continue")
+        .join(".sasva")
         .join("index")
         .join("sync.db");
     fs::create_dir_all(path.parent().unwrap()).unwrap();

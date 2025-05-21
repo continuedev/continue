@@ -141,13 +141,13 @@ continue_server.dist
 Icon
 Icon?
 
-.continuerc.json
+.sasvarc.json
 .aider*
 
 notes.md
 
 manual-testing-sandbox/.idea/**
-manual-testing-sandbox/.continue/**
+manual-testing-sandbox/.sasva/**
 extensions/intellij/.idea/**
 
 **/.idea/workspace.xml
@@ -158,13 +158,13 @@ extensions/intellij/.idea/**
 
 
 extensions/intellij/bin
-extensions/.continue-debug/
+extensions/.sasva-debug/
 
 *.vsix
 
 # intellij module library files
 *.iml
 
-.continuerules
-**/.continue/assistants/
+.sasvarules
+**/.sasva/assistants/
 keys

@@ -12,7 +12,10 @@ export class DownloadYamlExtensionCodeLensProvider
     document: vscode.TextDocument,
     _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    if (!document.uri.fsPath.includes(".continue")) {
+    if (
+      !document.uri.fsPath.includes(".sasva") ||
+      !document.uri.fsPath.endsWith("config.yaml")
+    ) {
       return [];
     }
     if (this.yamlExtensionDownloaded()) {

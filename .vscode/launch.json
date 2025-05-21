@@ -21,8 +21,8 @@
       "preLaunchTask": "vscode-extension:build",
       "env": {
         // "CONTROL_PLANE_ENV": "local",
-        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
-        // "staging" for the preview deployment	        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.sasva-debug"
+        // "staging" for the preview deployment	        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.sasva-debug"
         // "local" for entirely local development of control plane/proxy
       }
     },
@@ -40,7 +40,7 @@
       "env": {
         // "CONTROL_PLANE_ENV": "test",
         "CONTINUE_DEVELOPMENT": "true",
-        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.sasva-debug"
       }
     },
     {

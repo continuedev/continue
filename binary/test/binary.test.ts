@@ -50,7 +50,7 @@ function autodetectPlatformAndArch() {
   return [platform, arch];
 }
 
-const CONTINUE_GLOBAL_DIR = path.join(__dirname, "..", ".continue");
+const CONTINUE_GLOBAL_DIR = path.join(__dirname, "..", ".sasva");
 if (fs.existsSync(CONTINUE_GLOBAL_DIR)) {
   fs.rmSync(CONTINUE_GLOBAL_DIR, { recursive: true, force: true });
 }
@@ -156,7 +156,7 @@ describe("Test Suite", () => {
     expect(resp).toBe("pong");
   });
 
-  it("should create .continue directory at the specified location with expected files", async () => {
+  it("should create .sasva directory at the specified location with expected files", async () => {
     expect(fs.existsSync(CONTINUE_GLOBAL_DIR)).toBe(true);
 
     // Many of the files are only created when trying to load the config

@@ -26,6 +26,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.*
 import java.io.*
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Paths
 import javax.swing.*
 import com.intellij.openapi.components.service
@@ -85,6 +86,23 @@ private fun getTutorialFileName(): String {
 class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
     override fun runActivity(project: Project) {
+        // Ensure .sasva directory exists before anything else
+        try {
+            val sasvaPath = Paths.get(System.getProperty("user.home"), ".sasva")
+            if (!Files.exists(sasvaPath)) {
+                Files.createDirectories(sasvaPath)
+                // Create necessary subdirectories
+                Files.createDirectories(sasvaPath.resolve("logs"))
+                Files.createDirectories(sasvaPath.resolve(".diffs"))
+                Files.createDirectories(sasvaPath.resolve("sessions"))
+                Files.createDirectories(sasvaPath.resolve(".configs"))
+            }
+        } catch (e: Exception) {
+            // Log the error but don't throw - we want to continue initialization
+            println("Failed to create .sasva directory: ${e.message}")
+            e.printStackTrace()
+        }
+
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("I"))

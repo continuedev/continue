@@ -15,7 +15,7 @@ The output of the sync_results function is a list of 4 lists of tuples. Each tup
 
 The labels help us filter when retrieving results from an index like Meilisearch or Chroma. All ids of the items in these indices are the hash of the file contents (possibly plus a chunk index at the end).
 
-The first time, a Merkle tree of the codebase folder is constructed, ignoring any files in .gitignore or .continueignore. Every file found will be returned as needing to be computed added to the index.
+The first time, a Merkle tree of the codebase folder is constructed, ignoring any files in .gitignore or .sasvaignore. Every file found will be returned as needing to be computed added to the index.
 
 Thereafter, the following steps are performed:
 
@@ -35,14 +35,14 @@ Thereafter, the following steps are performed:
 
 ### Files created
 
-Several files are stored and updated on disk in the ~/.continue/index folder to keep track of indexed files:
+Several files are stored and updated on disk in the ~/.sasva/index folder to keep track of indexed files:
 
-- `~/.continue/index/tags/<dir>/<branch>/<provider_id>/merkle_tree` - the last computed Merkle tree of the codebase for a given tag
-- `~/.continue/index/tags/<dir>/<branch>/<provider_id>/.last_sync` - the last time the tag was synced
+- `~/.sasva/index/tags/<dir>/<branch>/<provider_id>/merkle_tree` - the last computed Merkle tree of the codebase for a given tag
+- `~/.sasva/index/tags/<dir>/<branch>/<provider_id>/.last_sync` - the last time the tag was synced
 - The index cache contains a list of hashes that have already been computed both in general and per tag. These are always kept in sync.
-  - `~/.continue/index/.index_cache` - contains the global cache (flat file of hashes)
-  - `~/.continue/index/tags/<dir>/<branch>/<provider_id>/.index_cache` - contains the tag-specific cache (flat file of hashes)
-  - `~/.continue/index/rev_tags` - contains a mapping from hash to tags that the hash is currently indexed for. This is a directory of files, where each file is prefixed with the first 2 characters of the hash. The file is a JSON mapping from hash to list of tags.
+  - `~/.sasva/index/.index_cache` - contains the global cache (flat file of hashes)
+  - `~/.sasva/index/tags/<dir>/<branch>/<provider_id>/.index_cache` - contains the tag-specific cache (flat file of hashes)
+  - `~/.sasva/index/rev_tags` - contains a mapping from hash to tags that the hash is currently indexed for. This is a directory of files, where each file is prefixed with the first 2 characters of the hash. The file is a JSON mapping from hash to list of tags.
 
 ### Files
 

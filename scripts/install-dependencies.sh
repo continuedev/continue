@@ -67,6 +67,11 @@ npm install
 npm run build
 popd
 
+echo "Building IntelliJ plugin..."
+pushd extensions/intellij
+./gradlew buildPlugin
+popd
+
 echo "Installing docs dependencies..."
 pushd docs
 npm install

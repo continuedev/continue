@@ -44,14 +44,14 @@ fn remove_seps_from_path(dir: &Path) -> String {
 
 fn path_for_tag(tag: &Tag) -> PathBuf {
     let mut path = get_my_home().unwrap().unwrap();
-    path.push(".continue/index/tags");
+    path.push(".sasva/index/tags");
     path.push(remove_seps_from_path(tag.dir));
     path.push(tag.branch);
     path.push(tag.provider_id);
     return path;
 }
 
-/// Stored in ~/.continue/index/.last_sync
+/// Stored in ~/.sasva/index/.last_sync
 fn get_last_sync_time(tag: &Tag) -> u64 {
     // TODO: Error handle here
     let path = path_for_tag(tag).join(".last_sync");
@@ -209,7 +209,7 @@ impl<'a> IndexCache<'a> {
 
     fn provider_dir(provider_id: &str) -> PathBuf {
         let mut path = get_my_home().unwrap().unwrap();
-        path.push(".continue/index/providers");
+        path.push(".sasva/index/providers");
         path.push(provider_id);
         return path;
     }

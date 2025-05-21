@@ -203,7 +203,7 @@ export function History() {
         <i
           className=""
           data-testid="history-sessions-note"
-        >{`Data is saved in ${platform === "windows" ? "%USERPROFILE%/.continue" : "~/.continue/sessions"}`}</i>
+        >{`Data is saved in ${platform === "windows" ? "%USERPROFILE%/.sasva" : "~/.sasva/sessions"}`}</i>
         <span
           className="cursor-pointer text-xs text-gray-400 hover:underline"
           onClick={showClearSessionsDialog}

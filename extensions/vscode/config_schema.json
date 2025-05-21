@@ -3431,7 +3431,7 @@
             },
             "useChromiumForDocsCrawling": {
               "type": "boolean",
-              "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`.",
+              "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.sasva/.utils`.",
               "default": false
             },
             "modelContextProtocolServers": {
