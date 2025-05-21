@@ -88,6 +88,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     return (
       !model.toLowerCase().includes("mamba") &&
       [
+        "devstral",
         "codestral",
         "mistral-large",
         "mistral-small",
@@ -136,6 +137,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
         "aya-expanse",
         "firefunction-v2",
         "mistral",
+        "devstral",
       ].some((part) => modelName.toLowerCase().includes(part))
     ) {
       return true;
