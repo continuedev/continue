@@ -221,16 +221,6 @@ export function UserSettingsForm() {
               text="Enable Indexing"
             />
 
-            <ToggleSwitch
-              isToggled={useCurrentFileAsContext}
-              onToggle={() =>
-                handleUpdate({
-                  useCurrentFileAsContext: !useCurrentFileAsContext,
-                })
-              }
-              text="Add Current File by Default"
-            />
-
             {/* <ToggleSwitch
                     isToggled={useAutocompleteCache}
                     onToggle={() =>
@@ -348,7 +338,7 @@ export function UserSettingsForm() {
             </form>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-x-2 gap-y-4">
             <div
               className="flex cursor-pointer items-center gap-2 text-left text-sm font-semibold"
               onClick={() => setShowExperimental(!showExperimental)}
@@ -365,7 +355,7 @@ export function UserSettingsForm() {
                 showExperimental ? "max-h-40" : "max-h-0"
               }`}
             >
-              <div className="flex flex-col gap-1 pl-6">
+              <div className="flex flex-col gap-x-1 gap-y-4 pl-6">
                 <ToggleSwitch
                   isToggled={autoAcceptEditToolDiffs}
                   onToggle={() =>
@@ -385,6 +375,16 @@ export function UserSettingsForm() {
                       </ToolTip>
                     </>
                   }
+                />
+
+                <ToggleSwitch
+                  isToggled={useCurrentFileAsContext}
+                  onToggle={() =>
+                    handleUpdate({
+                      useCurrentFileAsContext: !useCurrentFileAsContext,
+                    })
+                  }
+                  text="Add Current File by Default"
                 />
               </div>
             </div>
