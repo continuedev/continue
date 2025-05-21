@@ -8,6 +8,7 @@ import {
   MessageContent,
   RangeInFileWithContents,
   AcceptOrRejectDiffPayload,
+  ShowFilePayload,
 } from "../";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
@@ -23,7 +24,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   ];
   overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
-  showFile: [{ filepath: string }, void];
+  showFile: [ShowFilePayload, void];
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
   focusEditor: [undefined, void];
