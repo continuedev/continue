@@ -58,7 +58,7 @@ const EDIT_MESSAGE = `\
   at the beginning, middle, or end of files using these "lazy" comments. Only
   provide the complete file when explicitly requested. Include a concise explanation
   of changes unless the user specifically asks for code only.
-`
+`;
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
@@ -92,7 +92,8 @@ export function constructMessages(
     const historyItem = filteredHistory[i];
 
     if (messageMode === "chat") {
-      const toolMessage: ToolResultChatMessage = historyItem.message as ToolResultChatMessage;
+      const toolMessage: ToolResultChatMessage =
+        historyItem.message as ToolResultChatMessage;
       if (historyItem.toolCallState?.toolCallId || toolMessage.toolCallId) {
         // remove all tool calls from the history
         continue;
@@ -127,10 +128,33 @@ export function constructMessages(
     | ToolResultChatMessage
     | undefined;
 
+  // Find the context items for the last user message
+  let lastUserContextItems;
+  if (lastUserMsg) {
+    const lastUserMsgIndex = msgs.findIndex((msg) => {
+      if (msg.role !== "user" && msg.role !== "tool") return false;
+      if ("id" in msg && "id" in lastUserMsg) {
+        return msg.id === lastUserMsg.id;
+      }
+      return msg === lastUserMsg;
+    });
+
+    if (lastUserMsgIndex !== -1) {
+      const historyIndex = filteredHistory.findIndex(
+        (item) => item.message === msgs[lastUserMsgIndex],
+      );
+
+      if (historyIndex !== -1) {
+        lastUserContextItems = filteredHistory[historyIndex].contextItems;
+      }
+    }
+  }
+
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatOrAgentSystemMessage,
     rules,
     userMessage: lastUserMsg,
+    contextItems: lastUserContextItems,
   });
 
   if (systemMessage.trim()) {

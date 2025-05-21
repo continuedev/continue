@@ -1,5 +1,10 @@
 import { minimatch } from "minimatch";
-import { RuleWithSource, ToolResultChatMessage, UserChatMessage } from "../..";
+import {
+  ContextItemWithId,
+  RuleWithSource,
+  ToolResultChatMessage,
+  UserChatMessage,
+} from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
 
@@ -24,21 +29,32 @@ const matchesGlobs = (
 };
 
 /**
- * Filters rules that apply to the given message
+ * Filters rules that apply to the given message and/or context items
  */
 export const getApplicableRules = (
   userMessage: UserChatMessage | ToolResultChatMessage | undefined,
   rules: RuleWithSource[],
+  contextItems?: ContextItemWithId[],
 ): RuleWithSource[] => {
   const filePathsFromMessage = userMessage
     ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
     : [];
 
+  // Extract file paths from context items
+  const filePathsFromContextItems = contextItems
+    ? contextItems
+        .filter((item) => item.uri?.type === "file" && item.uri?.value)
+        .map((item) => item.uri!.value)
+    : [];
+
+  // Combine file paths from both sources
+  const allFilePaths = [...filePathsFromMessage, ...filePathsFromContextItems];
+
   return rules.filter((rule) => {
     // A rule is active if it has no globs (applies to all files)
     // or if at least one file path matches its globs
     const hasNoGlobs = !rule.globs;
-    const matchesAnyFilePath = filePathsFromMessage.some((path) =>
+    const matchesAnyFilePath = allFilePaths.some((path) =>
       matchesGlobs(path, rule.globs),
     );
 
@@ -50,12 +66,14 @@ export const getSystemMessageWithRules = ({
   baseSystemMessage,
   userMessage,
   rules,
+  contextItems,
 }: {
   baseSystemMessage?: string;
   userMessage: UserChatMessage | ToolResultChatMessage | undefined;
   rules: RuleWithSource[];
+  contextItems?: ContextItemWithId[];
 }) => {
-  const applicableRules = getApplicableRules(userMessage, rules);
+  const applicableRules = getApplicableRules(userMessage, rules, contextItems);
   let systemMessage = baseSystemMessage ?? "";
 
   for (const rule of applicableRules) {
