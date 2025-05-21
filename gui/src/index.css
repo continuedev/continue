@@ -25,7 +25,6 @@ body,
 #root {
   height: 100%;
   line-height: 1.3;
-  /* background-color: var(--vscode-sideBar-background); */
   font-family:
     system-ui,
     -apple-system,
@@ -42,7 +41,6 @@ body,
 
 body {
   padding: 0;
-  /* color: var(--vscode-sideBar-foreground); */
   padding: 0px;
   margin: 0px;
   height: 100%;
