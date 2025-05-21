@@ -302,7 +302,7 @@ function pruneRawPromptFromTop(
   Goal: reconcile chat messages with available context length
   Guidelines:
     - Always keep last user message, system message, and tools
-    - Never allow tool output without the corresponding tool call 
+    - Never allow tool output without the corresponding tool call
     - Remove older messages first
 */
 function compileChatMessages({
@@ -397,9 +397,9 @@ function compileChatMessages({
   // Make sure there's enough context for the non-excludable items
   if (inputTokensAvailable < 0) {
     throw new Error(
-      `Your request has gone over the default context length of ${contextLength} for this model.
-If the actual context length of this model is greater than ${contextLength}, you can update the context length in your model configuration by setting the "defaultCompletionOptions.contextLength" property.
-See the docs for more info: https://docs.continue.dev/reference#models
+      `Your request exceeds the maximum token limit of ${contextLength} for this model.
+If the model supports a higher limit, you can update the "defaultCompletionOptions.contextLength" in your model configuration.
+Learn more: https://docs.continue.dev/reference#models
 
 Request details:
 - contextLength: ${contextLength}
