@@ -84,8 +84,8 @@ ${EDIT_MESSAGE}
 function getUserContextItems(
   userMsg: UserChatMessage | ToolResultChatMessage | undefined,
   history: ChatHistoryItem[],
-): ContextItemWithId[] | undefined {
-  if (!userMsg) return undefined;
+): ContextItemWithId[] {
+  if (!userMsg) return [];
 
   // Find the history item that contains the userMsg
   const historyItem = history.find((item) => {
@@ -100,7 +100,7 @@ function getUserContextItems(
     );
   });
 
-  return historyItem?.contextItems;
+  return historyItem?.contextItems || [];
 }
 
 export function constructMessages(
