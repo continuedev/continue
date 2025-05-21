@@ -146,7 +146,7 @@ export function Option({
                 <StyledExclamationTriangleIcon
                   data-tooltip-id={`${idx}-errors-tooltip`}
                   $hovered={hovered}
-                  className="cursor-pointer text-red-500"
+                  className="text-error cursor-pointer"
                   onClick={onClickError}
                 />
                 <ToolTip id={`${idx}-errors-tooltip`}>

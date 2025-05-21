@@ -1,5 +1,4 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
-import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
@@ -29,6 +28,7 @@ import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
+import { THEME_COLORS } from "../styles/theme";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -139,20 +139,21 @@ function ParallelListeners() {
     dispatch(cancelStream());
 
     const jetbrains = isJetBrains();
-    for (const colorVar of VSC_THEME_COLOR_VARS) {
+    for (const [colorName, themeVals] of Object.entries(THEME_COLORS)) {
+      const cssVarName = themeVals.var;
       if (jetbrains) {
-        const cached = localStorage.getItem(colorVar);
+        const cached = localStorage.getItem(colorName);
         if (cached) {
-          document.body.style.setProperty(colorVar, cached);
+          document.body.style.setProperty(cssVarName, cached);
         }
       }
 
       // Remove alpha channel from colors
       const value = getComputedStyle(document.documentElement).getPropertyValue(
-        colorVar,
+        cssVarName,
       );
-      if (colorVar.startsWith("#") && value.length > 7) {
-        document.body.style.setProperty(colorVar, value.slice(0, 7));
+      if (value.startsWith("#") && value.length > 7) {
+        document.body.style.setProperty(cssVarName, value.slice(0, 7));
       }
     }
 
@@ -160,9 +161,11 @@ function ParallelListeners() {
       // Save theme colors to local storage for immediate loading in JetBrains
       ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
         if (result.status === "success") {
-          Object.entries(result.content).forEach(([key, value]) => {
-            document.body.style.setProperty(key, value);
-            document.documentElement.style.setProperty(key, value);
+          Object.entries(result.content).forEach(([colorName, value]) => {
+            const cssVarName =
+              THEME_COLORS[colorName as keyof typeof THEME_COLORS]?.var;
+            document.body.style.setProperty(cssVarName, value);
+            document.documentElement.style.setProperty(cssVarName, value);
           });
         }
       });
@@ -181,12 +184,10 @@ function ParallelListeners() {
         (window as any).vscMediaUrl = msg.vscMediaUrl;
       });
 
-      for (const colorVar of VSC_THEME_COLOR_VARS) {
-        if (document.body.style.getPropertyValue(colorVar)) {
-          localStorage.setItem(
-            colorVar,
-            document.body.style.getPropertyValue(colorVar),
-          );
+      for (const [colorName, themeVals] of Object.entries(THEME_COLORS)) {
+        const currentVal = document.body.style.getPropertyValue(themeVals.var);
+        if (currentVal) {
+          localStorage.setItem(colorName, currentVal);
         }
       }
     }
@@ -196,8 +197,9 @@ function ParallelListeners() {
     "jetbrains/setColors",
     async (data) => {
       Object.entries(data).forEach(([key, value]) => {
-        document.body.style.setProperty(key, value);
-        document.documentElement.style.setProperty(key, value);
+        const cssVarName = THEME_COLORS[key as keyof typeof THEME_COLORS]?.var;
+        document.body.style.setProperty(cssVarName, value);
+        document.documentElement.style.setProperty(cssVarName, value);
       });
     },
     [],
