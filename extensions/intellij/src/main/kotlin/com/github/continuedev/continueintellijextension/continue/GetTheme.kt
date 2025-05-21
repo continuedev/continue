@@ -73,6 +73,10 @@ class GetTheme {
             val buttonBackground = namedColor("Button.background")
             val buttonForeground = namedColor("Button.foreground")
             val buttonHoverBackground = namedColor("Button.hoverBackground") ?: buttonBackground?.brighter()
+
+            val secondaryBackground = getSecondaryDark()
+            val secondaryHover = secondaryBackground.brighter()
+
             val badgeBackground = namedColor("Badge.background")
             val badgeForeground = namedColor("Badge.foreground")
 
@@ -85,8 +89,8 @@ class GetTheme {
 
             val listHoverBackground = namedColor("List.hoverBackground") ?: namedColor("List.dropLineColor")
             val actionHoverBackground = namedColor("ActionButton.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
-            val hoverBackground = namedColor("List.dropLineColor")
-            val tableOddRow = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor")  ?: hoverBackground
+
+            val tableOddRow = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor") 
             val listSelectionForeground = namedColor("List.selectionForeground")
 
 
@@ -123,9 +127,9 @@ class GetTheme {
                 "primary-background" to buttonBackground,
                 "primary-foreground" to buttonForeground,
                 "primary-hover" to buttonHoverBackground,
-                "secondary-background" to getSecondaryDark(),
+                "secondary-background" to secondaryBackground,
                 "secondary-foreground" to foreground,
-                "secondary-hover" to hoverBackground,
+                "secondary-hover" to secondaryHover,
                 "border" to border,
                 "border-focus" to focusBorder,
                 "command-background" to commandBackground,
