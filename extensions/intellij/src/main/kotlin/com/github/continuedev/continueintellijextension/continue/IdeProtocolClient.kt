@@ -502,7 +502,7 @@ class IdeProtocolClient(
 
     fun sendHighlightedCode(edit: Boolean = false) {
         val editor = EditorUtils.getEditor(project)
-        val rif = editor?.getHighlightedCode() ?: return
+        val rif = editor?.getHighlightedRIF() ?: return
 
         continuePluginService.sendToWebview(
             "highlightedCode",

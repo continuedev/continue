@@ -337,6 +337,5 @@ class DiffStreamHandler(
     private fun setClosed() {
         sendUpdate(ApplyStateStatus.CLOSED)
         resetState()
-        onClose()
     }
 }
