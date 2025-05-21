@@ -103,7 +103,9 @@ function ThemePage() {
         <span className="">←</span>
         Back to Settings
       </span>
-
+      <h2 className="mb-2 mt-0 p-0 text-center text-xl font-semibold">
+        Theme Tester
+      </h2>
       <div className="bg-background border-border grid grid-cols-1 gap-4 rounded-md border border-solid p-4 md:grid-cols-2">
         <div className="col-span-2 flex gap-4">
           <p className="">Normal text</p>
@@ -178,6 +180,10 @@ function ThemePage() {
           <span className="bg-findMatch">find match</span>
           <span className="bg-findMatch-selected">current match</span>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="">Accent</span>
+          <div className="bg-accent h-3 w-3" />
+        </div>
       </div>
       <div className="flex flex-col gap-2">
         <h2 className="mb-2 mt-6 text-xl font-semibold">
@@ -214,7 +220,7 @@ function ThemePage() {
       <h2 className="mb-2 mt-6 text-xl font-semibold">All Theme Colors</h2>
       <div className="grid grid-cols-3">
         <div className="p-1">
-          <span className="font-bold">Tailwind Class</span>
+          <span className="font-bold">Theme Color</span>
         </div>
         <div className="p-1">
           <span className="font-bold">CSS Var</span>

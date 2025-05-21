@@ -41,7 +41,7 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
   const { isCurrent, top, left, width, height } = props;
   return (
     <div
-      className={isCurrent ? "bg-findMatch-selected" : "bg-findMatch"}
+      className={isCurrent ? "bg-findMatch-selected/50" : "bg-findMatch/50"}
       key={`highlight-${top}-${left}`}
       style={{
         position: "absolute",

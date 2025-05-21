@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 
 import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.colors.CodeInsightColors
 import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
@@ -60,6 +61,8 @@ class GetTheme {
 
     fun getTheme(): Map<String, String?> {
         try {
+            val editorScheme = EditorColorsManager.getInstance().globalScheme
+
             // IDE colors
             val background = JBColor.background()
             val foreground = JBColor.foreground()
@@ -69,8 +72,7 @@ class GetTheme {
 
             val buttonBackground = namedColor("Button.background")
             val buttonForeground = namedColor("Button.foreground")
-            val buttonHoverBackground = namedColor("Button.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
-
+            val buttonHoverBackground = namedColor("Button.hoverBackground") ?: buttonBackground?.brighter()
             val badgeBackground = namedColor("Badge.background")
             val badgeForeground = namedColor("Badge.foreground")
 
@@ -83,7 +85,8 @@ class GetTheme {
 
             val listHoverBackground = namedColor("List.hoverBackground") ?: namedColor("List.dropLineColor")
             val actionHoverBackground = namedColor("ActionButton.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
-            val hoverBackground = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor") ?: namedColor("List.dropLineColor")
+            val hoverBackground = namedColor("List.dropLineColor")
+            val tableOddRow = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor")  ?: hoverBackground
             val listSelectionForeground = namedColor("List.selectionForeground")
 
 
@@ -92,13 +95,16 @@ class GetTheme {
 
             val link = namedColor("Link.activeForeground")
 
-            val successColor = namedColor("Notification.Success.background") ?: namedColor("ProgressBar.progressColor")
-            val warningColor = namedColor("Notification.Warning.background") ?: namedColor("ProgressBar.warningColor")
-            val errorColor = namedColor("ErrorBackground") ?: namedColor("Notification.Error.background") ?: namedColor("ProgressBar.errorColor")
-            val accentColor = namedColor("Focus.defaultButtonBorderColor") ?: namedColor("Button.default.focusedBorderColor") ?: namedColor("Button.focusedBorderColor")
+            val successColor = namedColor("ValidationSuccess.successColor")
+                ?: namedColor("Component.successForeground")
+                ?: namedColor("Label.successForeground")
+            val warningColor = namedColor("ValidationWarning.warningColor")
+                ?: EditorColorsManager.getInstance().globalScheme.getAttributes(CodeInsightColors.WARNINGS_ATTRIBUTES)?.effectColor
+                ?: namedColor("Component.warningForeground")
+                ?: namedColor("Label.warningForeground")
 
-            // Editor colors
-            val editorScheme = EditorColorsManager.getInstance().globalScheme
+            val errorColor = namedColor("ValidationError.errorColor") ?: namedColor("Component.errorForeground") ?: namedColor("Label.errorForeground")
+            val accentColor = namedColor("Focus.defaultButtonBorderColor") ?: namedColor("Button.default.focusedBorderColor") ?: namedColor("Button.focusedBorderColor")
 
             val editorBackground = editorScheme.defaultBackground
             val editorForeground = editorScheme.defaultForeground
@@ -110,42 +116,42 @@ class GetTheme {
             
             // These should match the keys in GUI's theme.ts
             val theme = mapOf(
-                "background" to toHex(background),
-                "foreground" to toHex(foreground),
-                "editor-background" to toHex(editorBackground),
-                "editor-foreground" to toHex(editorForeground),
-                "primary-background" to toHex(buttonBackground),
-                "primary-foreground" to toHex(buttonForeground),
-                "primary-hover" to toHex(buttonHoverBackground),
-                "secondary-background" to toHex(getSecondaryDark()),
-                "secondary-foreground" to toHex(foreground),
-                "secondary-hover" to toHex(hoverBackground),
-                "border" to toHex(border),
-                "border-focus" to toHex(focusBorder),
-                "command-background" to toHex(commandBackground),
-                "command-foreground" to toHex(commandForeground),
-                "command-border" to toHex(border), // make command specific
-                "command-border-focus" to toHex(focusBorder), // make command specific
-                "description" to toHex(description),
-                "description-muted" to toHex(mutedDescription),
-                "input-background" to toHex(inputBackground),
-                "input-foreground" to toHex(inputForeground),
-                "input-border" to toHex(border),
-                "input-placeholder" to toHex(inputPlaceholder),
-                "table-oddRow" to toHex(hoverBackground),
-                "badge-background" to toHex(badgeBackground),
-                "badge-foreground" to toHex(badgeForeground),
-                "success" to toHex(successColor),
-                "warning" to toHex(warningColor),
-                "error" to toHex(errorColor),
-                "link" to toHex(link),
-                "accent" to toHex(accentColor),
-                "find-match" to toHex(findMatchBackground) + "40",
-                "find-match-selected" to toHex(findMatchSelectedBackground),
-                "list-hover" to toHex(listHoverBackground),
-                "list-active" to toHex(actionHoverBackground) + "50",
-                "list-active-foreground" to toHex(listSelectionForeground)
-            )
+                "background" to background,
+                "foreground" to foreground,
+                "editor-background" to editorBackground,
+                "editor-foreground" to editorForeground,
+                "primary-background" to buttonBackground,
+                "primary-foreground" to buttonForeground,
+                "primary-hover" to buttonHoverBackground,
+                "secondary-background" to getSecondaryDark(),
+                "secondary-foreground" to foreground,
+                "secondary-hover" to hoverBackground,
+                "border" to border,
+                "border-focus" to focusBorder,
+                "command-background" to commandBackground,
+                "command-foreground" to commandForeground,
+                "command-border" to border,
+                "command-border-focus" to focusBorder,
+                "description" to description,
+                "description-muted" to mutedDescription,
+                "input-background" to inputBackground,
+                "input-foreground" to inputForeground,
+                "input-border" to border,
+                "input-placeholder" to inputPlaceholder,
+                "table-oddRow" to tableOddRow,
+                "badge-background" to badgeBackground,
+                "badge-foreground" to badgeForeground,
+                "success" to successColor,
+                "warning" to warningColor,
+                "error" to errorColor,
+                "link" to link,
+                "accent" to accentColor,
+                "find-match" to findMatchBackground,
+                "find-match-selected" to findMatchSelectedBackground,
+                "list-hover" to listHoverBackground,
+                "list-active" to actionHoverBackground,
+                "list-active-foreground" to listSelectionForeground
+            ).mapValues { toHex(it.value) }
             return theme
         } catch (error: Error) {
             return mapOf()

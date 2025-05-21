@@ -6,8 +6,8 @@ export const THEME_COLORS = {
   background: {
     vars: [
       "--vscode-sideBar-background",
-      "--vscode-panel-background",
       "--vscode-editor-background",
+      "--vscode-panel-background",
     ],
     default: "#1e1e1e", // dark gray
   },
@@ -16,7 +16,7 @@ export const THEME_COLORS = {
       "--vscode-sideBar-foreground",
       "--vscode-editor-foreground",
       "--vscode-panel-foreground",
-    ], // --vscode-editor-foreground
+    ],
     default: "#e6e6e6", // light gray
   },
   "editor-background": {
@@ -186,10 +186,19 @@ export const THEME_DEFAULTS = Object.entries(THEME_COLORS).reduce(
 
 // Generates recursive CSS variable fallback for a given color name
 // e.g. var(--vscode-button-background, var(--vscode-button-foreground, #ffffff))
-export const varWithFallback = (colorName: keyof typeof THEME_COLORS) =>
-  THEME_COLORS[colorName].vars.reduce((curr, varName) => {
+export const getRecursiveVar = (vars: string[], defaultColor: string) => {
+  return vars.reverse().reduce((curr, varName) => {
     return `var(${varName}, ${curr})`;
-  }, THEME_COLORS[colorName].default);
+  }, defaultColor);
+};
+
+export const varWithFallback = (colorName: keyof typeof THEME_COLORS) => {
+  const themeVals = THEME_COLORS[colorName];
+  if (!themeVals) {
+    throw new Error(`Invalid theme color name ${colorName}`);
+  }
+  return getRecursiveVar(themeVals.vars, themeVals.default);
+};
 
 export const setDocumentStylesFromTheme = (
   theme: Record<string, string | undefined | null>,
@@ -215,13 +224,9 @@ export const setDocumentStylesFromTheme = (
         return;
       }
 
-      // Remove alpha channel from all hex colors besides ones that are expected to have it
+      // Remove alpha channel from all hex colors (seems to cause bad colors)
       let colorVal = value;
-      if (
-        !colorName.includes("find-match") &&
-        colorVal.startsWith("#") &&
-        value.length > 7
-      ) {
+      if (colorVal.startsWith("#") && value.length > 7) {
         colorVal = colorVal.slice(0, 7);
       }
 
