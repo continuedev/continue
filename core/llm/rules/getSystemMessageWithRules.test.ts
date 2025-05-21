@@ -1,4 +1,4 @@
-import { RuleWithSource, UserChatMessage } from "../..";
+import { ContextItemWithId, RuleWithSource, UserChatMessage } from "../..";
 import { getSystemMessageWithRules } from "./getSystemMessageWithRules";
 
 describe("getSystemMessageWithRules", () => {
@@ -33,11 +33,40 @@ describe("getSystemMessageWithRules", () => {
     source: "rules-block",
   };
 
+  // Empty context items
+  const emptyContextItems: ContextItemWithId[] = [];
+
+  // Context items with file paths
+  const tsContextItem: ContextItemWithId = {
+    content: "TypeScript file content",
+    name: "Component.tsx",
+    description: "A TypeScript component",
+    id: { providerTitle: "file", itemId: "src/Component.tsx" },
+    uri: { type: "file", value: "src/Component.tsx" },
+  };
+
+  const pyContextItem: ContextItemWithId = {
+    content: "Python file content",
+    name: "utils.py",
+    description: "A Python utility file",
+    id: { providerTitle: "file", itemId: "utils.py" },
+    uri: { type: "file", value: "utils.py" },
+  };
+
+  const jsContextItem: ContextItemWithId = {
+    content: "JavaScript file content",
+    name: "utils.js",
+    description: "A JavaScript utility file",
+    id: { providerTitle: "file", itemId: "src/utils.js" },
+    uri: { type: "file", value: "src/utils.js" },
+  };
+
   it("should not include pattern-matched rules when no file paths are mentioned", () => {
     const result = getSystemMessageWithRules({
       baseSystemMessage,
       userMessage: undefined,
       rules: [tsRule],
+      contextItems: emptyContextItems,
     });
 
     expect(result).toBe(baseSystemMessage);
@@ -48,12 +77,13 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage: undefined,
       rules: [generalRule],
+      contextItems: emptyContextItems,
     });
 
     expect(result).toBe(`${baseSystemMessage}\n\n${generalRule.rule}`);
   });
 
-  it("should include only matching rules based on file paths", () => {
+  it("should include only matching rules based on file paths in message", () => {
     const userMessage: UserChatMessage = {
       role: "user",
       content:
@@ -64,6 +94,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [tsRule, pythonRule, generalRule],
+      contextItems: emptyContextItems,
     });
 
     // Should include TS rule and general rule, but not Python rule
@@ -71,7 +102,38 @@ describe("getSystemMessageWithRules", () => {
     expect(result).toBe(expected);
   });
 
-  it("should include multiple matching rules", () => {
+  it("should include matching rules based on file paths in context items", () => {
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage: undefined,
+      rules: [tsRule, pythonRule, generalRule],
+      contextItems: [tsContextItem],
+    });
+
+    // Should include TS rule and general rule, but not Python rule
+    const expected = `${baseSystemMessage}\n\n${tsRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  it("should include matching rules from both message and context items", () => {
+    const userMessage: UserChatMessage = {
+      role: "user",
+      content: "```python test.py\nprint('hello')\n```",
+    };
+
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage,
+      rules: [tsRule, pythonRule, generalRule],
+      contextItems: [tsContextItem],
+    });
+
+    // Should include TS rule, Python rule, and general rule
+    const expected = `${baseSystemMessage}\n\n${tsRule.rule}\n\n${pythonRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  it("should include multiple matching rules from message", () => {
     const userMessage: UserChatMessage = {
       role: "user",
       content:
@@ -82,6 +144,20 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [tsRule, pythonRule, generalRule],
+      contextItems: emptyContextItems,
+    });
+
+    // Should include all rules
+    const expected = `${baseSystemMessage}\n\n${tsRule.rule}\n\n${pythonRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  it("should include multiple matching rules from context items", () => {
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage: undefined,
+      rules: [tsRule, pythonRule, generalRule],
+      contextItems: [tsContextItem, pyContextItem],
     });
 
     // Should include all rules
@@ -99,6 +175,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [tsRule, pythonRule, generalRule],
+      contextItems: emptyContextItems,
     });
 
     // Should only include the general rule
@@ -125,6 +202,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [commaRule],
+      contextItems: emptyContextItems,
     });
 
     // With the current implementation, the comma-separated pattern is treated as a single string,
@@ -151,6 +229,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [arrayGlobRule],
+      contextItems: emptyContextItems,
     });
 
     // With our new implementation, the array of patterns should match both src/main.ts and tests/example.test.ts
@@ -176,6 +255,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [arrayGlobRule],
+      contextItems: emptyContextItems,
     });
 
     // Should match src/main.ts but not config/settings.ts
@@ -201,6 +281,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [arrayGlobRule],
+      contextItems: emptyContextItems,
     });
 
     // Should not match any file paths
@@ -218,6 +299,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [jsRule, tsRule, generalRule],
+      contextItems: emptyContextItems,
     });
 
     // Should include JS rule and general rule
@@ -236,6 +318,7 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [jsRule, tsRule, generalRule],
+      contextItems: emptyContextItems,
     });
 
     // Should include JS rule and general rule
@@ -257,10 +340,66 @@ describe("getSystemMessageWithRules", () => {
       baseSystemMessage,
       userMessage,
       rules: [jsRule, tsRule, generalRule],
+      contextItems: emptyContextItems,
     });
 
     // Should include JS rule, TS rule, and general rule
     const expected = `${baseSystemMessage}\n\n${jsRule.rule}\n\n${tsRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  // Test for context items when there's no message
+  it("should apply rules based on context items only when no message is present", () => {
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage: undefined,
+      rules: [jsRule, tsRule, generalRule],
+      contextItems: [jsContextItem],
+    });
+
+    // Should include JS rule and general rule
+    const expected = `${baseSystemMessage}\n\n${jsRule.rule}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  // Test for non-file context items
+  it("should ignore non-file context items", () => {
+    const nonFileContextItem: ContextItemWithId = {
+      content: "Some search result",
+      name: "Search result",
+      description: "A search result",
+      id: { providerTitle: "search", itemId: "search-result" },
+      // No uri with type "file"
+    };
+
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage: undefined,
+      rules: [jsRule, tsRule, generalRule],
+      contextItems: [nonFileContextItem],
+    });
+
+    // Should only include general rule
+    const expected = `${baseSystemMessage}\n\n${generalRule.rule}`;
+    expect(result).toBe(expected);
+  });
+
+  // Test combining context items with message
+  it("should match rules from both message code blocks and context items", () => {
+    const userMessage: UserChatMessage = {
+      role: "user",
+      content: "```ts src/main.ts\nconsole.log('hello');\n```",
+    };
+
+    const result = getSystemMessageWithRules({
+      baseSystemMessage,
+      userMessage,
+      rules: [jsRule, tsRule, pythonRule, generalRule],
+      contextItems: [jsContextItem, pyContextItem],
+    });
+
+    // Should include JS, TS, Python rules and general rule
+    const expected = `${baseSystemMessage}\n\n${jsRule.rule}\n\n${tsRule.rule}\n\n${pythonRule.rule}\n\n${generalRule.rule}`;
     expect(result).toBe(expected);
   });
 });
