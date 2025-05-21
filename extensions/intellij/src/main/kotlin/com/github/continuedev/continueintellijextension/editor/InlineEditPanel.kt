@@ -437,8 +437,8 @@ class CustomPanel(
             val rightButton =
                 CustomButton("⏎  Enter") { onEnter() }
                     .apply {
-                        background = globalScheme.defaultForeground
-                        foreground = globalScheme.defaultBackground
+                        background = JBColor.namedColor("Button.startBackground")
+                        foreground = JBColor.namedColor("Button.foreground")
                         border = JBUI.Borders.empty(2, 6)
                     }
 
@@ -478,17 +478,17 @@ class CustomPanel(
             val leftButton =
                 CustomButton("Reject All (${getMetaKeyLabel()}${getShiftKeyLabel()}⌫)") { onReject() }
                     .apply {
-                        foreground = JBColor(0xFFFFFF, 0xFFFFFF)
-                        background = JBColor(0xFF0000, 0xFF0000)
-
-
+                        background = Color(0, 0, 0, 0)
+                        foreground = JBColor.foreground()
+                        border = JBUI.Borders.empty(2, 6)
                     }
 
             val rightButton =
                 CustomButton("Accept All (${getMetaKeyLabel()}${getShiftKeyLabel()}⏎)") { onAccept() }
                     .apply {
-                        foreground = JBColor(0xFFFFFF, 0xFFFFFF)
-                        background = JBColor(0x00BB00, 0x00BB00)
+                        background = JBColor.namedColor("Button.startBackground")
+                        foreground = JBColor.namedColor("Button.foreground")
+                        border = JBUI.Borders.empty(2, 6)
                     }
 
             val rightPanel =
