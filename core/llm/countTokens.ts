@@ -17,6 +17,7 @@ import {
   isUserOrToolMsg,
   messageHasToolCallId,
 } from "./messages.js";
+
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -270,6 +271,7 @@ function pruneStringFromTop(
 
 const MAX_TOKEN_SAFETY_BUFFER = 1000;
 const TOKEN_SAFETY_PROPORTION = 0.02;
+
 function getTokenCountingBufferSafety(contextLength: number) {
   return Math.min(
     MAX_TOKEN_SAFETY_BUFFER,
@@ -278,6 +280,7 @@ function getTokenCountingBufferSafety(contextLength: number) {
 }
 
 const MIN_RESPONSE_TOKENS = 1000;
+
 function getMinResponseTokens(maxTokens: number) {
   return Math.min(MIN_RESPONSE_TOKENS, maxTokens);
 }
@@ -394,15 +397,17 @@ function compileChatMessages({
   // Make sure there's enough context for the non-excludable items
   if (inputTokensAvailable < 0) {
     throw new Error(
-      `Not enough context available to include the system message, last user message, and tools.
-      There must be at least ${minOutputTokens} tokens remaining for output.
-      Request had the following token counts:
-      - contextLength: ${contextLength}
-      - counting safety buffer: ${countingSafetyBuffer}
-      - tools: ~${toolTokens}
-      - system message: ~${systemMsgTokens}
-      - last user or tool + tool call message tokens: ~${lastMessagesTokens}
-      - max output tokens: ${maxTokens}`,
+      `Your request has gone over the default context length of ${contextLength} for this model.
+If the actual context length of this model is greater than ${contextLength}, you can update the context length in your model configuration by setting the "defaultCompletionOptions.contextLength" property.
+See the docs for more info: https://docs.continue.dev/reference#models
+
+Request details:
+- contextLength: ${contextLength}
+- counting safety buffer: ${countingSafetyBuffer}
+- tools: ~${toolTokens}
+- system message: ~${systemMsgTokens}
+- last user or tool + tool call message tokens: ~${lastMessagesTokens}
+- max output tokens: ${maxTokens}`,
     );
   }
 
