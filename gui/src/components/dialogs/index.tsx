@@ -8,8 +8,7 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
-import { THEME_COLORS } from "../../styles/theme";
-import { parseColorForHex } from "../../styles/utils";
+import { varWithFallback } from "../../styles/theme";
 
 interface TextDialogProps {
   showDialog: boolean;
@@ -22,7 +21,7 @@ const ScreenCover = styled.div`
   position: fixed;
   width: 100%;
   height: 100%;
-  background-color: ${parseColorForHex(THEME_COLORS["background"].var)}aa;
+  background-color: ${varWithFallback("background")}aa;
   z-index: 100000;
   flex-direction: column;
 `;
