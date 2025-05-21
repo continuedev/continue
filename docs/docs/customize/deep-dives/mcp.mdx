@@ -20,15 +20,11 @@ To set up your own MCP server, read the [MCP quickstart](https://modelcontextpro
   ```yaml title="config.yaml"
   mcpServers:
     - name: My MCP Server
-      type: stdio
       command: uvx
       args:
         - mcp-server-sqlite
         - --db-path
         - /Users/NAME/test.db
-    - name: My MCP Server with SSE
-      type: sse
-      url: "https://example.com/mcp-server/sse"
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -41,12 +37,6 @@ To set up your own MCP server, read the [MCP quickstart](https://modelcontextpro
             "type": "stdio",
             "command": "uvx",
             "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
-          }  
-        },
-        {
-          "transport": {
-            "type": "sse",
-            "url": "https://example.com/mcp-server/sse"
           }  
         }
       ]
