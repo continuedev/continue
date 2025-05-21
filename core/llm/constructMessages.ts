@@ -1,6 +1,7 @@
 import {
   ChatHistoryItem,
   ChatMessage,
+  ContextItemWithId,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
@@ -77,6 +78,31 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 ${EDIT_MESSAGE}
 </important_rules>`;
 
+/**
+ * Helper function to get the context items for a user message
+ */
+function getUserContextItems(
+  userMsg: UserChatMessage | ToolResultChatMessage | undefined,
+  history: ChatHistoryItem[],
+): ContextItemWithId[] | undefined {
+  if (!userMsg) return undefined;
+
+  // Find the history item that contains the userMsg
+  const historyItem = history.find((item) => {
+    // Check if the message ID matches
+    if ("id" in userMsg && "id" in item.message) {
+      return (item.message as any).id === (userMsg as any).id;
+    }
+    // Fallback to content comparison
+    return (
+      item.message.content === userMsg.content &&
+      item.message.role === userMsg.role
+    );
+  });
+
+  return historyItem?.contextItems;
+}
+
 export function constructMessages(
   messageMode: string,
   history: ChatHistoryItem[],
@@ -128,28 +154,11 @@ export function constructMessages(
     | ToolResultChatMessage
     | undefined;
 
-  // Find the context items for the last user message
-  let lastUserContextItems;
-  if (lastUserMsg) {
-    const lastUserMsgIndex = msgs.findIndex((msg) => {
-      if (msg.role !== "user" && msg.role !== "tool") return false;
-      if ("id" in msg && "id" in lastUserMsg) {
-        return msg.id === lastUserMsg.id;
-      }
-      return msg === lastUserMsg;
-    });
-
-    if (lastUserMsgIndex !== -1) {
-      const historyIndex = filteredHistory.findIndex(
-        (item) => item.message === msgs[lastUserMsgIndex],
-      );
-
-      if (historyIndex !== -1) {
-        lastUserContextItems = filteredHistory[historyIndex].contextItems;
-      }
-    }
-  }
-
+  // Get context items for the last user message
+  const lastUserContextItems = getUserContextItems(
+    lastUserMsg,
+    filteredHistory,
+  );
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatOrAgentSystemMessage,
     rules,
