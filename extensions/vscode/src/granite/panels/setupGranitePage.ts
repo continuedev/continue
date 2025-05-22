@@ -1,6 +1,7 @@
 import { LocalModelSize } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import {
+  DEFAULT_GRANITE_EMBEDDING_MODEL,
   DEFAULT_MODEL_GRANITE_LARGE,
   DEFAULT_MODEL_GRANITE_SMALL,
 } from "core/config/default";
@@ -487,6 +488,12 @@ export class SetupGranitePage {
     this.wizardState.stepStatuses[OLLAMA_STEP] = serverVersion !== undefined && checkMinimumServerVersion(serverVersion) && (
       serverState.status === ServerStatus.started ||
       serverState.status === ServerStatus.stopped);
+
+    const allModelsInstalled = statusByModel.get(DEFAULT_MODEL_GRANITE_LARGE.model) === ModelStatus.installed
+      && statusByModel.get(DEFAULT_GRANITE_EMBEDDING_MODEL.model) === ModelStatus.installed;
+
+    this.wizardState.stepStatuses[MODELS_STEP] = allModelsInstalled;
+
     await webview.postMessage({
       command: "status",
       data: {
