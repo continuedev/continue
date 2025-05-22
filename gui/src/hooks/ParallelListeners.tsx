@@ -40,6 +40,7 @@ function ParallelListeners() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
@@ -99,18 +100,18 @@ function ParallelListeners() {
 
   // Load config from the IDE
   useEffect(() => {
-    initialLoadAuthAndConfig(true);
+    void initialLoadAuthAndConfig(true);
     const interval = setInterval(() => {
       if (hasDoneInitialConfigLoad.current) {
         // Init to run on initial config load
         ideMessenger.post("docs/initStatuses", undefined);
-        dispatch(updateFileSymbolsFromHistory());
-        dispatch(refreshSessionMetadata({}));
+        void dispatch(updateFileSymbolsFromHistory());
+        void dispatch(refreshSessionMetadata({}));
 
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
       } else {
-        initialLoadAuthAndConfig(true);
+        void initialLoadAuthAndConfig(true);
       }
     }, 2_000);
 
@@ -132,39 +133,43 @@ function ParallelListeners() {
   const sessionId = useAppSelector((state) => state.session.id);
   useEffect(() => {
     if (sessionId) {
-      dispatch(updateFileSymbolsFromHistory());
+      void dispatch(updateFileSymbolsFromHistory());
     }
   }, [sessionId]);
 
   // ON LOAD
   useEffect(() => {
     // Override persisted state
-    dispatch(cancelStream());
+    void dispatch(cancelStream());
 
     const jetbrains = isJetBrains();
     setDocumentStylesFromLocalStorage(jetbrains);
 
     if (jetbrains) {
       // Save theme colors to local storage for immediate loading in JetBrains
-      ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
-        if (result.status === "success") {
-          setDocumentStylesFromTheme(result.content);
-        }
-      });
+      void ideMessenger
+        .request("jetbrains/getColors", undefined)
+        .then((result) => {
+          if (result.status === "success") {
+            setDocumentStylesFromTheme(result.content);
+          }
+        });
 
       // Tell JetBrains the webview is ready
-      ideMessenger.request("jetbrains/onLoad", undefined).then((result) => {
-        if (result.status === "error") {
-          return;
-        }
+      void ideMessenger
+        .request("jetbrains/onLoad", undefined)
+        .then((result) => {
+          if (result.status === "error") {
+            return;
+          }
 
-        const msg = result.content;
-        (window as any).windowId = msg.windowId;
-        (window as any).serverUrl = msg.serverUrl;
-        (window as any).workspacePaths = msg.workspacePaths;
-        (window as any).vscMachineId = msg.vscMachineId;
-        (window as any).vscMediaUrl = msg.vscMediaUrl;
-      });
+          const msg = result.content;
+          (window as any).windowId = msg.windowId;
+          (window as any).serverUrl = msg.serverUrl;
+          (window as any).workspacePaths = msg.workspacePaths;
+          (window as any).vscMachineId = msg.vscMachineId;
+          (window as any).vscMediaUrl = msg.vscMediaUrl;
+        });
     }
   }, []);
 
@@ -194,7 +199,7 @@ function ParallelListeners() {
   );
 
   useWebviewListener("setInactive", async () => {
-    dispatch(cancelStream());
+    void dispatch(cancelStream());
   });
 
   useWebviewListener("setTTSActive", async (status) => {
@@ -203,7 +208,7 @@ function ParallelListeners() {
 
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
-    dispatch(
+    void dispatch(
       streamResponseThunk({
         editorState: data.message,
         modifiers: { useCodebase: false, noContext: true },
@@ -253,7 +258,7 @@ function ParallelListeners() {
             }),
           );
           // dispatch(setToolCallOutput([]));
-          dispatch(
+          void dispatch(
             streamResponseAfterToolCall({
               toolCallId: currentToolCallApplyState.toolCallId!,
             }),
@@ -264,12 +269,12 @@ function ParallelListeners() {
     [currentToolCallApplyState, history],
   );
 
-  const mode = useAppSelector((store) => store.session.mode);
   useEffect(() => {
-    if (mode !== "edit") {
+    if (isInEdit) {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
-  }, [mode, history]);
+  }, [isInEdit, history]);
+
   return <></>;
 }
 

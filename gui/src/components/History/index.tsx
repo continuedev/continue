@@ -13,6 +13,7 @@ import Shortcut from "../gui/Shortcut";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   newSession,
@@ -37,6 +38,7 @@ const HEADER_CLASS =
   "flex user-select-none pt-2 pb-3 opacity-75 text-center font-bold items-center justify-center sticky h-6";
 
 export function History() {
+  useNavigationListener();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const searchInputRef = React.useRef<HTMLInputElement>(null);

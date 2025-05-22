@@ -1,9 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
 import {
-  SetCodeToEditPayload,
   MessageModes,
   RangeInFileWithContents,
+  SetCodeToEditPayload,
 } from "core";
 import { stripImages } from "core/util/messageContent";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
@@ -13,7 +13,12 @@ import {
   setReturnToModeAfterEdit,
   updateEditStateApplyState,
 } from "../slices/editModeState";
-import { newSession, setActive, setMode } from "../slices/sessionSlice";
+import {
+  newSession,
+  setActive,
+  setIsInEdit,
+  setMode,
+} from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { loadLastSession, saveCurrentSession } from "./session";
 import { streamThunkWrapper } from "./streamThunkWrapper";
@@ -62,17 +67,18 @@ export const streamEditThunk = createAsyncThunk<
   },
 );
 
-export const exitEditMode = createAsyncThunk<
+export const exitEdit = createAsyncThunk<
   void,
   { goToMode?: MessageModes; openNewSession?: boolean },
   ThunkApiType
 >(
-  "edit/exitMode",
+  "edit/exit",
   async ({ goToMode, openNewSession }, { dispatch, extra, getState }) => {
     const state = getState();
     const codeToEdit = state.editModeState.codeToEdit;
+    const isInEdit = state.session.isInEdit;
 
-    if (state.session.mode !== "edit") {
+    if (!isInEdit) {
       return;
     }
 
@@ -86,6 +92,7 @@ export const exitEditMode = createAsyncThunk<
 
     dispatch(clearCodeToEdit());
     dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
+    dispatch(setIsInEdit(false));
 
     if (openNewSession || state.editModeState.lastNonEditSessionWasEmpty) {
       dispatch(newSession());
@@ -101,14 +108,15 @@ export const exitEditMode = createAsyncThunk<
   },
 );
 
-export const enterEditMode = createAsyncThunk<
+export const enterEdit = createAsyncThunk<
   void,
   { returnToMode?: MessageModes },
   ThunkApiType
->("edit/enterMode", async ({ returnToMode }, { dispatch, extra, getState }) => {
+>("edit/enter", async ({ returnToMode }, { dispatch, extra, getState }) => {
   const state = getState();
+  const isInEdit = state.session.isInEdit;
 
-  if (state.session.mode === "edit") {
+  if (isInEdit) {
     return;
   }
 
@@ -117,12 +125,12 @@ export const enterEditMode = createAsyncThunk<
   await dispatch(
     saveCurrentSession({
       openNewSession: true,
-      // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
+      // Because this causes a lag before Edit is focused. TODO just have that happen in background
       generateTitle: false,
     }),
   );
   dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
-  dispatch(setMode("edit"));
+  dispatch(setIsInEdit(true));
 
   if (!state.editModeState.codeToEdit[0]) {
     extra.ideMessenger.post("edit/addCurrentSelection", undefined);

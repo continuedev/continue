@@ -1,26 +1,28 @@
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { exitEditMode } from "../../redux/thunks/editMode";
+import { exitEdit } from "../../redux/thunks/edit";
 import AcceptRejectDiffButtons from "../AcceptRejectDiffButtons";
 import { useMainEditor } from "./TipTapEditor";
 
 const EditModeDetails = () => {
   const isStreaming = useAppSelector((store) => store.session.isStreaming);
-  const mode = useAppSelector((store) => store.session.mode);
   const dispatch = useAppDispatch();
   const editApplyState = useAppSelector(
     (store) => store.editModeState.applyState,
   );
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const { mainEditor } = useMainEditor();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  if (mode !== "edit") {
+  if (!isInEdit) {
     return null;
   }
+
   if (isStreaming) {
     return null;
   }
+
   if (editApplyState.status === "done") {
     const plural = editApplyState.numDiffs === 1 ? "" : "s";
     return (
@@ -32,7 +34,7 @@ const EditModeDetails = () => {
           applyStates={[editApplyState]}
           onAcceptOrReject={async (outcome) => {
             if (outcome === "acceptDiff") {
-              await dispatch(exitEditMode({}));
+              await dispatch(exitEdit({}));
               ideMessenger.post("focusEditor", undefined);
             } else {
               mainEditor?.commands.focus();

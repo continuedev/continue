@@ -27,9 +27,14 @@ interface MainEditorContextType {
   onEnterRef: React.MutableRefObject<(modifiers: InputModifiers) => void>;
 }
 
-const MainEditorContext = createContext<MainEditorContextType | undefined>(
-  undefined,
-);
+const DEFAULTS: MainEditorContextType = {
+  mainEditor: null,
+  setMainEditor: () => {}, // noop
+  inputId: null,
+  setInputId: () => {}, // noop
+  onEnterRef: { current: () => {} }, // noop
+};
+const MainEditorContext = createContext<MainEditorContextType>(DEFAULTS);
 
 /**
  * Provider component that maintains a reference to the main editor
@@ -110,8 +115,10 @@ export const MainEditorProvider: React.FC<{ children: React.ReactNode }> = ({
  */
 export const useMainEditor = (): MainEditorContextType => {
   const context = useContext(MainEditorContext);
+
   if (context === undefined) {
     throw new Error("useMainEditor must be used within a MainEditorProvider");
   }
+
   return context;
 };

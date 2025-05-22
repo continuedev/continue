@@ -10,16 +10,16 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { ReactNode } from "react";
-import { vscBadgeForeground } from "../..";
-import { useAppSelector } from "../../../redux/hooks";
-import { ToolTip } from "../../gui/Tooltip";
-import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
-import { useFontSize } from "../../ui/font";
-import HoverItem from "../InputToolbar/HoverItem";
-import { useLump } from "./LumpContext";
-import { ErrorsSectionTooltip } from "./sections/errors/ErrorsSectionTooltip";
-import { McpSectionTooltip } from "./sections/mcp/MCPTooltip";
-import { ToolsSectionTooltip } from "./sections/tool-policies/ToolPoliciesSectionTooltip";
+import { vscBadgeForeground } from "../../..";
+import { useAppSelector } from "../../../../redux/hooks";
+import { ToolTip } from "../../../gui/Tooltip";
+import AssistantSelect from "../../../modelSelection/platform/AssistantSelect";
+import { useFontSize } from "../../../ui/font";
+import HoverItem from "../../InputToolbar/HoverItem";
+import { useLump } from "../LumpContext";
+import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
+import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
+import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
 
 interface BlockSettingsToolbarIcon {
   title: string;
