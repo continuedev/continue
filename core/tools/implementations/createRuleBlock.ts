@@ -5,8 +5,8 @@ import { joinPathsToUri } from "../../util/uri";
 export interface CreateRuleBlockArgs {
   name: string;
   rule: string;
+  description: string;
   globs?: string;
-  description?: string;
 }
 
 export const createRuleBlockImpl: ToolImpl = async (
