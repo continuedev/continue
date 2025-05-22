@@ -101,6 +101,7 @@ export const streamResponseThunk = createAsyncThunk<
             ? (userMsg as UserChatMessage | ToolResultChatMessage)
             : undefined,
           rules,
+          selectedContextItems,
         );
 
         // Store in history for UI display
