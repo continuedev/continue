@@ -8,6 +8,7 @@ import kotlin.math.max
 import kotlin.math.min
 import com.intellij.ui.JBColor
 import com.intellij.ui.ColorUtil
+import kotlin.math.roundToInt
 
 class GetTheme {
     fun getSecondaryDark(): Color {
@@ -59,23 +60,66 @@ class GetTheme {
         return color
     }
 
+    fun lighten(color: Color, percentage: Int = 5): Color {
+        // Increase each RGB component slightly
+        val factor = 1 + percentage / 100f;
+        fun lightenInt(value: Int): Int {
+            return (value * factor).roundToInt().coerceAtMost(255)
+        }
+        return Color(
+            lightenInt(color.red),
+                    lightenInt (color.green),
+            lightenInt(color.blue),
+            color.alpha
+        )
+    }
+
+    fun darken(color: Color, percentage: Int = 5): Color {
+        // Decrease each RGB component slightly
+        val factor = 1 - percentage / 100f;
+        fun darkenInt(value: Int): Int {
+            return (value * factor).roundToInt().coerceAtLeast(0)
+        }
+        return Color(
+            darkenInt(color.red),
+            darkenInt(color.green),
+            darkenInt(color.blue),
+            color.alpha
+        )
+    }
+
+    fun slightChange(color: Color?, percentage: Int = 5): Color? {
+        if(color == null){
+            return null
+        }
+        // If dark, make slightly lighter. If light, make slightly darker
+        val averageRgb = (color.red + color.green + color.blue) / 3
+        return if (averageRgb > 128) darken(color, percentage) else lighten(color, percentage)
+    }
+
     fun getTheme(): Map<String, String?> {
         try {
             val editorScheme = EditorColorsManager.getInstance().globalScheme
 
-            // IDE colors
             val background = JBColor.background()
             val foreground = JBColor.foreground()
 
             val border = JBColor.border()
             val focusBorder = namedColor("Focus.borderColor") ?: namedColor("Component.focusedBorderColor")
 
-            val buttonBackground = namedColor("Button.background")
-            val buttonForeground = namedColor("Button.foreground")
-            val buttonHoverBackground = namedColor("Button.hoverBackground") ?: buttonBackground?.brighter()
+            val buttonBackground = namedColor("Button.default.startBackground")
+                ?: namedColor("Button.default.background")
 
-            val secondaryBackground = getSecondaryDark()
-            val secondaryHover = secondaryBackground.brighter()
+            val buttonForeground = namedColor("Button.default.startForeground")
+                ?: namedColor("Button.default.foreground")
+
+            val buttonHoverBackground = namedColor("Button.default.hoverStartBackground")
+                ?: namedColor("Button.default.hoverBackground")
+                ?: namedColor("Button.default.startHoverBackground")
+                ?: slightChange(buttonBackground)
+
+            val secondaryBackground = namedColor("Button.background") ?: background
+            val secondaryHoverBackground = namedColor("Button.hoverBackground") ?: slightChange(secondaryBackground)
 
             val badgeBackground = namedColor("Badge.background")
             val badgeForeground = namedColor("Badge.foreground")
@@ -86,16 +130,20 @@ class GetTheme {
             val inputBackground = namedColor("TextField.background")
             val inputForeground = namedColor("TextField.foreground")
             val inputPlaceholder = namedColor("TextField.inactiveForeground")
-            // list hover is too aggressive, primary hover is too much of a change, secondary seems useless, normal -> description -> muted doesn't grok consistently
-            val listHoverBackground = namedColor("List.hoverBackground") ?: namedColor("List.dropLineColor")
+
+            val listHoverBackground = namedColor("List.hoverBackground") ?: slightChange(background)
             val actionHoverBackground = namedColor("ActionButton.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
 
             val tableOddRow = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor") 
             val listSelectionForeground = namedColor("List.selectionForeground")
 
+            val description = namedColor("Label.disabledForeground") ?: namedColor("Label.infoForeground")
 
-            val description = namedColor("Label.infoForeground") ?: namedColor("ToolTip.foreground")
-            val mutedDescription = namedColor("Label.disabledForeground")
+            val mutedDescription = namedColor("Component.infoForeground")
+                ?: namedColor("ContextHelp.foreground")
+                ?: namedColor("TextField.placeholderForeground")
+                ?: namedColor("Label.disabledForeground")
+                ?: namedColor("ToolTip.foreground")
 
             val link = namedColor("Link.activeForeground")
 
@@ -129,7 +177,7 @@ class GetTheme {
                 "primary-hover" to buttonHoverBackground,
                 "secondary-background" to secondaryBackground,
                 "secondary-foreground" to foreground,
-                "secondary-hover" to secondaryHover,
+                "secondary-hover" to secondaryHoverBackground,
                 "border" to border,
                 "border-focus" to focusBorder,
                 "command-background" to commandBackground,
