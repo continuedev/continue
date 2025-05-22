@@ -6,7 +6,7 @@ interface ModeIconProps {
   className?: string;
 }
 
-function ModeIcon({
+export function ModeIcon({
   mode,
   className = "xs:h-3 xs:w-3 h-3 w-3",
 }: ModeIconProps) {
@@ -17,5 +17,3 @@ function ModeIcon({
       return <ChatBubbleLeftIcon className={className} />;
   }
 }
-
-export default ModeIcon;

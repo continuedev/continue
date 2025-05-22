@@ -270,7 +270,7 @@ function ParallelListeners() {
   );
 
   useEffect(() => {
-    if (isInEdit) {
+    if (!isInEdit) {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
   }, [isInEdit, history]);

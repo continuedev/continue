@@ -8,7 +8,6 @@ const openGUITypes: (keyof ToWebviewProtocol)[] = [
   "focusContinueInput",
   "focusContinueInputWithoutClear",
   "newSession",
-  "focusEdit",
 ];
 
 export const useNavigationListener = () => {

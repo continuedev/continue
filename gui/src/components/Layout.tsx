@@ -147,6 +147,7 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
+      navigate(ROUTES.HOME);
       await ideMessenger.request("edit/addCurrentSelection", undefined);
       await dispatch(enterEdit({}));
       mainEditor?.commands.focus();

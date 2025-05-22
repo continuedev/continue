@@ -13,7 +13,7 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "../ui/Listbox";
-import ModeIcon from "./ModeIcon";
+import { ModeIcon } from "./ModeIcon";
 
 export function ModeSelect() {
   const dispatch = useAppDispatch();
@@ -76,7 +76,7 @@ export function ModeSelect() {
       <div className="relative">
         <ListboxButton
           data-testid="mode-select-button"
-          className="xs:px-2 text-description-muted bg-border gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200"
+          className="xs:px-2 text-description-muted bg-badge gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">

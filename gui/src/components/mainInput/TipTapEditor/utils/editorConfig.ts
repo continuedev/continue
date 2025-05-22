@@ -81,8 +81,6 @@ export function createEditorConfig(options: {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);
-  const mode = useAppSelector((store) => store.session.mode);
-  const modeRef = useUpdatingRef(mode);
   const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const isInEditRef = useUpdatingRef(isInEdit);
