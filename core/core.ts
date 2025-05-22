@@ -319,7 +319,10 @@ export class Core {
     });
 
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(msg.data.profileId);
+      await this.configHandler.openConfigProfile(
+        msg.data.profileId,
+        msg.data?.element,
+      );
     });
 
     on("config/reload", async (msg) => {

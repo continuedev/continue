@@ -100,7 +100,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ),
     void,
   ];
-  "config/openProfile": [{ profileId: string | undefined }, void];
+  "config/openProfile": [
+    { profileId: string | undefined; element?: { sourceFile?: string } },
+    void,
+  ];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {

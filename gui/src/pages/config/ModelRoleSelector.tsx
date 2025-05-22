@@ -48,10 +48,13 @@ const ModelRoleSelector = ({
     onSelect(models.find((m) => m.title === title) ?? null);
   }
 
-  function onClickGear(e: MouseEvent<SVGSVGElement>) {
+  function onClickGear(e: MouseEvent<SVGSVGElement>, model: ModelDescription) {
     e.stopPropagation();
     e.preventDefault();
-    ideMessenger.post("config/openProfile", { profileId: undefined });
+    ideMessenger.post("config/openProfile", {
+      profileId: undefined,
+      element: model,
+    });
   }
 
   function handleOptionClick(
@@ -169,7 +172,9 @@ const ModelRoleSelector = ({
                                 {hoveredIdx === idx && (
                                   <Cog6ToothIcon
                                     className="h-3 w-3 flex-shrink-0"
-                                    onClick={onClickGear}
+                                    onClick={(e: MouseEvent<SVGSVGElement>) =>
+                                      onClickGear(e, option)
+                                    }
                                   />
                                 )}
                                 {option.title === selectedModel?.title && (
