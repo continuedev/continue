@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
-import { parseHexColor } from "../components";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { parseHexColor } from "../styles/utils";
 
 const hljsToTextMate: Record<string, string[]> = {
   ".hljs-comment": ["comment"],
