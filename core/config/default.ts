@@ -44,7 +44,7 @@ const BASE_GRANITE_CONFIG: Partial<ModelConfig> = {
     maxTokens: DEFAULT_CONTEXT_LENGTH / 4,
     temperature: 0,
   },
-  roles: ["apply", "autocomplete", "chat", "edit", "summarize"],
+  roles: ["apply", "chat", "edit", "summarize"],
 };
 
 export const DEFAULT_MODEL_GRANITE_SMALL: ModelConfig = {
@@ -61,6 +61,26 @@ export const DEFAULT_MODEL_GRANITE_LARGE: ModelConfig = {
   ...BASE_GRANITE_CONFIG,
 };
 
+export const DEFAULT_GRANITE_COMPLETION_MODEL_LARGE: ModelConfig = {
+  ...DEFAULT_MODEL_GRANITE_LARGE,
+  name: DEFAULT_MODEL_GRANITE_LARGE.name + "::autocomplete",
+  defaultCompletionOptions: {
+    ...DEFAULT_MODEL_GRANITE_LARGE.defaultCompletionOptions,
+    maxTokens: 100,
+  },
+  roles: ["autocomplete"],
+};
+
+export const DEFAULT_GRANITE_COMPLETION_MODEL_SMALL: ModelConfig = {
+  ...DEFAULT_MODEL_GRANITE_SMALL,
+  name: DEFAULT_MODEL_GRANITE_SMALL.name + "::autocomplete",
+  defaultCompletionOptions: {
+    ...DEFAULT_MODEL_GRANITE_SMALL.defaultCompletionOptions,
+    maxTokens: 100,
+  },
+  roles: ["autocomplete"],
+};
+
 export const DEFAULT_GRANITE_EMBEDDING_MODEL: ModelConfig = {
   name: "nomic-embed-text",
   provider: "ollama",
@@ -71,13 +91,13 @@ export const DEFAULT_GRANITE_EMBEDDING_MODEL: ModelConfig = {
 export const defaultConfigGraniteLarge: Required<
   Pick<AssistantUnrolled, "models" | "context">
 > = {
-  models: [DEFAULT_MODEL_GRANITE_LARGE, DEFAULT_GRANITE_EMBEDDING_MODEL],
+  models: [DEFAULT_MODEL_GRANITE_LARGE, DEFAULT_GRANITE_COMPLETION_MODEL_LARGE, DEFAULT_GRANITE_EMBEDDING_MODEL],
   context: defaultContextProvidersVsCode,
 };
 
 export const defaultConfigGraniteSmall: Required<
   Pick<AssistantUnrolled, "models" | "context">
 > = {
-  models: [DEFAULT_MODEL_GRANITE_SMALL, DEFAULT_GRANITE_EMBEDDING_MODEL],
+  models: [DEFAULT_MODEL_GRANITE_SMALL, DEFAULT_GRANITE_COMPLETION_MODEL_SMALL, DEFAULT_GRANITE_EMBEDDING_MODEL],
   context: defaultContextProvidersVsCode,
 };
