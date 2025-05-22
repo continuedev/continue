@@ -1,14 +1,14 @@
-import { Tool } from "core";
-import xml2js from "xml2js";
+import { Tool, ToolCall, ToolCallDelta } from "core";
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
-export const TOOL_CALL_OPENING_TAG = "<tool-call>";
-export const TOOL_CALL_CLOSING_TAG = "</tool-call>";
+export const TOOL_CALL_OPENING_TAG = "<tool_call>";
+export const TOOL_CALL_CLOSING_TAG = "</tool_call>";
 export const TOOL_CALL_NAME_OPENING_TAG = "<name>";
 export const TOOL_CALL_NAME_CLOSING_TAG = "</name>";
 export const TOOL_CALL_ARGS_OPENING_TAG = "<args>";
 export const TOOL_CALL_ARGS_CLOSING_TAG = "</args>";
 
-const EXAMPLE_TOOL = `<tool>
+const EXAMPLE_TOOL = `<tool_definition>
     <name>example_tool</name>
     <args>
         <arg1>
@@ -16,34 +16,39 @@ const EXAMPLE_TOOL = `<tool>
             <type>string</type>
             <required>true</required>
         </arg1>
-        <arg>
+        <arg2>
             <description>Second argument</description>
             <type>number</type>
             <required>false</required>
-        </arg>
+        </arg2>
     </args>
-    </tool>
+</tool_definition>
 `;
 
-const EXAMPLE_TOOL_CALL = `<tool-call>
+const EXAMPLE_TOOL_CALL = `
+<tool_call>
     <name>example_tool</name>
     <args>
         <arg1>value1</arg1>
     </args>
-</tool-call>
+</tool_call>
 `;
 
 function toolToXmlDefinition(tool: Tool): string {
-  const builder = new xml2js.Builder({
-    rootName: "tool",
-    headless: true,
-    renderOpts: { pretty: true, indent: "  ", newline: "\n" },
+  const builder = new XMLBuilder({
+    ignoreAttributes: true,
+    format: true,
+    suppressEmptyNode: true,
   });
-  const xml = builder.buildObject({
-    name: tool.function.name,
-    args: tool.function.parameters,
-  });
-  return xml;
+
+  const obj = {
+    tool_definition: {
+      name: tool.function.name,
+      args: tool.function.parameters,
+    },
+  };
+
+  return builder.build(obj);
 }
 
 export const generateNonNativeToolSystemMessage = (tools: Tool[]) => {
@@ -52,7 +57,7 @@ export const generateNonNativeToolSystemMessage = (tools: Tool[]) => {
   }
   let prompt = `The following tool definitions define tools that can be "called" to perform actions.
     Decided whether to use them based on the user's request and the context. 
-    To use a tool, respond with a <tool-call> xml tag containing the tool name and args. For example, this tool:`;
+    To use a tool, respond with a <tool_call> specifying name and args. Do NOT put a tool call in any codeblock. For example, this tool:`;
 
   prompt += EXAMPLE_TOOL;
 
@@ -67,4 +72,32 @@ export const generateNonNativeToolSystemMessage = (tools: Tool[]) => {
     prompt += "\n";
   }
   return prompt;
+};
+
+export const getXmlToolCallsFromContent = (
+  content: string,
+  existingToolCalls: ToolCallDelta[] = [],
+): ToolCall[] => {
+  const toolCallRegex = /<tool_call>([\s\S]*?)<\/tool_call>/g;
+  const matches = [...content.matchAll(toolCallRegex)].map((match) =>
+    match[0].trim(),
+  );
+
+  const parser = new XMLParser({
+    ignoreAttributes: true,
+    parseTagValue: true,
+    trimValues: true,
+  });
+
+  return matches.map((match, index) => {
+    const parsed = parser.parse(match);
+    return {
+      id: existingToolCalls[index]?.id ?? `tool-call-${index}`,
+      type: "function",
+      function: {
+        name: parsed["tool_call"]?.name,
+        arguments: JSON.stringify(parsed["tool_call"]?.args),
+      },
+    };
+  });
 };

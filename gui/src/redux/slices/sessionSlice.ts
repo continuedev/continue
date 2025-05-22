@@ -26,6 +26,7 @@ import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
+import { getXmlToolCallsFromContent } from "../../util/non-native-tools";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
@@ -381,6 +382,23 @@ export const sessionSlice = createSlice({
                 // Note this only works because new message above
                 // was already rendered from parts to string
                 lastMessage.content += messageContent;
+
+                if (lastMessage.role === "assistant") {
+                  const xmlToolCalls = getXmlToolCallsFromContent(
+                    renderChatMessage(lastMessage),
+                    lastMessage.toolCalls ?? [],
+                  );
+                  if (xmlToolCalls.length > 0) {
+                    const toolCall = xmlToolCalls[0]; // Only support one for now
+                    lastMessage.toolCalls = [toolCall];
+                    lastItem.toolCallState = {
+                      status: "done",
+                      toolCall: toolCall,
+                      parsedArgs: JSON.parse(toolCall.function.arguments),
+                      toolCallId: toolCall.id,
+                    };
+                  }
+                }
               }
             } else if (message.role === "thinking" && message.signature) {
               if (lastMessage.role === "thinking") {
