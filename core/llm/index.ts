@@ -187,6 +187,9 @@ export abstract class BaseLLM implements ILLM {
   maxEmbeddingChunkSize: number;
   maxEmbeddingBatchSize: number;
 
+  //URI to local block defining this LLM
+  sourceFile?: string;
+
   private _llmOptions: LLMOptions;
 
   protected openaiAdapter?: BaseLlmApi;
@@ -290,6 +293,7 @@ export abstract class BaseLLM implements ILLM {
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
 
     this.autocompleteOptions = options.autocompleteOptions;
+    this.sourceFile = options.sourceFile;
   }
 
   getConfigurationStatus() {

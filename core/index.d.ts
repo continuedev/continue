@@ -237,6 +237,7 @@ export interface SiteIndexingConfig {
   maxDepth?: number;
   faviconUrl?: string;
   useLocalCrawling?: boolean;
+  sourceFile?: string;
 }
 
 export interface DocsIndexingDetails {
@@ -660,6 +661,8 @@ export interface LLMOptions {
   deploymentId?: string;
 
   env?: Record<string, string | number | boolean>;
+
+  sourceFile?: string;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -1035,6 +1038,7 @@ export interface CustomCommand {
   name: string;
   prompt: string;
   description?: string;
+  sourceFile?: string;
 }
 
 export interface Prediction {
@@ -1152,6 +1156,8 @@ export interface ModelDescription {
   capabilities?: ModelCapability;
   roles?: ModelRole[];
   configurationStatus?: LLMConfigurationStatuses;
+
+  sourceFile?: string;
 }
 
 export interface JSONEmbedOptions {
@@ -1306,6 +1312,7 @@ export interface MCPServerStatus extends MCPOptions {
   tools: MCPTool[];
   resources: MCPResource[];
   resourceTemplates: MCPResourceTemplate[];
+  sourceFile?: string;
 }
 
 export interface ContinueUIConfig {
