@@ -2,21 +2,37 @@
  * Extracts file paths from markdown code blocks
  */
 export function extractPathsFromCodeBlocks(content: string): string[] {
-  // Match:
-  // 1. Starting ```
-  // 2. Optional language identifier
-  // 3. Required whitespace
-  // 4. File path (captured) that must contain a dot and extension
-  const codeBlockRegex = /```(?:[\w-+#]+)?\s+([^\s\n()]+\.[a-zA-Z0-9]+)/g;
-  const paths: string[] = [];
-  let match;
+  console.log("CONTENT", content);
 
-  while ((match = codeBlockRegex.exec(content)) !== null) {
-    const path = match[1];
-    if (path && !path.startsWith("```")) {
-      paths.push(path);
+  const paths: string[] = [];
+
+  // Match code block opening patterns:
+  // 1. ```language filepath
+  // 2. ```filepath
+  // 3. ```language filepath (range)
+
+  // First match all code block starts
+  const codeBlockStarts = content.match(/```[^\n]+/g) || [];
+
+  for (const blockStart of codeBlockStarts) {
+    // Try to extract a valid filename with extension
+    const filenameMatches = blockStart.match(/([^\s()```]+\.[a-zA-Z0-9]+)/);
+
+    if (filenameMatches && filenameMatches[1]) {
+      const filename = filenameMatches[1];
+
+      // Verify this is a legitimate filename (not part of something else)
+      if (
+        // Check if valid extension
+        /\.[a-zA-Z0-9]+$/.test(filename) &&
+        // Make sure it's not a URL
+        !filename.includes("://") &&
+        // Avoid duplicates
+        !paths.includes(filename)
+      ) {
+        paths.push(filename);
+      }
     }
   }
-
   return paths;
 }
