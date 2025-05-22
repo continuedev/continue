@@ -1,16 +1,13 @@
-import { RadioGroup } from "@headlessui/react";
 import { LocalModelSize } from "core";
 import {
   DEFAULT_MODEL_GRANITE_LARGE,
-  DEFAULT_MODEL_GRANITE_SMALL,
+  DEFAULT_MODEL_GRANITE_SMALL
 } from "core/config/default";
 import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
-import { MODEL_REQUIREMENTS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
 import { ServerState } from "core/granite/commons/serverState";
-import { GB } from "core/granite/commons/sizeUtils";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
-import { isHighEndApple, shouldRecommendLargeModel, SystemInfo } from "core/granite/commons/sysInfo";
+import { shouldRecommendLargeModel, SystemInfo } from "core/granite/commons/sysInfo";
 import { formatSize } from "core/granite/commons/textUtils";
 import { checkMinimumServerVersion, MIN_OLLAMA_VERSION } from "core/granite/commons/versions";
 import {
@@ -198,12 +195,6 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     </WizardContext.Provider>
   );
 };
-
-interface ModelOption {
-  key: LocalModelSize;
-  name: string;
-  description: string;
-}
 
 interface StepProps {
   isActive: boolean;
@@ -413,9 +404,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
 const ModelSelectionStep: React.FC<StepProps> = (props) => {
   const {
     serverState,
-    preselectedModel,
     selectedModel,
-    setSelectedModel,
     modelInstallationProgress,
     setModelInstallationProgress,
     modelInstallationStatus,
@@ -451,16 +440,6 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     setModelInstallationProgress(0);
   };
 
-  const handleModelChange = (value: LocalModelSize) => {
-    setSelectedModel(value);
-    vscode.postMessage({
-      command: "selectModels",
-      data: {
-        model: value,
-      },
-    });
-  };
-
   useEffect(() => {
     //cancel download on error
     if (modelInstallationError || isOffline) {
@@ -488,28 +467,6 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     setSystemErrors(sysErrors);
   }, [systemInfo, selectedModel, statusByModel, serverState.version]);
 
-  const recommendedMemoryThreshold = MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model].recommendedMemoryBytes / GB;
-  const modelOptions: ModelOption[] = [
-    {
-      key: "large",
-      name: "Large - 8 billion parameters",
-      description: `For machines with ${recommendedMemoryThreshold}\u{200A}GB of ${
-        systemInfo && isHighEndApple(systemInfo.gpus)
-          ? "system memory"
-          : "video memory and a high-performance GPU"
-      }.`,
-    },
-    {
-      key: "small",
-      name: "Small - 2 billion parameters",
-      description: `For machines with less than ${recommendedMemoryThreshold}\u{200A}GB of ${
-        systemInfo && isHighEndApple(systemInfo.gpus)
-          ? "system memory"
-          : "video memory and a lower-performance GPU"
-      }. Small models have limited capabilities and are intended for testing only.`,
-    },
-  ];
-
   const serverStatus = serverState.status;
 
   return (
@@ -517,53 +474,9 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
       {props.isActive && (
         <div className="mt-4">
           <p className="text-sm text-[--vscode-editor-foreground]">
-            Select your preferred model size. You can change this preference in the settings.
+            Setup will download Granite AI models.<br/>
+            Download size: {formatSize(getRequiredSpace(selectedModel, statusByModel))}.
           </p>
-          <RadioGroup
-            value={selectedModel}
-            onChange={handleModelChange}
-            className="mt-4"
-            disabled={modelInstallationStatus !== "idle"}
-          >
-            <div className="space-y-4">
-              {modelOptions.map((option) => (
-                <RadioGroup.Option
-                  key={option.key}
-                  value={option.key}
-                  className="relative flex cursor-pointer rounded focus:outline-none"
-                >
-                  {({ checked }) => (
-                    <div className="mt-1 flex w-full items-start">
-                      <input
-                        type="radio"
-                        checked={checked}
-                        readOnly
-                        className="mt-2 h-4 w-4 border border-[--vscode-editor-foreground] bg-transparent focus:ring-0 focus:ring-offset-0"
-                      />
-                      <div className="ml-3 space-y-1">
-                        <RadioGroup.Label className="font-bold text-[--vscode-editor-foreground]">
-                          {option.name}
-                        </RadioGroup.Label>
-                        <RadioGroup.Description className="text-sm leading-normal text-[--vscode-editor-foreground] opacity-80">
-                          {option.description}
-                        </RadioGroup.Description>
-                        {option.key === preselectedModel && option.key === "large" && (
-                          <p className="text-sm leading-normal text-[--vscode-editorWarning-foreground,#ddb100]">
-                            Recommended for your machine
-                          </p>
-                        )}
-                        {option.key === "large" && option.key !== preselectedModel && selectedModel === "large" && (
-                          <p className="text-sm leading-normal text-[--vscode-errorForeground]">
-                            Not recommended for your machine
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </RadioGroup.Option>
-              ))}
-            </div>
-          </RadioGroup>
 
           <div className="mt-4 flex items-center gap-2">
             {modelInstallationStatus === "idle" && (
@@ -671,9 +584,11 @@ const WizardContent: React.FC = () => {
     setSystemInfo,
     setInstallationModes,
     setPreselectedModel,
+    preselectedModel,
     setSelectedModel,
     setModelInstallationProgress,
     setModelInstallationError,
+    modelInstallationStatus,
     setModelInstallationStatus,
     setIsOffline,
     setOllamaInstallationProgress,
@@ -685,7 +600,7 @@ const WizardContent: React.FC = () => {
   } = useWizardContext();
   const currentStatusRef = useRef(currentStatus);
   const isVisibleRef = useRef(isVisible);
-
+  const modelInstallationStatusRef = useRef(modelInstallationStatus);
   const requestStatus = () => {
     if(!isVisibleRef.current) {
       return;
@@ -702,11 +617,14 @@ const WizardContent: React.FC = () => {
     });
   }
 
-
   // Update ref when currentStatus changes
   useEffect(() => {
     currentStatusRef.current = currentStatus;
   }, [currentStatus]);
+
+  useEffect(() => {
+    modelInstallationStatusRef.current = modelInstallationStatus;
+  }, [modelInstallationStatus]);
 
   // Update ref when visibility changes
   useEffect(() => {
@@ -736,18 +654,10 @@ const WizardContent: React.FC = () => {
             ? "large"
             : "small";
           setPreselectedModel(preselectedModel);
+          setSelectedModel("large");
           const wizardState = data.wizardState as WizardState | undefined;
-          if (wizardState) {
-            if (wizardState?.selectedModelSize) {
-              setSelectedModel(wizardState.selectedModelSize);
-            } else {
-              setSelectedModel(preselectedModel);
-            }
-            if (wizardState?.stepStatuses) {
-              setStepStatuses(wizardState.stepStatuses);
-            }
-          } else {
-            setSelectedModel(preselectedModel);
+          if (wizardState?.stepStatuses) {
+            setStepStatuses(wizardState.stepStatuses);
           }
 
           break;
@@ -760,36 +670,40 @@ const WizardContent: React.FC = () => {
           setOllamaOutdated(isOllamaOutdated);
           setServerState(newServerState);
 
+          const modelStatusMap = new Map<string, ModelStatus>(Object.entries(data.statusByModel));
+          setStatusByModel(modelStatusMap);
+
           const newStepStatuses = data.wizardState.stepStatuses as boolean[];
           setStepStatuses((prevStatuses) => {
-            if (prevStatuses[OLLAMA_STEP] && !newStepStatuses[OLLAMA_STEP]) {
-              //Ollama was just uninstalled/downgraded, return to the Ollama step
-              setActiveStep(OLLAMA_STEP);
-            } else if (
-              newStepStatuses[OLLAMA_STEP] &&
-              !newStepStatuses[MODELS_STEP] &&
-              prevStatuses[OLLAMA_STEP] !== newStepStatuses[OLLAMA_STEP]
-            ) {
-              setActiveStep(MODELS_STEP);
+            const ollamaStepChanged = prevStatuses[OLLAMA_STEP] !== newStepStatuses[OLLAMA_STEP];
+            const modelsStepChanged = prevStatuses[MODELS_STEP] !== newStepStatuses[MODELS_STEP];
+
+            if (ollamaStepChanged) {
+              if (!newStepStatuses[OLLAMA_STEP]) {
+                //Ollama was just uninstalled/downgraded, return to the Ollama step
+                setActiveStep(OLLAMA_STEP);
+              } else if (!newStepStatuses[MODELS_STEP]) {
+                setActiveStep(MODELS_STEP);
+              }
             }
             if (newStepStatuses[MODELS_STEP]) {
               setModelInstallationProgress(100);
               setModelInstallationStatus("complete");
-              if (
-                !newStepStatuses[FINAL_STEP] &&
-                prevStatuses[MODELS_STEP] !== newStepStatuses[MODELS_STEP] &&
-                !isOllamaOutdated
-              ) {
+              if (!newStepStatuses[FINAL_STEP] && modelsStepChanged && !isOllamaOutdated) {
                 setActiveStep(FINAL_STEP);
               }
+            } else if (modelsStepChanged && modelInstallationStatusRef.current === "complete") {
+              // Model installation was complete, and then some model was uninstalled
+              // Reset the progress and status to allow the user to start the installation again
+              setModelInstallationProgress(0);
+              setModelInstallationStatus("idle");
+              setActiveStep(MODELS_STEP);
             }
+
             return newStepStatuses;
           });
-          const modelStatusMap = new Map(Object.entries(data.statusByModel));
-          setStatusByModel(modelStatusMap as Map<string, ModelStatus>);
           if (
-            (newStepStatuses[OLLAMA_STEP] &&
-              currStatus === WizardStatus.downloadingOllama) ||
+            (newStepStatuses[OLLAMA_STEP] && currStatus === WizardStatus.downloadingOllama) ||
             currStatus === WizardStatus.startingOllama
           ) {
             setCurrentStatus(WizardStatus.idle);
@@ -864,7 +778,7 @@ const WizardContent: React.FC = () => {
 
   const steps = [
     { component: OllamaInstallStep, title: "Download and install Ollama" },
-    { component: ModelSelectionStep, title: "Download Granite model" },
+    { component: ModelSelectionStep, title: "Download Granite" },
     { component: StartLocalAIStep, title: "Start using local AI" },
   ];
 
@@ -878,9 +792,17 @@ const WizardContent: React.FC = () => {
             <h2 className="mb-2 text-3xl font-normal text-[--vscode-foreground]">
               Granite.Code Setup
             </h2>
-            <p className="mb-8 text-[--vscode-descriptionForeground]">
-              Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance. For a good experience, 10&#x200A;GB of video memory and a high-performance GPU are required.
+            <p className="mb-4 text-[--vscode-descriptionForeground]">
+              Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance.
             </p>
+            <p className="mb-4 text-[--vscode-descriptionForeground]">
+              For a good experience, an Apple Silicon Mac or a GPU with at least 10&#x200A;GB of video memory is required.
+            </p>
+            {preselectedModel !== "large" && (
+              <p className="mb-4 text-[--vscode-editorWarning-foreground]">
+              Warning : this device's hardware does not meet the minimum requirements.
+            </p>
+            )}
 
             <div className="space-y-[1px]">
               {steps.map((step, index) => {
@@ -922,8 +844,15 @@ function getRequiredSpace(
       ? DEFAULT_MODEL_GRANITE_LARGE
       : DEFAULT_MODEL_GRANITE_SMALL;
   const models: string[] = [graniteModel.model, "nomic-embed-text:latest"];
-  return models
-    .filter((model) => statusByModel.get(model) === ModelStatus.missing)
+  let missingModels = models
+    .filter((model) => statusByModel.get(model) !== ModelStatus.installed);
+
+  // If the user clicks back to a skipped download step, we want to show entire download size, not 0B
+  if (missingModels.length === 0) {
+    missingModels = models;
+  }
+
+  return missingModels
     .reduce((sum, model) => {
       const modelInfo = DEFAULT_MODEL_INFO.get(model); //FIXME get from registry
       return sum + (modelInfo ? modelInfo.size : 0);
