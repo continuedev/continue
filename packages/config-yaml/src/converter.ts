@@ -128,48 +128,14 @@ function convertCustomCommand(
 
 function convertMcp(mcp: any): NonNullable<ConfigYaml["mcpServers"]>[number] {
   const { transport } = mcp;
-  const { type } = transport;
+  const { command, args, env, server_name } = transport;
 
-  // Common properties for all server types
-  const baseServer: any = {
-    name: mcp.name,
-    type: type,
+  return {
+    command,
+    args,
+    env,
+    name: server_name || "MCP Server",
   };
-
-  if (mcp.faviconUrl) {
-    baseServer.faviconUrl = mcp.faviconUrl
-  }
-  if (mcp.connectionTimeout) {
-    baseServer.connectionTimeout = mcp.connectionTimeout
-  }
-
-  // Type-specific properties
-  switch (type) {
-    case "stdio":
-      const stdioServer = {
-        ...baseServer,
-        command: transport.command,
-      };
-
-      if (transport.args) {
-        stdioServer.args = transport.args
-      }
-      if (transport.env) {
-        stdioServer.env = transport.env
-      }
-
-      return stdioServer;
-
-    case "sse":
-    case "websocket":
-      return {
-        ...baseServer,
-        url: transport.url
-      };
-
-    default:
-      throw new Error(`Unknown MCP server type: ${type}`);
-  }
 }
 
 function convertDoc(
