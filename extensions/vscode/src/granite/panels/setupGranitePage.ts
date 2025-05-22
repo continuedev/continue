@@ -6,7 +6,7 @@ import {
   DEFAULT_MODEL_GRANITE_SMALL,
 } from "core/config/default";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
+import { GRANITE_ONBOARDING_INCOMPLETE_KEY } from "core/granite/commons/constants";
 import { DOWNLOADABLE_MODELS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
@@ -84,17 +84,12 @@ export class SetupGranitePage {
           this.wizardState.stepStatuses[MODELS_STEP];
         let reopen = false;
         if (!isComplete) {
-          const RESUME_LABEL = "Resume Setup";
-          const choice = await window.showWarningMessage(
-            "Resume Granite.Code Setup?",
-            {
-              modal: true,
-              detail:
-                "Granite.Code needs to be setup before it can be used. Setup is not yet complete.",
-            },
-            RESUME_LABEL, // Cancel is always shown
+          const REOPEN_LABEL = "Open Setup";
+          const choice = await window.showInformationMessage(
+            "Granite.Code setup is incomplete",
+            REOPEN_LABEL, // Cancel is always shown
           );
-          reopen = choice === RESUME_LABEL;
+          reopen = choice === REOPEN_LABEL;
         }
         this.dispose();
         if (reopen) {
@@ -441,7 +436,7 @@ export class SetupGranitePage {
   }
 
   private async hideGraniteOnboardingCard() {
-    await this.context.globalState.update(SHOW_GRANITE_ONBOARDING_CARD_KEY, false);
+    await this.context.globalState.update(GRANITE_ONBOARDING_INCOMPLETE_KEY, false);
     await commands.executeCommand("setContext", "granite.initialized", true);
     this.chatWebViewProtocol.send("setShowGraniteOnboardingCard", false);
   }
