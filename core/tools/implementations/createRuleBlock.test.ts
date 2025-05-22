@@ -25,23 +25,26 @@ describe("createRuleBlockImpl", () => {
 
     const result = await createRuleBlockImpl(args, mockExtras as any);
 
-    // Verify that writeFile was called with the correct YAML
+    // Verify that writeFile was called
     expect(mockIde.writeFile).toHaveBeenCalled();
-    const yamlContent = mockIde.writeFile.mock.calls[0][1];
-    const parsedYaml = YAML.parse(yamlContent);
 
-    // Verify the structure of the YAML
-    expect(parsedYaml).toEqual({
-      name: "Test Rule",
-      version: "0.0.1",
-      schema: "v1",
-      rules: [
-        {
-          name: "Test Rule",
-          rule: "Always write tests",
-        },
-      ],
-    });
+    // Verify the file name
+    const fileUri = mockIde.writeFile.mock.calls[0][0];
+    expect(fileUri).toContain("test-rule.md");
+
+    // Get the content
+    const fileContent = mockIde.writeFile.mock.calls[0][1];
+
+    // Verify the content structure
+    expect(fileContent).toContain("---");
+    expect(fileContent).toContain("# Test Rule");
+    expect(fileContent).toContain("Always write tests");
+
+    // Should have empty frontmatter - it will be "{}" not "" due to how YAML.stringify works with empty objects
+    const parts = fileContent.split(/^---\s*$/m);
+    expect(parts.length).toBeGreaterThanOrEqual(3);
+    const frontmatterStr = parts[1].trim();
+    expect(frontmatterStr === "" || frontmatterStr === "{}").toBeTruthy();
   });
 
   it("should create a rule with glob pattern", async () => {
@@ -53,14 +56,22 @@ describe("createRuleBlockImpl", () => {
 
     await createRuleBlockImpl(args, mockExtras as any);
 
-    // Verify the YAML structure with globs
-    const yamlContent = mockIde.writeFile.mock.calls[0][1];
-    const parsedYaml = YAML.parse(yamlContent);
-    expect(parsedYaml.rules[0]).toEqual({
-      name: "TypeScript Rule",
-      rule: "Use interfaces for object shapes",
+    // Get the content
+    const fileContent = mockIde.writeFile.mock.calls[0][1];
+
+    // Parse the frontmatter
+    const parts = fileContent.split(/^---\s*$/m);
+    const frontmatterStr = parts[1].trim();
+    const frontmatter = YAML.parse(frontmatterStr);
+
+    // Verify the frontmatter contains globs
+    expect(frontmatter).toEqual({
       globs: "**/*.{ts,tsx}",
     });
+
+    // Verify the content has the rule
+    expect(fileContent).toContain("# TypeScript Rule");
+    expect(fileContent).toContain("Use interfaces for object shapes");
   });
 
   it("should create a filename based on sanitized rule name", async () => {
@@ -73,6 +84,59 @@ describe("createRuleBlockImpl", () => {
 
     // Check that the filename is sanitized
     const fileUri = mockIde.writeFile.mock.calls[0][0];
-    expect(fileUri).toContain("special-chracters-spaces.yaml");
+    expect(fileUri).toContain("special-chracters-spaces.md");
+  });
+
+  it("should include description in frontmatter and content", async () => {
+    const args = {
+      name: "Description Test",
+      rule: "This is the rule content",
+      description: "This is a detailed explanation of the rule",
+    };
+
+    await createRuleBlockImpl(args, mockExtras as any);
+
+    // Get the content
+    const fileContent = mockIde.writeFile.mock.calls[0][1];
+
+    // Parse the frontmatter
+    const parts = fileContent.split(/^---\s*$/m);
+    const frontmatterStr = parts[1].trim();
+    const frontmatter = YAML.parse(frontmatterStr);
+
+    // Verify the frontmatter contains description
+    expect(frontmatter).toEqual({
+      description: "This is a detailed explanation of the rule",
+    });
+
+    // Verify the content structure includes description before rule
+    expect(fileContent).toContain("# Description Test");
+    expect(fileContent).toContain("This is a detailed explanation of the rule");
+    expect(fileContent).toContain("This is the rule content");
+  });
+
+  it("should include both globs and description in frontmatter", async () => {
+    const args = {
+      name: "Complete Rule",
+      rule: "Follow this standard",
+      description: "This rule enforces our team standards",
+      globs: "**/*.js",
+    };
+
+    await createRuleBlockImpl(args, mockExtras as any);
+
+    // Get the content
+    const fileContent = mockIde.writeFile.mock.calls[0][1];
+
+    // Parse the frontmatter
+    const parts = fileContent.split(/^---\s*$/m);
+    const frontmatterStr = parts[1].trim();
+    const frontmatter = YAML.parse(frontmatterStr);
+
+    // Verify the frontmatter contains both description and globs
+    expect(frontmatter).toEqual({
+      description: "This rule enforces our team standards",
+      globs: "**/*.js",
+    });
   });
 });
