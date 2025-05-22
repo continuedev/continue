@@ -108,7 +108,7 @@ class DiffManager(private val project: Project) : DumbAware {
         )
         continuePluginService.ideProtocolClient?.deleteAtIndex(diffInfo.stepIndex)
         continuePluginService.ideProtocolClient?.sendAcceptRejectDiff(false, diffInfo.stepIndex)
-
+        continuePluginService.coreMessenger?.request("cancelApply", null, null) {}
         cleanUpFile(file)
     }
 

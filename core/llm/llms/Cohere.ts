@@ -1,3 +1,4 @@
+import { streamJSON } from "@continuedev/fetch";
 import {
   ChatMessage,
   Chunk,
@@ -6,7 +7,6 @@ import {
 } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamJSON } from "../stream.js";
 
 class Cohere extends BaseLLM {
   static providerName = "cohere";
@@ -83,6 +83,10 @@ class Cohere extends BaseLLM {
       }),
       signal,
     });
+
+    if (resp.status === 499) {
+      return; // Aborted by user
+    }
 
     if (options.stream === false) {
       const data = await resp.json();

@@ -111,7 +111,8 @@ class DiffStreamHandler(
                 suffix = suffix,
                 language = virtualFile?.fileType?.name,
                 modelTitle = modelTitle,
-                includeRulesInSystemMessage = includeRulesInSystemMessage
+                includeRulesInSystemMessage = includeRulesInSystemMessage,
+                fileUri = virtualFile?.url
             ),
             null
         ) { response ->
@@ -288,7 +289,6 @@ class DiffStreamHandler(
             }
         }
     }
-
 
     private fun handleFinishedResponse() {
         ApplicationManager.getApplication().invokeLater {

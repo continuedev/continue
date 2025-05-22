@@ -46,6 +46,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
   abort: [undefined, void];
+  cancelApply: [undefined, void];
 
   // History
   "history/list": [ListHistoryOptions, SessionMetadata[]];

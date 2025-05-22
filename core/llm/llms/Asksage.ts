@@ -134,10 +134,8 @@ class Asksage extends BaseLLM {
       body: JSON.stringify(args),
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `API request failed with status ${response.status}: ${response.statusText}`,
-      );
+    if (response.status === 499) {
+      return ""; // Aborted by user
     }
 
     const data = await response.json();
@@ -167,10 +165,8 @@ class Asksage extends BaseLLM {
       signal,
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `API request failed with status ${response.status}: ${response.statusText}`,
-      );
+    if (response.status === 499) {
+      return; // Aborted by user
     }
 
     const data = await response.json();

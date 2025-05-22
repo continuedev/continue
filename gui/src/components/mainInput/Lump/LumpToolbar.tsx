@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { AnimatedEllipsis } from "../..";
@@ -40,12 +40,27 @@ function GeneratingIndicator() {
   );
 }
 
+function ApplyingIndicator() {
+  return (
+    <div className="text-xs text-gray-400">
+      <span>Applying</span>
+      <AnimatedEllipsis />
+    </div>
+  );
+}
+
 export function LumpToolbar() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const jetbrains = isJetBrains();
+  const applyStates = useAppSelector(
+    (store) => store.session.codeBlockApplyStates.states,
+  );
+  const isApplying = useMemo(() => {
+    return applyStates.find((state) => state.status === "streaming");
+  }, [applyStates]);
 
   const toolCallState = useSelector(selectCurrentToolCall);
 
@@ -84,6 +99,26 @@ export function LumpToolbar() {
           }}
         >
           ■ Stop TTS
+        </StopButton>
+      </Container>
+    );
+  }
+
+  if (isApplying) {
+    return (
+      <Container>
+        <ApplyingIndicator />
+        <StopButton
+          className="text-gray-400"
+          onClick={() => {
+            // Note that this will NOT stop generation but once apply is cancelled will show the Generating/cancel option
+            // Apply is prioritized because it can be more catastrophic
+            // Intentional to be more WYSIWYG for now
+            ideMessenger.post("cancelApply", undefined);
+          }}
+        >
+          {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
+          {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
         </StopButton>
       </Container>
     );

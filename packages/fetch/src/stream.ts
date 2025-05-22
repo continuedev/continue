@@ -2,7 +2,7 @@ export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
   for await (const chunk of nodeReadable) {
-    // @ts-expect-error
+    // @ts-ignore
     yield chunk as Uint8Array;
   }
 }
@@ -13,6 +13,7 @@ export async function* streamResponse(
   if (response.status === 499) {
     return; // In case of client-side cancellation, just return
   }
+
   if (response.status !== 200) {
     throw new Error(await response.text());
   }

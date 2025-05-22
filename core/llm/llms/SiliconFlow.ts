@@ -1,5 +1,5 @@
+import { streamSse } from "@continuedev/fetch";
 import { Chunk, CompletionOptions, LLMOptions } from "../../index.js";
-import { streamSse } from "../stream.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
@@ -58,7 +58,7 @@ class SiliconFlow extends OpenAI {
       console.warn("[SiliconFlow] rerank: query is empty");
       return [];
     }
-    
+
     if (!chunks || chunks.length === 0) {
       console.warn("[SiliconFlow] rerank: chunks is empty");
       return [];
