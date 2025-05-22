@@ -110,8 +110,8 @@ export class SetupGranitePage {
     ));
 
     // Add visibility change detection in the webview panel
-    this._disposables.push(this._panel.onDidChangeViewState((event) => {
-      this._panel.webview.postMessage({
+    this._disposables.push(this._panel.onDidChangeViewState(async (event) => {
+      await this._panel.webview.postMessage({
         command: "visibilityChange",
         data: {
           isVisible: event.webviewPanel.visible
@@ -129,8 +129,8 @@ export class SetupGranitePage {
     this._setWebviewMessageListener(this._panel);
 
     // Send a new status on configuration changes
-    const cleanupConfigUpdate = configHandler.onConfigUpdate(({ config }) => {
-      this.publishStatus(this._panel.webview);
+    const cleanupConfigUpdate = configHandler.onConfigUpdate(async ({ config }) => {
+      await this.publishStatus(this._panel.webview);
     });
     this._disposables.push(new Disposable(cleanupConfigUpdate));
   }
@@ -289,7 +289,7 @@ export class SetupGranitePage {
 
         switch (command) {
           case "init":
-            webview.postMessage({
+            await webview.postMessage({
               command: "init",
               data: {
                 installModes: await this.server.supportedInstallModes(),
@@ -303,7 +303,7 @@ export class SetupGranitePage {
             break;
           case "showTutorial":
             this.wizardState.stepStatuses[FINAL_STEP] = true;
-            this.publishStatus(webview);
+            await this.publishStatus(webview);
             await this.showTutorial();
             break;
           case "cancelInstallation":
@@ -331,7 +331,7 @@ export class SetupGranitePage {
             }
             this.debounceStatus = now;
 
-            this.publishStatus(webview);
+            await this.publishStatus(webview);
             break;
           case "selectModels":
             this.wizardState.selectedModelSize = data.model as LocalModelSize;
@@ -356,7 +356,7 @@ export class SetupGranitePage {
       if (mode !== "windows") {
         return;
       }
-      webview.postMessage({
+      await webview.postMessage({
         command: "ollamaInstallationProgress",
         data: {
           progress,
@@ -379,7 +379,7 @@ export class SetupGranitePage {
     if (serverState.status !== ServerStatus.started) {
       const errorMessage = `Ollama server failed to start in ${timeout / 1000} seconds`;
       console.error(errorMessage);
-      webview.postMessage({
+      await webview.postMessage({
         command: "modelInstallationProgress",
         data: {
           error: errorMessage,
@@ -390,7 +390,7 @@ export class SetupGranitePage {
     console.log("Installing models");
 
     async function reportProgress(progress: ProgressData) {
-      webview.postMessage({
+      await webview.postMessage({
         command: "modelInstallationProgress",
         data: {
           progress,
@@ -413,11 +413,11 @@ export class SetupGranitePage {
         reportProgress,
       );
       this.wizardState.stepStatuses[MODELS_STEP] = result;
-      this.publishStatus(webview);
+      await this.publishStatus(webview);
       if (result) {
         await this.saveSettings(modelSize);
-        this.hideGraniteOnboardingCard();
-        commands.executeCommand("continue.continueGUIView.focus");
+        await this.hideGraniteOnboardingCard();
+        await commands.executeCommand("continue.continueGUIView.focus");
         if (!panel.visible) {
           const selection = await window.showInformationMessage(
             "Granite.Code is ready to be used.",
@@ -430,7 +430,7 @@ export class SetupGranitePage {
       }
     } catch (error: any) {
       console.error("Error during model installation", error);
-      webview.postMessage({
+      await webview.postMessage({
         command: "modelInstallationProgress",
         data: {
           error: error.message,
@@ -439,9 +439,9 @@ export class SetupGranitePage {
     }
   }
 
-  private hideGraniteOnboardingCard() {
-    this.context.globalState.update(SHOW_GRANITE_ONBOARDING_CARD_KEY, false);
-    commands.executeCommand("setContext", "granite.initialized", true);
+  private async hideGraniteOnboardingCard() {
+    await this.context.globalState.update(SHOW_GRANITE_ONBOARDING_CARD_KEY, false);
+    await commands.executeCommand("setContext", "granite.initialized", true);
     this.chatWebViewProtocol.send("setShowGraniteOnboardingCard", false);
   }
 
@@ -487,7 +487,7 @@ export class SetupGranitePage {
     this.wizardState.stepStatuses[OLLAMA_STEP] = serverVersion !== undefined && checkMinimumServerVersion(serverVersion) && (
       serverState.status === ServerStatus.started ||
       serverState.status === ServerStatus.stopped);
-    webview.postMessage({
+    await webview.postMessage({
       command: "status",
       data: {
         serverState,
