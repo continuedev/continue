@@ -1,6 +1,7 @@
 import {
   ChatHistoryItem,
   ChatMessage,
+  ContextItemWithId,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
@@ -58,7 +59,7 @@ const EDIT_MESSAGE = `\
   at the beginning, middle, or end of files using these "lazy" comments. Only
   provide the complete file when explicitly requested. Include a concise explanation
   of changes unless the user specifically asks for code only.
-`
+`;
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
@@ -77,6 +78,31 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 ${EDIT_MESSAGE}
 </important_rules>`;
 
+/**
+ * Helper function to get the context items for a user message
+ */
+function getUserContextItems(
+  userMsg: UserChatMessage | ToolResultChatMessage | undefined,
+  history: ChatHistoryItem[],
+): ContextItemWithId[] {
+  if (!userMsg) return [];
+
+  // Find the history item that contains the userMsg
+  const historyItem = history.find((item) => {
+    // Check if the message ID matches
+    if ("id" in userMsg && "id" in item.message) {
+      return (item.message as any).id === (userMsg as any).id;
+    }
+    // Fallback to content comparison
+    return (
+      item.message.content === userMsg.content &&
+      item.message.role === userMsg.role
+    );
+  });
+
+  return historyItem?.contextItems || [];
+}
+
 export function constructMessages(
   messageMode: string,
   history: ChatHistoryItem[],
@@ -92,7 +118,8 @@ export function constructMessages(
     const historyItem = filteredHistory[i];
 
     if (messageMode === "chat") {
-      const toolMessage: ToolResultChatMessage = historyItem.message as ToolResultChatMessage;
+      const toolMessage: ToolResultChatMessage =
+        historyItem.message as ToolResultChatMessage;
       if (historyItem.toolCallState?.toolCallId || toolMessage.toolCallId) {
         // remove all tool calls from the history
         continue;
@@ -127,10 +154,16 @@ export function constructMessages(
     | ToolResultChatMessage
     | undefined;
 
+  // Get context items for the last user message
+  const lastUserContextItems = getUserContextItems(
+    lastUserMsg,
+    filteredHistory,
+  );
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatOrAgentSystemMessage,
     rules,
     userMessage: lastUserMsg,
+    contextItems: lastUserContextItems,
   });
 
   if (systemMessage.trim()) {

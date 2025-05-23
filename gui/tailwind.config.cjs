@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 const defaultTheme = require("tailwindcss/defaultTheme");
+const { varWithFallback, THEME_COLORS } = require("./src/styles/theme");
 
 module.exports = {
   content: [
@@ -29,25 +30,75 @@ module.exports = {
         default: "5px",
       },
       colors: {
-        lightgray: "#999998",
-        "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",
-        "vsc-background": "var(--vscode-sideBar-background, rgb(30 30 30))",
-        "vsc-foreground": "var(--vscode-editor-foreground, #fff)",
-        "vsc-editor-background":
-          "var(--vscode-editor-background, var(--vscode-sideBar-background, rgb(30 30 30)))",
-        "vsc-input-border": "var(--vscode-input-border, #999998)",
-        "vsc-commandCenter-inactiveBorder":
-          "var(--vscode-commandCenter-inactiveBorder, #999998)",
+        background: varWithFallback("background"),
+        foreground: varWithFallback("foreground"),
+        editor: {
+          DEFAULT: varWithFallback("editor-background"),
+          foreground: varWithFallback("editor-foreground"),
+        },
+        primary: {
+          DEFAULT: varWithFallback("primary-background"),
+          foreground: varWithFallback("primary-foreground"),
+          hover: varWithFallback("primary-hover"),
+        },
+        secondary: {
+          DEFAULT: varWithFallback("secondary-background"),
+          foreground: varWithFallback("secondary-foreground"),
+          hover: varWithFallback("secondary-hover"),
+        },
+        border: {
+          DEFAULT: varWithFallback("border"),
+          focus: varWithFallback("border-focus"),
+        },
+        command: {
+          DEFAULT: varWithFallback("command-background"),
+          foreground: varWithFallback("command-foreground"),
+          border: {
+            DEFAULT: varWithFallback("command-border"),
+            focus: varWithFallback("command-border-focus"),
+          },
+        },
+        description: {
+          DEFAULT: varWithFallback("description"),
+          muted: varWithFallback("description-muted"),
+        },
+        input: {
+          DEFAULT: varWithFallback("input-background"),
+          foreground: varWithFallback("input-foreground"),
+          border: varWithFallback("input-border"),
+          placeholder: varWithFallback("input-placeholder"),
+        },
+        table: {
+          oddRow: varWithFallback("table-oddRow"),
+        },
+        badge: {
+          DEFAULT: varWithFallback("badge-background"),
+          foreground: varWithFallback("badge-foreground"),
+        },
+        success: varWithFallback("success"),
+        warning: varWithFallback("warning"),
+        error: varWithFallback("error"),
+        link: varWithFallback("link"),
+        accent: varWithFallback("accent"),
+        findMatch: {
+          DEFAULT: THEME_COLORS["find-match"].default,
+          selected: varWithFallback("find-match-selected"),
+        },
+        list: {
+          hover: varWithFallback("list-hover"),
+          active: {
+            DEFAULT: varWithFallback("list-active"),
+            foreground: varWithFallback("list-active-foreground"),
+          },
+        },
 
-        // Starting to make things less vsc-specific
-        // TODO make it all non-IDE-specific naming
-        "find-match-selected":
-          "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0))",
-        "table-odd-rows":"var(--vscode-tree-tableOddRowsBackground, #1bbe84)",
-        "list-active": "var(--vscode-list-activeSelectionBackground, #1bbe84)",
-        "list-active-foreground":
-          "var(--vscode-quickInputList-focusForeground, var(--vscode-editor-foreground))",
-        badge: "var(--vscode-badge-background, #1bbe84)",
+        // DEPRECATED, slowly remove usages of these ide-named or explicit colors
+        lightgray: "#999998", // use border, description, or description-muted instead - AVOID
+        "vsc-input-background": varWithFallback("input-background"), // use "input-background" instead
+        "vsc-background": varWithFallback("background"), // use "background" instead
+        "vsc-foreground": varWithFallback("editor-foreground"), // use "foreground" instead
+        "vsc-editor-background": varWithFallback("editor-background"), // use "editor" instead
+        "vsc-input-border": varWithFallback("input-border"), // use "input-border" instead
       },
     },
   },
