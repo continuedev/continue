@@ -39,7 +39,7 @@ function Alert({ children, type = "info" }: AlertProps) {
   const { Icon } = ALERT_CONFIGS[type];
 
   return (
-    <div className="rounded-lg border-l-4 bg-[color:var(--vscode-editor-foreground)] p-4 opacity-70 shadow-none">
+    <div className="bg-editor-foreground rounded-lg border-l-4 p-4 opacity-70 shadow-none">
       <div className="flex items-start">
         <Icon
           className="h-6 min-h-5 w-6 min-w-5"
