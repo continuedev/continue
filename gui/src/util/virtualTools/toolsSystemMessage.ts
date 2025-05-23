@@ -69,7 +69,7 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
     return undefined;
   }
   let prompt = `The following tool definitions define tools that can be "called" to perform actions.
-    Decided whether to use them based on the user's request and the context. 
+    If it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool's description.
     To use a tool, respond with a <tool_call> specifying <name> and <args>. <args> is optional, only use if needed. 
     Do NOT put a tool call in any codeblock.
     You can only call one tool at a time. Ask and then wait for a response. For example, this tool:\n\n`;
