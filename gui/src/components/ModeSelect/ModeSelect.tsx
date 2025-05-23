@@ -38,13 +38,9 @@ export function ModeSelect() {
   }, [mode, agentModeSupported, dispatch, selectedModel]);
 
   const cycleMode = useCallback(() => {
-    if (mode === "chat" && agentModeSupported) {
-      dispatch(setMode("agent"));
-    } else {
-      dispatch(setMode("chat"));
-    }
+    dispatch(setMode(mode === "chat" ? "agent" : "chat"));
     mainEditor?.commands.focus();
-  }, [mode, agentModeSupported, mainEditor]);
+  }, [mode, mainEditor]);
 
   const selectMode = useCallback(
     (newMode: MessageModes) => {
