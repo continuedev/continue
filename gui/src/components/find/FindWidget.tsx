@@ -12,7 +12,6 @@ import {
   useState,
 } from "react";
 import { HeaderButton, Input } from "..";
-import { useAppSelector } from "../../redux/hooks";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 interface SearchMatch {
@@ -67,7 +66,8 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
 export const useFindWidget = (
   searchRef: RefObject<HTMLDivElement>,
   headerRef: RefObject<HTMLDivElement>,
-  dependencies: React.DependencyList,
+  refreshDependencies: React.DependencyList,
+  disabled: boolean,
 ) => {
   // Search input, debounced
   const [input, setInput] = useState<string>("");
@@ -329,7 +329,7 @@ export const useFindWidget = (
       scrollToMatch,
       caseSensitive,
       useRegex,
-      ...dependencies,
+      ...refreshDependencies,
     ],
   );
 
@@ -369,14 +369,10 @@ export const useFindWidget = (
     };
   }, [searchRef, refreshSearch, open]);
 
-  // Triggers that should cause results to temporarily disappear and then reload
-  // Active = LLM is generating, etc.
-  const active = useAppSelector((state) => state.session.isStreaming);
-
   useEffect(() => {
-    if (active || isResizing) setMatches([]);
+    if (disabled || isResizing) setMatches([]);
     else setTimeout(() => refreshSearch("none"), 300); // this gives plenty of time for resizing to finish
-  }, [refreshSearch, active, isResizing]);
+  }, [refreshSearch, disabled, isResizing]);
 
   useEffect(() => {
     if (!open) setMatches([]);
@@ -394,7 +390,7 @@ export const useFindWidget = (
         className={`fixed top-0 z-50 transition-all ${open ? "" : "-translate-y-full"} bg-vsc-background right-0 flex flex-row items-center gap-1.5 rounded-bl-lg border-0 border-b border-l border-solid border-zinc-700 pl-[3px] pr-3 sm:gap-2`}
       >
         <Input
-          disabled={active}
+          disabled={disabled}
           type="text"
           ref={inputRef}
           value={input}
@@ -417,7 +413,7 @@ export const useFindWidget = (
               previousMatch();
             }}
             className="h-4 w-4 focus:ring"
-            disabled={matches.length < 2 || active}
+            disabled={matches.length < 2 || disabled}
           >
             <ArrowUpIcon className="h-4 w-4" />
           </HeaderButtonWithToolTip>
@@ -429,13 +425,13 @@ export const useFindWidget = (
               nextMatch();
             }}
             className="h-4 w-4 focus:ring"
-            disabled={matches.length < 2 || active}
+            disabled={matches.length < 2 || disabled}
           >
             <ArrowDownIcon className="h-4 w-4" />
           </HeaderButtonWithToolTip>
         </div>
         <HeaderButtonWithToolTip
-          disabled={active}
+          disabled={disabled}
           inverted={caseSensitive}
           tooltipPlacement="top-end"
           text={

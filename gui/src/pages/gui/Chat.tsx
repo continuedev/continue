@@ -153,7 +153,12 @@ export function Chat() {
     };
   }, [isStreaming, jetbrains]);
 
-  const { widget, highlights } = useFindWidget(stepsDivRef, tabsRef, [history]);
+  const { widget, highlights } = useFindWidget(
+    stepsDivRef,
+    tabsRef,
+    [history],
+    isStreaming,
+  );
 
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
