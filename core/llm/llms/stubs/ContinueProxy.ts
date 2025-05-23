@@ -26,9 +26,11 @@ class ContinueProxy extends OpenAI {
   // but we need to keep track of the actual values that the proxy will use
   // to call whatever LLM API is chosen
   private actualApiBase?: string;
+  private env?: Record<string, any>;
 
   constructor(options: LLMOptions) {
     super(options);
+    this.env = options.env;
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
     this.orgScopeId = options.orgScopeId;
@@ -48,6 +50,7 @@ class ContinueProxy extends OpenAI {
       apiKeyLocation: this.apiKeyLocation,
       apiBase: this.actualApiBase,
       orgScopeId: this.orgScopeId ?? null,
+      env: this.env,
     };
     return {
       continueProperties,
