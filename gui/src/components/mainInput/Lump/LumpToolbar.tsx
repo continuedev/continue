@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
 import { callCurrentTool } from "../../../redux/thunks/callCurrentTool";
 import { cancelCurrentToolCall } from "../../../redux/thunks/cancelCurrentToolCall";
-import { cancelStream } from "../../../redux/thunks/cancelStream";
+import { cancelButton } from "../../../redux/thunks/cancelButton";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -96,7 +96,7 @@ export function LumpToolbar() {
         <StopButton
           className="text-gray-400"
           onClick={() => {
-            dispatch(cancelStream());
+            dispatch(cancelButton());
           }}
         >
           {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}

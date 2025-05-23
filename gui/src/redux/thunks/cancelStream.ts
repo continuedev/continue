@@ -1,10 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   abortStream,
-  clearLastEmptyResponse,
   setInactive,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { clearLastEmptyResponse } from "./clearLastEmptyResponse";
 
 export const cancelStream = createAsyncThunk<void, undefined, ThunkApiType>(
   "chat/cancelStream",

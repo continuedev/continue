@@ -27,6 +27,8 @@ import { renderChatMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
+import { cancelToolCallAndAddResult } from "../thunks/cancelToolCallAndAddResult";
+import { clearLastEmptyResponse } from "../thunks/clearLastEmptyResponse";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
 
@@ -102,21 +104,6 @@ export const sessionSlice = createSlice({
       const curMessage = state.history.at(-1);
       if (curMessage) {
         curMessage.isGatheringContext = payload;
-      }
-    },
-    clearLastEmptyResponse: (state) => {
-      if (state.history.length < 2) {
-        return;
-      }
-      const lastMessage = state.history[state.history.length - 1];
-
-      // Only clear in the case of an empty message
-      if (!lastMessage.message.content.length) {
-        state.mainEditorContentTrigger =
-          state.history[state.history.length - 2].editorState;
-        state.history = state.history.slice(0, -2);
-        // TODO is this logic correct for tool use conversations?
-        // Maybe slice at last index of "user" role message?
       }
     },
     // Trigger value picked up by editor with isMainInput to set its content
@@ -227,6 +214,12 @@ export const sessionSlice = createSlice({
         ...state.history[index],
         ...updates,
       };
+    },
+    removeLastHistoryItem: (state) => {
+      state.history.pop();
+    },
+    removeHistoryItemById: (state, action: PayloadAction<string>) => {
+      state.history = state.history.filter(item => item.message.id !== action.payload);
     },
     addContextItemsAtIndex: (
       state,
@@ -665,8 +658,36 @@ export const sessionSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Keep existing cases
     addPassthroughCases(builder, [streamResponseThunk]);
-  },
+    
+    // Add handlers for cancelToolCallAndAddResult
+    builder.addCase(cancelToolCallAndAddResult.fulfilled, (state, action) => {
+      if (action.payload) {
+        const { toolCallId, toolResultMessage } = action.payload;
+        
+        // First update the tool call status
+        const toolCallState = findToolCall(state.history, toolCallId);
+        if (toolCallState) {
+          toolCallState.status = "canceled";
+        }
+        
+        // Then add the tool result message to history
+        // Ensure the message has the required structure with id
+        if (toolResultMessage && toolResultMessage.message && toolResultMessage.message.id) {
+          state.history = [...state.history, toolResultMessage];
+        } else {
+          console.error("Cannot push tool result message to history: invalid message structure", toolResultMessage);
+        }
+      }
+    });
+    
+    // Add handlers for clearLastEmptyResponseThunk
+    builder.addCase(clearLastEmptyResponse.fulfilled, (state, action) => {
+      // All actions are handled directly by the thunk through dispatching
+      // other actions, so we don't need additional handling here
+    });
+  }
 });
 
 function addPassthroughCases(
@@ -722,7 +743,8 @@ export const {
   setActive,
   submitEditorAndInitAtIndex,
   updateHistoryItemAtIndex,
-  clearLastEmptyResponse,
+  removeLastHistoryItem,
+  removeHistoryItemById,
   setMainEditorContentTrigger,
   deleteMessage,
   setIsGatheringContext,
