@@ -78,9 +78,9 @@
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Diff">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="shift ctrl DELETE"/>
+                               first-keystroke="shift ctrl BACK_SPACE"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="shift meta DELETE"/>
+                               first-keystroke="shift meta BACK_SPACE"/>
             <override-text place="GoToAction" text="Continue: Reject Diff"/>
         </action>
 

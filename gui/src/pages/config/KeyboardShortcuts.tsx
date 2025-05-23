@@ -11,7 +11,7 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   return (
     <div
-      className={`flex flex-col items-start p-2 py-2 sm:flex-row sm:items-center ${props.isEven ? "" : "bg-table-odd-rows"}`}
+      className={`flex flex-col items-start p-2 py-2 sm:flex-row sm:items-center ${props.isEven ? "" : "bg-table-oddRow"}`}
     >
       <div className="w-full flex-grow pb-1 pr-4 sm:w-auto sm:pb-0">
         <span className="block break-words text-xs">{props.description}:</span>
