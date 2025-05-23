@@ -27,14 +27,15 @@ interface MainEditorContextType {
   onEnterRef: React.MutableRefObject<(modifiers: InputModifiers) => void>;
 }
 
-const DEFAULTS: MainEditorContextType = {
+const initialState: MainEditorContextType = {
   mainEditor: null,
-  setMainEditor: () => {}, // noop
+  setMainEditor: () => {},
   inputId: null,
-  setInputId: () => {}, // noop
-  onEnterRef: { current: () => {} }, // noop
+  setInputId: () => {},
+  onEnterRef: { current: () => {} },
 };
-const MainEditorContext = createContext<MainEditorContextType>(DEFAULTS);
+
+const MainEditorContext = createContext<MainEditorContextType>(initialState);
 
 /**
  * Provider component that maintains a reference to the main editor
@@ -43,8 +44,10 @@ export const MainEditorProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const dispatch = useAppDispatch();
-  const [mainEditor, setMainEditorInternal] = useState<Editor | null>(null);
-  const [inputId, setInputId] = useState<string | null>(null);
+  const [mainEditor, setMainEditorInternal] = useState<Editor | null>(
+    initialState.mainEditor,
+  );
+  const [inputId, setInputId] = useState<string | null>(initialState.inputId);
   const onEnterRef = useRef<(modifiers: InputModifiers) => void>(() => {});
   const editorFocusedRef = useRef<boolean>(false);
   const historyLength = useAppSelector((store) => store.session.history.length);
