@@ -67,8 +67,8 @@ const config = {
 
   scripts: [
     {
-			src: "/scripts/custom-reo.js",   // it references from static folder
-		},
+      src: "/scripts/custom-reo.js",   // it references from static folder
+    },
   ],
 
   themeConfig:
