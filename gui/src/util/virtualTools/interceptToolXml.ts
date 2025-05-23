@@ -117,50 +117,5 @@ export async function* interceptXMLToolCalls(
         buffer = "";
       }
     }
-
-    // if (inToolCall || buffer.length > 0) {
-    //   buffer += content;
-
-    //   try {
-    //     const result = parser.parse(buffer);
-
-    //     if (result.parsed?.tool_call) {
-    //       // Successfully parsed a complete tool call
-    //       const toolCall: ToolCallDelta = {
-    //         id: `tool-call-${toolCallCount++}`,
-    //         type: "function",
-    //         function: {
-    //           name: result.parsed.tool_call.name,
-    //           arguments: result.parsed.tool_call.args
-    //             ? JSON.stringify(result.parsed.tool_call.args)
-    //             : undefined,
-    //         },
-    //       };
-
-    //       existingToolCalls = [...existingToolCalls, toolCall];
-
-    //       yield {
-    //         ...message,
-    //         toolCalls: existingToolCalls,
-    //       };
-
-    //       // Reset state after successful parse
-    //       buffer = result.remainder;
-    //       inToolCall = false;
-    //       parser.clear();
-    //     } else {
-    //       // Still accumulating tool call content
-    //       yield message;
-    //     }
-    //   } catch (e) {
-    //     // Parsing failed - likely incomplete XML
-    //     yield message;
-    //   }
-    // } else {
-    //   // Not in a tool call context
-    //   yield message;
-    // }
   }
 }
-
-("_call>ex");
