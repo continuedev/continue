@@ -37,7 +37,7 @@ export function Lump() {
 
   return (
     <LumpDiv>
-      <div className="xs:px-2 mt-0.5 px-1">
+      <div className="xs:px-2 px-1 py-0.5">
         <LumpToolbar />
 
         <ContentDiv

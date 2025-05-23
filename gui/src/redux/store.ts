@@ -17,7 +17,7 @@ import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
 import { profilesReducer } from "./slices";
 import configReducer from "./slices/configSlice";
-import editModeStateReducer from "./slices/editModeState";
+import editModeStateReducer from "./slices/editState";
 import indexingReducer from "./slices/indexingSlice";
 import sessionReducer from "./slices/sessionSlice";
 import tabsReducer from "./slices/tabsSlice";

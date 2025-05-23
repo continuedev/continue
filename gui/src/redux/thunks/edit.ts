@@ -1,19 +1,26 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
 import {
-  SetCodeToEditPayload,
   MessageModes,
   RangeInFileWithContents,
+  SetCodeToEditPayload,
 } from "core";
 import { stripImages } from "core/util/messageContent";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import {
   clearCodeToEdit,
   INITIAL_EDIT_APPLY_STATE,
+  setPreviousModeEditorContent,
   setReturnToModeAfterEdit,
   updateEditStateApplyState,
-} from "../slices/editModeState";
-import { newSession, setActive, setMode } from "../slices/sessionSlice";
+} from "../slices/editState";
+import {
+  newSession,
+  setActive,
+  setIsInEdit,
+  setMainEditorContentTrigger,
+  setMode,
+} from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { loadLastSession, saveCurrentSession } from "./session";
 import { streamThunkWrapper } from "./streamThunkWrapper";
@@ -27,7 +34,7 @@ export const streamEditThunk = createAsyncThunk<
   ThunkApiType
 >(
   "chat/streamResponse",
-  async ({ editorState, codeToEdit }, { dispatch, extra, getState }) => {
+  async ({ editorState, codeToEdit }, { dispatch, extra }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         dispatch(setActive());
@@ -62,17 +69,20 @@ export const streamEditThunk = createAsyncThunk<
   },
 );
 
-export const exitEditMode = createAsyncThunk<
+export const exitEdit = createAsyncThunk<
   void,
   { goToMode?: MessageModes; openNewSession?: boolean },
   ThunkApiType
 >(
-  "edit/exitMode",
+  "edit/exit",
   async ({ goToMode, openNewSession }, { dispatch, extra, getState }) => {
     const state = getState();
     const codeToEdit = state.editModeState.codeToEdit;
+    const isInEdit = state.session.isInEdit;
+    const previousModeEditorContent =
+      state.editModeState.previousModeEditorContent;
 
-    if (state.session.mode !== "edit") {
+    if (!isInEdit) {
       return;
     }
 
@@ -86,6 +96,13 @@ export const exitEditMode = createAsyncThunk<
 
     dispatch(clearCodeToEdit());
     dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
+    dispatch(setIsInEdit(false));
+
+    // Restore the previous editor content if available
+    if (previousModeEditorContent) {
+      dispatch(setMainEditorContentTrigger(previousModeEditorContent));
+      dispatch(setPreviousModeEditorContent(undefined));
+    }
 
     if (openNewSession || state.editModeState.lastNonEditSessionWasEmpty) {
       dispatch(newSession());
@@ -101,30 +118,38 @@ export const exitEditMode = createAsyncThunk<
   },
 );
 
-export const enterEditMode = createAsyncThunk<
+export const enterEdit = createAsyncThunk<
   void,
-  { returnToMode?: MessageModes },
+  { returnToMode?: MessageModes; editorContent?: JSONContent },
   ThunkApiType
->("edit/enterMode", async ({ returnToMode }, { dispatch, extra, getState }) => {
-  const state = getState();
+>(
+  "edit/enter",
+  async ({ returnToMode, editorContent }, { dispatch, extra, getState }) => {
+    const state = getState();
+    const isInEdit = state.session.isInEdit;
 
-  if (state.session.mode === "edit") {
-    return;
-  }
+    if (isInEdit) {
+      return;
+    }
 
-  dispatch(setReturnToModeAfterEdit(returnToMode ?? state.session.mode));
+    dispatch(setMainEditorContentTrigger({}));
+    dispatch(setPreviousModeEditorContent(editorContent));
 
-  await dispatch(
-    saveCurrentSession({
-      openNewSession: true,
-      // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
-      generateTitle: false,
-    }),
-  );
-  dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
-  dispatch(setMode("edit"));
+    dispatch(setReturnToModeAfterEdit(returnToMode ?? state.session.mode));
+    dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
 
-  if (!state.editModeState.codeToEdit[0]) {
-    extra.ideMessenger.post("edit/addCurrentSelection", undefined);
-  }
-});
+    await dispatch(
+      saveCurrentSession({
+        openNewSession: true,
+        // Because this causes a lag before Edit is focused. TODO just have that happen in background
+        generateTitle: false,
+      }),
+    );
+
+    dispatch(setIsInEdit(true));
+
+    if (!state.editModeState.codeToEdit[0]) {
+      extra.ideMessenger.post("edit/addCurrentSelection", undefined);
+    }
+  },
+);
