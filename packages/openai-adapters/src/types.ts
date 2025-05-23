@@ -102,9 +102,11 @@ export type AnthropicConfig = z.infer<typeof AnthropicConfigSchema>;
 export const WatsonXConfigSchema = BasePlusConfig.extend({
   provider: z.literal("watsonx"),
   apiKey: z.string(),
-  apiVersion: z.string().optional(),
-  projectId: z.string().optional(),
-  deploymentId: z.string().optional(),
+  env: z.object({
+    apiVersion: z.string().optional(),
+    projectId: z.string().optional(),
+    deploymentId: z.string().optional(),
+  }),
 });
 export type WatsonXConfig = z.infer<typeof WatsonXConfigSchema>;
 

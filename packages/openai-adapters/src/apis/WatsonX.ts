@@ -30,16 +30,83 @@ export class WatsonXApi implements BaseLlmApi {
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
     }
-    this.apiVersion = config.apiVersion ?? this.apiVersion;
-    this.projectId = config.projectId;
-    this.deploymentId = config.deploymentId;
+    this.apiVersion = config.env.apiVersion ?? this.apiVersion;
+    this.projectId = config.env.projectId;
+    this.deploymentId = config.env.deploymentId;
   }
 
-  private getHeaders(): Record<string, string> {
+  private async getHeaders(): Promise<Record<string, string>> {
+    const bearer = await this.getBearerToken();
     return {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${this.config.apiKey}`,
+      Authorization: `Bearer ${bearer.token}`,
     };
+  }
+
+  async getBearerToken(): Promise<{ token: string; expiration: number }> {
+    if (this.apiBase?.includes("cloud.ibm.com")) {
+      // watsonx SaaS
+      const wxToken = (await (
+        await customFetch(this.config.requestOptions)(
+          `https://iam.cloud.ibm.com/identity/token?apikey=${this.config.apiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Accept: "application/json",
+            },
+          },
+        )
+      ).json()) as any;
+      return {
+        token: wxToken["access_token"],
+        expiration: wxToken["expiration"],
+      };
+    } else {
+      // watsonx Software
+      if (!this.config.apiKey?.includes(":")) {
+        // Using ZenApiKey auth
+        return {
+          token: this.config.apiKey ?? "",
+          expiration: -1,
+        };
+      } else {
+        // Using username/password auth
+        const userPass = this.config.apiKey?.split(":");
+        const wxToken = (await (
+          await customFetch(this.config.requestOptions)(
+            `${this.apiBase}/icp4d-api/v1/authorize`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({
+                username: userPass[0],
+                password: userPass[1],
+              }),
+            },
+          )
+        ).json()) as any;
+        const wxTokenExpiry = (await (
+          await customFetch(this.config.requestOptions)(
+            `${this.apiBase}/usermgmt/v1/user/tokenExpiry`,
+            {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${wxToken["token"]}`,
+              },
+            },
+          )
+        ).json()) as any;
+        return {
+          token: wxToken["token"],
+          expiration: wxTokenExpiry["exp"],
+        };
+      }
+    }
   }
 
   private getEndpoint(endpoint: string): string {
@@ -98,10 +165,12 @@ export class WatsonXApi implements BaseLlmApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const url = this.getEndpoint("chat");
+    const headers = await this.getHeaders();
+    const stringifiedBody = JSON.stringify(this._convertBody(body));
     const response = await customFetch(this.config.requestOptions)(url, {
       method: "POST",
-      headers: this.getHeaders(),
-      body: JSON.stringify(this._convertBody(body)),
+      headers,
+      body: stringifiedBody,
       signal,
     });
 
@@ -112,8 +181,10 @@ export class WatsonXApi implements BaseLlmApi {
     }
 
     for await (const value of streamSse(response as any)) {
-      const chunk = value;
-      yield chunk;
+      if (!value.choices?.[0]) {
+        continue;
+      }
+      yield value;
     }
   }
 
@@ -157,7 +228,7 @@ export class WatsonXApi implements BaseLlmApi {
     const url = this.getEndpoint("generation");
     const response = await customFetch(this.config.requestOptions)(url, {
       method: "POST",
-      headers: this.getHeaders(),
+      headers: await this.getHeaders(),
       body: JSON.stringify(payload),
       signal,
     });
