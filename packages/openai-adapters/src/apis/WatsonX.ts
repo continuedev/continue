@@ -11,7 +11,7 @@ import {
 } from "openai/resources/index";
 import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
 import { WatsonXConfig } from "../types.js";
-import { customFetch } from "../util.js";
+import { chatCompletion, customFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -157,7 +157,22 @@ export class WatsonXApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    throw new Error("Method not implemented.");
+    const generator = this.chatCompletionStream(
+      {
+        ...body,
+        stream: true,
+      },
+      signal,
+    );
+
+    let content = "";
+    for await (const chunk of generator) {
+      content += chunk.choices[0].delta.content ?? "";
+    }
+    return chatCompletion({
+      content,
+      model: body.model,
+    });
   }
 
   async *chatCompletionStream(
