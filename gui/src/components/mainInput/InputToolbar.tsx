@@ -101,7 +101,7 @@ function InputToolbar(props: InputToolbarProps) {
               Select Model
             </ToolTip>
           </HoverItem>
-          <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
+          <div className="xs:flex text-description -mb-1 hidden items-center transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
               (supportsImages && (
                 <>
@@ -151,7 +151,7 @@ function InputToolbar(props: InputToolbarProps) {
         </div>
 
         <div
-          className="flex items-center gap-2 whitespace-nowrap text-gray-400"
+          className="text-description flex items-center gap-2 whitespace-nowrap"
           style={{
             fontSize: tinyFont,
           }}

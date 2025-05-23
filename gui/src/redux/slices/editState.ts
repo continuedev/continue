@@ -1,14 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ApplyState, SetCodeToEditPayload, MessageModes } from "core";
+import { JSONContent } from "@tiptap/core";
+import { ApplyState, MessageModes, SetCodeToEditPayload } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 
-export interface EditModeState {
+export interface EditState {
   // Array because of previous multi-file edit functionality
   // Keeping array to not break persisted redux for now
   codeToEdit: SetCodeToEditPayload[];
   applyState: ApplyState;
   returnToMode: MessageModes;
   lastNonEditSessionWasEmpty: boolean;
+  previousModeEditorContent: JSONContent | undefined;
 }
 
 export const INITIAL_EDIT_APPLY_STATE: ApplyState = {
@@ -16,15 +18,16 @@ export const INITIAL_EDIT_APPLY_STATE: ApplyState = {
   status: "not-started",
 };
 
-const initialState: EditModeState = {
+const initialState: EditState = {
   applyState: INITIAL_EDIT_APPLY_STATE,
   codeToEdit: [],
   returnToMode: "chat",
   lastNonEditSessionWasEmpty: false,
+  previousModeEditorContent: undefined,
 };
 
-export const editModeStateSlice = createSlice({
-  name: "editModeState",
+export const editStateSlice = createSlice({
+  name: "editState",
   initialState,
   reducers: {
     setReturnToModeAfterEdit: (
@@ -63,6 +66,12 @@ export const editModeStateSlice = createSlice({
     ) => {
       state.lastNonEditSessionWasEmpty = payload;
     },
+    setPreviousModeEditorContent: (
+      state,
+      { payload }: PayloadAction<JSONContent | undefined>,
+    ) => {
+      state.previousModeEditorContent = payload;
+    },
   },
   selectors: {},
 });
@@ -73,5 +82,6 @@ export const {
   setCodeToEdit,
   updateEditStateApplyState,
   setLastNonEditSessionEmpty,
-} = editModeStateSlice.actions;
-export default editModeStateSlice.reducer;
+  setPreviousModeEditorContent,
+} = editStateSlice.actions;
+export default editStateSlice.reducer;

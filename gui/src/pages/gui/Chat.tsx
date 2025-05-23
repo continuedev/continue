@@ -55,7 +55,6 @@ import {
 } from "../../util/freeTrial";
 
 import AcceptRejectDiffButtons from "../../components/AcceptRejectDiffButtons";
-import EditModeDetails from "../../components/mainInput/EditModeDetails";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -398,7 +397,6 @@ export function Chat() {
             }
             inputId={MAIN_EDITOR_INPUT_ID}
           />
-          {isInEdit && <EditModeDetails />}
         </>
 
         <div

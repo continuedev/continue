@@ -31,7 +31,7 @@ export function StreamingToolbar() {
     <Container>
       <GeneratingIndicator />
       <StopButton
-        className="text-gray-400"
+        className="text-description"
         onClick={() => {
           void dispatch(cancelStream());
         }}

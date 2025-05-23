@@ -220,7 +220,7 @@ function ModelSelect() {
         <ListboxButton
           data-testid="model-select-button"
           ref={buttonRef}
-          className="h-[18px] gap-1 border-none text-gray-400"
+          className="text-description h-[18px] gap-1 border-none"
         >
           <span className="line-clamp-1 break-all hover:brightness-110">
             {modelSelectTitle(selectedModel) || "Select model"}

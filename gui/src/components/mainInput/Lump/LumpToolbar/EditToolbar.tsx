@@ -3,7 +3,6 @@ import { useContext } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { exitEdit } from "../../../../redux/thunks";
-import FileIcon from "../../../FileIcon";
 import { getEditFilenameAndRangeText } from "../../util";
 
 export function EditToolbar() {
@@ -14,25 +13,23 @@ export function EditToolbar() {
     (state) => state.editModeState.codeToEdit[0],
   );
 
+  const handleBackClick = async () => {
+    void dispatch(exitEdit({}));
+    ideMessenger.post("focusEditor", undefined);
+  };
+
   return (
-    <div className="text-description-muted flex items-center justify-between gap-3">
+    <div className="text-description-muted flex items-center justify-between gap-3 text-xs">
       <span
         className="flex cursor-pointer items-center whitespace-nowrap hover:brightness-125"
-        onClick={async () => {
-          void dispatch(exitEdit({}));
-          ideMessenger.post("focusEditor", undefined);
-        }}
+        onClick={handleBackClick}
       >
-        <ArrowLeftIcon className="mr-2 h-2.5 w-2.5" />
+        <ArrowLeftIcon className="mr-1 h-2.5 w-2.5" />
         Back to {mode.charAt(0).toUpperCase() + mode.slice(1)}
       </span>
-      <span className="flex items-center gap-0.5 truncate">
-        <FileIcon
-          filename={codeToEdit.filepath}
-          height={"18px"}
-          width={"18px"}
-        />
-        <span className="truncate">
+      <span className="truncate">
+        Editing{" "}
+        <span className="italic">
           {getEditFilenameAndRangeText(codeToEdit)}
         </span>
       </span>

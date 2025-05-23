@@ -8,6 +8,7 @@ import {
 } from "../../../../redux/thunks";
 import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
+import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
 import { EditToolbar } from "./EditToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
@@ -20,6 +21,9 @@ export function LumpToolbar() {
   const isInEdit = useAppSelector((state) => state.session.isInEdit);
   const jetbrains = isJetBrains();
   const toolCallState = useSelector(selectCurrentToolCall);
+  const editApplyState = useAppSelector(
+    (state) => state.editModeState.applyState,
+  );
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (toolCallState?.status === "generated") {
@@ -48,13 +52,20 @@ export function LumpToolbar() {
   if (ttsActive) {
     return <TtsActiveToolbar />;
   }
+
   if (isStreaming) {
     return <StreamingToolbar />;
   }
+
   if (toolCallState?.status === "generated") {
     return <PendingToolCallToolbar />;
   }
+
   if (isInEdit) {
+    if (editApplyState.status === "done") {
+      return <EditOutcomeToolbar />;
+    }
+
     return <EditToolbar />;
   }
 

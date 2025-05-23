@@ -7,7 +7,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setCodeToEdit } from "../redux/slices/editModeState";
+import { setCodeToEdit } from "../redux/slices/editState";
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
@@ -147,9 +147,8 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
-      navigate(ROUTES.HOME);
       await ideMessenger.request("edit/addCurrentSelection", undefined);
-      await dispatch(enterEdit({}));
+      await dispatch(enterEdit({ editorContent: mainEditor?.getJSON() }));
       mainEditor?.commands.focus();
     },
     [ideMessenger, mainEditor],

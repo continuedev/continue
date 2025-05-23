@@ -96,14 +96,14 @@ function BlockSettingsToolbarIcon(
           className={`${
             props.isSelected
               ? isErrorSection
-                ? "bg-red-600"
+                ? "bg-error"
                 : "bg-badge"
               : undefined
           } relative flex select-none items-center rounded-full px-[3px] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
         >
           <props.icon
             className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
-              isErrorSection ? "text-red-600" : ""
+              isErrorSection ? "text-error" : ""
             }`}
             style={{
               color: props.isSelected ? vscBadgeForeground : undefined,
@@ -158,7 +158,7 @@ export function BlockSettingsTopToolbar() {
   return (
     <div className="flex flex-1 items-center justify-between gap-2">
       <div className="flex flex-row">
-        <div className="xs:flex hidden items-center justify-center text-gray-400">
+        <div className="xs:flex text-description hidden items-center justify-center">
           <BlockSettingsToolbarIcon
             className="-ml-1.5"
             icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}

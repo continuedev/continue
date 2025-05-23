@@ -25,7 +25,7 @@ export function TtsActiveToolbar() {
     <Container>
       <GeneratingIndicator />
       <StopButton
-        className="text-gray-400"
+        className="text-description"
         onClick={() => {
           ideMessenger.post("tts/kill", undefined);
         }}

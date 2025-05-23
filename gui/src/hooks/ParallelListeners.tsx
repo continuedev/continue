@@ -3,6 +3,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
+import { useMainEditor } from "../components/mainInput/TipTapEditor";
 import {
   initializeProfilePreferences,
   setOrganizations,
@@ -15,7 +16,7 @@ import { setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
   updateEditStateApplyState,
-} from "../redux/slices/editModeState";
+} from "../redux/slices/editState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   acceptToolCall,
@@ -23,7 +24,7 @@ import {
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import { streamResponseAfterToolCall } from "../redux/thunks";
+import { exitEdit, streamResponseAfterToolCall } from "../redux/thunks";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
@@ -47,6 +48,11 @@ function ParallelListeners() {
   );
 
   const hasDoneInitialConfigLoad = useRef(false);
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
+  );
+
+  const { mainEditor } = useMainEditor();
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -229,14 +235,15 @@ function ParallelListeners() {
     dispatch(updateIndexingStatus(data));
   });
 
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
-  );
   useWebviewListener(
     "updateApplyState",
     async (state) => {
       if (state.streamId === EDIT_MODE_STREAM_ID) {
         dispatch(updateEditStateApplyState(state));
+
+        if (state.status === "closed") {
+          dispatch(exitEdit({}));
+        }
       } else {
         // chat or agent
         dispatch(updateApplyState(state));
