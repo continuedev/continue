@@ -104,6 +104,7 @@ export const streamNormalInput = createAsyncThunk<
     // If it's a tool call that is automatically accepted, we should call it
     const newState = getState();
     const toolSettings = newState.ui.toolSettings;
+    debugger;
     const toolCallState = selectCurrentToolCall(newState);
     if (toolCallState) {
       dispatch(

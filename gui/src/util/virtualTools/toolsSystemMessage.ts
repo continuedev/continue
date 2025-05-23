@@ -22,17 +22,14 @@ const EXAMPLE_TOOL = `<tool_definition>
             <required>false</required>
         </arg2>
     </args>
-</tool_definition>
-`;
+</tool_definition>`;
 
-const EXAMPLE_TOOL_CALL = `
-<tool_call>
+const EXAMPLE_TOOL_CALL = `<tool_call>
     <name>example_tool</name>
     <args>
         <arg1>value1</arg1>
     </args>
-</tool_call>
-`;
+</tool_call>`;
 
 function toolToXmlDefinition(tool: Tool): string {
   const builder = new XMLBuilder({
@@ -41,14 +38,30 @@ function toolToXmlDefinition(tool: Tool): string {
     suppressEmptyNode: true,
   });
 
-  const obj = {
-    tool_definition: {
-      name: tool.function.name,
-      args: tool.function.parameters,
-    },
+  const toolDefinition: {
+    name: string;
+    description?: string;
+    args?: Record<string, any>;
+  } = {
+    name: tool.function.name,
   };
 
-  return builder.build(obj);
+  if (tool.function.description) {
+    toolDefinition.description = tool.function.description;
+  }
+
+  if (tool.function.parameters && "properties" in tool.function.parameters) {
+    toolDefinition.args = {};
+    for (const [key, value] of Object.entries(
+      tool.function.parameters.properties,
+    )) {
+      toolDefinition.args[key] = value;
+    }
+  }
+
+  return builder.build({
+    tool_definition: toolDefinition,
+  });
 }
 
 export const generateToolsSystemMessage = (tools: Tool[]) => {
@@ -57,7 +70,9 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
   }
   let prompt = `The following tool definitions define tools that can be "called" to perform actions.
     Decided whether to use them based on the user's request and the context. 
-    To use a tool, respond with a <tool_call> specifying name and args. Do NOT put a tool call in any codeblock. For example, this tool:`;
+    To use a tool, respond with a <tool_call> specifying <name> and <args>. <args> is optional, only use if needed. 
+    Do NOT put a tool call in any codeblock.
+    You can only call one tool at a time. Ask and then wait for a response. For example, this tool:\n\n`;
 
   prompt += EXAMPLE_TOOL;
 
