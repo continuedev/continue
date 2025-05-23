@@ -7,7 +7,7 @@ import {
 import _ from "lodash";
 import { KeyboardEvent } from "react";
 import { getLocalStorage } from "./localStorage";
-import { generateNonNativeToolSystemMessage } from "./non-native-tools";
+import { generateToolsSystemMessage } from "./virtualTools/toolsSystemMessage";
 
 export type Platform = "mac" | "linux" | "windows" | "unknown";
 
@@ -134,7 +134,7 @@ export function getBaseSystemMessage(
     baseChatOrAgentSystemMessage =
       modelDetails?.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
     if (tools.length > 0) {
-      const toolsSystemMessage = generateNonNativeToolSystemMessage(tools);
+      const toolsSystemMessage = generateToolsSystemMessage(tools);
       baseChatOrAgentSystemMessage += `\n\n${toolsSystemMessage}`;
     }
   } else {

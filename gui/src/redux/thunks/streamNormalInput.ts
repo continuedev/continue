@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, LLMFullCompletionOptions } from "core";
 import { ToCoreProtocol } from "core/protocol";
+import { interceptXMLToolCalls } from "../../util/virtualTools/interceptToolXml";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -55,7 +56,8 @@ export const streamNormalInput = createAsyncThunk<
     );
 
     // Stream response
-    let next = await gen.next();
+    const withMiddleware = interceptXMLToolCalls(gen);
+    let next = await withMiddleware.next();
     while (!next.done) {
       if (!getState().session.isStreaming) {
         dispatch(abortStream());
@@ -63,7 +65,7 @@ export const streamNormalInput = createAsyncThunk<
       }
 
       dispatch(streamUpdate(next.value));
-      next = await gen.next();
+      next = await withMiddleware.next();
     }
 
     // Attach prompt log and end thinking for reasoning models

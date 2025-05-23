@@ -1,5 +1,5 @@
-import { Tool, ToolCall, ToolCallDelta } from "core";
-import { XMLBuilder, XMLParser } from "fast-xml-parser";
+import { Tool } from "core";
+import { XMLBuilder } from "fast-xml-parser";
 
 export const TOOL_CALL_OPENING_TAG = "<tool_call>";
 export const TOOL_CALL_CLOSING_TAG = "</tool_call>";
@@ -51,7 +51,7 @@ function toolToXmlDefinition(tool: Tool): string {
   return builder.build(obj);
 }
 
-export const generateNonNativeToolSystemMessage = (tools: Tool[]) => {
+export const generateToolsSystemMessage = (tools: Tool[]) => {
   if (tools.length === 0) {
     return undefined;
   }
@@ -72,32 +72,4 @@ export const generateNonNativeToolSystemMessage = (tools: Tool[]) => {
     prompt += "\n";
   }
   return prompt;
-};
-
-export const getXmlToolCallsFromContent = (
-  content: string,
-  existingToolCalls: ToolCallDelta[] = [],
-): ToolCall[] => {
-  const toolCallRegex = /<tool_call>([\s\S]*?)<\/tool_call>/g;
-  const matches = [...content.matchAll(toolCallRegex)].map((match) =>
-    match[0].trim(),
-  );
-
-  const parser = new XMLParser({
-    ignoreAttributes: true,
-    parseTagValue: true,
-    trimValues: true,
-  });
-
-  return matches.map((match, index) => {
-    const parsed = parser.parse(match);
-    return {
-      id: existingToolCalls[index]?.id ?? `tool-call-${index}`,
-      type: "function",
-      function: {
-        name: parsed["tool_call"]?.name,
-        arguments: JSON.stringify(parsed["tool_call"]?.args),
-      },
-    };
-  });
 };

@@ -26,7 +26,6 @@ import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
-import { getXmlToolCallsFromContent } from "../../util/non-native-tools";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
@@ -382,23 +381,6 @@ export const sessionSlice = createSlice({
                 // Note this only works because new message above
                 // was already rendered from parts to string
                 lastMessage.content += messageContent;
-
-                if (lastMessage.role === "assistant") {
-                  const xmlToolCalls = getXmlToolCallsFromContent(
-                    renderChatMessage(lastMessage),
-                    lastMessage.toolCalls ?? [],
-                  );
-                  if (xmlToolCalls.length > 0) {
-                    const toolCall = xmlToolCalls[0]; // Only support one for now
-                    lastMessage.toolCalls = [toolCall];
-                    lastItem.toolCallState = {
-                      status: "done",
-                      toolCall: toolCall,
-                      parsedArgs: JSON.parse(toolCall.function.arguments),
-                      toolCallId: toolCall.id,
-                    };
-                  }
-                }
               }
             } else if (message.role === "thinking" && message.signature) {
               if (lastMessage.role === "thinking") {
@@ -417,17 +399,20 @@ export const sessionSlice = createSlice({
               const newArgs =
                 (lastMessage.toolCalls?.[0]?.function?.arguments ?? "") +
                 (toolCallDelta.function?.arguments ?? "");
+              let newName = toolCallDelta.function?.name ?? "";
+
               if (lastMessage.toolCalls?.[0]) {
+                newName =
+                  newName || lastMessage.toolCalls[0].function?.name || "";
                 lastMessage.toolCalls[0].function = {
-                  name:
-                    toolCallDelta.function?.name ??
-                    lastMessage.toolCalls[0].function?.name ??
-                    "",
+                  name: newName,
                   arguments: newArgs,
                 };
               } else {
                 lastMessage.toolCalls = [toolCallDelta];
               }
+
+              console.log("REDUX", JSON.stringify(lastMessage.toolCalls[0]));
 
               // Update current tool call state
               if (!lastItem.toolCallState) {
@@ -440,6 +425,7 @@ export const sessionSlice = createSlice({
               const [_, parsedArgs] = incrementalParseJson(newArgs);
               lastItem.toolCallState.parsedArgs = parsedArgs;
               lastItem.toolCallState.toolCall.function.arguments = newArgs;
+              lastItem.toolCallState.toolCall.function.name = newName;
             }
           }
         }

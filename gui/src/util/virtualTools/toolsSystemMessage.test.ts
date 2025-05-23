@@ -1,5 +1,5 @@
 import { ToolCall } from "core";
-import { getXmlToolCallsFromContent } from "../../src/util/non-native-tools";
+import { getXmlToolCallsFromContent } from "./parseXmlToolCalls";
 
 test("getXmlToolCallsFromContent extracts single tool call correctly", () => {
   const content = `
