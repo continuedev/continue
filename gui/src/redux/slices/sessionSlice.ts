@@ -316,17 +316,7 @@ export const sessionSlice = createSlice({
             continue;
           }
 
-          if (
-            lastMessage.role !== message.role ||
-            // This is for when a tool call comes immediately before/after tool call
-            (lastMessage.role === "assistant" &&
-              message.role === "assistant" &&
-              // Last message isn't completely new
-              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
-              // And there's a difference in tool call presence
-              (lastMessage.toolCalls?.length ?? 0) !==
-                (message.toolCalls?.length ?? 0))
-          ) {
+          if (lastMessage.role !== message.role) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
               message: {
