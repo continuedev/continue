@@ -197,53 +197,17 @@ JavaScript/TypeScript. Please install the Prettier extension in VS Code and enab
 
 Continue has a set of named theme colors that we map to extension colors and tailwind classes, which can be found in [gui/src/styles/theme.ts](gui/src/styles/theme.ts)
 
-When developing the extension GUI:
+Guidelines for using theme colors:
 
 - Use Tailwind colors whenever possible. If developing in VS Code, download the [Tailwind CSS Intellisense extension](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) for great suggestions
 - Avoid using any explicit classes and CSS variables outside the theme (e.g. `text-yellow-400`)
 
-#### How Extension colors work
+Guidelines for adding/updating theme colors:
 
-Continue maps color values from VSCode/Jetbrains to its theme colors, and uses sensible defaults for a dark theme with blue accents.
-
-VS Code injects CSS variables into the webview based on the current theme. [Docs](https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content). [Colors](https://code.visualstudio.com/api/references/theme-color). [Example actual CSS variables list](https://www.notion.so/Extension-Theme-Colors-1fa1d55165f78097b551e3bc296fcf76?pvs=21). These colors are also automatically updated on theme changes.
-
-Jetbrains has two main groups of colors that we can choose from and then inject manually into the webview:
-
-- `EditorColorsManager` has colors mostly used in the actual code editor
-- `JBColor` has named colors that most themes have for panels and components outside the main editor
-- Docs for both of these aren’t great but models are pretty good at suggesting named/editor color options
-
-On startup, a messaging handshake occurs with the IDE using the `jetbrains/getColors` and `jetbrains/setColors` messages, which send/receive a record of continue theme color name to hex (see `GetTheme.kt`), and update the extension colors.
-
-Jetbrains colors are also cached in local storage and retrieved on startup to reduce flashing, since the CSS variables aren’t automatically injected. For now, under the hood, Jetbrains theme colors are simply written to every associated vs code CSS variable.
-
-As an example, take the `error` Continue theme color:
-
-- can be used with the tailwind class e.g. `bg-error`
-- uses the expression `var(--vscode-editorError-foreground, var(--vscode-list-errorForeground, #f44336))` under the hood, which works out of the box in VS Code
-- Is retrieved in Jetbrains using named colors with fallbacks like `namedColor("ValidationError.errorColor") ?: namedColor("Component.errorForeground") ?: namedColor("Label.errorForeground")` , and the outcome (or default `#f44336` if not found in theme) is written to the document style variables `--vscode-editorError-foreground` and `var(--vscode-list-errorForeground`
-
-#### Updating Extension Colors
-
-You can improve the extension colors in a variety of ways
-
-- Moving current explicit colors and CSS variables to use the theme colors
-- Updating the theme `vars` property to improve VS Code CSS variable fallbacks
-- Updating the `GetTheme.kt` values for Jetbrains
-- Tweaking the default theme values
-
-To add a new color:
-
-- Add an entry to `THEME_COLORS` in `gui/src/styles/theme.ts` that contains a sensible color name, the best VS CSS variables (`vars`), and a sensible default color for the default theme (`default`)
-- Go to `GetTheme.kt` and find a sensible Jetbrains color derivation for the new color, and include it in the `getTheme` output.
-- Add the corresponding tailwind class in `tailwind.config.js` using the provided `varWithFallback(colorName)` util
-
-**Using the Theme Test Page**
-
-When updating/adding colors, check the colors on several popular/varied themes to make sure it looks good, in both Jetbrains and VS Code. To help, you can use the Theme Test Page, which can be found in development mode by going to the `Help` section of the extension settings page and clicking `Theme Test Page`.
-
-This page shows examples of several components using the current theme colors, and shows which colors (jetbrains) or classes (vs code) are missing for the current theme. It also shows the full theme colors and defaults for comparison.
+- Choose sensible VS Code variables to add/update in [gui/src/styles/theme.ts](gui/src/styles/theme.ts) (see [here](https://code.visualstudio.com/api/references/theme-color) and [here](https://www.notion.so/1fa1d55165f78097b551e3bc296fcf76?pvs=25) for inspiration)
+- Choose sensible Jetbrains named colors to add/update in `GetTheme.kt` (flagship LLMs can give you good suggestions to try)
+- Update `tailwind.config.js` if needed
+- Use the Theme Test Page to check colors. This can be accessed by going to `Settings` -> `Help` -> `Theme Test Page` in dev/debug mode.
 
 ### Testing
 
