@@ -3,7 +3,14 @@ import {
   ArrowUpIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { RefObject, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { HeaderButton, Input } from "..";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import {
@@ -11,8 +18,8 @@ import {
   SearchMatch,
   searchWithinContainer,
 } from "./findWidgetSearch";
-import { useDebouncedInput } from "./useDebouncedInput";
-import { useElementSize } from "./useElementDims";
+import useDebounceValue from "./useDebounce";
+import { useElementSize } from "./useElementSize";
 
 interface HighlightOverlayProps {
   rectangle: Rectangle;
@@ -51,15 +58,12 @@ type ScrollToMatchOption = "closest" | "first" | "none";
 export const useFindWidget = (
   searchRef: RefObject<HTMLDivElement>,
   headerRef: RefObject<HTMLDivElement>,
-  refreshDependencies: React.DependencyList,
   disabled: boolean,
 ) => {
   // Search input, debounced
-  const {
-    inputRef,
-    debouncedValue: searchTerm,
-    currentValue,
-  } = useDebouncedInput();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [currentValue, setCurrentValue] = useState<string>("");
+  const searchTerm = useDebounceValue(currentValue, 300);
 
   // Widget open/closed state
   const [open, setOpen] = useState<boolean>(false);
@@ -134,14 +138,12 @@ export const useFindWidget = (
   }, [inputRef, matches, nextMatch]);
 
   // Handle container resize changes - highlight positions must adjust
-  const headerSize = useElementSize(headerRef);
-  const containerSize = useElementSize(searchRef);
+  const { clientHeight: headerHeight, isResizing: headerResizing } =
+    useElementSize(headerRef);
+  const { isResizing: containerResizing } = useElementSize(searchRef);
   const isResizing = useMemo(() => {
-    return containerSize.isResizing || headerSize.isResizing;
-  }, [containerSize, headerSize]);
-  const headerHeight = useMemo(() => {
-    return headerSize.size.height;
-  }, [headerSize]);
+    return containerResizing || headerResizing;
+  }, [containerResizing, headerResizing]);
 
   // Main function for finding matches and generating highlight overlays
   const refreshSearch = useCallback(
@@ -192,7 +194,7 @@ export const useFindWidget = (
     } else {
       refreshSearch("closest");
     }
-  }, [refreshSearch, open, disabled, isResizing, ...refreshDependencies]);
+  }, [refreshSearch, open, disabled, isResizing]);
 
   // Clicks in search div can cause content changes that for some reason don't trigger resize
   // Refresh clicking within container
@@ -220,6 +222,9 @@ export const useFindWidget = (
         type="text"
         ref={inputRef}
         value={currentValue}
+        onChange={(e) => {
+          setCurrentValue(e.target.value);
+        }}
         placeholder="Search..."
       />
       <p className="xs:block hidden min-w-12 whitespace-nowrap px-1 text-center text-xs">

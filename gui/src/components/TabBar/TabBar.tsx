@@ -35,6 +35,8 @@ const TabBarContainer = styled.div`
   border-bottom: none;
   position: relative;
   margin-top: 2px;
+  max-height: 100px;
+  overflow: auto;
 
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
@@ -223,10 +225,13 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
     }
   };
 
-  return tabs.length === 1 ? (
-    <></>
-  ) : (
-    <TabBarContainer ref={ref}>
+  return (
+    <TabBarContainer
+      ref={ref}
+      style={{
+        display: tabs.length === 1 ? "none" : "flex",
+      }}
+    >
       {tabs.map((tab) => (
         <Tab
           key={tab.id}

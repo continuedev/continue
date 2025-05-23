@@ -156,7 +156,6 @@ export function Chat() {
   const { widget, highlights } = useFindWidget(
     stepsDivRef,
     tabsRef,
-    [history],
     isStreaming,
   );
 

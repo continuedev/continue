@@ -87,9 +87,10 @@ export const searchWithinContainer = (
       startIndex = endIndex;
 
       const top =
-        rect.top + searchContainer.clientTop + searchContainer.scrollTop;
-      //  -
-      // options.offsetHeight;
+        rect.top +
+        searchContainer.clientTop +
+        searchContainer.scrollTop -
+        options.offsetHeight;
 
       const left =
         rect.left + searchContainer.clientLeft + searchContainer.scrollLeft;
