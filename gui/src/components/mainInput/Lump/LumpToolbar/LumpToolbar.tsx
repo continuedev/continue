@@ -10,6 +10,7 @@ import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
 import { EditToolbar } from "./EditToolbar";
+import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
 import { TtsActiveToolbar } from "./TtsActiveToolbar";
@@ -24,6 +25,9 @@ export function LumpToolbar() {
   const editApplyState = useAppSelector(
     (state) => state.editModeState.applyState,
   );
+  const pendingApplyStates = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.states,
+  ).filter((state) => state.status === "done");
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (toolCallState?.status === "generated") {
@@ -49,6 +53,14 @@ export function LumpToolbar() {
     };
   }, [toolCallState]);
 
+  if (isInEdit) {
+    if (editApplyState.status === "done") {
+      return <EditOutcomeToolbar />;
+    }
+
+    return <EditToolbar />;
+  }
+
   if (ttsActive) {
     return <TtsActiveToolbar />;
   }
@@ -61,12 +73,10 @@ export function LumpToolbar() {
     return <PendingToolCallToolbar />;
   }
 
-  if (isInEdit) {
-    if (editApplyState.status === "done") {
-      return <EditOutcomeToolbar />;
-    }
-
-    return <EditToolbar />;
+  if (pendingApplyStates.length > 0) {
+    return (
+      <PendingApplyStatesToolbar pendingApplyStates={pendingApplyStates} />
+    );
   }
 
   return <BlockSettingsTopToolbar />;

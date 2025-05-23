@@ -34,10 +34,6 @@ export default function AcceptRejectAllButtons({
     }
   }
 
-  if (!pendingApplyStates.length) {
-    return null;
-  }
-
   const rejectShortcut = `${getMetaKeyLabel()}⇧⌫`;
   const acceptShortcut = `${getMetaKeyLabel()}⇧⏎`;
 

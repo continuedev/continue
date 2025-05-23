@@ -54,7 +54,6 @@ import {
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
 
-import AcceptRejectDiffButtons from "../../components/AcceptRejectDiffButtons";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -119,9 +118,6 @@ export function Chat() {
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-  const applyStates = useAppSelector(
-    (state) => state.session.codeBlockApplyStates.states,
-  );
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const hasDismissedExploreDialog = useAppSelector(
@@ -382,22 +378,14 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        <>
-          {!isStreaming && !isInEdit && (
-            <AcceptRejectDiffButtons
-              applyStates={applyStates}
-              onAcceptOrReject={async () => {}}
-            />
-          )}
-          <ContinueInputBox
-            isMainInput
-            isLastUserInput={false}
-            onEnter={(editorState, modifiers, editor) =>
-              sendInput(editorState, modifiers, undefined, editor)
-            }
-            inputId={MAIN_EDITOR_INPUT_ID}
-          />
-        </>
+        <ContinueInputBox
+          isMainInput
+          isLastUserInput={false}
+          onEnter={(editorState, modifiers, editor) =>
+            sendInput(editorState, modifiers, undefined, editor)
+          }
+          inputId={MAIN_EDITOR_INPUT_ID}
+        />
 
         <div
           style={{

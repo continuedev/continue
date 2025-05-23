@@ -14,7 +14,7 @@ export function EditOutcomeToolbar() {
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
-    <div className="text-description-muted gap- flex items-center justify-between py-0.5 text-xs">
+    <div className="text-description-muted flex items-center justify-between py-0.5 text-xs">
       <div className="bg-badge rounded px-1.5">
         <span>{`${editApplyState.numDiffs} diff${editApplyState.numDiffs !== 1 ? "s" : ""}`}</span>
       </div>
