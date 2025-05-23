@@ -9,9 +9,10 @@ export const contextSchema = z.object({
   params: z.any().optional(),
 });
 
+// TODO: This should be a discriminated union by type
 const mcpServerSchema = z.object({
   name: z.string(),
-  command: z.string(),
+  command: z.string().optional(),
   type: z.enum(["sse", "stdio"]).optional(),
   url: z.string().optional(),
   faviconUrl: z.string().optional(),

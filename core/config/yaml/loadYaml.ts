@@ -71,7 +71,7 @@ function convertYamlMcpToContinueMcp(
       command: server.command,
       args: server.args ?? [],
       env: server.env,
-    },
+    } as any, // TODO: Fix the mcpServers types in config-yaml (discriminated union)
     timeout: server.connectionTimeout,
   };
 }
@@ -458,7 +458,7 @@ async function configYamlToContinueConfig(options: {
       transport: {
         type: "stdio",
         args: [],
-        ...server,
+        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
       },
       timeout: server.connectionTimeout,
     })),
