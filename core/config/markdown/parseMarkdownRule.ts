@@ -59,9 +59,10 @@ export function convertMarkdownRuleToContinueRule(
   }
 
   return {
+    name,
     rule: markdown,
     globs: frontmatter.globs,
-    name,
+    description: frontmatter.description,
     source: "rules-block",
     ruleFile: path,
   };

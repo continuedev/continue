@@ -2,12 +2,12 @@ import { ToIdeFromWebviewOrCoreProtocol } from "./ide";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 
 import {
+  AcceptOrRejectDiffPayload,
   ApplyState,
-  SetCodeToEditPayload,
   HighlightedCodePayload,
   MessageContent,
   RangeInFileWithContents,
-  AcceptOrRejectDiffPayload,
+  SetCodeToEditPayload,
   ShowFilePayload,
 } from "../";
 
@@ -42,7 +42,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
       vscMediaUrl: string;
     },
   ];
-  "jetbrains/getColors": [undefined, Record<string, string>];
+  "jetbrains/getColors": [undefined, Record<string, string | null | undefined>];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
   acceptDiff: [AcceptOrRejectDiffPayload, void];

@@ -13,35 +13,24 @@ import {
 } from "react";
 import { HeaderButton, Input } from "..";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { useAppSelector } from "../../redux/hooks";
+import {
+  Rectangle,
+  SearchMatch,
+  searchWithinContainer,
+} from "./findWidgetSearch";
+import useDebounceValue from "./useDebounce";
+import { useElementSize } from "./useElementSize";
 
-interface SearchMatch {
-  index: number;
-  textNode: Text;
-  overlayRectangle: Rectangle;
-}
-
-type ScrollToMatchOption = "closest" | "first" | "none";
-
-const SEARCH_DEBOUNCE = 300;
-const RESIZE_DEBOUNCE = 200;
-
-interface Rectangle {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
-
-interface HighlightOverlayProps extends Rectangle {
+interface HighlightOverlayProps {
+  rectangle: Rectangle;
   isCurrent: boolean;
 }
 
 const HighlightOverlay = (props: HighlightOverlayProps) => {
-  const { isCurrent, top, left, width, height } = props;
+  const { top, left, width, height } = props.rectangle;
   return (
     <div
-      className={isCurrent ? "bg-find-match-selected" : "bg-blue-200/30"} // bg-vsc-find-match can"t get to work
+      className={props.isCurrent ? "bg-findMatch-selected" : "bg-findMatch"}
       key={`highlight-${top}-${left}`}
       style={{
         position: "absolute",
@@ -56,6 +45,8 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
   );
 };
 
+type ScrollToMatchOption = "closest" | "first" | "none";
+
 /*
     useFindWidget takes a container ref and returns
     1. A widget that can be placed anywhere to search the contents of that container
@@ -64,18 +55,22 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
 
     Container must have relative positioning
 */
-export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
+export const useFindWidget = (
+  searchRef: RefObject<HTMLDivElement>,
+  headerRef: RefObject<HTMLDivElement>,
+  disabled: boolean,
+) => {
   // Search input, debounced
-  const [input, setInput] = useState<string>("");
-  const debouncedInput = useRef<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [currentValue, setCurrentValue] = useState<string>("");
+  const searchTerm = useDebounceValue(currentValue, 300);
 
   // Widget open/closed state
   const [open, setOpen] = useState<boolean>(false);
   const openWidget = useCallback(() => {
     setOpen(true);
     inputRef?.current?.select();
-  }, [setOpen, inputRef]);
+  }, [inputRef]);
 
   // Search settings and results
   const [caseSensitive, setCaseSensitive] = useState<boolean>(false);
@@ -97,7 +92,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         behavior: "smooth",
       });
     },
-    [searchRef.current],
+    [searchRef],
   );
 
   const nextMatch = useCallback(() => {
@@ -143,327 +138,166 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
   }, [inputRef, matches, nextMatch]);
 
   // Handle container resize changes - highlight positions must adjust
-  const [isResizing, setIsResizing] = useState(false);
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
-    if (!searchRef?.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      setIsResizing(true);
-      timeoutId = setTimeout(() => {
-        setIsResizing(false);
-      }, RESIZE_DEBOUNCE);
-    });
-
-    resizeObserver.observe(searchRef.current);
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      if (searchRef.current) resizeObserver.unobserve(searchRef.current);
-    };
-  }, [searchRef.current]);
+  const { clientHeight: headerHeight, isResizing: headerResizing } =
+    useElementSize(headerRef);
+  const { isResizing: containerResizing } = useElementSize(searchRef);
+  const isResizing = useMemo(() => {
+    return containerResizing || headerResizing;
+  }, [containerResizing, headerResizing]);
 
   // Main function for finding matches and generating highlight overlays
   const refreshSearch = useCallback(
-    (scrollTo: ScrollToMatchOption = "none", clearFirst = false) => {
-      if (clearFirst) setMatches([]);
-
-      const searchContainer = searchRef.current;
-
-      const _query = debouncedInput.current; // trimStart - decided no because spaces should be fully searchable
-      if (!searchContainer || !_query) {
-        setMatches([]);
-        return;
-      }
-      const query = caseSensitive ? _query : _query.toLowerCase();
-
-      // First grab all text nodes
-      // Skips any elements with the "find-widget-skip" class
-      const textNodes: Text[] = [];
-      const walker = document.createTreeWalker(
-        searchRef.current,
-        NodeFilter.SHOW_ALL,
+    (scrollTo: ScrollToMatchOption = "none") => {
+      const { results, closestToMiddle } = searchWithinContainer(
+        searchRef,
+        searchTerm,
         {
-          acceptNode: (node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              if ((node as Element).classList.contains("find-widget-skip"))
-                return NodeFilter.FILTER_REJECT;
-              return NodeFilter.FILTER_ACCEPT;
-            } else if (node.nodeType === Node.TEXT_NODE) {
-              if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
-              const nodeValue = caseSensitive
-                ? node.nodeValue
-                : node.nodeValue.toLowerCase();
-              if (nodeValue.includes(query)) return NodeFilter.FILTER_ACCEPT;
-            }
-            return NodeFilter.FILTER_REJECT;
-          },
+          caseSensitive,
+          useRegex,
+          offsetHeight: headerHeight,
         },
       );
-
-      while (walker.nextNode()) {
-        if (walker.currentNode.nodeType === Node.ELEMENT_NODE) continue;
-        textNodes.push(walker.currentNode as Text);
-      }
-
-      // Now walk through each node match and extract search results
-      // One node can have several matches
-      const newMatches: SearchMatch[] = [];
-      textNodes.forEach((textNode, idx) => {
-        // Hacky way to detect code blocks that be wider than client and cause absolute positioning to fail
-        const highlightFullLine =
-          textNode.parentElement?.className.includes("hljs");
-
-        let nodeTextValue = caseSensitive
-          ? textNode.nodeValue
-          : textNode.nodeValue.toLowerCase();
-        let startIndex = 0;
-        while ((startIndex = nodeTextValue.indexOf(query, startIndex)) !== -1) {
-          // Create a range to measure the size and position of the match
-          const range = document.createRange();
-          range.setStart(textNode, startIndex);
-          const endIndex = startIndex + query.length;
-          range.setEnd(textNode, endIndex);
-          const rect = range.getBoundingClientRect();
-          range.detach();
-          startIndex = endIndex;
-
-          const top =
-            rect.top + searchContainer.clientTop + searchContainer.scrollTop;
-          const left =
-            rect.left + searchContainer.clientLeft + searchContainer.scrollLeft;
-
-          // Build a match result and push to matches
-          const newMatch: SearchMatch = {
-            index: 0, // will set later
-            textNode,
-            overlayRectangle: {
-              top,
-              left: highlightFullLine ? 2 : left,
-              width: highlightFullLine
-                ? searchContainer.clientWidth - 4
-                : rect.width, // equivalent of adding 2 px x padding
-              height: rect.height,
-            },
-          };
-          newMatches.push(newMatch);
-
-          if (highlightFullLine) {
-            break; // Since highlighting full line no need for multiple overlays, will cause darker highlight
-          }
-        }
-      });
-
-      // There will still be duplicate full lines when multiple text nodes are in the same line (e.g. Code highlights)
-      // Filter them out by using the overlay rectangle as a hash key
-      const matchHash = Object.fromEntries(
-        newMatches.map((match) => [
-          JSON.stringify(match.overlayRectangle),
-          match,
-        ]),
-      );
-      const filteredMatches = Object.values(matchHash).map((match, index) => ({
-        ...match,
-        index,
-      }));
-
+      setMatches(results);
       // Find match closest to the middle of the view
-      const verticalMiddle =
-        searchRef.current.scrollTop + searchRef.current.clientHeight / 2;
-      let closestDist = Infinity;
-      let closestMatchToMiddle: SearchMatch | null = null;
-      filteredMatches.forEach((match) => {
-        const dist = Math.abs(verticalMiddle - match.overlayRectangle.top);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closestMatchToMiddle = match;
-        }
-      });
-
-      // Update matches and scroll to the closest or first match
-      setMatches(filteredMatches);
-      if (query.length > 1 && filteredMatches.length) {
+      if (searchTerm.length > 1 && results.length) {
         if (scrollTo === "first") {
-          scrollToMatch(filteredMatches[0]);
+          scrollToMatch(results[0]);
         }
         if (scrollTo === "closest") {
-          if (closestMatchToMiddle) {
-            scrollToMatch(closestMatchToMiddle);
+          if (closestToMiddle) {
+            scrollToMatch(closestToMiddle);
           }
         }
         if (scrollTo === "none") {
-          if (closestMatchToMiddle) {
-            setCurrentMatch(closestMatchToMiddle);
+          if (closestToMiddle) {
+            setCurrentMatch(closestToMiddle);
           } else {
-            setCurrentMatch(filteredMatches[0]);
+            setCurrentMatch(results[0]);
           }
         }
       }
     },
-    [searchRef.current, debouncedInput, scrollToMatch, caseSensitive, useRegex],
+    [
+      searchTerm,
+      caseSensitive,
+      useRegex,
+      searchRef,
+      headerHeight,
+      scrollToMatch,
+    ],
   );
 
   // Triggers that should cause immediate refresh of results to closest search value:
-  // Input change (debounced) and window click
-  const lastUpdateRef = useRef(0);
   useEffect(() => {
-    const debounce = () => {
-      debouncedInput.current = input;
-      lastUpdateRef.current = Date.now();
-      refreshSearch("closest");
-    };
-    const timeSinceLastUpdate = Date.now() - lastUpdateRef.current;
-    if (timeSinceLastUpdate >= SEARCH_DEBOUNCE) {
-      debounce();
+    if (disabled || isResizing || !open) {
+      setMatches([]);
     } else {
-      const handler = setTimeout(() => {
-        debounce();
-      }, SEARCH_DEBOUNCE - timeSinceLastUpdate);
-      return () => {
-        clearTimeout(handler);
-      };
+      refreshSearch("closest");
     }
-  }, [refreshSearch, input]);
+  }, [refreshSearch, open, disabled, isResizing]);
 
-  // Could consider doing any window click but I only handled search div here
-  // Since usually only clicks in search div will cause content changes in search div
+  // Clicks in search div can cause content changes that for some reason don't trigger resize
+  // Refresh clicking within container
   useEffect(() => {
     const searchContainer = searchRef.current;
     if (!open || !searchContainer) return;
     const handleSearchRefClick = () => {
-      refreshSearch("none");
+      setTimeout(() => {
+        refreshSearch("none");
+      }, 150);
     };
     searchContainer.addEventListener("click", handleSearchRefClick);
     return () => {
       searchContainer.removeEventListener("click", handleSearchRefClick);
     };
-  }, [searchRef.current, refreshSearch, open]);
-
-  // Triggers that should cause results to temporarily disappear and then reload
-  // Active = LLM is generating, etc.
-  const active = useAppSelector((state) => state.session.isStreaming);
-
-  useEffect(() => {
-    if (active || isResizing) setMatches([]);
-    else refreshSearch("none");
-  }, [refreshSearch, active]);
-
-  useEffect(() => {
-    if (!open) setMatches([]);
-    else refreshSearch("closest");
-  }, [refreshSearch, open]);
-
-  useEffect(() => {
-    refreshSearch("closest");
-  }, [refreshSearch, caseSensitive, useRegex]);
+  }, [searchRef, refreshSearch, open]);
 
   // Find widget component
-  const widget = useMemo(() => {
-    return (
-      <div
-        className={`fixed top-0 z-50 transition-all ${open ? "" : "-translate-y-full"} bg-vsc-background right-0 flex flex-row items-center gap-1.5 rounded-bl-lg border-0 border-b border-l border-solid border-zinc-700 pl-[3px] pr-3 sm:gap-2`}
-      >
-        <Input
-          disabled={active}
-          type="text"
-          ref={inputRef}
-          value={input}
-          onChange={(e) => {
-            setInput(e.target.value);
-          }}
-          placeholder="Search..."
-        />
-        <p className="xs:block hidden min-w-12 whitespace-nowrap px-1 text-center text-xs">
-          {matches.length === 0
-            ? "No results"
-            : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
-        </p>
-        <div className="hidden flex-row gap-0.5 sm:flex">
-          <HeaderButtonWithToolTip
-            tooltipPlacement="top-end"
-            text={"Previous Match"}
-            onClick={(e) => {
-              e.stopPropagation();
-              previousMatch();
-            }}
-            className="h-4 w-4 focus:ring"
-            disabled={matches.length < 2 || active}
-          >
-            <ArrowUpIcon className="h-4 w-4" />
-          </HeaderButtonWithToolTip>
-          <HeaderButtonWithToolTip
-            tooltipPlacement="top-end"
-            text={"Next Match"}
-            onClick={(e) => {
-              e.stopPropagation();
-              nextMatch();
-            }}
-            className="h-4 w-4 focus:ring"
-            disabled={matches.length < 2 || active}
-          >
-            <ArrowDownIcon className="h-4 w-4" />
-          </HeaderButtonWithToolTip>
-        </div>
+  const widget = (
+    <div
+      className={`fixed top-0 z-50 transition-all ${open ? "" : "-translate-y-full"} bg-vsc-background right-0 flex flex-row items-center gap-1.5 rounded-bl-lg border-0 border-b border-l border-solid border-zinc-700 pl-[3px] pr-3 sm:gap-2`}
+    >
+      <Input
+        disabled={disabled}
+        type="text"
+        ref={inputRef}
+        value={currentValue}
+        onChange={(e) => {
+          setCurrentValue(e.target.value);
+        }}
+        placeholder="Search..."
+      />
+      <p className="xs:block hidden min-w-12 whitespace-nowrap px-1 text-center text-xs">
+        {matches.length === 0
+          ? "No results"
+          : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
+      </p>
+      <div className="hidden flex-row gap-0.5 sm:flex">
         <HeaderButtonWithToolTip
-          disabled={active}
-          inverted={caseSensitive}
           tooltipPlacement="top-end"
-          text={
-            caseSensitive
-              ? "Turn off case sensitivity"
-              : "Turn on case sensitivity"
-          }
+          text={"Previous Match"}
           onClick={(e) => {
             e.stopPropagation();
-            setCaseSensitive((curr) => !curr);
+            previousMatch();
           }}
-          className="h-5 w-6 rounded-full border text-xs focus:outline-none focus:ring"
+          className="h-4 w-4 focus:ring"
+          disabled={matches.length < 2 || disabled}
         >
-          Aa
+          <ArrowUpIcon className="h-4 w-4" />
         </HeaderButtonWithToolTip>
-        {/* TODO - add useRegex functionality */}
-        <HeaderButton
-          inverted={false}
-          onClick={() => setOpen(false)}
-          className="focus:ring"
+        <HeaderButtonWithToolTip
+          tooltipPlacement="top-end"
+          text={"Next Match"}
+          onClick={(e) => {
+            e.stopPropagation();
+            nextMatch();
+          }}
+          className="h-4 w-4 focus:ring"
+          disabled={matches.length < 2 || disabled}
         >
-          <XMarkIcon className="h-4 w-4" />
-        </HeaderButton>
+          <ArrowDownIcon className="h-4 w-4" />
+        </HeaderButtonWithToolTip>
       </div>
-    );
-  }, [
-    open,
-    input,
-    inputRef,
-    caseSensitive,
-    matches,
-    currentMatch,
-    previousMatch,
-    nextMatch,
-  ]);
+      <HeaderButtonWithToolTip
+        disabled={disabled}
+        inverted={caseSensitive}
+        tooltipPlacement="top-end"
+        text={
+          caseSensitive
+            ? "Turn off case sensitivity"
+            : "Turn on case sensitivity"
+        }
+        onClick={(e) => {
+          e.stopPropagation();
+          setCaseSensitive((curr) => !curr);
+        }}
+        className="h-5 w-6 rounded-full border text-xs focus:outline-none focus:ring"
+      >
+        Aa
+      </HeaderButtonWithToolTip>
+      {/* TODO - add useRegex functionality */}
+      <HeaderButton
+        inverted={false}
+        onClick={() => setOpen(false)}
+        className="focus:ring"
+      >
+        <XMarkIcon className="h-4 w-4" />
+      </HeaderButton>
+    </div>
+  );
 
   // Generate the highlight overlay elements
   const highlights = useMemo(() => {
     return matches.map((match) => (
       <HighlightOverlay
-        {...match.overlayRectangle}
+        rectangle={match.overlayRectangle}
         isCurrent={currentMatch?.index === match.index}
       />
     ));
   }, [matches, currentMatch]);
 
   return {
-    matches,
     highlights,
-    inputRef,
-    input: debouncedInput,
-    setInput,
-    open,
-    setOpen,
     widget,
   };
 };
