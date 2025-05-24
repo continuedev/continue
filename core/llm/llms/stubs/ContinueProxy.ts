@@ -1,6 +1,7 @@
 import {
   ContinueProperties,
   decodeSecretLocation,
+  parseProxyModelName,
   SecretType,
 } from "@continuedev/config-yaml";
 
@@ -47,6 +48,11 @@ class ContinueProxy extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
+  get underlyingProviderName(): string {
+    const { provider } = parseProxyModelName(this.model);
+    return provider;
+  }
+
   protected extraBodyProperties(): Record<string, any> {
     const continueProperties: ContinueProperties = {
       apiKeyLocation: this.apiKeyLocation,
@@ -83,6 +89,10 @@ class ContinueProxy extends OpenAI {
   }
 
   supportsFim(): boolean {
+    const { provider } = parseProxyModelName(this.model);
+    if (provider === "vllm") {
+      return false;
+    }
     return true;
   }
 

@@ -12,6 +12,10 @@ class Vllm extends OpenAI {
     }
   }
 
+  supportsFim(): boolean {
+    return false;
+  }
+
   private _setupCompletionOptions() {
     this.fetch(this._getEndpoint("models"), {
       method: "GET",

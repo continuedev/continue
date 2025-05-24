@@ -40,6 +40,7 @@ function BestExperienceConfigForm({
     const chatModelConfig = {
       model: chatModel.params.model,
       provider: chatProvider.provider,
+      underlyingProviderName: chatProvider.provider,
       apiKey: chatApiKey,
       title: chatModel.params.title,
     };
@@ -47,6 +48,7 @@ function BestExperienceConfigForm({
     const repoMapConfig = {
       model: repoMapModel.params.model,
       provider: chatProvider.provider,
+      underlyingProviderName: chatProvider.provider,
       apiKey: chatApiKey,
       title: repoMapModel.params.title,
     };
@@ -54,6 +56,7 @@ function BestExperienceConfigForm({
     const autocompleteModelConfig = {
       title: autocompleteModel.params.title,
       provider: autocompleteProvider.provider,
+      underlyingProviderName: autocompleteProvider.provider,
       model: autocompleteModel.params.model,
       apiKey: autocompleteApiKey,
     };
