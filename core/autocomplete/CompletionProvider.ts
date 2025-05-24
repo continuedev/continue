@@ -1,6 +1,7 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
+import { DEFAULT_AUTOCOMPLETE_MAX_TOKENS } from "../llm/constants.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
@@ -71,6 +72,11 @@ export class CompletionProvider {
     // Set temperature (but don't override)
     if (llm.completionOptions.temperature === undefined) {
       llm.completionOptions.temperature = 0.01;
+    }
+
+    // (DOES NOT WORK) llm.complettionOptions.maxTokens is already populated - need to detect if llm not have maxTokens already set
+    if (llm.completionOptions.maxTokens === undefined) {
+      llm.completionOptions.maxTokens = DEFAULT_AUTOCOMPLETE_MAX_TOKENS;
     }
 
     if (llm instanceof OpenAI) {

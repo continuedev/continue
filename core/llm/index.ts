@@ -41,6 +41,7 @@ import {
 } from "./autodetect.js";
 import {
   DEFAULT_ARGS,
+  DEFAULT_AUTOCOMPLETE_MAX_TOKENS,
   DEFAULT_CONTEXT_LENGTH,
   DEFAULT_MAX_BATCH_SIZE,
   DEFAULT_MAX_CHUNK_SIZE,
@@ -195,6 +196,12 @@ export abstract class BaseLLM implements ILLM {
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
 
+    // if model has a single role - autocomplete, then use a smaller default maxTokens
+    const defaultMaxTokens =
+      options.roles?.length === 1 && options.roles.at(0) === "autocomplete"
+        ? DEFAULT_AUTOCOMPLETE_MAX_TOKENS
+        : DEFAULT_MAX_TOKENS;
+
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.baseAgentSystemMessage = options.baseAgentSystemMessage;
@@ -214,7 +221,7 @@ export abstract class BaseLLM implements ILLM {
               // because it takes away from the context length
               this.contextLength / 4,
             )
-          : DEFAULT_MAX_TOKENS),
+          : defaultMaxTokens),
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
