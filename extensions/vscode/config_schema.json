@@ -3494,6 +3494,20 @@
                           }
                         },
                         "required": ["type", "url"]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": ["streamable-http"]
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
+                        "required": ["type", "url"]
                       }
                     ]
                   }

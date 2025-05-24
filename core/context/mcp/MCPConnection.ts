@@ -4,6 +4,7 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import {
   MCPConnectionStatus,
@@ -305,6 +306,10 @@ class MCPConnection {
                 },
               }),
           },
+          requestInit: { headers: options.transport.requestOptions?.headers },
+        });
+      case "streamable-http":
+        return new StreamableHTTPClientTransport(new URL(options.transport.url), {
           requestInit: { headers: options.transport.requestOptions?.headers },
         });
       default:
