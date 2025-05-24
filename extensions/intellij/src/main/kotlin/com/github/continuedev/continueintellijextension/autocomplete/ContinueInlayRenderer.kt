@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.autocomplete
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
+import com.intellij.openapi.editor.InlayModel
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.markup.TextAttributes
@@ -22,6 +23,14 @@ import java.awt.Rectangle
  * @author lk
  */
 class ContinueInlayRenderer(val lines: List<String>) : EditorCustomElementRenderer {
+    companion object {
+        fun hasConflictingInlays(editor: Editor, offset: Int): Boolean {
+            val inlayModel = editor.inlayModel
+            val existingInlays = inlayModel.getInlineElementsInRange(offset, offset)
+            return existingInlays.any { it.renderer !is ContinueInlayRenderer }
+        }
+    }
+
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         var maxLen = 0;
         for (line in lines) {
@@ -45,6 +54,12 @@ class ContinueInlayRenderer(val lines: List<String>) : EditorCustomElementRender
 
     override fun paint(inlay: Inlay<*>, g: Graphics, targetRegion: Rectangle, textAttributes: TextAttributes) {
         val editor = inlay.editor
+
+        // Check for conflicts before rendering
+        if (hasConflictingInlays(editor, inlay.offset)) {
+            inlay.dispose()
+            return
+        }
         g.color = JBColor.GRAY
         g.font = font(editor)
         var additionalYOffset = 0
