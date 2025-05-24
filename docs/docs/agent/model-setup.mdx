@@ -18,3 +18,5 @@ Currently the following providers are supported:
 - [Mistral](../customize/model-providers/top-level/mistral.mdx) - we recommend [Codestral](https://hub.continue.dev/mistral/codestral)
 
 The best chat models generally support tool usage. See [recommended chat models](../customize/model-roles/chat.mdx#recommended-chat-models) for more.
+
+If the model is _not_ known to support tools, Agent will be disabled. To designate tool support, a model must be configured with the [`tool_use` capability](../reference.md#models) or specifically marked as supporting tools in Continue's [source code](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts#L4).

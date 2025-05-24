@@ -1,7 +1,6 @@
 import { Tool, ToolCallState } from "core";
 import Mustache from "mustache";
 import { ReactNode } from "react";
-import { getFontSize } from "../../../util";
 import { useFontSize } from "../../../components/ui/font";
 
 interface ToolCallStatusMessageProps {
