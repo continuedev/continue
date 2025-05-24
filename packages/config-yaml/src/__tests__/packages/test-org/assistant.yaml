@@ -27,3 +27,9 @@ models:
   - uses: test-org/claude35sonnet
     with:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+  - name: proxy-ollama
+    provider: ollama
+    model: llama3.1
+    defaultCompletionOptions:
+      stream: false

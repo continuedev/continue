@@ -50,6 +50,7 @@ export const completionOptionsSchema = z.object({
   reasoning: z.boolean().optional(),
   reasoningBudgetTokens: z.number().optional(),
   promptCaching: z.boolean().optional(),
+  stream: z.boolean().optional()
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
