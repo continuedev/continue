@@ -2,8 +2,6 @@
  * Extracts file paths from markdown code blocks
  */
 export function extractPathsFromCodeBlocks(content: string): string[] {
-  console.log("CONTENT", content);
-
   const paths: string[] = [];
 
   // Match code block opening patterns:

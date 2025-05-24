@@ -21,6 +21,7 @@ import {
   acceptToolCall,
   addContextItemsAtIndex,
   updateApplyState,
+  updateToolCallOutput,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { streamResponseAfterToolCall } from "../redux/thunks";
@@ -33,6 +34,7 @@ import {
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
+import { getEditToolOutput } from "../util/clientTools/editImpl";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
@@ -242,18 +244,32 @@ function ParallelListeners() {
           currentToolCallApplyState &&
           currentToolCallApplyState.streamId === state.streamId
         ) {
-          // const output: ContextItem = {
-          //   name: "Edit tool output",
-          //   content: "Completed edit",
-          //   description: "",
-          // };
+          let content = "Edit completed";
+          if (currentToolCallApplyState.filepath) {
+            const response = await ideMessenger.request("readFile", {
+              filepath: currentToolCallApplyState.filepath,
+            });
+            if (response.status === "success") {
+              content = response.content;
+            }
+          }
+          const output = await getEditToolOutput(
+            currentToolCallApplyState.filepath,
+            ideMessenger,
+          );
+
           dispatch(
             acceptToolCall({
               toolCallId: currentToolCallApplyState.toolCallId!,
             }),
           );
-          // dispatch(setToolCallOutput([]));
           dispatch(
+            updateToolCallOutput({
+              toolCallId: currentToolCallApplyState.toolCallId!,
+              contextItems: output,
+            }),
+          );
+          void dispatch(
             streamResponseAfterToolCall({
               toolCallId: currentToolCallApplyState.toolCallId!,
             }),
