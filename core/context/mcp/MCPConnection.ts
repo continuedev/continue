@@ -38,6 +38,10 @@ class MCPConnection {
   public resources: MCPResource[] = [];
   private transport: Transport;
   private connectionPromise: Promise<unknown> | null = null;
+  private stdioOutput: { stdout: string; stderr: string } = {
+    stdout: "",
+    stderr: "",
+  };
 
   constructor(public options: MCPOptions) {
     this.transport = this.constructTransport(options);
@@ -91,6 +95,7 @@ class MCPConnection {
     this.prompts = [];
     this.resources = [];
     this.errors = [];
+    this.stdioOutput = { stdout: "", stderr: "" };
 
     this.abortController.abort();
     this.abortController = new AbortController();
@@ -215,6 +220,20 @@ class MCPConnection {
             }
           }
 
+          // Include stdio output if available for stdio transport
+          if (
+            this.options.transport.type === "stdio" &&
+            (this.stdioOutput.stdout || this.stdioOutput.stderr)
+          ) {
+            errorMessage += "\n\nProcess output:";
+            if (this.stdioOutput.stdout) {
+              errorMessage += `\nSTDOUT:\n${this.stdioOutput.stdout}`;
+            }
+            if (this.stdioOutput.stderr) {
+              errorMessage += `\nSTDERR:\n${this.stdioOutput.stderr}`;
+            }
+          }
+
           this.status = "error";
           this.errors.push(errorMessage);
         } finally {
@@ -284,11 +303,20 @@ class MCPConnection {
           options.transport.args || [],
         );
 
-        return new StdioClientTransport({
+        const transport = new StdioClientTransport({
           command,
           args,
           env,
+          stderr: "pipe",
         });
+
+        // Capture stdio output for better error reporting
+
+        transport.stderr?.on("data", (data: Buffer) => {
+          this.stdioOutput.stderr += data.toString();
+        });
+
+        return transport;
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
       case "sse":
