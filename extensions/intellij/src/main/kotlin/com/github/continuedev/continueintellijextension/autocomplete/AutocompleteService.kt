@@ -52,6 +52,7 @@ fun Editor.addInlayElement(
 
 @Service(Service.Level.PROJECT)
 class AutocompleteService(private val project: Project) {
+    private val completionLock = Object()
     var pendingCompletion: PendingCompletion? = null
     private val autocompleteLookupListener = project.service<AutocompleteLookupListener>()
     private val widget: AutocompleteSpinnerWidget? by lazy {
@@ -70,59 +71,61 @@ class AutocompleteService(private val project: Project) {
             return
         }
 
-        if (pendingCompletion != null) {
-            clearCompletions(pendingCompletion!!.editor)
-        }
+        synchronized(completionLock) {
+            if (pendingCompletion != null) {
+                clearCompletions(pendingCompletion!!.editor)
+            }
 
-        // Set pending completion
-        val completionId = uuid()
-        val offset = editor.caretModel.primaryCaret.offset
-        pendingCompletion = PendingCompletion(editor, offset, completionId, null)
+            // Set pending completion
+            val completionId = uuid()
+            val offset = editor.caretModel.primaryCaret.offset
+            pendingCompletion = PendingCompletion(editor, offset, completionId, null)
 
-        // Request a completion from the core
-        val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+            // Request a completion from the core
+            val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
 
-        val uri = virtualFile?.toUriOrNull() ?: return
+            val uri = virtualFile?.toUriOrNull() ?: return
 
-        widget?.setLoading(true)
+            widget?.setLoading(true)
 
-        val line = editor.caretModel.primaryCaret.logicalPosition.line
-        val column = editor.caretModel.primaryCaret.logicalPosition.column
-        val input = mapOf(
-            "completionId" to completionId,
-            "filepath" to uri,
-            "pos" to mapOf(
-                "line" to line,
-                "character" to column
-            ),
-            "clipboardText" to "",
-            "recentlyEditedRanges" to emptyList<Any>(),
-            "recentlyVisitedRanges" to emptyList<Any>(),
-        )
+            val line = editor.caretModel.primaryCaret.logicalPosition.line
+            val column = editor.caretModel.primaryCaret.logicalPosition.column
+            val input = mapOf(
+                "completionId" to completionId,
+                "filepath" to uri,
+                "pos" to mapOf(
+                    "line" to line,
+                    "character" to column
+                ),
+                "clipboardText" to "",
+                "recentlyEditedRanges" to emptyList<Any>(),
+                "recentlyVisitedRanges" to emptyList<Any>(),
+            )
 
-        project.service<ContinuePluginService>().coreMessenger?.request(
-            "autocomplete/complete",
-            input,
-            null,
-            ({ response ->
-                if (pendingCompletion == null || pendingCompletion?.completionId == completionId) {
-                    widget?.setLoading(false)
-                }
-
-                val responseObject = response as Map<*, *>
-                val completions = responseObject["content"] as List<*>
-
-                if (completions.isNotEmpty()) {
-                    val completion = completions[0].toString()
-                    val finalTextToInsert = deduplicateCompletion(editor, offset, completion)
-
-                    if (shouldRenderCompletion(finalTextToInsert, offset, line, editor)) {
-                        renderCompletion(editor, offset, finalTextToInsert)
-                        pendingCompletion = PendingCompletion(editor, offset, completionId, finalTextToInsert)
+            project.service<ContinuePluginService>().coreMessenger?.request(
+                "autocomplete/complete",
+                input,
+                null,
+                ({ response ->
+                    if (pendingCompletion == null || pendingCompletion?.completionId == completionId) {
+                        widget?.setLoading(false)
                     }
-                }
-            })
-        )
+
+                    val responseObject = response as Map<*, *>
+                    val completions = responseObject["content"] as List<*>
+
+                    if (completions.isNotEmpty()) {
+                        val completion = completions[0].toString()
+                        val finalTextToInsert = deduplicateCompletion(editor, offset, completion)
+
+                        if (shouldRenderCompletion(finalTextToInsert, offset, line, editor)) {
+                            renderCompletion(editor, offset, finalTextToInsert)
+                            pendingCompletion = PendingCompletion(editor, offset, completionId, finalTextToInsert)
+                        }
+                    }
+                })
+            )
+        }
     }
 
     private fun shouldRenderCompletion(completion: String, offset: Int, line: Int, editor: Editor): Boolean {
@@ -178,34 +181,33 @@ class AutocompleteService(private val project: Project) {
     }
 
     private fun renderCompletion(editor: Editor, offset: Int, completion: String) {
-        if (completion.isEmpty()) {
-            return
-        }
-        if (isInjectedFile(editor)) return
-        // Skip rendering completions if the code completion dropdown is already visible and the IDE completion side-by-side setting is disabled
-        if (shouldSkipRender(ServiceManager.getService(ContinueExtensionSettings::class.java))) {
+        if (completion.isEmpty() || isInjectedFile(editor)) {
             return
         }
 
         ApplicationManager.getApplication().invokeLater {
-            WriteAction.run<Throwable> {
-                // Clear existing completions
-                hideCompletions(editor)
+            synchronized(completionLock) {
+                if (ContinueInlayRenderer.hasConflictingInlays(editor, offset)) {
+                    return@invokeLater
+                }
 
-                val properties = InlayProperties()
-                properties.relatesToPrecedingText(true)
-                properties.disableSoftWrapping(true)
+                WriteAction.runAndWait<Throwable> {
+                    try {
+                        // Clear existing completions
+                        hideCompletions(editor)
 
-                val lines = completion.lines()
-                pendingCompletion = pendingCompletion?.copy(text = lines.joinToString("\n"))
-                editor.addInlayElement(lines, offset, properties)
+                        val properties = InlayProperties()
+                        properties.relatesToPrecedingText(true)
+                        properties.disableSoftWrapping(true)
 
-//                val attributes = TextAttributes().apply {
-//                    backgroundColor = JBColor.GREEN
-//                }
-//                val key = TextAttributesKey.createTextAttributesKey("CONTINUE_AUTOCOMPLETE")
-//                key.let { editor.colorsScheme.setAttributes(it, attributes) }
-//                editor.markupModel.addLineHighlighter(key, editor.caretModel.logicalPosition.line, HighlighterLayer.LAST)
+                        val lines = completion.lines()
+                        pendingCompletion = pendingCompletion?.copy(text = lines.joinToString("\n"))
+                        editor.addInlayElement(lines, offset, properties)
+                    } catch (e: Exception) {
+                        // Log error and clean up
+                        clearCompletions(editor)
+                    }
+                }
             }
         }
     }
@@ -290,13 +292,22 @@ class AutocompleteService(private val project: Project) {
     }
 
     fun clearCompletions(editor: Editor, completion: PendingCompletion? = pendingCompletion) {
-        if (isInjectedFile(editor)) return
+        synchronized(completionLock) {
+            if (isInjectedFile(editor)) return
 
-        if (completion != null) {
-            cancelCompletion(completion)
-            if (completion.completionId == pendingCompletion?.completionId) pendingCompletion = null
+            if (completion != null) {
+                cancelCompletion(completion)
+                if (completion.completionId == pendingCompletion?.completionId) {
+                    pendingCompletion = null
+                }
+            }
+
+            ApplicationManager.getApplication().invokeLater {
+                WriteAction.runAndWait<Throwable> {
+                    disposeInlayRenderer(editor)
+                }
+            }
         }
-        disposeInlayRenderer(editor)
     }
 
     private fun isInjectedFile(editor: Editor): Boolean {
