@@ -1133,7 +1133,17 @@ export interface SSEOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+export interface StreamableHTTPOptions {
+  type: "streamable-http";
+  url: string;
+  requestOptions?: RequestOptions;
+}
+
+export type TransportOptions = 
+  | StdioOptions
+  | WebSocketOptions
+  | SSEOptions
+  | StreamableHTTPOptions;
 
 export interface MCPOptions {
   name: string;
