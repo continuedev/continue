@@ -29,8 +29,12 @@ export function LumpToolbar() {
     (state) => state.session.codeBlockApplyStates.states,
   ).filter((state) => state.status === "done");
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (toolCallState?.status === "generated") {
+  useEffect(() => {
+    if (toolCallState?.status !== "generated") {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
       const metaKey = event.metaKey || event.ctrlKey;
       const altKey = event.altKey;
 
@@ -43,10 +47,8 @@ export function LumpToolbar() {
         event.stopPropagation();
         void dispatch(cancelCurrentToolCall());
       }
-    }
-  };
+    };
 
-  useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);

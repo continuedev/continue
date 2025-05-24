@@ -116,12 +116,5 @@ export const MainEditorProvider: React.FC<{ children: React.ReactNode }> = ({
 /**
  * Hook to access the main editor context
  */
-export const useMainEditor = (): MainEditorContextType => {
-  const context = useContext(MainEditorContext);
-
-  if (context === undefined) {
-    throw new Error("useMainEditor must be used within a MainEditorProvider");
-  }
-
-  return context;
-};
+export const useMainEditor = (): MainEditorContextType =>
+  useContext(MainEditorContext);
