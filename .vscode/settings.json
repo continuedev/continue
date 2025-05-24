@@ -45,6 +45,7 @@
     "extensions/.continue-debug": true
     // "sync/**": true
   },
+  "editor.formatOnSave": true,
   "eslint.workingDirectories": ["./core"],
   "typescript.tsdk": "node_modules/typescript/lib",
   "conventionalCommits.showNewVersionNotes": false,

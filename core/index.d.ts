@@ -1321,6 +1321,11 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   modelContextProtocolServers?: ExperimentalMCPOptions[];
+
+  /**
+   * If enabled, will add the current file as context.
+   */
+  useCurrentFileAsContext?: boolean;
 }
 
 export interface AnalyticsConfig {
