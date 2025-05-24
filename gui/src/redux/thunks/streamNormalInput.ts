@@ -1,8 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, LLMFullCompletionOptions } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
-import { selectActiveTools } from "../selectors/selectActiveTools";
+import { interceptXMLToolCalls } from "../../util/virtualTools/interceptToolXml";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -37,13 +36,13 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     let completionOptions: LLMFullCompletionOptions = {};
-    const activeTools = selectActiveTools(state);
-    const toolsSupported = modelSupportsTools(selectedChatModel);
-    if (toolsSupported && activeTools.length > 0) {
-      completionOptions = {
-        tools: activeTools,
-      };
-    }
+    // const activeTools = selectActiveTools(state);
+    // const toolsSupported = modelSupportsTools(selectedChatModel);
+    // if (toolsSupported && activeTools.length > 0) {
+    //   completionOptions = {
+    //     tools: activeTools,
+    //   };
+    // }
 
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(
@@ -57,7 +56,8 @@ export const streamNormalInput = createAsyncThunk<
     );
 
     // Stream response
-    let next = await gen.next();
+    const withMiddleware = interceptXMLToolCalls(gen);
+    let next = await withMiddleware.next();
     while (!next.done) {
       if (!getState().session.isStreaming) {
         dispatch(abortStream());
@@ -65,7 +65,7 @@ export const streamNormalInput = createAsyncThunk<
       }
 
       dispatch(streamUpdate(next.value));
-      next = await gen.next();
+      next = await withMiddleware.next();
     }
 
     // Attach prompt log and end thinking for reasoning models

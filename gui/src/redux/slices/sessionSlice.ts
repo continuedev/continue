@@ -399,17 +399,20 @@ export const sessionSlice = createSlice({
               const newArgs =
                 (lastMessage.toolCalls?.[0]?.function?.arguments ?? "") +
                 (toolCallDelta.function?.arguments ?? "");
+              let newName = toolCallDelta.function?.name ?? "";
+
               if (lastMessage.toolCalls?.[0]) {
+                newName =
+                  newName || lastMessage.toolCalls[0].function?.name || "";
                 lastMessage.toolCalls[0].function = {
-                  name:
-                    toolCallDelta.function?.name ??
-                    lastMessage.toolCalls[0].function?.name ??
-                    "",
+                  name: newName,
                   arguments: newArgs,
                 };
               } else {
                 lastMessage.toolCalls = [toolCallDelta];
               }
+
+              console.log("REDUX", JSON.stringify(lastMessage.toolCalls[0]));
 
               // Update current tool call state
               if (!lastItem.toolCallState) {
@@ -422,6 +425,7 @@ export const sessionSlice = createSlice({
               const [_, parsedArgs] = incrementalParseJson(newArgs);
               lastItem.toolCallState.parsedArgs = parsedArgs;
               lastItem.toolCallState.toolCall.function.arguments = newArgs;
+              lastItem.toolCallState.toolCall.function.name = newName;
             }
           }
         }
