@@ -42,6 +42,7 @@ export type DocsConfig = z.infer<typeof docSchema>;
 const ruleObjectSchema = z.object({
   name: z.string(),
   rule: z.string(),
+  description: z.string().optional(),
   globs: z.union([z.string(), z.array(z.string())]).optional(),
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
