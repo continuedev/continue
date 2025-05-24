@@ -173,7 +173,8 @@ describe("MCPConnection", () => {
     });
 
     it("should handle custom connection timeout", async () => {
-      const conn = new MCPConnection({ ...options, timeout: 11 });
+      const conn = new MCPConnection({ ...options, timeout: 50 });
+      
       const mockConnect = jest
         .spyOn(Client.prototype, "connect")
         .mockImplementation(
