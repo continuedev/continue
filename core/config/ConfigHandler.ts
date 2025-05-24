@@ -457,14 +457,14 @@ export class ConfigHandler {
         configLoadInterrupted: true,
       };
     }
-    const config = await this.currentProfile.loadConfig(
+    const configResult = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );
 
-    if (config.errors?.length) {
-      logger.warn("Errors loading config: ", config.errors);
+    if (configResult.errors?.length) {
+      logger.warn("Errors loading config: ", configResult.errors);
     }
-    return config;
+    return configResult;
   }
 
   async openConfigProfile(profileId?: string) {
