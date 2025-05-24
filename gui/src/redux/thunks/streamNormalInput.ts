@@ -75,7 +75,7 @@ export const streamNormalInput = createAsyncThunk<
       try {
         if (state.session.mode === "chat" || state.session.mode === "agent") {
           extra.ideMessenger.post("devdata/log", {
-            name: "chatInteraction",
+            name: state.session.mode === 'chat' ? "chatInteraction" : "agentInteraction",
             data: {
               prompt: next.value.prompt,
               completion: next.value.completion,
