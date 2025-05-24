@@ -9,4 +9,5 @@ export const editInteractionEventAllSchema = baseDevDataAllSchema.extend({
   modelTitle: z.string(),
   prompt: z.string(),
   completion: z.string(),
+  filepath: z.string(),
 });
