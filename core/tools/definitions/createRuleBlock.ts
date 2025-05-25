@@ -28,6 +28,10 @@ export const createRuleBlock: Tool = {
           description:
             "Clear, imperative instruction for future code generation (e.g. 'Use named exports', 'Add Python type hints'). Each rule should focus on one specific standard.",
         },
+        description: {
+          type: "string",
+          description: "Short description of the rule",
+        },
         globs: {
           type: "string",
           description:

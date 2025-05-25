@@ -110,6 +110,7 @@ export function Chat() {
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const history = useAppSelector((state) => state.session.history);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
@@ -147,7 +148,11 @@ export function Chat() {
     };
   }, [isStreaming, jetbrains]);
 
-  const { widget, highlights } = useFindWidget(stepsDivRef);
+  const { widget, highlights } = useFindWidget(
+    stepsDivRef,
+    tabsRef,
+    isStreaming,
+  );
 
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
@@ -288,13 +293,14 @@ export function Chat() {
 
   return (
     <>
+      {!!showSessionTabs && mode !== "edit" && <TabBar ref={tabsRef} />}
       {widget}
 
       {!!showSessionTabs && !isInEdit && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-3 overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
