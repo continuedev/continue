@@ -1,4 +1,4 @@
-async function* toAsyncIterable(
+export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
   for await (const chunk of nodeReadable) {
