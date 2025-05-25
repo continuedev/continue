@@ -1,9 +1,9 @@
 // core/llm/toolSupport.test.ts
-import { PROVIDER_TOOL_SUPPORT } from "./toolSupport";
+import { NATIVE_TOOL_SUPPORT } from "./toolSupport";
 
-describe("PROVIDER_TOOL_SUPPORT", () => {
+describe("NATIVE_TOOL_SUPPORT", () => {
   describe("continue-proxy", () => {
-    const supportsFn = PROVIDER_TOOL_SUPPORT["continue-proxy"];
+    const supportsFn = NATIVE_TOOL_SUPPORT["continue-proxy"];
 
     it("should return true for Claude 3.5 models", () => {
       expect(supportsFn("claude-3-5-sonnet")).toBe(true);
@@ -43,7 +43,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
   });
 
   describe("anthropic", () => {
-    const supportsFn = PROVIDER_TOOL_SUPPORT["anthropic"];
+    const supportsFn = NATIVE_TOOL_SUPPORT["anthropic"];
 
     it("should return true for Claude 3.5 models", () => {
       expect(supportsFn("claude-3-5-sonnet")).toBe(true);
@@ -67,7 +67,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
   });
 
   describe("openai", () => {
-    const supportsFn = PROVIDER_TOOL_SUPPORT["openai"];
+    const supportsFn = NATIVE_TOOL_SUPPORT["openai"];
 
     it("should return true for GPT-4 models", () => {
       expect(supportsFn("gpt-4")).toBe(true);
@@ -92,7 +92,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
   });
 
   describe("gemini", () => {
-    const supportsFn = PROVIDER_TOOL_SUPPORT["gemini"];
+    const supportsFn = NATIVE_TOOL_SUPPORT["gemini"];
 
     it("should return true for all Gemini models", () => {
       expect(supportsFn("gemini-pro")).toBe(true);
@@ -112,24 +112,42 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
   });
 
   describe("bedrock", () => {
-    const supportsFn = PROVIDER_TOOL_SUPPORT["bedrock"];
+    const supportsFn = NATIVE_TOOL_SUPPORT["bedrock"];
 
     it("should return true for Claude 3.5 Sonnet models", () => {
-      expect(supportsFn("anthropic.claude-3-5-sonnet-20240620-v1:0")).toBe(true);
-      expect(supportsFn("anthropic.claude-3.5-sonnet-20240620-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3-5-sonnet-20240620-v1:0")).toBe(
+        true,
+      );
+      expect(supportsFn("anthropic.claude-3.5-sonnet-20240620-v1:0")).toBe(
+        true,
+      );
     });
 
     it("should return true for Claude 3.7 Sonnet models", () => {
-      expect(supportsFn("anthropic.claude-3-7-sonnet-20240620-v1:0")).toBe(true);
-      expect(supportsFn("anthropic.claude-3.7-sonnet-20240620-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3-7-sonnet-20240620-v1:0")).toBe(
+        true,
+      );
+      expect(supportsFn("anthropic.claude-3.7-sonnet-20240620-v1:0")).toBe(
+        true,
+      );
     });
 
     it("should return undefined for Claude Haiku and Opus models", () => {
-      expect(supportsFn("anthropic.claude-3-5-haiku-20240307-v1:0")).toBeUndefined();
-      expect(supportsFn("anthropic.claude-3.5-haiku-20240620-v1:0")).toBeUndefined();
-      expect(supportsFn("anthropic.claude-3-7-haiku-20240620-v1:0")).toBeUndefined();
-      expect(supportsFn("anthropic.claude-3-5-opus-20240620-v1:0")).toBeUndefined();
-      expect(supportsFn("anthropic.claude-3.7-opus-20240620-v1:0")).toBeUndefined();
+      expect(
+        supportsFn("anthropic.claude-3-5-haiku-20240307-v1:0"),
+      ).toBeUndefined();
+      expect(
+        supportsFn("anthropic.claude-3.5-haiku-20240620-v1:0"),
+      ).toBeUndefined();
+      expect(
+        supportsFn("anthropic.claude-3-7-haiku-20240620-v1:0"),
+      ).toBeUndefined();
+      expect(
+        supportsFn("anthropic.claude-3-5-opus-20240620-v1:0"),
+      ).toBeUndefined();
+      expect(
+        supportsFn("anthropic.claude-3.7-opus-20240620-v1:0"),
+      ).toBeUndefined();
     });
 
     it("should return undefined for other unsupported models", () => {
@@ -138,13 +156,17 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
 
     it("should handle case insensitivity", () => {
-      expect(supportsFn("ANTHROPIC.CLAUDE-3-5-SONNET-20240620-v1:0")).toBe(true);
-      expect(supportsFn("ANTHROPIC.CLAUDE-3.7-SONNET-20240620-v1:0")).toBe(true);
+      expect(supportsFn("ANTHROPIC.CLAUDE-3-5-SONNET-20240620-v1:0")).toBe(
+        true,
+      );
+      expect(supportsFn("ANTHROPIC.CLAUDE-3.7-SONNET-20240620-v1:0")).toBe(
+        true,
+      );
     });
   });
 
   describe("mistral", () => {
-    const supportsFn = PROVIDER_TOOL_SUPPORT["mistral"];
+    const supportsFn = NATIVE_TOOL_SUPPORT["mistral"];
 
     it("should return true for supported models", () => {
       expect(supportsFn("mistral-large-latest")).toBe(true);
@@ -176,7 +198,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
   });
 
   describe("ollama", () => {
-    const supportsFn = PROVIDER_TOOL_SUPPORT["ollama"];
+    const supportsFn = NATIVE_TOOL_SUPPORT["ollama"];
 
     it("should return true for supported models", () => {
       expect(supportsFn("llama3.1")).toBe(true);
@@ -220,17 +242,17 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
 
   describe("edge cases", () => {
     it("should handle empty model names", () => {
-      expect(PROVIDER_TOOL_SUPPORT["continue-proxy"]("")).toBe(false);
-      expect(PROVIDER_TOOL_SUPPORT["anthropic"]("")).toBeUndefined();
-      expect(PROVIDER_TOOL_SUPPORT["openai"]("")).toBeUndefined();
-      expect(PROVIDER_TOOL_SUPPORT["gemini"]("")).toBe(false);
-      expect(PROVIDER_TOOL_SUPPORT["bedrock"]("")).toBeUndefined();
-      expect(PROVIDER_TOOL_SUPPORT["ollama"]("")).toBeUndefined();
+      expect(NATIVE_TOOL_SUPPORT["continue-proxy"]("")).toBe(false);
+      expect(NATIVE_TOOL_SUPPORT["anthropic"]("")).toBeUndefined();
+      expect(NATIVE_TOOL_SUPPORT["openai"]("")).toBeUndefined();
+      expect(NATIVE_TOOL_SUPPORT["gemini"]("")).toBe(false);
+      expect(NATIVE_TOOL_SUPPORT["bedrock"]("")).toBeUndefined();
+      expect(NATIVE_TOOL_SUPPORT["ollama"]("")).toBeUndefined();
     });
 
     it("should handle non-existent provider", () => {
       // @ts-ignore - Testing runtime behavior with invalid provider
-      expect(PROVIDER_TOOL_SUPPORT["non-existent"]).toBeUndefined();
+      expect(NATIVE_TOOL_SUPPORT["non-existent"]).toBeUndefined();
     });
   });
 });

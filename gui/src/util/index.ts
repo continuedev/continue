@@ -127,14 +127,14 @@ export function isLocalProfile(profile: ProfileDescription): boolean {
 export function getBaseSystemMessage(
   modelDetails: ModelDescription | null,
   mode: MessageModes,
-  tools: Tool[],
+  systemMessageTools: Tool[],
 ) {
   let baseChatOrAgentSystemMessage: string | undefined;
   if (mode === "agent") {
     baseChatOrAgentSystemMessage =
       modelDetails?.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
-    if (tools.length > 0) {
-      const toolsSystemMessage = generateToolsSystemMessage(tools);
+    if (systemMessageTools.length > 0) {
+      const toolsSystemMessage = generateToolsSystemMessage(systemMessageTools);
       baseChatOrAgentSystemMessage += `\n\n${toolsSystemMessage}`;
     }
   } else {

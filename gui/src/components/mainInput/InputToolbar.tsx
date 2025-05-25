@@ -1,6 +1,6 @@
 import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
-import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
+import { modelSupportsImages } from "core/llm/autodetect";
 import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -62,8 +62,6 @@ function InputToolbar(props: InputToolbarProps) {
     toolCallState?.status === "generated" ||
     (currentToolCallApplyState &&
       currentToolCallApplyState.status !== "closed");
-
-  const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =
     defaultModel &&
@@ -156,7 +154,7 @@ function InputToolbar(props: InputToolbarProps) {
         >
           {!props.toolbarOptions?.hideUseCodebase && mode !== "edit" && (
             <div
-              className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
+              className={`hover:underline" hidden transition-colors duration-200 md:flex`}
             >
               {props.activeKey === "Alt" ? (
                 <HoverItem className="underline">

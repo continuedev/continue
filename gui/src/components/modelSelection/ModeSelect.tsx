@@ -7,7 +7,6 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
 import { useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { lightGray } from "..";
@@ -34,9 +33,6 @@ function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const agentModeSupported = useMemo(() => {
-    return selectedModel && modelSupportsTools(selectedModel);
-  }, [selectedModel]);
   const { mainEditor } = useMainEditor();
   const jetbrains = useMemo(() => {
     return isJetBrains();
@@ -55,16 +51,6 @@ function ModeSelect() {
         return <PencilIcon className="xs:h-3 xs:w-3 h-3 w-3" />;
     }
   };
-
-  // Switch to chat mode if agent mode is selected but not supported
-  useEffect(() => {
-    if (!selectedModel) {
-      return;
-    }
-    if (mode === "agent" && !agentModeSupported) {
-      dispatch(setMode("chat"));
-    }
-  }, [mode, agentModeSupported, dispatch, selectedModel]);
 
   const cycleMode = useCallback(async () => {
     const modes: MessageModes[] = jetbrains
@@ -173,20 +159,12 @@ function ModeSelect() {
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
 
-          <ListboxOption
-            value="agent"
-            disabled={!agentModeSupported}
-            className={"gap-1"}
-          >
+          <ListboxOption value="agent" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <SparklesIcon className="h-3 w-3" />
               <span className="">Agent</span>
             </div>
-            {agentModeSupported ? (
-              mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />
-            ) : (
-              <span>(Not supported)</span>
-            )}
+            {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
 
           <div className="text-lightgray px-2 py-1">

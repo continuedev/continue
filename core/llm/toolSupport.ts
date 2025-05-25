@@ -1,4 +1,6 @@
-export const PROVIDER_TOOL_SUPPORT: Record<
+import { ModelDescription } from "..";
+
+export const NATIVE_TOOL_SUPPORT: Record<
   string,
   (model: string) => boolean | undefined
 > = {
@@ -7,7 +9,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     const provider = model.split("/")[2];
     const _model = model.split("/")[3];
     if (provider && _model && provider !== "continue-proxy") {
-      const fn = PROVIDER_TOOL_SUPPORT[provider];
+      const fn = NATIVE_TOOL_SUPPORT[provider];
       if (fn) {
         return fn(_model);
       }
@@ -25,9 +27,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   },
   anthropic: (model) => {
     if (
-      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7","claude-sonnet-4"].some((part) =>
-        model.toLowerCase().startsWith(part),
-      )
+      [
+        "claude-3-5",
+        "claude-3.5",
+        "claude-3-7",
+        "claude-3.7",
+        "claude-sonnet-4",
+      ].some((part) => model.toLowerCase().startsWith(part))
     ) {
       return true;
     }
@@ -49,6 +55,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
     // firworks-ai https://docs.fireworks.ai/guides/function-calling
+    // TODO - should be under fireworks provider?
     if (model.startsWith("accounts/fireworks/models/")) {
       switch (model.substring(26)) {
         case "llama-v3p1-405b-instruct":
@@ -77,9 +84,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     // For Bedrock, only support Claude Sonnet models with versions 3.5/3-5 and 3.7/3-7
     if (
       model.toLowerCase().includes("sonnet") &&
-      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7","claude-sonnet-4"].some((part) =>
-        model.toLowerCase().includes(part),
-      )
+      [
+        "claude-3-5",
+        "claude-3.5",
+        "claude-3-7",
+        "claude-3.7",
+        "claude-sonnet-4",
+      ].some((part) => model.toLowerCase().includes(part))
     ) {
       return true;
     }
@@ -236,3 +247,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     }
   },
 };
+
+export function modelSupportsNativeTools(modelDescription: ModelDescription) {
+  if (modelDescription.capabilities?.tools !== undefined) {
+    return modelDescription.capabilities.tools;
+  }
+  const providerSupport = NATIVE_TOOL_SUPPORT[modelDescription.provider];
+  if (!providerSupport) {
+    return false;
+  }
+  return providerSupport(modelDescription.model) ?? false;
+}
