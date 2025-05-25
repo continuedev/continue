@@ -1,4 +1,4 @@
-import { streamJSON } from "@continuedev/fetch";
+import { streamSse } from "@continuedev/fetch";
 import {
   ChatMessage,
   Chunk,
@@ -11,7 +11,7 @@ import { BaseLLM } from "../index.js";
 class Cohere extends BaseLLM {
   static providerName = "cohere";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.cohere.ai/v1",
+    apiBase: "https://api.cohere.ai/v2",
     maxEmbeddingBatchSize: 96,
   };
   static maxStopSequences = 5;
@@ -19,13 +19,31 @@ class Cohere extends BaseLLM {
   private _convertMessages(msgs: ChatMessage[]): any[] {
     const messages = [];
     for (const m of msgs) {
-      if (m.role === "system" || !m.content) {
+      if (!m.content) {
         continue;
       }
-      messages.push({
-        role: m.role === "assistant" ? "chatbot" : m.role,
-        message: m.content,
-      });
+      switch (m.role) {
+        case "user":
+          messages.push({
+            role: m.role,
+            content: m.content,
+          });
+          break;
+        case "assistant":
+          messages.push({
+            role: m.role,
+            content: m.content,
+          });
+          break;
+        case "system":
+          messages.push({
+            role: m.role,
+            content: stripImages(m.content),
+          });
+          break;
+        default:
+          break;
+      }
     }
     return messages;
   }
@@ -41,7 +59,6 @@ class Cohere extends BaseLLM {
       stop_sequences: options.stop?.slice(0, Cohere.maxStopSequences),
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
-      raw_prompting: options.raw,
     };
   }
 
@@ -67,19 +84,12 @@ class Cohere extends BaseLLM {
       ...this.requestOptions?.headers,
     };
 
-    let preamble: string | undefined = undefined;
-    const systemMessage = messages.find((m) => m.role === "system")?.content;
-    if (systemMessage) {
-      preamble = stripImages(systemMessage);
-    }
     const resp = await this.fetch(new URL("chat", this.apiBase), {
       method: "POST",
       headers,
       body: JSON.stringify({
         ...this._convertArgs(options),
-        message: messages.pop()?.content,
-        chat_history: this._convertMessages(messages),
-        preamble,
+        messages: this._convertMessages(messages),
       }),
       signal,
     });
@@ -90,13 +100,22 @@ class Cohere extends BaseLLM {
 
     if (options.stream === false) {
       const data = await resp.json();
-      yield { role: "assistant", content: data.text };
+      yield { role: "assistant", content: data.message.content[0].text };
       return;
     }
 
-    for await (const value of streamJSON(resp)) {
-      if (value.event_type === "text-generation") {
-        yield { role: "assistant", content: value.text };
+    for await (const value of streamSse(resp)) {
+      // https://docs.cohere.com/v2/docs/streaming#stream-events
+      switch (value.type) {
+        // https://docs.cohere.com/v2/docs/streaming#content-delta
+        case "content-delta":
+          yield {
+            role: "assistant",
+            content: value.delta.message.content.text,
+          };
+          break;
+        default:
+          break;
       }
     }
   }
