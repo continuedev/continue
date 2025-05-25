@@ -1,4 +1,5 @@
 import { IDE, PromptLog } from "core";
+import { AuthType } from "core/control-plane/AuthTypes";
 import {
   FromIdeProtocol,
   FromWebviewProtocol,
@@ -38,6 +39,7 @@ async function defaultMockHandleMessage<T extends keyof FromWebviewProtocol>(
       ]);
     case "getControlPlaneSessionInfo":
       return returnFor("getControlPlaneSessionInfo", {
+        AUTH_TYPE: AuthType.WorkOsStaging,
         accessToken: "",
         account: {
           label: "",

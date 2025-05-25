@@ -1,5 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius } from "..";
@@ -13,16 +13,30 @@ import {
 } from "../../redux/slices/tabsSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { loadSession, saveCurrentSession } from "../../redux/thunks/session";
+import { varWithFallback } from "../../styles/theme";
+
+// Haven't set up theme colors for tabs yet
+// Will keep it simple and choose from existing ones. Comments show vars we could use
+const tabBorderVar = varWithFallback("border"); // --vscode-tab-border
+const tabBackgroundVar = varWithFallback("background"); // --vscode-tab-inactiveBackground
+const tabForegroundVar = varWithFallback("foreground"); // --vscode-tab-inactiveForeground
+const tabHoverBackgroundVar = varWithFallback("list-hover"); // --vscode-tab-hoverBackground
+const tabHoverForegroundVar = varWithFallback("foreground"); // --vscode-tab-hoverForeground
+const tabSelectedBackgroundVar = varWithFallback("background"); // --vscode-tab-activeBackground
+const tabSelectedForegroundVar = varWithFallback("foreground"); // --vscode-tab-activeForeground
+const tabAccentVar = varWithFallback("accent"); // --vscode-tab-activeBorderTop
 
 const TabBarContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   flex-shrink: 0;
   flex-grow: 0;
-  background-color: var(--vscode-tab-inactiveBackground);
+  background-color: ${tabBackgroundVar};
   border-bottom: none;
   position: relative;
   margin-top: 2px;
+  max-height: 100px;
+  overflow: auto;
 
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
@@ -41,24 +55,18 @@ const Tab = styled.div<{ isActive: boolean }>`
   max-width: 150px;
   height: 25px;
   background-color: ${(props) =>
-    props.isActive
-      ? "var(--vscode-tab-activeBackground)"
-      : "var(--vscode-tab-inactiveBackground)"};
+    props.isActive ? tabSelectedBackgroundVar : tabBackgroundVar};
   color: ${(props) =>
-    props.isActive
-      ? "var(--vscode-tab-activeForeground)"
-      : "var(--vscode-tab-inactiveForeground)"};
+    props.isActive ? tabSelectedForegroundVar : tabForegroundVar};
   cursor: pointer;
-  border: 1px solid var(--vscode-tab-border);
+  border: 1px solid ${tabBorderVar};
   border-bottom: ${(props) =>
-    props.isActive ? "none" : `1px solid var(--vscode-tab-border)`};
+    props.isActive ? "none" : `1px solid ${tabBorderVar}`};
   user-select: none;
   position: relative;
   transition: background-color 0.2s;
   border-top: ${(props) =>
-    props.isActive
-      ? `1px solid var(--vscode-tab-activeBorderTop, --vscode-tab-border)`
-      : `1px solid var(--vscode-tab-border)`};
+    props.isActive ? `1px solid ${tabAccentVar}` : `1px solid ${tabBorderVar}`};
   &:first-child {
     border-left: none;
   }
@@ -68,13 +76,9 @@ const Tab = styled.div<{ isActive: boolean }>`
 
   &:hover {
     background-color: ${(props) =>
-      props.isActive
-        ? "var(--vscode-tab-activeBackground)"
-        : "var(--vscode-tab-hoverBackground)"};
+      props.isActive ? tabSelectedBackgroundVar : tabHoverBackgroundVar};
     color: ${(props) =>
-      props.isActive
-        ? "var(--vscode-tab-activeForeground)"
-        : "var(--vscode-tab-hoverForeground)"};
+      props.isActive ? tabSelectedForegroundVar : tabHoverForegroundVar};
   }
 `;
 
@@ -104,7 +108,7 @@ const CloseButton = styled.button`
 
   &:hover {
     opacity: 1;
-    background-color: var(--vscode-tab-hoverBackground);
+    background-color: ${tabHoverBackgroundVar};
   }
 
   ${Tab}:hover & {
@@ -119,33 +123,12 @@ const CloseButton = styled.button`
 const TabBarSpace = styled.div`
   flex: 1;
   display: flex;
-  border-bottom: 1px solid var(--vscode-tab-border);
-  background-color: var(--vscode-tab-inactiveBackground);
+  border-bottom: 1px solid ${tabBorderVar};
+  background-color: ${tabBackgroundVar};
 `;
 
-const NewTabButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 35px;
-  height: 100%;
-  border: none;
-  background: transparent;
-  color: var(--vscode-tab-inactiveForeground);
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 1;
-    background-color: var(--vscode-tab-hoverBackground);
-    color: var(--vscode-tab-hoverForeground);
-  }
-`;
-
-export function TabBar() {
+export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
   const dispatch = useDispatch<AppDispatch>();
-  const currentSession = useSelector((state: RootState) => state.session);
   const currentSessionId = useSelector((state: RootState) => state.session.id);
   const currentSessionTitle = useSelector(
     (state: RootState) => state.session.title,
@@ -160,7 +143,6 @@ export function TabBar() {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
   }, []);
 
-  // Handle session changes
   useEffect(() => {
     if (!currentSessionId) return;
 
@@ -243,10 +225,13 @@ export function TabBar() {
     }
   };
 
-  return tabs.length === 1 ? (
-    <></>
-  ) : (
-    <TabBarContainer>
+  return (
+    <TabBarContainer
+      ref={ref}
+      style={{
+        display: tabs.length === 1 ? "none" : "flex",
+      }}
+    >
       {tabs.map((tab) => (
         <Tab
           key={tab.id}
@@ -272,4 +257,4 @@ export function TabBar() {
       </TabBarSpace>
     </TabBarContainer>
   );
-}
+});

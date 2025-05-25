@@ -33,7 +33,7 @@ import {
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "../control-plane/client";
+import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 

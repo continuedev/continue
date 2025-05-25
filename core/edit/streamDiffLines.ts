@@ -127,6 +127,7 @@ export async function* streamDiffLines({
                 (msg) => msg.role === "user" || msg.role === "tool",
               ) as UserChatMessage | ToolResultChatMessage | undefined),
         baseSystemMessage: undefined,
+        contextItems: [],
       })
     : undefined;
 

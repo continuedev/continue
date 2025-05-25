@@ -166,7 +166,7 @@ class VerticalDiffBlock(
         val rejectBtn =
             createButton(
                 "${getAltKeyLabel()}${getShiftKeyLabel()}N",
-                JBColor(0x77FF0000, 0x77FF0000)
+                JBColor(0xFF0000, 0xFF0000)
             ).apply {
                 addActionListener {
                     handleReject()
@@ -178,12 +178,13 @@ class VerticalDiffBlock(
             createButton(
                 "${getAltKeyLabel()}${
                     getShiftKeyLabel()
-                }Y", JBColor(0x7700BB00, 0x7700BB00)
+                }Y", JBColor(0x00BB00, 0x00BB00)
             ).apply {
                 addActionListener {
                     handleAccept()
                 }
             }
+
 
         return Pair(acceptBtn, rejectBtn)
     }

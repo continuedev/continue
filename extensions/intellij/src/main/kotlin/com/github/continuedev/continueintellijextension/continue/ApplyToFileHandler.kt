@@ -121,10 +121,10 @@ class ApplyToFileHandler(
         val prompt = buildApplyPrompt()
 
         // Extract the code ranges (highlighted or full document)
-        val (prefix, highlighted, suffix) = editorUtils.extractCodeRanges()
+        val (prefix, highlighted, suffix) = editorUtils.getHighlightedRangeTriplet()
 
         // Get the line range for the diff stream
-        val rif = editorUtils.getHighlightedCode()
+        val rif = editorUtils.getHighlightedRIF()
         val startLine = rif?.range?.start?.line ?: 0
         val endLine = rif?.range?.end?.line ?: (editorUtils.getLineCount() - 1)
 

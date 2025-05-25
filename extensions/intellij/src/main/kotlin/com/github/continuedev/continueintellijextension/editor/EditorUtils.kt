@@ -1,7 +1,5 @@
 package com.github.continuedev.continueintellijextension.editor
 
-import com.github.continuedev.continueintellijextension.Position
-import com.github.continuedev.continueintellijextension.Range
 import com.github.continuedev.continueintellijextension.utils.toUriOrNull
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
@@ -72,28 +70,33 @@ class EditorUtils(val editor: Editor) {
         editor.scrollingModel.scrollTo(logicalPosition, ScrollType.CENTER_UP)
     }
 
+    /**
+     * Remove the selected range in a thread-safe manner
+     */
+    fun removeSelection() {
+        ApplicationManager.getApplication().invokeLater {
+            editor.selectionModel.removeSelection()
+        }
+    }
 
     /**
      * Extracts code ranges from the editor: (prefix, highlighted/selected text, suffix)
      */
-    fun extractCodeRanges(): Triple<String, String, String> {
-        val rif = getHighlightedCode()
+    fun getHighlightedRangeTriplet(): Triple<String, String, String> {
+        val rif = getHighlightedRIF()
 
         return if (rif == null) {
             // If no highlight, use the whole document as highlighted
             Triple("", editor.document.text, "")
         } else {
             // Use the RangeInFileWithContents to get absolute offsets
-            val startOffset = rif.getStartOffset(editor.document)
-            val endOffset = rif.getEndOffset(editor.document)
+            val (startOffset, endOffset) = rif.offsets
+
             val prefix = editor.document.getText(TextRange(0, startOffset))
             val highlighted = rif.contents
             val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
 
-            // Remove the selection after processing
-            ApplicationManager.getApplication().invokeLater {
-                editor.selectionModel.removeSelection()
-            }
+            removeSelection()
 
             Triple(prefix, highlighted, suffix)
         }
@@ -103,7 +106,7 @@ class EditorUtils(val editor: Editor) {
      * Gets the selected code from the current editor.
      * Returns null if there is no selection.
      */
-    fun getHighlightedCode(): RangeInFileWithContents? {
+    fun getHighlightedRIF(): RangeInFileWithContents? {
         return ApplicationManager.getApplication().runReadAction<RangeInFileWithContents?> {
             val virtualFile =
                 FileDocumentManager.getInstance().getFile(editor.document) ?: return@runReadAction null

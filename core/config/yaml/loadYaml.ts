@@ -41,9 +41,8 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { logger } from "../../util/logger";
 import { getCleanUriPath } from "../../util/uri";
-import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
+import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
 
@@ -72,7 +71,7 @@ function convertYamlMcpToContinueMcp(
       command: server.command,
       args: server.args ?? [],
       env: server.env,
-    },
+    } as any, // TODO: Fix the mcpServers types in config-yaml (discriminated union)
     timeout: server.connectionTimeout,
   };
 }
@@ -97,7 +96,7 @@ async function loadConfigYaml(options: {
   // Add local .continue blocks
   const allLocalBlocks: PackageIdentifier[] = [];
   for (const blockType of BLOCK_TYPES) {
-    const localBlocks = await getAllDotContinueYamlFiles(
+    const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
       { includeGlobal: true, includeWorkspace: true },
       blockType,
@@ -115,9 +114,9 @@ async function loadConfigYaml(options: {
       ? dirname(getCleanUriPath(packageIdentifier.filePath))
       : undefined;
 
-  logger.info(
-    `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
-  );
+  // logger.info(
+  //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
+  // );
 
   let config =
     overrideConfigYaml ??
@@ -459,7 +458,7 @@ async function configYamlToContinueConfig(options: {
       transport: {
         type: "stdio",
         args: [],
-        ...server,
+        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
       },
       timeout: server.connectionTimeout,
     })),

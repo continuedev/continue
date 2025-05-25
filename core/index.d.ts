@@ -842,7 +842,7 @@ export interface SlashCommand {
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
-  promptFile?: string
+  promptFile?: string;
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
@@ -1252,6 +1252,10 @@ export interface HighlightedCodePayload {
 export interface AcceptOrRejectDiffPayload {
   filepath: string;
   streamId?: string;
+}
+
+export interface ShowFilePayload {
+  filepath: string;
 }
 
 export interface RangeInFileWithContents {
