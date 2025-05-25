@@ -221,6 +221,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("qwen2")).toBe(true);
       expect(supportsFn("mixtral-8x7b")).toBe(true);
       expect(supportsFn("command-r")).toBe(true);
+      expect(supportsFn("command-a")).toBe(true);
       expect(supportsFn("smollm2")).toBe(true);
       expect(supportsFn("hermes3")).toBe(true);
       expect(supportsFn("athene-v2")).toBe(true);

@@ -52,6 +52,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "cohere",
   "sagemaker",
   "continue-proxy",
   "mistral",
@@ -140,6 +141,7 @@ function modelSupportsImages(
 const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
+  "cohere",
   "sagemaker",
   "deepinfra",
   "gemini",
@@ -176,6 +178,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   if (
     lower.includes("gpt") ||
     lower.includes("command") ||
+    lower.includes("aya") ||
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini") ||
