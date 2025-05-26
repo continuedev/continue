@@ -17,3 +17,4 @@ CHANGELOG.md
 **/node_modules
 **/CODEOWNERS
 core/vendor
+coverage
