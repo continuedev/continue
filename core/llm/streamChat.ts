@@ -8,7 +8,7 @@ import { TTS } from "../util/tts";
 
 export async function* llmStreamChat(
   configHandler: ConfigHandler,
-  abortedMessageIds: Set<string>,
+  abortController: AbortController,
   msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
   ide: IDE,
   messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
@@ -75,52 +75,44 @@ export async function* llmStreamChat(
       selectedCode,
       config,
       fetch: (url, init) =>
-        fetchwithRequestOptions(url, init, config.requestOptions),
+        fetchwithRequestOptions(
+          url,
+          {
+            ...init,
+            signal: abortController.signal,
+          },
+          config.requestOptions,
+        ),
       completionOptions,
     });
-    const checkActiveInterval = setInterval(() => {
-      if (abortedMessageIds.has(msg.messageId)) {
-        abortedMessageIds.delete(msg.messageId);
-        clearInterval(checkActiveInterval);
+    let next = await gen.next();
+    while (!next.done) {
+      if (abortController.signal.aborted) {
+        next = await gen.return(errorPromptLog);
+        break;
       }
-    }, 100);
-    try {
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return(errorPromptLog);
-          clearInterval(checkActiveInterval);
-          break;
-        }
-        if (next.value) {
-          yield {
-            role: "assistant",
-            content: next.value,
-          };
-        }
-        next = await gen.next();
+      if (next.value) {
+        yield {
+          role: "assistant",
+          content: next.value,
+        };
       }
-      if (!next.done) {
-        throw new Error("Will never happen");
-      }
-
-      return next.value;
-    } catch (e) {
-      throw e;
-    } finally {
-      clearInterval(checkActiveInterval);
+      next = await gen.next();
     }
+    if (!next.done) {
+      throw new Error("Will never happen");
+    }
+
+    return next.value;
   } else {
     const gen = model.streamChat(
       messages,
-      new AbortController().signal,
+      abortController.signal,
       completionOptions,
     );
     let next = await gen.next();
     while (!next.done) {
-      if (abortedMessageIds.has(msg.messageId)) {
-        abortedMessageIds.delete(msg.messageId);
+      if (abortController.signal.aborted) {
         next = await gen.return(errorPromptLog);
         break;
       }

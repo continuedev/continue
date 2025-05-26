@@ -151,4 +151,24 @@ This is a test rule without a heading.`;
     );
     expect(result.name).toBe("custom-rule");
   });
+
+  it("should include description from frontmatter", () => {
+    const content = `---
+globs: "**/test/**/*.kt"
+name: Test Rule
+description: This is a rule description from frontmatter
+---
+
+# Test Rule
+
+This is the content of the rule.`;
+
+    const result = convertMarkdownRuleToContinueRule(
+      "/path/to/rule.md",
+      content,
+    );
+    expect(result.description).toBe(
+      "This is a rule description from frontmatter",
+    );
+  });
 });

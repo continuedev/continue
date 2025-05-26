@@ -99,6 +99,17 @@ export const AnthropicConfigSchema = OpenAIConfigSchema.extend({
 });
 export type AnthropicConfig = z.infer<typeof AnthropicConfigSchema>;
 
+export const WatsonXConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("watsonx"),
+  apiKey: z.string(),
+  env: z.object({
+    apiVersion: z.string().optional(),
+    projectId: z.string().optional(),
+    deploymentId: z.string().optional(),
+  }),
+});
+export type WatsonXConfig = z.infer<typeof WatsonXConfigSchema>;
+
 export const JinaConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("jina"),
 });
@@ -118,6 +129,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   AzureConfigSchema,
   GeminiConfigSchema,
   AnthropicConfigSchema,
+  WatsonXConfigSchema,
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,

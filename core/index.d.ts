@@ -93,6 +93,7 @@ export interface ILLM
   extends Omit<LLMOptions, RequiredLLMOptions>,
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
+  get underlyingProviderName(): string;
 
   complete(
     prompt: string,
@@ -423,7 +424,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "edit" | "agent";
+export type MessageModes = "chat" | "agent";
 
 export type ToolStatus =
   | "generating"
@@ -1035,6 +1036,7 @@ export interface ModelCapability {
 export interface ModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
 
@@ -1240,6 +1242,7 @@ export interface StreamDiffLinesPayload {
   language: string | undefined;
   modelTitle: string | undefined;
   includeRulesInSystemMessage: boolean;
+  fileUri?: string;
 }
 
 export interface HighlightedCodePayload {
@@ -1332,6 +1335,7 @@ export interface AnalyticsConfig {
 export interface JSONModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
   apiBase?: string;
