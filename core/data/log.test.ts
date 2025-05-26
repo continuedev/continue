@@ -20,13 +20,14 @@ const TEST_EVENT: DevDataLogEvent = {
 };
 
 const TEST_AGENT_INTERACTION_EVENT: DevDataLogEvent = {
-  name: 'agentInteraction',
+  name: 'chatInteraction',
   data: {
     prompt: "Hello, world!",
     completion: "Hello, world!",
     modelProvider: "openai",
     modelTitle: "gpt-4",
     sessionId: "1234",
+    tools: ['test-tool1']
   },
 }
  
@@ -180,9 +181,11 @@ describe("DataLogger", () => {
 
       // Read file contents and verify
       const fileContent = fs.readFileSync(filepath, "utf8");
-      expect(fileContent).toContain('"eventName":"agentInteraction"');
+      console.log('debug1 filecontent', fileContent)
+      expect(fileContent).toContain('"eventName":"chatInteraction"');
       expect(fileContent).toContain('"prompt":"Hello, world!"');
       expect(fileContent).toContain('"completion":"Hello, world!"');
+      expect(fileContent).toContain('"tools":["test-tool1"]');
     })
   });
 

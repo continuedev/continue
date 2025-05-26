@@ -72,7 +72,6 @@ const devEventAllVersionDataSchemas = z.object({
   tokensGenerated: tokensGeneratedEventAllSchema,
   chatInteraction: chatInteractionEventAllSchema,
   editInteraction: editInteractionEventAllSchema,
-  agentInteraction: chatInteractionEventAllSchema
 });
 
 // Version and level specific schemas are organized here
@@ -98,7 +97,6 @@ export const devDataVersionedSchemas = {
       tokensGenerated: tokensGeneratedEventSchema_0_2_0,
       chatInteraction: chatInteractionEventSchema_0_2_0,
       editInteraction: editInteractionEventSchema_0_2_0,
-      agentInteraction: chatInteractionEventSchema_0_2_0,
     },
     noCode: {
       autocomplete: autocompleteEventSchema_0_2_0_noCode,
@@ -106,7 +104,6 @@ export const devDataVersionedSchemas = {
       tokensGenerated: tokensGeneratedEventSchema_0_2_0_noCode,
       chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
       editInteraction: editInteractionEventSchema_0_2_0_noCode,
-      agentInteraction: chatInteractionEventSchema_0_2_0_noCode,
     },
   },
 };

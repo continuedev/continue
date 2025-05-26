@@ -36,6 +36,7 @@ export const streamNormalInput = createAsyncThunk<
       throw new Error("Default model not defined");
     }
 
+    const isInEdit = state.session.isInEdit;
     let completionOptions: LLMFullCompletionOptions = {};
     const activeTools = selectActiveTools(state);
     const toolsSupported = modelSupportsTools(selectedChatModel);
@@ -75,13 +76,16 @@ export const streamNormalInput = createAsyncThunk<
       try {
         if (state.session.mode === "chat" || state.session.mode === "agent") {
           extra.ideMessenger.post("devdata/log", {
-            name: state.session.mode === 'chat' ? "chatInteraction" : "agentInteraction",
+            name: "chatInteraction",
             data: {
               prompt: next.value.prompt,
               completion: next.value.completion,
               modelProvider: selectedChatModel.underlyingProviderName,
               modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
+              ...(isInEdit && {
+                tools: activeTools.map((tool) => tool.function.name),
+              }),
             },
           });
         }
