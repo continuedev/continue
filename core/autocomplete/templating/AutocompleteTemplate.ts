@@ -72,7 +72,8 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
 };
 
 const seedCoderFimTemplate: AutocompleteTemplate = {
-  template: "<[fim-prefix]>{{{prefix}}}<[fim-suffix]>{{{suffix}}}<[fim-middle]>",
+  template:
+    "<[fim-prefix]>{{{prefix}}}<[fim-suffix]>{{{suffix}}}<[fim-middle]>",
   completionOptions: {
     stop: [
       "<[end▁of▁sentence]>",

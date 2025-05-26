@@ -25,9 +25,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   },
   anthropic: (model) => {
     if (
-      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7","claude-sonnet-4"].some((part) =>
-        model.toLowerCase().startsWith(part),
-      )
+      [
+        "claude-3-5",
+        "claude-3.5",
+        "claude-3-7",
+        "claude-3.7",
+        "claude-sonnet-4",
+      ].some((part) => model.toLowerCase().startsWith(part))
     ) {
       return true;
     }
@@ -77,9 +81,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     // For Bedrock, only support Claude Sonnet models with versions 3.5/3-5 and 3.7/3-7
     if (
       model.toLowerCase().includes("sonnet") &&
-      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7","claude-sonnet-4"].some((part) =>
-        model.toLowerCase().includes(part),
-      )
+      [
+        "claude-3-5",
+        "claude-3.5",
+        "claude-3-7",
+        "claude-3.7",
+        "claude-sonnet-4",
+      ].some((part) => model.toLowerCase().includes(part))
     ) {
       return true;
     }

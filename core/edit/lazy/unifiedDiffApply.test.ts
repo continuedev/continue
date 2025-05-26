@@ -43,7 +43,7 @@ describe("isUnifiedDiffFormat", () => {
     expect(isUnifiedDiffFormat(diffWithoutFileHeaders)).toBe(true);
   });
 
-	it("should return true in case of empty lines", () => {
+  it("should return true in case of empty lines", () => {
     const diffWithoutFileHeaders = `@@ -1,3 +1,4 @@
  line1
 
@@ -83,16 +83,25 @@ describe("applyUnifiedDiff", () => {
     const expected = [
       { type: "same", line: "func main() {" },
       { type: "same", line: "    scanner := bufio.NewScanner(os.Stdin)" },
-      { type: "same", line: "    fmt.Println(\"Calculator started! Available operations:\")" },
-      { type: "same", line: "    fmt.Println(\"  +  : Addition\")" },
-      { type: "same", line: "    fmt.Println(\"  -  : Subtraction\")" },
-      { type: "same", line: "    fmt.Println(\"  *  : Multiplication\")" },
-      { type: "same", line: "    fmt.Println(\"  /  : Division\")" },
-      { type: "same", line: "    fmt.Println(\"  ^  : Power\")" },
-      { type: "same", line: "    fmt.Println(\"  √  : Square root (use only one number)\")" },
-      { type: "new", line: "    fmt.Println(\"  log: Logarithm (use 'log base number')\")" },
+      {
+        type: "same",
+        line: '    fmt.Println("Calculator started! Available operations:")',
+      },
+      { type: "same", line: '    fmt.Println("  +  : Addition")' },
+      { type: "same", line: '    fmt.Println("  -  : Subtraction")' },
+      { type: "same", line: '    fmt.Println("  *  : Multiplication")' },
+      { type: "same", line: '    fmt.Println("  /  : Division")' },
+      { type: "same", line: '    fmt.Println("  ^  : Power")' },
+      {
+        type: "same",
+        line: '    fmt.Println("  √  : Square root (use only one number)")',
+      },
+      {
+        type: "new",
+        line: "    fmt.Println(\"  log: Logarithm (use 'log base number')\")",
+      },
       { type: "same", line: "}" },
-      { type: "same", line: "// End of file" }
+      { type: "same", line: "// End of file" },
     ];
 
     expect(result).toEqual(expected);
@@ -130,18 +139,18 @@ func main() {
     const expected = [
       { type: "same", line: "package main" },
       { type: "same", line: "" },
-      { type: "old", line: "import \"fmt\"" },
+      { type: "old", line: 'import "fmt"' },
       { type: "new", line: "import (" },
-      { type: "new", line: "  \"fmt\"" },
-      { type: "new", line: "  \"time\"" },
+      { type: "new", line: '  "fmt"' },
+      { type: "new", line: '  "time"' },
       { type: "new", line: ")" },
       { type: "same", line: "" },
       { type: "same", line: "func main() {" },
-      { type: "old", line: "  fmt.Println(\"Hello\")" },
-      { type: "new", line: "  fmt.Printf(\"The time is: %v\\n\", time.Now())" },
-      { type: "old", line: "  fmt.Println(\"World\")" },
-      { type: "new", line: "  fmt.Println(\"Goodbye!\")" },
-      { type: "same", line: "}" }
+      { type: "old", line: '  fmt.Println("Hello")' },
+      { type: "new", line: '  fmt.Printf("The time is: %v\\n", time.Now())' },
+      { type: "old", line: '  fmt.Println("World")' },
+      { type: "new", line: '  fmt.Println("Goodbye!")' },
+      { type: "same", line: "}" },
     ];
 
     expect(result).toEqual(expected);
@@ -379,29 +388,47 @@ func TestLargeNumbers(t *testing.T) {
 
     expect(result[0].line).toEqual("package main");
     // 1st block
-		expect(result[18].line).toEqual("\tfmt.Println(\"  √  : Square root (use only one number)\")");
-		expect(result[19].line).toEqual("  fmt.Println(\"  log: Logarithm (use 'log base number')\")");
-    expect(result[20].line).toEqual("  fmt.Println(\"       Base must be > 0 and != 1, number must be > 0\")");
-		// 2nd block
-		expect(result[56]).toEqual({type: "same", line: "\t}"});
-		expect(result[57]).toEqual({type: "new", line: "\t"});
-		expect(result[58]).toEqual({type: "new", line: "\t// Handle logarithmic operations"});
-		expect(result[73]).toEqual({type: "new", line: ""});
-		expect(result[74]).toEqual({type: "same", line: "\tif len(parts) != 3 {"});
-		// 3rd block
-		expect(result[140]).toEqual({type: "same", line: "}"});
-		expect(result[141]).toEqual({type: "new", line: ""});
-		expect(result[142]).toEqual({type: "new", line: "func TestLogarithmicCases(t *testing.T) {"});
-		expect(result[153]).toEqual({type: "new", line: "\t}"});
-		expect(result[154]).toEqual({type: "same", line: "func TestSpecialCases(t *testing.T) {"});
-	});
+    expect(result[18].line).toEqual(
+      '\tfmt.Println("  √  : Square root (use only one number)")',
+    );
+    expect(result[19].line).toEqual(
+      "  fmt.Println(\"  log: Logarithm (use 'log base number')\")",
+    );
+    expect(result[20].line).toEqual(
+      '  fmt.Println("       Base must be > 0 and != 1, number must be > 0")',
+    );
+    // 2nd block
+    expect(result[56]).toEqual({ type: "same", line: "\t}" });
+    expect(result[57]).toEqual({ type: "new", line: "\t" });
+    expect(result[58]).toEqual({
+      type: "new",
+      line: "\t// Handle logarithmic operations",
+    });
+    expect(result[73]).toEqual({ type: "new", line: "" });
+    expect(result[74]).toEqual({
+      type: "same",
+      line: "\tif len(parts) != 3 {",
+    });
+    // 3rd block
+    expect(result[140]).toEqual({ type: "same", line: "}" });
+    expect(result[141]).toEqual({ type: "new", line: "" });
+    expect(result[142]).toEqual({
+      type: "new",
+      line: "func TestLogarithmicCases(t *testing.T) {",
+    });
+    expect(result[153]).toEqual({ type: "new", line: "\t}" });
+    expect(result[154]).toEqual({
+      type: "same",
+      line: "func TestSpecialCases(t *testing.T) {",
+    });
+  });
 
-	it("should throw error when hunk cannot be matched to source", () => {
-		const sourceCode = `line1
+  it("should throw error when hunk cannot be matched to source", () => {
+    const sourceCode = `line1
 line2 
 line3`;
 
-	const diffText = `--- a.txt
+    const diffText = `--- a.txt
 +++ b.txt
 @@ -1,3 +1,4 @@
 missing1
@@ -409,7 +436,8 @@ missing1
 +newline2
 missing3`;
 
-		expect(() => applyUnifiedDiff(sourceCode, diffText))
-			.toThrow("Hunk could not be applied cleanly to source code.");
-	});
+    expect(() => applyUnifiedDiff(sourceCode, diffText)).toThrow(
+      "Hunk could not be applied cleanly to source code.",
+    );
+  });
 });
