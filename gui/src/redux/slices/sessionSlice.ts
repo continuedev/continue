@@ -18,14 +18,12 @@ import {
   RuleWithSource,
   Session,
   SessionMetadata,
-  ToolCallDelta,
-  ToolCallState,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
-import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
+import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
@@ -278,27 +276,6 @@ export const sessionSlice = createSlice({
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
       if (state.history.length) {
-        function toolCallDeltaToState(
-          toolCallDelta: ToolCallDelta,
-        ): ToolCallState {
-          const [_, parsedArgs] = incrementalParseJson(
-            toolCallDelta.function?.arguments ?? "{}",
-          );
-          return {
-            status: "generating",
-            toolCall: {
-              id: toolCallDelta.id ?? "",
-              type: toolCallDelta.type ?? "function",
-              function: {
-                name: toolCallDelta.function?.name ?? "",
-                arguments: toolCallDelta.function?.arguments ?? "",
-              },
-            },
-            toolCallId: toolCallDelta.id ?? "",
-            parsedArgs,
-          };
-        }
-
         for (const message of action.payload) {
           const lastItem = state.history[state.history.length - 1];
           const lastMessage = lastItem.message;
@@ -340,21 +317,10 @@ export const sessionSlice = createSlice({
             };
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
-              if (
-                !(
-                  toolCallDelta.id &&
-                  toolCallDelta.function?.arguments !== undefined &&
-                  toolCallDelta.function?.name &&
-                  toolCallDelta.type
-                )
-              ) {
-                console.warn(
-                  "Received streamed tool call without required fields",
-                  toolCallDelta,
-                );
-              }
-
-              historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
+              historyItem.toolCallState = addToolCallDeltaToState(
+                toolCallDelta,
+                undefined,
+              );
             }
             state.history.push(historyItem);
           } else {
@@ -396,34 +362,12 @@ export const sessionSlice = createSlice({
             ) {
               // Intentionally only supporting one tool call for now.
               const toolCallDelta = message.toolCalls[0];
-
-              // Update message tool call with delta data
-              const newArgs =
-                (lastMessage.toolCalls?.[0]?.function?.arguments ?? "") +
-                (toolCallDelta.function?.arguments ?? "");
-              if (lastMessage.toolCalls?.[0]) {
-                lastMessage.toolCalls[0].function = {
-                  name:
-                    toolCallDelta.function?.name ??
-                    lastMessage.toolCalls[0].function?.name ??
-                    "",
-                  arguments: newArgs,
-                };
-              } else {
-                lastMessage.toolCalls = [toolCallDelta];
-              }
-
-              // Update current tool call state
-              if (!lastItem.toolCallState) {
-                console.warn(
-                  "Received streamed tool call response prior to initial tool call delta",
-                );
-                lastItem.toolCallState = toolCallDeltaToState(toolCallDelta);
-              }
-
-              const [_, parsedArgs] = incrementalParseJson(newArgs);
-              lastItem.toolCallState.parsedArgs = parsedArgs;
-              lastItem.toolCallState.toolCall.function.arguments = newArgs;
+              const newToolCallState = addToolCallDeltaToState(
+                toolCallDelta,
+                lastItem.toolCallState,
+              );
+              lastItem.toolCallState = newToolCallState;
+              lastMessage.toolCalls = [newToolCallState.toolCall];
             }
           }
         }
