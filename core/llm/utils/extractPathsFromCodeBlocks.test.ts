@@ -17,7 +17,7 @@ describe("extractPathsFromCodeBlocks", () => {
   });
 
   it("should handle multiple code blocks with different formats", () => {
-    const content = 
+    const content =
       "```typescript src/main.ts\nconst x = 1;\n```\n" +
       "```test.js\nclass Calculator { }\n```\n" +
       "```js utils.js (19-25)\nfunction test() {}\n```";

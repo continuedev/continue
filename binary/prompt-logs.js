@@ -1,7 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const logDirPath = path.join(__dirname, '..', 'extensions', '.continue-debug', 'logs');
+const logDirPath = path.join(
+  __dirname,
+  "..",
+  "extensions",
+  ".continue-debug",
+  "logs",
+);
 const logFilePath = path.join(logDirPath, "prompt.log");
 
 // Ensure the log directory exists
@@ -12,7 +18,7 @@ if (!fs.existsSync(logDirPath)) {
 
 // Create the log file if it doesn't exist
 if (!fs.existsSync(logFilePath)) {
-  fs.writeFileSync(logFilePath, ''); // Create an empty file synchronously
+  fs.writeFileSync(logFilePath, ""); // Create an empty file synchronously
   console.log("Created empty log file at " + logFilePath);
 }
 
@@ -25,14 +31,16 @@ try {
       // console.clear();
       const stream = fs.createReadStream(logFilePath);
       stream.pipe(process.stdout);
-      stream.on('error', (err) => {
-        console.error('Error reading log file:', err.message);
+      stream.on("error", (err) => {
+        console.error("Error reading log file:", err.message);
       });
     } catch (err) {
-      console.error('Error while handling file change:', err.message);
+      console.error("Error while handling file change:", err.message);
     }
   });
 } catch (err) {
-  console.error('Error setting up file watcher:', err.message);
-  console.log('You may need to restart the script after the extension generates the first log entry.');
+  console.error("Error setting up file watcher:", err.message);
+  console.log(
+    "You may need to restart the script after the extension generates the first log entry.",
+  );
 }

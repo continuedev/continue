@@ -20,7 +20,7 @@ const modelDescriptionSchema = z.object({
     "nebius",
     "siliconflow",
     "scaleway",
-    "watsonx"
+    "watsonx",
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
@@ -94,7 +94,7 @@ const embeddingsProviderSchema = z.object({
     "nebius",
     "siliconflow",
     "scaleway",
-    "watsonx"
+    "watsonx",
   ]),
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),

@@ -19,8 +19,8 @@ export function headerIsMarkdown(header: string): boolean {
     header.includes(" markdown") ||
     header.includes(" gfm") ||
     header.includes(" github-markdown") ||
-    (header.split(" ")[0]?.split(".").pop() === "md") ||
-    (header.split(" ")[0]?.split(".").pop() === "markdown") ||
-    (header.split(" ")[0]?.split(".").pop() === "gfm")
+    header.split(" ")[0]?.split(".").pop() === "md" ||
+    header.split(" ")[0]?.split(".").pop() === "markdown" ||
+    header.split(" ")[0]?.split(".").pop() === "gfm"
   );
 }

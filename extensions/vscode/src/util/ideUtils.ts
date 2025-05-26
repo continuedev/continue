@@ -292,7 +292,7 @@ export class VsCodeIdeUtils {
   async readRangeInFile(uri: vscode.Uri, range: vscode.Range): Promise<string> {
     const buffer = await this.readFile(uri);
     if (buffer === null) {
-      return '';
+      return "";
     }
     const contents = new TextDecoder().decode(buffer);
     const lines = contents.split("\n");
@@ -608,7 +608,6 @@ export class VsCodeIdeUtils {
     try {
       if (repos) {
         for (const repo of repos) {
-
           const staged = await repo.diff(true);
 
           diffs.push(staged);
@@ -620,11 +619,9 @@ export class VsCodeIdeUtils {
       }
 
       return diffs.flatMap((diff) => this.splitDiff(diff));
-
     } catch (e) {
       console.error(e);
       return [];
     }
-
   }
 }

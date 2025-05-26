@@ -30,7 +30,7 @@ describe.skip("codeChunker", () => {
   test("should capture small class and function from large python file", async () => {
     const extraLine = "# This is a comment";
     const myClass = "class MyClass:\n    def __init__(self):\n        pass";
-    const myFunction = "def my_function():\n    return \"Hello, World!\"";
+    const myFunction = 'def my_function():\n    return "Hello, World!"';
 
     const file =
       Array(100).fill(extraLine).join("\n") +
@@ -67,7 +67,7 @@ describe.skip("codeChunker", () => {
       chunks[0].startsWith("class MyClass:\n    def method1():\n        ..."),
     ).toBe(true);
     // The extra spaces seem to be a bug with tree-sitter-python
-    expect(chunks).toContain("def method1():\n        return \"Hello, 1!\"");
-    expect(chunks).toContain("def method20():\n        return \"Hello, 20!\"");
+    expect(chunks).toContain('def method1():\n        return "Hello, 1!"');
+    expect(chunks).toContain('def method20():\n        return "Hello, 20!"');
   });
 });

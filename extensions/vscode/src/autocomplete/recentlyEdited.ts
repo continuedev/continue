@@ -48,7 +48,6 @@ export class RecentlyEditedTracker {
   private async insertRange(
     editedRange: Omit<VsCodeRecentlyEditedRange, "lines" | "symbols">,
   ): Promise<void> {
-
     if (editedRange.uri.scheme !== "file") {
       return;
     }
@@ -119,10 +118,10 @@ export class RecentlyEditedTracker {
       return "";
     }
     return content
-        .toString()
-        .split("\n")
-        .slice(entry.range.start.line, entry.range.end.line + 1)
-        .join("\n");
+      .toString()
+      .split("\n")
+      .slice(entry.range.start.line, entry.range.end.line + 1)
+      .join("\n");
   }
 
   public async getRecentlyEditedRanges(): Promise<RecentlyEditedRange[]> {

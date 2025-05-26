@@ -74,7 +74,6 @@ export class StreamTransformPipeline {
 
     const timeoutValue = helper.options.modelTimeout;
 
-
     lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, timeoutValue!);
 
     const finalGenerator = streamWithNewLines(lineGenerator);

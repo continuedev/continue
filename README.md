@@ -58,7 +58,6 @@ file
 
 ![edit](docs/static/img/edit.gif)
 
-
 </div>
 
 ## Getting Started

@@ -1,7 +1,7 @@
 import {
-    InvokeEndpointCommand,
-    InvokeEndpointWithResponseStreamCommand,
-    SageMakerRuntimeClient,
+  InvokeEndpointCommand,
+  InvokeEndpointWithResponseStreamCommand,
+  SageMakerRuntimeClient,
 } from "@aws-sdk/client-sagemaker-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 

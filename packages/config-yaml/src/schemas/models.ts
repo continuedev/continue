@@ -50,17 +50,20 @@ export const completionOptionsSchema = z.object({
   reasoning: z.boolean().optional(),
   reasoningBudgetTokens: z.number().optional(),
   promptCaching: z.boolean().optional(),
-  stream: z.boolean().optional()
+  stream: z.boolean().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
 export const embeddingTasksSchema = z.union([
   z.literal("chunk"),
-  z.literal("query")
+  z.literal("query"),
 ]);
 export type EmbeddingTasks = z.infer<typeof embeddingTasksSchema>;
 
-export const embeddingPrefixesSchema = z.record(embeddingTasksSchema, z.string());
+export const embeddingPrefixesSchema = z.record(
+  embeddingTasksSchema,
+  z.string(),
+);
 export type EmbeddingPrefixes = z.infer<typeof embeddingPrefixesSchema>;
 
 export const cacheBehaviorSchema = z.object({
@@ -68,7 +71,6 @@ export const cacheBehaviorSchema = z.object({
   cacheConversation: z.boolean().optional(),
 });
 export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
-
 
 export const embedOptionsSchema = z.object({
   maxChunkSize: z.number().optional(),
@@ -79,7 +81,7 @@ export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 
 export const chatOptionsSchema = z.object({
   baseSystemMessage: z.string().optional(),
-  baseAgentSystemMessage: z.string().optional()
+  baseAgentSystemMessage: z.string().optional(),
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 

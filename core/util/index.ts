@@ -74,7 +74,7 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
     tsx: "tsx",
     ts: "typescript",
     java: "java",
-    class:"java", //.class files decompile to Java
+    class: "java", //.class files decompile to Java
     go: "go",
     rb: "ruby",
     rs: "rust",
@@ -101,8 +101,7 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
   return ext ? (extToLangMap[ext] ?? ext) : "";
 }
 
-
-function sanitizeExtension(ext?: string): string|undefined {
+function sanitizeExtension(ext?: string): string | undefined {
   if (ext) {
     //ignore ranges in extension eg. "java (11-23)"
     const match = ext.match(/^(\S+)\s*(\(.*\))?$/);
@@ -208,6 +207,6 @@ export function removeCodeBlocksAndTrim(text: string): string {
 export function splitCamelCaseAndNonAlphaNumeric(value: string) {
   return value
     .split(/(?<=[a-z0-9])(?=[A-Z])|[^a-zA-Z0-9]/)
-    .filter(t => t.length > 0)
-    .map(t => t.toLowerCase());
+    .filter((t) => t.length > 0)
+    .map((t) => t.toLowerCase());
 }

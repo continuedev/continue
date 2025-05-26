@@ -1,9 +1,7 @@
 {
   "name": "Rust",
   "scopeName": "source.rust",
-  "fileTypes": [
-    "rs"
-  ],
+  "fileTypes": ["rs"],
   "repository": {
     "block_doc_comment": {
       "comment": "Block documentation comment",

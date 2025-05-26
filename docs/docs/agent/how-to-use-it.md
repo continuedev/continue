@@ -28,7 +28,7 @@ Agent lives within the same interface as [Chat](../chat/how-it-works.md), so the
 
 #### Use natural language
 
-With Agent, you can provide natural language instruction and let the model do the work. As an example, you might say 
+With Agent, you can provide natural language instruction and let the model do the work. As an example, you might say
 
 > Set the @typescript-eslint/naming-convention rule to "off" for all eslint configurations in this project
 

@@ -164,7 +164,7 @@ describe("E2E Scenarios", () => {
     );
 
     const proxyOllamaModel = unrolledConfig.models?.[3]!;
-    expect(proxyOllamaModel.provider).toBe('ollama')
+    expect(proxyOllamaModel.provider).toBe("ollama");
     expect(proxyOllamaModel.defaultCompletionOptions?.stream).toBe(false);
 
     expect(unrolledConfig.rules?.length).toBe(2);

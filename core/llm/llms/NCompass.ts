@@ -6,9 +6,9 @@ import OpenAI from "./OpenAI.js";
 class NCompass extends OpenAI {
   static providerName = "ncompass";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.ncompass.tech/v1"
+    apiBase: "https://api.ncompass.tech/v1",
   };
-  static embeddingsApiEndpoint: "https://api.gcp.ncompass.tech/v1/embeddings"
+  static embeddingsApiEndpoint: "https://api.gcp.ncompass.tech/v1/embeddings";
 
   private static modelConversion: { [key: string]: string } = {
     "qwen2.5-coder-7b": "Qwen/Qwen2.5-Coder-7B-Instruct",
@@ -30,7 +30,12 @@ class NCompass extends OpenAI {
   }
 
   protected _getHeaders() {
-    const headers = super._getHeaders() as { "Content-Type": string; Authorization: string; "api-key": string; Accept?: string };
+    const headers = super._getHeaders() as {
+      "Content-Type": string;
+      Authorization: string;
+      "api-key": string;
+      Accept?: string;
+    };
     headers["Accept"] = "text/event-stream";
     return headers;
   }
@@ -56,7 +61,6 @@ class NCompass extends OpenAI {
     const data = (await resp.json()) as any;
     return data.data.map((result: { embedding: number[] }) => result.embedding);
   }
-
 }
 
 export default NCompass;

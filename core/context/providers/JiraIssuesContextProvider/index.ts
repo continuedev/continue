@@ -25,7 +25,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
       issueQuery: this.options.issueQuery,
       apiVersion: this.options.apiVersion,
       requestOptions: this.options.requestOptions,
-      maxResults: this.options.maxResults
+      maxResults: this.options.maxResults,
     });
   }
 

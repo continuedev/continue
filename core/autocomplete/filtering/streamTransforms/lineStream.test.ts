@@ -215,21 +215,47 @@ describe("lineStream", () => {
     });
 
     it("should handle unfenced code with a code block", async () => {
-      const linesGenerator = await getLineGenerator(["const x = 5;","```bash","ls -al","```"]);
+      const linesGenerator = await getLineGenerator([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
 
-      expect(filteredLines).toEqual(["const x = 5;","```bash","ls -al","```"]);
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+      ]);
     });
 
     it("should handle unfenced code with two code blocks", async () => {
-      const linesGenerator = await getLineGenerator(["const x = 5;","```bash","ls -al","```","```bash","ls -al","```"]);
+      const linesGenerator = await getLineGenerator([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+        "```bash",
+        "ls -al",
+        "```",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
 
-      expect(filteredLines).toEqual(["const x = 5;","```bash","ls -al","```","```bash","ls -al","```"]);
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+        "```bash",
+        "ls -al",
+        "```",
+      ]);
     });
 
     it("should remove lines before the first valid line", async () => {
@@ -242,7 +268,11 @@ describe("lineStream", () => {
     });
 
     it("should remove outer blocks", async () => {
-      const linesGenerator = await getLineGenerator(["```ts", "const x = 5;","```"]);
+      const linesGenerator = await getLineGenerator([
+        "```ts",
+        "const x = 5;",
+        "```",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
@@ -251,48 +281,119 @@ describe("lineStream", () => {
     });
 
     it("should leave inner blocks intact", async () => {
-      const linesGenerator = await getLineGenerator(["```md", "const x = 5;", "```bash","ls -al","```","```"]);
+      const linesGenerator = await getLineGenerator([
+        "```md",
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+        "```",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
 
-      expect(filteredLines).toEqual(["const x = 5;","```bash","ls -al","```"]);
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+      ]);
     });
 
     it("should handle included inner ticks", async () => {
-      const linesGenerator = await getLineGenerator(["```md", "const x = 5;", "```bash","echo ```test```","```","```"]);
+      const linesGenerator = await getLineGenerator([
+        "```md",
+        "const x = 5;",
+        "```bash",
+        "echo ```test```",
+        "```",
+        "```",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
 
-      expect(filteredLines).toEqual(["const x = 5;","```bash","echo ```test```","```"]);
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "```bash",
+        "echo ```test```",
+        "```",
+      ]);
     });
 
     it("should leave single inner blocks intact but not return trailing text", async () => {
-      const linesGenerator = await getLineGenerator(["```md", "const x = 5;", "```bash","ls -al","```","```","trailing text"]);
+      const linesGenerator = await getLineGenerator([
+        "```md",
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+        "```",
+        "trailing text",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
 
-      expect(filteredLines).toEqual(["const x = 5;","```bash","ls -al","```"]);
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+      ]);
     });
 
     it("should leave double inner blocks intact but not return trailing text", async () => {
-      const linesGenerator = await getLineGenerator(["```md", "const x = 5;", "```bash","ls -al","```","const y = 10;","```sh","echo `hello world`","```","```","trailing text"]);
+      const linesGenerator = await getLineGenerator([
+        "```md",
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+        "const y = 10;",
+        "```sh",
+        "echo `hello world`",
+        "```",
+        "```",
+        "trailing text",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
 
-      expect(filteredLines).toEqual(["const x = 5;","```bash","ls -al","```","const y = 10;","```sh","echo `hello world`","```"]);
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+        "const y = 10;",
+        "```sh",
+        "echo `hello world`",
+        "```",
+      ]);
     });
 
     it("should leave inner blocks intact but not return trailing or leading text", async () => {
-      const linesGenerator = await getLineGenerator(["[CODE]", "const x = 5;", "```bash","ls -al","```","[/CODE]","trailing text"]);
+      const linesGenerator = await getLineGenerator([
+        "[CODE]",
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+        "[/CODE]",
+        "trailing text",
+      ]);
 
       const result = lineStream.filterCodeBlockLines(linesGenerator);
       const filteredLines = await getFilteredLines(result);
 
-      expect(filteredLines).toEqual(["const x = 5;","```bash","ls -al","```"]);
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "```bash",
+        "ls -al",
+        "```",
+      ]);
     });
   });
 

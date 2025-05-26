@@ -17,21 +17,21 @@ export const runTerminalCommandTool: Tool = {
       When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
       When suggesting subsequent shell commands ALWAYS format them in shell command blocks.\
       Do NOT perform actions requiring special/admin privileges.",
-      parameters: {
-        type: "object",
-        required: ["command"],
-        properties: {
-          command: {
-            type: "string",
-            description:
-              "The command to run. This will be passed directly into the IDE shell.",
-          },
-          waitForCompletion: {
-            type: "boolean",
-            description:
-              "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground and wait to collect the output.",
-          },
+    parameters: {
+      type: "object",
+      required: ["command"],
+      properties: {
+        command: {
+          type: "string",
+          description:
+            "The command to run. This will be passed directly into the IDE shell.",
+        },
+        waitForCompletion: {
+          type: "boolean",
+          description:
+            "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground and wait to collect the output.",
         },
       },
+    },
   },
 };

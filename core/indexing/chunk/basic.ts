@@ -14,12 +14,14 @@ export async function* basicChunker(
   let startLine = 0;
   let currLine = 0;
 
-  const lineTokens = await Promise.all(contents.split("\n").map(async l => {
-    return {
-      line: l,
-      tokenCount: await countTokensAsync(l),
-    };
-  }));
+  const lineTokens = await Promise.all(
+    contents.split("\n").map(async (l) => {
+      return {
+        line: l,
+        tokenCount: await countTokensAsync(l),
+      };
+    }),
+  );
 
   for (const lt of lineTokens) {
     if (chunkTokens + lt.tokenCount > maxChunkSize - 5) {

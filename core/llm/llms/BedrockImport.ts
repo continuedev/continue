@@ -1,6 +1,6 @@
 import {
-    BedrockRuntimeClient,
-    InvokeModelWithResponseStreamCommand,
+  BedrockRuntimeClient,
+  InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 

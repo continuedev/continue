@@ -9,7 +9,7 @@ export const Gemini: ModelProvider = {
       maxCompletionTokens: 8192,
       mediaTypes: AllMediaTypes,
       regex: /gemini-2\.0-flash/i,
-      recommendedFor: ["chat"]
+      recommendedFor: ["chat"],
     },
     {
       model: "gemini-2.0-flash-lite",
@@ -18,7 +18,7 @@ export const Gemini: ModelProvider = {
       maxCompletionTokens: 8192,
       mediaTypes: AllMediaTypes,
       regex: /gemini-2\.0-flash-lite/i,
-      recommendedFor: ["chat"]
+      recommendedFor: ["chat"],
     },
     {
       model: "gemini-2.0-flash-exp-image-generation",
@@ -27,7 +27,7 @@ export const Gemini: ModelProvider = {
       maxCompletionTokens: 8192,
       mediaTypes: AllMediaTypes,
       regex: /gemini-2\.0-flash-exp-image-generation/i,
-      recommendedFor: ["chat"]
+      recommendedFor: ["chat"],
     },
     {
       model: "gemini-2.5-pro-exp-03-25",
@@ -36,7 +36,7 @@ export const Gemini: ModelProvider = {
       maxCompletionTokens: 65536,
       mediaTypes: AllMediaTypes,
       regex: /gemini-2\.5-pro-exp-03-25/i,
-      recommendedFor: ["chat"]
+      recommendedFor: ["chat"],
     },
     {
       model: "gemini-1.5-flash",

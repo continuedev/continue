@@ -42,17 +42,18 @@ export const getSnippets = (
   helper: HelperVars,
   payload: SnippetPayload,
 ): AutocompleteSnippet[] => {
-
   const snippets = {
-    "clipboard": payload.clipboardSnippets,
-    "recentlyVisitedRanges": payload.recentlyVisitedRangesSnippets,
-    "recentlyEditedRanges": payload.recentlyEditedRangeSnippets,
-    "diff": payload.diffSnippets,
-    "base": shuffleArray(filterSnippetsAlreadyInCaretWindow(
-      [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],
-      helper.prunedCaretWindow,
-    )),
-  }
+    clipboard: payload.clipboardSnippets,
+    recentlyVisitedRanges: payload.recentlyVisitedRangesSnippets,
+    recentlyEditedRanges: payload.recentlyEditedRangeSnippets,
+    diff: payload.diffSnippets,
+    base: shuffleArray(
+      filterSnippetsAlreadyInCaretWindow(
+        [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],
+        helper.prunedCaretWindow,
+      ),
+    ),
+  };
 
   // Define snippets with their priorities
   const snippetConfigs: {
@@ -61,53 +62,60 @@ export const getSnippets = (
     defaultPriority: number;
     snippets: AutocompleteSnippet[];
   }[] = [
-      {
-        key: "clipboard",
-        enabledOrPriority: helper.options.experimental_includeClipboard,
-        defaultPriority: 1,
-        snippets: payload.clipboardSnippets,
-      },
-      {
-        key: "recentlyVisitedRanges",
-        enabledOrPriority: helper.options.experimental_includeRecentlyVisitedRanges,
-        defaultPriority: 2,
-        snippets: payload.recentlyVisitedRangesSnippets,
-        /* TODO: recentlyVisitedRanges also contain contents from other windows like terminal or output
+    {
+      key: "clipboard",
+      enabledOrPriority: helper.options.experimental_includeClipboard,
+      defaultPriority: 1,
+      snippets: payload.clipboardSnippets,
+    },
+    {
+      key: "recentlyVisitedRanges",
+      enabledOrPriority:
+        helper.options.experimental_includeRecentlyVisitedRanges,
+      defaultPriority: 2,
+      snippets: payload.recentlyVisitedRangesSnippets,
+      /* TODO: recentlyVisitedRanges also contain contents from other windows like terminal or output
       if they are visible. We should handle them separately so that we can control their priority
       and whether they should be included or not. */
-      },
-      {
-        key: "recentlyEditedRanges",
-        enabledOrPriority: helper.options.experimental_includeRecentlyEditedRanges,
-        defaultPriority: 3,
-        snippets: payload.recentlyEditedRangeSnippets,
-      },
-      {
-        key: "diff",
-        enabledOrPriority: helper.options.experimental_includeDiff,
-        defaultPriority: 4,
-        snippets: payload.diffSnippets,
-        // TODO: diff is commonly too large, thus anything lower in priority is not included.
-      },
-      {
-        key: "base",
-        enabledOrPriority: true,
-        defaultPriority: 99, // make sure it's the last one to be processed, but still possible to override
-        snippets: shuffleArray(filterSnippetsAlreadyInCaretWindow(
+    },
+    {
+      key: "recentlyEditedRanges",
+      enabledOrPriority:
+        helper.options.experimental_includeRecentlyEditedRanges,
+      defaultPriority: 3,
+      snippets: payload.recentlyEditedRangeSnippets,
+    },
+    {
+      key: "diff",
+      enabledOrPriority: helper.options.experimental_includeDiff,
+      defaultPriority: 4,
+      snippets: payload.diffSnippets,
+      // TODO: diff is commonly too large, thus anything lower in priority is not included.
+    },
+    {
+      key: "base",
+      enabledOrPriority: true,
+      defaultPriority: 99, // make sure it's the last one to be processed, but still possible to override
+      snippets: shuffleArray(
+        filterSnippetsAlreadyInCaretWindow(
           [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],
           helper.prunedCaretWindow,
-        )),
-        // TODO: Add this too to experimental config, maybe move upper in the order, since it's almost
-        // always not inlucded due to diff being commonly large
-      },
-    ];
+        ),
+      ),
+      // TODO: Add this too to experimental config, maybe move upper in the order, since it's almost
+      // always not inlucded due to diff being commonly large
+    },
+  ];
 
   // Create a readable order of enabled snippets
   const snippetOrder = snippetConfigs
     .filter(({ enabledOrPriority }) => enabledOrPriority)
     .map(({ key, enabledOrPriority, defaultPriority }) => ({
       key,
-      priority: typeof enabledOrPriority === 'number' ? enabledOrPriority : defaultPriority,
+      priority:
+        typeof enabledOrPriority === "number"
+          ? enabledOrPriority
+          : defaultPriority,
     }))
     .sort((a, b) => a.priority - b.priority);
 
@@ -121,15 +129,19 @@ export const getSnippets = (
   // Convert configs to prioritized snippets
   let prioritizedSnippets = snippetOrder
     .flatMap(({ key, priority }) =>
-      snippets[key].map(snippet => ({ snippet, priority }))
+      snippets[key].map((snippet) => ({ snippet, priority })),
     )
     .sort((a, b) => a.priority - b.priority)
     .map(({ snippet }) => snippet);
 
   // Exclude Continue's own output as it makes it super-hard for users to test the autocomplete feature
   // while looking at the prompts in the Continue's output
-  prioritizedSnippets = prioritizedSnippets.filter((snippet) =>
-    !(snippet as AutocompleteCodeSnippet).filepath?.startsWith("output:extension-output-Continue.continue"));
+  prioritizedSnippets = prioritizedSnippets.filter(
+    (snippet) =>
+      !(snippet as AutocompleteCodeSnippet).filepath?.startsWith(
+        "output:extension-output-Continue.continue",
+      ),
+  );
 
   const finalSnippets = [];
   let remainingTokenCount = getRemainingTokenCount(helper);

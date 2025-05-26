@@ -108,55 +108,57 @@ const ModelRoleSelector = ({
               style={{ borderRadius: defaultBorderRadius }}
               className="min-w-40"
             >
-              {[...models].sort((a,b)=>a.title.localeCompare(b.title)).map((option, idx) => {
-                const showMissingApiKeyMsg =
-                  option.configurationStatus ===
-                  LLMConfigurationStatuses.MISSING_API_KEY;
+              {[...models]
+                .sort((a, b) => a.title.localeCompare(b.title))
+                .map((option, idx) => {
+                  const showMissingApiKeyMsg =
+                    option.configurationStatus ===
+                    LLMConfigurationStatuses.MISSING_API_KEY;
 
-                return (
-                  <ListboxOption
-                    key={idx}
-                    value={option.title}
-                    disabled={showMissingApiKeyMsg}
-                    onMouseEnter={() => setHoveredIdx(idx)}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                    onClick={(e: any) =>
-                      handleOptionClick(showMissingApiKeyMsg, e)
-                    }
-                    className={""}
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex flex-1 flex-row items-center justify-between gap-2">
-                        <div className="flex flex-1 flex-row items-center gap-2">
-                          <CubeIcon className="h-3 w-3 flex-shrink-0" />
-                          <span
-                            className="line-clamp-1 flex-1"
-                            style={{ fontSize: fontSize(-3) }}
-                          >
-                            {option.title}
-                            {showMissingApiKeyMsg && (
-                              <span className="ml-2 text-[10px] italic">
-                                (Missing API key)
-                              </span>
+                  return (
+                    <ListboxOption
+                      key={idx}
+                      value={option.title}
+                      disabled={showMissingApiKeyMsg}
+                      onMouseEnter={() => setHoveredIdx(idx)}
+                      onMouseLeave={() => setHoveredIdx(null)}
+                      onClick={(e: any) =>
+                        handleOptionClick(showMissingApiKeyMsg, e)
+                      }
+                      className={""}
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-1 flex-row items-center justify-between gap-2">
+                          <div className="flex flex-1 flex-row items-center gap-2">
+                            <CubeIcon className="h-3 w-3 flex-shrink-0" />
+                            <span
+                              className="line-clamp-1 flex-1"
+                              style={{ fontSize: fontSize(-3) }}
+                            >
+                              {option.title}
+                              {showMissingApiKeyMsg && (
+                                <span className="ml-2 text-[10px] italic">
+                                  (Missing API key)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex flex-shrink-0 flex-row items-center gap-1">
+                            {hoveredIdx === idx && (
+                              <Cog6ToothIcon
+                                className="h-3 w-3 flex-shrink-0"
+                                onClick={onClickGear}
+                              />
                             )}
-                          </span>
-                        </div>
-                        <div className="flex flex-shrink-0 flex-row items-center gap-1">
-                          {hoveredIdx === idx && (
-                            <Cog6ToothIcon
-                              className="h-3 w-3 flex-shrink-0"
-                              onClick={onClickGear}
-                            />
-                          )}
-                          {option.title === selectedModel?.title && (
-                            <CheckIcon className="h-3 w-3 flex-shrink-0" />
-                          )}
+                            {option.title === selectedModel?.title && (
+                              <CheckIcon className="h-3 w-3 flex-shrink-0" />
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </ListboxOption>
-                );
-              })}
+                    </ListboxOption>
+                  );
+                })}
             </ListboxOptions>
           </Transition>
         </div>

@@ -20,10 +20,11 @@ class HttpContextProvider extends BaseContextProvider {
     try {
       const currentFile = await ide.getCurrentFile();
       // `isLocalhost` actually also returns true for other local addresses, not just localhost
-      return await isLocalhost(url.hostname) ?
-             (await ide.getWorkspaceDirs()).find(workspaceDirectory => {
-               return currentFile?.path.startsWith(workspaceDirectory)
-             }) : undefined
+      return (await isLocalhost(url.hostname))
+        ? (await ide.getWorkspaceDirs()).find((workspaceDirectory) => {
+            return currentFile?.path.startsWith(workspaceDirectory);
+          })
+        : undefined;
     } catch (e) {
       return undefined;
     }
@@ -44,12 +45,12 @@ class HttpContextProvider extends BaseContextProvider {
         HttpContextProvider.description.renderInlineAs,
     };
   }
-  
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const parsedUrl = new URL(this.options.url)
+    const parsedUrl = new URL(this.options.url);
     const response = await extras.fetch(parsedUrl, {
       method: "POST",
       headers: {

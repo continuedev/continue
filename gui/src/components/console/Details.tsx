@@ -60,7 +60,9 @@ export default function Details({ interaction }: DetailsProps) {
     }
     // Allow a small threshold for floating point errors
     const threshold = 5;
-    setIsAtBottom((elt.scrollHeight - elt.scrollTop - elt.clientHeight) < threshold);
+    setIsAtBottom(
+      elt.scrollHeight - elt.scrollTop - elt.clientHeight < threshold,
+    );
   }
 
   useEffect(() => {
