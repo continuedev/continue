@@ -1,5 +1,3 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
 import { Registry } from "./interfaces/index.js";
 import { FullSlug, PackageIdentifier } from "./interfaces/slugs.js";
 
@@ -26,7 +24,7 @@ export class RegistryClient implements Registry {
   async getContent(id: PackageIdentifier): Promise<string> {
     switch (id.uriType) {
       case "file":
-        return this.getContentFromFilePath(id.filePath);
+        return await this.getContentFromFilePath(id.filePath);
       case "slug":
         return this.getContentFromSlug(id.fullSlug);
       default:
@@ -36,7 +34,25 @@ export class RegistryClient implements Registry {
     }
   }
 
-  private getContentFromFilePath(filepath: string): string {
+  private async getContentFromFilePath(filepath: string): Promise<string> {
+    // Try CommonJS first, then ESM
+    let fs: any;
+    let path: any;
+
+    try {
+      // Try CommonJS
+      fs = require("node:fs");
+      path = require("node:path");
+    } catch {
+      // Fall back to ESM
+      const [fsModule, pathModule] = await Promise.all([
+        import("node:fs"),
+        import("node:path"),
+      ]);
+      fs = fsModule;
+      path = pathModule;
+    }
+
     if (filepath.startsWith("file://")) {
       // For Windows file:///C:/path/to/file, we need to handle it properly
       // On other systems, we might have file:///path/to/file
