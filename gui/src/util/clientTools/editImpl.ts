@@ -1,5 +1,9 @@
+import { ContextItem } from "core";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { ClientToolImpl } from "./callClientTool";
+
+import { findUriInDirs, getUriFileExtension } from "core/util/uri";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 
 export const editToolImpl: ClientToolImpl = async (
   args,
@@ -35,13 +39,50 @@ export const editToolImpl: ClientToolImpl = async (
     if (out.status === "error") {
       throw new Error(out.error);
     }
+    const output = await getEditToolOutput(firstUriMatch, extras.ideMessenger);
     return {
       respondImmediately: true,
-      output: undefined, // TODO - feed edit results back to model (also in parallel listeners)
+      output,
     };
   }
   return {
     respondImmediately: false,
     output: undefined, // No immediate output.
   };
+};
+
+export const getEditToolOutput = async (
+  filepath: string | undefined,
+  ideMessenger: IIdeMessenger,
+): Promise<ContextItem[]> => {
+  let content = "The contents of the file after editing are:\n\n";
+  if (filepath) {
+    const response = await ideMessenger.request("readFile", {
+      filepath,
+    });
+    const dirsResponse = await ideMessenger.request(
+      "getWorkspaceDirs",
+      undefined,
+    );
+    const workspaceDirs =
+      dirsResponse.status === "error"
+        ? (window.workspacePaths ?? [])
+        : dirsResponse.content;
+    const { relativePathOrBasename } = findUriInDirs(filepath, workspaceDirs);
+
+    if (response.status === "success") {
+      content += `\`\`\`${getUriFileExtension(filepath)} ${relativePathOrBasename}
+      ${response.content}
+\`\`\``;
+    } else {
+      content += `Error reading file`;
+    }
+  }
+
+  const output: ContextItem = {
+    name: "Edit Results New File Contents",
+    content,
+    description: "File contents after edit",
+  };
+  return [output];
 };
