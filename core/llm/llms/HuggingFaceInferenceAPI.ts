@@ -1,6 +1,6 @@
+import { streamSse } from "@continuedev/fetch";
 import { CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
-import { streamSse } from "../stream.js";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
   static providerName = "huggingface-inference-api";

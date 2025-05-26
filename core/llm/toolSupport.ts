@@ -111,6 +111,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "pixtral",
           "ministral",
           "mistral-nemo",
+          "devstral",
         ].some((part) => model.toLowerCase().includes(part))
       );
     },
@@ -185,9 +186,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return false;
       }
       if (
-        ["llama-3", "llama-4", "mistral", "codestral", "granite-3"].some(
-          (part) => model.toLowerCase().includes(part),
-        )
+        [
+          "llama-3",
+          "llama-4",
+          "mistral",
+          "codestral",
+          "granite-3",
+          "devstral",
+        ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
       }
@@ -211,6 +217,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "openai/o3",
         "openai/o4",
         "anthropic/claude-3",
+        "anthropic/claude-4",
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
@@ -225,6 +232,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "mistralai/codestral",
         "mistralai/mixtral",
         "mistral/ministral",
+        "mistral/devstral",
         "mistralai/pixtral",
         "meta-llama/llama-3.3",
         "amazon/nova",

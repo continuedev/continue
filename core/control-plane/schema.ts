@@ -26,6 +26,7 @@ const modelDescriptionSchema = z.object({
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
   contextLength: z.number().optional(),
+  maxStopWords: z.number().optional(),
   template: z
     .enum([
       "llama2",
