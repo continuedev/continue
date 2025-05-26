@@ -1685,8 +1685,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekR1DistillLlama70B: {
     title: "DeepSeek R1 Distill Llama 70B",
-    description:
-      "A llama 3.1 70 model distilled from deekseek R1",
+    description: "A llama 3.1 70 model distilled from deekseek R1",
     params: {
       title: "DeepSeek R1 Distill Llama 70B",
       model: "DeepSeek-R1-Distill-Llama-70B",
@@ -1698,8 +1697,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekR1: {
     title: "DeepSeek R1",
-    description:
-      "DeekSeek R1 reasoning model from DeepSeek",
+    description: "DeekSeek R1 reasoning model from DeepSeek",
     params: {
       title: "DeepSeek R1",
       model: "DeepSeek-R1",
@@ -1711,8 +1709,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekV3: {
     title: "DeepSeek V3",
-    description:
-      "DeekSeek V3 reasoning model from DeepSeek",
+    description: "DeekSeek V3 reasoning model from DeepSeek",
     params: {
       title: "DeepSeek V3",
       model: "DeepSeek-V3-0324",

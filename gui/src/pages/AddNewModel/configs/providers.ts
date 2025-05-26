@@ -797,7 +797,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
       ...completionParamsInputsConfigs,
     ],
-    packages:[
+    packages: [
       models.llama4Scout,
       models.llama4Maverick,
       models.llama3370BInstruct,
@@ -808,7 +808,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.qwq32B,
       models.deepseekR1DistillLlama70B,
       models.deepseekR1,
-      models.deepseekV3
+      models.deepseekV3,
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
@@ -1011,9 +1011,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         required: true,
       },
     ],
-    packages: [
-      {...models.AUTODETECT}
-    ],
-    apiKeyUrl: "https://venice.ai/chat"
-  }
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://venice.ai/chat",
+  },
 };
