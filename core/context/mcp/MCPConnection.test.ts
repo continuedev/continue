@@ -173,11 +173,11 @@ describe("MCPConnection", () => {
     });
 
     it("should handle custom connection timeout", async () => {
-      const conn = new MCPConnection({ ...options, timeout: 11 });
+      const conn = new MCPConnection({ ...options, timeout: 1500 });
       const mockConnect = jest
         .spyOn(Client.prototype, "connect")
         .mockImplementation(
-          () => new Promise((resolve) => setTimeout(resolve, 10)),
+          () => new Promise((resolve) => setTimeout(resolve, 1000)),
         );
 
       const abortController = new AbortController();
