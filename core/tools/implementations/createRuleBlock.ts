@@ -1,15 +1,14 @@
 import * as YAML from "yaml";
 import { ToolImpl } from ".";
 import { RuleWithSource } from "../..";
+import { RuleFrontmatter } from "../../config/markdown/parseMarkdownRule";
 import { joinPathsToUri } from "../../util/uri";
 
-export interface CreateRuleBlockArgs
-  extends Pick<
-    RuleWithSource,
-    "rule" | "description" | "alwaysApply" | "globs"
-  > {
-  name: string;
-}
+export type CreateRuleBlockArgs = Pick<
+  Required<RuleWithSource>,
+  "rule" | "description" | "alwaysApply" | "name"
+> &
+  Pick<RuleWithSource, "globs">;
 
 export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
@@ -23,7 +22,7 @@ export const createRuleBlockImpl: ToolImpl = async (
 
   const fileExtension = "md";
 
-  const frontmatter: Record<string, string | string[] | boolean> = {};
+  const frontmatter: RuleFrontmatter = {};
 
   if (args.globs) {
     frontmatter.globs =

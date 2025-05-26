@@ -54,14 +54,11 @@ export const shouldApplyRule = (
   // If alwaysApply is undefined, default behavior:
   // - No globs: always apply
   // - Has globs: only apply if they match
-  if (rule.alwaysApply === undefined) {
-    if (!rule.globs) {
-      return true;
-    }
-    return filePaths.some((path) => matchesGlobs(path, rule.globs));
+  if (!rule.globs) {
+    return true;
   }
 
-  return false;
+  return filePaths.some((path) => matchesGlobs(path, rule.globs));
 };
 
 /**
