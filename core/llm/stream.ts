@@ -1,4 +1,4 @@
-async function* toAsyncIterable(
+export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
   for await (const chunk of nodeReadable) {
@@ -58,7 +58,7 @@ function parseDataLine(line: string): any {
 }
 
 function parseSseLine(line: string): { done: boolean; data: any } {
-  if (line.startsWith("data: [DONE]")) {
+  if (line.startsWith("data:[DONE]") || line.startsWith("data: [DONE]")) {
     return { done: true, data: undefined };
   }
   if (line.startsWith("data:")) {

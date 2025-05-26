@@ -2,7 +2,7 @@ export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
   for await (const chunk of nodeReadable) {
-    // @ts-expect-error
+    // @ts-ignore
     yield chunk as Uint8Array;
   }
 }
@@ -10,6 +10,10 @@ export async function* toAsyncIterable(
 export async function* streamResponse(
   response: Response,
 ): AsyncGenerator<string> {
+  if (response.status === 499) {
+    return; // In case of client-side cancellation, just return
+  }
+
   if (response.status !== 200) {
     throw new Error(await response.text());
   }
@@ -21,26 +25,34 @@ export async function* streamResponse(
   // Get the major version of Node.js
   const nodeMajorVersion = parseInt(process.versions.node.split(".")[0], 10);
 
-  if (nodeMajorVersion >= 20) {
-    // Use the new API for Node 20 and above
-    const stream = (ReadableStream as any).from(response.body);
-    for await (const chunk of stream.pipeThrough(
-      new TextDecoderStream("utf-8"),
-    )) {
-      yield chunk;
+  try {
+    if (nodeMajorVersion >= 20) {
+      // Use the new API for Node 20 and above
+      const stream = (ReadableStream as any).from(response.body);
+      for await (const chunk of stream.pipeThrough(
+        new TextDecoderStream("utf-8"),
+      )) {
+        yield chunk;
+      }
+    } else {
+      // Fallback for Node versions below 20
+      // Streaming with this method doesn't work as version 20+ does
+      const decoder = new TextDecoder("utf-8");
+      const nodeStream = response.body as unknown as NodeJS.ReadableStream;
+      for await (const chunk of toAsyncIterable(nodeStream)) {
+        yield decoder.decode(chunk, { stream: true });
+      }
     }
-  } else {
-    // Fallback for Node versions below 20
-    // Streaming with this method doesn't work as version 20+ does
-    const decoder = new TextDecoder("utf-8");
-    const nodeStream = response.body as unknown as NodeJS.ReadableStream;
-    for await (const chunk of toAsyncIterable(nodeStream)) {
-      yield decoder.decode(chunk, { stream: true });
+  } catch (e) {
+    if (e instanceof Error && e.name.startsWith("AbortError")) {
+      return; // In case of client-side cancellation, just return
     }
+    throw e;
   }
 }
 
-function parseDataLine(line: string): any {
+// Export for testing purposes
+export function parseDataLine(line: string): any {
   const json = line.startsWith("data: ")
     ? line.slice("data: ".length)
     : line.slice("data:".length);
@@ -53,12 +65,20 @@ function parseDataLine(line: string): any {
 
     return data;
   } catch (e) {
+    // If the error was thrown by our error check, rethrow it
+    if (
+      e instanceof Error &&
+      e.message.startsWith("Error streaming response:")
+    ) {
+      throw e;
+    }
+    // Otherwise it's a JSON parsing error
     throw new Error(`Malformed JSON sent from server: ${json}`);
   }
 }
 
 function parseSseLine(line: string): { done: boolean; data: any } {
-  if (line.startsWith("data: [DONE]")) {
+  if (line.startsWith("data:[DONE]") || line.startsWith("data: [DONE]")) {
     return { done: true, data: undefined };
   }
   if (line.startsWith("data:")) {

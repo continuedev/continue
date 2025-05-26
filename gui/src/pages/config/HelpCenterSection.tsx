@@ -1,6 +1,7 @@
 import {
   ArrowTopRightOnSquareIcon,
   DocumentArrowUpIcon,
+  PaintBrushIcon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
@@ -9,6 +10,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch } from "../../redux/hooks";
 import { setOnboardingCard } from "../../redux/slices/uiSlice";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import { ROUTES } from "../../util/navigation";
 import MoreHelpRow from "./MoreHelpRow";
 
 export function HelpCenterSection() {
@@ -20,6 +22,15 @@ export function HelpCenterSection() {
     <div className="py-5">
       <h3 className="mb-4 mt-0 text-xl">Help center</h3>
       <div className="-mx-4 flex flex-col">
+        <MoreHelpRow
+          title="Continue Hub"
+          description="Visit hub.continue.dev to explore custom assistants and blocks"
+          Icon={ArrowTopRightOnSquareIcon}
+          onClick={() =>
+            ideMessenger.post("openUrl", "https://hub.continue.dev/")
+          }
+        />
+
         <MoreHelpRow
           title="Documentation"
           description="Learn how to configure and use Continue"
@@ -74,6 +85,16 @@ export function HelpCenterSection() {
             ideMessenger.post("showTutorial", undefined);
           }}
         />
+        {process.env.NODE_ENV === "development" && (
+          <MoreHelpRow
+            title="Theme Test Page"
+            description="Development page for testing themes"
+            Icon={PaintBrushIcon}
+            onClick={async () => {
+              navigate(ROUTES.THEME);
+            }}
+          />
+        )}
       </div>
     </div>
   );

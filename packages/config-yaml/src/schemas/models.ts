@@ -49,8 +49,19 @@ export const completionOptionsSchema = z.object({
   n: z.number().optional(),
   reasoning: z.boolean().optional(),
   reasoningBudgetTokens: z.number().optional(),
+  promptCaching: z.boolean().optional(),
+  stream: z.boolean().optional()
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
+
+export const embeddingTasksSchema = z.union([
+  z.literal("chunk"),
+  z.literal("query")
+]);
+export type EmbeddingTasks = z.infer<typeof embeddingTasksSchema>;
+
+export const embeddingPrefixesSchema = z.record(embeddingTasksSchema, z.string());
+export type EmbeddingPrefixes = z.infer<typeof embeddingPrefixesSchema>;
 
 export const cacheBehaviorSchema = z.object({
   cacheSystemMessage: z.boolean().optional(),
@@ -58,9 +69,11 @@ export const cacheBehaviorSchema = z.object({
 });
 export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
 
+
 export const embedOptionsSchema = z.object({
   maxChunkSize: z.number().optional(),
   maxBatchSize: z.number().optional(),
+  embeddingPrefixes: embeddingPrefixesSchema.optional(),
 });
 export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 
@@ -105,6 +118,7 @@ const baseModelFields = {
   model: z.string(),
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
+  maxStopWords: z.number().optional(),
   roles: modelRolesSchema.array().optional(),
   capabilities: modelCapabilitySchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),

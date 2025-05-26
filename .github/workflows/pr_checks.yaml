@@ -235,10 +235,11 @@ jobs:
           cd packages/config-yaml
           npm run build
 
-      - name: Type check
+      - name: Type check and lint
         run: |
           cd gui
           npx tsc --noEmit
+          npm run lint
 
   binary-checks:
     needs: [install-root, install-core, install-config-yaml]

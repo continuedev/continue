@@ -1,9 +1,9 @@
 import { GoogleAuth } from "google-auth-library";
 
+import { streamResponse, streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse, streamSse } from "../stream.js";
 
 import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
@@ -95,6 +95,7 @@ class VertexAI extends BaseLLM {
   protected async *StreamChatAnthropic(
     messages: ChatMessage[],
     options: CompletionOptions,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatMessage> {
     const systemMessage = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content ?? "",
@@ -128,7 +129,12 @@ class VertexAI extends BaseLLM {
             ]
           : systemMessage,
       }),
+      signal,
     });
+
+    if (response.status === 499) {
+      return; // Aborted by user
+    }
 
     if (options.stream === false) {
       const data = await response.json();
@@ -150,6 +156,7 @@ class VertexAI extends BaseLLM {
   private async *streamChatGemini(
     messages: ChatMessage[],
     options: CompletionOptions,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatMessage> {
     const apiURL = new URL(
       `publishers/google/models/${options.model}:streamGenerateContent`,
@@ -160,6 +167,7 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal,
     });
     for await (const message of this.geminiInstance.processGeminiResponse(
       streamResponse(response),
@@ -171,6 +179,7 @@ class VertexAI extends BaseLLM {
   private async *streamChatBison(
     messages: ChatMessage[],
     options: CompletionOptions,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatMessage> {
     const instances = messages.map((message) => ({ prompt: message.content }));
 
@@ -193,7 +202,11 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal,
     });
+    if (response.status === 499) {
+      return; // Aborted by user
+    }
     const data = await response.json();
     yield { role: "assistant", content: data.predictions[0].content };
   }
@@ -203,6 +216,7 @@ class VertexAI extends BaseLLM {
   protected async *StreamChatMistral(
     messages: ChatMessage[],
     options: CompletionOptions,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatMessage> {
     const apiBase = this.apiBase!;
     const apiURL = new URL(
@@ -228,6 +242,7 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal,
     });
 
     for await (const chunk of streamSse(response)) {
@@ -304,6 +319,9 @@ class VertexAI extends BaseLLM {
       }),
       signal,
     });
+    if (resp.status === 499) {
+      return; // Aborted by user
+    }
     // Streaming is not supported by code-gecko
     // TODO: convert to non-streaming fim method when one exist in continue.
     yield (await resp.json()).predictions[0].content;
@@ -323,14 +341,14 @@ class VertexAI extends BaseLLM {
       ? this.geminiInstance.removeSystemMessage(messages)
       : messages;
     if (this.vertexProvider === "gemini") {
-      yield* this.streamChatGemini(convertedMsgs, options);
+      yield* this.streamChatGemini(convertedMsgs, options, signal);
     } else if (this.vertexProvider === "mistral") {
-      yield* this.StreamChatMistral(messages, options);
+      yield* this.StreamChatMistral(messages, options, signal);
     } else if (this.vertexProvider === "anthropic") {
-      yield* this.StreamChatAnthropic(messages, options);
+      yield* this.StreamChatAnthropic(messages, options, signal);
     } else {
       if (options.model.includes("bison")) {
-        yield* this.streamChatBison(convertedMsgs, options);
+        yield* this.streamChatBison(convertedMsgs, options, signal);
       } else {
         throw new Error(`Unsupported model: ${options.model}`);
       }

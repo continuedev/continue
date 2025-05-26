@@ -63,6 +63,7 @@ export function slashCommandFromPromptFileV1(
     name,
     description,
     prompt,
+    promptFile: path,
     run: async function* (context) {
       const userInput = extractUserInput(context.input, name);
       const [_, renderedPrompt] = await renderPromptFileV2(prompt, {

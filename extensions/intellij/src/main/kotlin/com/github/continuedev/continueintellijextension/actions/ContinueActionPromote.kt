@@ -11,15 +11,19 @@ import org.jetbrains.annotations.NotNull
 class ContinueActionPromote : ActionPromoter {
 
     override fun promote(@NotNull actions: List<AnAction>, @NotNull context: DataContext): List<AnAction>? {
-
-        if (actions.none { it is AcceptAutocompleteAction }) {
-            return null
-        } else {
+        // For autocomplete actions
+        if (actions.any { it is AcceptAutocompleteAction }) {
             val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-            if (!settings.continueState.showIDECompletionSideBySide) {
-                return null;
+            if (settings.continueState.showIDECompletionSideBySide) {
+                return actions.filterIsInstance<AcceptAutocompleteAction>()
             }
-            return actions.filterIsInstance<AcceptAutocompleteAction>()
         }
+
+        val rejectDiffActions = actions.filterIsInstance<RejectDiffAction>()
+        if (rejectDiffActions.isNotEmpty()) {
+            return rejectDiffActions
+        }
+
+        return null
     }
 }

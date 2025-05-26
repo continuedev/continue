@@ -1,5 +1,4 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
-import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
@@ -29,6 +28,10 @@ import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
+import {
+  setDocumentStylesFromLocalStorage,
+  setDocumentStylesFromTheme,
+} from "../styles/theme";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -139,31 +142,13 @@ function ParallelListeners() {
     dispatch(cancelStream());
 
     const jetbrains = isJetBrains();
-    for (const colorVar of VSC_THEME_COLOR_VARS) {
-      if (jetbrains) {
-        const cached = localStorage.getItem(colorVar);
-        if (cached) {
-          document.body.style.setProperty(colorVar, cached);
-        }
-      }
-
-      // Remove alpha channel from colors
-      const value = getComputedStyle(document.documentElement).getPropertyValue(
-        colorVar,
-      );
-      if (colorVar.startsWith("#") && value.length > 7) {
-        document.body.style.setProperty(colorVar, value.slice(0, 7));
-      }
-    }
+    setDocumentStylesFromLocalStorage(jetbrains);
 
     if (jetbrains) {
       // Save theme colors to local storage for immediate loading in JetBrains
       ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
         if (result.status === "success") {
-          Object.entries(result.content).forEach(([key, value]) => {
-            document.body.style.setProperty(key, value);
-            document.documentElement.style.setProperty(key, value);
-          });
+          setDocumentStylesFromTheme(result.content);
         }
       });
 
@@ -180,25 +165,13 @@ function ParallelListeners() {
         (window as any).vscMachineId = msg.vscMachineId;
         (window as any).vscMediaUrl = msg.vscMediaUrl;
       });
-
-      for (const colorVar of VSC_THEME_COLOR_VARS) {
-        if (document.body.style.getPropertyValue(colorVar)) {
-          localStorage.setItem(
-            colorVar,
-            document.body.style.getPropertyValue(colorVar),
-          );
-        }
-      }
     }
   }, []);
 
   useWebviewListener(
     "jetbrains/setColors",
     async (data) => {
-      Object.entries(data).forEach(([key, value]) => {
-        document.body.style.setProperty(key, value);
-        document.documentElement.style.setProperty(key, value);
-      });
+      setDocumentStylesFromTheme(data);
     },
     [],
   );

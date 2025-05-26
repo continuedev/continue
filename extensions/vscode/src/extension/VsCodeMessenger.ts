@@ -15,6 +15,7 @@ import {
 import { stripImages } from "core/util/messageContent";
 import * as vscode from "vscode";
 
+import { DataLogger } from "core/data/log";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
@@ -228,6 +229,18 @@ export class VsCodeMessenger {
         ),
         rulesToInclude: config.rules,
       });
+
+      // Log dev data
+      await DataLogger.getInstance().logDevData({
+        name: "editInteraction",
+        data: {
+          prompt: stripImages(prompt),
+          completion: fileAfterEdit ?? "",
+          modelProvider: model.providerName,
+          modelTitle: model.title ?? "",
+        },
+      });
+
       return fileAfterEdit;
     });
 
