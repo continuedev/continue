@@ -1,5 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius } from "..";
@@ -35,6 +35,8 @@ const TabBarContainer = styled.div`
   border-bottom: none;
   position: relative;
   margin-top: 2px;
+  max-height: 100px;
+  overflow: auto;
 
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
@@ -125,7 +127,7 @@ const TabBarSpace = styled.div`
   background-color: ${tabBackgroundVar};
 `;
 
-export function TabBar() {
+export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
   const dispatch = useDispatch<AppDispatch>();
   const currentSessionId = useSelector((state: RootState) => state.session.id);
   const currentSessionTitle = useSelector(
@@ -141,7 +143,6 @@ export function TabBar() {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
   }, []);
 
-  // Handle session changes
   useEffect(() => {
     if (!currentSessionId) return;
 
@@ -224,10 +225,13 @@ export function TabBar() {
     }
   };
 
-  return tabs.length === 1 ? (
-    <></>
-  ) : (
-    <TabBarContainer>
+  return (
+    <TabBarContainer
+      ref={ref}
+      style={{
+        display: tabs.length === 1 ? "none" : "flex",
+      }}
+    >
       {tabs.map((tab) => (
         <Tab
           key={tab.id}
@@ -253,4 +257,4 @@ export function TabBar() {
       </TabBarSpace>
     </TabBarContainer>
   );
-}
+});
