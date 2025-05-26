@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { exitEditMode } from "../../redux/thunks/editMode";
-import AcceptRejectAllButtons from "../AcceptRejectAllButtons";
+import AcceptRejectDiffButtons from "../AcceptRejectDiffButtons";
 import { useMainEditor } from "./TipTapEditor";
 
 const EditModeDetails = () => {
@@ -28,7 +28,7 @@ const EditModeDetails = () => {
         <div className="flex flex-col items-center justify-center pb-1 pt-3 text-xs italic text-gray-400">
           <span className="">{`${editApplyState.numDiffs} diff${plural} remaining`}</span>
         </div>
-        <AcceptRejectAllButtons
+        <AcceptRejectDiffButtons
           applyStates={[editApplyState]}
           onAcceptOrReject={async (outcome) => {
             if (outcome === "acceptDiff") {

@@ -11,6 +11,7 @@ import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { RelaceApi } from "./apis/Relace.js";
+import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
 
@@ -48,6 +49,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new RelaceApi(config);
     case "inception":
       return new InceptionApi(config);
+    case "watsonx":
+      return new WatsonXApi(config);
     case "x-ai":
       return openAICompatible("https://api.x.ai/v1/", config);
     case "voyage":
@@ -75,7 +78,10 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "nvidia":
       return openAICompatible("https://integrate.api.nvidia.com/v1/", config);
     case "ovhcloud":
-      return openAICompatible("https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/", config);
+      return openAICompatible(
+        "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/",
+        config,
+      );
     case "scaleway":
       return openAICompatible("https://api.scaleway.ai/v1/", config);
     case "fireworks":
@@ -111,10 +117,9 @@ export {
   type Completion,
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
-  type CompletionCreateParamsStreaming
+  type CompletionCreateParamsStreaming,
 } from "openai/resources/index";
 
 // export
 export type { BaseLlmApi } from "./apis/base.js";
 export type { LLMConfig } from "./types.js";
-

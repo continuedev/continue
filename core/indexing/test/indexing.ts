@@ -3,11 +3,11 @@ import { jest } from "@jest/globals";
 import { IndexTag } from "../..";
 import { IContinueServerClient } from "../../continueServer/interface";
 import { ChunkCodebaseIndex } from "../chunk/ChunkCodebaseIndex";
-import { tagToString } from "../refreshIndex";
 import { CodebaseIndex, RefreshIndexResults } from "../types";
 
 import { testIde } from "../../test/fixtures";
 import { addToTestDir, TEST_DIR } from "../../test/testDir";
+import { tagToString } from "../utils";
 
 export const mockFilename = "test.py";
 export const mockPathAndCacheKey = {

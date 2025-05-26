@@ -197,15 +197,14 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
-
-  loadSubmenuItems?: (
-    args: LoadSubmenuItemsArgs,
-  ) => Promise<ContextSubmenuItem[]>;
 }
 
 export interface ContextSubmenuItem {
@@ -843,6 +842,7 @@ export interface SlashCommand {
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
+  promptFile?: string;
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
@@ -1168,6 +1168,7 @@ export interface MCPResource {
   description?: string;
   mimeType?: string;
 }
+
 export interface MCPTool {
   name: string;
   description?: string;
@@ -1193,6 +1194,7 @@ export interface ContinueUIConfig {
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
   showSessionTabs?: boolean;
+  autoAcceptEditToolDiffs?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1230,6 +1232,32 @@ export interface ApplyState {
   toolCallId?: string;
 }
 
+export interface StreamDiffLinesPayload {
+  prefix: string;
+  highlighted: string;
+  suffix: string;
+  input: string;
+  language: string | undefined;
+  modelTitle: string | undefined;
+  includeRulesInSystemMessage: boolean;
+  fileUri?: string;
+}
+
+export interface HighlightedCodePayload {
+  rangeInFileWithContents: RangeInFileWithContents;
+  prompt?: string;
+  shouldRun?: boolean;
+}
+
+export interface AcceptOrRejectDiffPayload {
+  filepath: string;
+  streamId?: string;
+}
+
+export interface ShowFilePayload {
+  filepath: string;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1239,7 +1267,7 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
  * Represents the configuration for a quick action in the Code Lens.
