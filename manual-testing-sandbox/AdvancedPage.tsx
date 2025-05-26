@@ -13,10 +13,7 @@ const AdvancedPage = () => {
       className={`${isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"} min-h-screen p-4`}
     >
       <header className="mb-4 flex items-center justify-between border-b-2 pb-4">
-        I apologize, but there seems to be a misunderstanding. The user's
-        request doesn't appear to be related to rewriting the code section you
-        provided. The request mentions editing a readme.md file, which is not
-        part of the React component code you've shown.
+        {" "}
         <button
           className="rounded bg-blue-500 px-4 py-2 text-white"
           onClick={toggleDarkMode}

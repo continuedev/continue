@@ -1,0 +1,22 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="config-yaml tests" type="JavaScriptTestRunnerJest">
+    <config-file value="$PROJECT_DIR$/packages/config-yaml/jest.config.mjs" />
+    <node-interpreter value="project" />
+    <node-options value="--experimental-vm-modules" />
+    <jest-package value="$PROJECT_DIR$/binary/node_modules/jest" />
+    <working-dir value="$PROJECT_DIR$/packages/config-yaml" />
+    <envs />
+    <scope-kind value="ALL" />
+    <method v="2">
+      <option name="NpmBeforeRunTask" enabled="true">
+        <package-json value="$PROJECT_DIR$/packages/config-yaml/package.json" />
+        <command value="run" />
+        <scripts>
+          <script value="build" />
+        </scripts>
+        <node-interpreter value="project" />
+        <envs />
+      </option>
+    </method>
+  </configuration>
+</component>

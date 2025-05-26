@@ -77,6 +77,7 @@ export function addModel(
         model: model.model,
         apiKey: model.apiKey,
         apiBase: model.apiBase,
+        maxStopWords: model.maxStopWords,
         defaultCompletionOptions: model.completionOptions,
       };
       if (model.systemMessage) {

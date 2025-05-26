@@ -20,6 +20,7 @@ import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRules";
 import { gptEditPrompt } from "../llm/templates/edit";
+import { StreamAbortManager } from "../util/abortManager";
 import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
 import { recursiveStream } from "./recursiveStream";
@@ -63,6 +64,7 @@ export async function* streamDiffLines({
   highlighted,
   suffix,
   llm,
+  abortControllerId,
   input,
   language,
   onlyOneInsertion,
@@ -73,12 +75,15 @@ export async function* streamDiffLines({
   highlighted: string;
   suffix: string;
   llm: ILLM;
+  abortControllerId: string;
   input: string;
   language: string | undefined;
   onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
   rulesToInclude: RuleWithSource[] | undefined;
 }): AsyncGenerator<DiffLine> {
+  const abortManager = StreamAbortManager.getInstance();
+  const abortController = abortManager.get(abortControllerId);
   void Telemetry.capture(
     "inlineEdit",
     {
@@ -122,6 +127,7 @@ export async function* streamDiffLines({
                 (msg) => msg.role === "user" || msg.role === "tool",
               ) as UserChatMessage | ToolResultChatMessage | undefined),
         baseSystemMessage: undefined,
+        contextItems: [],
       })
     : undefined;
 
@@ -157,7 +163,7 @@ export async function* streamDiffLines({
     content: highlighted,
   };
 
-  const completion = recursiveStream(llm, prompt, prediction);
+  const completion = recursiveStream(llm, abortController, prompt, prediction);
 
   let lines = streamLines(completion);
 

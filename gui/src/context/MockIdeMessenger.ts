@@ -1,9 +1,12 @@
 import { IDE, PromptLog } from "core";
+import { AuthType } from "core/control-plane/AuthTypes";
 import {
+  FromIdeProtocol,
   FromWebviewProtocol,
   ToCoreProtocol,
   ToWebviewProtocol,
 } from "core/protocol";
+import { Message } from "core/protocol/messenger";
 import { MessageIde } from "core/protocol/messenger/messageIde";
 import {
   GeneratorReturnType,
@@ -36,6 +39,7 @@ async function defaultMockHandleMessage<T extends keyof FromWebviewProtocol>(
       ]);
     case "getControlPlaneSessionInfo":
       return returnFor("getControlPlaneSessionInfo", {
+        AUTH_TYPE: AuthType.WorkOsStaging,
         accessToken: "",
         account: {
           label: "",
@@ -60,13 +64,48 @@ async function defaultMockHandleMessage<T extends keyof FromWebviewProtocol>(
 
 export class MockIdeMessenger implements IIdeMessenger {
   ide: IDE;
+  private messageHandlers: Map<
+    keyof FromIdeProtocol,
+    Array<(data: any) => void>
+  > = new Map();
 
   constructor() {
     this.ide = new MessageIde(
       (messageType, data) => {
         throw new Error("Not implemented");
       },
-      (messageType, callback) => {},
+      (messageType, callback) => {
+        // Store the callback in our handlers map
+        if (!this.messageHandlers.has(messageType)) {
+          this.messageHandlers.set(messageType, []);
+        }
+        this.messageHandlers.get(messageType)?.push(callback);
+      },
+    );
+  }
+
+  /**
+   * Simulates a message being sent from the IDE to the webview
+   * @param messageType The type of message to send
+   * @param data The data to send with the message
+   */
+  mockMessageToWebview<T extends keyof ToWebviewProtocol>(
+    messageType: T,
+    data: ToWebviewProtocol[T][0],
+  ): void {
+    // Create a message object that matches what the useWebviewListener hook expects
+    const messageData: Message<ToWebviewProtocol[T][0]> = {
+      messageType,
+      data,
+      messageId: `mock-${Date.now()}-${Math.random().toString(36).substring(2)}`,
+    };
+
+    // Dispatch a custom message event that the window event listener will pick up
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: messageData,
+        origin: window.location.origin,
+      }),
     );
   }
 
@@ -80,7 +119,6 @@ export class MockIdeMessenger implements IIdeMessenger {
         content: "This is a test",
       },
     ];
-
     return undefined;
   }
 

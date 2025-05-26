@@ -9,7 +9,7 @@ import { AutocompleteInput } from "../autocomplete/util/types";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
-import type {
+import {
   BrowserSerializedContinueConfig,
   ChatMessage,
   ContextItem,
@@ -29,10 +29,11 @@ import type {
   SessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescription,
+  StreamDiffLinesPayload,
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "../control-plane/client";
+import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -45,6 +46,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
   abort: [undefined, void];
+  cancelApply: [undefined, void];
 
   // History
   "history/list": [ListHistoryOptions, SessionMetadata[]];
@@ -142,18 +144,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
-  streamDiffLines: [
-    {
-      prefix: string;
-      highlighted: string;
-      suffix: string;
-      input: string;
-      language: string | undefined;
-      modelTitle: string | undefined;
-      includeRulesInSystemMessage: boolean;
-    },
-    AsyncGenerator<DiffLine>,
-  ];
+  streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
   "chatDescriber/describe": [
     {
       text: string;

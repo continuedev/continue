@@ -14,6 +14,7 @@ function testConfig(config: ModelConfig) {
     provider: config.provider as any,
     apiKey: config.apiKey,
     apiBase: config.apiBase,
+    env: config.env,
   });
 
   if (false) {

@@ -193,11 +193,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     };
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
-
-  const isLastItem = useMemo(() => {
-    return props.itemIndex === history.length - 1;
-  }, [history.length, props.itemIndex]);
-  const isLastItemRef = useUpdatingRef(isLastItem);
+  const itemIndexRef = useUpdatingRef(props.itemIndex);
 
   const codeblockStreamIds = useRef<string[]>([]);
   useEffect(() => {
@@ -296,8 +292,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
-          const isFinalCodeblock =
-            preChildProps["data-islastcodeblock"] && isLastItemRef.current;
+          const isLastCodeblock = preChildProps["data-islastcodeblock"];
 
           if (codeblockStreamIds.current[codeBlockIndex] === undefined) {
             codeblockStreamIds.current[codeBlockIndex] =
@@ -307,10 +302,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
+              itemIndex={itemIndexRef.current}
               codeBlockIndex={codeBlockIndex}
               language={language}
               relativeFilepath={relativeFilePath}
-              isFinalCodeblock={isFinalCodeblock}
+              isLastCodeblock={isLastCodeblock}
               range={range}
               codeBlockStreamId={codeblockStreamIds.current[codeBlockIndex]}
               expanded={props.expandCodeblocks}

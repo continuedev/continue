@@ -1,5 +1,5 @@
 import { ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { CodeToEdit } from "core";
+import { SetCodeToEditPayload } from "core";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { getUriPathBasename } from "core/util/uri";
 import { useContext, useMemo, useState } from "react";
@@ -26,7 +26,7 @@ const NoPaddingWrapper = styled.div`
 `;
 
 interface CodeToEditItemProps {
-  code: CodeToEdit;
+  code: SetCodeToEditPayload;
 }
 
 function CodeToEditItem({ code }: CodeToEditItemProps) {
@@ -143,6 +143,7 @@ function CodeToEditItem({ code }: CodeToEditItemProps) {
     </div>
   );
 }
+
 export default function CodeToEditCard() {
   // Array from previous multi-file edit
   const codeToEditArray = useAppSelector(

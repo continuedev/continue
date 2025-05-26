@@ -32,6 +32,7 @@ import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
+import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
@@ -127,6 +128,12 @@ export default async function doLoadConfig(options: {
     await getWorkspaceContinueRuleDotFiles(ide);
   newConfig.rules.unshift(...rules);
   errors.push(...continueRulesErrors);
+
+  // Add rules from markdown files in .continue/rules
+  const { rules: markdownRules, errors: markdownRulesErrors } =
+    await loadMarkdownRules(ide);
+  newConfig.rules.unshift(...markdownRules);
+  errors.push(...markdownRulesErrors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
