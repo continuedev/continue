@@ -1240,6 +1240,7 @@ export interface StreamDiffLinesPayload {
   language: string | undefined;
   modelTitle: string | undefined;
   includeRulesInSystemMessage: boolean;
+  fileUri?: string;
 }
 
 export interface HighlightedCodePayload {

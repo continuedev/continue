@@ -138,7 +138,8 @@ export function Chat() {
         (jetbrains ? e.altKey : isMetaEquivalentKeyPressed(e)) &&
         !e.shiftKey
       ) {
-        void dispatch(cancelStream());
+        dispatch(cancelStream());
+        ideMessenger.post("cancelApply", undefined); // just always cancel, if not in applying won't matter
       }
     };
     window.addEventListener("keydown", listener);
