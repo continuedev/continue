@@ -21,3 +21,5 @@ coverage
 e2e
 extensions/vscode/gui
 extensions/vscode/models
+extensions/intellij/src/main/resources
+packages/continue-sdk
