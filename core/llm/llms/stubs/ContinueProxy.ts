@@ -89,6 +89,10 @@ class ContinueProxy extends OpenAI {
   }
 
   supportsFim(): boolean {
+    const { provider } = parseProxyModelName(this.model);
+    if (provider === "vllm") {
+      return false;
+    }
     return true;
   }
 
