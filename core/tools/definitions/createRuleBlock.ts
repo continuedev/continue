@@ -37,6 +37,11 @@ export const createRuleBlock: Tool = {
           description:
             "Optional file patterns to which this rule applies (e.g. ['**/*.{ts,tsx}'] or ['src/**/*.ts', 'tests/**/*.ts'])",
         },
+        alwaysApply: {
+          type: "boolean",
+          description:
+            "Whether this rule should always be applied regardless of file pattern matching",
+        },
       },
     },
   },

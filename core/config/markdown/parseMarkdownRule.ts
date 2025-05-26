@@ -63,6 +63,7 @@ export function convertMarkdownRuleToContinueRule(
     rule: markdown,
     globs: frontmatter.globs,
     description: frontmatter.description,
+    alwaysApply: frontmatter.alwaysApply,
     source: "rules-block",
     ruleFile: path,
   };

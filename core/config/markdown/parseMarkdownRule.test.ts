@@ -171,4 +171,22 @@ This is the content of the rule.`;
       "This is a rule description from frontmatter",
     );
   });
+
+  it("should include `alwaysApply` from frontmatter", () => {
+    const content = `---
+globs: "**/test/**/*.kt"
+name: Test Rule
+alwaysApply: false
+---
+
+# Test Rule
+
+This is a rule with alwaysApply explicitly set to false.`;
+
+    const result = convertMarkdownRuleToContinueRule(
+      "/path/to/rule.md",
+      content,
+    );
+    expect(result.alwaysApply).toBe(false);
+  });
 });
