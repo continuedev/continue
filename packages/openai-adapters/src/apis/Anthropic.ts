@@ -12,6 +12,7 @@ import {
 import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
 import { AnthropicConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, customFetch } from "../util.js";
+import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -156,6 +157,10 @@ export class AnthropicApi implements BaseLlmApi {
         signal,
       },
     );
+
+    if (response.status === 499) {
+      return EMPTY_CHAT_COMPLETION;
+    }
 
     const completion = (await response.json()) as any;
     return {
