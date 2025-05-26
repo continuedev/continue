@@ -36,7 +36,6 @@ export const streamNormalInput = createAsyncThunk<
       throw new Error("Default model not defined");
     }
 
-    const isInEdit = state.session.isInEdit;
     let completionOptions: LLMFullCompletionOptions = {};
     const activeTools = selectActiveTools(state);
     const toolsSupported = modelSupportsTools(selectedChatModel);
@@ -83,7 +82,7 @@ export const streamNormalInput = createAsyncThunk<
               modelProvider: selectedChatModel.underlyingProviderName,
               modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
-              ...(isInEdit && {
+              ...(state.session.mode === 'agent' && {
                 tools: activeTools.map((tool) => tool.function.name),
               }),
             },
