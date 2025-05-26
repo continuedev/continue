@@ -26,4 +26,13 @@ export const readFileTool: Tool = {
       },
     },
   },
+  //   systemMessageDescription: `
+  // To read an existing file, call the readFile tool like this:
+  // <tool_call>
+  //   <name>readFile</name>
+  //   <args>
+  //     <filepath>/path/to/file.txt</filepath>
+  //   </args>
+  // </tool_call>
+  // `.trim(),
 };

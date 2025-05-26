@@ -1,9 +1,8 @@
 import { ChatMessage, ToolCallDelta } from "core";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuid } from "uuid";
-import { parsePartialXml } from "./partialXmlParser";
-import { getStringDelta } from "./stringDelta";
-import { splitAtTagBoundaries } from "./xmlParsing";
+import { parsePartialXml } from "./parsePartialXmlToolCall";
+import { getStringDelta, splitAtTagBoundaries } from "./xmlToolsUtils";
 
 /*
     Function to intercept tool calls in XML format from a chat message stream

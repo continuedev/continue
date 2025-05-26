@@ -1,10 +1,10 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions } from "core";
 import { constructMessages } from "core/llm/constructMessages";
-import { modelSupportsNativeTools } from "core/llm/toolSupport";
+import { modelIsGreatWithNativeTools } from "core/llm/toolSupport";
 import { ToCoreProtocol } from "core/protocol";
 import { getBaseSystemMessage } from "../../util";
-import { interceptXMLToolCalls } from "../../util/virtualTools/interceptToolXml";
+import { interceptXMLToolCalls } from "../../util/instructionTools/interceptXmlToolCalls";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -37,11 +37,11 @@ export const streamNormalInput = createAsyncThunk<
     const messageMode = state.session.mode;
 
     const activeTools = selectActiveTools(state);
-    const useNative = modelSupportsNativeTools(selectedChatModel);
+    const useNative = modelIsGreatWithNativeTools(selectedChatModel);
 
     // Set up completions options with tools
     const completionOptions: LLMFullCompletionOptions =
-      useNative && activeTools.length
+      useNative && !!activeTools.length
         ? {
             tools: activeTools,
           }

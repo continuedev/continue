@@ -6,8 +6,8 @@ import {
 } from "core/llm/constructMessages";
 import _ from "lodash";
 import { KeyboardEvent } from "react";
+import { generateToolsSystemMessage } from "./instructionTools/buildXmlToolsSystemMessage";
 import { getLocalStorage } from "./localStorage";
-import { generateToolsSystemMessage } from "./virtualTools/toolsSystemMessage";
 
 export type Platform = "mac" | "linux" | "windows" | "unknown";
 

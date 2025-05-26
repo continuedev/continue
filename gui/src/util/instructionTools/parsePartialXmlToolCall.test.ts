@@ -1,4 +1,4 @@
-import { parsePartialXml } from "./partialXmlParser";
+import { parsePartialXml } from "./parsePartialXmlToolCall";
 
 describe("PartialXMLParser", () => {
   test("parses simple XML tag with content", () => {

@@ -1,4 +1,4 @@
-import { splitAtTagBoundaries } from "./xmlParsing";
+import { closeTag, splitAtTagBoundaries } from "./xmlToolsUtils";
 
 describe("splitAtTagBoundaries", () => {
   test("doesn't split plain text without tags", () => {
@@ -39,5 +39,28 @@ describe("splitAtTagBoundaries", () => {
 
   test("handles consecutive tag boundaries", () => {
     expect(splitAtTagBoundaries("<><>")).toEqual(["<>", "<>"]);
+  });
+});
+
+describe("closeTag", () => {
+  describe("when given an opening tag", () => {
+    const testCases = [
+      {
+        input: "<div>",
+        expectedOutput: "</div>",
+      },
+      {
+        input: "<p>",
+        expectedOutput: "</p>",
+      },
+      // Add more test cases as needed
+    ];
+
+    testCases.forEach((testCase) => {
+      it(`closes tag "${testCase.input}" to "</${testCase.input.slice(1)}"`, () => {
+        const result = closeTag(testCase.input);
+        expect(result).to.equal(testCase.expectedOutput);
+      });
+    });
   });
 });

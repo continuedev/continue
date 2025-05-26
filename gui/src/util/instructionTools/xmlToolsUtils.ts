@@ -1,3 +1,13 @@
+export function getStringDelta(original: string, updated: string): string {
+  if (!updated.startsWith(original)) {
+    console.warn(
+      `Original string "${original}" is not a prefix of updated string "${updated}"`,
+    );
+    return updated;
+  }
+  return updated.slice(original.length);
+}
+
 export function splitAtTagBoundaries(content: string) {
   if (!content) return [""];
 
@@ -11,4 +21,8 @@ export function splitAtTagBoundaries(content: string) {
   const parts = spaced.split(BOUNDARY).filter(Boolean);
 
   return parts;
+}
+
+export function closeTag(openingTag: string): string {
+  return `</${openingTag.slice(1)}`;
 }

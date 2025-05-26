@@ -258,3 +258,16 @@ export function modelSupportsNativeTools(modelDescription: ModelDescription) {
   }
   return providerSupport(modelDescription.model) ?? false;
 }
+
+export function modelIsGreatWithNativeTools(
+  modelDescription: ModelDescription,
+): boolean {
+  const model = modelDescription.model;
+  if (
+    model.toLowerCase().includes("claude") &&
+    ["3.5", "3-5", "3.7", "3-7", "-4"].some((p) => model.includes(p))
+  ) {
+    return true;
+  }
+  return false;
+}

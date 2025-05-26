@@ -3,10 +3,12 @@ import {
   ChatBubbleLeftIcon,
   CheckIcon,
   ChevronDownIcon,
+  ExclamationCircleIcon,
   PencilIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
+import { modelIsGreatWithNativeTools } from "core/llm/toolSupport";
 import { useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { lightGray } from "..";
@@ -15,6 +17,7 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { enterEditMode, exitEditMode } from "../../redux/thunks/editMode";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
+import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import {
   Listbox,
@@ -33,6 +36,13 @@ function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
+  const isGoodInAgentMode = useMemo(() => {
+    if (!selectedModel) {
+      return true; // not need to show warning if no model is selected
+    }
+    return modelIsGreatWithNativeTools(selectedModel);
+  }, [selectedModel]);
+
   const { mainEditor } = useMainEditor();
   const jetbrains = useMemo(() => {
     return isJetBrains();
@@ -164,7 +174,41 @@ function ModeSelect() {
               <SparklesIcon className="h-3 w-3" />
               <span className="">Agent</span>
             </div>
-            {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
+            {!isGoodInAgentMode && (
+              <>
+                <ExclamationCircleIcon
+                  data-tooltip-id="bad-at-agent-mode-tooltip"
+                  className="text-warning h-3 w-3"
+                />
+                <ToolTip
+                  id="bad-at-agent-mode-tooltip"
+                  style={{
+                    zIndex: 200001, // in front of listbox
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  Agent might not work well with this model.{" "}
+                  {/* can't seem to make link in tooltip clickable. globalCloseEvents or closeEvents? */}
+                  {/* <a
+                    href=""
+                    onClick={() => {
+                      ideMessenger.post(
+                        "openUrl",
+                        "https://docs.continue.dev/agent/model-setup",
+                      );
+                    }}
+                    className="text-link cursor-pointer"
+                  >
+                    See docs
+                  </a> */}
+                </ToolTip>
+              </>
+            )}
+            {mode === "agent" ? (
+              <CheckIcon className="ml-auto h-3 w-3" />
+            ) : (
+              <div className="ml-auto"></div>
+            )}
           </ListboxOption>
 
           <div className="text-lightgray px-2 py-1">
