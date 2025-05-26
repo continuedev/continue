@@ -19,7 +19,7 @@ export class DeepSeekApi extends OpenAIApi {
     body: FimCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const endpoint = new URL("beta/completions", this.config.apiBase);
+    const endpoint = new URL("beta/completions", this.apiBase);
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
