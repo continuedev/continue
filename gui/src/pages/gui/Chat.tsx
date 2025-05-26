@@ -294,10 +294,8 @@ export function Chat() {
 
   return (
     <>
-      {!!showSessionTabs && isInEdit && <TabBar ref={tabsRef} />}
+      {!!showSessionTabs && !isInEdit && <TabBar ref={tabsRef} />}
       {widget}
-
-      {!!showSessionTabs && !isInEdit && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
