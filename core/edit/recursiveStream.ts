@@ -16,6 +16,7 @@ const RECURSIVE_PROMPT = `Continue EXACTLY where you left`;
 
 export async function* recursiveStream(
   llm: ILLM,
+  abortController: AbortController,
   prompt: ChatMessage[] | string,
   prediction: Prediction | undefined,
   currentBuffer = "",
@@ -28,7 +29,7 @@ export async function* recursiveStream(
   // let whiteSpaceAtEndOfBuffer = buffer.match(/\s*$/)?.[0] ?? ""; // attempts at fixing whitespace bug with recursive boundaries
 
   if (typeof prompt === "string") {
-    const generator = llm.streamComplete(prompt, new AbortController().signal, {
+    const generator = llm.streamComplete(prompt, abortController.signal, {
       raw: true,
       prediction: undefined,
       reasoning: false,
@@ -50,6 +51,7 @@ export async function* recursiveStream(
         // // TODO - Prediction capabilities lost because of partial input
         // yield* recursiveStream(
         //   llm,
+        //   abortController,
         //   continuationPrompt,
         //   undefined,
         //   buffer,
@@ -60,7 +62,7 @@ export async function* recursiveStream(
       }
     }
   } else {
-    const generator = llm.streamChat(prompt, new AbortController().signal, {
+    const generator = llm.streamChat(prompt, abortController.signal, {
       prediction,
       reasoning: false,
     });
@@ -90,6 +92,7 @@ export async function* recursiveStream(
         // await generator.return(DUD_PROMPT_LOG);
         // yield* recursiveStream(
         //   llm,
+        //   abortController,
         //   continuationPrompt,
         //   undefined,
         //   buffer,

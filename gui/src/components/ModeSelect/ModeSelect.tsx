@@ -1,21 +1,11 @@
-// A dropdown menu for selecting between Chat, Edit, and Agent modes with keyboard shortcuts
-import {
-  ChatBubbleLeftIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  PencilIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { useCallback, useEffect, useMemo } from "react";
-import styled from "styled-components";
-import { lightGray } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
-import { enterEditMode, exitEditMode } from "../../redux/thunks/editMode";
-import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
+import { getFontSize, getMetaKeyLabel } from "../../util";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import {
   Listbox,
@@ -23,14 +13,9 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "../ui/Listbox";
+import { ModeIcon } from "./ModeIcon";
 
-const ShortcutText = styled.span`
-  color: ${lightGray};
-  font-size: ${getFontSize() - 3}px;
-  margin-right: auto;
-`;
-
-function ModeSelect() {
+export function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
@@ -38,23 +23,9 @@ function ModeSelect() {
     return selectedModel && modelSupportsTools(selectedModel);
   }, [selectedModel]);
   const { mainEditor } = useMainEditor();
-  const jetbrains = useMemo(() => {
-    return isJetBrains();
-  }, []);
   const metaKeyLabel = useMemo(() => {
     return getMetaKeyLabel();
   }, []);
-
-  const getModeIcon = (mode: MessageModes) => {
-    switch (mode) {
-      case "agent":
-        return <SparklesIcon className="xs:h-3 xs:w-3 h-3 w-3" />;
-      case "chat":
-        return <ChatBubbleLeftIcon className="xs:h-3 xs:w-3 h-3 w-3" />;
-      case "edit":
-        return <PencilIcon className="xs:h-3 xs:w-3 h-3 w-3" />;
-    }
-  };
 
   // Switch to chat mode if agent mode is selected but not supported
   useEffect(() => {
@@ -66,55 +37,18 @@ function ModeSelect() {
     }
   }, [mode, agentModeSupported, dispatch, selectedModel]);
 
-  const cycleMode = useCallback(async () => {
-    const modes: MessageModes[] = jetbrains
-      ? ["chat", "agent"]
-      : ["chat", "agent", "edit"];
-    const currentIndex = modes.indexOf(mode);
-    const nextMode = modes[(currentIndex + 1) % modes.length];
-
-    if (mode === "edit") {
-      await dispatch(
-        exitEditMode({
-          goToMode: nextMode,
-        }),
-      );
-    } else {
-      if (nextMode === "edit") {
-        await dispatch(
-          enterEditMode({
-            returnToMode: mode,
-          }),
-        );
-      } else {
-        dispatch(setMode(nextMode));
-      }
-    }
+  const cycleMode = useCallback(() => {
+    dispatch(setMode(mode === "chat" ? "agent" : "chat"));
     mainEditor?.commands.focus();
-  }, [jetbrains, mode, mainEditor]);
+  }, [mode, mainEditor]);
 
   const selectMode = useCallback(
-    async (newMode: MessageModes) => {
+    (newMode: MessageModes) => {
       if (newMode === mode) {
         return;
       }
-      if (newMode === "edit") {
-        await dispatch(
-          enterEditMode({
-            returnToMode: mode,
-          }),
-        );
-      } else {
-        if (mode === "edit") {
-          await dispatch(
-            exitEditMode({
-              goToMode: newMode,
-            }),
-          );
-        } else {
-          dispatch(setMode(newMode));
-        }
-      }
+
+      dispatch(setMode(newMode));
 
       mainEditor?.commands.focus();
     },
@@ -138,13 +72,9 @@ function ModeSelect() {
       <div className="relative">
         <ListboxButton
           data-testid="mode-select-button"
-          className="xs:px-2 gap-1 border-none px-1.5 py-0.5 text-gray-400 transition-colors duration-200"
-          style={{
-            backgroundColor: `${lightGray}33`,
-            borderRadius: "9999px",
-          }}
+          className="xs:px-2 text-description-muted bg-table-oddRow gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
         >
-          {getModeIcon(mode)}
+          <ModeIcon mode={mode} />
           <span className="hidden sm:block">
             {mode.charAt(0).toUpperCase() + mode.slice(1)}
           </span>
@@ -154,21 +84,15 @@ function ModeSelect() {
           />
         </ListboxButton>
         <ListboxOptions className="min-w-32 max-w-48">
-          {!jetbrains && (
-            <ListboxOption value="edit">
-              <div className="flex flex-row items-center gap-1.5">
-                <PencilIcon className="h-3 w-3" />
-                <span className="">Edit</span>
-                <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
-              </div>
-              {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
-            </ListboxOption>
-          )}
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">
-              <ChatBubbleLeftIcon className="h-3 w-3" />
+              <ModeIcon mode="chat" />
               <span className="">Chat</span>
-              <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
+              <span
+                className={`text-description-muted text-[${getFontSize() - 3}px] mr-auto`}
+              >
+                {getMetaKeyLabel()}L
+              </span>
             </div>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
@@ -179,7 +103,7 @@ function ModeSelect() {
             className={"gap-1"}
           >
             <div className="flex flex-row items-center gap-1.5">
-              <SparklesIcon className="h-3 w-3" />
+              <ModeIcon mode="agent" />
               <span className="">Agent</span>
             </div>
             {agentModeSupported ? (
@@ -189,7 +113,7 @@ function ModeSelect() {
             )}
           </ListboxOption>
 
-          <div className="text-lightgray px-2 py-1">
+          <div className="text-description-muted px-2 py-1">
             {`${metaKeyLabel} . for next mode`}
           </div>
         </ListboxOptions>
@@ -197,5 +121,3 @@ function ModeSelect() {
     </Listbox>
   );
 }
-
-export default ModeSelect;

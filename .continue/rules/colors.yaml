@@ -1,0 +1,27 @@
+name: GUI
+version: 0.0.1
+schema: v1
+rules:
+  - name: Extension Color Themes
+    rule: |
+      When adding colors to components, use tailwind color classes.
+      Do NOT use explicit colors like text-gray-400. Instead, use theme colors.
+
+      The common available theme colors are:
+      - For normal text: foreground, description, description-muted
+      - For other text, icons, etc: success, warning, error, accent, link
+      - For general components background, border, border-focus
+      - For specific components: 
+          - Button: primary, primary-foreground, primary-hover, secondary, secondary-foreground, secondary-hover
+          - Input: input, input-foreground, input-border, input-placeholder
+          - Badge: badge, badge-foreground
+          - List/Dropdown items: list-hover, list-active, list-active-foreground
+          - Code Editor: editor, editor-foreground
+
+      Any of these colors can be used in tailwind e.g. bg-primary, text-success, border-error, hover:bg-list-hover, etc.
+    globs: "gui/**/*.tsx"
+# Excluding the following less-used colors:
+# Command (only used by tip-tap): command, command-foreground, command-border, command-border-focus
+# Find widget colors: find-match, find-match-selected
+# table-oddRow
+

@@ -27,9 +27,15 @@ interface MainEditorContextType {
   onEnterRef: React.MutableRefObject<(modifiers: InputModifiers) => void>;
 }
 
-const MainEditorContext = createContext<MainEditorContextType | undefined>(
-  undefined,
-);
+const initialState: MainEditorContextType = {
+  mainEditor: null,
+  setMainEditor: () => {},
+  inputId: null,
+  setInputId: () => {},
+  onEnterRef: { current: () => {} },
+};
+
+const MainEditorContext = createContext<MainEditorContextType>(initialState);
 
 /**
  * Provider component that maintains a reference to the main editor
@@ -38,8 +44,10 @@ export const MainEditorProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const dispatch = useAppDispatch();
-  const [mainEditor, setMainEditorInternal] = useState<Editor | null>(null);
-  const [inputId, setInputId] = useState<string | null>(null);
+  const [mainEditor, setMainEditorInternal] = useState<Editor | null>(
+    initialState.mainEditor,
+  );
+  const [inputId, setInputId] = useState<string | null>(initialState.inputId);
   const onEnterRef = useRef<(modifiers: InputModifiers) => void>(() => {});
   const editorFocusedRef = useRef<boolean>(false);
   const historyLength = useAppSelector((store) => store.session.history.length);
@@ -108,10 +116,5 @@ export const MainEditorProvider: React.FC<{ children: React.ReactNode }> = ({
 /**
  * Hook to access the main editor context
  */
-export const useMainEditor = (): MainEditorContextType => {
-  const context = useContext(MainEditorContext);
-  if (context === undefined) {
-    throw new Error("useMainEditor must be used within a MainEditorProvider");
-  }
-  return context;
-};
+export const useMainEditor = (): MainEditorContextType =>
+  useContext(MainEditorContext);

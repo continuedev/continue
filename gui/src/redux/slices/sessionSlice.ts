@@ -47,6 +47,7 @@ type SessionState = {
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
+  isInEdit: boolean;
   codeBlockApplyStates: {
     states: ApplyState[];
     curIndex: number;
@@ -63,6 +64,7 @@ const initialState: SessionState = {
   streamAborter: new AbortController(),
   symbols: {},
   mode: "chat",
+  isInEdit: false,
   codeBlockApplyStates: {
     states: [],
     curIndex: 0,
@@ -645,6 +647,9 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    setIsInEdit: (state, action: PayloadAction<boolean>) => {
+      state.isInEdit = action.payload;
+    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -741,6 +746,7 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
+  setIsInEdit,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;
