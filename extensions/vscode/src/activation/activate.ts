@@ -33,21 +33,34 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     );
   }
 
-  // Only set the YAML schema configuration if it hasn't been set before
-  if (!context.globalState.get("yamlSchemaConfigured")) {
-    vscode.workspace.getConfiguration("yaml").update(
-      "schemas",
-      {
-        [path.join(
-          context.extension.extensionUri.fsPath,
-          "config-yaml-schema.json",
-        )]: [".continue/**/*.yaml"],
-      },
+  // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)
+  const yamlConfig = vscode.workspace.getConfiguration("yaml");
+  const existingSchemas = yamlConfig.get("schemas") || {};
+
+  const oldContinueSchemaKeys = Object.entries(existingSchemas)
+    .filter(
+      ([_, value]) =>
+        Array.isArray(value) && value.includes(".continue/**/*.yaml"),
+    )
+    .map(([key]) => key);
+
+  for (const oldKey of oldContinueSchemaKeys) {
+    await yamlConfig.update(
+      `schemas.${oldKey}`,
+      undefined,
       vscode.ConfigurationTarget.Global,
     );
-    // Mark that we've configured the YAML schema
-    context.globalState.update("yamlSchemaConfigured", true);
   }
+
+  const newPath = path.join(
+    context.extension.extensionUri.fsPath,
+    "config-yaml-schema.json",
+  );
+  await yamlConfig.update(
+    `schemas.${newPath}`,
+    [".continue/**/*.yaml"],
+    vscode.ConfigurationTarget.Global,
+  );
 
   const api = new VsCodeContinueApi(vscodeExtension);
   const continuePublicApi = {
