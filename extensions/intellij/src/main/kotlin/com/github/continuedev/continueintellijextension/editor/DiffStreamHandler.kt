@@ -111,7 +111,8 @@ class DiffStreamHandler(
                 suffix = suffix,
                 language = virtualFile?.fileType?.name,
                 modelTitle = modelTitle,
-                includeRulesInSystemMessage = includeRulesInSystemMessage
+                includeRulesInSystemMessage = includeRulesInSystemMessage,
+                fileUri = virtualFile?.url
             ),
             null
         ) { response ->
@@ -289,7 +290,6 @@ class DiffStreamHandler(
         }
     }
 
-
     private fun handleFinishedResponse() {
         ApplicationManager.getApplication().invokeLater {
             // Since we only call onLastDiffLine() when we reach a "same" line, we need to handle the case where
@@ -337,6 +337,5 @@ class DiffStreamHandler(
     private fun setClosed() {
         sendUpdate(ApplyStateStatus.CLOSED)
         resetState()
-        onClose()
     }
 }

@@ -101,7 +101,14 @@ export function resolveSerializedConfig(
 
 const configMergeKeys = {
   models: (a: any, b: any) => a.title === b.title,
-  contextProviders: (a: any, b: any) => a.name === b.name,
+  contextProviders: (a: any, b: any) => {
+    // If not HTTP providers, use the name only
+    if (a.name !== "http" || b.name !== "http") {
+      return a.name === b.name;
+    }
+    // For HTTP providers, consider them different if they have different URLs
+    return a.name === b.name && a.params?.url === b.params?.url;
+  },
   slashCommands: (a: any, b: any) => a.name === b.name,
   customCommands: (a: any, b: any) => a.name === b.name,
 };

@@ -18,6 +18,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "claude-3.5",
         "claude-3-7",
         "claude-3.7",
+        "claude-4",
         "gpt-4",
         "o3",
         "gemini",
@@ -25,9 +26,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     anthropic: (model) => {
       if (
-        ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7"].some((part) =>
-          model.toLowerCase().startsWith(part),
-        )
+        [
+          "claude-3-5",
+          "claude-3.5",
+          "claude-3-7",
+          "claude-3.7",
+          "claude-4",
+        ].some((part) => model.toLowerCase().startsWith(part))
       ) {
         return true;
       }
@@ -81,9 +86,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       // For Bedrock, only support Claude Sonnet models with versions 3.5/3-5 and 3.7/3-7
       if (
         model.toLowerCase().includes("sonnet") &&
-        ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7"].some((part) =>
-          model.toLowerCase().includes(part),
-        )
+        [
+          "claude-3-5",
+          "claude-3.5",
+          "claude-3-7",
+          "claude-3.7",
+          "claude-4",
+        ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
       }
@@ -101,6 +110,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "pixtral",
           "ministral",
           "mistral-nemo",
+          "devstral",
         ].some((part) => model.toLowerCase().includes(part))
       );
     },
@@ -143,6 +153,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "aya-expanse",
           "firefunction-v2",
           "mistral",
+          "devstral",
         ].some((part) => modelName.toLowerCase().includes(part))
       ) {
         return true;
@@ -174,9 +185,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return false;
       }
       if (
-        ["llama-3", "llama-4", "mistral", "codestral", "granite-3"].some(
-          (part) => model.toLowerCase().includes(part),
-        )
+        [
+          "llama-3",
+          "llama-4",
+          "mistral",
+          "codestral",
+          "granite-3",
+          "devstral",
+        ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
       }
@@ -200,6 +216,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "openai/o3",
         "openai/o4",
         "anthropic/claude-3",
+        "anthropic/claude-4",
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
@@ -214,6 +231,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "mistralai/codestral",
         "mistralai/mixtral",
         "mistral/ministral",
+        "mistral/devstral",
         "mistralai/pixtral",
         "meta-llama/llama-3.3",
         "amazon/nova",

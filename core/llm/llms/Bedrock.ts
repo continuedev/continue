@@ -306,7 +306,7 @@ class Bedrock extends BaseLLM {
     }
 
     const supportsTools =
-      PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
+      (this.capabilities?.tools || PROVIDER_TOOL_SUPPORT.bedrock?.(options.model)) ?? false;
 
     let toolConfig = supportsTools && options.tools
     ? {

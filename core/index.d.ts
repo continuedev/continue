@@ -1242,6 +1242,7 @@ export interface StreamDiffLinesPayload {
   language: string | undefined;
   modelTitle: string | undefined;
   includeRulesInSystemMessage: boolean;
+  fileUri?: string;
 }
 
 export interface HighlightedCodePayload {
@@ -1253,6 +1254,10 @@ export interface HighlightedCodePayload {
 export interface AcceptOrRejectDiffPayload {
   filepath: string;
   streamId?: string;
+}
+
+export interface ShowFilePayload {
+  filepath: string;
 }
 
 export interface RangeInFileWithContents {

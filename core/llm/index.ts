@@ -390,6 +390,9 @@ export abstract class BaseLLM implements ILLM {
 
         // Error mapping to be more helpful
         if (!resp.ok) {
+          if (resp.status === 499) {
+            return resp; // client side cancellation
+          }
           let text = await resp.text();
           if (resp.status === 404 && !resp.url.includes("/v1")) {
             const error = JSON.parse(text)?.error?.replace(/"/g, "'");

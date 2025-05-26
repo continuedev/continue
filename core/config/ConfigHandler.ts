@@ -19,7 +19,7 @@ import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
 import {
   ASSISTANTS,
-  getAllDotContinueYamlFiles,
+  getAllDotContinueDefinitionFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
@@ -284,7 +284,7 @@ export class ConfigHandler {
     }
 
     if (options.includeWorkspace) {
-      const assistantFiles = await getAllDotContinueYamlFiles(
+      const assistantFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
         options,
         ASSISTANTS,
