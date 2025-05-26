@@ -249,7 +249,10 @@ export class CodebaseIndexer {
     }
 
     const { config } = await this.configHandler.loadConfig();
-    if (config?.disableIndexing) {
+    if (!config) {
+      return;
+    }
+    if (config.disableIndexing) {
       yield {
         progress,
         desc: "Indexing is disabled in config.json",
