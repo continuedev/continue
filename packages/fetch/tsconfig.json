@@ -19,5 +19,5 @@
     "declaration": true
     // "sourceMap": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "jest.globals.d.ts"]
 }
