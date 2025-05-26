@@ -60,7 +60,7 @@ export const modelDescriptionSchema = z.object({
     "continue-proxy",
     "nebius",
     "scaleway",
-    "watsonx"
+    "watsonx",
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
@@ -115,7 +115,7 @@ export const embeddingsProviderSchema = z.object({
     "continue-proxy",
     "nebius",
     "scaleway",
-    "watsonx"
+    "watsonx",
   ]),
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),

@@ -3,35 +3,35 @@
 ## Table of Contents
 
 - [Contributing to Continue](#contributing-to-continue)
-    - [Table of Contents](#table-of-contents)
+  - [Table of Contents](#table-of-contents)
 - [❤️ Ways to Contribute](#️-ways-to-contribute)
-    - [👋 Continue Contribution Ideas](#-continue-contribution-ideas)
-    - [🐛 Report Bugs](#-report-bugs)
-    - [✨ Suggest Enhancements](#-suggest-enhancements)
-    - [📖 Updating / Improving Documentation](#-updating--improving-documentation)
-        - [Running the Documentation Server Locally](#running-the-documentation-server-locally)
-            - [Method 1: NPM Script](#method-1-npm-script)
-            - [Method 2: VS Code Task](#method-2-vs-code-task)
-    - [🧑‍💻 Contributing Code](#-contributing-code)
-        - [Environment Setup](#environment-setup)
-            - [Pre-requisites](#pre-requisites)
-            - [Fork the Continue Repository](#fork-the-continue-repository)
-            - [VS Code](#vs-code)
-                - [Debugging](#debugging)
-            - [JetBrains](#jetbrains)
-        - [Our Git Workflow](#our-git-workflow)
-        - [Development workflow](#development-workflow)
-        - [Formatting](#formatting)
-        - [Testing](#testing)
-        - [Review Process](#review-process)
-        - [Getting help](#getting-help)
-    - [Contribtuing new LLM Providers/Models](#contribtuing-new-llm-providersmodels)
-        - [Adding an LLM Provider](#adding-an-llm-provider)
-        - [Adding Models](#adding-models)
-    - [📐 Continue Architecture](#-continue-architecture)
-        - [Continue VS Code Extension](#continue-vs-code-extension)
-        - [Continue JetBrains Extension](#continue-jetbrains-extension)
-    - [Contibutor License Agreement](#contributor-license-agreement-cla)
+  - [👋 Continue Contribution Ideas](#-continue-contribution-ideas)
+  - [🐛 Report Bugs](#-report-bugs)
+  - [✨ Suggest Enhancements](#-suggest-enhancements)
+  - [📖 Updating / Improving Documentation](#-updating--improving-documentation)
+    - [Running the Documentation Server Locally](#running-the-documentation-server-locally)
+      - [Method 1: NPM Script](#method-1-npm-script)
+      - [Method 2: VS Code Task](#method-2-vs-code-task)
+  - [🧑‍💻 Contributing Code](#-contributing-code)
+    - [Environment Setup](#environment-setup)
+      - [Pre-requisites](#pre-requisites)
+      - [Fork the Continue Repository](#fork-the-continue-repository)
+      - [VS Code](#vs-code)
+        - [Debugging](#debugging)
+      - [JetBrains](#jetbrains)
+    - [Our Git Workflow](#our-git-workflow)
+    - [Development workflow](#development-workflow)
+    - [Formatting](#formatting)
+    - [Testing](#testing)
+    - [Review Process](#review-process)
+    - [Getting help](#getting-help)
+  - [Contribtuing new LLM Providers/Models](#contribtuing-new-llm-providersmodels)
+    - [Adding an LLM Provider](#adding-an-llm-provider)
+    - [Adding Models](#adding-models)
+  - [📐 Continue Architecture](#-continue-architecture)
+    - [Continue VS Code Extension](#continue-vs-code-extension)
+    - [Continue JetBrains Extension](#continue-jetbrains-extension)
+  - [Contibutor License Agreement](#contributor-license-agreement-cla)
 
 # ❤️ Ways to Contribute
 
@@ -60,9 +60,9 @@ an enhancement are:
 
 - Create an issue
 
-    - First, check whether a similar proposal has already been made
-    - If not, [create an issue](https://github.com/continuedev/continue/issues)
-    - Please describe the enhancement in as much detail as you can, and why it would be useful
+  - First, check whether a similar proposal has already been made
+  - If not, [create an issue](https://github.com/continuedev/continue/issues)
+  - Please describe the enhancement in as much detail as you can, and why it would be useful
 
 - Join the [Continue Discord](https://discord.gg/NWtdYexhMs) and tell us about your idea in the `#feedback` channel
 
@@ -140,12 +140,12 @@ nvm use
 
 2. Start debugging:
 
-    1. Switch to Run and Debug view
-    2. Select `Launch extension` from drop down
-    3. Hit play button
-    4. This will start the extension in debug mode and open a new VS Code window with it installed
-        1. The new VS Code window with the extension is referred to as the _Host VS Code_
-        2. The window you started debugging from is referred to as the _Main VS Code_
+   1. Switch to Run and Debug view
+   2. Select `Launch extension` from drop down
+   3. Hit play button
+   4. This will start the extension in debug mode and open a new VS Code window with it installed
+      1. The new VS Code window with the extension is referred to as the _Host VS Code_
+      2. The window you started debugging from is referred to as the _Main VS Code_
 
 3. To package the extension, run `npm run package` in the `extensions/vscode` directory, select `Tasks: Run Task` and
    then select `vscode-extension:package`. This will generate `extensions/vscode/build/continue-{VERSION}.vsix`, which
@@ -239,10 +239,10 @@ model:
 
 - [AddNewModel page](./gui/src/pages/AddNewModel/configs/) - This directory defines which model options are shown in the
   side bar model selection UI. To add a new model:
-    1. Add a `ModelPackage` entry for the model into [configs/models.ts](./gui/src/pages/AddNewModel/configs/models.ts),
-       following the lead of the many examples near the top of the file
-    2. Add the model within its provider's array
-       to [configs/providers.ts](./gui/src/pages/AddNewModel/configs/providers.ts) (add provider if needed)
+  1. Add a `ModelPackage` entry for the model into [configs/models.ts](./gui/src/pages/AddNewModel/configs/models.ts),
+     following the lead of the many examples near the top of the file
+  2. Add the model within its provider's array
+     to [configs/providers.ts](./gui/src/pages/AddNewModel/configs/providers.ts) (add provider if needed)
 - LLM Providers: Since many providers use their own custom strings to identify models, you'll have to add the
   translation from Continue's model name (the one you added to `index.d.ts`) and the model string for each of these
   providers: [Ollama](./core/llm/llms/Ollama.ts), [Together](./core/llm/llms/Together.ts),
