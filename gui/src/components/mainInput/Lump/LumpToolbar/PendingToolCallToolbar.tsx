@@ -32,13 +32,13 @@ export function PendingToolCallToolbar() {
 
   return (
     <Container>
-      <div className="flex flex-row items-center pb-0.5 pr-1 text-xs text-gray-400">
+      <div className="text-description flex flex-row items-center pb-0.5 pr-1 text-xs">
         <span className="hidden sm:flex">Pending tool call</span>
       </div>
 
       <div className="flex gap-2 pb-0.5">
         <StopButton
-          className="text-gray-400"
+          className="text-description"
           onClick={() => dispatch(cancelCurrentToolCall())}
           data-testid="reject-tool-call-button"
         >
@@ -47,7 +47,7 @@ export function PendingToolCallToolbar() {
         </StopButton>
         <EnterButton
           isPrimary={true}
-          className="text-gray-400"
+          className="text-description"
           onClick={() => dispatch(callCurrentTool())}
           data-testid="accept-tool-call-button"
         >

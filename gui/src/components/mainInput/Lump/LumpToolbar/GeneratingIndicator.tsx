@@ -1,9 +1,13 @@
 import { AnimatedEllipsis } from "../../..";
 
-export function GeneratingIndicator() {
+export function GeneratingIndicator({
+  text = "Generating",
+}: {
+  text?: string;
+}) {
   return (
     <div className="text-description-muted text-xs">
-      <span>Generating</span>
+      <span>{text}</span>
       <AnimatedEllipsis />
     </div>
   );

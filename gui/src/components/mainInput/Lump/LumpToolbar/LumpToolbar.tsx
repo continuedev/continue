@@ -10,6 +10,7 @@ import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
 import { EditToolbar } from "./EditToolbar";
+import { IsApplyingToolbar } from "./IsApplyingToolbar";
 import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
@@ -25,9 +26,15 @@ export function LumpToolbar() {
   const editApplyState = useAppSelector(
     (state) => state.editModeState.applyState,
   );
-  const pendingApplyStates = useAppSelector(
+  const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
-  ).filter((state) => state.status === "done");
+  );
+
+  const pendingApplyStates = applyStates.filter(
+    (state) => state.status === "done",
+  );
+
+  const isApplying = applyStates.some((state) => state.status === "streaming");
 
   useEffect(() => {
     if (toolCallState?.status !== "generated") {
@@ -54,6 +61,10 @@ export function LumpToolbar() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [toolCallState]);
+
+  if (isApplying) {
+    return <IsApplyingToolbar />;
+  }
 
   if (isInEdit) {
     if (editApplyState.status === "done") {
