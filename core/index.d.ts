@@ -93,6 +93,7 @@ export interface ILLM
   extends Omit<LLMOptions, RequiredLLMOptions>,
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
+  get underlyingProviderName(): string;
 
   complete(
     prompt: string,
@@ -1035,6 +1036,7 @@ export interface ModelCapability {
 export interface ModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
 
@@ -1333,6 +1335,7 @@ export interface AnalyticsConfig {
 export interface JSONModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
   apiBase?: string;

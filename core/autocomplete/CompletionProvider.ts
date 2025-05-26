@@ -244,7 +244,7 @@ export class CompletionProvider {
         prefix,
         suffix,
         prompt,
-        modelProvider: llm.providerName,
+        modelProvider: llm.underlyingProviderName,
         modelName: llm.model,
         completionOptions,
         cacheHit,
