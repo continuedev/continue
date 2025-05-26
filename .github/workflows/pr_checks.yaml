@@ -46,7 +46,7 @@ jobs:
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - name: Check code formatting with Prettier
-        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore
+        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
 
   install-config-yaml:
     needs: install-root
