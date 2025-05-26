@@ -21,7 +21,8 @@ export function addToolCallDeltaToState(
   const nameDelta = toolCallDelta.function?.name ?? "";
   const argsDelta = toolCallDelta.function?.arguments ?? "";
 
-  const mergedName = currentName + nameDelta;
+  const mergedName =
+    currentName === nameDelta ? currentName : currentName + nameDelta; // Some models may include the name repeatedly. This doesn't account for an edge case where the name is like "dothisdothis" and it happens to stream name in chunks "dothis" and "dothis" but that's a super edge case
   const mergedArgs = currentArgs + argsDelta;
 
   const [_, parsedArgs] = incrementalParseJson(mergedArgs || "{}");
