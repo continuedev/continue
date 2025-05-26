@@ -34,33 +34,32 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   }
 
   // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)
+  const yamlMatcher = ".continue/**/*.yaml";
   const yamlConfig = vscode.workspace.getConfiguration("yaml");
+
   const existingSchemas = yamlConfig.get("schemas") || {};
-
-  const oldContinueSchemaKeys = Object.entries(existingSchemas)
-    .filter(
-      ([_, value]) =>
-        Array.isArray(value) && value.includes(".continue/**/*.yaml"),
-    )
-    .map(([key]) => key);
-
-  for (const oldKey of oldContinueSchemaKeys) {
-    await yamlConfig.update(
-      `schemas.${oldKey}`,
-      undefined,
-      vscode.ConfigurationTarget.Global,
-    );
-  }
+  const newSchemas = Object.entries(existingSchemas).filter(
+    ([_, value]) => Array.isArray(value) && value.includes(yamlMatcher), // remove old ones
+  );
 
   const newPath = path.join(
     context.extension.extensionUri.fsPath,
     "config-yaml-schema.json",
   );
-  await yamlConfig.update(
-    `schemas.${newPath}`,
-    [".continue/**/*.yaml"],
-    vscode.ConfigurationTarget.Global,
-  );
+  newSchemas.push([newPath, [yamlMatcher]]);
+
+  try {
+    await yamlConfig.update(
+      "schemas",
+      Object.fromEntries(newSchemas),
+      vscode.ConfigurationTarget.Global,
+    );
+  } catch (error) {
+    console.error(
+      "Failed to register Continue config.yaml schema, most likely, YAML extension is not installed",
+      error,
+    );
+  }
 
   const api = new VsCodeContinueApi(vscodeExtension);
   const continuePublicApi = {
