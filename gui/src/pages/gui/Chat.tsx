@@ -294,7 +294,7 @@ export function Chat() {
 
   return (
     <>
-      {!!showSessionTabs && mode !== "edit" && <TabBar ref={tabsRef} />}
+      {!!showSessionTabs && isInEdit && <TabBar ref={tabsRef} />}
       {widget}
 
       {!!showSessionTabs && !isInEdit && <TabBar />}
