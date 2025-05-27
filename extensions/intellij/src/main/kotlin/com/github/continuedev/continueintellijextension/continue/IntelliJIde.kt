@@ -576,11 +576,6 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String? {
-        val continueSettingsService = service<ContinueExtensionSettings>()
-        return continueSettingsService.continueState.ghAuthToken
-    }
-
     override suspend fun gotoDefinition(location: Location): List<RangeInFile> {
         throw NotImplementedError("gotoDefinition not implemented yet")
     }
