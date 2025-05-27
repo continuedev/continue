@@ -202,14 +202,16 @@ export class SetupGranitePage {
    * rendered within the webview panel
    */
   private _getWebviewContent(webview: Webview, context: ExtensionContext) {
-    let stylesUri, scriptUri;
+    let stylesUri, scriptUri, vscMediaUrl;
     const extensionUri = context.extensionUri;
-    const vscMediaUrl = getUri(webview, extensionUri, ["gui"]).toString();
 
     if (context.extensionMode === ExtensionMode.Development) {
+      vscMediaUrl = "http://localhost:5173";
       scriptUri = "http://localhost:5173/src/granite/indexSetupGranite.tsx";
       stylesUri = "http://localhost:5173/src/granite/indexSetupGranite.css";
     } else {
+      vscMediaUrl = getUri(webview, extensionUri, ["gui"]).toString();
+
       // The CSS file from the React build output
       stylesUri = getUri(webview, extensionUri, [
         "gui",
@@ -229,6 +231,7 @@ export class SetupGranitePage {
 
     const devStyleSrc = inDevelopmentMode ? "http://localhost:5173" : "";
     const devConnectSrc = inDevelopmentMode ? "ws://localhost:5173" : "";
+    const devImgSrc = inDevelopmentMode ? "http://localhost:5173" : "";
 
     const nonce = getNonce();
     // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
@@ -238,7 +241,7 @@ export class SetupGranitePage {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src ${webview.cspSource} ${devStyleSrc} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src ${devConnectSrc} 'self'; img-src https: ${webview.cspSource} data:">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src ${webview.cspSource} ${devStyleSrc} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src ${devConnectSrc} 'self'; img-src https: ${webview.cspSource} data: ${devImgSrc};">
           <script nonce="${nonce}">const vscode = acquireVsCodeApi();</script>
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Granite Models</title>
