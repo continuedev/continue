@@ -995,6 +995,7 @@ export interface Tool {
   uri?: string;
   faviconUrl?: string;
   group: string;
+  systemMessageDescription?: string;
 }
 
 interface ToolChoice {

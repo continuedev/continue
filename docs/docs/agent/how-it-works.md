@@ -28,13 +28,13 @@ In [Chat mode](../chat/how-to-use-it.md), tools are **not** included in the requ
 
 Continue includes several built-in tools which provide the model access to IDE functionality:
 
-- **Read file** (`builtin_read_file`): read the contents of a file within the project
-- **Read currently open file** (`builtin_read_currently_open_file`): read the contents of the currently open file
-- **Create new file** (`builtin_create_new_file`): Create a new file within the project, with path and contents specified by the model
-- **Exact search** (`builtin_exact_search`): perform a `ripgrep` search within the project
-- **Run terminal command** (`builtin_run_terminal_command`): run a terminal command from the workspace root
-- **Search web** (`builtin_search_web`): Perform a web search to get top results
-- **View diff** (`builtin_view_diff`): View the current working git diff
-- **View repo map** (`builtin_view_repo_map`): request a copy of the repository map—same as the [Repo Map Context Provider](../customize/context-providers.mdx#repository-map)
-- **View subdirectory** (`builtin_view_subdirectory`): request a copy of a repo map for a specific directory within the project
-- **Create Rule Block** (`builtin_create_rule_block`): creates a new rule block in `.continue/rules` based on the contents of the conversation
+- **Read file** (`read_file`): read the contents of a file within the project
+- **Read currently open file** (`read_currently_open_file`): read the contents of the currently open file
+- **Create new file** (`create_new_file`): Create a new file within the project, with path and contents specified by the model
+- **Exact search** (`exact_search`): perform a `ripgrep` search within the project
+- **Run terminal command** (`run_terminal_command`): run a terminal command from the workspace root
+- **Search web** (`search_web`): Perform a web search to get top results
+- **View diff** (`view_diff`): View the current working git diff
+- **View repo map** (`view_repo_map`): request a copy of the repository map—same as the [Repo Map Context Provider](../customize/context-providers.mdx#repository-map)
+- **View subdirectory** (`view_subdirectory`): request a copy of a repo map for a specific directory within the project
+- **Create Rule Block** (`create_rule_block`): creates a new rule block in `.continue/rules` based on the contents of the conversation

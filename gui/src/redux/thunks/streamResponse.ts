@@ -1,11 +1,9 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
 import { InputModifiers, ToolResultChatMessage, UserChatMessage } from "core";
-import { constructMessages } from "core/llm/constructMessages";
 import { getApplicableRules } from "core/llm/rules/getSystemMessageWithRules";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
-import { getBaseSystemMessage } from "../../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   setAppliedRulesAtIndex,
@@ -104,24 +102,12 @@ export const streamResponseThunk = createAsyncThunk<
         );
 
         // Store in history for UI display
+        // TODO - show applied rules for tool calls as well?
         dispatch(
           setAppliedRulesAtIndex({
             index: inputIndex,
             appliedRules: applicableRules,
           }),
-        );
-
-        const messageMode = getState().session.mode;
-        const baseChatOrAgentSystemMessage = getBaseSystemMessage(
-          selectedChatModel,
-          messageMode,
-        );
-
-        const messages = constructMessages(
-          messageMode,
-          [...updatedHistory],
-          baseChatOrAgentSystemMessage,
-          applicableRules,
         );
 
         posthog.capture("step run", {
@@ -140,7 +126,6 @@ export const streamResponseThunk = createAsyncThunk<
         unwrapResult(
           await dispatch(
             streamNormalInput({
-              messages,
               legacySlashCommandData: slashCommandWithInput
                 ? {
                     command: slashCommandWithInput.command,
