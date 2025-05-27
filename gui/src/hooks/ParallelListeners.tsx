@@ -3,7 +3,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
-import { useMainEditor } from "../components/mainInput/TipTapEditor";
 import {
   initializeProfilePreferences,
   setOrganizations,
@@ -52,7 +51,7 @@ function ParallelListeners() {
     selectCurrentToolCallApplyState,
   );
 
-  const { mainEditor } = useMainEditor();
+  const config = useAppSelector((store) => store.config.config);
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -252,7 +251,8 @@ function ParallelListeners() {
         if (
           state.status === "closed" &&
           currentToolCallApplyState &&
-          currentToolCallApplyState.streamId === state.streamId
+          currentToolCallApplyState.streamId === state.streamId &&
+          !config.ui?.autoAcceptEditToolDiffs
         ) {
           // const output: ContextItem = {
           //   name: "Edit tool output",
@@ -273,7 +273,7 @@ function ParallelListeners() {
         }
       }
     },
-    [currentToolCallApplyState, history],
+    [currentToolCallApplyState, history, config],
   );
 
   useEffect(() => {
