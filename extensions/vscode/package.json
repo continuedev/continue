@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.38",
+  "version": "1.1.40",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -105,7 +105,7 @@
         "continue.enableQuickActions": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/features/quick-actions)"
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/customize/deep-dives/vscode-actions#quick-actions)"
         },
         "continue.enableTabAutocomplete": {
           "type": "boolean",
@@ -631,7 +631,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.6.4",
     "@nestjs/common": "^11.0.16",
-    "@openapitools/openapi-generator-cli": "^2.5.2",
+    "@openapitools/openapi-generator-cli": "^2.20.0",
     "@types/chai": "^5.0.1",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -661,7 +661,7 @@
   },
   "dependencies": {
     "@continuedev/config-types": "^1.0.14",
-    "@continuedev/fetch": "^1.0.3",
+    "@continuedev/fetch": "^1.0.10",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/node-fetch": "^2.6.11",

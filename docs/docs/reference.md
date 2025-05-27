@@ -188,6 +188,7 @@ chat, editing, and summarizing.
   not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on
   provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
   `chat`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [
   `apply`](./customize/model-roles/apply.mdx#prompt-templating) and [
@@ -379,33 +380,21 @@ prompts, context, and tool use. Continue supports any MCP server with the MCP co
 **Properties:**
 
 - `name` (**required**): The name of the MCP server.
-- `type"` (**required**): The type of the MCP server. Can be "stdio", "sse", or "websocket".
-
-**Stdio type**
-
 - `command` (**required**): The command used to start the server.
 - `args`: An optional array of arguments for the command.
 - `env`: An optional map of environment variables for the server process.
 - `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
-**SSE or Websocket type**
-
-- `url` (**required**): The URL of the MCP server.
-
 **Example:**
 
 ```yaml title="config.yaml"
 mcpServers:
-  - name: My MCP Server with stdio
-    type: stdio
+  - name: My MCP Server
     command: uvx
     args:
       - mcp-server-sqlite
       - --db-path
       - /Users/NAME/test.db
-  - name: My MCP Server with SSE
-    type: sse
-    url: "https://example.com/mcp-server/sse"
 ```
 
 ### `data`
@@ -418,7 +407,7 @@ Destinations to which [development data](./customize/deep-dives/development-data
 - `destination` (**required**): The destination/endpoint that will receive the data. Can be:
   - an HTTP endpoint that will receive a POST request with a JSON blob
   - a file URL to a directory in which events will be dumpted to `.jsonl` files
-- `schema` (**required**): the schema version of the JSON blobs to be sent
+- `schema` (**required**): the schema version of the JSON blobs to be sent. Options include `0.1.0` and `0.2.0`
 - `events`: an array of event names to include. Defaults to all events if not specified.
 - `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file
   contents, prompts, and completions. Defaults to `all`

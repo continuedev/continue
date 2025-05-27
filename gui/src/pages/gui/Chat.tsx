@@ -44,24 +44,21 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
-import { cancelStream } from "../../redux/thunks/cancelStream";
-import { streamEditThunk } from "../../redux/thunks/editMode";
-import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks";
+import { cancelStream } from "../../redux/thunks/cancelStream";
+import { streamEditThunk } from "../../redux/thunks/edit";
+import { loadLastSession } from "../../redux/thunks/session";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
 
-import CodeToEditCard from "../../components/mainInput/CodeToEditCard";
-import EditModeDetails from "../../components/mainInput/EditModeDetails";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { useAutoScroll } from "./useAutoScroll";
-import AcceptRejectDiffButtons from "../../components/AcceptRejectDiffButtons";
 
 const StepsDiv = styled.div`
   position: relative;
@@ -113,6 +110,7 @@ export function Chat() {
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const history = useAppSelector((state) => state.session.history);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
@@ -120,9 +118,7 @@ export function Chat() {
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const mode = useAppSelector((store) => store.session.mode);
-  const applyStates = useAppSelector(
-    (state) => state.session.codeBlockApplyStates.states,
-  );
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const hasDismissedExploreDialog = useAppSelector(
@@ -143,6 +139,7 @@ export function Chat() {
         !e.shiftKey
       ) {
         dispatch(cancelStream());
+        ideMessenger.post("cancelApply", undefined); // just always cancel, if not in applying won't matter
       }
     };
     window.addEventListener("keydown", listener);
@@ -152,7 +149,11 @@ export function Chat() {
     };
   }, [isStreaming, jetbrains]);
 
-  const { widget, highlights } = useFindWidget(stepsDivRef);
+  const { widget, highlights } = useFindWidget(
+    stepsDivRef,
+    tabsRef,
+    isStreaming,
+  );
 
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
@@ -179,15 +180,14 @@ export function Chat() {
         );
       }
 
-      const model =
-        mode === "edit"
-          ? (selectedModels?.edit ?? selectedModels?.chat)
-          : selectedModels?.chat;
+      const model = isInEdit
+        ? (selectedModels?.edit ?? selectedModels?.chat)
+        : selectedModels?.chat;
       if (!model) {
         return;
       }
 
-      if (mode === "edit" && codeToEdit.length === 0) {
+      if (isInEdit && codeToEdit.length === 0) {
         return;
       }
 
@@ -218,15 +218,15 @@ export function Chat() {
         }
       }
 
-      if (mode === "edit") {
-        dispatch(
+      if (isInEdit) {
+        void dispatch(
           streamEditThunk({
             editorState,
             codeToEdit,
           }),
         );
       } else {
-        dispatch(streamResponseThunk({ editorState, modifiers, index }));
+        void dispatch(streamResponseThunk({ editorState, modifiers, index }));
 
         if (editorToClearOnSend) {
           editorToClearOnSend.commands.clearContent();
@@ -246,7 +246,15 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [history, selectedModels, streamResponse, mode, codeToEdit, toolCallState],
+    [
+      history,
+      selectedModels,
+      streamResponse,
+      mode,
+      isInEdit,
+      codeToEdit,
+      toolCallState,
+    ],
   );
 
   useWebviewListener(
@@ -286,13 +294,12 @@ export function Chat() {
 
   return (
     <>
+      {!!showSessionTabs && !isInEdit && <TabBar ref={tabsRef} />}
       {widget}
-
-      {!!showSessionTabs && mode !== "edit" && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-3 overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -376,24 +383,14 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        <>
-          {!isStreaming && mode !== "edit" && (
-            <AcceptRejectDiffButtons
-              applyStates={applyStates}
-              onAcceptOrReject={async () => {}}
-            />
-          )}
-          {mode === "edit" && <CodeToEditCard />}
-          <ContinueInputBox
-            isMainInput
-            isLastUserInput={false}
-            onEnter={(editorState, modifiers, editor) =>
-              sendInput(editorState, modifiers, undefined, editor)
-            }
-            inputId={MAIN_EDITOR_INPUT_ID}
-          />
-          <EditModeDetails />
-        </>
+        <ContinueInputBox
+          isMainInput
+          isLastUserInput={false}
+          onEnter={(editorState, modifiers, editor) =>
+            sendInput(editorState, modifiers, undefined, editor)
+          }
+          inputId={MAIN_EDITOR_INPUT_ID}
+        />
 
         <div
           style={{
@@ -402,7 +399,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {history.length === 0 && lastSessionId && mode !== "edit" && (
+              {history.length === 0 && lastSessionId && !isInEdit && (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
