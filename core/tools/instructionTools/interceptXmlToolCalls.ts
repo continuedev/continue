@@ -1,6 +1,6 @@
-import { v4 as uuid } from "uuid";
 import { ChatMessage, ToolCallDelta } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
+import { generateOpenAIToolCallId } from "./openAIToolCallId";
 import { parsePartialXml } from "./parsePartialXmlToolCall";
 import { getStringDelta, splitAtTagBoundaries } from "./xmlToolsUtils";
 
@@ -21,7 +21,6 @@ export async function* interceptXMLToolCalls(
   let currentToolCallId: string | undefined = undefined;
   let currentToolCallArgs: string = "";
   let inToolCall = false;
-  console.log("currentToolCallId:", currentToolCallId);
 
   let buffer = "";
 
@@ -50,7 +49,7 @@ export async function* interceptXMLToolCalls(
 
         if (inToolCall) {
           if (!currentToolCallId) {
-            currentToolCallId = `tool_${uuid()}`;
+            currentToolCallId = generateOpenAIToolCallId();
           }
 
           toolCallText += buffer;
