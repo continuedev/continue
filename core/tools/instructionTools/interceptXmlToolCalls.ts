@@ -1,6 +1,6 @@
-import { ChatMessage, ToolCallDelta } from "core";
-import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuid } from "uuid";
+import { ChatMessage, ToolCallDelta } from "../..";
+import { renderChatMessage } from "../../util/messageContent";
 import { parsePartialXml } from "./parsePartialXmlToolCall";
 import { getStringDelta, splitAtTagBoundaries } from "./xmlToolsUtils";
 
@@ -21,6 +21,7 @@ export async function* interceptXMLToolCalls(
   let currentToolCallId: string | undefined = undefined;
   let currentToolCallArgs: string = "";
   let inToolCall = false;
+  console.log("currentToolCallId:", currentToolCallId);
 
   let buffer = "";
 

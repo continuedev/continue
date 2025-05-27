@@ -59,7 +59,7 @@ describe("closeTag", () => {
     testCases.forEach((testCase) => {
       it(`closes tag "${testCase.input}" to "</${testCase.input.slice(1)}"`, () => {
         const result = closeTag(testCase.input);
-        expect(result).to.equal(testCase.expectedOutput);
+        expect(result).toEqual(testCase.expectedOutput);
       });
     });
   });

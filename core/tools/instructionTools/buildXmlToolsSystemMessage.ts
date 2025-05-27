@@ -1,5 +1,5 @@
-import { Tool } from "core";
 import { XMLBuilder } from "fast-xml-parser";
+import { Tool } from "../..";
 import { closeTag } from "./xmlToolsUtils";
 
 export const TOOL_INSTRUCTIONS_TAG = "<tools_instructions>";
@@ -63,34 +63,38 @@ function toolToXmlDefinition(tool: Tool): string {
     }
   }
 
-  return builder.build({
-    tool_definition: toolDefinition,
-  });
+  return builder
+    .build({
+      tool_definition: toolDefinition,
+    })
+    .trim();
 }
 
 export const generateToolsSystemMessage = (tools: Tool[]) => {
   if (tools.length === 0) {
     return undefined;
   }
-  // const withPredefinedMessage = tools.filter(tool => !!tool.systemMessageDescription)
+  const withPredefinedMessage = tools.filter(
+    (tool) => !!tool.systemMessageDescription,
+  );
 
   const withDynamicMessage = tools.filter(
     (tool) => !tool.systemMessageDescription,
   );
 
   let prompt = `${TOOL_INSTRUCTIONS_TAG}
-You have access to several "tools" that can be used to perform tasks for the User and interact with the IDE.
+You have access to several "tools" that you can use at any time to perform tasks for the User and interact with the IDE.
+To use a tool, respond with a ${TOOL_CALL_TAG}, specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG} as shown in the provided examples below.
 If it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool's description.
-To use a tool, include a ${TOOL_CALL_TAG} xml tag in your response, specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG}.
-${TOOL_ARGS_TAG} is optional, only use if needed. Do NOT put a tool call in any codeblock. You can only call one tool at a time.`;
+Do NOT use codeblocks for tool calls. You can only call one tool at a time.`;
 
-  // if(withPredefinedMessage.length > 0){
-  //   prompt += `\n\nThe following tools are available to you:`
-  //   for(const tool of withPredefinedMessage) {
-  //     prompt += "\n\n";
-  //     prompt += tool.systemMessageDescription;
-  //   }
-  // }
+  if (withPredefinedMessage.length > 0) {
+    prompt += `\n\nThe following tools are available to you:`;
+    for (const tool of withPredefinedMessage) {
+      prompt += "\n\n";
+      prompt += tool.systemMessageDescription;
+    }
+  }
 
   if (withDynamicMessage.length > 0) {
     prompt += `For example, this tool:\n\n`;
@@ -101,7 +105,7 @@ ${TOOL_ARGS_TAG} is optional, only use if needed. Do NOT put a tool call in any 
 
     prompt += EXAMPLE_TOOL_CALL;
 
-    prompt += "\n\nHere are the available tools:\n\n";
+    prompt += "\n\nHere are the available tools:";
 
     for (const tool of tools) {
       prompt += "\n\n";
@@ -118,17 +122,9 @@ ${TOOL_ARGS_TAG} is optional, only use if needed. Do NOT put a tool call in any 
   return prompt;
 };
 
-// export function createSystemMessageDefinition(
-//   name: string,
-//   desc: string,
-//   argsText: string,
-// ) {
-//   return `${TOOL_DEFINITION_TAG}
-//     ${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}
-//     ${TOOL_DESCRIPTION_TAG}${desc}${closeTag(TOOL_DESCRIPTION_TAG)}
-//     ${TOOL_ARGS_TAG}${argsText}${closeTag(TOOL_ARGS_TAG)}
-//     ${TOOL_CALL_TAG}
-//       ${argsText}
-//     ${closeTag(TOOL_CALL_TAG)}
-//   ${closeTag(TOOL_DEFINITION_TAG)}`;
-// }
+export function createSystemMessageExampleCall(name: string, argsText: string) {
+  return `${TOOL_CALL_TAG}
+    ${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}
+    ${TOOL_ARGS_TAG}${argsText}${closeTag(TOOL_ARGS_TAG)}
+  ${closeTag(TOOL_CALL_TAG)}`;
+}

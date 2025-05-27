@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../instructionTools/buildXmlToolsSystemMessage";
 
 export const readFileTool: Tool = {
   type: "function",
@@ -26,13 +27,10 @@ export const readFileTool: Tool = {
       },
     },
   },
-  //   systemMessageDescription: `
-  // To read an existing file, call the readFile tool like this:
-  // <tool_call>
-  //   <name>readFile</name>
-  //   <args>
-  //     <filepath>/path/to/file.txt</filepath>
-  //   </args>
-  // </tool_call>
-  // `.trim(),
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.ReadFile,
+    `
+      <filepath>/path/to/file.txt</filepath>
+  `.trim(),
+  ),
 };

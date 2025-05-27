@@ -262,6 +262,7 @@ export function modelSupportsNativeTools(modelDescription: ModelDescription) {
 export function modelIsGreatWithNativeTools(
   modelDescription: ModelDescription,
 ): boolean {
+  return false;
   const model = modelDescription.model;
   if (
     model.toLowerCase().includes("claude") &&

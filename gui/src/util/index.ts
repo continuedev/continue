@@ -4,9 +4,9 @@ import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
 } from "core/llm/constructMessages";
+import { generateToolsSystemMessage } from "core/tools/instructionTools/buildXmlToolsSystemMessage";
 import _ from "lodash";
 import { KeyboardEvent } from "react";
-import { generateToolsSystemMessage } from "./instructionTools/buildXmlToolsSystemMessage";
 import { getLocalStorage } from "./localStorage";
 
 export type Platform = "mac" | "linux" | "windows" | "unknown";
