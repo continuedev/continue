@@ -109,6 +109,19 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("cohere", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["cohere"];
+
+    it("should return true for Command models", () => {
+      expect(supportsFn("command-r")).toBe(true);
+      expect(supportsFn("command-a")).toBe(true);
+    });
+
+    it("should return false for other models", () => {
+      expect(supportsFn("c4ai-aya-expanse-32b")).toBe(false);
+    });
+  });
+
   describe("gemini", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["gemini"];
 
