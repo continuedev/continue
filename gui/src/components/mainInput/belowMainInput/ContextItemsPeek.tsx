@@ -44,16 +44,16 @@ export function ContextItemsPeekItem({
 
       if (isRangeInFile) {
         const rif = ctxItemToRifWithContents(contextItem, true);
-        ideMessenger.ide.showLines(
+        void ideMessenger.ide.showLines(
           rif.filepath,
           rif.range.start.line,
           rif.range.end.line,
         );
       } else {
-        ideMessenger.ide.openFile(uri.value);
+        void ideMessenger.ide.openFile(uri.value);
       }
     } else {
-      ideMessenger.ide.showVirtualFile(name, content);
+      void ideMessenger.ide.showVirtualFile(name, content);
     }
   }
 

@@ -1,6 +1,10 @@
-import { CodeBracketIcon } from "@heroicons/react/24/outline";
+import {
+  CodeBracketIcon
+} from "@heroicons/react/24/outline";
+import { ContextItemWithId } from "core";
 import { useMemo } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
+import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 
 interface ArgsToggleIconProps {
   isShowing: boolean;
@@ -40,9 +44,14 @@ export const ArgsToggleIcon = ({
 interface ArgsItemsProps {
   isShowing: boolean;
   args: [string, string][];
+  output: ContextItemWithId[];
 }
 
-export const ArgsItems = ({ args, isShowing }: ArgsItemsProps) => {
+export const ArgsAndOutputItems = ({
+  args,
+  isShowing,
+  output,
+}: ArgsItemsProps) => {
   if (args.length === 0) {
     return null;
   }
@@ -57,6 +66,12 @@ export const ArgsItems = ({ args, isShowing }: ArgsItemsProps) => {
         <div key={key} className="flex flex-row items-center gap-2 py-0.5">
           <span className="text-lightgray">{key}:</span>
           <code className="line-clamp-1">{value.toString()}</code>
+        </div>
+      ))}
+      {output?.map((outputItem) => (
+        <div key={outputItem.name} className="flex flex-row items-center gap-2 py-0.5">
+          <span className="text-lightgray">Output:</span>
+          <ContextItemsPeekItem contextItem={outputItem} />
         </div>
       ))}
     </div>
