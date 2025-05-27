@@ -2,6 +2,7 @@ import { Mutex } from "async-mutex";
 import { JSONSchema7, JSONSchema7Object } from "json-schema";
 import { v4 as uuidv4 } from "uuid";
 
+import { streamResponse } from "@continuedev/fetch";
 import {
   ChatMessage,
   ChatMessageRole,
@@ -12,7 +13,6 @@ import {
 import { renderChatMessage } from "../../util/messageContent.js";
 import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
 
 type OllamaChatMessage = {
   role: ChatMessageRole;
@@ -457,6 +457,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
     }
 
     if (chatOptions.stream === false) {
+      if (response.status === 499) {
+        return; // Aborted by user
+      }
       const json = (await response.json()) as OllamaChatResponse;
       yield convertChatMessage(json);
     } else {

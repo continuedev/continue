@@ -12,22 +12,43 @@ import com.intellij.openapi.util.TextRange
 class RangeInFileWithContents(
     val filepath: String,
     val range: Range,
-    val contents: String
+    val contents: String,
+    val document: Document
+
 ) {
     /**
-     * Returns the absolute document offset for the start position
+     * The absolute document offset for the start position
      */
-    fun getStartOffset(document: Document): Int {
-        return document.getLineStartOffset(range.start.line) + range.start.character
-    }
+    val startOffset: Int
+        get() = document.getLineStartOffset(range.start.line) + range.start.character
 
     /**
-     * Returns the absolute document offset for the end position
+     * The absolute document offset for the end position
      */
-    fun getEndOffset(document: Document): Int {
-        return document.getLineStartOffset(range.end.line) + range.end.character
-    }
+    val endOffset: Int
+        get() = document.getLineStartOffset(range.end.line) + range.end.character
 
+    /**
+     * The line number where the highlighted range starts (zero-based)
+     */
+    val startLine: Int
+        get() = range.start.line
+
+    /**
+     * The line number where the highlighted range ends (zero-based)
+     * This already accounts for proper line ending calculations.
+     */
+    val endLine: Int
+        get() = range.end.line
+
+    /**
+     * Both the start and end line numbers of the highlighted range as a pair
+     */
+    val lines: Pair<Int, Int>
+        get() = Pair(startLine, endLine)
+
+    val offsets: Pair<Int, Int>
+        get() = Pair(startOffset, endOffset)
 
     companion object {
         /**
@@ -45,6 +66,13 @@ class RangeInFileWithContents(
             val startChar = selectionStart - document.getLineStartOffset(startLine)
             val endChar = selectionEnd - document.getLineStartOffset(endLine)
 
+            // Adjust end line if it's a single line selection with trailing newlines
+            val adjustedEndLine = if (isSelectionWithTrailingNewline(document, selectionStart, selectionEnd)) {
+                endLine - 1
+            } else {
+                endLine
+            }
+
             val selectedText = document.getText(
                 TextRange(selectionStart, selectionEnd)
             )
@@ -53,10 +81,30 @@ class RangeInFileWithContents(
                 filepath,
                 Range(
                     Position(startLine, startChar),
-                    Position(endLine, endChar)
+                    Position(adjustedEndLine, endChar)
                 ),
-                selectedText
+                selectedText,
+                document
             )
+        }
+
+        /**
+         * Checks if the selection spans to the next line only because of trailing newlines.
+         * This matters when a user double-clicks to highlight a full line.
+         *
+         * @return true if the selection is actually a single line selection with trailing newline
+         */
+        fun isSelectionWithTrailingNewline(
+            document: Document,
+            selectionStart: Int,
+            selectionEnd: Int
+        ): Boolean {
+            val startLine = document.getLineNumber(selectionStart)
+            val endLine = document.getLineNumber(selectionEnd)
+
+            return endLine > startLine &&
+                    endLine < document.lineCount &&
+                    document.getLineStartOffset(endLine) == selectionEnd
         }
     }
 }

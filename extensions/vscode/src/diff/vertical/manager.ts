@@ -1,5 +1,4 @@
 import { ChatMessage, DiffLine, ILLM, RuleWithSource } from "core";
-import { ConfigHandler } from "core/config/ConfigHandler";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
@@ -31,7 +30,6 @@ export class VerticalDiffManager {
   logDiffs: DiffLine[] | undefined;
 
   constructor(
-    private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly editDecorationManager: EditDecorationManager,
   ) {
@@ -43,12 +41,12 @@ export class VerticalDiffManager {
     startLine: number,
     endLine: number,
     options: VerticalDiffHandlerOptions,
-  ) {
+  ): VerticalDiffHandler | undefined {
     if (this.fileUriToHandler.has(fileUri)) {
       this.fileUriToHandler.get(fileUri)?.clear(false);
       this.fileUriToHandler.delete(fileUri);
     }
-    const editor = vscode.window.activeTextEditor; // TODO
+    const editor = vscode.window.activeTextEditor; // TODO might cause issues if user switches files
     if (editor && URI.equal(editor.document.uri.toString(), fileUri)) {
       const handler = new VerticalDiffHandler(
         startLine,
@@ -453,6 +451,7 @@ export class VerticalDiffManager {
           language: getMarkdownLanguageTagForFile(fileUri),
           onlyOneInsertion: !!onlyOneInsertion,
           overridePrompt,
+          abortControllerId: fileUri,
         });
 
         for await (const line of stream) {

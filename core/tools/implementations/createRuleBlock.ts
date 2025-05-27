@@ -1,4 +1,3 @@
-import { ConfigYaml } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { ToolImpl } from ".";
 import { joinPathsToUri } from "../../util/uri";
@@ -6,6 +5,7 @@ import { joinPathsToUri } from "../../util/uri";
 export interface CreateRuleBlockArgs {
   name: string;
   rule: string;
+  description: string;
   globs?: string;
 }
 
@@ -19,41 +19,46 @@ export const createRuleBlockImpl: ToolImpl = async (
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
 
-  const ruleObject = {
-    name: args.name,
-    rule: args.rule,
-    ...(args.globs ? { globs: args.globs.trim() } : {}),
-  };
+  const fileExtension = "md";
 
-  const ruleBlock: ConfigYaml = {
-    name: args.name,
-    version: "0.0.1",
-    schema: "v1",
-    rules: [ruleObject],
-  };
+  const frontmatter: Record<string, string> = {};
 
-  const ruleYaml = YAML.stringify(ruleBlock);
+  if (args.globs) {
+    frontmatter.globs = args.globs.trim();
+  }
 
+  if (args.description) {
+    frontmatter.description = args.description.trim();
+  }
+  const frontmatterYaml = YAML.stringify(frontmatter).trim();
+  let fileContent = `---
+${frontmatterYaml}
+---
+
+# ${args.name}
+
+${args.rule}
+`;
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
   const rulesDirUri = joinPathsToUri(
     localContinueDir,
     ".continue",
     "rules",
-    `${safeRuleName}.yaml`,
+    `${safeRuleName}.${fileExtension}`,
   );
 
-  await extras.ide.writeFile(rulesDirUri, ruleYaml);
+  await extras.ide.writeFile(rulesDirUri, fileContent);
   await extras.ide.openFile(rulesDirUri);
 
   return [
     {
       name: "New Rule Block",
-      description: "", // No description throws an error in the GUI
+      description: args.description || "",
       uri: {
         type: "file",
         value: rulesDirUri,
       },
-      content: "Rule created successfully",
+      content: `Rule created successfully`,
     },
   ];
 };

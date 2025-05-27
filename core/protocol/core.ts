@@ -33,7 +33,7 @@ import {
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "../control-plane/client";
+import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -46,6 +46,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
   abort: [undefined, void];
+  cancelApply: [undefined, void];
 
   // History
   "history/list": [ListHistoryOptions, SessionMetadata[]];

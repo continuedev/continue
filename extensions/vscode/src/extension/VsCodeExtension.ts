@@ -130,7 +130,6 @@ export class VsCodeExtension {
     this.configHandler.loadConfig();
 
     this.verticalDiffManager = new VerticalDiffManager(
-      this.configHandler,
       this.sidebar.webviewProtocol,
       this.editDecorationManager,
     );
