@@ -8,7 +8,7 @@ interface ToolCallDisplayProps {
   icon: React.ReactNode;
   tool: Tool | undefined;
   toolCallState: ToolCallState;
-  contextItems: ContextItemWithId[]
+  contextItems: ContextItemWithId[];
 }
 
 export function ToolCallDisplay({
@@ -16,7 +16,7 @@ export function ToolCallDisplay({
   toolCallState,
   children,
   icon,
-  contextItems
+  contextItems,
 }: ToolCallDisplayProps) {
   const [argsExpanded, setArgsExpanded] = useState(false);
 
@@ -43,7 +43,7 @@ export function ToolCallDisplay({
                 />
               </div>
             </div>
-            {!!args.length ? (
+            {!!args.length || !!contextItems.length ? (
               <ArgsToggleIcon
                 isShowing={argsExpanded}
                 setIsShowing={setArgsExpanded}
@@ -52,7 +52,11 @@ export function ToolCallDisplay({
             ) : null}
           </div>
           {argsExpanded && (
-            <ArgsAndOutputItems args={args} output={contextItems} isShowing={argsExpanded} />
+            <ArgsAndOutputItems
+              args={args}
+              output={contextItems}
+              isShowing={argsExpanded}
+            />
           )}
         </div>
         <div>{children}</div>

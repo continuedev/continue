@@ -1,7 +1,6 @@
 import { Tool, ToolCallState } from "core";
 import Mustache from "mustache";
 import { ReactNode } from "react";
-import { getFontSize } from "../../../util";
 import { useFontSize } from "../../../components/ui/font";
 
 interface ToolCallStatusMessageProps {
@@ -68,7 +67,7 @@ export function ToolCallStatusMessage({
     message = futureMessage;
   }
   return (
-    <div className="block" style={{ fontSize }}>
+    <div className="block" style={{ fontSize }} data-testid="tool-call-status">
       <span>Continue</span> {intro} {message}
     </div>
   );

@@ -25,6 +25,7 @@ export const ArgsToggleIcon = ({
     <>
       <div
         data-tooltip-id={argsTooltipId}
+        data-testid="tools-args-toggle"
         onClick={(e) => {
           e.stopPropagation();
           setIsShowing(!isShowing);
@@ -52,7 +53,7 @@ export const ArgsAndOutputItems = ({
   isShowing,
   output,
 }: ArgsItemsProps) => {
-  if (args.length === 0) {
+  if (args.length === 0 && output.length === 0) {
     return null;
   }
 
@@ -61,7 +62,7 @@ export const ArgsAndOutputItems = ({
   }
 
   return (
-    <div className="ml-7 mt-1">
+    <div className="ml-7 mt-1" data-testid="tools-args-and-output">
       {args.map(([key, value]) => (
         <div key={key} className="flex flex-row items-center gap-2 py-0.5">
           <span className="text-lightgray">{key}:</span>
