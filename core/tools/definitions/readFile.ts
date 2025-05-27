@@ -29,8 +29,7 @@ export const readFileTool: Tool = {
   },
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.ReadFile,
-    `
-      <filepath>/path/to/file.txt</filepath>
-  `.trim(),
+    `To read a file with a known filepath, use the ${BuiltInToolNames.ReadFile} tool. For example, to read a file located at 'path/to/file.txt', you would respond with this:`,
+    `<filepath>path/to/the_file.txt</filepath>`,
   ),
 };

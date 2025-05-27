@@ -82,11 +82,9 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
     (tool) => !tool.systemMessageDescription,
   );
 
-  let prompt = `${TOOL_INSTRUCTIONS_TAG}
-You have access to several "tools" that you can use at any time to perform tasks for the User and interact with the IDE.
-To use a tool, respond with a ${TOOL_CALL_TAG}, specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG} as shown in the provided examples below.
-If it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool's description.
-Do NOT use codeblocks for tool calls. You can only call one tool at a time.`;
+  let prompt = TOOL_INSTRUCTIONS_TAG;
+  prompt += `You have access to several "tools" that you can use at any time to perform tasks for the User and interact with the IDE.`;
+  prompt += `\nTo use a tool, respond with a ${TOOL_CALL_TAG}, specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG} as shown in the provided examples below.`;
 
   if (withPredefinedMessage.length > 0) {
     prompt += `\n\nThe following tools are available to you:`;
@@ -97,15 +95,7 @@ Do NOT use codeblocks for tool calls. You can only call one tool at a time.`;
   }
 
   if (withDynamicMessage.length > 0) {
-    prompt += `For example, this tool:\n\n`;
-
-    prompt += EXAMPLE_DYNAMIC_TOOL;
-
-    prompt += "\n\nCan be called like this:\n";
-
-    prompt += EXAMPLE_TOOL_CALL;
-
-    prompt += "\n\nHere are the available tools:";
+    prompt += `Also, these additional tool definitions show other tools you can call with the same syntax:`;
 
     for (const tool of tools) {
       prompt += "\n\n";
@@ -115,16 +105,38 @@ Do NOT use codeblocks for tool calls. You can only call one tool at a time.`;
         prompt += toolToXmlDefinition(tool);
       }
     }
+
+    prompt += `For example, this tool definition:\n\n`;
+
+    prompt += EXAMPLE_DYNAMIC_TOOL;
+
+    prompt += "\n\nCan be called like this:\n";
+
+    prompt += EXAMPLE_TOOL_CALL;
   }
+
+  prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool's description.`;
+  prompt += `\nDo NOT use codeblocks for tool calls. You can only call one tool at a time.`;
 
   prompt += `\n${closeTag(TOOL_INSTRUCTIONS_TAG)}`;
 
   return prompt;
 };
 
-export function createSystemMessageExampleCall(name: string, argsText: string) {
-  return `${TOOL_CALL_TAG}
-    ${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}
-    ${TOOL_ARGS_TAG}${argsText}${closeTag(TOOL_ARGS_TAG)}
-  ${closeTag(TOOL_CALL_TAG)}`;
+export function createSystemMessageExampleCall(
+  name: string,
+  instructions: string,
+  argsExample: string = "",
+) {
+  return `${instructions}\n${TOOL_CALL_TAG}
+${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}${
+    !!argsExample
+      ? `
+  ${TOOL_ARGS_TAG}
+    ${argsExample}
+  ${closeTag(TOOL_ARGS_TAG)}
+`.trim()
+      : ""
+  }
+${closeTag(TOOL_CALL_TAG)}`;
 }
