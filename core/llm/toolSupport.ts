@@ -1,19 +1,18 @@
+import { parseProxyModelName } from "@continuedev/config-yaml";
 import { ModelDescription } from "..";
 
-export const NATIVE_TOOL_SUPPORT: Record<
-  string,
-  (model: string) => boolean | undefined
-> = {
+export const NATIVE_TOOL_SUPPORT: Record<string, (model: string) => boolean> = {
   "continue-proxy": (model) => {
-    // see getContinueProxyModelName
-    const provider = model.split("/")[2];
-    const _model = model.split("/")[3];
-    if (provider && _model && provider !== "continue-proxy") {
-      const fn = NATIVE_TOOL_SUPPORT[provider];
-      if (fn) {
-        return fn(_model);
+    try {
+      const { provider, model: _model } = parseProxyModelName(model);
+      if (provider && _model && provider !== "continue-proxy") {
+        const fn = NATIVE_TOOL_SUPPORT[provider];
+        if (fn) {
+          return fn(_model);
+        }
       }
-    }
+    } catch (e) {}
+
     return [
       "claude-3-5",
       "claude-3.5",
@@ -37,6 +36,8 @@ export const NATIVE_TOOL_SUPPORT: Record<
     ) {
       return true;
     }
+
+    return false;
   },
   azure: (model) => {
     if (
@@ -55,7 +56,6 @@ export const NATIVE_TOOL_SUPPORT: Record<
       return true;
     }
     // firworks-ai https://docs.fireworks.ai/guides/function-calling
-    // TODO - should be under fireworks provider?
     if (model.startsWith("accounts/fireworks/models/")) {
       switch (model.substring(26)) {
         case "llama-v3p1-405b-instruct":
@@ -68,6 +68,8 @@ export const NATIVE_TOOL_SUPPORT: Record<
           return false;
       }
     }
+
+    return false;
   },
   gemini: (model) => {
     // All gemini models support function calling
@@ -94,6 +96,8 @@ export const NATIVE_TOOL_SUPPORT: Record<
     ) {
       return true;
     }
+
+    return false;
   },
   mistral: (model) => {
     // https://docs.mistral.ai/capabilities/function_calling/
@@ -107,6 +111,7 @@ export const NATIVE_TOOL_SUPPORT: Record<
         "pixtral",
         "ministral",
         "mistral-nemo",
+        "devstral",
       ].some((part) => model.toLowerCase().includes(part))
     );
   },
@@ -154,6 +159,8 @@ export const NATIVE_TOOL_SUPPORT: Record<
     ) {
       return true;
     }
+
+    return false;
   },
   sambanova: (model) => {
     // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
@@ -164,20 +171,34 @@ export const NATIVE_TOOL_SUPPORT: Record<
     ) {
       return true;
     }
+
+    return false;
   },
   deepseek: (model) => {
     if (model !== "deepseek-reasoner") {
       return true;
     }
+
+    return false;
   },
   watsonx: (model) => {
-    if (model.toLowerCase().includes("guard")) return false;
+    if (model.toLowerCase().includes("guard")) {
+      return false;
+    }
     if (
-      ["llama-3", "llama-4", "mistral", "codestral", "granite-3"].some((part) =>
-        model.toLowerCase().includes(part),
-      )
-    )
+      [
+        "llama-3",
+        "llama-4",
+        "mistral",
+        "codestral",
+        "granite-3",
+        "devstral",
+      ].some((part) => model.toLowerCase().includes(part))
+    ) {
       return true;
+    }
+
+    return false;
   },
   openrouter: (model) => {
     // https://openrouter.ai/models?fmt=cards&supported_parameters=tools
@@ -196,6 +217,7 @@ export const NATIVE_TOOL_SUPPORT: Record<
       "openai/o3",
       "openai/o4",
       "anthropic/claude-3",
+      "anthropic/claude-4",
       "microsoft/phi-3",
       "google/gemini-flash-1.5",
       "google/gemini-2",
@@ -210,6 +232,7 @@ export const NATIVE_TOOL_SUPPORT: Record<
       "mistralai/codestral",
       "mistralai/mixtral",
       "mistral/ministral",
+      "mistral/devstral",
       "mistralai/pixtral",
       "meta-llama/llama-3.3",
       "amazon/nova",
@@ -245,6 +268,8 @@ export const NATIVE_TOOL_SUPPORT: Record<
         return true;
       }
     }
+
+    return false;
   },
 };
 

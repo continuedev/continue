@@ -83,15 +83,15 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useAppSelector(
     (state) => state.config.config.contextProviders,
   );
-  const mode = useAppSelector((store) => store.session.mode);
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const editModeState = useAppSelector((state) => state.editModeState);
 
   const filteredSlashCommands = useMemo(() => {
-    return mode === "edit" ? [] : availableSlashCommands;
-  }, [mode, availableSlashCommands]);
+    return isInEdit ? [] : availableSlashCommands;
+  }, [isInEdit, availableSlashCommands]);
 
   const filteredContextProviders = useMemo(() => {
-    if (mode === "edit") {
+    if (isInEdit) {
       return (
         availableContextProviders?.filter(
           (provider) =>
@@ -101,22 +101,21 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     }
 
     return availableContextProviders ?? [];
-  }, [availableContextProviders, mode]);
+  }, [availableContextProviders, isInEdit]);
 
-  const historyKey = mode === "edit" ? "edit" : "chat";
-  const placeholder = mode === "edit" ? "Describe changes" : undefined;
+  const historyKey = isInEdit ? "edit" : "chat";
+  const placeholder = isInEdit ? "Edit selected code" : undefined;
 
-  const toolbarOptions: ToolbarOptions =
-    mode === "edit"
-      ? {
-          hideAddContext: false,
-          hideImageUpload: false,
-          hideUseCodebase: true,
-          hideSelectModel: false,
-          enterText:
-            editModeState.applyState.status === "done" ? "Retry" : "Edit",
-        }
-      : {};
+  const toolbarOptions: ToolbarOptions = isInEdit
+    ? {
+        hideAddContext: false,
+        hideImageUpload: false,
+        hideUseCodebase: true,
+        hideSelectModel: false,
+        enterText:
+          editModeState.applyState.status === "done" ? "Retry" : "Edit",
+      }
+    : {};
 
   const { appliedRules = [], contextItems = [] } = props;
 

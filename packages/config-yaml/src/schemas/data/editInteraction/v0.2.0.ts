@@ -15,6 +15,7 @@ export const editInteractionEventSchema_0_2_0 =
     completion: true,
     modelTitle: true,
     modelProvider: true,
+    filepath: true,
   });
 
 export const editInteractionEventSchema_0_2_0_noCode =

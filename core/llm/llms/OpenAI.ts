@@ -3,6 +3,7 @@ import {
   ChatCompletionMessageParam,
 } from "openai/resources/index";
 
+import { streamSse } from "@continuedev/fetch";
 import {
   ChatMessage,
   CompletionOptions,
@@ -16,7 +17,6 @@ import {
   LlmApiRequestType,
   toChatBody,
 } from "../openaiTypeConverters.js";
-import { streamSse } from "../stream.js";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",
@@ -352,6 +352,9 @@ class OpenAI extends BaseLLM {
 
     // Handle non-streaming response
     if (body.stream === false) {
+      if (response.status === 499) {
+        return; // Aborted by user
+      }
       const data = await response.json();
       yield data.choices[0].message;
       return;
