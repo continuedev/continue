@@ -193,7 +193,7 @@ async function configYamlToContinueConfig(options: {
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    tools: baseToolDefinitions,
+    tools: [...baseToolDefinitions],
     mcpServerStatuses: [],
     contextProviders: [],
     modelsByRole: {

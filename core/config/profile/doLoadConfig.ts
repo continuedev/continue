@@ -194,7 +194,11 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  newConfig.tools.push(...getConfigDependentTools(newConfig));
+  newConfig.tools.push(
+    ...getConfigDependentToolDefinitions({
+      rules: newConfig.rules,
+    }),
+  );
 
   // Detect duplicate tool names
   const counts: Record<string, number> = {};
@@ -312,24 +316,4 @@ async function getWorkspaceConfigs(ide: IDE): Promise<ContinueRcJson[]> {
   }
 
   return workspaceConfigs;
-}
-
-/**
- * Returns a list of tools that depend on the configuration.
- * @param {ContinueConfig} config - The configuration object.
- * @returns {Tool[]} Array of tools
- * @todo Why is `doLoadConfig` getting called multiple times causing us to have duplicates here unless we filter
- */
-function getConfigDependentTools(config: ContinueConfig): Tool[] {
-  const configDependentTools = getConfigDependentToolDefinitions({
-    rules: config.rules,
-  });
-
-  return configDependentTools.filter(
-    (configTool) =>
-      !config.tools.some(
-        (existingTool) =>
-          existingTool.function.name === configTool.function.name,
-      ),
-  );
 }

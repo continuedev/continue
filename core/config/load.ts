@@ -529,7 +529,7 @@ async function intermediateToFinalConfig({
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    tools: baseToolDefinitions,
+    tools: [...baseToolDefinitions],
     mcpServerStatuses: [],
     slashCommands: config.slashCommands ?? [],
     modelsByRole: {
