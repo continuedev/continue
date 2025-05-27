@@ -10,7 +10,7 @@ import { localPathToUri } from "../util/pathToUri";
 import { joinPathsToUri } from "../util/uri";
 
 export const ASSISTANTS = "assistants";
-export const ASSISTANTS_FOLDER = `.continue/${ASSISTANTS}`;
+export const ASSISTANTS_FOLDER = `.granite-code/${ASSISTANTS}`;
 
 export function isLocalAssistantFile(uri: string): boolean {
   if (!uri.endsWith(".yaml") && !uri.endsWith(".yml")) {
@@ -67,14 +67,14 @@ export function getDotContinueSubDirs(
 ): string[] {
   let fullDirs: string[] = [];
 
-  // Workspace .continue/<subDirName>
+  // Workspace .granite-code/<subDirName>
   if (options.includeWorkspace) {
     fullDirs = workspaceDirs.map((dir) =>
-      joinPathsToUri(dir, ".continue", subDirName),
+      joinPathsToUri(dir, ".granite-code", subDirName),
     );
   }
 
-  // ~/.continue/<subDirName>
+  // ~/.granite-code/<subDirName>
   if (options.includeGlobal) {
     fullDirs.push(localPathToUri(getGlobalFolderWithName(subDirName)));
   }
@@ -83,8 +83,8 @@ export function getDotContinueSubDirs(
 }
 
 /**
- * This method searches in both ~/.continue and workspace .continue
- * for all YAML files in the specified subdirctory, for example .continue/assistants or .continue/prompts
+ * This method searches in both ~/.granite-code and workspace .granite-code
+ * for all YAML files in the specified subdirctory, for example .granite-code/assistants or .granite-code/prompts
  */
 export async function getAllDotContinueYamlFiles(
   ide: IDE,

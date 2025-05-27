@@ -12,7 +12,7 @@ export class DownloadYamlExtensionCodeLensProvider
     document: vscode.TextDocument,
     _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    if (!document.uri.fsPath.includes(".continue")) {
+    if (!document.uri.fsPath.includes(".granite-code")) {
       return [];
     }
     if (this.yamlExtensionDownloaded()) {
