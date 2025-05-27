@@ -1556,4 +1556,5 @@ export interface RuleWithSource {
   rule: string;
   description?: string;
   ruleFile?: string;
+  alwaysApply?: boolean;
 }
