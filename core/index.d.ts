@@ -1003,6 +1003,12 @@ interface ToolChoice {
   };
 }
 
+export interface ConfigDependentToolParams {
+  rules: RuleWithSource[];
+}
+
+export type GetTool = (params: ConfigDependentToolParams) => Tool;
+
 export interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;

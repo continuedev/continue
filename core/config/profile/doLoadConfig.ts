@@ -25,6 +25,7 @@ import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
@@ -193,6 +194,8 @@ export default async function doLoadConfig(options: {
     }
   }
 
+  newConfig.tools.push(...getConfigDependentTools(newConfig));
+
   // Detect duplicate tool names
   const counts: Record<string, number> = {};
   newConfig.tools.forEach((tool) => {
@@ -202,6 +205,7 @@ export default async function doLoadConfig(options: {
       counts[tool.function.name] = 1;
     }
   });
+
   Object.entries(counts).forEach(([toolName, count]) => {
     if (count > 1) {
       errors!.push({
@@ -308,4 +312,24 @@ async function getWorkspaceConfigs(ide: IDE): Promise<ContinueRcJson[]> {
   }
 
   return workspaceConfigs;
+}
+
+/**
+ * Returns a list of tools that depend on the configuration.
+ * @param {ContinueConfig} config - The configuration object.
+ * @returns {Tool[]} Array of tools
+ * @todo Why is `doLoadConfig` getting called multiple times causing us to have duplicates here unless we filter
+ */
+function getConfigDependentTools(config: ContinueConfig): Tool[] {
+  const configDependentTools = getConfigDependentToolDefinitions({
+    rules: config.rules,
+  });
+
+  return configDependentTools.filter(
+    (configTool) =>
+      !config.tools.some(
+        (existingTool) =>
+          existingTool.function.name === configTool.function.name,
+      ),
+  );
 }
