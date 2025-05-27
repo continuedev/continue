@@ -9,9 +9,9 @@ export interface RequestRuleArgs {
 export function getRequestRuleDescription(
   rules: ConfigDependentToolParams["rules"],
 ): string {
-  // Must be explicitly false
+  // Must be explicitly false and no globs
   const agentRequestedRules = rules.filter(
-    (rule) => rule.alwaysApply === false,
+    (rule) => rule.alwaysApply === false && !rule.globs,
   );
 
   const prefix =
