@@ -596,7 +596,8 @@ jobs:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
-        command: ["e2e:ci:run", "e2e:ci:run-yaml"]
+        # e2e:ci:run is equivalent to upstream e2e:ci:run-yaml since we only support the newer config.yaml
+        command: ["e2e:ci:run"]
     steps:
       - uses: actions/checkout@v4
 
@@ -687,7 +688,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-failure-screenshots-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+          name: e2e-failure-screenshots-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-yaml
           path: extensions/vscode/e2e/storage/screenshots
 
       - name: Find e2e log file
@@ -700,7 +701,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-logs-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+          name: e2e-logs-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-yaml
           path: extensions/vscode/e2e.log
 
   gui-tests:
