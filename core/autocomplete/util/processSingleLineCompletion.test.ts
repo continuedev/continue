@@ -12,7 +12,8 @@ describe("processSingleLineCompletion", () => {
         const result = processSingleLineCompletion(
             testCase.input.lastLineOfCompletionText,
             testCase.input.currentText,
-            testCase.input.cursorPosition
+            testCase.input.cursorPosition,
+            true,
         );
 
         expect(result).toEqual(testCase.expectedResult);
@@ -20,14 +21,16 @@ describe("processSingleLineCompletion", () => {
 
     it("should handle midline insert repeating the end of line", () => {
         const testCase = processTestCase({
-            original: "console.log(|cur|);|till|",
+            original: "console.log(|cur|);",
             completion: "\"Hello, world!\");",
+            appliedCompletion: '"Hello, world!"',
         });
 
         const result = processSingleLineCompletion(
             testCase.input.lastLineOfCompletionText,
             testCase.input.currentText,
-            testCase.input.cursorPosition
+            testCase.input.cursorPosition,
+            true,
         );
 
         expect(result).toEqual(testCase.expectedResult);
@@ -42,7 +45,25 @@ describe("processSingleLineCompletion", () => {
         const result = processSingleLineCompletion(
             testCase.input.lastLineOfCompletionText,
             testCase.input.currentText,
-            testCase.input.cursorPosition
+            testCase.input.cursorPosition,
+            true,
+        );
+
+        expect(result).toEqual(testCase.expectedResult);
+    });
+
+    it("should handle midline insert plus extra when range can't be changed", () => {
+        const testCase = processTestCase({
+            original: "console.log(|cur|)",
+            completion: "\"Hello, world!\");",
+            appliedCompletion: '"Hello, world!"',
+        });
+
+        const result = processSingleLineCompletion(
+            testCase.input.lastLineOfCompletionText,
+            testCase.input.currentText,
+            testCase.input.cursorPosition,
+            false,
         );
 
         expect(result).toEqual(testCase.expectedResult);
@@ -51,13 +72,14 @@ describe("processSingleLineCompletion", () => {
     it("should handle simple midline insert", () => {
         const testCase = processTestCase({
             original: "console.log(|cur|)",
-            completion: "\"Hello, world!\"",
+            completion: '"Hello, world!"',
         });
 
         const result = processSingleLineCompletion(
             testCase.input.lastLineOfCompletionText,
             testCase.input.currentText,
-            testCase.input.cursorPosition
+            testCase.input.cursorPosition,
+            true,
         );
 
         expect(result).toEqual(testCase.expectedResult);
@@ -67,13 +89,14 @@ describe("processSingleLineCompletion", () => {
         const testCase = processTestCase({
             original: "console.log(|cur||till|, \"param1\", )", // TODO
             completion: "\"Hello world!\", \"param1\", param1);",
-            appliedCompletion: "\"Hello world!\""
+            appliedCompletion: '"Hello world!"',
         });
 
         const result = processSingleLineCompletion(
             testCase.input.lastLineOfCompletionText,
             testCase.input.currentText,
-            testCase.input.cursorPosition
+            testCase.input.cursorPosition,
+            true,
         );
 
         expect(result).toEqual(testCase.expectedResult);
@@ -88,10 +111,10 @@ describe("processSingleLineCompletion", () => {
         const result = processSingleLineCompletion(
             testCase.input.lastLineOfCompletionText,
             testCase.input.currentText,
-            testCase.input.cursorPosition
+            testCase.input.cursorPosition,
+            true,
         );
 
         expect(result).toEqual(testCase.expectedResult);
     });
-
 });
