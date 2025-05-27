@@ -74,8 +74,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           state.config.config.rules,
         );
 
-        const result = await dispatch(streamNormalInput({ messages }));
-        unwrapResult(result);
+        unwrapResult(await dispatch(streamNormalInput({ messages })));
       }),
     );
   },
