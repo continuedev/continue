@@ -35,10 +35,6 @@ export const editToolImpl: ClientToolImpl = async (
     if (out.status === "error") {
       throw new Error(out.error);
     }
-    return {
-      respondImmediately: true,
-      output: undefined, // TODO - feed edit results back to model (also in parallel listeners)
-    };
   }
   return {
     respondImmediately: false,

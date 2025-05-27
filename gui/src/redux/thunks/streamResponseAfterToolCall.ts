@@ -4,11 +4,7 @@ import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
 import { getBaseSystemMessage } from "../../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
-import {
-  addContextItemsAtIndex,
-  setActive,
-  streamUpdate,
-} from "../slices/sessionSlice";
+import { addContextItemsAtIndex, streamUpdate } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { findToolCall } from "../util";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
@@ -63,14 +59,14 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           }),
         );
 
-        dispatch(setActive());
-
-        
         const updatedHistory = getState().session.history;
-        const messageMode = getState().session.mode
+        const messageMode = getState().session.mode;
 
-        const baseChatOrAgentSystemMessage = getBaseSystemMessage(selectedChatModel, messageMode)
-        
+        const baseChatOrAgentSystemMessage = getBaseSystemMessage(
+          selectedChatModel,
+          messageMode,
+        );
+
         const messages = constructMessages(
           messageMode,
           [...updatedHistory],
@@ -78,7 +74,8 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           state.config.config.rules,
         );
 
-        unwrapResult(await dispatch(streamNormalInput({ messages })));
+        const result = await dispatch(streamNormalInput({ messages }));
+        unwrapResult(result);
       }),
     );
   },
