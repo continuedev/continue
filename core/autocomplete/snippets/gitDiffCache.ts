@@ -31,6 +31,9 @@ export class GitDiffCache {
       this.cachedDiff = diff;
       this.lastFetchTime = Date.now();
       return this.cachedDiff;
+    } catch (e) {
+      console.error("Error fetching git diff:", e);
+      return [];
     } finally {
       this.pendingRequest = null;
     }

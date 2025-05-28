@@ -1,5 +1,5 @@
 import { ToolImpl } from ".";
-import { getDiffsFromCache } from "../../autocomplete/snippets/diffSnippetCache";
+import { getDiffsFromCache } from "../../autocomplete/snippets/gitDiffCache";
 
 export const viewDiffImpl: ToolImpl = async (args, extras) => {
   const diffs = await getDiffsFromCache(extras.ide); // const diffs = await extras.ide.getDiff(true);

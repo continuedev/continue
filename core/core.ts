@@ -45,10 +45,7 @@ import {
 } from ".";
 
 import { ConfigYaml } from "@continuedev/config-yaml";
-import {
-  getDiffFn,
-  GitDiffCache,
-} from "./autocomplete/snippets/diffSnippetCache";
+import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import {
   setupBestConfig,

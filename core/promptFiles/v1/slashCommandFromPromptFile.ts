@@ -1,5 +1,5 @@
 import { ContinueSDK, SlashCommand } from "../..";
-import { getDiffsFromCache } from "../../autocomplete/snippets/diffSnippetCache";
+import { getDiffsFromCache } from "../../autocomplete/snippets/gitDiffCache";
 import { renderChatMessage } from "../../util/messageContent";
 import { getLastNPathParts } from "../../util/uri";
 import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";

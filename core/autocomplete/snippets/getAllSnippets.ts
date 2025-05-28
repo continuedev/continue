@@ -3,7 +3,7 @@ import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
-import { getDiffsFromCache } from "./diffSnippetCache";
+import { getDiffsFromCache } from "./gitDiffCache";
 
 import {
   AutocompleteClipboardSnippet,
