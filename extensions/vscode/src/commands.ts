@@ -660,7 +660,7 @@ const getCommandsMap: (
             : StatusBarStatus.Disabled;
       }
 
-      quickPick.items = [
+      const baseItems = [
         {
           label: "$(gear) Open settings",
         },
@@ -683,6 +683,10 @@ const getCommandsMap: (
           label: "$(feedback) Give feedback",
         },
         */
+      ];
+
+      quickPick.items = autocompleteModels.length > 1 ? [
+        ...baseItems,
         {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
@@ -690,8 +694,8 @@ const getCommandsMap: (
         ...autocompleteModels.map((model) => ({
           label: getAutocompleteStatusBarTitle(selected, model),
           description: getAutocompleteStatusBarDescription(selected, model),
-        })),
-      ];
+        }))
+      ] : baseItems;
       quickPick.onDidAccept(() => {
         const selectedOption = quickPick.selectedItems[0].label;
         const targetStatus =
