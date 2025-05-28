@@ -132,7 +132,7 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     InstallationMode[]
   >([]);
   const [preselectedModel, setPreselectedModel] =
-    useState<LocalModelSize>("small");
+    useState<LocalModelSize>("large");
   const [selectedModel, setSelectedModel] =
     useState<LocalModelSize>(preselectedModel);
   const [modelInstallationProgress, setModelInstallationProgress] =
@@ -221,7 +221,7 @@ const WizardStep: React.FC<StepProps> = ({
     <div
       className={`mb-[1px] rounded-md p-4 transition-colors duration-100 ease-in-out ${
         isActive
-          ? "border border-[var(--vscode-welcomePage-tileBorder)] bg-[var(--vscode-welcomePage-tileBackground)]"
+          ? "border border-solid border-[var(--vscode-welcomePage-tileBorder)] bg-[var(--vscode-welcomePage-tileBackground)]"
           : "hover:bg-[var(--vscode-welcomePage-tileHoverBackground,rgba(255,255,255,0.04))]"
       }`}
       onClick={onClick}
@@ -238,8 +238,8 @@ const WizardStep: React.FC<StepProps> = ({
           <h3
             className={`m-0 ml-3 text-sm font-semibold leading-[1.4] ${
               isActive
-                ? "text-[var(--vscode-peekViewTitleLabel-foreground)]"
-                : "text-[var(--vscode-descriptionForeground)]"
+                ? "text-[var(--vscode-walkthrough-stepTitle\\.foreground)]"
+                : ""
             }`}
           >
             {title}
@@ -356,12 +356,12 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
   return (
     <WizardStep {...props}>
       <div className="mt-4">
-        <p className="text-sm text-[--vscode-editor-foreground]">
+        <p>
           Ollama is an open source tool that allows running AI models locally.
           It is required by Granite.Code.
         </p>
         {isDevspaces && (
-          <p className="text-sm text-[--vscode-editor-foreground]">
+          <p>
             Follow the guide to install Ollama on Red Hat Dev Spaces.
           </p>
         )}
@@ -378,7 +378,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
             </div>
           )}
         {!isDevspaces && installationModes.length > 0 && (
-          <p className="text-sm text-[--vscode-editor-foreground]">
+          <p>
             If you prefer, you can also
             {!isOllamaOutdated &&
              <a href="https://ollama.com/download"> install Ollama manually</a>}
@@ -473,7 +473,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     <WizardStep {...props}>
       {props.isActive && (
         <div className="mt-4">
-          <p className="text-sm text-[--vscode-editor-foreground]">
+          <p>
             Setup will download Granite AI models.<br/>
             Download size: {formatSize(getRequiredSpace(selectedModel, statusByModel))}.
           </p>
@@ -551,7 +551,7 @@ const StartLocalAIStep: React.FC<StepProps> = (props) => {
     <WizardStep {...props}>
       {props.isActive && (
         <div className="mt-4">
-          <p className="text-sm text-[--vscode-editor-foreground]">
+          <p>
             Granite.Code is ready to be used. Try the tutorial to get started.
           </p>
           <VSCodeButton className="mt-4" onClick={handleShowTutorial}>
@@ -783,26 +783,32 @@ const WizardContent: React.FC = () => {
   ];
 
   return (
-    <div className="h-full w-full" role="tablist">
+    <div className="h-full w-full text-[--vscode-foreground]" role="tablist">
       {/* Main container with responsive layout */}
-      <div className="mx-10 max-w-[1400px] px-10 pt-1 md:px-16 md:pt-6">
+      <div className="mx-auto max-w-[1200px] px-10 pt-6 md:px-16 md:pt-24">
         <div className="flex flex-col gap-8 md:flex-row">
           {/* Left panel with text and steps */}
           <div className="max-w-[600px] flex-1">
-            <h2 className="mb-2 text-3xl font-normal text-[--vscode-foreground]">
-              Granite.Code Setup
-            </h2>
-            <p className="mb-4 text-[--vscode-descriptionForeground]">
-              Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance.
-            </p>
-            <p className="mb-4 text-[--vscode-descriptionForeground]">
-              For a good experience, an Apple Silicon Mac or a GPU with at least 10&#x200A;GB of video memory is required.
-            </p>
-            {preselectedModel !== "large" && (
-              <p className="mb-4 text-[--vscode-editorWarning-foreground]">
-              Warning : this device's hardware does not meet the minimum requirements.
-            </p>
-            )}
+            <div className="mb-6">
+              <h2 className="mb-2 text-[40px] font-normal">
+                Granite.Code Setup
+              </h2>
+              <div className="mb-[18px] mt-[18px]">
+                <p className="mb-4">
+                  Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance.
+                </p>
+                <p className="mb-4">
+                  For a good experience, an Apple Silicon Mac or a GPU with at least 10&#x200A;GB of video memory is required.
+                </p>
+                {preselectedModel !== "large" && (
+                  <p className="mb-4 text-[--vscode-editorWarning-foreground]">
+                  Warning : this device's hardware does not meet the minimum requirements.
+                </p>
+                )}
+              </div>
+            </div>
+
+            {/* Steps list */}
 
             <div className="space-y-[1px]">
               {steps.map((step, index) => {
