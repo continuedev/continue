@@ -1,28 +1,70 @@
-export class DiffSnippetsCache {
-  private static instance: DiffSnippetsCache;
-  private cache: Map<number, any> = new Map();
-  private lastTimestamp: number = 0;
+import { IDE } from "../..";
 
-  private constructor() {}
+type GetDiffFn = () => Promise<string[]>;
 
-  public static getInstance(): DiffSnippetsCache {
-    if (!DiffSnippetsCache.instance) {
-      DiffSnippetsCache.instance = new DiffSnippetsCache();
+export class GitDiffCache {
+  private static instance: GitDiffCache | null = null;
+  private cachedDiff: string[] | undefined = undefined;
+  private lastFetchTime: number = 0;
+  private pendingRequest: Promise<string[]> | null = null;
+  private getDiffFn: GetDiffFn;
+  private cacheTimeMs: number;
+
+  private constructor(getDiffFn: GetDiffFn, cacheTimeSeconds: number = 20) {
+    this.getDiffFn = getDiffFn;
+    this.cacheTimeMs = cacheTimeSeconds * 1000;
+  }
+
+  public static getInstance(
+    getDiffFn: GetDiffFn,
+    cacheTimeSeconds?: number,
+  ): GitDiffCache {
+    if (!GitDiffCache.instance) {
+      GitDiffCache.instance = new GitDiffCache(getDiffFn, cacheTimeSeconds);
     }
-    return DiffSnippetsCache.instance;
+    return GitDiffCache.instance;
   }
 
-  public set<T>(timestamp: number, value: T): T {
-    // Clear old cache entry if exists
-    if (this.lastTimestamp !== timestamp) {
-      this.cache.clear();
+  private async getDiffPromise(): Promise<string[]> {
+    try {
+      const diff = await this.getDiffFn();
+      this.cachedDiff = diff;
+      this.lastFetchTime = Date.now();
+      return this.cachedDiff;
+    } finally {
+      this.pendingRequest = null;
     }
-    this.lastTimestamp = timestamp;
-    this.cache.set(timestamp, value);
-    return value;
   }
 
-  public get(timestamp: number): any | undefined {
-    return this.cache.get(timestamp);
+  public async get(): Promise<string[]> {
+    if (
+      this.cachedDiff !== undefined &&
+      Date.now() - this.lastFetchTime < this.cacheTimeMs
+    ) {
+      return this.cachedDiff;
+    }
+
+    // If there's already a request in progress, return that instead of starting a new one
+    if (this.pendingRequest) {
+      return this.pendingRequest;
+    }
+
+    this.pendingRequest = this.getDiffPromise();
+    return this.pendingRequest;
   }
+
+  public invalidate(): void {
+    this.cachedDiff = undefined;
+    this.pendingRequest = null;
+  }
+}
+
+// factory to make diff cache more testable
+export function getDiffFn(ide: IDE): GetDiffFn {
+  return () => ide.getDiff(true);
+}
+
+export async function getDiffsFromCache(ide: IDE): Promise<string[]> {
+  const diffCache = GitDiffCache.getInstance(getDiffFn(ide));
+  return await diffCache.get();
 }

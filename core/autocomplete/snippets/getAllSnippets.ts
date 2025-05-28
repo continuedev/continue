@@ -1,9 +1,9 @@
-import { IDE, IdeInfo } from "../../index";
+import { IDE } from "../../index";
 import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
-import { DiffSnippetsCache } from "./diffSnippetCache";
+import { getDiffsFromCache } from "./diffSnippetCache";
 
 import {
   AutocompleteClipboardSnippet,
@@ -92,44 +92,15 @@ const getClipboardSnippets = async (
 
 const getDiffSnippets = async (
   ide: IDE,
-  ideInfo: IdeInfo | undefined,
 ): Promise<AutocompleteDiffSnippet[]> => {
-  const diffSnippetsCache = DiffSnippetsCache.getInstance();
-  if (ideInfo?.ideType !== "vscode") {
-    // Disabling for non-vscode IDEs for now
-    // See https://github.com/continuedev/continue/issues/4130
-    // https://github.com/continuedev/continue/issues/5819
-    return [];
-  }
-  const currentTimestamp = ide.getLastFileSaveTimestamp
-    ? ide.getLastFileSaveTimestamp()
-    : Math.floor(Date.now() / 10000) * 10000; // Defaults to update once in every 10 seconds
+  const diffs = await getDiffsFromCache(ide);
 
-  // Check cache first
-  const cached = diffSnippetsCache.get(
-    currentTimestamp,
-  ) as AutocompleteDiffSnippet[];
-
-  if (cached) {
-    return cached;
-  }
-
-  let diff: string[] = [];
-  try {
-    diff = await ide.getDiff(true);
-  } catch (e) {
-    console.error("Error getting diff for autocomplete", e);
-  }
-
-  return diffSnippetsCache.set(
-    currentTimestamp,
-    diff.map((item) => {
-      return {
-        content: item,
-        type: AutocompleteSnippetType.Diff,
-      };
-    }),
-  );
+  return diffs.map((item) => {
+    return {
+      content: item,
+      type: AutocompleteSnippetType.Diff,
+    };
+  });
 };
 
 export const getAllSnippets = async ({
@@ -160,7 +131,7 @@ export const getAllSnippets = async ({
     IDE_SNIPPETS_ENABLED
       ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp))
       : [],
-    racePromise(getDiffSnippets(ide, helper.ideInfo)),
+    racePromise(getDiffSnippets(ide)),
     racePromise(getClipboardSnippets(ide)),
   ]);
 

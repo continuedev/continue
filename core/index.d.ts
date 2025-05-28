@@ -776,10 +776,6 @@ export interface IDE {
       }
   >;
 
-  getLastFileSaveTimestamp?(): number;
-
-  updateLastFileSaveTimestamp?(): void;
-
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;
@@ -1141,7 +1137,7 @@ export interface StreamableHTTPOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = 
+export type TransportOptions =
   | StdioOptions
   | WebSocketOptions
   | SSEOptions

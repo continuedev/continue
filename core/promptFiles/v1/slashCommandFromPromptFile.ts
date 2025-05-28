@@ -1,4 +1,5 @@
 import { ContinueSDK, SlashCommand } from "../..";
+import { getDiffsFromCache } from "../../autocomplete/snippets/diffSnippetCache";
 import { renderChatMessage } from "../../util/messageContent";
 import { getLastNPathParts } from "../../util/uri";
 import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
@@ -32,8 +33,8 @@ async function renderPromptV1(
 
   // A few context providers that don't need to be in config.json to work in .prompt files
   if (helpers?.find((helper) => helper[0] === "diff")) {
-    const diff = await context.ide.getDiff(true);
-    inputData.diff = diff.join("\n");
+    const diffs = await getDiffsFromCache(context.ide);
+    inputData.diff = diffs.join("\n");
   }
   if (helpers?.find((helper) => helper[0] === "currentFile")) {
     const currentFile = await context.ide.getCurrentFile();
