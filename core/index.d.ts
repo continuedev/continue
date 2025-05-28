@@ -975,6 +975,7 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
+  config: ContinueConfig;
 }
 
 export interface Tool {
@@ -1147,7 +1148,7 @@ export interface StreamableHTTPOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = 
+export type TransportOptions =
   | StdioOptions
   | WebSocketOptions
   | SSEOptions

@@ -1,5 +1,5 @@
-import { getRequestRuleDescription } from "./requestRule";
 import { RuleWithSource } from "../..";
+import { getRequestRuleDescription } from "./requestRule";
 
 describe("getRequestRuleDescription", () => {
   it("should return no rules message when no agent-requested rules exist", () => {
@@ -25,7 +25,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     expect(result).toBe(
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\nNo rules available."
+      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\nNo rules available.",
     );
   });
 
@@ -68,14 +68,10 @@ describe("getRequestRuleDescription", () => {
 
     const result = getRequestRuleDescription(rules);
 
-    const expected = 
+    const expected =
       "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
-      "Rule: Agent Rule 1\n" +
-      "Description: First agent-requested rule\n" +
-      "Filepath: /path/to/agent-rule1.md\n\n" +
-      "Rule: Agent Rule 2\n" +
-      "Description: Second agent-requested rule\n" +
-      "Filepath: /path/to/agent-rule2.md";
+      "Agent Rule 1: First agent-requested rule\n" +
+      "Agent Rule 2: Second agent-requested rule";
 
     expect(result).toBe(expected);
   });
@@ -93,11 +89,9 @@ describe("getRequestRuleDescription", () => {
 
     const result = getRequestRuleDescription(rules);
 
-    const expected = 
+    const expected =
       "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
-      "Rule: Rule Without Description\n" +
-      "Description: undefined\n" +
-      "Filepath: /path/to/no-desc-rule.md";
+      "Rule Without Description: undefined";
 
     expect(result).toBe(expected);
   });
@@ -115,11 +109,9 @@ describe("getRequestRuleDescription", () => {
 
     const result = getRequestRuleDescription(rules);
 
-    const expected = 
+    const expected =
       "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
-      "Rule: undefined\n" +
-      "Description: Rule without name\n" +
-      "Filepath: /path/to/no-name-rule.md";
+      "undefined: Rule without name";
 
     expect(result).toBe(expected);
   });
@@ -137,11 +129,9 @@ describe("getRequestRuleDescription", () => {
 
     const result = getRequestRuleDescription(rules);
 
-    const expected = 
+    const expected =
       "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
-      "Rule: Rule Without File\n" +
-      "Description: Rule without file path\n" +
-      "Filepath: undefined";
+      "Rule Without File: Rule without file path";
 
     expect(result).toBe(expected);
   });
@@ -168,11 +158,9 @@ describe("getRequestRuleDescription", () => {
 
     const result = getRequestRuleDescription(rules);
 
-    const expected = 
+    const expected =
       "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
-      "Rule: Valid Agent Rule\n" +
-      "Description: This should be included\n" +
-      "Filepath: /path/to/valid-rule.md";
+      "Valid Agent Rule: This should be included";
 
     expect(result).toBe(expected);
   });
@@ -191,7 +179,7 @@ describe("getRequestRuleDescription", () => {
       {
         name: "Rule with array globs",
         description: "This should also be filtered out",
-        source: "rules-block", 
+        source: "rules-block",
         rule: "Some rule",
         alwaysApply: false,
         globs: ["**/*.ts", "**/*.js"],
@@ -209,11 +197,9 @@ describe("getRequestRuleDescription", () => {
 
     const result = getRequestRuleDescription(rules);
 
-    const expected = 
+    const expected =
       "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
-      "Rule: Valid Agent Rule\n" +
-      "Description: This should be included\n" +
-      "Filepath: /path/to/valid-rule.md";
+      "Valid Agent Rule: This should be included";
 
     expect(result).toBe(expected);
   });
@@ -224,7 +210,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     expect(result).toBe(
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\nNo rules available."
+      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\nNo rules available.",
     );
   });
 
@@ -242,11 +228,9 @@ describe("getRequestRuleDescription", () => {
 
     const result = getRequestRuleDescription(rules);
 
-    const expected = 
+    const expected =
       "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
-      "Rule: Single Rule\n" +
-      "Description: The only agent-requested rule\n" +
-      "Filepath: /path/to/single-rule.md";
+      "Single Rule: The only agent-requested rule";
 
     expect(result).toBe(expected);
   });
