@@ -44,7 +44,7 @@ export class LocalPlatformClient implements PlatformClient {
       return dotEnv[fqsn.secretName];
     } catch (error) {
       console.warn(
-        `Error reading ~/.continue/.env file: ${error instanceof Error ? error.message : String(error)}`,
+        `Error reading ~/.granite-code/.env file: ${error instanceof Error ? error.message : String(error)}`,
       );
       return undefined;
     }

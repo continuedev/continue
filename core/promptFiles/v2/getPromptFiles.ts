@@ -4,7 +4,7 @@ import { readAllGlobalPromptFiles } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
 import { DEFAULT_PROMPTS_FOLDER_V1 } from "../v1";
 
-export const DEFAULT_PROMPTS_FOLDER_V2 = ".continue/prompts";
+export const DEFAULT_PROMPTS_FOLDER_V2 = ".granite-code/prompts";
 export async function getPromptFilesFromDir(
   ide: IDE,
   dir: string,
@@ -55,7 +55,7 @@ export async function getAllPromptFiles(
     await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
-  // Also read from ~/.continue/.prompts
+  // Also read from ~/.granite-code/.prompts
   promptFiles.push(...readAllGlobalPromptFiles());
 
   return await Promise.all(

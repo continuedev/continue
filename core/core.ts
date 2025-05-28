@@ -843,7 +843,7 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml"))
+          (uri.includes(".granite-code") && uri.endsWith(".yaml"))
         ) {
           await this.configHandler.reloadConfig();
         } else if (

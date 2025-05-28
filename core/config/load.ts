@@ -798,7 +798,7 @@ async function tryBuildConfigTs() {
     }
   } catch (e) {
     console.log(
-      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
+      `Build error. Please check your ~/.granite-code/config.ts file: ${e}`,
     );
   }
 }
@@ -982,5 +982,6 @@ export {
   intermediateToFinalConfig,
   loadContinueConfigFromJson,
   writeContinueConfig,
-  type BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig
 };
+
