@@ -43,12 +43,12 @@ export const editFileTool: Tool = {
 - filepath: the relative filepath to the file.
 - changes: ${CHANGES_DESCRIPTION}
 For example:`,
-    `<filepath>path/to/the_file.ts</filepath><contents>// ... existing code ...
+    `<filepath>path/to/the_file.ts</filepath><changes>// ... existing code ...
 
     function subtract(a: number, b: number): number {
       return a - b;
     }
 
-    // ... rest of code ...</contents>`,
+    // ... rest of code ...</changes>`,
   ),
 };

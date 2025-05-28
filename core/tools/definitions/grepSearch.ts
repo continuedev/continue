@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../instructionTools/buildXmlToolsSystemMessage";
 
 export const grepSearchTool: Tool = {
   type: "function",
@@ -25,4 +26,9 @@ export const grepSearchTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.GrepSearch,
+    `To perform a grep search within the project, call the ${BuiltInToolNames.GrepSearch} tool with the query pattern to match. For example:`,
+    `<query>.*main_services.*</query>`,
+  ),
 };
