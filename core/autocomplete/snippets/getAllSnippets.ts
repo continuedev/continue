@@ -3,6 +3,7 @@ import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
+import { DiffSnippetsCache } from "./diffSnippetCache";
 
 import {
   AutocompleteClipboardSnippet,
@@ -23,34 +24,13 @@ export interface SnippetPayload {
   clipboardSnippets: AutocompleteClipboardSnippet[];
 }
 
-function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
+function racePromise<T>(promise: Promise<T[]>, timeout = 100): Promise<T[]> {
   const timeoutPromise = new Promise<T[]>((resolve) => {
-    setTimeout(() => resolve([]), 100);
+    setTimeout(() => resolve([]), timeout);
   });
 
   return Promise.race([promise, timeoutPromise]);
 }
-
-class DiffSnippetsCache {
-  private cache: Map<number, any> = new Map();
-  private lastTimestamp: number = 0;
-
-  public set<T>(timestamp: number, value: T): T {
-    // Clear old cache entry if exists
-    if (this.lastTimestamp !== timestamp) {
-      this.cache.clear();
-    }
-    this.lastTimestamp = timestamp;
-    this.cache.set(timestamp, value);
-    return value;
-  }
-
-  public get(timestamp: number): any | undefined {
-    return this.cache.get(timestamp);
-  }
-}
-
-const diffSnippetsCache = new DiffSnippetsCache();
 
 // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
 // or they might separately track recently edited ranges)
@@ -114,6 +94,7 @@ const getDiffSnippets = async (
   ide: IDE,
   ideInfo: IdeInfo | undefined,
 ): Promise<AutocompleteDiffSnippet[]> => {
+  const diffSnippetsCache = DiffSnippetsCache.getInstance();
   if (ideInfo?.ideType !== "vscode") {
     // Disabling for non-vscode IDEs for now
     // See https://github.com/continuedev/continue/issues/4130
