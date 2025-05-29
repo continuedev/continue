@@ -69,7 +69,7 @@ export class WatsonXApi implements BaseLlmApi {
 
       const wxToken = (await (
         await customFetch(this.config.requestOptions)(
-          `${this.apiBase}/icp4d-api/v1/authorize`,
+          new URL("icp4d-api/v1/authorize", this.apiBase),
           {
             method: "POST",
             headers: {
@@ -77,8 +77,8 @@ export class WatsonXApi implements BaseLlmApi {
               Accept: "application/json",
             },
             body: JSON.stringify({
-              username,
-              api_key,
+              username: username?.trim(),
+              api_key: api_key?.trim(),
             }),
           },
         )
