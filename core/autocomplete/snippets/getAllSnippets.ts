@@ -131,7 +131,7 @@ export const getAllSnippets = async ({
     IDE_SNIPPETS_ENABLED
       ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp))
       : [],
-    racePromise(getDiffSnippets(ide)),
+    [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     racePromise(getClipboardSnippets(ide)),
   ]);
 

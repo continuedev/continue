@@ -10,7 +10,7 @@ export class GitDiffCache {
   private getDiffFn: GetDiffFn;
   private cacheTimeMs: number;
 
-  private constructor(getDiffFn: GetDiffFn, cacheTimeSeconds: number = 20) {
+  private constructor(getDiffFn: GetDiffFn, cacheTimeSeconds: number = 60) {
     this.getDiffFn = getDiffFn;
     this.cacheTimeMs = cacheTimeSeconds * 1000;
   }
