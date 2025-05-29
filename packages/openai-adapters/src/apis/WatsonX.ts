@@ -35,14 +35,6 @@ export class WatsonXApi implements BaseLlmApi {
     this.deploymentId = config.env.deploymentId;
   }
 
-  private async getHeaders(): Promise<Record<string, string>> {
-    const bearer = await this.getBearerToken();
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${bearer.token}`,
-    };
-  }
-
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
     if (this.apiBase?.includes("cloud.ibm.com")) {
       // watsonx SaaS
@@ -183,6 +175,16 @@ export class WatsonXApi implements BaseLlmApi {
     }
 
     return payload;
+  }
+
+  private async getHeaders(): Promise<Record<string, string>> {
+    const bearer = await this.getBearerToken();
+    const isZenApiKey = bearer.expiration === -1;
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `${isZenApiKey ? "ZenApiKey" : "Bearer"} ${bearer.token}`,
+    };
   }
 
   async chatCompletionNonStream(

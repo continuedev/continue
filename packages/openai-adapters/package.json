@@ -12,7 +12,6 @@
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "dependencies": {
-    "@azure/openai": "^1.0.0-beta.12",
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/config-yaml": "^1.0.51",
     "@continuedev/fetch": "^1.0.11",
