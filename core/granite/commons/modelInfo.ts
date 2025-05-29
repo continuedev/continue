@@ -13,6 +13,11 @@ export const DEFAULT_MODEL_INFO = new Map<string, ModelInfo>();
     digest: "",
   },
   {
+    id: "ibm/granite3.3:2b-base",
+    size: 1.5 * GB,
+    digest: "",
+  },
+  {
     id: "granite3.3:8b",
     size: 4.9 * GB,
     digest: "",

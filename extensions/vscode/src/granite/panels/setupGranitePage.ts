@@ -1,13 +1,11 @@
 import { LocalModelSize } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import {
-  DEFAULT_GRANITE_EMBEDDING_MODEL,
-  DEFAULT_MODEL_GRANITE_LARGE,
-  DEFAULT_MODEL_GRANITE_SMALL,
+  DEFAULT_GRANITE_MODEL_IDS_LARGE,
+  DEFAULT_GRANITE_MODEL_IDS_SMALL,
 } from "core/config/default";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { GRANITE_ONBOARDING_INCOMPLETE_KEY } from "core/granite/commons/constants";
-import { DOWNLOADABLE_MODELS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
 import { checkMinimumServerVersion } from "core/granite/commons/versions";
@@ -401,13 +399,13 @@ export class SetupGranitePage {
     this._disposables.push(this.modelInstallCanceller);
     try {
       this.wizardState.selectedModelSize = modelSize;
-      const graniteModel =
+      const modelsToPull =
         modelSize === "large"
-          ? DEFAULT_MODEL_GRANITE_LARGE
-          : DEFAULT_MODEL_GRANITE_SMALL;
+          ? DEFAULT_GRANITE_MODEL_IDS_LARGE
+          : DEFAULT_GRANITE_MODEL_IDS_SMALL;
 
       const result = await this.server.pullModels(
-        [graniteModel.model, "nomic-embed-text:latest"],
+        modelsToPull,
         this.modelInstallCanceller.signal,
         reportProgress,
       );
@@ -464,10 +462,12 @@ export class SetupGranitePage {
     return { serverState, timeout };
   }
 
-  async getStatusByModel(): Promise<Map<string, ModelStatus>> {
+  async getStatusByModel(
+    modelIds: string[],
+  ): Promise<Map<string, ModelStatus>> {
     const statusByModel: Map<string, ModelStatus> = new Map();
     await Promise.all(
-      DOWNLOADABLE_MODELS.map(async (id) => {
+      modelIds.map(async (id) => {
         const status = await this.server.getModelStatus(id);
         statusByModel.set(id, status);
       }),
@@ -477,9 +477,10 @@ export class SetupGranitePage {
 
   async publishStatus(webview: Webview) {
     // console.log("Received fetchStatus msg " + debounceStatus);
+    const modelIds = DEFAULT_GRANITE_MODEL_IDS_LARGE;
     const [serverState, statusByModel] = await Promise.all([
       this.server.getState(),
-      this.getStatusByModel(),
+      this.getStatusByModel(modelIds),
     ]);
     const statusByModelObject = Object.fromEntries(statusByModel); // Convert Map to Object
     const serverVersion = serverState.version;
@@ -487,8 +488,9 @@ export class SetupGranitePage {
       serverState.status === ServerStatus.started ||
       serverState.status === ServerStatus.stopped);
 
-    const allModelsInstalled = statusByModel.get(DEFAULT_MODEL_GRANITE_LARGE.model) === ModelStatus.installed
-      && statusByModel.get(DEFAULT_GRANITE_EMBEDDING_MODEL.model) === ModelStatus.installed;
+    const allModelsInstalled = modelIds.every(
+      (id) => statusByModel.get(id) === ModelStatus.installed,
+    );
 
     this.wizardState.stepStatuses[MODELS_STEP] = allModelsInstalled;
 

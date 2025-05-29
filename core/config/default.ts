@@ -1,7 +1,7 @@
 import {
-    AssistantUnrolled,
-    ConfigYaml,
-    ModelConfig,
+  AssistantUnrolled,
+  ConfigYaml,
+  ModelConfig,
 } from "@continuedev/config-yaml";
 
 export const defaultContextProvidersVsCode = [
@@ -61,21 +61,18 @@ export const DEFAULT_MODEL_GRANITE_LARGE: ModelConfig = {
   ...BASE_GRANITE_CONFIG,
 };
 
-export const DEFAULT_GRANITE_COMPLETION_MODEL_LARGE: ModelConfig = {
-  ...DEFAULT_MODEL_GRANITE_LARGE,
-  name: DEFAULT_MODEL_GRANITE_LARGE.name + "::autocomplete",
+// We optimize for speed over quality by using the 2b-base
+// model which is *almost* as good as the 8b-instruct model,
+// though not as good as the 8b-base model.
+export const DEFAULT_GRANITE_COMPLETION_MODEL: ModelConfig = {
+  ...BASE_GRANITE_CONFIG,
+  name: "granite3.3:2b-base",
+  provider: "ollama",
+  model: "ibm/granite3.3:2b-base",
   defaultCompletionOptions: {
-    ...DEFAULT_MODEL_GRANITE_LARGE.defaultCompletionOptions,
-    maxTokens: 100,
-  },
-  roles: ["autocomplete"],
-};
-
-export const DEFAULT_GRANITE_COMPLETION_MODEL_SMALL: ModelConfig = {
-  ...DEFAULT_MODEL_GRANITE_SMALL,
-  name: DEFAULT_MODEL_GRANITE_SMALL.name + "::autocomplete",
-  defaultCompletionOptions: {
-    ...DEFAULT_MODEL_GRANITE_SMALL.defaultCompletionOptions,
+    ...BASE_GRANITE_CONFIG.defaultCompletionOptions,
+    // This needs to be bigger than maxPromptTokens (1024) + maxTokens (100)
+    contextLength: 1536,
     maxTokens: 100,
   },
   roles: ["autocomplete"],
@@ -88,16 +85,36 @@ export const DEFAULT_GRANITE_EMBEDDING_MODEL: ModelConfig = {
   roles: ["embed"],
 };
 
+export const DEFAULT_GRANITE_MODEL_IDS_LARGE = [
+  DEFAULT_MODEL_GRANITE_LARGE.model,
+  DEFAULT_GRANITE_COMPLETION_MODEL.model,
+  DEFAULT_GRANITE_EMBEDDING_MODEL.model,
+];
+
+export const DEFAULT_GRANITE_MODEL_IDS_SMALL = [
+  DEFAULT_MODEL_GRANITE_SMALL.model,
+  DEFAULT_GRANITE_COMPLETION_MODEL.model,
+  DEFAULT_GRANITE_EMBEDDING_MODEL.model,
+];
+
 export const defaultConfigGraniteLarge: Required<
   Pick<AssistantUnrolled, "models" | "context">
 > = {
-  models: [DEFAULT_MODEL_GRANITE_LARGE, DEFAULT_GRANITE_COMPLETION_MODEL_LARGE, DEFAULT_GRANITE_EMBEDDING_MODEL],
+  models: [
+    DEFAULT_MODEL_GRANITE_LARGE,
+    DEFAULT_GRANITE_COMPLETION_MODEL,
+    DEFAULT_GRANITE_EMBEDDING_MODEL,
+  ],
   context: defaultContextProvidersVsCode,
 };
 
 export const defaultConfigGraniteSmall: Required<
   Pick<AssistantUnrolled, "models" | "context">
 > = {
-  models: [DEFAULT_MODEL_GRANITE_SMALL, DEFAULT_GRANITE_COMPLETION_MODEL_SMALL, DEFAULT_GRANITE_EMBEDDING_MODEL],
+  models: [
+    DEFAULT_MODEL_GRANITE_SMALL,
+    DEFAULT_GRANITE_COMPLETION_MODEL,
+    DEFAULT_GRANITE_EMBEDDING_MODEL,
+  ],
   context: defaultContextProvidersVsCode,
 };
