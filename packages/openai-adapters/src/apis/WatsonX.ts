@@ -179,11 +179,12 @@ export class WatsonXApi implements BaseLlmApi {
 
   private async getHeaders(): Promise<Record<string, string>> {
     const bearer = await this.getBearerToken();
-    const isZenApiKey = bearer.expiration === -1;
+    // const isZenApiKey = bearer.expiration === -1;
 
     return {
       "Content-Type": "application/json",
-      Authorization: `${isZenApiKey ? "ZenApiKey" : "Bearer"} ${bearer.token}`,
+      // Authorization: `${isZenApiKey ? "ZenApiKey" : "Bearer"} ${bearer.token}`,
+      Authorization: `Bearer ${bearer.token}`,
     };
   }
 
