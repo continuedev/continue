@@ -85,7 +85,7 @@ export class WatsonXApi implements BaseLlmApi {
       ).json()) as any;
 
       return {
-        token: wxToken["access_token"],
+        token: wxToken["access_token"] ?? wxToken["token"],
         expiration: 0,
       };
       // } else if (!this.config.apiKey?.includes(":")) {
