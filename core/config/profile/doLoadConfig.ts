@@ -219,6 +219,26 @@ export default async function doLoadConfig(options: {
     }
   });
 
+  const ruleCounts: Record<string, number> = {};
+  newConfig.rules.forEach((rule) => {
+    if (rule.name) {
+      if (ruleCounts[rule.name]) {
+        ruleCounts[rule.name] = ruleCounts[rule.name] + 1;
+      } else {
+        ruleCounts[rule.name] = 1;
+      }
+    }
+  });
+
+  Object.entries(ruleCounts).forEach(([ruleName, count]) => {
+    if (count > 1) {
+      errors!.push({
+        fatal: false,
+        message: `Duplicate (${count}) rules named "${ruleName}" detected. This may cause unexpected behavior`,
+      });
+    }
+  });
+
   newConfig.allowAnonymousTelemetry =
     newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());
 
