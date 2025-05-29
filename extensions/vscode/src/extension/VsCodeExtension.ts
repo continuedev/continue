@@ -244,6 +244,7 @@ export class VsCodeExtension {
       this.consoleView,
       this.configHandler,
       this.verticalDiffManager,
+      // This is expected to exist, but it's no longer used? Can I remove it?
       this.core.continueServerClientPromise,
       this.battery,
       quickEdit,
