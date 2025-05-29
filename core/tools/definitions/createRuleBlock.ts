@@ -16,7 +16,7 @@ export const createRuleBlock: Tool = {
       "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently. To modify existing rules, use the edit tool instead.",
     parameters: {
       type: "object",
-      required: ["name", "rule"],
+      required: ["name", "rule", "alwaysApply", "description"],
       properties: {
         name: {
           type: "string",
@@ -36,6 +36,11 @@ export const createRuleBlock: Tool = {
           type: "string",
           description:
             "Optional file patterns to which this rule applies (e.g. ['**/*.{ts,tsx}'] or ['src/**/*.ts', 'tests/**/*.ts'])",
+        },
+        alwaysApply: {
+          type: "boolean",
+          description:
+            "Whether this rule should always be applied regardless of file pattern matching",
         },
       },
     },

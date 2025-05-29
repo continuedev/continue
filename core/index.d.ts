@@ -1135,7 +1135,17 @@ export interface SSEOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+export interface StreamableHTTPOptions {
+  type: "streamable-http";
+  url: string;
+  requestOptions?: RequestOptions;
+}
+
+export type TransportOptions = 
+  | StdioOptions
+  | WebSocketOptions
+  | SSEOptions
+  | StreamableHTTPOptions;
 
 export interface MCPOptions {
   name: string;
@@ -1324,6 +1334,11 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   modelContextProtocolServers?: ExperimentalMCPOptions[];
+
+  /**
+   * If enabled, will add the current file as context.
+   */
+  useCurrentFileAsContext?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1546,4 +1561,5 @@ export interface RuleWithSource {
   rule: string;
   description?: string;
   ruleFile?: string;
+  alwaysApply?: boolean;
 }

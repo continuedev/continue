@@ -76,7 +76,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   const Icon =
     props.toolCall.function?.name &&
     toolCallIcons[props.toolCall.function.name];
-  const icon = Icon ? <Icon /> : undefined 
+  const icon = Icon ? <Icon /> : undefined;
 
   return (
     <ToolCallDisplay

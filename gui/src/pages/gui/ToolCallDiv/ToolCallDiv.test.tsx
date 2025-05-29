@@ -32,9 +32,7 @@ const testToolCallOutputWithId: ContextItemWithId[] = testToolCallOutput.map(
   (tool) => ({ ...tool, id: { itemId: "testid", providerTitle: "test" } }),
 );
 
-const getToolCallState = (
-  status: ToolCallState["status"],
-) => {
+const getToolCallState = (status: ToolCallState["status"]) => {
   return {
     toolCallId: "1",
     toolCall: structuredClone(testToolCall),
@@ -69,7 +67,7 @@ describe("Tool Call test", () => {
         />
       </Provider>,
     );
-    expect(screen.getByTestId("tool-call-status")).toBeInTheDocument();
+    expect(screen.getByTestId("tool-call-title")).toBeInTheDocument();
   });
 
   it("should the toggle icon if there are args", () => {

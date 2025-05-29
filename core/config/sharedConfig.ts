@@ -18,6 +18,7 @@ export const sharedConfigSchema = z
     useChromiumForDocsCrawling: z.boolean(),
     readResponseTTS: z.boolean(),
     promptPath: z.string(),
+    useCurrentFileAsContext: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -165,6 +166,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.readResponseTTS !== undefined) {
     configCopy.experimental.readResponseTTS = sharedConfig.readResponseTTS;
+  }
+  if (sharedConfig.useCurrentFileAsContext !== undefined) {
+    configCopy.experimental.useCurrentFileAsContext =
+      sharedConfig.useCurrentFileAsContext;
   }
 
   return configCopy;

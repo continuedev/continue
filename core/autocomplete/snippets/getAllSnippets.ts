@@ -1,4 +1,4 @@
-import { IDE } from "../../index";
+import { IDE, IdeInfo } from "../../index";
 import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
@@ -112,13 +112,22 @@ const getClipboardSnippets = async (
 
 const getDiffSnippets = async (
   ide: IDE,
+  ideInfo: IdeInfo | undefined,
 ): Promise<AutocompleteDiffSnippet[]> => {
-  const currentTimestamp = ide.getLastFileSaveTimestamp ?
-    ide.getLastFileSaveTimestamp() :
-    Math.floor(Date.now() / 10000) * 10000; // Defaults to update once in every 10 seconds
+  if (ideInfo?.ideType !== "vscode") {
+    // Disabling for non-vscode IDEs for now
+    // See https://github.com/continuedev/continue/issues/4130
+    // https://github.com/continuedev/continue/issues/5819
+    return [];
+  }
+  const currentTimestamp = ide.getLastFileSaveTimestamp
+    ? ide.getLastFileSaveTimestamp()
+    : Math.floor(Date.now() / 10000) * 10000; // Defaults to update once in every 10 seconds
 
   // Check cache first
-  const cached = diffSnippetsCache.get(currentTimestamp) as AutocompleteDiffSnippet[];
+  const cached = diffSnippetsCache.get(
+    currentTimestamp,
+  ) as AutocompleteDiffSnippet[];
 
   if (cached) {
     return cached;
@@ -131,13 +140,15 @@ const getDiffSnippets = async (
     console.error("Error getting diff for autocomplete", e);
   }
 
-  return diffSnippetsCache.set(currentTimestamp, diff.map((item) => {
-    return {
-      content: item,
-      type: AutocompleteSnippetType.Diff,
-    };
-  }));
-
+  return diffSnippetsCache.set(
+    currentTimestamp,
+    diff.map((item) => {
+      return {
+        content: item,
+        type: AutocompleteSnippetType.Diff,
+      };
+    }),
+  );
 };
 
 export const getAllSnippets = async ({
@@ -162,9 +173,13 @@ export const getAllSnippets = async ({
     clipboardSnippets,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
-    racePromise(contextRetrievalService.getSnippetsFromImportDefinitions(helper)),
-    IDE_SNIPPETS_ENABLED ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)) : [],
-    racePromise(getDiffSnippets(ide)),
+    racePromise(
+      contextRetrievalService.getSnippetsFromImportDefinitions(helper),
+    ),
+    IDE_SNIPPETS_ENABLED
+      ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp))
+      : [],
+    racePromise(getDiffSnippets(ide, helper.ideInfo)),
     racePromise(getClipboardSnippets(ide)),
   ]);
 

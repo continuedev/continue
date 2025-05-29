@@ -153,15 +153,14 @@ const AssistantSelectOption = ({
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, refreshProfiles } = useAuth();
   const currentOrg = useAppSelector(selectCurrentOrg);
   const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
   const [loading, setLoading] = useState(false);
 
-  const { profiles, session, login } = useAuth();
-  const navigate = useNavigate();
+  const { profiles, session, login, selectedProfile, refreshProfiles } =
+    useAuth();
 
   function close() {
     if (buttonRef.current) {
@@ -218,6 +217,11 @@ export default function AssistantSelect() {
   }, [currentOrg, selectedProfile]);
 
   const cycleOrgs = () => {
+    if (!session) {
+      void login(false);
+      return;
+    }
+
     const orgIds = orgs.map((org) => org.id);
     if (orgIds.length < 2) {
       return;
@@ -358,7 +362,7 @@ export default function AssistantSelect() {
               />
 
               <div
-                className="text-description flex items-center justify-between px-2 py-1"
+                className="text-description flex items-center justify-between gap-1.5 px-2 py-1"
                 style={{
                   fontSize: tinyFont,
                 }}
