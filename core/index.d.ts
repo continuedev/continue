@@ -1141,7 +1141,7 @@ export interface StreamableHTTPOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = 
+export type TransportOptions =
   | StdioOptions
   | WebSocketOptions
   | SSEOptions
@@ -1174,9 +1174,18 @@ export interface MCPPrompt {
 // Leaving here to ideate on
 // export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
 
+// https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
 export interface MCPResource {
   name: string;
   uri: string;
+  description?: string;
+  mimeType?: string;
+}
+
+// https://modelcontextprotocol.io/docs/concepts/resources#resource-templates
+export interface MCPResourceTemplate {
+  uriTemplate: string;
+  name: string;
   description?: string;
   mimeType?: string;
 }
@@ -1197,6 +1206,7 @@ export interface MCPServerStatus extends MCPOptions {
   prompts: MCPPrompt[];
   tools: MCPTool[];
   resources: MCPResource[];
+  resourceTemplates: MCPResourceTemplate[];
 }
 
 export interface ContinueUIConfig {
