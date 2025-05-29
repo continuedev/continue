@@ -176,12 +176,21 @@ export default async function doLoadConfig(options: {
       );
       newConfig.slashCommands.push(...serverSlashCommands);
 
-      const submenuItems = server.resources.map((resource) => ({
-        title: resource.name,
-        description: resource.description ?? resource.name,
-        id: resource.uri,
-        icon: server.faviconUrl,
-      }));
+      const submenuItems = server.resources
+        .map((resource) => ({
+          title: resource.name,
+          description: resource.description ?? resource.name,
+          id: resource.uri,
+          icon: server.faviconUrl,
+        }))
+        .concat(
+          server.resourceTemplates.map((template) => ({
+            title: template.name,
+            description: template.description ?? template.name,
+            id: template.uriTemplate,
+            icon: server.faviconUrl,
+          })),
+        );
       if (submenuItems.length > 0) {
         const serverContextProvider = new MCPContextProvider({
           submenuItems,
