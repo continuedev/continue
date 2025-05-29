@@ -1,7 +1,7 @@
 import { LocalModelSize } from "core";
 import {
-  DEFAULT_MODEL_GRANITE_LARGE,
-  DEFAULT_MODEL_GRANITE_SMALL,
+  DEFAULT_GRANITE_MODEL_IDS_LARGE,
+  DEFAULT_GRANITE_MODEL_IDS_SMALL,
 } from "core/config/default";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { ProgressData } from "core/granite/commons/progressData";
@@ -68,11 +68,10 @@ export class ModelUpdater implements Disposable {
       const type = workspace
         .getConfiguration(EXTENSION_NAME)
         .get<LocalModelSize>("modelSize");
-      const graniteModel =
+      const modelsToCheck =
         type === "large"
-          ? DEFAULT_MODEL_GRANITE_LARGE
-          : DEFAULT_MODEL_GRANITE_SMALL;
-      const modelsToCheck = [graniteModel.model, "nomic-embed-text:latest"];
+          ? DEFAULT_GRANITE_MODEL_IDS_LARGE
+          : DEFAULT_GRANITE_MODEL_IDS_SMALL;
 
       const modelsToUpdate = await Promise.all(
         modelsToCheck.map(async (model) => {

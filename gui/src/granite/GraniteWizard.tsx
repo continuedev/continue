@@ -1,7 +1,7 @@
 import { LocalModelSize } from "core";
 import {
-  DEFAULT_MODEL_GRANITE_LARGE,
-  DEFAULT_MODEL_GRANITE_SMALL
+  DEFAULT_GRANITE_MODEL_IDS_LARGE,
+  DEFAULT_GRANITE_MODEL_IDS_SMALL,
 } from "core/config/default";
 import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
 import { ProgressData } from "core/granite/commons/progressData";
@@ -839,11 +839,10 @@ function getRequiredSpace(
   selectedModel: LocalModelSize,
   statusByModel: Map<string, ModelStatus>,
 ): number {
-  const graniteModel =
+  const models =
     selectedModel === "large"
-      ? DEFAULT_MODEL_GRANITE_LARGE
-      : DEFAULT_MODEL_GRANITE_SMALL;
-  const models: string[] = [graniteModel.model, "nomic-embed-text:latest"];
+      ? DEFAULT_GRANITE_MODEL_IDS_LARGE
+      : DEFAULT_GRANITE_MODEL_IDS_SMALL;
   let missingModels = models
     .filter((model) => statusByModel.get(model) !== ModelStatus.installed);
 

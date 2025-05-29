@@ -52,8 +52,13 @@ export async function getRemoteModelInfo(
     signal?: AbortSignal,
   ): Promise<ModelInfo | undefined> {
     const start = Date.now();
-    const [modelName, tag = "latest"] = modelId.split(":");
-    const url = `https://registry.ollama.ai/v2/library/${modelName}/manifests/${tag}`;
+
+    const [namespacedModelName, tag = "latest"] = modelId.split(":");
+    const parts = namespacedModelName.split("/");
+    const [namespace, modelName] =
+      parts.length === 1 ? ["library", ...parts] : parts;
+
+    const url = `https://registry.ollama.ai/v2/${namespace}/${modelName}/manifests/${tag}`;
     try {
       const sig = signal ? signal : AbortSignal.timeout(3000);
       const response = await fetch(url, { signal: sig });

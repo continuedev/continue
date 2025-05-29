@@ -12,8 +12,12 @@ export async function getRemoteModelInfo(
     return cache.get(modelId);
   }
   const start = Date.now();
-  const [modelName, tag] = modelId.split(":");
-  const url = `https://registry.ollama.ai/v2/library/${modelName}/manifests/${tag}`;
+  const [namespacedModelName, tag] = modelId.split(":");
+  const parts = namespacedModelName.split("/");
+  const [namespace, modelName] =
+    parts.length === 1 ? ["library", ...parts] : parts;
+
+  const url = `https://registry.ollama.ai/v2/${namespace}/${modelName}/manifests/${tag}`;
   try {
     const sig = signal ? signal : AbortSignal.timeout(3000);
     const response = await fetch(url, { signal: sig });
