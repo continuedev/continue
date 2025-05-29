@@ -836,6 +836,7 @@ export interface ContinueSDK {
   config: ContinueConfig;
   fetch: FetchFunction;
   completionOptions?: LLMFullCompletionOptions;
+  abortController: AbortController;
 }
 
 export interface SlashCommand {
@@ -1141,7 +1142,7 @@ export interface StreamableHTTPOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = 
+export type TransportOptions =
   | StdioOptions
   | WebSocketOptions
   | SSEOptions
