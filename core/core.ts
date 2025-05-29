@@ -53,6 +53,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
@@ -61,7 +62,6 @@ import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { StreamAbortManager } from "./util/abortManager";
 
 export class Core {
   configHandler: ConfigHandler;
@@ -509,6 +509,11 @@ export class Core {
         throw new Error("No model selected");
       }
 
+      const abortManager = ApplyAbortManager.getInstance();
+      const abortController = abortManager.get(
+        data.fileUri ?? "current-file-stream",
+      ); // not super important since currently cancelling apply will cancel all streams it's one file at a time
+
       return streamDiffLines({
         highlighted: data.highlighted,
         prefix: data.prefix,
@@ -522,13 +527,13 @@ export class Core {
         language: data.language,
         onlyOneInsertion: false,
         overridePrompt: undefined,
-        abortControllerId: data.fileUri ?? "current-file-stream", // not super important since currently cancelling apply will cancel all streams it's one file at a time
+        abortController,
       });
     });
 
     on("cancelApply", async (msg) => {
-      const abortManager = StreamAbortManager.getInstance();
-      abortManager.clear();
+      const abortManager = ApplyAbortManager.getInstance();
+      abortManager.clear(); // for now abort all streams
     });
 
     on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
