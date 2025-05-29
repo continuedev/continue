@@ -95,11 +95,9 @@ describe("Tool Call test", () => {
     );
     const toggleButton = screen.getByTestId("tools-args-toggle");
     act(() => toggleButton.click());
-    expect(screen.getByTestId("tools-args-and-output")).toBeInTheDocument();
+    expect(screen.getByTestId("tool-call-args")).toBeInTheDocument();
     act(() => toggleButton.click());
-    expect(
-      screen.queryByTestId("tools-args-and-output"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("tools-call-args")).not.toBeInTheDocument();
   });
 
   it("should contain the tool arguments and output", () => {
@@ -115,12 +113,15 @@ describe("Tool Call test", () => {
     );
     const toggleButton = screen.getByTestId("tools-args-toggle");
     act(() => toggleButton.click());
-    expect(screen.getByTestId("tools-args-and-output")).toBeInTheDocument();
-    expect(screen.getByText(testToolArgs.query)).toBeInTheDocument();
+    expect(screen.getByTestId("tool-call-args")).toBeInTheDocument();
+    expect(screen.getByTestId("tool-call-output")).toBeInTheDocument();
+    expect(
+      screen.getByText('"' + testToolArgs.query + '"'),
+    ).toBeInTheDocument();
     expect(screen.getByText(testToolCallOutput[0].name)).toBeInTheDocument();
   });
 
-  it("should show the context output items even if args are absent", () => {
+  it("should show the tool call output items even if args are absent", () => {
     const modifiedTestToolCall = { ...testToolCall };
     modifiedTestToolCall.function.arguments = undefined as any;
     const modifiedTestToolCallState = getToolCallState("done");
@@ -137,7 +138,8 @@ describe("Tool Call test", () => {
     );
     const toggleButton = screen.getByTestId("tools-args-toggle");
     act(() => toggleButton.click());
-    expect(screen.getByTestId("tools-args-and-output")).toBeInTheDocument();
+    expect(screen.getByTestId("tool-call-output")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-args")).not.toBeInTheDocument();
     expect(screen.queryByText(testToolArgs.query)).not.toBeInTheDocument();
     expect(screen.getByText(testToolCallOutput[0].name)).toBeInTheDocument();
   });
