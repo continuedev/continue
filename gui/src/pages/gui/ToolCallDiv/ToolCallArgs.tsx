@@ -1,8 +1,6 @@
 import { CodeBracketIcon } from "@heroicons/react/24/outline";
-import { ContextItemWithId } from "core";
 import { useMemo } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
-import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 
 interface ArgsToggleIconProps {
   isShowing: boolean;
@@ -33,7 +31,7 @@ export const ArgsToggleIcon = ({
         <CodeBracketIcon className="h-2.5 w-2.5 flex-shrink-0 opacity-60" />
       </div>
       <ToolTip id={argsTooltipId}>
-        {isShowing ? "Hide args" : "Show args"}
+        {isShowing ? "Hide args and output" : "Show args and output"}
       </ToolTip>
     </>
   );
@@ -42,15 +40,10 @@ export const ArgsToggleIcon = ({
 interface ArgsItemsProps {
   isShowing: boolean;
   args: [string, string][];
-  output: ContextItemWithId[];
 }
 
-export const ArgsAndOutputItems = ({
-  args,
-  isShowing,
-  output,
-}: ArgsItemsProps) => {
-  if (args.length === 0 && output.length === 0) {
+export const ArgsItems = ({ args, isShowing }: ArgsItemsProps) => {
+  if (args.length === 0) {
     return null;
   }
 
@@ -61,7 +54,7 @@ export const ArgsAndOutputItems = ({
   return (
     <div
       className="ml-5 mr-2 mt-1 flex flex-col text-xs"
-      data-testid="tools-args-and-output"
+      data-testid="tool-call-args"
     >
       {args.map(([key, value]) => (
         <div key={key} className="flex flex-row items-center gap-2 py-0.5">
@@ -69,15 +62,6 @@ export const ArgsAndOutputItems = ({
           <code className="line-clamp-1 break-all">
             {JSON.stringify(value)}
           </code>
-        </div>
-      ))}
-      {output?.map((outputItem) => (
-        <div
-          key={outputItem.name}
-          className="flex flex-row items-center gap-2 py-0.5"
-        >
-          <span className="text-lightgray">Output:</span>
-          <ContextItemsPeekItem contextItem={outputItem} />
         </div>
       ))}
     </div>

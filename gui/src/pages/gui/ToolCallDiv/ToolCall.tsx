@@ -1,6 +1,7 @@
 import { ContextItemWithId, Tool, ToolCallState } from "core";
 import { useMemo, useState } from "react";
-import { ArgsAndOutputItems, ArgsToggleIcon } from "./ToolCallArgs";
+import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
+import { OutputItems } from "./ToolCallOutput";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 
 interface ToolCallDisplayProps {
@@ -49,12 +50,9 @@ export function ToolCallDisplay({
               />
             ) : null}
           </div>
+          {argsExpanded && <ArgsItems args={args} isShowing={argsExpanded} />}
           {argsExpanded && (
-            <ArgsAndOutputItems
-              args={args}
-              output={contextItems}
-              isShowing={argsExpanded}
-            />
+            <OutputItems outputItems={contextItems} isShowing={argsExpanded} />
           )}
         </div>
         <div>{children}</div>
