@@ -22,7 +22,7 @@ import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
 import { UriEventHandler } from "./uriHandler";
 
-const AUTH_NAME = "Continue";
+const AUTH_NAME = "Granite.Code";
 
 const controlPlaneEnv = getControlPlaneEnvSync(true ? "production" : "none");
 

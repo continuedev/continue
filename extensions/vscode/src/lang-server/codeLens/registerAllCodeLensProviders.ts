@@ -122,11 +122,6 @@ export function registerAllCodeLensProviders(
     new providers.SuggestionsCodeLensProvider(),
   );
 
-  configJsonConverterCodeLensDisposable = registerCodeLensProvider(
-    "*",
-    new providers.ConfigJsonConverterCodeLensProvider(),
-  );
-
   downloadYamlExtensionCodeLensDisposable = registerCodeLensProvider(
     "yaml",
     new providers.DownloadYamlExtensionCodeLensProvider(),
@@ -142,7 +137,6 @@ export function registerAllCodeLensProviders(
 
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
-  context.subscriptions.push(configJsonConverterCodeLensDisposable);
 
   return { verticalDiffCodeLens };
 }

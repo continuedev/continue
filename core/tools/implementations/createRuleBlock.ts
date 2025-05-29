@@ -37,7 +37,7 @@ export const createRuleBlockImpl: ToolImpl = async (
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
   const rulesDirUri = joinPathsToUri(
     localContinueDir,
-    ".continue",
+    ".granite-code",
     "rules",
     `${safeRuleName}.yaml`,
   );
