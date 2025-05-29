@@ -134,7 +134,7 @@ export class WatsonXApi implements BaseLlmApi {
   }
 
   private getEndpoint(endpoint: string): string {
-    return `${this.apiBase}ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}/` : ""}text/${endpoint}_stream?version=${this.apiVersion}`;
+    return `${this.apiBase}ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}/` : ""}text/${endpoint}?version=${this.apiVersion}`;
   }
 
   private _convertBody(oaiBody: ChatCompletionCreateParams) {
@@ -172,6 +172,10 @@ export class WatsonXApi implements BaseLlmApi {
       } else {
         payload.tool_choice_option = "auto";
       }
+    }
+
+    if (oaiBody.stream) {
+      payload.stream = oaiBody.stream;
     }
 
     return payload;
@@ -216,7 +220,12 @@ export class WatsonXApi implements BaseLlmApi {
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const url = this.getEndpoint("chat");
     const headers = await this.getHeaders();
-    const stringifiedBody = JSON.stringify(this._convertBody(body));
+    const stringifiedBody = JSON.stringify(
+      this._convertBody({
+        ...body,
+        stream: true,
+      }),
+    );
     const response = await customFetch(this.config.requestOptions)(url, {
       method: "POST",
       headers,
