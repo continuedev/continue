@@ -333,17 +333,16 @@ export function Chat() {
                   "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
-                <div>
+                <div className="">
                   {item.message.toolCalls?.map((toolCall, i) => {
                     return (
-                      <div key={i}>
-                        <ToolCallDiv
-                          toolCallState={item.toolCallState!}
-                          toolCall={toolCall}
-                          output={history[index + 1]?.contextItems}
-                          historyIndex={index}
-                        />
-                      </div>
+                      <ToolCallDiv
+                        key={i}
+                        toolCallState={item.toolCallState!}
+                        toolCall={toolCall}
+                        output={history[index + 1]?.contextItems}
+                        historyIndex={index}
+                      />
                     );
                   })}
                 </div>

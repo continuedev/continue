@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId, Tool, ToolCallState } from "core";
 import { ComponentType, useMemo, useState } from "react";
 import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
@@ -32,39 +32,27 @@ export function SimpleToolCallUI({
   }, [toolCallState.parsedArgs]);
 
   return (
-    <div className="flex flex-1 flex-col pl-1 pr-2 pt-2">
-      <div className="flex flex-row items-center justify-between gap-2 hover:brightness-125">
+    <div className="flex flex-col pl-5 pr-2 pt-4">
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2">
         <div
-          className="text-description flex cursor-pointer items-center justify-between gap-1.5 text-xs"
+          className="text-description flex min-w-0 cursor-pointer flex-row items-center justify-between gap-1.5 text-xs transition-colors duration-200 ease-in-out hover:brightness-125"
           onClick={() => setOpen((prev) => !prev)}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           data-testid="context-items-peek"
         >
-          <div className="relative mr-1 h-4 w-4">
+          <div className="flex h-4 w-4 flex-shrink-0 flex-col items-center justify-center">
             {Icon && !isHovered && !open ? (
-              <Icon className={`text-description absolute h-4 w-4`} />
+              <Icon className={`text-description h-4 w-4`} />
             ) : (
-              <>
-                <ChevronRightIcon
-                  className={`text-description absolute h-4 w-4 transition-all duration-200 ease-in-out ${
-                    open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
-                  }`}
-                />
-                <ChevronDownIcon
-                  className={`text-description absolute h-4 w-4 transition-all duration-200 ease-in-out ${
-                    open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
-                  }`}
-                />
-              </>
+              <ChevronRightIcon
+                className={`text-description h-4 w-4 transition-transform duration-200 ease-in-out ${
+                  open ? "rotate-90" : "rotate-0"
+                }`}
+              />
             )}
           </div>
-          <div
-            className="text-description ml-1 inline-block text-xs transition-colors duration-200"
-            data-testid="tool-call-title"
-          >
-            <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
-          </div>
+          <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
         {args.length > 0 ? (
           <ArgsToggleIcon
