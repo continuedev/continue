@@ -723,6 +723,7 @@ export class Core {
       };
 
       return await callTool(tool, toolCall.function.arguments, {
+        config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
         fetch: (url, init) =>

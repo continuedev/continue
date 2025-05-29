@@ -975,6 +975,7 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
+  config: ContinueConfig;
 }
 
 export interface Tool {
@@ -1003,6 +1004,12 @@ interface ToolChoice {
     name: string;
   };
 }
+
+export interface ConfigDependentToolParams {
+  rules: RuleWithSource[];
+}
+
+export type GetTool = (params: ConfigDependentToolParams) => Tool;
 
 export interface BaseCompletionOptions {
   temperature?: number;
