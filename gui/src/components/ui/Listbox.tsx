@@ -72,7 +72,7 @@ const ListboxOption = React.forwardRef<HTMLLIElement, ListboxOptionProps>(
         ref={ref}
         {...props}
         className={cn(
-          "text-vsc-foreground flex select-none flex-row items-center justify-between px-2 py-1",
+          "text-foreground flex select-none flex-row items-center justify-between px-2 py-1",
           props.disabled
             ? "opacity-50"
             : "background-transparent hover:bg-list-active hover:text-list-active-foreground cursor-pointer opacity-100",

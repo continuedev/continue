@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { IndexTag } from "..";
 
 // Maximum length for table names to stay under OS filename limits
@@ -18,8 +19,8 @@ const MAX_DIR_LENGTH = 200;
  *
  * To handle long paths:
  * 1. First tries the full string - most backwards compatible
- * 2. If too long, truncates directory from the beginning to maintain uniqueness
- *    (since final parts of paths are more unique than prefixes)
+ * 2. If too long, truncates directory from the beginning and adds a hash prefix
+ *    to ensure uniqueness while preserving the more readable end parts
  * 3. Finally ensures entire string stays under MAX_TABLE_NAME_LENGTH for OS compatibility
  *
  * @param tag The tag containing directory, branch, and artifactId
@@ -32,14 +33,22 @@ export function tagToString(tag: IndexTag): string {
     return result;
   }
 
+  // Create a hash of the full directory path to ensure uniqueness
+  const dirHash = crypto
+    .createHash("md5")
+    .update(tag.directory)
+    .digest("hex")
+    .slice(0, 8);
+
+  // Calculate how much space we have for the directory after accounting for hash, separators, branch, and artifactId
+  const nonDirLength = `${dirHash}_::${tag.branch}::${tag.artifactId}`.length;
+  const maxDirForTruncated = MAX_TABLE_NAME_LENGTH - nonDirLength;
+
   // Truncate from the beginning of directory path to preserve the more unique end parts
-  const dir =
-    tag.directory.length > MAX_DIR_LENGTH
-      ? tag.directory.slice(tag.directory.length - MAX_DIR_LENGTH)
+  const truncatedDir =
+    tag.directory.length > maxDirForTruncated
+      ? tag.directory.slice(tag.directory.length - maxDirForTruncated)
       : tag.directory;
 
-  return `${dir}::${tag.branch}::${tag.artifactId}`.slice(
-    0,
-    MAX_TABLE_NAME_LENGTH,
-  );
+  return `${dirHash}_${truncatedDir}::${tag.branch}::${tag.artifactId}`;
 }

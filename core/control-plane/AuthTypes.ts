@@ -13,14 +13,10 @@ export interface OnPremSessionInfo {
 
 export type ControlPlaneSessionInfo = HubSessionInfo | OnPremSessionInfo;
 
-export function isHubSession(
+export function isOnPremSession(
   sessionInfo: ControlPlaneSessionInfo | undefined,
-): sessionInfo is HubSessionInfo {
-  return (
-    sessionInfo !== undefined &&
-    (sessionInfo.AUTH_TYPE === AuthType.WorkOsProd ||
-      sessionInfo.AUTH_TYPE === AuthType.WorkOsStaging)
-  );
+): sessionInfo is OnPremSessionInfo {
+  return sessionInfo !== undefined && sessionInfo.AUTH_TYPE === AuthType.OnPrem;
 }
 
 export enum AuthType {

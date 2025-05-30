@@ -1,6 +1,6 @@
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 
-import { isHubSession } from "core/control-plane/AuthTypes";
+import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { SecondaryButton } from "../../components";
 import {
   Popover,
@@ -29,7 +29,7 @@ export function AccountButton() {
   }
 
   // No login button for on-prem deployments
-  if (!isHubSession(session)) {
+  if (isOnPremSession(session)) {
     return null;
   }
 

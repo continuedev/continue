@@ -1,6 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem } from "core";
-import { CLIENT_TOOLS } from "core/tools/builtIn";
+import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
 import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -51,7 +51,7 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
     // Errors that occur outside specifically calling the tool
     // Should not be caught here - should be handled as normal stream errors
     if (
-      CLIENT_TOOLS.find(
+      CLIENT_TOOLS_IMPLS.find(
         (toolName) => toolName === toolCallState.toolCall.function.name,
       )
     ) {

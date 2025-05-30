@@ -113,11 +113,15 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
             data-tooltip-id={resourcesTooltipId}
           >
             <CircleStackIcon className="h-3 w-3" />
-            <span className="text-xs">{server.resources.length}</span>
+            <span className="text-xs">
+              {server.resources.length + server.resourceTemplates.length}
+            </span>
             <ToolTip id={resourcesTooltipId} className="flex flex-col gap-0.5">
-              {server.resources.map((resource, idx) => (
-                <code key={idx}>{resource.name}</code>
-              ))}
+              {[...server.resources, ...server.resourceTemplates].map(
+                (resource, idx) => (
+                  <code key={idx}>{resource.name}</code>
+                ),
+              )}
               {server.resources.length === 0 && (
                 <span className="text-lightgray">No resources</span>
               )}

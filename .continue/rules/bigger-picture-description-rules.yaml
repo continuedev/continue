@@ -1,0 +1,13 @@
+name: bigger-picture-description-rules
+version: 0.0.1
+schema: v1
+rules:
+  - name: bigger-picture-description-rules
+    rule: >-
+      When a user asks how a certain part of the code works:
+
+      1. Describe what the code does in isolation.
+
+      2. If the code interacts with other parts of the codebase, describe how the code is imported and used in other parts of the codebase.
+
+      3. When describing each use-case, include the parent function for clarity.

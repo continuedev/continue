@@ -1,3 +1,4 @@
+import { ConfigDependentToolParams, Tool } from "..";
 import { createNewFileTool } from "./definitions/createNewFile";
 import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
@@ -6,11 +7,12 @@ import { grepSearchTool } from "./definitions/grepSearch";
 import { lsTool } from "./definitions/lsTool";
 import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
 import { readFileTool } from "./definitions/readFile";
+import { requestRuleTool } from "./definitions/requestRule";
 import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
 
-export const allTools = [
+export const baseToolDefinitions = [
   readFileTool,
   editFileTool,
   createNewFileTool,
@@ -26,3 +28,7 @@ export const allTools = [
   // viewSubdirectoryTool,
   // viewRepoMapTool,
 ];
+
+export const getConfigDependentToolDefinitions = (
+  params: ConfigDependentToolParams,
+): Tool[] => [requestRuleTool(params)];

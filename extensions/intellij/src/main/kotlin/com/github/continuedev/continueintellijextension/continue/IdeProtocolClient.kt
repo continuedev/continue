@@ -504,10 +504,16 @@ class IdeProtocolClient(
         val editor = EditorUtils.getEditor(project)
         val rif = editor?.getHighlightedRIF() ?: return
 
+       val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
+            filepath = rif.filepath,
+            range = rif.range,
+            contents = rif.contents
+        )
+
         continuePluginService.sendToWebview(
             "highlightedCode",
             HighlightedCodePayload(
-                rangeInFileWithContents = rif,
+                rangeInFileWithContents = serializedRif,
                 shouldRun = edit
             )
         )

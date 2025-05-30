@@ -132,18 +132,18 @@ class GetTheme {
             val inputPlaceholder = namedColor("TextField.inactiveForeground")
 
             val listHoverBackground = namedColor("List.hoverBackground") ?: slightChange(background)
-            val actionHoverBackground = namedColor("ActionButton.hoverBackground") ?: namedColor("Button.darcula.hoverBackground")
+            val listHoverForeground = namedColor("List.hoverForeground") ?: slightChange(foreground)
 
-            val tableOddRow = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor") 
-            val listSelectionForeground = namedColor("List.selectionForeground")
+            val tableOddRow = namedColor("Table.hoverBackground") ?: namedColor("Table.stripeColor")
 
-            val description = namedColor("Label.disabledForeground") ?: namedColor("Label.infoForeground")
+            val description = namedColor("Label.infoForeground") ?: namedColor("Label.disabledForeground") ?: foreground
 
             val mutedDescription = namedColor("Component.infoForeground")
                 ?: namedColor("ContextHelp.foreground")
                 ?: namedColor("TextField.placeholderForeground")
                 ?: namedColor("Label.disabledForeground")
                 ?: namedColor("ToolTip.foreground")
+                ?: description
 
             val link = namedColor("Link.activeForeground")
 
@@ -201,8 +201,8 @@ class GetTheme {
                 "find-match" to findMatchBackground,
                 "find-match-selected" to findMatchSelectedBackground,
                 "list-hover" to listHoverBackground,
-                "list-active" to actionHoverBackground,
-                "list-active-foreground" to listSelectionForeground
+                "list-active" to listHoverBackground,
+                "list-active-foreground" to listHoverForeground
             ).mapValues { toHex(it.value) }
             return theme
         } catch (error: Error) {

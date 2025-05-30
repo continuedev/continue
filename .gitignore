@@ -144,7 +144,9 @@ Icon?
 .continuerc.json
 .aider*
 
+*.notes.md
 notes.md
+*.notes.md
 
 manual-testing-sandbox/.idea/**
 manual-testing-sandbox/.continue/**
