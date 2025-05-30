@@ -5,6 +5,7 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { IGNORE_NEXT_EDIT } from "core/nextEdit/IgnoreNextEdit";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
@@ -32,8 +33,7 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider
-{
+  implements vscode.InlineCompletionItemProvider {
   private async onError(e: any) {
     if (await handleLLMError(e)) {
       return;
@@ -61,7 +61,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
-  private nextEditProvider: NextEditProvider;
+  private nextEditProvider: NextEditProvider | undefined;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
   private recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -86,13 +86,16 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
-    this.nextEditProvider = new NextEditProvider(
-      this.configHandler,
-      this.ide,
-      getAutocompleteModel,
-      this.onError.bind(this),
-      getDefinitionsFromLsp,
-    );
+    // NOTE: Only turn it on locally when testing (for review purposes).
+    if (!IGNORE_NEXT_EDIT) {
+      this.nextEditProvider = new NextEditProvider(
+        this.configHandler,
+        this.ide,
+        getAutocompleteModel,
+        this.onError.bind(this),
+        getDefinitionsFromLsp,
+      );
+    }
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
@@ -220,11 +223,13 @@ export class ContinueCompletionProvider
 
       // NOTE: This is a very rudimentary check to see if we can call the next edit service.
       // In the future we will have to figure out how to call this more gracefully.
-      const nextEditOutcome =
-        await this.nextEditProvider.provideInlineCompletionItems(input, signal);
+      if (this.nextEditProvider) {
+        const nextEditOutcome =
+          await this.nextEditProvider?.provideInlineCompletionItems(input, signal);
 
-      if (nextEditOutcome && nextEditOutcome.completion) {
-        outcome.completion = nextEditOutcome.completion;
+        if (nextEditOutcome && nextEditOutcome.completion) {
+          outcome.completion = nextEditOutcome.completion;
+        }
       }
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
