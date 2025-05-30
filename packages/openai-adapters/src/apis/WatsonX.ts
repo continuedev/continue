@@ -216,7 +216,11 @@ export class WatsonXApi implements BaseLlmApi {
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const url = this.getEndpoint("chat");
     const headers = await this.getHeaders();
-    const stringifiedBody = JSON.stringify(this._convertBody(body));
+    const stringifiedBody = JSON.stringify({
+      time_limit: 8000,
+      ...this._convertBody(body),
+      stream: true,
+    });
     const response = await customFetch(this.config.requestOptions)(url, {
       method: "POST",
       headers,
