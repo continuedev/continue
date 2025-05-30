@@ -85,6 +85,8 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
   </TabItem>
 </Tabs>
 
+
+
 ### LLM
 
 If you only have access to a single LLM, then you can use it as a reranker. This is discouraged unless truly necessary, because it will be much more expensive and still less accurate than any of the above models trained specifically for the task. Note that this will not work if you are using a local model, for example with Ollama, because too many parallel requests need to be made.
@@ -154,3 +156,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
     ```
     </TabItem>
 </Tabs>
+
+### Morph
+
+See the [Morph guide](../model-providers/more/morph.mdx) for details on how to use MorphLLM for reranking.

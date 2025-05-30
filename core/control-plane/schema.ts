@@ -20,7 +20,7 @@ const modelDescriptionSchema = z.object({
     "nebius",
     "siliconflow",
     "scaleway",
-    "watsonx"
+    "watsonx",
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
@@ -88,13 +88,14 @@ const embeddingsProviderSchema = z.object({
     "ollama",
     "openai",
     "cohere",
+    "morph",
     "free-trial",
     "gemini",
     "ovhcloud",
     "nebius",
     "siliconflow",
     "scaleway",
-    "watsonx"
+    "watsonx",
   ]),
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),
@@ -116,7 +117,7 @@ const embeddingsProviderSchema = z.object({
 });
 
 const rerankerSchema = z.object({
-  name: z.enum(["cohere", "voyage", "llm", "watsonx"]),
+  name: z.enum(["cohere", "morph", "voyage", "llm", "watsonx"]),
   params: z.record(z.any()).optional(),
 });
 

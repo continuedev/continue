@@ -18,6 +18,7 @@ import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
+import Morph from "./Morph"
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
@@ -116,6 +117,7 @@ export const LLMClasses = [
   SiliconFlow,
   Scaleway,
   Relace,
+  Morph,
   Inception,
   Voyage,
 ];

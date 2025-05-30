@@ -2,6 +2,7 @@ import { Anthropic } from "./providers/anthropic.js";
 import { Azure } from "./providers/azure.js";
 import { Bedrock } from "./providers/bedrock.js";
 import { Cohere } from "./providers/cohere.js";
+import { Morph } from "./providers/morph.js";
 import { Gemini } from "./providers/gemini.js";
 import { Mistral } from "./providers/mistral.js";
 import { Ollama } from "./providers/ollama.js";
@@ -22,6 +23,7 @@ export const allModelProviders: ModelProvider[] = [
   Vllm,
   Bedrock,
   Cohere,
+  Morph,
   xAI,
 ];
 
