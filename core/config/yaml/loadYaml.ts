@@ -67,7 +67,7 @@ function convertYamlMcpToContinueMcp(
   return {
     transport: {
       type: "stdio",
-      command: server.command || "", // Add default empty string to handle undefined
+      command: server.command,
       args: server.args ?? [],
       env: server.env,
     } as any, // TODO: Fix the mcpServers types in config-yaml (discriminated union)
@@ -424,28 +424,16 @@ async function configYamlToContinueConfig(options: {
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
   mcpManager.setConnections(
-    (config.mcpServers ?? []).map((server) => {
-      // Create proper transport object based on type
-      const transport = server.type === "sse"
-        ? {
-            type: "sse" as const,
-            url: server.url || "",
-            faviconUrl: server.faviconUrl
-          }
-        : {
-            type: "stdio" as const,
-        command: server.command || "",
-            args: server.args || [],
-            env: server.env,
-            faviconUrl: server.faviconUrl
-          };
-    return {
-        id: server.name,
-        name: server.name,
-        transport,
-        timeout: server.connectionTimeout
-    };
-    }),
+    (config.mcpServers ?? []).map((server) => ({
+      id: server.name,
+      name: server.name,
+      transport: {
+        type: "stdio",
+        args: [],
+        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
+      },
+      timeout: server.connectionTimeout,
+    })),
     false,
   );
 
@@ -491,8 +479,8 @@ export async function loadContinueConfigFromYaml(options: {
       errors: configYamlResult.errors,
       config: undefined,
       configLoadInterrupted: true,
-  };
-}
+    };
+  }
 
   const { config: continueConfig, errors: localErrors } =
     await configYamlToContinueConfig({
