@@ -5,6 +5,7 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -31,7 +32,8 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider {
+  implements vscode.InlineCompletionItemProvider
+{
   private async onError(e: any) {
     if (await handleLLMError(e)) {
       return;
@@ -59,6 +61,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
+  private nextEditProvider: NextEditProvider;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
   private recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -83,11 +86,17 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
+    this.nextEditProvider = new NextEditProvider(
+      this.configHandler,
+      this.ide,
+      getAutocompleteModel,
+      this.onError.bind(this),
+      getDefinitionsFromLsp,
+    );
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
-
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -209,6 +218,15 @@ export class ContinueCompletionProvider
         return null;
       }
 
+      // NOTE: This is a very rudimentary check to see if we can call the next edit service.
+      // In the future we will have to figure out how to call this more gracefully.
+      const nextEditOutcome =
+        await this.nextEditProvider.provideInlineCompletionItems(input, signal);
+
+      if (nextEditOutcome && nextEditOutcome.completion) {
+        outcome.completion = nextEditOutcome.completion;
+      }
+
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
       // We should first always make sure we have a valid completion, but if it goes wrong we
       // want telemetry to be correct
@@ -254,7 +272,7 @@ export class ContinueCompletionProvider
         const result = processSingleLineCompletion(
           lastLineOfCompletionText,
           currentText,
-          startPos.character
+          startPos.character,
         );
 
         if (result === undefined) {
@@ -265,10 +283,9 @@ export class ContinueCompletionProvider
         if (result.range) {
           range = new vscode.Range(
             new vscode.Position(startPos.line, result.range.start),
-            new vscode.Position(startPos.line, result.range.end)
+            new vscode.Position(startPos.line, result.range.end),
           );
         }
-
       } else {
         // Extend the range to the end of the line for multiline completions
         range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
