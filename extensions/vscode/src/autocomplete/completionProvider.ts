@@ -5,7 +5,7 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { IGNORE_NEXT_EDIT } from "core/nextEdit/IgnoreNextEdit";
+import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
@@ -87,7 +87,7 @@ export class ContinueCompletionProvider
       getDefinitionsFromLsp,
     );
     // NOTE: Only turn it on locally when testing (for review purposes).
-    if (!IGNORE_NEXT_EDIT) {
+    if (IS_NEXT_EDIT_ACTIVE) {
       this.nextEditProvider = new NextEditProvider(
         this.configHandler,
         this.ide,
