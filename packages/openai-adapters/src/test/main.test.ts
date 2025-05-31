@@ -85,6 +85,12 @@ const TESTS: Omit<ModelConfig, "name">[] = [
   //   roles: ["embed"],
   // },
   // {
+  //   provider: "morph",
+  //   model: "morph-embedding-v2",
+  //   apiKey: process.env.MORPH_API_KEY!,
+  //   roles: ["embed"],
+  // },
+  // {
   //   provider: "gemini",
   //   model: "models/text-embedding-004",
   //   apiKey: process.env.GEMINI_API_KEY!,
@@ -100,6 +106,12 @@ const TESTS: Omit<ModelConfig, "name">[] = [
   //   provider: "cohere",
   //   model: "rerank-english-v3.0",
   //   apiKey: process.env.COHERE_API_KEY!,
+  //   roles: ["rerank"],
+  // },
+  // {
+  //   provider: "morph",
+  //   model: "morph-rerank-v2",
+  //   apiKey: process.env.MORPH_API_KEY!,
   //   roles: ["rerank"],
   // },
 ];

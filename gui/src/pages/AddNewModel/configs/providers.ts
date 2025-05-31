@@ -353,6 +353,28 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.commandR, models.commandRPlus],
     apiKeyUrl: "https://docs.cohere.com/v2/docs/rate-limits",
   },
+  morph: {
+    title: "Morph",
+    provider: "morph",
+    refPage: "morph",
+    description: "Fast Apply, Embed, and Rerank models",
+    icon: "morph.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    longDescription:
+      "To use Morph, visit the [Morph dashboard](https://morphllm.com/dashboard) to create an API key.",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Morph API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.morphFastApply, models.morphEmbed, models.morphRerank],
+    apiKeyUrl: "https://morphllm.com/dashboard",
+  },
   groq: {
     title: "Groq",
     provider: "groq",
@@ -797,7 +819,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
       ...completionParamsInputsConfigs,
     ],
-    packages:[
+    packages: [
       models.llama4Scout,
       models.llama4Maverick,
       models.llama3370BInstruct,
@@ -808,7 +830,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.qwq32B,
       models.deepseekR1DistillLlama70B,
       models.deepseekR1,
-      models.deepseekV3
+      models.deepseekV3,
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
@@ -1011,9 +1033,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         required: true,
       },
     ],
-    packages: [
-      {...models.AUTODETECT}
-    ],
-    apiKeyUrl: "https://venice.ai/chat"
-  }
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://venice.ai/chat",
+  },
 };
