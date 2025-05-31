@@ -86,6 +86,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
 
     class ContinueState {
         var lastSelectedInlineEditModel: String? = null
+        var lastSelectedVcsCommitModel: String? = null
         var shownWelcomeDialog: Boolean = false
         var remoteConfigServerUrl: String? = null
         var remoteConfigSyncPeriod: Int = 60
