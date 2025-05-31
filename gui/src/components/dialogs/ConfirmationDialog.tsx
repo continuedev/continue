@@ -1,7 +1,6 @@
 import { useDispatch } from "react-redux";
-import styled from "styled-components";
-import { Button, SecondaryButton } from "..";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { Button } from "../ui/Button";
 
 interface ConfirmationDialogProps {
   onConfirm: () => void;
@@ -26,8 +25,8 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
 
       <div className="w/1/2 flex justify-end gap-2">
         {!!props.hideCancelButton || (
-          <SecondaryButton
-            className="text-lightgray"
+          <Button
+            variant="outline"
             onClick={() => {
               dispatch(setShowDialog(false));
               dispatch(setDialogMessage(undefined));
@@ -35,7 +34,7 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
             }}
           >
             Cancel
-          </SecondaryButton>
+          </Button>
         )}
         <Button
           onClick={() => {

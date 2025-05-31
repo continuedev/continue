@@ -170,14 +170,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return url.toString();
   }
 
-  public static useOnboardingUri: boolean = false;
+  public static shouldRedirectToExtension: boolean = false;
   get redirectUri() {
-    if (WorkOsAuthProvider.useOnboardingUri) {
-      const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/onboarding/redirect/${env.uriScheme}`;
-      return url.toString();
-    }
-    return this.ideRedirectUri;
+    return WorkOsAuthProvider.shouldRedirectToExtension
+      ? `${env.uriScheme}://Continue.continue`
+      : this.ideRedirectUri;
   }
 
   async refreshSessions() {
@@ -514,7 +511,7 @@ export async function getControlPlaneSessionInfo(
 
   try {
     if (useOnboarding) {
-      WorkOsAuthProvider.useOnboardingUri = true;
+      WorkOsAuthProvider.shouldRedirectToExtension = true;
     }
 
     const session = await authentication.getSession(
@@ -534,6 +531,6 @@ export async function getControlPlaneSessionInfo(
       },
     };
   } finally {
-    WorkOsAuthProvider.useOnboardingUri = false;
+    WorkOsAuthProvider.shouldRedirectToExtension = false;
   }
 }
