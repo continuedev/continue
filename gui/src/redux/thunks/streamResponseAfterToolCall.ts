@@ -35,7 +35,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const toolCallState = findToolCall(state.session.history, toolCallId);
 
         if (!toolCallState) {
-          throw new Error("Tool call not found");
+          return; // in cases where edit tool is cancelled mid apply, this will be triggered
         }
 
         const toolOutput = toolCallState.output ?? [];
@@ -65,12 +65,14 @@ export const streamResponseAfterToolCall = createAsyncThunk<
 
         dispatch(setActive());
 
-        
         const updatedHistory = getState().session.history;
-        const messageMode = getState().session.mode
+        const messageMode = getState().session.mode;
 
-        const baseChatOrAgentSystemMessage = getBaseSystemMessage(selectedChatModel, messageMode)
-        
+        const baseChatOrAgentSystemMessage = getBaseSystemMessage(
+          selectedChatModel,
+          messageMode,
+        );
+
         const messages = constructMessages(
           messageMode,
           [...updatedHistory],

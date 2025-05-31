@@ -41,7 +41,7 @@ const MAX_EXPLORE_DEPTH = 2;
 const OnboardSlashCommand: SlashCommand = {
   name: "onboard",
   description: "Familiarize yourself with the codebase",
-  run: async function* ({ llm, ide }) {
+  run: async function* ({ llm, ide, abortController }) {
     const [workspaceDir] = await ide.getWorkspaceDirs();
 
     const context = await gatherProjectContext(workspaceDir, ide);
@@ -49,7 +49,7 @@ const OnboardSlashCommand: SlashCommand = {
 
     for await (const chunk of llm.streamChat(
       [{ role: "user", content: prompt }],
-      new AbortController().signal,
+      abortController.signal,
     )) {
       yield renderChatMessage(chunk);
     }

@@ -1,16 +1,16 @@
-export class StreamAbortManager {
-  private static instance: StreamAbortManager;
+export class ApplyAbortManager {
+  private static instance: ApplyAbortManager;
   private controllers: Map<string, AbortController>;
 
   private constructor() {
     this.controllers = new Map();
   }
 
-  public static getInstance(): StreamAbortManager {
-    if (!StreamAbortManager.instance) {
-      StreamAbortManager.instance = new StreamAbortManager();
+  public static getInstance(): ApplyAbortManager {
+    if (!ApplyAbortManager.instance) {
+      ApplyAbortManager.instance = new ApplyAbortManager();
     }
-    return StreamAbortManager.instance;
+    return ApplyAbortManager.instance;
   }
 
   public get(id: string): AbortController {
