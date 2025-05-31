@@ -1,5 +1,7 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useContext } from "react";
 import { Button, SecondaryButton, vscButtonBackground } from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { fontSize } from "../../../util";
 import { Listbox, ListboxButton, ListboxOptions, Transition } from "../../ui";
 import { useFontSize } from "../../ui/font";
@@ -37,6 +39,7 @@ function ProgressBar({ label, current, total }: ProgressBarProps) {
 export default function FreeTrialButton() {
   const smallFont = useFontSize(-3);
   const tinyFont = useFontSize(-4);
+  const ideMessenger = useContext(IdeMessengerContext);
 
   // Hardcoded values for now
   const autocompleteUsage = { current: 850, total: 2000 };
@@ -80,18 +83,22 @@ export default function FreeTrialButton() {
               <div className="mt-4 flex gap-2">
                 <SecondaryButton
                   className="flex-1"
-                  onClick={() => {
-                    // TODO: Implement eject from trial
-                    console.log("Eject from trial clicked");
+                  onClick={async () => {
+                    await ideMessenger.request("controlPlane/openUrl", {
+                      path: "/setup-models",
+                      orgSlug: undefined,
+                    });
                   }}
                 >
                   Eject from trial
                 </SecondaryButton>
                 <Button
                   className="flex-1"
-                  onClick={() => {
-                    // TODO: Implement upgrade
-                    console.log("Upgrade clicked");
+                  onClick={async () => {
+                    await ideMessenger.request("controlPlane/openUrl", {
+                      path: "/settings/billing",
+                      orgSlug: undefined,
+                    });
                   }}
                 >
                   Upgrade
