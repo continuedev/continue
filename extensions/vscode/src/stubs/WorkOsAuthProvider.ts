@@ -1,5 +1,11 @@
 import crypto from "crypto";
 
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+  HubEnv,
+  isHubEnv,
+} from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
@@ -17,12 +23,6 @@ import {
   window,
 } from "vscode";
 
-import {
-  AuthType,
-  ControlPlaneSessionInfo,
-  HubEnv,
-  isHubEnv,
-} from "core/control-plane/AuthTypes";
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
 import { UriEventHandler } from "./uriHandler";
@@ -174,7 +174,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   get redirectUri() {
     if (WorkOsAuthProvider.useOnboardingUri) {
       const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/onboarding/redirect/${env.uriScheme}`;
+      url.pathname = `/auth/${env.uriScheme}-redirect`;
       return url.toString();
     }
     return this.ideRedirectUri;

@@ -1,12 +1,13 @@
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
-import { Button, ButtonSubtext } from "../../..";
+import { ButtonSubtext } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { selectCurrentOrg } from "../../../../redux";
 import { useAppSelector } from "../../../../redux/hooks";
 import { hasPassedFTL } from "../../../../util/freeTrial";
 import ContinueLogo from "../../../gui/ContinueLogo";
+import { Button } from "../../../ui/Button";
 import { useOnboardingCard } from "../../hooks";
 
 export default function MainTab({
@@ -22,7 +23,7 @@ export default function MainTab({
   const currentOrg = useAppSelector(selectCurrentOrg);
 
   function onGetStarted() {
-    auth.login(true).then((success) => {
+    void auth.login(true).then((success) => {
       if (success) {
         onboardingCard.close(isDialog);
       }
@@ -69,7 +70,7 @@ export default function MainTab({
             onClick={onGetStarted}
             className="mt-4 grid w-full grid-flow-col items-center gap-2"
           >
-            Get started
+            Get started with Free Trial
           </Button>
         </>
       ) : (
@@ -82,21 +83,21 @@ export default function MainTab({
             onClick={onGetStarted}
             className="mt-4 grid w-full grid-flow-col items-center gap-2"
           >
-            Get started
+            Get started with Free Trial
           </Button>
         </>
       )}
 
       {onboardingCard.activeTab === "ExistingUserHubIntro" ? (
         <ButtonSubtext onClick={() => onboardingCard.close(isDialog)}>
-          <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
+          <div className="mt-1 flex cursor-pointer items-center justify-center gap-1">
             <span>Or, use Continue as usual</span>
             <ChevronRightIcon className="h-3 w-3" />
           </div>
         </ButtonSubtext>
       ) : (
         <ButtonSubtext onClick={onRemainLocal}>
-          <div className="flex cursor-pointer items-center justify-center gap-1 hover:brightness-125">
+          <div className="mt-1 flex cursor-pointer items-center justify-center gap-1 hover:brightness-125">
             <span>Or, remain local</span>
             <ChevronRightIcon className="h-3 w-3" />
           </div>
