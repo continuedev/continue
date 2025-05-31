@@ -1,10 +1,10 @@
+import { PackageIdentifier } from "@continuedev/config-yaml";
 import * as fs from "node:fs";
 import * as http from "node:http";
 import { AddressInfo } from "node:net";
 import * as os from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "url";
-import { PackageIdentifier } from "./interfaces/slugs.js";
 import { RegistryClient } from "./registryClient.js";
 
 describe("RegistryClient", () => {
