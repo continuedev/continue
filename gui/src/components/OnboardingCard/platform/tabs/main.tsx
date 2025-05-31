@@ -70,7 +70,7 @@ export default function MainTab({
             onClick={onGetStarted}
             className="mt-4 grid w-full grid-flow-col items-center gap-2"
           >
-            Get started
+            Get started with Free Trial
           </Button>
         </>
       ) : (
@@ -83,7 +83,7 @@ export default function MainTab({
             onClick={onGetStarted}
             className="mt-4 grid w-full grid-flow-col items-center gap-2"
           >
-            Get started
+            Get started with Free Trial
           </Button>
         </>
       )}

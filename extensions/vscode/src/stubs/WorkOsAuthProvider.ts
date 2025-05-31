@@ -1,5 +1,11 @@
 import crypto from "crypto";
 
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+  HubEnv,
+  isHubEnv,
+} from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
@@ -17,12 +23,6 @@ import {
   window,
 } from "vscode";
 
-import {
-  AuthType,
-  ControlPlaneSessionInfo,
-  HubEnv,
-  isHubEnv,
-} from "core/control-plane/AuthTypes";
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
 import { UriEventHandler } from "./uriHandler";
@@ -170,11 +170,14 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return url.toString();
   }
 
-  public static shouldRedirectToExtension: boolean = false;
+  public static useOnboardingUri: boolean = false;
   get redirectUri() {
-    return WorkOsAuthProvider.shouldRedirectToExtension
-      ? `${env.uriScheme}://Continue.continue`
-      : this.ideRedirectUri;
+    if (WorkOsAuthProvider.useOnboardingUri) {
+      const url = new URL(controlPlaneEnv.APP_URL);
+      url.pathname = `/auth/${env.uriScheme}-redirect`;
+      return url.toString();
+    }
+    return this.ideRedirectUri;
   }
 
   async refreshSessions() {
@@ -511,7 +514,7 @@ export async function getControlPlaneSessionInfo(
 
   try {
     if (useOnboarding) {
-      WorkOsAuthProvider.shouldRedirectToExtension = true;
+      WorkOsAuthProvider.useOnboardingUri = true;
     }
 
     const session = await authentication.getSession(
@@ -531,6 +534,6 @@ export async function getControlPlaneSessionInfo(
       },
     };
   } finally {
-    WorkOsAuthProvider.shouldRedirectToExtension = false;
+    WorkOsAuthProvider.useOnboardingUri = false;
   }
 }
