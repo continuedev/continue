@@ -1,4 +1,4 @@
-import { IDE, IdeInfo, TabAutocompleteOptions } from "../..";
+import { IDE, TabAutocompleteOptions } from "../..";
 import {
   countTokens,
   pruneLinesFromBottom,
@@ -21,7 +21,6 @@ export class HelperVars {
   lang: AutocompleteLanguageInfo;
   treePath: AstPath | undefined;
   workspaceUris: string[] = [];
-  ideInfo: IdeInfo | undefined;
 
   private _fileContents: string | undefined;
   private _fileLines: string[] | undefined;
@@ -44,7 +43,6 @@ export class HelperVars {
     if (this._fileContents !== undefined) {
       return;
     }
-    this.ideInfo = await this.ide.getIdeInfo();
     this.workspaceUris = await this.ide.getWorkspaceDirs();
 
     this._fileContents =

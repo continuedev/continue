@@ -182,8 +182,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Notify core of content changes
                     if (changedURIs.isNotEmpty()) {
-                        continuePluginService.updateLastFileSaveTimestamp()
-
                         val data = mapOf("uris" to changedURIs)
                         continuePluginService.coreMessenger?.request("files/changed", data, null) { _ -> }
                     }
