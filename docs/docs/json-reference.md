@@ -385,8 +385,6 @@ Example:
 }
 ```
 
-You can also add your own slash command by following [this tutorial](./customize/tutorials/build-your-own-slash-command.md).
-
 ### `customCommands`
 
 User-defined commands for prompt shortcuts in the sidebar, allowing quick access to common actions.

@@ -84,5 +84,3 @@ export function modifyConfig(config: Config): Config {
   return config;
 }
 ```
-
-For examples of how to use `config.ts`, see [writing custom slash commands](../tutorials/build-your-own-slash-command.md#custom-slash-commands) or [writing custom context providers](../tutorials/build-your-own-context-provider.mdx).
