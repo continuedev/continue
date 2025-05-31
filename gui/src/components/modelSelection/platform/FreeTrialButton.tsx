@@ -1,4 +1,5 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { FreeTrialStatus } from "core/control-plane/client";
 import { useContext } from "react";
 import { Button, SecondaryButton, vscButtonBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -36,14 +37,50 @@ function ProgressBar({ label, current, total }: ProgressBarProps) {
   );
 }
 
-export default function FreeTrialButton() {
+interface FreeTrialProgressBarsProps {
+  freeTrialStatus: FreeTrialStatus;
+}
+
+function FreeTrialProgressBars({
+  freeTrialStatus,
+}: FreeTrialProgressBarsProps) {
+  // Use data from freeTrialStatus
+  const autocompleteUsage = {
+    current: freeTrialStatus.autocompleteCount,
+    total: freeTrialStatus.autocompleteLimit,
+  };
+  const chatUsage = {
+    current: freeTrialStatus.chatCount,
+    total: freeTrialStatus.chatLimit,
+  };
+
+  return (
+    <>
+      <ProgressBar
+        label="Autocomplete usage"
+        current={autocompleteUsage.current ?? 0}
+        total={autocompleteUsage.total}
+      />
+
+      <ProgressBar
+        label="Chat usage"
+        current={chatUsage.current ?? 0}
+        total={chatUsage.total}
+      />
+    </>
+  );
+}
+
+interface FreeTrialButtonProps {
+  freeTrialStatus?: FreeTrialStatus | null;
+}
+
+export default function FreeTrialButton({
+  freeTrialStatus,
+}: FreeTrialButtonProps) {
   const smallFont = useFontSize(-3);
   const tinyFont = useFontSize(-4);
   const ideMessenger = useContext(IdeMessengerContext);
-
-  // Hardcoded values for now
-  const autocompleteUsage = { current: 850, total: 2000 };
-  const chatUsage = { current: 23, total: 50 };
 
   return (
     <Listbox>
@@ -68,17 +105,15 @@ export default function FreeTrialButton() {
                 You are currently using the free trial
               </h3>
 
-              <ProgressBar
-                label="Autocomplete usage"
-                current={autocompleteUsage.current}
-                total={autocompleteUsage.total}
-              />
-
-              <ProgressBar
-                label="Chat usage"
-                current={chatUsage.current}
-                total={chatUsage.total}
-              />
+              {!freeTrialStatus ? (
+                <div className="mb-4 flex items-center justify-center py-8">
+                  <span className="text-description">
+                    Loading trial usage...
+                  </span>
+                </div>
+              ) : (
+                <FreeTrialProgressBars freeTrialStatus={freeTrialStatus} />
+              )}
 
               <div className="mt-4 flex gap-2">
                 <SecondaryButton

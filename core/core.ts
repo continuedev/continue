@@ -362,6 +362,10 @@ export class Core {
       await this.messenger.request("openUrl", url);
     });
 
+    on("controlPlane/getFreeTrialStatus", async (msg) => {
+      return this.configHandler.controlPlaneClient.getFreeTrialStatus();
+    });
+
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });

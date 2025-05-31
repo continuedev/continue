@@ -22,7 +22,6 @@ import {
   isLocalProfile,
   isMetaEquivalentKeyPressed,
 } from "../../../util";
-import { usesFreeTrialApiKey } from "../../../util/freeTrialHelpers";
 import {
   Listbox,
   ListboxButton,
@@ -32,9 +31,11 @@ import {
 } from "../../ui";
 
 import type { ProfileDescription } from "core/config/ConfigHandler";
+import { FreeTrialStatus } from "core/control-plane/client";
 import { useNavigate } from "react-router-dom";
 import { vscCommandCenterInactiveBorder } from "../..";
 import { cn } from "../../../util/cn";
+import { usesFreeTrialApiKey } from "../../../util/freeTrialHelpers";
 import { ROUTES } from "../../../util/navigation";
 import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
@@ -161,6 +162,19 @@ export default function AssistantSelect() {
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
   const [loading, setLoading] = useState(false);
+  const [freeTrialStatus, setFreeTrialStatus] =
+    useState<FreeTrialStatus | null>(null);
+
+  useEffect(() => {
+    ideMessenger
+      .request("controlPlane/getFreeTrialStatus", undefined)
+      .then((resp) => {
+        if (resp.status === "success") {
+          setFreeTrialStatus(resp.content);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const { profiles, session, login, selectedProfile, refreshProfiles } =
     useAuth();
@@ -168,7 +182,7 @@ export default function AssistantSelect() {
   // If using free trial, show the FreeTrialButton instead
   const isUsingFreeTrial = usesFreeTrialApiKey(config);
   if (isUsingFreeTrial) {
-    return <FreeTrialButton />;
+    return <FreeTrialButton freeTrialStatus={freeTrialStatus} />;
   }
 
   function close() {

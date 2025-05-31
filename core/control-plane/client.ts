@@ -23,6 +23,14 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
+export interface FreeTrialStatus {
+  optedInToFreeTrial: boolean;
+  chatCount?: number;
+  autocompleteCount?: number;
+  chatLimit: number;
+  autocompleteLimit: number;
+}
+
 export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
@@ -155,6 +163,21 @@ export class ControlPlaneClient {
       });
       const { fullSlugs } = (await resp.json()) as any;
       return fullSlugs;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async getFreeTrialStatus(): Promise<FreeTrialStatus | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.request("ide/free-trial-status", {
+        method: "GET",
+      });
+      return (await resp.json()) as FreeTrialStatus;
     } catch (e) {
       return null;
     }
