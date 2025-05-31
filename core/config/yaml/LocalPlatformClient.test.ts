@@ -166,6 +166,8 @@ describe("LocalPlatformClient", () => {
         testFQSN2,
       ]);
 
+      // both the secrets should be present as they are retrieved from different files
+
       expect(resolvedFQSNs.length).toBe(2);
 
       const continueDirSecretValue = (
@@ -174,7 +176,6 @@ describe("LocalPlatformClient", () => {
       const dotEnvSecretValue = (
         resolvedFQSNs[1] as SecretResult & { value: unknown }
       )?.value;
-
       expect(continueDirSecretValue).toContain(secretValue);
       expect(continueDirSecretValue).toContain(randomValueForContinueDirDotEnv);
       expect(dotEnvSecretValue).toContain(secretValue + "-workspace");
@@ -217,10 +218,10 @@ describe("LocalPlatformClient", () => {
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
 
       expect(resolvedFQSNs.length).toBe(1);
-
       expect(
         (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
       ).toContain(secretValue);
+      // we check that workspace <workspace>.continue/.env does not override the <workspace>/.env secret
       expect(
         (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
       ).toContain(randomValueForContinueDirDotEnv);
