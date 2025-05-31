@@ -22,6 +22,7 @@ import {
   isLocalProfile,
   isMetaEquivalentKeyPressed,
 } from "../../../util";
+import { usesFreeTrialApiKey } from "../../../util/freeTrialHelpers";
 import {
   Listbox,
   ListboxButton,
@@ -38,6 +39,7 @@ import { ROUTES } from "../../../util/navigation";
 import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
+import FreeTrialButton from "./FreeTrialButton";
 
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;
@@ -155,12 +157,19 @@ export default function AssistantSelect() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const currentOrg = useAppSelector(selectCurrentOrg);
   const orgs = useAppSelector((store) => store.profiles.organizations);
+  const config = useAppSelector((state) => state.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
   const [loading, setLoading] = useState(false);
 
   const { profiles, session, login, selectedProfile, refreshProfiles } =
     useAuth();
+
+  // If using free trial, show the FreeTrialButton instead
+  const isUsingFreeTrial = usesFreeTrialApiKey(config);
+  if (isUsingFreeTrial) {
+    return <FreeTrialButton />;
+  }
 
   function close() {
     if (buttonRef.current) {
