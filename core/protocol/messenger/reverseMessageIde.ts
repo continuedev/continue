@@ -34,10 +34,6 @@ export class ReverseMessageIde {
   }
 
   private initializeListeners() {
-    this.on("getGitHubAuthToken", (data) => {
-      return this.ide.getGitHubAuthToken(data);
-    });
-
     this.on("getFileStats", (data) => {
       return this.ide.getFileStats(data.files);
     });

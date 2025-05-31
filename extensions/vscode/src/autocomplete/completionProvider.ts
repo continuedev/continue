@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
 import { handleLLMError } from "../util/errorHandling";
-import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -31,21 +30,15 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider {
-  private async onError(e: any) {
+  implements vscode.InlineCompletionItemProvider
+{
+  private async onError(e: unknown) {
     if (await handleLLMError(e)) {
       return;
     }
-    let message = e.message;
-    if (message.includes("Please sign in with GitHub")) {
-      showFreeTrialLoginMessage(
-        message,
-        this.configHandler.reloadConfig.bind(this.configHandler),
-        () => {
-          void this.webviewProtocol.request("openOnboardingCard", undefined);
-        },
-      );
-      return;
+    let message = "Continue Autocomplete Error";
+    if (e instanceof Error) {
+      message += `: ${e.message}`;
     }
     vscode.window.showErrorMessage(message, "Documentation").then((val) => {
       if (val === "Documentation") {
@@ -87,7 +80,6 @@ export class ContinueCompletionProvider
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
-
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -254,7 +246,7 @@ export class ContinueCompletionProvider
         const result = processSingleLineCompletion(
           lastLineOfCompletionText,
           currentText,
-          startPos.character
+          startPos.character,
         );
 
         if (result === undefined) {
@@ -265,10 +257,9 @@ export class ContinueCompletionProvider
         if (result.range) {
           range = new vscode.Range(
             new vscode.Position(startPos.line, result.range.start),
-            new vscode.Position(startPos.line, result.range.end)
+            new vscode.Position(startPos.line, result.range.end),
           );
         }
-
       } else {
         // Extend the range to the end of the line for multiline completions
         range = new vscode.Range(startPos, document.lineAt(startPos).range.end);

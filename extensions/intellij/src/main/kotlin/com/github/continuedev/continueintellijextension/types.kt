@@ -187,8 +187,6 @@ interface IDE {
 
     suspend fun getFileStats(files: List<String>): Map<String, FileStats>
 
-    suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String?
-
     // LSP
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
 
@@ -199,10 +197,6 @@ interface IDE {
         // Default implementation does nothing
     }
 }
-
-data class GetGhTokenArgs(
-    val force: String?
-)
 
 data class Message(
     val messageType: String,

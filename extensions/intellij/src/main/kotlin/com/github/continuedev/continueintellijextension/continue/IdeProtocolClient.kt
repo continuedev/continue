@@ -388,33 +388,6 @@ class IdeProtocolClient(
                         respond(pinnedFiles)
                     }
 
-                    "getGitHubAuthToken" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            GetGhTokenArgs::class.java
-                        )
-
-                        val ghAuthToken = ide.getGitHubAuthToken(params)
-
-                        if (ghAuthToken == null) {
-                            // Open a dialog so user can enter their GitHub token
-                            continuePluginService.sendToWebview("openOnboardingCard", null, uuid())
-                            respond(null)
-                        } else {
-                            respond(ghAuthToken)
-                        }
-                    }
-
-                    "setGitHubAuthToken" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            SetGitHubAuthTokenParams::class.java
-                        )
-                        val continueSettingsService = service<ContinueExtensionSettings>()
-                        continueSettingsService.continueState.ghAuthToken = params.token
-                        respond(null)
-                    }
-
                     "openUrl" -> {
                         val url = Gson().fromJson(
                             dataElement.toString(),

@@ -101,23 +101,7 @@
 //   //   const originalEmbeddingsProvider =
 //   //     await docsService.getEmbeddingsProvider();
 
-//   //   // Change embeddings provider
-//   //   editConfigJson((config) => ({
-//   //     ...config,
-//   //     embeddingsProvider: {
-//   //       provider: FreeTrial.providerName,
-//   //     },
-//   //   }));
-
-//   //   await getReloadedConfig();
-
-//   //   const { provider, isPreindexed} = await docsService.getEmbeddingsProvider();
-
-//   //   // Verify reindexing
-//   //   const [originalVector] = await originalEmbeddingsProvider.embed(["test"]);
-//   //   const [newMockVector] = await provider.embed(["test"]);
-
-//   //   expect(originalVector).not.toEqual(newMockVector);
+//   // TODO removed this test when free trial provider was removed
 //   // });
 
 //   test("Handles pulling down and adding pre-indexed docs", async () => {

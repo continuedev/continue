@@ -423,33 +423,6 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
-  llama3170bTrial: {
-    title: "Codellama 70b (Free Trial)",
-    description:
-      "The best code model from Meta, fine-tuned for code generation and conversation",
-    refUrl: "",
-    params: {
-      title: "CodeLlama-70b",
-      model: "codellama-70b",
-      contextLength: 4096,
-    },
-    icon: "meta.png",
-    providerOptions: ["free-trial"],
-    isOpenSource: false,
-  },
-  llama31405bTrial: {
-    title: "Llama3.1 405b (Free Trial)",
-    description: "The latest Llama model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama3.1-405b",
-      model: "llama3.1-405b",
-      contextLength: 8192,
-    },
-    icon: "meta.png",
-    providerOptions: ["free-trial"],
-    isOpenSource: false,
-  },
   mixtralTrial: {
     title: "Mixtral (Free Trial)",
     description:
@@ -461,7 +434,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 4096,
     },
     icon: "mistral.png",
-    providerOptions: ["free-trial", "groq"],
+    providerOptions: ["groq"],
     isOpenSource: false,
   },
   llama38bChat: {
@@ -725,13 +698,7 @@ export const models: { [key: string]: ModelPackage } = {
       model: "phind-codellama-34b",
       contextLength: 4096,
     },
-    providerOptions: [
-      "ollama",
-      "lmstudio",
-      "llama.cpp",
-      "replicate",
-      "free-trial",
-    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
     isOpenSource: true,
   },
   codestral: {
@@ -859,7 +826,7 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
-    providerOptions: ["gemini", "free-trial", "askSage"],
+    providerOptions: ["gemini", "askSage"],
     isOpenSource: false,
   },
   gemini15Flash: {
@@ -998,7 +965,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai", "free-trial", "askSage"],
+    providerOptions: ["openai", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1026,7 +993,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8096,
       title: "GPT-3.5-Turbo",
     },
-    providerOptions: ["openai", "free-trial", "askSage"],
+    providerOptions: ["openai", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1040,7 +1007,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3.5 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial", "askSage"],
+    providerOptions: ["anthropic", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -1068,7 +1035,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial", "askSage"],
+    providerOptions: ["anthropic", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -1082,7 +1049,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3.5 Haiku",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial"],
+    providerOptions: ["anthropic"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -1685,8 +1652,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekR1DistillLlama70B: {
     title: "DeepSeek R1 Distill Llama 70B",
-    description:
-      "A llama 3.1 70 model distilled from deekseek R1",
+    description: "A llama 3.1 70 model distilled from deekseek R1",
     params: {
       title: "DeepSeek R1 Distill Llama 70B",
       model: "DeepSeek-R1-Distill-Llama-70B",
@@ -1698,8 +1664,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekR1: {
     title: "DeepSeek R1",
-    description:
-      "DeekSeek R1 reasoning model from DeepSeek",
+    description: "DeekSeek R1 reasoning model from DeepSeek",
     params: {
       title: "DeepSeek R1",
       model: "DeepSeek-R1",
@@ -1711,8 +1676,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekV3: {
     title: "DeepSeek V3",
-    description:
-      "DeekSeek V3 reasoning model from DeepSeek",
+    description: "DeekSeek V3 reasoning model from DeepSeek",
     params: {
       title: "DeepSeek V3",
       model: "DeepSeek-V3-0324",

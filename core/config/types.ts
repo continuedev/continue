@@ -743,8 +743,6 @@ declare global {
   
     getLastModified(files: string[]): Promise<{ [path: string]: number }>;
   
-    getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
-  
     // LSP
     gotoDefinition(location: Location): Promise<RangeInFile[]>;
   

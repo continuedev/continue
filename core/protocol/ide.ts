@@ -92,7 +92,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
-  getGitHubAuthToken: [GetGhTokenArgs, string | undefined];
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },
     ControlPlaneSessionInfo | undefined,
