@@ -6,7 +6,7 @@ import * as vscode from "vscode";
 
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
-import { GitExtension, Repository } from "../otherExtensions/git";
+import { API, GitExtension, Repository } from "../otherExtensions/git";
 import {
   SuggestionRanges,
   acceptSuggestionCommand,
@@ -477,9 +477,27 @@ export class VsCodeIdeUtils {
     }
   }
 
+  /**
+   * Fetches the repository data directly from the source, bypassing any cache.
+   */
+  async getRepoDirect(uri: vscode.Uri): Promise<Repository | undefined> {
+    return this._getGitApi()?.getRepository(uri) ?? undefined;
+  }
+
+  async getRepos(): Promise<Repository[] | undefined> {
+    return this._getGitApi()?.repositories;
+  }
+
   private async _getRepo(
     forDirectory: vscode.Uri,
   ): Promise<Repository | undefined> {
+    return this._getGitApi()?.getRepository(forDirectory) ?? undefined;
+  }
+
+  /**
+   * Gets the Git extension API if available
+   */
+  private _getGitApi(): API | undefined {
     // Use the native git extension to get the branch name
     const extension =
       vscode.extensions.getExtension<GitExtension>("vscode.git");
@@ -492,29 +510,7 @@ export class VsCodeIdeUtils {
     }
 
     try {
-      const git = extension.exports.getAPI(1);
-      return git.getRepository(forDirectory) ?? undefined;
-    } catch (e) {
-      this._repoWasNone = true;
-      console.warn("Git not found: ", e);
-      return undefined;
-    }
-  }
-
-  private _getRepositories(): Repository[] | undefined {
-    const extension =
-      vscode.extensions.getExtension<GitExtension>("vscode.git");
-    if (
-      typeof extension === "undefined" ||
-      !extension.isActive ||
-      typeof vscode.workspace.workspaceFolders === "undefined"
-    ) {
-      return undefined;
-    }
-
-    try {
-      const git = extension.exports.getAPI(1);
-      return git.repositories;
+      return extension.exports.getAPI(1);
     } catch (e) {
       this._repoWasNone = true;
       console.warn("Git not found: ", e);
@@ -603,7 +599,7 @@ export class VsCodeIdeUtils {
   async getDiff(includeUnstaged: boolean): Promise<string[]> {
     const diffs: string[] = [];
 
-    const repos = this._getRepositories();
+    const repos = await this.getRepos();
 
     try {
       if (repos) {

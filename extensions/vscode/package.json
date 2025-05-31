@@ -201,6 +201,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.generateCommitMessage",
+        "category": "Continue",
+        "title": "Generate Commit Message with Continue",
+        "icon": "$(sparkle)"
+      },
+      {
         "command": "continue.exitEditMode",
         "category": "Continue",
         "title": "Exit Edit Mode",
@@ -530,6 +536,20 @@
         {
           "command": "continue.debugTerminal",
           "group": "navigation@top"
+        }
+      ],
+      "git.commit": [
+        {
+          "command": "continue.generateCommitMessage",
+          "when": "scmProvider == git",
+          "group": "Continue"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "continue.generateCommitMessage",
+          "when": "scmProvider == git",
+          "group": "navigation@-1"
         }
       ]
     },

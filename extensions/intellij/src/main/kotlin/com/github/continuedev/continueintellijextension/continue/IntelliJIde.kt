@@ -25,7 +25,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiDocumentManager
@@ -516,7 +515,7 @@ class IntelliJIDE(
             }
 
             val deferred = CompletableDeferred<String?>()
-            val icon = IconLoader.getIcon("/icons/continue.svg", javaClass)
+            val icon = ContinueIcons.CONTINUE
 
             val notification = NotificationGroupManager.getInstance().getNotificationGroup("Continue")
                 .createNotification(message, notificationType).setIcon(icon)

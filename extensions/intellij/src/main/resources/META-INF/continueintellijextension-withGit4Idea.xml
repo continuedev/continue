@@ -1,0 +1,12 @@
+<idea-plugin>
+
+    <actions>
+        <!-- Define action ONLY when plugin Git4Idea is present -->
+        <action id="continue.Vcs.CommitMessage"
+                class="com.github.continuedev.continueintellijextension.actions.GenerateCommitMessageAction">
+
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="last"/>
+        </action>
+    </actions>
+
+</idea-plugin>
