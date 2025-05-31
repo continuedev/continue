@@ -60,7 +60,6 @@ export class LocalPlatformClient implements PlatformClient {
   ): Promise<string | undefined> {
     try {
       const workspaceDirs = await this.ide.getWorkspaceDirs();
-
       for (const folder of workspaceDirs) {
         const envFilePath = joinPathsToUri(
           folder,

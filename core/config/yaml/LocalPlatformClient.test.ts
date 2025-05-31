@@ -1,11 +1,18 @@
 import { FQSN, SecretResult, SecretType } from "@continuedev/config-yaml";
-import { testControlPlaneClient, testIde } from "../../test/fixtures";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  Mock,
+  test,
+  vi,
+} from "vitest";
+import { IDE } from "../..";
+import { ControlPlaneClient } from "../../control-plane/client";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 
-jest.mock("../../util/paths.ts", () => ({
-  ...jest.requireActual("../../util/paths"),
-  getContinueDotEnv: jest.fn(),
-}));
+vi.mock("../../util/paths", { spy: true });
 
 describe("LocalPlatformClient", () => {
   const testFQSN: FQSN = {
@@ -17,6 +24,16 @@ describe("LocalPlatformClient", () => {
     ],
     secretName: "TEST_CONTINUE_SECRET_KEY",
   };
+  const testFQSN2: FQSN = {
+    packageSlugs: [
+      {
+        ownerSlug: "test-owner-slug-2",
+        packageSlug: "test-package-slug-2",
+      },
+    ],
+    secretName: "TEST_WORKSPACE_SECRET_KEY",
+  };
+
   const testResolvedFQSN: SecretResult = {
     found: true,
     fqsn: testFQSN,
@@ -27,20 +44,38 @@ describe("LocalPlatformClient", () => {
     },
   };
 
-  afterEach(() => jest.restoreAllMocks());
+  let testControlPlaneClient: ControlPlaneClient;
+  let testIde: IDE;
+  beforeEach(
+    /**dynamic import before each test for test isolation */
+    async () => {
+      const testFixtures = await import("../../test/fixtures");
+      testControlPlaneClient = testFixtures.testControlPlaneClient;
+      testIde = testFixtures.testIde;
+    },
+  );
 
-  test("should not be able to resolve FQSNs if they do not exist", async () => {
-    testControlPlaneClient.resolveFQSNs = jest.fn(async () => [
-      testResolvedFQSN,
-    ]);
-    const localPlatformClient = new LocalPlatformClient(
-      null,
-      testControlPlaneClient,
-      testIde,
-    );
-    const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
-    expect(testControlPlaneClient.resolveFQSNs).toHaveBeenCalled();
-    expect(resolvedFQSNs).toEqual([testResolvedFQSN]);
+  let secretValue: string;
+  let envKeyValues: Record<string, unknown>;
+  let envKeyValuesString: string;
+  beforeEach(
+    /**generate unique env key value pairs for each test */
+    () => {
+      secretValue = Math.floor(Math.random() * 100) + "";
+      envKeyValues = {
+        TEST_CONTINUE_SECRET_KEY: secretValue,
+        TEST_WORKSPACE_SECRET_KEY: secretValue + "-workspace",
+      };
+      envKeyValuesString = Object.entries(envKeyValues)
+        .map(([key, value]) => `${key}=${value}`)
+        .join("\n");
+    },
+  );
+
+  afterEach(() => {
+    vi.resetAllMocks();
+    vi.restoreAllMocks();
+    vi.resetModules(); // clear dynamic imported module cache
   });
 
   test("should not be able to resolve FQSNs if they do not exist", async () => {
@@ -55,34 +90,28 @@ describe("LocalPlatformClient", () => {
     expect(resolvedFQSNs[0]?.found).toBe(false);
   });
 
-  describe.only("searches for secrets in local .env files", () => {
-    const secretValue = Math.floor(Math.random() * 100) + "";
-    const envKeyValues = {
-      TEST_CONTINUE_SECRET_KEY: secretValue,
-    };
-    const getContinueDotEnv = jest.fn(() => envKeyValues);
+  test("should be able to resolve FQSNs if they exist", async () => {
+    testControlPlaneClient.resolveFQSNs = vi.fn(async () => [testResolvedFQSN]);
+    const localPlatformClient = new LocalPlatformClient(
+      null,
+      testControlPlaneClient,
+      testIde,
+    );
+    const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+    expect(testControlPlaneClient.resolveFQSNs).toHaveBeenCalled();
+    expect(resolvedFQSNs).toEqual([testResolvedFQSN]);
+    expect(resolvedFQSNs[0]?.found).toBe(true);
+  });
 
+  describe("searches for secrets in local .env files", () => {
+    let getContinueDotEnv: Mock;
     beforeEach(async () => {
-      //   const directoryExists = fs.existsSync("./_tests");
-      //   if (directoryExists) {
-      //     fs.rmSync("./_tests", { force: true, recursive: true });
-      //   }
-      //   const envFileContent = `TEST_CONTINUE_SECRET_KEY=${secretValue}`;
-      //   fs.writeFileSync("./_tests/.env", envFileContent);
-      //   utilPaths.getContinueDotEnv = getContinueDotEnv
-      // const spy = jest.spyOn(utilPaths, 'getContinueDotEnv')
-      // Object.defineProperty(utilPaths, 'getContinueDotEnv', {
-      //   writable: true,
-      //   configurable: true,
-      //   value: spy.mockImplementation(() => envKeyValues),
-      // });
-      //   jest.mock(utilPaths, () => ({
-      //     ...jest.requireActual(utilPaths),
-      //     getContinueDotEnv: jest.fn().mockReturnValue(envKeyValues)
-      //   }))
+      const utilPaths = await import("../../util/paths");
+      getContinueDotEnv = vi.fn(() => envKeyValues);
+      utilPaths.getContinueDotEnv = getContinueDotEnv;
     });
 
-    test("should be able to get secrets from global ~/.continue/.env files", async () => {
+    test("should be able to get secrets from ~/.continue/.env files", async () => {
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
@@ -90,7 +119,114 @@ describe("LocalPlatformClient", () => {
       );
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
       expect(getContinueDotEnv).toHaveBeenCalled();
-      console.log("resolved->", resolvedFQSNs);
+      expect(resolvedFQSNs.length).toBe(1);
+      expect(
+        (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
+      ).toBe(secretValue);
+      console.log("debug1 resolved fqsn", resolvedFQSNs);
+    });
+  });
+
+  describe("should be able to get secrets from workspace .env files", () => {
+    test("should get secrets from <workspace>/.continue/.env and <workspace>/.env", async () => {
+      const originalIdeFileExists = testIde.fileExists;
+      testIde.fileExists = vi.fn(async (fileUri: string) =>
+        fileUri.includes(".env") ? true : originalIdeFileExists(fileUri),
+      );
+
+      const originalIdeReadFile = testIde.readFile;
+      const randomValueForContinueDirDotEnv =
+        "continue-dir-" + Math.floor(Math.random() * 100);
+      const randomValueForWorkspaceDotEnv =
+        "dotenv-" + Math.floor(Math.random() * 100);
+
+      testIde.readFile = vi.fn(async (fileUri: string) => {
+        // fileUri should contain .continue/.env and not .env
+        if (fileUri.match(/.*\.continue\/\.env.*/gi)?.length) {
+          return (
+            envKeyValuesString.split("\n")[0] + randomValueForContinueDirDotEnv
+          );
+        }
+        // filUri should contain .env and not .continue/.env
+        else if (fileUri.match(/.*(?<!\.continue\/)\.env.*/gi)?.length) {
+          return (
+            envKeyValuesString.split("\n")[1] + randomValueForWorkspaceDotEnv
+          );
+        }
+        return originalIdeReadFile(fileUri);
+      });
+
+      const localPlatformClient = new LocalPlatformClient(
+        null,
+        testControlPlaneClient,
+        testIde,
+      );
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([
+        testFQSN,
+        testFQSN2,
+      ]);
+
+      expect(resolvedFQSNs.length).toBe(2);
+
+      const continueDirSecretValue = (
+        resolvedFQSNs[0] as SecretResult & { value: unknown }
+      )?.value;
+      const dotEnvSecretValue = (
+        resolvedFQSNs[1] as SecretResult & { value: unknown }
+      )?.value;
+
+      expect(continueDirSecretValue).toContain(secretValue);
+      expect(continueDirSecretValue).toContain(randomValueForContinueDirDotEnv);
+      expect(dotEnvSecretValue).toContain(secretValue + "-workspace");
+      expect(dotEnvSecretValue).toContain(randomValueForWorkspaceDotEnv);
+    });
+
+    test("should first get secrets from <workspace>/.continue/.env and then <workspace>/.env", async () => {
+      const originalIdeFileExists = testIde.fileExists;
+      testIde.fileExists = vi.fn(async (fileUri: string) =>
+        fileUri.includes(".env") ? true : originalIdeFileExists(fileUri),
+      );
+
+      const randomValueForContinueDirDotEnv =
+        "continue-dir-" + Math.floor(Math.random() * 100);
+      const randomValueForWorkspaceDotEnv =
+        "dotenv-" + Math.floor(Math.random() * 100);
+
+      const originalIdeReadFile = testIde.readFile;
+      testIde.readFile = vi.fn(async (fileUri: string) => {
+        // fileUri should contain .continue/.env and not .env
+        if (fileUri.match(/.*\.continue\/\.env.*/gi)?.length) {
+          return (
+            envKeyValuesString.split("\n")[0] + randomValueForContinueDirDotEnv
+          );
+        }
+        // filUri should contain .env and not .continue/.env
+        else if (fileUri.match(/.*(?<!\.continue\/)\.env.*/gi)?.length) {
+          return (
+            envKeyValuesString.split("\n")[0] + randomValueForWorkspaceDotEnv
+          );
+        }
+        return originalIdeReadFile(fileUri);
+      });
+
+      const localPlatformClient = new LocalPlatformClient(
+        null,
+        testControlPlaneClient,
+        testIde,
+      );
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+      expect(resolvedFQSNs.length).toBe(1);
+
+      expect(
+        (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
+      ).toContain(secretValue);
+      expect(
+        (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
+      ).toContain(randomValueForContinueDirDotEnv);
+      expect(
+        (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
+      ).not.toContain(randomValueForWorkspaceDotEnv);
     });
   });
 });
