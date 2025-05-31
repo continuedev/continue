@@ -7,13 +7,15 @@ import { isProcessBackgrounded, removeBackgroundedProcess } from "../../util/pro
 
 const asyncExec = util.promisify(childProcess.exec);
 
+const ENABLED_FOR_REMOTES = ["","local","wsl","dev-container","devcontainer","ssh-remote","attached-container","codespaces","tunnel"];
+
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   // Default to waiting for completion if not specified
   const waitForCompletion = args.waitForCompletion !== false;
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  if (ideInfo.remoteName === "local" || ideInfo.remoteName === "") {
+  if (ENABLED_FOR_REMOTES.includes(ideInfo.remoteName)) {
     // For streaming output
     if (extras.onPartialOutput) {
       return new Promise((resolve, reject) => {
