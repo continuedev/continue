@@ -13,7 +13,7 @@
                     <option value="runIdeForUiTests"/>
                 </list>
             </option>
-            <option name="vmOptions"/>
+             <option name="vmOptions" value="-Dide.browser.jcef.out-of-process.enabled=false"/>
         </ExternalSystemSettings>
         <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
         <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
