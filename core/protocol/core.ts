@@ -205,4 +205,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
+
+  "generateCommitMessage": [
+    {
+      modelTitle?: string;
+      diff?: string[];
+    },
+    AsyncGenerator<string>,
+  ];
 };
