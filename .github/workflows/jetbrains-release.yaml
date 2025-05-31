@@ -63,7 +63,7 @@ jobs:
 
       - name: Bump version in gradle.properties
         run: |
-          cd extensions/intelllij
+          cd extensions/intellij
           awk '/pluginVersion=/{split($0,a,"="); split(a[2],b,"."); b[3]+=1; printf "%s=%s.%s.%s\n",a[1],b[1],b[2],b[3];next}1' gradle.properties > tmp && mv tmp gradle.properties
           rm -rf tmp
           NEW_VERSION=$(grep 'pluginVersion=' gradle.properties | cut -d'=' -f2)

@@ -126,7 +126,7 @@ const AssistantSelectOption = ({
             )}
             {isLocalProfile(profile) ? (
               <Cog6ToothIcon
-                className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
+                className="text-description h-3 w-3 flex-shrink-0 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -135,7 +135,7 @@ const AssistantSelectOption = ({
               />
             ) : (
               <ArrowTopRightOnSquareIcon
-                className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
+                className="text-description h-3 w-3 flex-shrink-0 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -153,15 +153,14 @@ const AssistantSelectOption = ({
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, refreshProfiles } = useAuth();
   const currentOrg = useAppSelector(selectCurrentOrg);
   const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
   const [loading, setLoading] = useState(false);
 
-  const { profiles, session, login } = useAuth();
-  const navigate = useNavigate();
+  const { profiles, session, login, selectedProfile, refreshProfiles } =
+    useAuth();
 
   function close() {
     if (buttonRef.current) {
@@ -218,6 +217,11 @@ export default function AssistantSelect() {
   }, [currentOrg, selectedProfile]);
 
   const cycleOrgs = () => {
+    if (!session) {
+      void login(false);
+      return;
+    }
+
     const orgIds = orgs.map((org) => org.id);
     if (orgIds.length < 2) {
       return;
@@ -242,12 +246,12 @@ export default function AssistantSelect() {
     return (
       <div
         onClick={() => {
-          ideMessenger.request("controlPlane/openUrl", {
+          void ideMessenger.request("controlPlane/openUrl", {
             path: "/new?type=assistant",
             orgSlug: currentOrg?.slug,
           });
         }}
-        className="flex cursor-pointer select-none items-center gap-1 text-gray-400"
+        className="text-description flex cursor-pointer select-none items-center gap-1"
         style={{ fontSize: smallFont }}
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
@@ -266,7 +270,7 @@ export default function AssistantSelect() {
         <ListboxButton
           data-testid="assistant-select-button"
           ref={buttonRef}
-          className="border-none bg-transparent text-gray-400 hover:brightness-125"
+          className="text-description border-none bg-transparent hover:brightness-125"
           style={{ fontSize: fontSize(-3) }}
         >
           <div className="flex flex-row items-center gap-1.5">
@@ -301,7 +305,7 @@ export default function AssistantSelect() {
               >
                 <ArrowPathIcon
                   className={cn(
-                    "text-lightgray h-2.5 w-2.5",
+                    "text-description h-2.5 w-2.5",
                     loading && "animate-spin-slow",
                   )}
                 />
@@ -339,7 +343,7 @@ export default function AssistantSelect() {
                   onClick={session ? onNewAssistant : () => login(false)}
                 >
                   <div
-                    className="text-lightgray flex flex-row items-center gap-2"
+                    className="text-description flex flex-row items-center gap-2"
                     style={{
                       fontSize: tinyFont,
                     }}
@@ -358,7 +362,7 @@ export default function AssistantSelect() {
               />
 
               <div
-                className="text-lightgray flex items-center justify-between px-2 py-1"
+                className="text-description flex items-center justify-between gap-1.5 px-2 py-1"
                 style={{
                   fontSize: tinyFont,
                 }}

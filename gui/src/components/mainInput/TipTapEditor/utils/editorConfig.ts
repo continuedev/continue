@@ -23,7 +23,7 @@ import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
-import { exitEditMode } from "../../../../redux/thunks/editMode";
+import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
 import * as ContinueExtensions from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
@@ -81,9 +81,9 @@ export function createEditorConfig(options: {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);
-  const mode = useAppSelector((store) => store.session.mode);
-  const modeRef = useUpdatingRef(mode);
   const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const isInEditRef = useUpdatingRef(isInEdit);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -157,7 +157,7 @@ export function createEditorConfig(options: {
                     for (const item of items) {
                       const file = item.getAsFile();
                       file &&
-                        modelSupportsImages(
+                        void modelSupportsImages(
                           model.provider,
                           model.model,
                           model.title,
@@ -269,9 +269,9 @@ export function createEditorConfig(options: {
                 return true;
               }
 
-              if (modeRef.current === "edit") {
-                dispatch(
-                  exitEditMode({
+              if (isInEditRef.current) {
+                void dispatch(
+                  exitEdit({
                     openNewSession: false,
                   }),
                 );
@@ -345,7 +345,7 @@ export function createEditorConfig(options: {
       if (!editor) {
         return;
       }
-      if (isStreaming || (codeToEdit.length === 0 && mode === "edit")) {
+      if (isStreaming || (codeToEdit.length === 0 && isInEdit)) {
         return;
       }
 
@@ -362,7 +362,7 @@ export function createEditorConfig(options: {
 
       props.onEnter(json, modifiers, editor);
     },
-    [props.onEnter, editor, props.isMainInput, codeToEdit, mode],
+    [props.onEnter, editor, props.isMainInput, codeToEdit, isInEdit],
   );
 
   return { editor, onEnterRef };

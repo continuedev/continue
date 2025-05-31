@@ -51,7 +51,6 @@ import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
-import { allTools } from "../tools";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
@@ -67,6 +66,7 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
+import { baseToolDefinitions } from "../tools";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
@@ -101,7 +101,14 @@ export function resolveSerializedConfig(
 
 const configMergeKeys = {
   models: (a: any, b: any) => a.title === b.title,
-  contextProviders: (a: any, b: any) => a.name === b.name,
+  contextProviders: (a: any, b: any) => {
+    // If not HTTP providers, use the name only
+    if (a.name !== "http" || b.name !== "http") {
+      return a.name === b.name;
+    }
+    // For HTTP providers, consider them different if they have different URLs
+    return a.name === b.name && a.params?.url === b.params?.url;
+  },
   slashCommands: (a: any, b: any) => a.name === b.name,
   customCommands: (a: any, b: any) => a.name === b.name,
 };
@@ -522,7 +529,7 @@ async function intermediateToFinalConfig({
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    tools: [...allTools],
+    tools: [...baseToolDefinitions],
     mcpServerStatuses: [],
     slashCommands: config.slashCommands ?? [],
     modelsByRole: {
@@ -620,6 +627,7 @@ async function intermediateToFinalConfig({
 function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
   return {
     provider: llm.providerName,
+    underlyingProviderName: llm.underlyingProviderName,
     model: llm.model,
     title: llm.title ?? llm.model,
     apiKey: llm.apiKey,
@@ -970,6 +978,5 @@ export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadContinueConfigFromJson,
-  type BrowserSerializedContinueConfig
+  type BrowserSerializedContinueConfig,
 };
-

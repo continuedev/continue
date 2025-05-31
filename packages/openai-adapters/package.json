@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.21",
+  "version": "1.0.26",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
     "@azure/openai": "^1.0.0-beta.12",
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/config-yaml": "^1.0.51",
-    "@continuedev/fetch": "^1.0.3",
+    "@continuedev/fetch": "^1.0.10",
     "dotenv": "^16.5.0",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",

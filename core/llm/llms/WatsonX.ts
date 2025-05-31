@@ -1,12 +1,12 @@
+import { streamResponse, streamSse } from "@continuedev/fetch";
 import {
   ChatMessage,
   Chunk,
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
+import { fromChatCompletionChunk } from "../openaiTypeConverters.js";
 
 let watsonxToken = {
   expiration: 0,
@@ -82,10 +82,8 @@ class WatsonX extends BaseLLM {
     }
   }
 
-  getWatsonxEndpoint(): string {
-    return this.deploymentId
-      ? `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`
-      : `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`;
+  _getEndpoint(endpoint: string): string {
+    return `${this.apiBase}/ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}/` : ""}text/${endpoint}_stream?version=${this.apiVersion}`;
   }
 
   static providerName = "watsonx";
@@ -117,14 +115,10 @@ class WatsonX extends BaseLLM {
     };
   }
 
-  protected _convertModelName(model: string): string {
-    return model;
-  }
-
   protected _convertArgs(options: any, messages: ChatMessage[]) {
     const finalOptions = {
       messages: messages.map(this._convertMessage).filter(Boolean),
-      model: this._convertModelName(options.model),
+      model: options.model,
       max_tokens: options.maxTokens,
       temperature: options.temperature,
       top_p: options.topP,
@@ -185,26 +179,10 @@ class WatsonX extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    for await (const chunk of this._streamChat(
-      [{ role: "user", content: prompt }],
-      signal,
-      options,
-    )) {
-      yield renderChatMessage(chunk);
-    }
-  }
-
-  protected async *_streamChat(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions,
-  ): AsyncGenerator<ChatMessage> {
     await this.updateWatsonxToken();
 
-    const stopSequences =
-      options.stop?.slice(0, 6) ??
-      (options.model?.includes("granite") ? ["Question:"] : []);
-    const url = this.getWatsonxEndpoint();
+    const stopSequences = options.stop?.slice(0, 6) ?? [];
+    const url = this._getEndpoint("generation");
     const headers = this._getHeaders();
 
     const parameters: any = {
@@ -224,7 +202,7 @@ class WatsonX extends BaseLLM {
     }
 
     const payload: any = {
-      input: messages[messages.length - 1].content,
+      input: prompt,
       parameters: parameters,
     };
     if (!this.deploymentId) {
@@ -232,46 +210,91 @@ class WatsonX extends BaseLLM {
       payload.project_id = this.projectId;
     }
 
-    var response = await this.fetch(url, {
+    const response = await this.fetch(url, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
       signal,
     });
 
-    if (!response.ok || response.body === null) {
-      throw new Error(
-        "Something went wrong. No response received, check your connection",
-      );
-    } else {
-      for await (const value of streamResponse(response)) {
-        const lines = value.split("\n");
-        let generatedChunk = "";
-        let generatedTextIndex = undefined;
-        lines.forEach((el: string) => {
-          // console.log(`${el}`);
-          if (el.startsWith("id:")) {
-            generatedTextIndex = parseInt(el.replace(/^id:\s+/, ""));
-            if (isNaN(generatedTextIndex)) {
-              console.error(`Unable to parse stream chunk ID: ${el}`);
-            }
-          } else if (el.startsWith("data:")) {
-            const dataStr = el.replace(/^data:\s+/, "");
-            try {
-              const data = JSON.parse(dataStr);
-              data.results.forEach((result: any) => {
-                generatedChunk += result.generated_text || "";
-              });
-            } catch (e) {
-              // parsing error is expected with streaming response
-              // console.error(`Error parsing JSON string: ${dataStr}`, e);
-            }
+    for await (const value of streamResponse(response)) {
+      const lines = value.split("\n");
+      let generatedChunk = "";
+      let generatedTextIndex = undefined;
+      lines.forEach((el: string) => {
+        // console.log(`${el}`);
+        if (el.startsWith("id:")) {
+          generatedTextIndex = parseInt(el.replace(/^id:\s+/, ""));
+          if (isNaN(generatedTextIndex)) {
+            console.error(`Unable to parse stream chunk ID: ${el}`);
           }
-        });
-        yield {
-          role: "assistant",
-          content: generatedChunk,
-        };
+        } else if (el.startsWith("data:")) {
+          const dataStr = el.replace(/^data:\s+/, "");
+          try {
+            const data = JSON.parse(dataStr);
+            data.results.forEach((result: any) => {
+              generatedChunk += result.generated_text || "";
+            });
+          } catch (e) {
+            // parsing error is expected with streaming response
+            // console.error(`Error parsing JSON string: ${dataStr}`, e);
+          }
+        }
+      });
+      yield generatedChunk;
+    }
+  }
+
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    await this.updateWatsonxToken();
+
+    const stopSequences = options.stop?.slice(0, 6) ?? [];
+    const url = this._getEndpoint("chat");
+    const headers = this._getHeaders();
+
+    const payload: any = {
+      messages: messages,
+      max_tokens: options.maxTokens ?? 1024,
+      stop: stopSequences,
+      frequency_penalty: options.frequencyPenalty || 1,
+      presence_penalty: options.presencePenalty || 1,
+    };
+
+    if (!this.deploymentId) {
+      payload.model_id = options.model;
+      payload.project_id = this.projectId;
+    }
+
+    if (!!options.temperature) {
+      payload.temperature = options.temperature;
+    }
+    if (!!options.topP) {
+      payload.top_p = options.topP;
+    }
+    if (!!options.tools) {
+      payload.tools = options.tools;
+      if (options.toolChoice) {
+        payload.tool_choice = options.toolChoice;
+      } else {
+        payload.tool_choice_option = "auto";
+      }
+    }
+
+    const response = await this.fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(payload),
+      signal,
+    });
+
+    for await (const value of streamSse(response)) {
+      const chunk = fromChatCompletionChunk(value);
+      if (chunk) {
+        yield chunk;
       }
     }
   }

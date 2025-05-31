@@ -83,9 +83,9 @@ class CoreMessenger(
     private fun setPermissions(destination: String) {
         val osName = System.getProperty("os.name").toLowerCase()
         if (osName.contains("mac") || osName.contains("darwin")) {
-            ProcessBuilder("xattr", "-dr", "com.apple.quarantine", destination).start()
+            ProcessBuilder("xattr", "-dr", "com.apple.quarantine", destination).start().waitFor()
             setFilePermissions(destination, "rwxr-xr-x")
-        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("mac")) {
+        } else if (osName.contains("nix") || osName.contains("nux")) {
             setFilePermissions(destination, "rwxr-xr-x")
         }
     }
@@ -146,9 +146,11 @@ class CoreMessenger(
                 e.printStackTrace()
             }
         } else {
-            // Set proper permissions
-            coroutineScope.launch(Dispatchers.IO) { setPermissions(continueCorePath) }
-
+            // Set proper permissions synchronously
+            runBlocking(Dispatchers.IO) {
+                setPermissions(continueCorePath)
+            }
+            
             // Start the subprocess
             val processBuilder =
                 ProcessBuilder(continueCorePath).directory(File(continueCorePath).parentFile)

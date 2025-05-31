@@ -8,6 +8,10 @@ interface CreateFileToolCallProps {
 }
 
 export function CreateFile(props: CreateFileToolCallProps) {
+  if (!props.fileContents) {
+    return null;
+  }
+
   const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilepath ?? "output.txt")} ${props.relativeFilepath}\n${props.fileContents ?? ""}\n\`\`\``;
 
   return props.relativeFilepath ? (

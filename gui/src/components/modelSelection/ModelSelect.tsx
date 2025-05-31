@@ -6,8 +6,7 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
-import { defaultBorderRadius, lightGray } from "..";
+import { lightGray } from "..";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
@@ -29,21 +28,6 @@ interface Option {
   title: string;
   apiKey?: string;
 }
-
-const IconBase = styled.div<{ $hovered: boolean }>`
-  width: 1.2em;
-  height: 1.2em;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: ${defaultBorderRadius};
-  opacity: ${(props) => (props.$hovered ? 0.75 : 0)};
-  visibility: ${(props) => (props.$hovered ? "visible" : "hidden")};
-
-  &:hover {
-    opacity: 1;
-    background-color: ${lightGray}33;
-  }
-`;
 
 function modelSelectTitle(model: any): string {
   if (model?.title) return model?.title;
@@ -120,12 +104,12 @@ function ModelOption({
 function ModelSelect() {
   const dispatch = useAppDispatch();
 
-  const mode = useAppSelector((store) => store.session.mode);
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const config = useAppSelector((state) => state.config.config);
 
   let selectedModel = null;
   let allModels = null;
-  if (mode === "edit") {
+  if (isInEdit) {
     allModels = config.modelsByRole.edit;
     selectedModel = config.selectedModelByRole.edit;
   }
@@ -166,7 +150,11 @@ function ModelSelect() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "'" && isMetaEquivalentKeyPressed(event as any)) {
+      if (
+        event.key === "'" &&
+        isMetaEquivalentKeyPressed(event as any) &&
+        !event.shiftKey // To prevent collisions w/ assistant toggle logic
+      ) {
         if (!selectedProfile) {
           return;
         }
@@ -179,7 +167,7 @@ function ModelSelect() {
         if (nextIndex < 0) nextIndex = options.length - 1;
         const newModelTitle = options[nextIndex].value;
 
-        dispatch(
+        void dispatch(
           updateSelectedModelByRole({
             selectedProfile,
             role: "chat",
@@ -219,10 +207,10 @@ function ModelSelect() {
     <Listbox
       onChange={async (val: string) => {
         if (val === selectedModel?.title) return;
-        dispatch(
+        void dispatch(
           updateSelectedModelByRole({
             selectedProfile,
-            role: mode === "edit" ? "edit" : "chat",
+            role: isInEdit ? "edit" : "chat",
             modelTitle: val,
           }),
         );
@@ -232,7 +220,7 @@ function ModelSelect() {
         <ListboxButton
           data-testid="model-select-button"
           ref={buttonRef}
-          className="h-[18px] gap-1 border-none text-gray-400"
+          className="text-description h-[18px] gap-1 border-none"
         >
           <span className="line-clamp-1 break-all hover:brightness-110">
             {modelSelectTitle(selectedModel) || "Select model"}

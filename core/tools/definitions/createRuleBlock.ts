@@ -13,10 +13,10 @@ export const createRuleBlock: Tool = {
   function: {
     name: BuiltInToolNames.CreateRuleBlock,
     description:
-      "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently.",
+      "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently. To modify existing rules, use the edit tool instead.",
     parameters: {
       type: "object",
-      required: ["name", "rule"],
+      required: ["name", "rule", "alwaysApply", "description"],
       properties: {
         name: {
           type: "string",
@@ -28,10 +28,19 @@ export const createRuleBlock: Tool = {
           description:
             "Clear, imperative instruction for future code generation (e.g. 'Use named exports', 'Add Python type hints'). Each rule should focus on one specific standard.",
         },
+        description: {
+          type: "string",
+          description: "Short description of the rule",
+        },
         globs: {
           type: "string",
           description:
             "Optional file patterns to which this rule applies (e.g. ['**/*.{ts,tsx}'] or ['src/**/*.ts', 'tests/**/*.ts'])",
+        },
+        alwaysApply: {
+          type: "boolean",
+          description:
+            "Whether this rule should always be applied regardless of file pattern matching",
         },
       },
     },

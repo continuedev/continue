@@ -22,6 +22,8 @@ import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
+import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
+
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -36,17 +38,15 @@ import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
-import { Battery } from "./util/battery";
-import { getMetaKeyLabel } from "./util/util";
-import { VsCodeIde } from "./VsCodeIde";
-
-import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 import {
   addCodeToContextFromRange,
   addEntireFileToContext,
   addHighlightedCodeToContext,
 } from "./util/addCode";
+import { Battery } from "./util/battery";
+import { getMetaKeyLabel } from "./util/util";
 import { openEditorAndRevealRange } from "./util/vscode";
+import { VsCodeIde } from "./VsCodeIde";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -97,6 +97,7 @@ async function processDiff(
   action: "accept" | "reject",
   sidebar: ContinueGUIWebviewViewProvider,
   ide: VsCodeIde,
+  core: Core,
   verticalDiffManager: VerticalDiffManager,
   newFileUri?: string,
   streamId?: string,
@@ -121,6 +122,9 @@ async function processDiff(
 
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
+  if (action === "reject") {
+    core.invoke("cancelApply", undefined);
+  }
 
   if (streamId) {
     const fileContent = await ide.readFile(newOrCurrentUri);
@@ -236,18 +240,20 @@ const getCommandsMap: (
         "accept",
         sidebar,
         ide,
+        core,
         verticalDiffManager,
         newFileUri,
         streamId,
       ),
 
-    "continue.rejectDiff": async (newFilepath?: string, streamId?: string) =>
+    "continue.rejectDiff": async (newFileUri?: string, streamId?: string) =>
       processDiff(
         "reject",
         sidebar,
         ide,
+        core,
         verticalDiffManager,
-        newFilepath,
+        newFileUri,
         streamId,
       ),
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
@@ -573,11 +579,15 @@ const getCommandsMap: (
             await addEntireFileToContext(
               vscode.Uri.parse(fileUri),
               sidebar.webviewProtocol,
-              ide.ideUtils
+              ide.ideUtils,
             );
           }
         } else {
-          await addEntireFileToContext(uri, sidebar.webviewProtocol, ide.ideUtils);
+          await addEntireFileToContext(
+            uri,
+            sidebar.webviewProtocol,
+            ide.ideUtils,
+          );
         }
       }
     },
@@ -673,6 +683,8 @@ const getCommandsMap: (
         },
         {
           label: quickPickStatusText(targetStatus),
+          description:
+            getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
         {
           label: "$(feedback) Give feedback",

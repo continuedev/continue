@@ -1,9 +1,9 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
-import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
+import { useMainEditor } from "../components/mainInput/TipTapEditor";
 import {
   initializeProfilePreferences,
   setOrganizations,
@@ -16,7 +16,7 @@ import { setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
   updateEditStateApplyState,
-} from "../redux/slices/editModeState";
+} from "../redux/slices/editState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   acceptToolCall,
@@ -24,11 +24,15 @@ import {
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import { streamResponseAfterToolCall } from "../redux/thunks";
+import { exitEdit, streamResponseAfterToolCall } from "../redux/thunks";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
+import {
+  setDocumentStylesFromLocalStorage,
+  setDocumentStylesFromTheme,
+} from "../styles/theme";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -37,12 +41,18 @@ function ParallelListeners() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
 
   const hasDoneInitialConfigLoad = useRef(false);
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
+  );
+
+  const { mainEditor } = useMainEditor();
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -96,18 +106,18 @@ function ParallelListeners() {
 
   // Load config from the IDE
   useEffect(() => {
-    initialLoadAuthAndConfig(true);
+    void initialLoadAuthAndConfig(true);
     const interval = setInterval(() => {
       if (hasDoneInitialConfigLoad.current) {
         // Init to run on initial config load
         ideMessenger.post("docs/initStatuses", undefined);
-        dispatch(updateFileSymbolsFromHistory());
-        dispatch(refreshSessionMetadata({}));
+        void dispatch(updateFileSymbolsFromHistory());
+        void dispatch(refreshSessionMetadata({}));
 
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
       } else {
-        initialLoadAuthAndConfig(true);
+        void initialLoadAuthAndConfig(true);
       }
     }, 2_000);
 
@@ -129,76 +139,50 @@ function ParallelListeners() {
   const sessionId = useAppSelector((state) => state.session.id);
   useEffect(() => {
     if (sessionId) {
-      dispatch(updateFileSymbolsFromHistory());
+      void dispatch(updateFileSymbolsFromHistory());
     }
   }, [sessionId]);
 
   // ON LOAD
   useEffect(() => {
     // Override persisted state
-    dispatch(cancelStream());
+    void dispatch(cancelStream());
 
     const jetbrains = isJetBrains();
-    for (const colorVar of VSC_THEME_COLOR_VARS) {
-      if (jetbrains) {
-        const cached = localStorage.getItem(colorVar);
-        if (cached) {
-          document.body.style.setProperty(colorVar, cached);
-        }
-      }
-
-      // Remove alpha channel from colors
-      const value = getComputedStyle(document.documentElement).getPropertyValue(
-        colorVar,
-      );
-      if (colorVar.startsWith("#") && value.length > 7) {
-        document.body.style.setProperty(colorVar, value.slice(0, 7));
-      }
-    }
+    setDocumentStylesFromLocalStorage(jetbrains);
 
     if (jetbrains) {
       // Save theme colors to local storage for immediate loading in JetBrains
-      ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
-        if (result.status === "success") {
-          Object.entries(result.content).forEach(([key, value]) => {
-            document.body.style.setProperty(key, value);
-            document.documentElement.style.setProperty(key, value);
-          });
-        }
-      });
+      void ideMessenger
+        .request("jetbrains/getColors", undefined)
+        .then((result) => {
+          if (result.status === "success") {
+            setDocumentStylesFromTheme(result.content);
+          }
+        });
 
       // Tell JetBrains the webview is ready
-      ideMessenger.request("jetbrains/onLoad", undefined).then((result) => {
-        if (result.status === "error") {
-          return;
-        }
+      void ideMessenger
+        .request("jetbrains/onLoad", undefined)
+        .then((result) => {
+          if (result.status === "error") {
+            return;
+          }
 
-        const msg = result.content;
-        (window as any).windowId = msg.windowId;
-        (window as any).serverUrl = msg.serverUrl;
-        (window as any).workspacePaths = msg.workspacePaths;
-        (window as any).vscMachineId = msg.vscMachineId;
-        (window as any).vscMediaUrl = msg.vscMediaUrl;
-      });
-
-      for (const colorVar of VSC_THEME_COLOR_VARS) {
-        if (document.body.style.getPropertyValue(colorVar)) {
-          localStorage.setItem(
-            colorVar,
-            document.body.style.getPropertyValue(colorVar),
-          );
-        }
-      }
+          const msg = result.content;
+          (window as any).windowId = msg.windowId;
+          (window as any).serverUrl = msg.serverUrl;
+          (window as any).workspacePaths = msg.workspacePaths;
+          (window as any).vscMachineId = msg.vscMachineId;
+          (window as any).vscMediaUrl = msg.vscMediaUrl;
+        });
     }
   }, []);
 
   useWebviewListener(
     "jetbrains/setColors",
     async (data) => {
-      Object.entries(data).forEach(([key, value]) => {
-        document.body.style.setProperty(key, value);
-        document.documentElement.style.setProperty(key, value);
-      });
+      setDocumentStylesFromTheme(data);
     },
     [],
   );
@@ -221,7 +205,7 @@ function ParallelListeners() {
   );
 
   useWebviewListener("setInactive", async () => {
-    dispatch(cancelStream());
+    void dispatch(cancelStream());
   });
 
   useWebviewListener("setTTSActive", async (status) => {
@@ -230,7 +214,7 @@ function ParallelListeners() {
 
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
-    dispatch(
+    void dispatch(
       streamResponseThunk({
         editorState: data.message,
         modifiers: { useCodebase: false, noContext: true },
@@ -251,14 +235,15 @@ function ParallelListeners() {
     dispatch(updateIndexingStatus(data));
   });
 
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
-  );
   useWebviewListener(
     "updateApplyState",
     async (state) => {
       if (state.streamId === EDIT_MODE_STREAM_ID) {
         dispatch(updateEditStateApplyState(state));
+
+        if (state.status === "closed") {
+          dispatch(exitEdit({}));
+        }
       } else {
         // chat or agent
         dispatch(updateApplyState(state));
@@ -280,7 +265,7 @@ function ParallelListeners() {
             }),
           );
           // dispatch(setToolCallOutput([]));
-          dispatch(
+          void dispatch(
             streamResponseAfterToolCall({
               toolCallId: currentToolCallApplyState.toolCallId!,
             }),
@@ -291,12 +276,12 @@ function ParallelListeners() {
     [currentToolCallApplyState, history],
   );
 
-  const mode = useAppSelector((store) => store.session.mode);
   useEffect(() => {
-    if (mode !== "edit") {
+    if (!isInEdit) {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
-  }, [mode, history]);
+  }, [isInEdit, history]);
+
   return <></>;
 }
 

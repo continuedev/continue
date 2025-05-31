@@ -93,6 +93,7 @@ export interface ILLM
   extends Omit<LLMOptions, RequiredLLMOptions>,
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
+  get underlyingProviderName(): string;
 
   complete(
     prompt: string,
@@ -197,15 +198,14 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
-
-  loadSubmenuItems?: (
-    args: LoadSubmenuItemsArgs,
-  ) => Promise<ContextSubmenuItem[]>;
 }
 
 export interface ContextSubmenuItem {
@@ -424,7 +424,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "edit" | "agent";
+export type MessageModes = "chat" | "agent";
 
 export type ToolStatus =
   | "generating"
@@ -459,6 +459,7 @@ export interface ChatHistoryItem {
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
+  appliedRules?: RuleWithSource[];
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -842,6 +843,7 @@ export interface SlashCommand {
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
+  promptFile?: string;
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
@@ -973,6 +975,7 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
+  config: ContinueConfig;
 }
 
 export interface Tool {
@@ -1002,6 +1005,12 @@ interface ToolChoice {
   };
 }
 
+export interface ConfigDependentToolParams {
+  rules: RuleWithSource[];
+}
+
+export type GetTool = (params: ConfigDependentToolParams) => Tool;
+
 export interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -1023,6 +1032,7 @@ export interface BaseCompletionOptions {
   toolChoice?: ToolChoice;
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
+  promptCaching?: boolean;
 }
 
 export interface ModelCapability {
@@ -1033,6 +1043,7 @@ export interface ModelCapability {
 export interface ModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
 
@@ -1090,6 +1101,7 @@ export interface TabAutocompleteOptions {
   disable: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
+  modelTimeout: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
   transform?: boolean;
@@ -1130,7 +1142,17 @@ export interface SSEOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+export interface StreamableHTTPOptions {
+  type: "streamable-http";
+  url: string;
+  requestOptions?: RequestOptions;
+}
+
+export type TransportOptions =
+  | StdioOptions
+  | WebSocketOptions
+  | SSEOptions
+  | StreamableHTTPOptions;
 
 export interface MCPOptions {
   name: string;
@@ -1159,12 +1181,22 @@ export interface MCPPrompt {
 // Leaving here to ideate on
 // export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
 
+// https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
 export interface MCPResource {
   name: string;
   uri: string;
   description?: string;
   mimeType?: string;
 }
+
+// https://modelcontextprotocol.io/docs/concepts/resources#resource-templates
+export interface MCPResourceTemplate {
+  uriTemplate: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+}
+
 export interface MCPTool {
   name: string;
   description?: string;
@@ -1181,6 +1213,7 @@ export interface MCPServerStatus extends MCPOptions {
   prompts: MCPPrompt[];
   tools: MCPTool[];
   resources: MCPResource[];
+  resourceTemplates: MCPResourceTemplate[];
 }
 
 export interface ContinueUIConfig {
@@ -1190,6 +1223,7 @@ export interface ContinueUIConfig {
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
   showSessionTabs?: boolean;
+  autoAcceptEditToolDiffs?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1227,6 +1261,32 @@ export interface ApplyState {
   toolCallId?: string;
 }
 
+export interface StreamDiffLinesPayload {
+  prefix: string;
+  highlighted: string;
+  suffix: string;
+  input: string;
+  language: string | undefined;
+  modelTitle: string | undefined;
+  includeRulesInSystemMessage: boolean;
+  fileUri?: string;
+}
+
+export interface HighlightedCodePayload {
+  rangeInFileWithContents: RangeInFileWithContents;
+  prompt?: string;
+  shouldRun?: boolean;
+}
+
+export interface AcceptOrRejectDiffPayload {
+  filepath: string;
+  streamId?: string;
+}
+
+export interface ShowFilePayload {
+  filepath: string;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1236,7 +1296,7 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
  * Represents the configuration for a quick action in the Code Lens.
@@ -1291,6 +1351,11 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   modelContextProtocolServers?: ExperimentalMCPOptions[];
+
+  /**
+   * If enabled, will add the current file as context.
+   */
+  useCurrentFileAsContext?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1302,6 +1367,7 @@ export interface AnalyticsConfig {
 export interface JSONModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
   apiBase?: string;
@@ -1495,19 +1561,22 @@ export interface TerminalOptions {
   waitForCompletion?: boolean;
 }
 
+export type RuleSource =
+  | "default-chat"
+  | "default-agent"
+  | "model-chat-options"
+  | "model-agent-options"
+  | "rules-block"
+  | "json-systemMessage"
+  | ".continuerules";
+
 export interface RuleWithSource {
   name?: string;
   slug?: string;
-  source:
-    | "default-chat"
-    | "default-agent"
-    | "model-chat-options"
-    | "model-agent-options"
-    | "rules-block"
-    | "json-systemMessage"
-    | ".continuerules";
+  source: RuleSource;
   globs?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;
+  alwaysApply?: boolean;
 }

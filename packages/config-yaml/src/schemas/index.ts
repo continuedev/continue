@@ -9,13 +9,16 @@ export const contextSchema = z.object({
   params: z.any().optional(),
 });
 
+// TODO: This should be a discriminated union by type
 const mcpServerSchema = z.object({
   name: z.string(),
-  command: z.string(),
+  command: z.string().optional(),
+  type: z.enum(["sse", "stdio"]).optional(),
+  url: z.string().optional(),
   faviconUrl: z.string().optional(),
   args: z.array(z.string()).optional(),
   env: z.record(z.string()).optional(),
-  connectionTimeout: z.number().gt(0).optional()
+  connectionTimeout: z.number().gt(0).optional(),
 });
 
 export type MCPServer = z.infer<typeof mcpServerSchema>;
@@ -39,7 +42,9 @@ export type DocsConfig = z.infer<typeof docSchema>;
 const ruleObjectSchema = z.object({
   name: z.string(),
   rule: z.string(),
+  description: z.string().optional(),
   globs: z.union([z.string(), z.array(z.string())]).optional(),
+  alwaysApply: z.boolean().optional(),
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
