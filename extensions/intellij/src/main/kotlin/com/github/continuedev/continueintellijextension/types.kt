@@ -232,7 +232,7 @@ data class ApplyState(
 )
 
 data class HighlightedCodePayload(
-    val rangeInFileWithContents: RangeInFileWithContents,
+    val rangeInFileWithContents: com.github.continuedev.continueintellijextension.RangeInFileWithContents,
     val prompt: String? = null,
     val shouldRun: Boolean? = null
 )
@@ -244,7 +244,8 @@ data class StreamDiffLinesPayload(
     val input: String,
     val language: String?,
     val modelTitle: String?,
-    val includeRulesInSystemMessage: Boolean
+    val includeRulesInSystemMessage: Boolean,
+    val fileUri: String?
 )
 
 data class AcceptOrRejectDiffPayload(

@@ -35,7 +35,6 @@ import { TTS } from "./util/tts";
 
 import {
   ContextItemWithId,
-  DiffLine,
   IdeSettings,
   ModelDescription,
   RangeInFile,
@@ -62,61 +61,7 @@ import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
-
-// This function is used for jetbrains inline edit and apply
-async function* streamDiffLinesGenerator(
-  configHandler: ConfigHandler,
-  abortedMessageIds: Set<string>,
-  msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
-): AsyncGenerator<DiffLine> {
-  const {
-    highlighted,
-    prefix,
-    suffix,
-    input,
-    language,
-    modelTitle,
-    includeRulesInSystemMessage,
-  } = msg.data;
-
-  const { config } = await configHandler.loadConfig();
-  if (!config) {
-    throw new Error("Failed to load config");
-  }
-
-  // Title can be an edit, chat, or apply model
-  // Fall back to chat
-  const llm =
-    config.modelsByRole.edit.find((m) => m.title === modelTitle) ??
-    config.modelsByRole.apply.find((m) => m.title === modelTitle) ??
-    config.modelsByRole.chat.find((m) => m.title === modelTitle) ??
-    config.selectedModelByRole.chat;
-
-  if (!llm) {
-    throw new Error("No model selected");
-  }
-
-  // rules included for edit, NOT apply
-  const rules = includeRulesInSystemMessage ? config.rules : undefined;
-
-  for await (const diffLine of streamDiffLines({
-    highlighted,
-    prefix,
-    suffix,
-    llm,
-    rulesToInclude: rules,
-    input,
-    language,
-    onlyOneInsertion: false,
-    overridePrompt: undefined,
-  })) {
-    if (abortedMessageIds.has(msg.messageId)) {
-      abortedMessageIds.delete(msg.messageId);
-      break;
-    }
-    yield diffLine;
-  }
-}
+import { StreamAbortManager } from "./util/abortManager";
 
 export class Core {
   configHandler: ConfigHandler;
@@ -132,7 +77,18 @@ export class Core {
     this.globalContext.get("indexingPaused") === true,
   );
 
-  private abortedMessageIds: Set<string> = new Set();
+  private messageAbortControllers = new Map<string, AbortController>();
+  private addMessageAbortController(id: string): AbortController {
+    const controller = new AbortController();
+    this.messageAbortControllers.set(id, controller);
+    controller.signal.addEventListener("abort", () => {
+      this.messageAbortControllers.delete(id);
+    });
+    return controller;
+  }
+  private abortById(messageId: string) {
+    this.messageAbortControllers.get(messageId)?.abort();
+  }
 
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
@@ -301,7 +257,7 @@ export class Core {
     });
 
     on("abort", (msg) => {
-      this.abortedMessageIds.add(msg.messageId);
+      this.abortById(msg.data ?? msg.messageId);
     });
 
     on("ping", (msg) => {
@@ -470,27 +426,28 @@ export class Core {
       }
     });
 
-    on("llm/streamChat", (msg) =>
-      llmStreamChat(
+    on("llm/streamChat", (msg) => {
+      const abortController = this.addMessageAbortController(msg.messageId);
+      return llmStreamChat(
         this.configHandler,
-        this.abortedMessageIds,
+        abortController,
         msg,
         this.ide,
         this.messenger,
-      ),
-    );
+      );
+    });
 
     on("llm/complete", async (msg) => {
-      const model = (await this.configHandler.loadConfig()).config
-        ?.selectedModelByRole.chat;
-
+      const { config } = await this.configHandler.loadConfig();
+      const model = config?.selectedModelByRole.chat;
       if (!model) {
         throw new Error("No chat model selected");
       }
+      const abortController = this.addMessageAbortController(msg.messageId);
 
       const completion = await model.complete(
         msg.data.prompt,
-        new AbortController().signal,
+        abortController.signal,
         msg.data.completionOptions,
       );
       return completion;
@@ -532,9 +489,47 @@ export class Core {
       this.completionProvider.cancel();
     });
 
-    on("streamDiffLines", (msg) =>
-      streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
-    );
+    on("streamDiffLines", async (msg) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Failed to load config");
+      }
+
+      const { data } = msg;
+
+      // Title can be an edit, chat, or apply model
+      // Fall back to chat
+      const llm =
+        config.modelsByRole.edit.find((m) => m.title === data.modelTitle) ??
+        config.modelsByRole.apply.find((m) => m.title === data.modelTitle) ??
+        config.modelsByRole.chat.find((m) => m.title === data.modelTitle) ??
+        config.selectedModelByRole.chat;
+
+      if (!llm) {
+        throw new Error("No model selected");
+      }
+
+      return streamDiffLines({
+        highlighted: data.highlighted,
+        prefix: data.prefix,
+        suffix: data.suffix,
+        llm,
+        // rules included for edit, NOT apply
+        rulesToInclude: data.includeRulesInSystemMessage
+          ? config.rules
+          : undefined,
+        input: data.input,
+        language: data.language,
+        onlyOneInsertion: false,
+        overridePrompt: undefined,
+        abortControllerId: data.fileUri ?? "current-file-stream", // not super important since currently cancelling apply will cancel all streams it's one file at a time
+      });
+    });
+
+    on("cancelApply", async (msg) => {
+      const abortManager = StreamAbortManager.getInstance();
+      abortManager.clear();
+    });
 
     on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
 
@@ -728,6 +723,7 @@ export class Core {
       };
 
       return await callTool(tool, toolCall.function.arguments, {
+        config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
         fetch: (url, init) =>

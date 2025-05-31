@@ -3,6 +3,7 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 
 import {
@@ -10,6 +11,7 @@ import {
   MCPOptions,
   MCPPrompt,
   MCPResource,
+  MCPResourceTemplate,
   MCPServerStatus,
   MCPTool,
 } from "../..";
@@ -36,8 +38,13 @@ class MCPConnection {
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
+  public resourceTemplates: MCPResourceTemplate[] = [];
   private transport: Transport;
   private connectionPromise: Promise<unknown> | null = null;
+  private stdioOutput: { stdout: string; stderr: string } = {
+    stdout: "",
+    stderr: "",
+  };
 
   constructor(public options: MCPOptions) {
     this.transport = this.constructTransport(options);
@@ -67,6 +74,7 @@ class MCPConnection {
       errors: this.errors,
       prompts: this.prompts,
       resources: this.resources,
+      resourceTemplates: this.resourceTemplates,
       tools: this.tools,
       status: this.status,
     };
@@ -90,7 +98,9 @@ class MCPConnection {
     this.tools = [];
     this.prompts = [];
     this.resources = [];
+    this.resourceTemplates = [];
     this.errors = [];
+    this.stdioOutput = { stdout: "", stderr: "" };
 
     this.abortController.abort();
     this.abortController = new AbortController();
@@ -163,6 +173,23 @@ class MCPConnection {
                   }
                   this.errors.push(errorMessage);
                 }
+
+                // Resource templates
+                try {
+                  const { resourceTemplates } =
+                    await this.client.listResourceTemplates(
+                      {},
+                      { signal: timeoutController.signal },
+                    );
+
+                  this.resourceTemplates = resourceTemplates;
+                } catch (e) {
+                  let errorMessage = `Error loading resource templates for MCP Server ${this.options.name}`;
+                  if (e instanceof Error) {
+                    errorMessage += `: ${e.message}`;
+                  }
+                  this.errors.push(errorMessage);
+                }
               }
 
               // Tools <—> Tools
@@ -212,6 +239,20 @@ class MCPConnection {
               errorMessage += `Error: command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
             } else {
               errorMessage += "Error: " + error.message;
+            }
+          }
+
+          // Include stdio output if available for stdio transport
+          if (
+            this.options.transport.type === "stdio" &&
+            (this.stdioOutput.stdout || this.stdioOutput.stderr)
+          ) {
+            errorMessage += "\n\nProcess output:";
+            if (this.stdioOutput.stdout) {
+              errorMessage += `\nSTDOUT:\n${this.stdioOutput.stdout}`;
+            }
+            if (this.stdioOutput.stderr) {
+              errorMessage += `\nSTDERR:\n${this.stdioOutput.stderr}`;
             }
           }
 
@@ -284,11 +325,20 @@ class MCPConnection {
           options.transport.args || [],
         );
 
-        return new StdioClientTransport({
+        const transport = new StdioClientTransport({
           command,
           args,
           env,
+          stderr: "pipe",
         });
+
+        // Capture stdio output for better error reporting
+
+        transport.stderr?.on("data", (data: Buffer) => {
+          this.stdioOutput.stderr += data.toString();
+        });
+
+        return transport;
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
       case "sse":
@@ -307,6 +357,13 @@ class MCPConnection {
           },
           requestInit: { headers: options.transport.requestOptions?.headers },
         });
+      case "streamable-http":
+        return new StreamableHTTPClientTransport(
+          new URL(options.transport.url),
+          {
+            requestInit: { headers: options.transport.requestOptions?.headers },
+          },
+        );
       default:
         throw new Error(
           `Unsupported transport type: ${(options.transport as any).type}`,

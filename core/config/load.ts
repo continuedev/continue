@@ -51,7 +51,6 @@ import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
-import { allTools } from "../tools";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
@@ -67,6 +66,7 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
+import { baseToolDefinitions } from "../tools";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
@@ -529,7 +529,7 @@ async function intermediateToFinalConfig({
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    tools: [...allTools],
+    tools: [...baseToolDefinitions],
     mcpServerStatuses: [],
     slashCommands: config.slashCommands ?? [],
     modelsByRole: {
@@ -627,6 +627,7 @@ async function intermediateToFinalConfig({
 function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
   return {
     provider: llm.providerName,
+    underlyingProviderName: llm.underlyingProviderName,
     model: llm.model,
     title: llm.title ?? llm.model,
     apiKey: llm.apiKey,

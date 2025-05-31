@@ -1,6 +1,6 @@
+import { streamSse } from "@continuedev/fetch";
 import { CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
-import { streamSse } from "../stream.js";
 
 class LlamaCpp extends BaseLLM {
   static providerName = "llama.cpp";
@@ -35,7 +35,7 @@ class LlamaCpp extends BaseLLM {
       ...this.requestOptions?.headers,
     };
 
-    const resp = await this.fetch(new URL("completions", this.apiBase), {
+    const resp = await this.fetch(new URL("completion", this.apiBase), {
       method: "POST",
       headers,
       body: JSON.stringify({

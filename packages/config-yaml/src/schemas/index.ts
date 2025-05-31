@@ -44,6 +44,7 @@ const ruleObjectSchema = z.object({
   rule: z.string(),
   description: z.string().optional(),
   globs: z.union([z.string(), z.array(z.string())]).optional(),
+  alwaysApply: z.boolean().optional(),
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 

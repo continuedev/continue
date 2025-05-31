@@ -236,8 +236,9 @@ export class VsCodeMessenger {
         data: {
           prompt: stripImages(prompt),
           completion: fileAfterEdit ?? "",
-          modelProvider: model.providerName,
+          modelProvider: model.underlyingProviderName,
           modelTitle: model.title ?? "",
+          filepath: msg.data.range.filepath,
         },
       });
 

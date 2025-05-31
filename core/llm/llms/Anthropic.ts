@@ -1,7 +1,7 @@
+import { streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamSse } from "../stream.js";
 
 class Anthropic extends BaseLLM {
   static providerName = "anthropic";
@@ -212,6 +212,10 @@ class Anthropic extends BaseLLM {
       }),
       signal,
     });
+
+    if (response.status === 499) {
+      return; // Aborted by user
+    }
 
     if (!response.ok) {
       const json = await response.json();
