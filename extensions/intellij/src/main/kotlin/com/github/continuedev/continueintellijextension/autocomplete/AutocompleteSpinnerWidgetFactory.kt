@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.ContinueIcons
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.intellij.openapi.Disposable
@@ -8,11 +9,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.StatusBarWidgetFactory
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.impl.status.EditorBasedWidget
-import com.intellij.ui.AnimatedIcon
 import com.intellij.util.Consumer
 import java.awt.event.MouseEvent
 import javax.swing.Icon
@@ -23,7 +22,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     private val iconLabel = JLabel()
     private var isLoading = false
     
-    private val animatedIcon = AnimatedIcon.Default()
+    private val animatedIcon = ContinueIcons.SPINNING
 
     init {
         Disposer.register(ContinuePluginDisposable.getInstance(project), this)
@@ -50,7 +49,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     }
 
     override fun getIcon(): Icon = if (isLoading) animatedIcon else
-        IconLoader.getIcon("/icons/continue.svg", javaClass)
+        ContinueIcons.CONTINUE
 
     fun setLoading(loading: Boolean) {
         isLoading = loading
