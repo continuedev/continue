@@ -33,20 +33,32 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     );
   }
 
-  // Only set the YAML schema configuration if it hasn't been set before
-  if (!context.globalState.get("yamlSchemaConfigured")) {
-    vscode.workspace.getConfiguration("yaml").update(
+  // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)
+  const yamlMatcher = ".continue/**/*.yaml";
+  const yamlConfig = vscode.workspace.getConfiguration("yaml");
+
+  const existingSchemas = yamlConfig.get("schemas") || {};
+  const newSchemas = Object.entries(existingSchemas).filter(
+    ([_, value]) => Array.isArray(value) && value.includes(yamlMatcher), // remove old ones
+  );
+
+  const newPath = path.join(
+    context.extension.extensionUri.fsPath,
+    "config-yaml-schema.json",
+  );
+  newSchemas.push([newPath, [yamlMatcher]]);
+
+  try {
+    await yamlConfig.update(
       "schemas",
-      {
-        [path.join(
-          context.extension.extensionUri.fsPath,
-          "config-yaml-schema.json",
-        )]: [".continue/**/*.yaml"],
-      },
+      Object.fromEntries(newSchemas),
       vscode.ConfigurationTarget.Global,
     );
-    // Mark that we've configured the YAML schema
-    context.globalState.update("yamlSchemaConfigured", true);
+  } catch (error) {
+    console.error(
+      "Failed to register Continue config.yaml schema, most likely, YAML extension is not installed",
+      error,
+    );
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);
