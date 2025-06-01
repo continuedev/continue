@@ -66,13 +66,6 @@ class IntelliJIDE(
         }
     }
 
-    /**
-     * Updates the timestamp when a file is saved
-     */
-    override fun updateLastFileSaveTimestamp() {
-        gitService.updateLastFileSaveTimestamp()
-    }
-
     override suspend fun getIdeInfo(): IdeInfo {
         val applicationInfo = ApplicationInfo.getInstance()
         val ideName: String = applicationInfo.fullApplicationName
