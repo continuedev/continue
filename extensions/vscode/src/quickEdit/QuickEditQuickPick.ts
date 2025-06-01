@@ -326,12 +326,52 @@ export class QuickEdit {
 
     void this.webviewProtocol.request("incrementFtc", undefined);
 
+    const editorUriString = this.editorWhenOpened?.document?.uri?.toString();
+    if (this.editorWhenOpened && editorUriString) {
+      console.log(`
+
+
+!!!!!!!!!!!!!!
+[CONTINUE DEBUG QEQP - PATH A]
+EDITOR IS DEFINED AND HAS URI: ${editorUriString}
+PASSING TO streamEdit
+!!!!!!!!!!!!!!
+
+
+`);
+    } else if (this.editorWhenOpened) {
+      console.log(`
+
+
+!!!!!!!!!!!!!!
+[CONTINUE DEBUG QEQP - PATH B]
+EDITOR IS DEFINED BUT URI IS NOT: ${editorUriString}
+PASSING POTENTIALLY UNDEFINED URI TO streamEdit
+!!!!!!!!!!!!!!
+
+
+`);
+    } else {
+      console.log(`
+
+
+!!!!!!!!!!!!!!
+[CONTINUE DEBUG QEQP - PATH C]
+EDITOR IS UNDEFINED
+PASSING UNDEFINED URI TO streamEdit
+!!!!!!!!!!!!!!
+
+
+`);
+    }
+
     await this.verticalDiffManager.streamEdit({
       input: prompt,
       llm: model,
       quickEdit: this.previousInput,
       range: this.range,
       rulesToInclude: rules,
+      fileUriFromQuickPick: editorUriString, // Pass the potentially undefined string
     });
   }
 

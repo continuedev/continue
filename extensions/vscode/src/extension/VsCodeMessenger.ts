@@ -228,6 +228,7 @@ export class VsCodeMessenger {
           new vscode.Position(end.line, end.character),
         ),
         rulesToInclude: config.rules,
+        fileUriFromQuickPick: msg.data.range.filepath,
       });
 
       // Log dev data

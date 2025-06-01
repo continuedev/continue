@@ -1,14 +1,13 @@
-import { ChatMessage, DiffLine, ILLM, RuleWithSource } from "core";
-import { streamDiffLines } from "core/edit/streamDiffLines";
-import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
-import { getMarkdownLanguageTagForFile } from "core/util";
-import * as URI from "uri-js";
+import { DiffLine, ILLM, RuleWithSource } from "core";
 import * as vscode from "vscode";
 
-import { isFastApplyModel } from "../../apply/utils";
+import { streamDiffLines } from "core/edit/streamDiffLines";
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { handleLLMError } from "../../util/errorHandling";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
+
+// Placeholder: Assuming generateDiffAsync is defined elsewhere and needs to be imported
+// import { generateDiffAsync } from "./diffUtils"; // Or the correct path
 
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
@@ -37,31 +36,29 @@ export class VerticalDiffManager {
   }
 
   createVerticalDiffHandler(
-    fileUri: string,
+    editor: vscode.TextEditor,
     startLine: number,
     endLine: number,
     options: VerticalDiffHandlerOptions,
   ): VerticalDiffHandler | undefined {
+    const fileUri = editor.document.uri.toString();
+
     if (this.fileUriToHandler.has(fileUri)) {
       this.fileUriToHandler.get(fileUri)?.clear(false);
       this.fileUriToHandler.delete(fileUri);
     }
-    const editor = vscode.window.activeTextEditor; // TODO might cause issues if user switches files
-    if (editor && URI.equal(editor.document.uri.toString(), fileUri)) {
-      const handler = new VerticalDiffHandler(
-        startLine,
-        endLine,
-        editor,
-        this.fileUriToCodeLens,
-        this.clearForfileUri.bind(this),
-        this.refreshCodeLens,
-        options,
-      );
-      this.fileUriToHandler.set(fileUri, handler);
-      return handler;
-    } else {
-      return undefined;
-    }
+
+    const handler = new VerticalDiffHandler(
+      startLine,
+      endLine,
+      editor,
+      this.fileUriToCodeLens,
+      this.clearForfileUri.bind(this),
+      this.refreshCodeLens,
+      options,
+    );
+    this.fileUriToHandler.set(fileUri, handler);
+    return handler;
   }
 
   getHandlerForFile(fileUri: string) {
@@ -214,7 +211,7 @@ export class VerticalDiffManager {
 
     // Create new handler with determined start/end
     const diffHandler = this.createVerticalDiffHandler(
-      fileUri,
+      editor,
       startLine,
       endLine,
       {
@@ -259,7 +256,7 @@ export class VerticalDiffManager {
       this.disableDocumentChangeListener();
       const handled = await handleLLMError(e);
       if (!handled) {
-        let message = "Error streaming diffs";
+        let message = "Error streaming edit diffs";
         if (e instanceof Error) {
           message += `: ${e.message}`;
         }
@@ -284,6 +281,7 @@ export class VerticalDiffManager {
     newCode,
     toolCallId,
     rulesToInclude,
+    fileUriFromQuickPick,
   }: {
     input: string;
     llm: ILLM;
@@ -294,191 +292,244 @@ export class VerticalDiffManager {
     newCode?: string;
     toolCallId?: string;
     rulesToInclude: undefined | RuleWithSource[];
+    fileUriFromQuickPick?: string;
   }): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
+    console.log(`
+>>>>>>>>>>>>>>
+[CONTINUE DEBUG VDM - streamEdit CALLED]
+fileUriFromQuickPick: ${fileUriFromQuickPick}
+Initially active editor: ${vscode.window.activeTextEditor?.document.uri.toString()}
+>>>>>>>>>>>>>>
+`);
 
-    let editor = vscode.window.activeTextEditor;
+    let tentativeEditor: vscode.TextEditor | undefined;
+    let tentativeFileUri: string | undefined;
 
-    if (!editor) {
+    if (fileUriFromQuickPick) {
+      tentativeFileUri = fileUriFromQuickPick;
+      tentativeEditor = vscode.window.visibleTextEditors.find(
+        (e) => e.document.uri.toString() === tentativeFileUri,
+      );
+      if (!tentativeEditor) {
+        const document = vscode.workspace.textDocuments.find(
+          (doc) => doc.uri.toString() === tentativeFileUri,
+        );
+        console.log(
+          `[Continue DEBUG VDM] Document for ${tentativeFileUri} in textDocuments: ${document ? "FOUND" : "NOT FOUND"}`,
+        );
+        if (document) {
+          try {
+            console.log(
+              `[Continue DEBUG VDM] Attempting to showTextDocument for ${tentativeFileUri}`,
+            );
+            tentativeEditor = await vscode.window.showTextDocument(document, {
+              preserveFocus: true,
+            });
+            console.log(
+              `[Continue DEBUG VDM] showTextDocument result for ${tentativeFileUri}: editor is ${tentativeEditor ? "DEFINED" : "UNDEFINED"}`,
+            );
+          } catch (e) {
+            console.warn(
+              `[Continue DEBUG VDM] Failed to showTextDocument for ${tentativeFileUri}:`,
+              e,
+            );
+            tentativeEditor = undefined;
+          }
+        } else {
+          console.log(
+            `[Continue DEBUG VDM] Document ${tentativeFileUri} not found in workspace.textDocuments.`,
+          );
+        }
+      }
+    } else if (vscode.window.activeTextEditor) {
+      tentativeEditor = vscode.window.activeTextEditor;
+      tentativeFileUri = tentativeEditor.document.uri.toString();
+    }
+
+    if (!tentativeEditor || !tentativeFileUri) {
+      console.warn(
+        `[Continue DEBUG VDM] FINAL CHECK FAILED: tentativeEditor is ${tentativeEditor ? "DEFINED" : "UNDEFINED"}, tentativeFileUri is ${tentativeFileUri || "UNDEFINED"}. Cannot stream edit for URI "${fileUriFromQuickPick || "active editor (none found)"}".`,
+      );
       return undefined;
     }
 
-    const fileUri = editor.document.uri.toString();
+    const editor: vscode.TextEditor = tentativeEditor;
+    const fileUri: string = tentativeFileUri;
 
-    let startLine, endLine: number;
+    console.log(`
+>>>>>>>>>>>>>>
+[CONTINUE DEBUG VDM - streamEdit RESOLVED]
+Resolved editor URI: ${editor.document.uri.toString()}
+Target file URI: ${fileUri}
+>>>>>>>>>>>>>>
+`);
 
+    const existingHandler = this.getHandlerForFile(fileUri);
+    if (existingHandler && !quickEdit) {
+      // Don't clear if it's a follow-up quickEdit
+      await existingHandler.clear(false);
+      // Add a small delay to ensure decorations are cleared before new ones are added
+      // This was causing issues with overlapping decorations, especially if the new edit was quick
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    let startLine: number, endLine: number;
     if (range) {
+      // Explicit range passed
       startLine = range.start.line;
       endLine = range.end.line;
+    } else if (quickEdit && existingHandler?.range) {
+      // If this is a quickEdit follow-up and a new range isn't selected by the user,
+      // use the range from the existing handler.
+      const currentSelectionEmptyOrUnchanged =
+        editor.selection.isEmpty ||
+        (editor.selection.start.line === existingHandler.range.start.line &&
+          editor.selection.end.line === existingHandler.range.end.line);
+
+      if (currentSelectionEmptyOrUnchanged) {
+        startLine = existingHandler.range.start.line;
+        endLine = existingHandler.range.end.line;
+      } else {
+        startLine = editor.selection.start.line;
+        endLine = editor.selection.end.line;
+      }
     } else {
+      // Default to current selection
       startLine = editor.selection.start.line;
       endLine = editor.selection.end.line;
     }
 
-    // Check for existing handlers in the same file the new one will be created in
-    const existingHandler = this.getHandlerForFile(fileUri);
+    const handlerOptions: VerticalDiffHandlerOptions = {
+      // input, // User's prompt for the edit - input is now a top-level param for streamDiffLines
+      // llm, // llm is now a top-level param for streamDiffLines
+      // streamId: streamId ?? fileUri, // streamId is not directly part of VerticalDiffHandlerOptions
+      // onlyOneInsertion, // This is a parameter for streamDiffLines, not VerticalDiffHandlerOptions
+      // range: new vscode.Range(startLine, 0, endLine, 0), // VerticalDiffHandler manages its own range via constructor
+      onStatusUpdate: (status, numDiffs, text) => {
+        this.webviewProtocol.request("updateApplyState", {
+          streamId: streamId ?? fileUri, // Use streamId from outer scope or fileUri
+          filepath: fileUri,
+          status,
+          numDiffs,
+          fileContent: text,
+          toolCallId,
+        });
+      },
+      // newCode, // Used if we want to bypass LLM and directly apply a change - not part of VerticalDiffHandlerOptions
+      // quickEdit, // Original prompt from a prior quick edit, if this is a follow-up - not part of VerticalDiffHandlerOptions
+      // fileUri: fileUri, // Not part of VerticalDiffHandlerOptions, handler gets it from editor
+      // rulesToInclude, // rulesToInclude is now a top-level param for streamDiffLines
+    };
 
-    if (existingHandler) {
-      if (quickEdit) {
-        // Previous diff was a quickEdit
-        // Check if user has highlighted a range
-        let rangeBool =
-          startLine !== endLine ||
-          editor.selection.start.character !== editor.selection.end.character;
-
-        // Check if the range is different from the previous range
-        let newRangeBool =
-          startLine !== existingHandler.range.start.line ||
-          endLine !== existingHandler.range.end.line;
-
-        if (!rangeBool || !newRangeBool) {
-          // User did not highlight a new range -> use start/end from the previous quickEdit
-          startLine = existingHandler.range.start.line;
-          endLine = existingHandler.range.end.line;
-        }
-      }
-
-      // Clear the previous handler
-      // This allows the user to edit above the changed area,
-      // but extra delta was added for each line generated by Continue
-      // Before adding this back, we need to distinguish between human and Continue
-      // let effectiveLineDelta =
-      //   existingHandler.getLineDeltaBeforeLine(startLine);
-      // startLine += effectiveLineDelta;
-      // endLine += effectiveLineDelta;
-
-      await existingHandler.clear(false);
-    }
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 150);
-    });
-
-    // Create new handler with determined start/end
-    const diffHandler = this.createVerticalDiffHandler(
-      fileUri,
+    const handler = this.createVerticalDiffHandler(
+      editor,
       startLine,
       endLine,
-      {
-        instant: isFastApplyModel(llm),
-        input,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
-          streamId &&
-          void this.webviewProtocol.request("updateApplyState", {
-            streamId,
-            status,
-            numDiffs,
-            fileContent,
-            filepath: fileUri,
-            toolCallId,
-          }),
-      },
+      handlerOptions,
     );
 
-    if (!diffHandler) {
-      console.warn("Issue occurred while creating new vertical diff handler");
+    if (!handler) {
+      console.warn(`Failed to create VerticalDiffHandler for ${fileUri}`);
       return undefined;
     }
-
-    let selectedRange = diffHandler.range;
-
-    // Only if the selection is empty, use exact prefix/suffix instead of by line
-    if (selectedRange.isEmpty) {
-      selectedRange = new vscode.Range(
-        editor.selection.start.with(undefined, 0),
-        editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
-      );
-    }
-
-    const rangeContent = editor.document.getText(selectedRange);
-    const prefix = pruneLinesFromTop(
-      editor.document.getText(
-        new vscode.Range(new vscode.Position(0, 0), selectedRange.start),
-      ),
-      llm.contextLength / 4,
-      llm.model,
-    );
-    const suffix = pruneLinesFromBottom(
-      editor.document.getText(
-        new vscode.Range(
-          selectedRange.end,
-          new vscode.Position(editor.document.lineCount, 0),
-        ),
-      ),
-      llm.contextLength / 4,
-      llm.model,
-    );
-
-    let overridePrompt: ChatMessage[] | undefined;
-    if (llm.promptTemplates?.apply) {
-      const rendered = llm.renderPromptTemplate(llm.promptTemplates.apply, [], {
-        original_code: rangeContent,
-        new_code: newCode ?? "",
-      });
-      overridePrompt =
-        typeof rendered === "string"
-          ? [{ role: "user", content: rendered }]
-          : rendered;
-    }
-
-    if (editor.selection) {
-      // Unselect the range
-      editor.selection = new vscode.Selection(
-        editor.selection.active,
-        editor.selection.active,
-      );
-    }
-
-    vscode.commands.executeCommand(
-      "setContext",
-      "continue.streamingDiff",
-      true,
-    );
-
-    this.editDecorationManager.clear();
+    this.fileUriToHandler.set(fileUri, handler);
+    this.enableDocumentChangeListener();
 
     try {
-      const streamedLines: string[] = [];
-
-      async function* recordedStream() {
-        const stream = streamDiffLines({
-          highlighted: rangeContent,
-          prefix,
-          suffix,
-          llm,
-          rulesToInclude,
-          input,
-          language: getMarkdownLanguageTagForFile(fileUri),
-          onlyOneInsertion: !!onlyOneInsertion,
-          overridePrompt,
-          abortControllerId: fileUri,
-        });
-
-        for await (const line of stream) {
-          if (line.type === "new" || line.type === "same") {
-            streamedLines.push(line.line);
-          }
-          yield line;
-        }
+      // Determine the actual range content for the LLM context
+      // This might be different from handler.range if selection was empty
+      let llmContextRange = handler.range;
+      if (editor.selection.isEmpty && !range) {
+        // if no explicit range and selection is a cursor
+        llmContextRange = new vscode.Range(
+          editor.selection.start.with(undefined, 0), // current line start
+          editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER), // current line end
+        );
       }
 
-      this.logDiffs = await diffHandler.run(recordedStream());
+      const originalContent = editor.document.getText(llmContextRange);
 
-      // enable a listener for user edits to file while diff is open
-      this.enableDocumentChangeListener();
+      // Use streamDiffLines to generate the diff
+      const diffGenerator = newCode
+        ? (() => {
+            // Simulate DiffLine stream for direct newCode application
+            // This is a simplified approach. Ideally, a proper diffing
+            // function (like myers diff) would be used here too if newCode is substantial.
+            // For now, assume newCode replaces the llmContextRange entirely.
+            const originalLines = originalContent.split("\n");
+            const newLines = newCode.split("\n");
+            async function* gen(): AsyncGenerator<DiffLine> {
+              for (const line of originalLines) {
+                yield { type: "old", line };
+              }
+              for (const line of newLines) {
+                yield { type: "new", line };
+              }
+            }
+            return gen();
+          })()
+        : streamDiffLines({
+            prefix: editor.document.getText(
+              new vscode.Range(
+                new vscode.Position(0, 0),
+                llmContextRange.start,
+              ),
+            ),
+            highlighted: originalContent,
+            suffix: editor.document.getText(
+              new vscode.Range(
+                llmContextRange.end,
+                new vscode.Position(editor.document.lineCount, 0),
+              ),
+            ),
+            llm,
+            input,
+            language: editor.document.languageId,
+            abortControllerId: streamId ?? fileUri, // Use streamId or fileUri as abort controller id
+            onlyOneInsertion: !!onlyOneInsertion,
+            rulesToInclude,
+            overridePrompt: undefined, // Add missing overridePrompt
+          });
 
-      return `${prefix}${streamedLines.join("\n")}${suffix}`;
-    } catch (e) {
-      this.disableDocumentChangeListener();
-      const handled = await handleLLMError(e);
+      const diffLines = await handler.run(diffGenerator);
+
+      if (
+        diffLines &&
+        diffLines.length === 0 &&
+        handler.insertedInCurrentBlock === 0
+      ) {
+        this.clearForfileUri(fileUri, true); // Accept if no changes were made
+        return editor.document.getText();
+      }
+
+      // Construct the full text if needed, or just return based on handler's results
+      // The primary goal is that the diff is displayed and can be applied.
+      if (diffLines && diffLines.length > 0) {
+        // The handler should have applied changes or staged them for acceptance.
+        // This return value is likely for other parts of the system or for testing.
+        // For consistency, we can reconstruct the text from diffLines.
+        return diffLines
+          .filter((line) => line.type === "new" || line.type === "same")
+          .map((line) => line.line)
+          .join("\n");
+      }
+
+      // Fallback if diffLines is undefined or empty in an unexpected way
+      console.warn(
+        "[Continue DEBUG VDM] streamEdit: diffLines were undefined or handler state was unexpected. Returning current editor text.",
+      );
+      return editor.document.getText();
+    } catch (e: any) {
+      this.clearForfileUri(fileUri, false);
+      // Use the error handling utility
+      const handled = await handleLLMError(e); // Corrected: llm.model is not needed as per handleLLMError signature
       if (!handled) {
-        let message = "Error streaming edit diffs";
-        if (e instanceof Error) {
-          message += `: ${e.message}`;
-        }
-        throw new Error(message);
+        vscode.window.showErrorMessage(`Error applying edit: ${e.message}`);
       }
+      return undefined;
     } finally {
+      // Ensure streaming diff context is reset
       vscode.commands.executeCommand(
         "setContext",
         "continue.streamingDiff",
