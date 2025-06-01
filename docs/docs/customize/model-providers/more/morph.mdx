@@ -9,7 +9,7 @@ Morph provides a fast apply model that helps you quickly and accurately apply co
    <TabItem value="yaml" label="YAML">
    ```yaml title="config.yaml"
    models:
-     - uses: morphllm/morph-v0
+     - uses: morphllm/morph-v2
        with:
          MORPH_API_KEY: ${{ secrets.MORPH_API_KEY }}
    ```
@@ -21,7 +21,7 @@ Morph provides a fast apply model that helps you quickly and accurately apply co
        {
          "title": "Morph Fast Apply",
          "provider": "openai",
-         "model": "morph-v0",
+         "model": "morph-v2",
          "apiKey": "<YOUR_MORPH_API_KEY>",
          "apiBase": "https://api.morphllm.com/v1/",
          "roles": ["apply", "chat"],
@@ -34,3 +34,4 @@ Morph provides a fast apply model that helps you quickly and accurately apply co
    ```
    </TabItem>
 </Tabs>
+
