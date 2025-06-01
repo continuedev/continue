@@ -12,7 +12,6 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
 import { handleLLMError } from "../util/errorHandling";
-import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -33,21 +32,15 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider {
-  private async onError(e: any) {
+  implements vscode.InlineCompletionItemProvider
+{
+  private async onError(e: unknown) {
     if (await handleLLMError(e)) {
       return;
     }
-    let message = e.message;
-    if (message.includes("Please sign in with GitHub")) {
-      showFreeTrialLoginMessage(
-        message,
-        this.configHandler.reloadConfig.bind(this.configHandler),
-        () => {
-          void this.webviewProtocol.request("openOnboardingCard", undefined);
-        },
-      );
-      return;
+    let message = "Continue Autocomplete Error";
+    if (e instanceof Error) {
+      message += `: ${e.message}`;
     }
     vscode.window.showErrorMessage(message, "Documentation").then((val) => {
       if (val === "Documentation") {
