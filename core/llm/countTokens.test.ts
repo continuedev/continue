@@ -46,6 +46,39 @@ describe.skip("pruneLinesFromTop", () => {
     const pruned = pruneLinesFromTop(prompt, 5, "gpt-4");
     expect(pruned.split("\n").length).toBeLessThan(prompt.split("\n").length);
   });
+
+  it("should return the original prompt if it's within max tokens", () => {
+    const prompt = "Line 1\nLine 2";
+    const pruned = pruneLinesFromTop(prompt, 10, "gpt-4");
+    expect(pruned).toEqual(prompt);
+  });
+
+  it("should return an empty string if maxTokens is 0", () => {
+    const prompt = "Line 1\nLine 2\nLine 3\nLine 4";
+    const pruned = pruneLinesFromTop(prompt, 0, "gpt-4");
+    expect(pruned).toEqual("");
+  });
+
+  it("should handle an empty prompt string", () => {
+    const prompt = "";
+    const pruned = pruneLinesFromTop(prompt, 5, "gpt-4");
+    expect(pruned).toEqual("");
+  });
+
+  it("should handle a prompt with a single line that exceeds maxTokens", () => {
+    const prompt =
+      "This is a single long line that will exceed the token limit";
+    const pruned = pruneLinesFromTop(prompt, 5, "gpt-4");
+
+    expect(pruned).toEqual("");
+  });
+
+  it("should correctly prune when all lines together exceed maxTokens but individual lines do not", () => {
+    const prompt = "L1\nL2\nL3\nL4";
+
+    const pruned = pruneLinesFromTop(prompt, 5, "gpt-4");
+    expect(pruned).toEqual("L3\nL4");
+  });
 });
 
 describe.skip("pruneLinesFromBottom", () => {
@@ -53,6 +86,39 @@ describe.skip("pruneLinesFromBottom", () => {
     const prompt = "Line 1\nLine 2\nLine 3\nLine 4";
     const pruned = pruneLinesFromBottom(prompt, 5, "gpt-4");
     expect(pruned.split("\n").length).toBeLessThan(prompt.split("\n").length);
+  });
+
+  it("should return the original prompt if it's within max tokens", () => {
+    const prompt = "Line 1\nLine 2";
+    const pruned = pruneLinesFromBottom(prompt, 10, "gpt-4");
+    expect(pruned).toEqual(prompt);
+  });
+
+  it("should return an empty string if maxTokens is 0", () => {
+    const prompt = "Line 1\nLine 2\nLine 3\nLine 4";
+    const pruned = pruneLinesFromBottom(prompt, 0, "gpt-4");
+    expect(pruned).toEqual("");
+  });
+
+  it("should handle an empty prompt string", () => {
+    const prompt = "";
+    const pruned = pruneLinesFromBottom(prompt, 5, "gpt-4");
+    expect(pruned).toEqual("");
+  });
+
+  it("should handle a prompt with a single line that exceeds maxTokens", () => {
+    const prompt =
+      "This is a single long line that will exceed the token limit";
+    const pruned = pruneLinesFromBottom(prompt, 5, "gpt-4");
+
+    expect(pruned).toEqual("");
+  });
+
+  it("should correctly prune when all lines together exceed maxTokens but individual lines do not", () => {
+    const prompt = "L1\nL2\nL3\nL4";
+
+    const pruned = pruneLinesFromBottom(prompt, 5, "gpt-4");
+    expect(pruned).toEqual("L1\nL2");
   });
 });
 
