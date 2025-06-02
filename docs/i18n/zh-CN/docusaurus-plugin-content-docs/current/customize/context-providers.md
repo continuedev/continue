@@ -449,7 +449,7 @@ HttpContextProvider 创建一个 POST 请求到配置中的 url 。服务器必�
     {
       "name": "http",
       "params": {
-        "url": "https://api.example.com/v1/users",
+        "url": "https://api.example.com/v1/users"
       }
     }
   ]
@@ -457,6 +457,7 @@ HttpContextProvider 创建一个 POST 请求到配置中的 url 。服务器必�
 ```
 
 接收的 URL 应该接收下面的参数：
+
 ```json title="POST parameters"
 {
   query: string,
@@ -465,6 +466,7 @@ HttpContextProvider 创建一个 POST 请求到配置中的 url 。服务器必�
 ```
 
 响应 200 OK 应该是一个有以下结构的 JSON 对象：
+
 ```json title="Response"
 [
   {

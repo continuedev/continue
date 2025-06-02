@@ -31,10 +31,12 @@ class EditDecorationManager {
 
   // Checks if two ranges are adjacent or overlapping
   private rangesCoincide(range1: vscode.Range, range2: vscode.Range): boolean {
-    return range1.start.isEqual(range2.start)
-    || range1.end.isEqual(range2.start)
-    || range2.end.isEqual(range1.start)
-    || !!range1.intersection(range2);
+    return (
+      range1.start.isEqual(range2.start) ||
+      range1.end.isEqual(range2.start) ||
+      range2.end.isEqual(range1.start) ||
+      !!range1.intersection(range2)
+    );
   }
 
   // Merges new range with existing ranges in the map
@@ -43,12 +45,16 @@ class EditDecorationManager {
     const rangesToPrune: string[] = [];
 
     for (const [key, existingRange] of this.activeRangesMap.entries()) {
-      if (!this.rangesCoincide(mergedRange, existingRange)) continue; 
+      if (!this.rangesCoincide(mergedRange, existingRange)) {
+        continue;
+      }
       mergedRange = mergedRange.union(existingRange);
       rangesToPrune.push(key);
     }
 
-    for (const key of rangesToPrune) this.activeRangesMap.delete(key);
+    for (const key of rangesToPrune) {
+      this.activeRangesMap.delete(key);
+    }
     this.activeRangesMap.set(this.rangeToString(mergedRange), mergedRange);
   }
 
@@ -59,10 +65,14 @@ class EditDecorationManager {
     }
     this._lastEditor = editor;
 
-    for (const range of ranges) this.mergeNewRange(range);
+    for (const range of ranges) {
+      this.mergeNewRange(range);
+    }
 
     const activeRanges = Array.from(this.activeRangesMap.values());
-    if (activeRanges.length === 0) return; // No ranges to highlight
+    if (activeRanges.length === 0) {
+      return;
+    } // No ranges to highlight
 
     // Update active ranges and apply decorations
     editor.setDecorations(this.decorationType, activeRanges);
