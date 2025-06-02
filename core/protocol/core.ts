@@ -34,6 +34,7 @@ import {
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
+import { FreeTrialStatus } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -198,6 +199,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
+  "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
