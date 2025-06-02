@@ -11,7 +11,8 @@ import {
 } from "openai/resources/index";
 import { z } from "zod";
 import { BedrockConfigSchema } from "../types.js";
-import { chatChunk, model } from "../util.js";
+import { chatChunk, chatChunkFromDelta } from "../util.js";
+import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -19,52 +20,236 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
+interface ToolUseState {
+  toolUseId: string;
+  name: string;
+  input: string;
+}
+
 export class BedrockApi implements BaseLlmApi {
   private client: AnthropicBedrock;
+  private _currentToolResponse: Partial<ToolUseState> | null = null;
+
   constructor(protected config: z.infer<typeof BedrockConfigSchema>) {
     this.client = new AnthropicBedrock({
       awsRegion: config.env.region ?? "us-east-1",
-      // The SDK will automatically use AWS credentials from environment or ~/.aws/credentials
-      // If profile is specified, we might need to handle it differently
       awsAccessKey: config.env.awsAccessKey,
       awsSecretKey: config.env.awsSecretKey,
     });
   }
 
-  private convertMessagesToAnthropicFormat(messages: any[]): any[] {
-    return messages.map((message) => {
-      if (message.role === "system") {
-        // Anthropic handles system messages differently - they're usually prepended to the first user message
+  private _convertBody(oaiBody: any) {
+    let stop = undefined;
+    if (oaiBody.stop && Array.isArray(oaiBody.stop)) {
+      stop = oaiBody.stop.filter((x: string) => x.trim() !== "");
+    } else if (typeof oaiBody.stop === "string" && oaiBody.stop.trim() !== "") {
+      stop = [oaiBody.stop];
+    }
+
+    const systemMessage = oaiBody.messages.find(
+      (msg: any) => msg.role === "system",
+    )?.content;
+
+    // Convert tool_choice to proper Anthropic format
+    let toolChoice: any = undefined;
+    if (oaiBody.tool_choice) {
+      if (typeof oaiBody.tool_choice === "string") {
+        if (oaiBody.tool_choice === "auto") {
+          toolChoice = { type: "auto" };
+        } else if (oaiBody.tool_choice === "required") {
+          toolChoice = { type: "any" };
+        } else if (oaiBody.tool_choice === "none") {
+          toolChoice = { type: "none" };
+        }
+      } else if (oaiBody.tool_choice?.function?.name) {
+        toolChoice = {
+          type: "tool",
+          name: oaiBody.tool_choice.function.name,
+        };
+      }
+    }
+
+    const anthropicBody: any = {
+      messages: this._convertMessages(
+        oaiBody.messages.filter((msg: any) => msg.role !== "system"),
+      ),
+      system: systemMessage
+        ? [
+            {
+              type: "text",
+              text: systemMessage,
+              cache_control: { type: "ephemeral" },
+            },
+          ]
+        : undefined,
+      top_p: oaiBody.top_p,
+      temperature: oaiBody.temperature,
+      max_tokens: oaiBody.max_tokens ?? 4096,
+      model: oaiBody.model,
+      stop_sequences: stop?.slice(0, 4), // Bedrock supports max 4 stop sequences
+      stream: oaiBody.stream,
+      tools: oaiBody.tools?.map((tool: any) => ({
+        name: tool.function.name,
+        description: tool.function.description,
+        input_schema: tool.function.parameters,
+      })),
+      tool_choice: toolChoice,
+    };
+
+    return anthropicBody;
+  }
+
+  private _convertMessages(msgs: any[]): any[] {
+    const messages = msgs.map((message) => {
+      if (message.role === "tool") {
         return {
-          role: "user",
-          content: `System: ${message.content}\n\nUser: `,
+          role: "user" as const,
+          content: [
+            {
+              type: "tool_result" as const,
+              tool_use_id: message.tool_call_id,
+              content:
+                typeof message.content === "string"
+                  ? message.content
+                  : Array.isArray(message.content)
+                    ? message.content
+                        .map(
+                          (part: any) =>
+                            part.text || part.content || JSON.stringify(part),
+                        )
+                        .join("")
+                    : String(message.content),
+            },
+          ],
+        };
+      } else if (message.role === "assistant" && message.tool_calls) {
+        return {
+          role: "assistant" as const,
+          content: message.tool_calls.map((toolCall: any) => ({
+            type: "tool_use" as const,
+            id: toolCall.id,
+            name: toolCall.function?.name,
+            input: JSON.parse(toolCall.function?.arguments || "{}"),
+          })),
         };
       }
 
+      if (!Array.isArray(message.content)) {
+        return message;
+      }
+
       return {
-        role: message.role === "assistant" ? "assistant" : "user",
-        content:
-          typeof message.content === "string"
-            ? message.content
-            : Array.isArray(message.content)
-              ? message.content
-                  .map(
-                    (item: any) =>
-                      item.text || item.content || JSON.stringify(item),
-                  )
-                  .join("\n")
-              : String(message.content),
+        ...message,
+        content: message.content
+          .map((part: any) => {
+            if (part.type === "text") {
+              if ((part.text?.trim() ?? "") === "") {
+                return null;
+              }
+              return part;
+            }
+            if (part.type === "imageUrl" || part.type === "image_url") {
+              const imageUrl = part.imageUrl || part.image_url;
+              if (imageUrl?.url) {
+                try {
+                  const [mimeType, base64Data] = imageUrl.url.split(",");
+                  const mediaType =
+                    mimeType.replace("data:", "").split(";")[0] || "image/jpeg";
+                  return {
+                    type: "image" as const,
+                    source: {
+                      type: "base64" as const,
+                      media_type: mediaType,
+                      data: base64Data,
+                    },
+                  };
+                } catch (error) {
+                  console.warn(`Failed to process image: ${error}`);
+                  return null;
+                }
+              }
+            }
+            return null;
+          })
+          .filter((x: any) => x !== null),
       };
     });
+    return messages;
   }
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    throw new Error(
-      "Non-streaming chat completion not implemented for Bedrock",
-    );
+    try {
+      const anthropicBody = this._convertBody(body);
+
+      const response = await this.client.messages.create({
+        ...anthropicBody,
+        stream: false,
+      } as any);
+
+      if (signal.aborted) {
+        return EMPTY_CHAT_COMPLETION;
+      }
+
+      // Convert Anthropic response to OpenAI format
+      const content = response.content
+        .map((block: any) => {
+          if (block.type === "text") {
+            return block.text;
+          }
+          return "";
+        })
+        .join("");
+
+      const toolCalls = response.content
+        .filter((block: any) => block.type === "tool_use")
+        .map((block: any, index: number) => ({
+          id: block.id,
+          type: "function" as const,
+          function: {
+            name: block.name,
+            arguments: JSON.stringify(block.input),
+          },
+        }));
+
+      return {
+        id: response.id || `chatcmpl-${Date.now()}`,
+        object: "chat.completion",
+        model: body.model,
+        created: Date.now(),
+        usage: {
+          total_tokens:
+            (response.usage?.input_tokens || 0) +
+            (response.usage?.output_tokens || 0),
+          completion_tokens: response.usage?.output_tokens || 0,
+          prompt_tokens: response.usage?.input_tokens || 0,
+        },
+        choices: [
+          {
+            logprobs: null,
+            finish_reason:
+              response.stop_reason === "end_turn"
+                ? "stop"
+                : (response.stop_reason as any) || "stop",
+            message: {
+              role: "assistant",
+              content: content || null,
+              tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+              refusal: null,
+            },
+            index: 0,
+          },
+        ],
+      };
+    } catch (error) {
+      if (signal.aborted) {
+        return EMPTY_CHAT_COMPLETION;
+      }
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Bedrock API error: ${message}`);
+    }
   }
 
   async *chatCompletionStream(
@@ -72,54 +257,101 @@ export class BedrockApi implements BaseLlmApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     try {
-      const messages = this.convertMessagesToAnthropicFormat(body.messages);
+      const anthropicBody = this._convertBody(body);
 
       const stream = await this.client.messages.create({
-        model: body.model,
-        messages,
-        max_tokens: body.max_tokens || 4096,
-        temperature: body.temperature ?? undefined,
-        top_p: body.top_p ?? undefined,
+        ...anthropicBody,
         stream: true,
       });
+      this._currentToolResponse = null;
+      let lastToolUseId: string | undefined;
+      let lastToolUseName: string | undefined;
 
-      for await (const event of stream) {
+      for await (const event of stream as any) {
         if (signal.aborted) {
           throw new Error("Request was aborted");
         }
 
-        if (
-          event.type === "content_block_delta" &&
-          event.delta?.type === "text_delta"
-        ) {
-          yield chatChunk({
-            content: event.delta.text,
-            model: body.model,
-          });
-        }
+        switch (event.type) {
+          case "content_block_start":
+            if (event.content_block?.type === "tool_use") {
+              lastToolUseId = event.content_block.id;
+              lastToolUseName = event.content_block.name;
+              this._currentToolResponse = {
+                toolUseId: lastToolUseId,
+                name: lastToolUseName,
+                input: "",
+              };
+            }
+            break;
 
-        if (event.type === "message_stop") {
-          yield chatChunk({
-            content: null,
-            model: body.model,
-            finish_reason: "stop",
-          });
-          break;
-        }
+          case "content_block_delta":
+            if (event.delta?.type === "text_delta") {
+              yield chatChunk({
+                content: event.delta.text,
+                model: body.model,
+              });
+            } else if (event.delta?.type === "input_json_delta") {
+              if (!lastToolUseId || !lastToolUseName) {
+                break;
+              }
 
-        // Handle usage information if available
-        if (event.type === "message_delta" && event.usage) {
-          yield chatChunk({
-            content: null,
-            model: body.model,
-            usage: {
-              prompt_tokens: event.usage.input_tokens || 0,
-              completion_tokens: event.usage.output_tokens || 0,
-              total_tokens:
-                (event.usage.input_tokens || 0) +
-                (event.usage.output_tokens || 0),
-            },
-          });
+              if (this._currentToolResponse) {
+                this._currentToolResponse.input +=
+                  event.delta.partial_json || "";
+              }
+
+              yield chatChunkFromDelta({
+                model: body.model,
+                delta: {
+                  tool_calls: [
+                    {
+                      id: lastToolUseId,
+                      type: "function",
+                      index: 0,
+                      function: {
+                        name: lastToolUseName,
+                        arguments: event.delta.partial_json || "",
+                      },
+                    },
+                  ],
+                },
+              });
+            }
+            break;
+
+          case "content_block_stop":
+            if (this._currentToolResponse) {
+              // Tool use completed - the arguments have been streamed via deltas
+              this._currentToolResponse = null;
+            }
+            lastToolUseId = undefined;
+            lastToolUseName = undefined;
+            break;
+
+          case "message_stop":
+            yield chatChunk({
+              content: null,
+              model: body.model,
+              finish_reason: "stop",
+            });
+            break;
+
+          case "message_delta":
+            if (event.usage) {
+              yield chatChunk({
+                content: null,
+                model: body.model,
+                usage: {
+                  prompt_tokens: event.usage.input_tokens || 0,
+                  completion_tokens: event.usage.output_tokens || 0,
+                  total_tokens:
+                    (event.usage.input_tokens || 0) +
+                    (event.usage.output_tokens || 0),
+                },
+              });
+            }
+            break;
         }
       }
     } catch (error) {
@@ -162,21 +394,6 @@ export class BedrockApi implements BaseLlmApi {
   }
 
   async list(): Promise<Model[]> {
-    // Return common Bedrock models that work with Anthropic SDK
-    const commonModels = [
-      "anthropic.claude-3-5-sonnet-20240620-v1:0",
-      "anthropic.claude-3-5-sonnet-20241022-v2:0",
-      "anthropic.claude-3-haiku-20240307-v1:0",
-      "anthropic.claude-3-opus-20240229-v1:0",
-      "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-      "us.anthropic.claude-3-5-haiku-20241022-v1:0",
-    ];
-
-    return commonModels.map((modelId) =>
-      model({
-        id: modelId,
-        owned_by: "amazon-bedrock",
-      }),
-    );
+    throw new Error("/v1/models not implemented");
   }
 }

@@ -13,6 +13,7 @@ jest.mock("@anthropic-ai/bedrock-sdk", () => ({
 test("BedrockApi should initialize with default region", () => {
   const api = new BedrockApi({
     provider: "bedrock",
+    env: {},
   });
 
   expect(api).toBeInstanceOf(BedrockApi);
@@ -21,8 +22,10 @@ test("BedrockApi should initialize with default region", () => {
 test("BedrockApi should initialize with custom region", () => {
   const api = new BedrockApi({
     provider: "bedrock",
-    region: "us-west-2",
-    profile: "custom-profile",
+    env: {
+      region: "us-west-2",
+      profile: "custom-profile",
+    },
   });
 
   expect(api).toBeInstanceOf(BedrockApi);
@@ -31,6 +34,7 @@ test("BedrockApi should initialize with custom region", () => {
 test("chatCompletionStream should be a function", () => {
   const api = new BedrockApi({
     provider: "bedrock",
+    env: {},
   });
 
   expect(typeof api.chatCompletionStream).toBe("function");
@@ -39,6 +43,7 @@ test("chatCompletionStream should be a function", () => {
 test("list should return available models", async () => {
   const api = new BedrockApi({
     provider: "bedrock",
+    env: {},
   });
 
   const models = await api.list();
@@ -53,13 +58,11 @@ test("list should return available models", async () => {
 test("unsupported methods should throw errors", async () => {
   const api = new BedrockApi({
     provider: "bedrock",
+    env: {},
   });
 
   const signal = new AbortController().signal;
 
-  await expect(
-    api.chatCompletionNonStream({} as any, signal),
-  ).rejects.toThrow();
   await expect(api.completionNonStream({} as any, signal)).rejects.toThrow();
   await expect(api.embed({})).rejects.toThrow();
   await expect(api.rerank({} as any)).rejects.toThrow();
