@@ -1,4 +1,4 @@
-import { parseMarkdownRule } from "../../config/markdown/parseMarkdownRule";
+import { parseMarkdownRule } from "../../config/markdown";
 import { createRuleBlockImpl } from "./createRuleBlock";
 
 // Mock the extras parameter with necessary functions
@@ -21,6 +21,8 @@ describe("createRuleBlockImpl", () => {
     const args = {
       name: "TypeScript Rule",
       rule: "Use interfaces for object shapes",
+      description: "Always use interfaces",
+      alwaysApply: true,
       globs: "**/*.{ts,tsx}",
     };
 
@@ -31,23 +33,27 @@ describe("createRuleBlockImpl", () => {
     const { frontmatter, markdown } = parseMarkdownRule(fileContent);
 
     expect(frontmatter).toEqual({
+      description: "Always use interfaces",
       globs: "**/*.{ts,tsx}",
+      alwaysApply: true,
     });
 
     expect(markdown).toContain("# TypeScript Rule");
     expect(markdown).toContain("Use interfaces for object shapes");
   });
 
-  it("should create a filename based on sanitized rule name", async () => {
+  it("should create a filename based on sanitized rule name using shared path function", async () => {
     const args = {
       name: "Special Ch@racters & Spaces",
       rule: "Handle special characters",
+      description: "Test rule",
+      alwaysApply: false,
     };
 
     await createRuleBlockImpl(args, mockExtras as any);
 
     const fileUri = mockIde.writeFile.mock.calls[0][0];
-    expect(fileUri).toContain("special-chracters-spaces.md");
+    expect(fileUri).toBe("/.continue/rules/special-chracters-spaces.md");
   });
 
   it("should create a rule with description pattern", async () => {
@@ -55,6 +61,7 @@ describe("createRuleBlockImpl", () => {
       name: "Description Test",
       rule: "This is the rule content",
       description: "This is a detailed explanation of the rule",
+      alwaysApply: true,
     };
 
     await createRuleBlockImpl(args, mockExtras as any);
@@ -65,6 +72,7 @@ describe("createRuleBlockImpl", () => {
 
     expect(frontmatter).toEqual({
       description: "This is a detailed explanation of the rule",
+      alwaysApply: true,
     });
 
     expect(markdown).toContain("# Description Test");
@@ -76,6 +84,7 @@ describe("createRuleBlockImpl", () => {
       name: "Complete Rule",
       rule: "Follow this standard",
       description: "This rule enforces our team standards",
+      alwaysApply: false,
       globs: "**/*.js",
     };
 
@@ -88,6 +97,7 @@ describe("createRuleBlockImpl", () => {
     expect(frontmatter).toEqual({
       description: "This rule enforces our team standards",
       globs: "**/*.js",
+      alwaysApply: false,
     });
 
     expect(markdown).toContain("# Complete Rule");
@@ -98,6 +108,7 @@ describe("createRuleBlockImpl", () => {
     const args = {
       name: "Conditional Rule",
       rule: "This rule should not always be applied",
+      description: "Optional rule",
       alwaysApply: false,
     };
 
@@ -108,6 +119,7 @@ describe("createRuleBlockImpl", () => {
     const { frontmatter } = parseMarkdownRule(fileContent);
 
     expect(frontmatter).toEqual({
+      description: "Optional rule",
       alwaysApply: false,
     });
   });
