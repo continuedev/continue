@@ -45,6 +45,7 @@ import {
 } from ".";
 
 import { ConfigYaml } from "@continuedev/config-yaml";
+import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import {
   setupBestConfig,
@@ -723,6 +724,7 @@ export class Core {
       };
 
       return await callTool(tool, toolCall.function.arguments, {
+        config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
         fetch: (url, init) =>
@@ -808,6 +810,8 @@ export class Core {
     uris?: string[];
   }>) {
     if (data?.uris?.length) {
+      const diffCache = GitDiffCache.getInstance(getDiffFn(this.ide));
+      diffCache.invalidate();
       walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
       for (const uri of data.uris) {
         const currentProfileUri =

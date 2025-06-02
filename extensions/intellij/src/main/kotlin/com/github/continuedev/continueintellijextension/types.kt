@@ -187,22 +187,12 @@ interface IDE {
 
     suspend fun getFileStats(files: List<String>): Map<String, FileStats>
 
-    suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String?
-
     // LSP
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
-
-    fun updateLastFileSaveTimestamp() {
-        // Default implementation does nothing
-    }
 }
-
-data class GetGhTokenArgs(
-    val force: String?
-)
 
 data class Message(
     val messageType: String,
@@ -232,7 +222,7 @@ data class ApplyState(
 )
 
 data class HighlightedCodePayload(
-    val rangeInFileWithContents: RangeInFileWithContents,
+    val rangeInFileWithContents: com.github.continuedev.continueintellijextension.RangeInFileWithContents,
     val prompt: String? = null,
     val shouldRun: Boolean? = null
 )
