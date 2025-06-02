@@ -1,6 +1,9 @@
 /* eslint-disable max-lines-per-function */
 import { ContextItemWithId, RuleWithSource, UserChatMessage } from "../..";
-import { getSystemMessageWithRules, shouldApplyRule } from "./getSystemMessageWithRules";
+import {
+  getSystemMessageWithRules,
+  shouldApplyRule,
+} from "./getSystemMessageWithRules";
 
 describe("getSystemMessageWithRules", () => {
   const baseSystemMessage = "Base system message";
@@ -450,7 +453,8 @@ describe("getSystemMessageWithRules", () => {
     it("should include rules with alwaysApply: false when globs match", () => {
       const userMessage: UserChatMessage = {
         role: "user",
-        content: "```tsx Component.tsx\nexport const Component = () => <div>Hello</div>;\n```",
+        content:
+          "```tsx Component.tsx\nexport const Component = () => <div>Hello</div>;\n```",
       };
 
       const result = getSystemMessageWithRules({
@@ -701,14 +705,18 @@ describe("shouldApplyRule", () => {
     it("should return true when alwaysApply is true, regardless of file paths", () => {
       expect(shouldApplyRule(ruleAlwaysApplyTrue, [])).toBe(true);
       expect(shouldApplyRule(ruleAlwaysApplyTrue, ["src/main.js"])).toBe(true);
-      expect(shouldApplyRule(ruleAlwaysApplyTrue, ["Component.tsx"])).toBe(true);
+      expect(shouldApplyRule(ruleAlwaysApplyTrue, ["Component.tsx"])).toBe(
+        true,
+      );
     });
 
     it("should use glob matching when alwaysApply is false", () => {
       // Should apply when globs match
       expect(shouldApplyRule(ruleAlwaysApplyFalse, ["src/main.ts"])).toBe(true);
-      expect(shouldApplyRule(ruleAlwaysApplyFalse, ["Component.tsx"])).toBe(true);
-      
+      expect(shouldApplyRule(ruleAlwaysApplyFalse, ["Component.tsx"])).toBe(
+        true,
+      );
+
       // Should not apply when globs don't match
       expect(shouldApplyRule(ruleAlwaysApplyFalse, ["script.py"])).toBe(false);
       expect(shouldApplyRule(ruleAlwaysApplyFalse, [])).toBe(false);
@@ -716,7 +724,9 @@ describe("shouldApplyRule", () => {
 
     it("should return false when alwaysApply is false and no globs specified", () => {
       expect(shouldApplyRule(ruleAlwaysApplyFalseNoGlobs, [])).toBe(false);
-      expect(shouldApplyRule(ruleAlwaysApplyFalseNoGlobs, ["any-file.js"])).toBe(false);
+      expect(
+        shouldApplyRule(ruleAlwaysApplyFalseNoGlobs, ["any-file.js"]),
+      ).toBe(false);
     });
   });
 
@@ -724,7 +734,9 @@ describe("shouldApplyRule", () => {
     it("should return true for rules without globs regardless of file paths", () => {
       expect(shouldApplyRule(ruleWithoutGlobs, [])).toBe(true);
       expect(shouldApplyRule(ruleWithoutGlobs, ["src/main.js"])).toBe(true);
-      expect(shouldApplyRule(ruleWithoutGlobs, ["Component.tsx", "utils.py"])).toBe(true);
+      expect(
+        shouldApplyRule(ruleWithoutGlobs, ["Component.tsx", "utils.py"]),
+      ).toBe(true);
     });
 
     it("should return false for rules with globs when no file paths are provided", () => {
@@ -734,12 +746,16 @@ describe("shouldApplyRule", () => {
     it("should return true for rules with globs when matching file paths are provided", () => {
       expect(shouldApplyRule(ruleWithGlobs, ["Component.tsx"])).toBe(true);
       expect(shouldApplyRule(ruleWithGlobs, ["src/main.ts"])).toBe(true);
-      expect(shouldApplyRule(ruleWithGlobs, ["utils.js", "Component.tsx"])).toBe(true);
+      expect(
+        shouldApplyRule(ruleWithGlobs, ["utils.js", "Component.tsx"]),
+      ).toBe(true);
     });
 
     it("should return false for rules with globs when no matching file paths are provided", () => {
       expect(shouldApplyRule(ruleWithGlobs, ["utils.py"])).toBe(false);
-      expect(shouldApplyRule(ruleWithGlobs, ["main.js", "script.rb"])).toBe(false);
+      expect(shouldApplyRule(ruleWithGlobs, ["main.js", "script.rb"])).toBe(
+        false,
+      );
     });
   });
 
@@ -760,19 +776,39 @@ describe("shouldApplyRule", () => {
 
     it("should handle array of glob patterns", () => {
       expect(shouldApplyRule(ruleWithArrayGlobs, ["src/main.ts"])).toBe(true);
-      expect(shouldApplyRule(ruleWithArrayGlobs, ["tests/unit.test.js"])).toBe(true);
-      expect(shouldApplyRule(ruleWithArrayGlobs, ["config/settings.json"])).toBe(false);
+      expect(shouldApplyRule(ruleWithArrayGlobs, ["tests/unit.test.js"])).toBe(
+        true,
+      );
+      expect(
+        shouldApplyRule(ruleWithArrayGlobs, ["config/settings.json"]),
+      ).toBe(false);
     });
 
     it("should handle string glob patterns", () => {
       expect(shouldApplyRule(ruleWithSpecificPattern, ["utils.py"])).toBe(true);
-      expect(shouldApplyRule(ruleWithSpecificPattern, ["src/models/user.py"])).toBe(true);
-      expect(shouldApplyRule(ruleWithSpecificPattern, ["utils.js"])).toBe(false);
+      expect(
+        shouldApplyRule(ruleWithSpecificPattern, ["src/models/user.py"]),
+      ).toBe(true);
+      expect(shouldApplyRule(ruleWithSpecificPattern, ["utils.js"])).toBe(
+        false,
+      );
     });
 
     it("should return true if any file path matches when multiple paths provided", () => {
-      expect(shouldApplyRule(ruleWithSpecificPattern, ["utils.js", "models.py", "config.json"])).toBe(true);
-      expect(shouldApplyRule(ruleWithGlobs, ["utils.py", "Component.tsx", "script.rb"])).toBe(true);
+      expect(
+        shouldApplyRule(ruleWithSpecificPattern, [
+          "utils.js",
+          "models.py",
+          "config.json",
+        ]),
+      ).toBe(true);
+      expect(
+        shouldApplyRule(ruleWithGlobs, [
+          "utils.py",
+          "Component.tsx",
+          "script.rb",
+        ]),
+      ).toBe(true);
     });
   });
 
@@ -784,7 +820,7 @@ describe("shouldApplyRule", () => {
         globs: [],
         source: "rules-block",
       };
-      
+
       // Empty array should be treated as "no globs" (truthy check fails)
       expect(shouldApplyRule(ruleWithEmptyGlobs, ["any-file.js"])).toBe(false);
     });
@@ -796,7 +832,7 @@ describe("shouldApplyRule", () => {
         globs: undefined,
         source: "rules-block",
       };
-      
+
       expect(shouldApplyRule(ruleUndefinedGlobs, ["any-file.js"])).toBe(true);
       expect(shouldApplyRule(ruleUndefinedGlobs, [])).toBe(true);
     });

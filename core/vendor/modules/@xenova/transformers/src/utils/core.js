@@ -1,10 +1,9 @@
-
 /**
  * @file Core utility functions/classes for Transformers.js.
- * 
+ *
  * These are only used internally, meaning an end-user shouldn't
  * need to access anything here.
- * 
+ *
  * @module utils/core
  */
 
@@ -17,7 +16,7 @@
  * @private
  */
 export function dispatchCallback(progress_callback, data) {
-    if (progress_callback) progress_callback(data);
+  if (progress_callback) progress_callback(data);
 }
 
 /**
@@ -28,8 +27,10 @@ export function dispatchCallback(progress_callback, data) {
  * @see https://ultimatecourses.com/blog/reverse-object-keys-and-values-in-javascript
  */
 export function reverseDictionary(data) {
-    // https://ultimatecourses.com/blog/reverse-object-keys-and-values-in-javascript
-    return Object.fromEntries(Object.entries(data).map(([key, value]) => [value, key]));
+  // https://ultimatecourses.com/blog/reverse-object-keys-and-values-in-javascript
+  return Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [value, key]),
+  );
 }
 
 /**
@@ -39,29 +40,30 @@ export function reverseDictionary(data) {
  * @returns {string} The escaped string.
  */
 export function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
 /**
  * A base class for creating callable objects.
- * 
+ *
  * @type {new () => {(...args: any[]): any, _call(...args: any[]): any}}
  */
-export const Callable = /** @type {any} */ (class {
+export const Callable = /** @type {any} */ (
+  class {
     /**
-    * Creates a new instance of the Callable class.
-    */
+     * Creates a new instance of the Callable class.
+     */
     constructor() {
-        /**
-         * Creates a closure that delegates to a private method '_call' with the given arguments.
-         * @type {any}
-         * @param {...any} args Zero or more arguments to pass to the '_call' method.
-         * @returns {*} The result of calling the '_call' method.
-         */
-        let closure = function (...args) {
-            return closure._call(...args)
-        }
-        return Object.setPrototypeOf(closure, new.target.prototype)
+      /**
+       * Creates a closure that delegates to a private method '_call' with the given arguments.
+       * @type {any}
+       * @param {...any} args Zero or more arguments to pass to the '_call' method.
+       * @returns {*} The result of calling the '_call' method.
+       */
+      let closure = function (...args) {
+        return closure._call(...args);
+      };
+      return Object.setPrototypeOf(closure, new.target.prototype);
     }
 
     /**
@@ -72,21 +74,21 @@ export const Callable = /** @type {any} */ (class {
      * @throws {Error} If the subclass does not implement the `_call` method.
      */
     _call(...args) {
-        throw Error('Must implement _call method in subclass')
+      throw Error("Must implement _call method in subclass");
     }
-});
+  }
+);
 
 /**
  * Check if a value is a typed array.
  * @param {*} val The value to check.
  * @returns {boolean} True if the value is a `TypedArray`, false otherwise.
- * 
+ *
  * Adapted from https://stackoverflow.com/a/71091338/13989043
  */
 export function isTypedArray(val) {
-    return val?.prototype?.__proto__?.constructor?.name === 'TypedArray';
+  return val?.prototype?.__proto__?.constructor?.name === "TypedArray";
 }
-
 
 /**
  * Check if a value is an integer.
@@ -94,7 +96,7 @@ export function isTypedArray(val) {
  * @returns {boolean} True if the value is a string, false otherwise.
  */
 export function isIntegralNumber(x) {
-    return Number.isInteger(x) || typeof x === 'bigint'
+  return Number.isInteger(x) || typeof x === "bigint";
 }
 
 /**
@@ -103,7 +105,7 @@ export function isIntegralNumber(x) {
  * @returns {boolean} True if the value exists, false otherwise.
  */
 export function exists(x) {
-    return x !== undefined && x !== null;
+  return x !== undefined && x !== null;
 }
 
 /**
@@ -113,13 +115,13 @@ export function exists(x) {
  * @returns {number[]} An array containing the dimensions of the input array.
  */
 export function calculateDimensions(arr) {
-    const dimensions = [];
-    let current = arr;
-    while (Array.isArray(current)) {
-        dimensions.push(current.length);
-        current = current[0];
-    }
-    return dimensions;
+  const dimensions = [];
+  let current = arr;
+  while (Array.isArray(current)) {
+    dimensions.push(current.length);
+    current = current[0];
+  }
+  return dimensions;
 }
 
 /**
@@ -131,15 +133,15 @@ export function calculateDimensions(arr) {
  * @throws {Error} If the key does not exist and no default value is provided.
  */
 export function pop(obj, key, defaultValue = undefined) {
-    const value = obj[key];
-    if (value !== undefined) {
-        delete obj[key];
-        return value;
-    }
-    if (defaultValue === undefined) {
-        throw Error(`Key ${key} does not exist in object.`)
-    }
-    return defaultValue;
+  const value = obj[key];
+  if (value !== undefined) {
+    delete obj[key];
+    return value;
+  }
+  if (defaultValue === undefined) {
+    throw Error(`Key ${key} does not exist in object.`);
+  }
+  return defaultValue;
 }
 
 /**
@@ -149,7 +151,7 @@ export function pop(obj, key, defaultValue = undefined) {
  * @returns {Array} The merged array.
  */
 export function mergeArrays(...arrs) {
-    return Array.prototype.concat.apply([], arrs);
+  return Array.prototype.concat.apply([], arrs);
 }
 
 /**
@@ -159,9 +161,9 @@ export function mergeArrays(...arrs) {
  * @private
  */
 export function product(...a) {
-    // Cartesian product of items
-    // Adapted from https://stackoverflow.com/a/43053803
-    return a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e])));
+  // Cartesian product of items
+  // Adapted from https://stackoverflow.com/a/43053803
+  return a.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e])));
 }
 
 /**
@@ -171,5 +173,5 @@ export function product(...a) {
  * @returns {number} The index offset.
  */
 export function calculateReflectOffset(i, w) {
-    return Math.abs((i + w) % (2 * w) - w);
+  return Math.abs(((i + w) % (2 * w)) - w);
 }

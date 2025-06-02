@@ -45,12 +45,16 @@ class EditDecorationManager {
     const rangesToPrune: string[] = [];
 
     for (const [key, existingRange] of this.activeRangesMap.entries()) {
-      if (!this.rangesCoincide(mergedRange, existingRange)) {continue;}
+      if (!this.rangesCoincide(mergedRange, existingRange)) {
+        continue;
+      }
       mergedRange = mergedRange.union(existingRange);
       rangesToPrune.push(key);
     }
 
-    for (const key of rangesToPrune) {this.activeRangesMap.delete(key);}
+    for (const key of rangesToPrune) {
+      this.activeRangesMap.delete(key);
+    }
     this.activeRangesMap.set(this.rangeToString(mergedRange), mergedRange);
   }
 
@@ -61,10 +65,14 @@ class EditDecorationManager {
     }
     this._lastEditor = editor;
 
-    for (const range of ranges) {this.mergeNewRange(range);}
+    for (const range of ranges) {
+      this.mergeNewRange(range);
+    }
 
     const activeRanges = Array.from(this.activeRangesMap.values());
-    if (activeRanges.length === 0) {return;} // No ranges to highlight
+    if (activeRanges.length === 0) {
+      return;
+    } // No ranges to highlight
 
     // Update active ranges and apply decorations
     editor.setDecorations(this.decorationType, activeRanges);
