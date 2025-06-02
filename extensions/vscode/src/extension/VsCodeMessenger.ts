@@ -1,4 +1,6 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { DataLogger } from "core/data/log";
+import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -15,8 +17,6 @@ import {
 import { stripImages } from "core/util/messageContent";
 import * as vscode from "vscode";
 
-import { DataLogger } from "core/data/log";
-import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { addCurrentSelectionToEdit } from "../quickEdit/AddCurrentSelection";

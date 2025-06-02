@@ -1,5 +1,15 @@
-import { stripImages, renderChatMessage, renderContextItems, normalizeToMessageParts } from "./messageContent.js";
-import { ChatMessage, ContextItem, MessageContent, MessagePart } from "../index.js";
+import {
+  stripImages,
+  renderChatMessage,
+  renderContextItems,
+  normalizeToMessageParts,
+} from "./messageContent.js";
+import {
+  ChatMessage,
+  ContextItem,
+  MessageContent,
+  MessagePart,
+} from "../index.js";
 
 describe("messageContent utility functions", () => {
   describe("stripImages", () => {
@@ -11,7 +21,10 @@ describe("messageContent utility functions", () => {
     it("should strip out image parts and join text parts of a message", () => {
       const content: MessageContent = [
         { type: "text", text: "This is" },
-        { type: "imageUrl", imageUrl: { url: "http://example.com/image1.png" } },
+        {
+          type: "imageUrl",
+          imageUrl: { url: "http://example.com/image1.png" },
+        },
         { type: "text", text: "a test message." },
       ];
       expect(stripImages(content)).toBe("This is\na test message.");
@@ -24,7 +37,10 @@ describe("messageContent utility functions", () => {
         role: "assistant",
         content: [
           { type: "text", text: "Hello," },
-          { type: "imageUrl", imageUrl: { url: "http://example.com/image.png" } },
+          {
+            type: "imageUrl",
+            imageUrl: { url: "http://example.com/image.png" },
+          },
           { type: "text", text: "world!" },
         ],
       };
@@ -44,10 +60,20 @@ describe("messageContent utility functions", () => {
   describe("renderContextItems", () => {
     it("should concatenate the content of context items with two newlines", () => {
       const items: ContextItem[] = [
-        { content: "Context Item 1", name: "Item1", description: "Description1" },
-        { content: "Context Item 2", name: "Item2", description: "Description2" },
+        {
+          content: "Context Item 1",
+          name: "Item1",
+          description: "Description1",
+        },
+        {
+          content: "Context Item 2",
+          name: "Item2",
+          description: "Description2",
+        },
       ];
-      expect(renderContextItems(items)).toBe("Context Item 1\n\nContext Item 2");
+      expect(renderContextItems(items)).toBe(
+        "Context Item 1\n\nContext Item 2",
+      );
     });
   });
 
@@ -57,7 +83,9 @@ describe("messageContent utility functions", () => {
         role: "user",
         content: "This is a test message.",
       };
-      const expected: MessagePart[] = [{ type: "text", text: "This is a test message." }];
+      const expected: MessagePart[] = [
+        { type: "text", text: "This is a test message." },
+      ];
       expect(normalizeToMessageParts(message)).toEqual(expected);
     });
 
@@ -67,7 +95,9 @@ describe("messageContent utility functions", () => {
         content: "Tool message content",
         toolCallId: "1",
       };
-      const expected: MessagePart[] = [{ type: "text", text: "Tool message content" }];
+      const expected: MessagePart[] = [
+        { type: "text", text: "Tool message content" },
+      ];
       expect(normalizeToMessageParts(message)).toEqual(expected);
     });
   });

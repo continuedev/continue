@@ -19,14 +19,14 @@ const GenerateTerminalCommand: SlashCommand = {
       return;
     }
 
-    const gen =
-      llm.streamComplete(`The user has made a request to run a shell command. Their description of what it should do is:
+    const gen = llm.streamComplete(
+      `The user has made a request to run a shell command. Their description of what it should do is:
 
 "${input}"
 
 Please write a shell command that will do what the user requested. Your output should consist of only the command itself, without any explanation or example output. Do not use any newlines. Only output the command that when inserted into the terminal will do precisely what was requested. Here is the command:`,
-        new AbortController().signal
-      );
+      new AbortController().signal,
+    );
 
     const lines = streamLines(gen);
     let cmd = "";
