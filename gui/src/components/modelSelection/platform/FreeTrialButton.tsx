@@ -90,7 +90,7 @@ export default function FreeTrialButton({
           style={{ fontSize: fontSize(-3) }}
         >
           <div className="flex flex-row items-center gap-1.5">
-            <span className="line-clamp-1 select-none">Using free trial</span>
+            <span className="line-clamp-1 select-none">Free trial usage</span>
           </div>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0 select-none"
@@ -102,8 +102,26 @@ export default function FreeTrialButton({
           <ListboxOptions className="min-w-80 pb-0">
             <div className="px-4 pb-4">
               <h3 className="mb-4 text-sm font-semibold">
-                You are currently using the free trial
+                Free trial of the Models Add-On
               </h3>
+
+              <div className="mb-4">
+                <span className="text-description">
+                  You are currently using a free trial the Models Add-On, which
+                  allows you to use a variety of frontier models for a flat
+                  monthly fee. Read more about usage limits and what models are
+                  included{" "}
+                  <a
+                    href="https://hub.continue.dev/pricing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 underline hover:text-blue-300"
+                  >
+                    here
+                  </a>
+                  .
+                </span>
+              </div>
 
               {!freeTrialStatus ? (
                 <div className="mb-4 flex items-center justify-center py-8">
@@ -125,7 +143,7 @@ export default function FreeTrialButton({
                     });
                   }}
                 >
-                  Eject from trial
+                  Exit trial
                 </SecondaryButton>
                 <Button
                   className="flex-1"
