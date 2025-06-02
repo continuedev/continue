@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import StreamErrorDialog from "../../pages/gui/StreamError";
-import { setInactive } from "../slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { cancelStream } from "./cancelStream";
@@ -22,7 +21,6 @@ export const streamThunkWrapper = createAsyncThunk<
         }),
       );
     }
-    dispatch(setInactive());
   } catch (e) {
     dispatch(cancelStream());
     dispatch(setDialogMessage(<StreamErrorDialog error={e} />));

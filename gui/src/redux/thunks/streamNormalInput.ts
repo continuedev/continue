@@ -8,6 +8,8 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  setActive,
+  setInactive,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
@@ -45,6 +47,8 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
+    dispatch(setActive());
+
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(
       {
@@ -67,6 +71,8 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(streamUpdate(next.value));
       next = await gen.next();
     }
+
+    dispatch(setInactive());
 
     // Attach prompt log and end thinking for reasoning models
     if (next.done && next.value) {
