@@ -1,7 +1,12 @@
 import { BlockType } from "@continuedev/config-yaml";
 import { describe, expect, test } from "@jest/globals";
 import { RULE_FILE_EXTENSION } from "../markdown";
-import { blockTypeToSingular, findAvailableFilename } from "./workspaceBlocks";
+import {
+  blockTypeToFilename,
+  blockTypeToSingular,
+  findAvailableFilename,
+  getFileContent,
+} from "./workspaceBlocks";
 
 describe("blockTypeToSingular", () => {
   test("converts block types to singular form correctly", () => {
@@ -10,7 +15,58 @@ describe("blockTypeToSingular", () => {
     expect(blockTypeToSingular("rules")).toBe("rule");
     expect(blockTypeToSingular("docs")).toBe("doc");
     expect(blockTypeToSingular("prompts")).toBe("prompt");
-    expect(blockTypeToSingular("mcpServers")).toBe("mcp-server");
+    expect(blockTypeToSingular("mcpServers")).toBe("MCP server");
+  });
+});
+
+describe("blockTypeToFilename", () => {
+  test("converts block types to filename-safe singular form correctly", () => {
+    expect(blockTypeToFilename("models")).toBe("model");
+    expect(blockTypeToFilename("context")).toBe("context");
+    expect(blockTypeToFilename("rules")).toBe("rule");
+    expect(blockTypeToFilename("docs")).toBe("doc");
+    expect(blockTypeToFilename("prompts")).toBe("prompt");
+    expect(blockTypeToFilename("mcpServers")).toBe("mcp-server");
+  });
+});
+
+describe("getFileContent", () => {
+  test("returns markdown content for rules block type", () => {
+    const result = getFileContent("rules");
+    expect(result).toContain("# New Rule");
+    expect(result).toContain("Your rule content");
+    expect(result).toContain("A description of your rule");
+  });
+
+  test("returns YAML content for non-rules block types", () => {
+    const result = getFileContent("models");
+    expect(result).toContain("name: New model");
+    expect(result).toContain("version: 0.0.1");
+    expect(result).toContain("schema: v1");
+    expect(result).toContain("models:");
+    expect(result).toContain("provider: anthropic");
+  });
+
+  test("generates correct YAML for different block types", () => {
+    const contextResult = getFileContent("context");
+    expect(contextResult).toContain("name: New context");
+    expect(contextResult).toContain("context:");
+    expect(contextResult).toContain("provider: file");
+
+    const docsResult = getFileContent("docs");
+    expect(docsResult).toContain("name: New doc");
+    expect(docsResult).toContain("docs:");
+    expect(docsResult).toContain("startUrl: https://docs.continue.dev");
+
+    const promptsResult = getFileContent("prompts");
+    expect(promptsResult).toContain("name: New prompt");
+    expect(promptsResult).toContain("prompts:");
+    expect(promptsResult).toContain("thorough suite of unit tests");
+
+    const mcpResult = getFileContent("mcpServers");
+    expect(mcpResult).toContain("name: New MCP server");
+    expect(mcpResult).toContain("mcpServers:");
+    expect(mcpResult).toContain("command: npx");
   });
 });
 

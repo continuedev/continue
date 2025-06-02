@@ -2,13 +2,29 @@ import { BlockType, ConfigYaml } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
 import { joinPathsToUri } from "../../util/uri";
-import {
-  RULE_FILE_EXTENSION,
-  createMarkdownWithFrontmatter,
-  type RuleFrontmatter,
-} from "../markdown";
+import { RULE_FILE_EXTENSION, createRuleMarkdown } from "../markdown";
 
 export function blockTypeToSingular(blockType: BlockType): string {
+  switch (blockType) {
+    case "context":
+      return "context";
+    case "models":
+      return "model";
+    case "rules":
+      return "rule";
+    case "docs":
+      return "doc";
+    case "prompts":
+      return "prompt";
+    case "mcpServers":
+      return "MCP server";
+    default:
+      // Fallback to slice approach for any new block types
+      return blockType.slice(0, -1);
+  }
+}
+
+export function blockTypeToFilename(blockType: BlockType): string {
   switch (blockType) {
     case "context":
       return "context";
@@ -93,22 +109,14 @@ function getFileExtension(blockType: BlockType): string {
   return blockType === "rules" ? RULE_FILE_EXTENSION : "yaml";
 }
 
-/**
- * Creates a new rule markdown file content with default values
- * Only used by workspace block creation
- */
-function createNewRuleMarkdown(
-  name: string = "New rule",
-  description: string = "Rule description",
-): string {
-  const frontmatter: RuleFrontmatter = {
-    name,
-    description,
-  };
-
-  const markdownBody = `# ${name}\n\nWrite your rule content here.`;
-
-  return createMarkdownWithFrontmatter(frontmatter, markdownBody);
+export function getFileContent(blockType: BlockType): string {
+  if (blockType === "rules") {
+    return createRuleMarkdown("New Rule", "Your rule content", {
+      description: "A description of your rule",
+    });
+  } else {
+    return YAML.stringify(getContentsForNewBlock(blockType));
+  }
 }
 
 export async function findAvailableFilename(
@@ -117,7 +125,7 @@ export async function findAvailableFilename(
   fileExists: (uri: string) => Promise<boolean>,
   extension?: string,
 ): Promise<string> {
-  const baseFilename = `new-${blockTypeToSingular(blockType)}`;
+  const baseFilename = `new-${blockTypeToFilename(blockType)}`;
   const fileExtension = extension ?? getFileExtension(blockType);
   let counter = 0;
   let fileUri: string;
@@ -153,12 +161,7 @@ export async function createNewWorkspaceBlockFile(
     ide.fileExists.bind(ide),
   );
 
-  let fileContent: string;
-  if (blockType === "rules") {
-    fileContent = createNewRuleMarkdown();
-  } else {
-    fileContent = YAML.stringify(getContentsForNewBlock(blockType));
-  }
+  const fileContent = getFileContent(blockType);
 
   await ide.writeFile(fileUri, fileContent);
   await ide.openFile(fileUri);
