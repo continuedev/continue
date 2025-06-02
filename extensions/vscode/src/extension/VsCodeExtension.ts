@@ -175,20 +175,37 @@ export class VsCodeExtension {
     const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
     const enabled = config.get<boolean>("enableTabAutocomplete");
 
+    const completionProvider = new ContinueCompletionProvider(
+      this.configHandler,
+      this.ide,
+      this.sidebar.webviewProtocol,
+    );
+
     // Register inline completion provider
     setupStatusBar(
       enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
     );
-    context.subscriptions.push(
-      vscode.languages.registerInlineCompletionItemProvider(
-        [{ pattern: "**" }],
-        new ContinueCompletionProvider(
-          this.configHandler,
-          this.ide,
-          this.sidebar.webviewProtocol,
-        ),
-      ),
+    
+    // For inline completions right in the text editor
+    const inlineCompletionDisposable = vscode.languages.registerInlineCompletionItemProvider(
+      [{ pattern: "**" }],
+      completionProvider,
     );
+
+    // Register non-inline completion provider for suggestion widget
+    console.log("Continue: Registering completion item provider");
+    const completionItemDisposable = vscode.languages.registerCompletionItemProvider(
+      [{ pattern: "**" }],
+      completionProvider,
+      // All possible trigger characters - alphabet, digits, symbols, etc.
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+      "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+      ".", ",", ";", ":", "!", "?", "@", "#", "$", "%", "^", "&", "*", "(", ")", "[", "]", "{", "}", "<", ">", "=", "+", "-", "_", "|", "\\", "/", "~", "`", "'", '"', " "
+    );
+    console.log("Continue: Completion item provider registered");
+
+    context.subscriptions.push(inlineCompletionDisposable, completionItemDisposable);
 
     // Handle uri events
     this.uriHandler.event((uri) => {

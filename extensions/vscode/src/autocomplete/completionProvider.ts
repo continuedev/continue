@@ -41,10 +41,11 @@ interface PendingInlineCompletion {
   character: number;
   sourceFragment: SourceFragment;
   acceptListener: CompletionProvider.Disposable | null;
+  suggestionWidgetPending: boolean;
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider, vscode.Disposable {
+  implements vscode.InlineCompletionItemProvider, vscode.CompletionItemProvider, vscode.Disposable {
   private async onError(e: any) {
     if (await handleLLMError(e)) {
       return;
@@ -136,6 +137,7 @@ export class ContinueCompletionProvider
   }
 
   private async requestNewInlineCompletion() {
+    console.log("requesting new inline completion");
     setTimeout(async () => {
       await vscode.commands.executeCommand(
         "editor.action.inlineSuggest.trigger",
@@ -233,6 +235,7 @@ export class ContinueCompletionProvider
       const insertText = remainingCompletion.getAsText({
         ignoreWhitespace: false,
       });
+
       result[0].insertText = insertText;
       result[0].range = new vscode.Range(position, position);
     }
@@ -259,8 +262,12 @@ export class ContinueCompletionProvider
 
     if (!completionPromise) return null;
 
+    console.log("Preparing new inline completion")
+
     const acceptListener = this.completionProvider.onAccept((completionId, acceptedOutcome) => {
       if (!this.pendingInlineCompletion) return;
+
+      console.log("Accepting inline completion")
 
       this.pendingInlineCompletion.cancellationSource?.cancel();
       this.pendingInlineCompletion.acceptListener?.dispose();
@@ -285,7 +292,10 @@ export class ContinueCompletionProvider
       character: position.character,
       sourceFragment: completionFragment,
       acceptListener,
+      suggestionWidgetPending: false,
     };
+
+    console.log("Prime the completion with the current line until we can get an answer from the LLM");
 
     this.handleInlineCompletionWhenReady(completionPromise);
 
@@ -305,7 +315,15 @@ export class ContinueCompletionProvider
       if (result && result[0]) {
         const completionText = result[0].insertText.toString();
         const currentText = this.pendingInlineCompletion.sourceFragment.getAsText({ ignoreWhitespace: false });
+        console.log (`completion returned: currentText: {${currentText}}\ncompletionText: {${completionText}}`);
         this.pendingInlineCompletion.sourceFragment = new SourceFragment(currentText + completionText);
+      }
+
+      if (this.pendingInlineCompletion.suggestionWidgetPending) {
+        await setTimeout(async () => {
+          await vscode.commands.executeCommand('hideSuggestWidget');
+          await vscode.commands.executeCommand('editor.action.triggerSuggest');
+        }, 80);
       }
 
       await this.requestNewInlineCompletion();
@@ -318,6 +336,7 @@ export class ContinueCompletionProvider
     context: vscode.InlineCompletionContext,
     token: vscode.CancellationToken,
   ): Promise<vscode.InlineCompletionItem[] | null> {
+    console.log("VSCode asking for new inline completion");
     // Check if an inline completion is already being generated
     if (this.pendingInlineCompletion) {
       // Cancel if the user has moved around
@@ -601,5 +620,135 @@ export class ContinueCompletionProvider
     }
 
     return true;
+  }
+
+  public async provideCompletionItems(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    token: vscode.CancellationToken,
+    context: vscode.CompletionContext,
+  ): Promise<vscode.CompletionItem[] | null> {
+    console.log('provideCompletionItems called', {
+      hasPendingCompletion: !!this.pendingInlineCompletion,
+      documentUri: document.uri.toString(),
+      position: { line: position.line, character: position.character },
+      triggerKind: context.triggerKind,
+      pendingCompletion: this.pendingInlineCompletion ? {
+        documentUri: this.pendingInlineCompletion.documentUri,
+        line: this.pendingInlineCompletion.line,
+        character: this.pendingInlineCompletion.character,
+        hasResult: !!this.pendingInlineCompletion.result,
+        suggestionWidgetPending: this.pendingInlineCompletion.suggestionWidgetPending,
+      } : null
+    });
+
+    if (!this.pendingInlineCompletion) {
+      console.log('No pending completion, returning null');
+      return null;
+    }
+
+    const isRelevantCompletion =
+      this.pendingInlineCompletion.documentUri === document.uri.toString() &&
+      this.pendingInlineCompletion.line === position.line &&
+      this.pendingInlineCompletion.character <= position.character;
+
+    console.log('isRelevantCompletion:', isRelevantCompletion);
+
+    if (!isRelevantCompletion) {
+      console.log('Not relevant completion, returning null');
+      //return null;
+    }
+
+    const wordRange = document.getWordRangeAtPosition(position);
+    const currentWord = wordRange ? document.getText(wordRange) : "";
+
+    if (this.pendingInlineCompletion.result && this.pendingInlineCompletion.result[0]) {
+      if (!this.pendingInlineCompletion.suggestionWidgetPending) {
+        console.log('Completion ready but no suggestion widget was shown before, returning null');
+        return null;
+      }
+
+      const editorText = document.getText(new vscode.Range(
+        new vscode.Position(this.pendingInlineCompletion.line, 0),
+        position
+      ));
+
+      const item = new vscode.CompletionItem(
+        currentWord ? `${currentWord} (code suggestion)` : "(code suggestion)",
+        vscode.CompletionItemKind.Text
+      );
+      const editorFragment = new SourceFragment(editorText);
+      const completionFragment = this.pendingInlineCompletion.sourceFragment;
+      const remainingCompletion = editorFragment.getRemainingCompletion(
+        completionFragment,
+        { ignoreWhitespace: true, mergeWhitespace: true }
+      );
+
+      if (remainingCompletion) {
+        const completionText = remainingCompletion.getAsText({
+          ignoreWhitespace: false,
+        });
+        console.log("Full completion:", completionFragment.getAsText({ ignoreWhitespace: false }));
+        console.log("Remaining completion:", completionText);
+        console.log("editorText:", editorText);
+
+        const [ previewText = "" ] = completionFragment.head(1, { ignoreWhitespace: true });
+
+        item.detail = "Granite.Code";
+        item.label = previewText;
+        item.documentation = new vscode.MarkdownString(
+          `$(check) Code suggestion\n\n\`\`\`\n${completionFragment.getAsText({ ignoreWhitespace: false })}\n\`\`\``
+        );
+        item.documentation.supportThemeIcons = true;
+
+        item.range = new vscode.Range(position, position)
+        item.insertText = completionText;
+        item.filterText = completionText;
+        item.sortText = '\0';
+        item.preselect = true;
+      }
+      console.log('returning item', item);
+      return [item];
+    } else {
+      const isExplicitTrigger = context.triggerKind === vscode.CompletionTriggerKind.Invoke;
+      const isCharacterTrigger = context.triggerKind === vscode.CompletionTriggerKind.TriggerCharacter;
+
+      if (isExplicitTrigger || isCharacterTrigger) {
+        const item = new vscode.CompletionItem(
+          currentWord ? `${currentWord} (generating code)` : "(generating code)",
+          vscode.CompletionItemKind.Text
+        );
+
+        item.detail = "Granite.Code";
+        item.documentation = new vscode.MarkdownString(
+          "$(loading~spin) One moment…"
+        );
+        item.documentation.supportThemeIcons = true;
+
+        item.sortText = '\0';
+        item.filterText = currentWord;
+        item.preselect = true;
+
+        if (wordRange)
+          item.range = wordRange;
+
+        item.insertText = currentWord;
+
+        this.pendingInlineCompletion.suggestionWidgetPending = true;
+        console.log('Showing "generating code" item in suggestion widget');
+        return [item];
+      } else {
+        console.log('Auto-triggered with no user action, not showing in suggestion widget');
+        this.pendingInlineCompletion.suggestionWidgetPending = false;
+        return null;
+      }
+    }
+  }
+
+  public async resolveCompletionItem(
+    item: vscode.CompletionItem,
+    token: vscode.CancellationToken,
+  ): Promise<vscode.CompletionItem> {
+    return item;
   }
 }
