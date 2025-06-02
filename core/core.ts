@@ -40,7 +40,7 @@ import {
   RangeInFile,
   type ContextItem,
   type ContextItemId,
-  type IDE
+  type IDE,
 } from ".";
 
 import { ConfigYaml } from "@continuedev/config-yaml";
@@ -66,7 +66,6 @@ export class Core {
   configHandler: ConfigHandler;
   codeBaseIndexer: CodebaseIndexer;
   completionProvider: CompletionProvider;
-   continueServerClientPromise: Promise<ContinueServerClient>;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
@@ -165,18 +164,11 @@ export class Core {
     dataLogger.ideInfoPromise = ideInfoPromise;
     dataLogger.ideSettingsPromise = ideSettingsPromise;
 
-    let continueServerClientResolve: (_: any) => void | undefined;
-    this.continueServerClientPromise = new Promise(
-      (resolve) => (continueServerClientResolve = resolve),
-    );
-
-
     void ideSettingsPromise.then((ideSettings) => {
-            const continueServerClient = new ContinueServerClient(
+      const continueServerClient = new ContinueServerClient(
         ideSettings.remoteConfigServerUrl,
         ideSettings.userToken,
       );
-      continueServerClientResolve(continueServerClient);
 
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
