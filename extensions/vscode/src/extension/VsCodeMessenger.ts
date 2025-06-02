@@ -250,7 +250,9 @@ export class VsCodeMessenger {
     this.onWebview("edit/clearDecorations", async (msg) => {
       editDecorationManager.clear();
     });
-    this.onWebview("checkForIncompatibleExtensions", async (msg) => {
+    this.onWebview("onWebviewLoad", async (msg) => {
+      const isGraniteOnboardingComplete = ide.isGraniteOnboardingComplete();
+      this.webviewProtocol.send("setShowGraniteOnboardingCard", !isGraniteOnboardingComplete);
       this.webviewProtocol.send("updateIncompatibleExtensions", checkForIncompatibleExtensions());
     });
 

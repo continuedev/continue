@@ -196,9 +196,9 @@ const Layout = () => {
     };
   }, []);
 
-  // Check if there are any incompatible extension enabled when the webview is on mount
+  // When the webview is on mount, check if there are any incompatible extension enabled, and if the onboardingCard should be shown
   useEffect(() => {
-    ideMessenger.post("checkForIncompatibleExtensions", undefined);
+    ideMessenger.post("onWebviewLoad", undefined);
   }, []);
 
   return showGraniteOnboardingCard ? (

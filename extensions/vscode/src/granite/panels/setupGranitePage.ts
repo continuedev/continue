@@ -409,12 +409,9 @@ export class SetupGranitePage {
         this.modelInstallCanceller.signal,
         reportProgress,
       );
-      this.wizardState.stepStatuses[MODELS_STEP] = result;
       await this.publishStatus(webview);
       if (result) {
         await this.saveSettings(modelSize);
-        await this.hideGraniteOnboardingCard();
-        await commands.executeCommand("continue.continueGUIView.focus");
         if (!panel.visible) {
           const selection = await window.showInformationMessage(
             "Granite.Code is ready to be used.",
@@ -488,11 +485,16 @@ export class SetupGranitePage {
       serverState.status === ServerStatus.started ||
       serverState.status === ServerStatus.stopped);
 
+    const prevModelStatus = this.wizardState.stepStatuses[MODELS_STEP];
     const allModelsInstalled = modelIds.every(
       (id) => statusByModel.get(id) === ModelStatus.installed,
     );
 
     this.wizardState.stepStatuses[MODELS_STEP] = allModelsInstalled;
+    if (allModelsInstalled && !prevModelStatus) {
+      await commands.executeCommand("continue.continueGUIView.focus");
+      await this.hideGraniteOnboardingCard();
+    }
 
     await webview.postMessage({
       command: "status",

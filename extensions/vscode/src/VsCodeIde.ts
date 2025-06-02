@@ -9,6 +9,7 @@ import * as URI from "uri-js";
 import * as vscode from "vscode";
 
 import { executeGotoProvider } from "./autocomplete/lsp";
+import { isGraniteOnboardingComplete } from "./granite/utils/extensionUtils";
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
@@ -788,6 +789,10 @@ class VsCodeIde implements IDE {
   async getIdeSettings(): Promise<IdeSettings> {
     const ideSettings = this.getIdeSettingsSync();
     return ideSettings;
+  }
+
+  isGraniteOnboardingComplete(): boolean {
+    return isGraniteOnboardingComplete(this.context);
   }
 }
 
