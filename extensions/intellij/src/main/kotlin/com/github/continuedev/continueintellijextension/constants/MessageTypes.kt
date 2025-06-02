@@ -36,8 +36,6 @@ class MessageTypes {
             "getFileStats",
             "insertAtCursor",
             "applyToFile",
-            "getGitHubAuthToken",
-            "setGitHubAuthToken",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
             "getTerminalContents",

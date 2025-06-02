@@ -62,7 +62,7 @@ export const gatherContext = createAsyncThunk<
 
     // Automatically use currently open file
     if (!modifiers.noContext) {
-      const usingFreeTrial = selectedChatModel.provider === "free-trial";
+      const usingFreeTrial = false; // TODO no longer tracking free trial count, need to hook up to hub
 
       const currentFileResponse = await extra.ideMessenger.request(
         "context/getContextItems",

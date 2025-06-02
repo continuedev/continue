@@ -63,8 +63,4 @@ class ContinuePluginService : Disposable, DumbAware {
             listener()
         }
     }
-
-    fun updateLastFileSaveTimestamp() {
-        ideProtocolClient?.updateLastFileSaveTimestamp()
-    }
 }

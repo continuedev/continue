@@ -45,6 +45,7 @@ import {
 } from ".";
 
 import { ConfigYaml } from "@continuedev/config-yaml";
+import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import {
   setupBestConfig,
@@ -360,6 +361,10 @@ export class Core {
         url += `?org=${msg.data.orgSlug}`;
       }
       await this.messenger.request("openUrl", url);
+    });
+
+    on("controlPlane/getFreeTrialStatus", async (msg) => {
+      return this.configHandler.controlPlaneClient.getFreeTrialStatus();
     });
 
     on("mcp/reloadServer", async (msg) => {
@@ -809,6 +814,8 @@ export class Core {
     uris?: string[];
   }>) {
     if (data?.uris?.length) {
+      const diffCache = GitDiffCache.getInstance(getDiffFn(this.ide));
+      diffCache.invalidate();
       walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
       for (const uri of data.uris) {
         const currentProfileUri =

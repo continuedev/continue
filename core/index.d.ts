@@ -5,7 +5,6 @@ import {
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
-import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
   interface Window {
@@ -776,10 +775,6 @@ export interface IDE {
       }
   >;
 
-  getLastFileSaveTimestamp?(): number;
-
-  updateLastFileSaveTimestamp?(): void;
-
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;
@@ -807,8 +802,6 @@ export interface IDE {
   listDir(dir: string): Promise<[string, FileType][]>;
 
   getFileStats(files: string[]): Promise<FileStatsMap>;
-
-  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // Secret Storage
   readSecrets(keys: string[]): Promise<Record<string, string>>;

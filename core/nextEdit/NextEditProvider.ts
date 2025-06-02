@@ -3,21 +3,24 @@ import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
-import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
-import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
+import { shouldCompleteMultiline } from "../autocomplete/classification/shouldCompleteMultiline.js";
+import { ContextRetrievalService } from "../autocomplete/context/ContextRetrievalService.js";
 
-import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
-import { CompletionStreamer } from "./generation/CompletionStreamer.js";
-import { postprocessCompletion } from "./postprocessing/index.js";
-import { shouldPrefilter } from "./prefiltering/index.js";
-import { getAllSnippets } from "./snippets/index.js";
-import { renderPrompt } from "./templating/index.js";
-import { GetLspDefinitionsFunction } from "./types.js";
-import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
-import { AutocompleteLoggingService } from "./util/AutocompleteLoggingService.js";
-import AutocompleteLruCache from "./util/AutocompleteLruCache.js";
-import { HelperVars } from "./util/HelperVars.js";
-import { AutocompleteInput, AutocompleteOutcome } from "./util/types.js";
+import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
+import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
+import { postprocessCompletion } from "../autocomplete/postprocessing/index.js";
+import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
+import { getAllSnippets } from "../autocomplete/snippets/index.js";
+import { renderPrompt } from "../autocomplete/templating/index.js";
+import { GetLspDefinitionsFunction } from "../autocomplete/types.js";
+import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebouncer.js";
+import { AutocompleteLoggingService } from "../autocomplete/util/AutocompleteLoggingService.js";
+import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
+import { HelperVars } from "../autocomplete/util/HelperVars.js";
+import {
+  AutocompleteInput,
+  AutocompleteOutcome,
+} from "../autocomplete/util/types.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -29,7 +32,7 @@ const ERRORS_TO_IGNORE = [
   "operation was aborted",
 ];
 
-export class CompletionProvider {
+export class NextEditProvider {
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
@@ -75,6 +78,13 @@ export class CompletionProvider {
     if (llm instanceof OpenAI) {
       llm.useLegacyCompletionsEndpoint = true;
     }
+    // TODO: Resolve import error with TRIAL_FIM_MODEL
+    // else if (
+    //   llm.providerName === "free-trial" &&
+    //   llm.model !== TRIAL_FIM_MODEL
+    // ) {
+    //   llm.model = TRIAL_FIM_MODEL;
+    // }
 
     return llm;
   }
