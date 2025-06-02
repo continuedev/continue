@@ -19,7 +19,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
-import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
@@ -46,17 +45,10 @@ import {
 } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { streamEditThunk } from "../../redux/thunks/editMode";
+import { streamEditThunk } from "../../redux/thunks/edit";
 import { loadLastSession } from "../../redux/thunks/session";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
-import {
-  FREE_TRIAL_LIMIT_REQUESTS,
-  incrementFreeTrialCount,
-} from "../../util/freeTrial";
 
-import AcceptRejectDiffButtons from "../../components/AcceptRejectDiffButtons";
-import CodeToEditCard from "../../components/mainInput/CodeToEditCard";
-import EditModeDetails from "../../components/mainInput/EditModeDetails";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -121,9 +113,7 @@ export function Chat() {
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const mode = useAppSelector((store) => store.session.mode);
-  const applyStates = useAppSelector(
-    (state) => state.session.codeBlockApplyStates.states,
-  );
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const hasDismissedExploreDialog = useAppSelector(
@@ -185,54 +175,54 @@ export function Chat() {
         );
       }
 
-      const model =
-        mode === "edit"
-          ? (selectedModels?.edit ?? selectedModels?.chat)
-          : selectedModels?.chat;
+      const model = isInEdit
+        ? (selectedModels?.edit ?? selectedModels?.chat)
+        : selectedModels?.chat;
       if (!model) {
         return;
       }
 
-      if (mode === "edit" && codeToEdit.length === 0) {
+      if (isInEdit && codeToEdit.length === 0) {
         return;
       }
 
-      if (model.provider === "free-trial") {
-        const newCount = incrementFreeTrialCount();
+      // TODO - hook up with hub to detect free trial progress
+      // if (model.provider === "free-trial") {
+      //   const newCount = incrementFreeTrialCount();
 
-        if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
-          posthog?.capture("ftc_reached");
-        }
-        if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
-          // Show this message whether using platform or not
-          // So that something happens if in new chat
-          void ideMessenger.ide.showToast(
-            "error",
-            "You've reached the free trial limit. Please configure a model to continue.",
-          );
+      //   if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
+      //     posthog?.capture("ftc_reached");
+      //   }
+      //   if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
+      //     // Show this message whether using platform or not
+      //     // So that something happens if in new chat
+      //     void ideMessenger.ide.showToast(
+      //       "error",
+      //       "You've reached the free trial limit. Please configure a model to continue.",
+      //     );
 
-          // Card in chat will only show if no history
-          // Also, note that platform card ignore the "Best", always opens to main tab
-          onboardingCard.open("Best");
+      //     // Card in chat will only show if no history
+      //     // Also, note that platform card ignore the "Best", always opens to main tab
+      //     onboardingCard.open("Best");
 
-          // If history, show the dialog, which will automatically close if there is not history
-          if (history.length) {
-            dispatch(setDialogMessage(<FreeTrialOverDialog />));
-            dispatch(setShowDialog(true));
-          }
-          return;
-        }
-      }
+      //     // If history, show the dialog, which will automatically close if there is not history
+      //     if (history.length) {
+      //       dispatch(setDialogMessage(<FreeTrialOverDialog />));
+      //       dispatch(setShowDialog(true));
+      //     }
+      //     return;
+      //   }
+      // }
 
-      if (mode === "edit") {
-        dispatch(
+      if (isInEdit) {
+        void dispatch(
           streamEditThunk({
             editorState,
             codeToEdit,
           }),
         );
       } else {
-        dispatch(streamResponseThunk({ editorState, modifiers, index }));
+        void dispatch(streamResponseThunk({ editorState, modifiers, index }));
 
         if (editorToClearOnSend) {
           editorToClearOnSend.commands.clearContent();
@@ -252,7 +242,15 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [history, selectedModels, streamResponse, mode, codeToEdit, toolCallState],
+    [
+      history,
+      selectedModels,
+      streamResponse,
+      mode,
+      isInEdit,
+      codeToEdit,
+      toolCallState,
+    ],
   );
 
   useWebviewListener(
@@ -292,7 +290,7 @@ export function Chat() {
 
   return (
     <>
-      {!!showSessionTabs && mode !== "edit" && <TabBar ref={tabsRef} />}
+      {!!showSessionTabs && !isInEdit && <TabBar ref={tabsRef} />}
       {widget}
 
       <StepsDiv
@@ -331,17 +329,16 @@ export function Chat() {
                   "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
-                <div>
+                <div className="">
                   {item.message.toolCalls?.map((toolCall, i) => {
                     return (
-                      <div key={i}>
-                        <ToolCallDiv
-                          toolCallState={item.toolCallState!}
-                          toolCall={toolCall}
-                          output={history[index + 1]?.contextItems}
-                          historyIndex={index}
-                        />
-                      </div>
+                      <ToolCallDiv
+                        key={i}
+                        toolCallState={item.toolCallState!}
+                        toolCall={toolCall}
+                        output={history[index + 1]?.contextItems}
+                        historyIndex={index}
+                      />
                     );
                   })}
                 </div>
@@ -381,24 +378,14 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        <>
-          {!isStreaming && mode !== "edit" && (
-            <AcceptRejectDiffButtons
-              applyStates={applyStates}
-              onAcceptOrReject={async () => {}}
-            />
-          )}
-          {mode === "edit" && <CodeToEditCard />}
-          <ContinueInputBox
-            isMainInput
-            isLastUserInput={false}
-            onEnter={(editorState, modifiers, editor) =>
-              sendInput(editorState, modifiers, undefined, editor)
-            }
-            inputId={MAIN_EDITOR_INPUT_ID}
-          />
-          <EditModeDetails />
-        </>
+        <ContinueInputBox
+          isMainInput
+          isLastUserInput={false}
+          onEnter={(editorState, modifiers, editor) =>
+            sendInput(editorState, modifiers, undefined, editor)
+          }
+          inputId={MAIN_EDITOR_INPUT_ID}
+        />
 
         <div
           style={{
@@ -407,7 +394,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {history.length === 0 && lastSessionId && mode !== "edit" && (
+              {history.length === 0 && lastSessionId && !isInEdit && (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {

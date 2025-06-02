@@ -1,5 +1,4 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
@@ -75,11 +74,6 @@ export class CompletionProvider {
 
     if (llm instanceof OpenAI) {
       llm.useLegacyCompletionsEndpoint = true;
-    } else if (
-      llm.providerName === "free-trial" &&
-      llm.model !== TRIAL_FIM_MODEL
-    ) {
-      llm.model = TRIAL_FIM_MODEL;
     }
 
     return llm;
@@ -244,7 +238,7 @@ export class CompletionProvider {
         prefix,
         suffix,
         prompt,
-        modelProvider: llm.providerName,
+        modelProvider: llm.underlyingProviderName,
         modelName: llm.model,
         completionOptions,
         cacheHit,

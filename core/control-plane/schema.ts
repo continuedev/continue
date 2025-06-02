@@ -88,7 +88,6 @@ const embeddingsProviderSchema = z.object({
     "ollama",
     "openai",
     "cohere",
-    "free-trial",
     "gemini",
     "ovhcloud",
     "nebius",

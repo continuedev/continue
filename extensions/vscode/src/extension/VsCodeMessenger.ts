@@ -236,8 +236,9 @@ export class VsCodeMessenger {
         data: {
           prompt: stripImages(prompt),
           completion: fileAfterEdit ?? "",
-          modelProvider: model.providerName,
+          modelProvider: model.underlyingProviderName,
           modelTitle: model.title ?? "",
+          filepath: msg.data.range.filepath,
         },
       });
 
@@ -351,9 +352,6 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("showToast", (msg) => {
       this.ide.showToast(...msg.data);
     });
-    this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
-      ide.getGitHubAuthToken(msg.data),
-    );
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
       return getControlPlaneSessionInfo(
         msg.data.silent,

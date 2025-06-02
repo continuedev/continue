@@ -5,7 +5,6 @@ import {
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
-import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
   interface Window {
@@ -93,6 +92,7 @@ export interface ILLM
   extends Omit<LLMOptions, RequiredLLMOptions>,
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
+  get underlyingProviderName(): string;
 
   complete(
     prompt: string,
@@ -423,7 +423,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "edit" | "agent";
+export type MessageModes = "chat" | "agent";
 
 export type ToolStatus =
   | "generating"
@@ -775,10 +775,6 @@ export interface IDE {
       }
   >;
 
-  getLastFileSaveTimestamp?(): number;
-
-  updateLastFileSaveTimestamp?(): void;
-
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;
@@ -806,8 +802,6 @@ export interface IDE {
   listDir(dir: string): Promise<[string, FileType][]>;
 
   getFileStats(files: string[]): Promise<FileStatsMap>;
-
-  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // Secret Storage
   readSecrets(keys: string[]): Promise<Record<string, string>>;
@@ -974,6 +968,7 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
+  config: ContinueConfig;
 }
 
 export interface Tool {
@@ -1002,6 +997,12 @@ interface ToolChoice {
     name: string;
   };
 }
+
+export interface ConfigDependentToolParams {
+  rules: RuleWithSource[];
+}
+
+export type GetTool = (params: ConfigDependentToolParams) => Tool;
 
 export interface BaseCompletionOptions {
   temperature?: number;
@@ -1035,6 +1036,7 @@ export interface ModelCapability {
 export interface ModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
 
@@ -1133,7 +1135,17 @@ export interface SSEOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+export interface StreamableHTTPOptions {
+  type: "streamable-http";
+  url: string;
+  requestOptions?: RequestOptions;
+}
+
+export type TransportOptions =
+  | StdioOptions
+  | WebSocketOptions
+  | SSEOptions
+  | StreamableHTTPOptions;
 
 export interface MCPOptions {
   name: string;
@@ -1162,9 +1174,18 @@ export interface MCPPrompt {
 // Leaving here to ideate on
 // export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
 
+// https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
 export interface MCPResource {
   name: string;
   uri: string;
+  description?: string;
+  mimeType?: string;
+}
+
+// https://modelcontextprotocol.io/docs/concepts/resources#resource-templates
+export interface MCPResourceTemplate {
+  uriTemplate: string;
+  name: string;
   description?: string;
   mimeType?: string;
 }
@@ -1185,6 +1206,7 @@ export interface MCPServerStatus extends MCPOptions {
   prompts: MCPPrompt[];
   tools: MCPTool[];
   resources: MCPResource[];
+  resourceTemplates: MCPResourceTemplate[];
 }
 
 export interface ContinueUIConfig {
@@ -1322,6 +1344,11 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   modelContextProtocolServers?: ExperimentalMCPOptions[];
+
+  /**
+   * If enabled, will add the current file as context.
+   */
+  useCurrentFileAsContext?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1333,6 +1360,7 @@ export interface AnalyticsConfig {
 export interface JSONModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
   apiBase?: string;
@@ -1543,4 +1571,5 @@ export interface RuleWithSource {
   rule: string;
   description?: string;
   ruleFile?: string;
+  alwaysApply?: boolean;
 }

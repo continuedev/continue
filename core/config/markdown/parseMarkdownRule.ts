@@ -2,11 +2,18 @@ import { basename } from "path";
 import * as YAML from "yaml";
 import { RuleWithSource } from "../..";
 
+export interface RuleFrontmatter {
+  globs?: RuleWithSource["globs"];
+  name?: RuleWithSource["name"];
+  description?: RuleWithSource["description"];
+  alwaysApply?: RuleWithSource["alwaysApply"];
+}
+
 /**
  * Parses markdown content with YAML frontmatter
  */
 export function parseMarkdownRule(content: string): {
-  frontmatter: Record<string, any>;
+  frontmatter: RuleFrontmatter;
   markdown: string;
 } {
   // Normalize line endings to \n
@@ -63,6 +70,7 @@ export function convertMarkdownRuleToContinueRule(
     rule: markdown,
     globs: frontmatter.globs,
     description: frontmatter.description,
+    alwaysApply: frontmatter.alwaysApply,
     source: "rules-block",
     ruleFile: path,
   };

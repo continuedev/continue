@@ -5,12 +5,13 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
 import { handleLLMError } from "../util/errorHandling";
-import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -33,20 +34,13 @@ interface VsCodeCompletionInput {
 export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
 {
-  private async onError(e: any) {
+  private async onError(e: unknown) {
     if (await handleLLMError(e)) {
       return;
     }
-    let message = e.message;
-    if (message.includes("Please sign in with GitHub")) {
-      showFreeTrialLoginMessage(
-        message,
-        this.configHandler.reloadConfig.bind(this.configHandler),
-        () => {
-          void this.webviewProtocol.request("openOnboardingCard", undefined);
-        },
-      );
-      return;
+    let message = "Continue Autocomplete Error";
+    if (e instanceof Error) {
+      message += `: ${e.message}`;
     }
     vscode.window.showErrorMessage(message, "Documentation").then((val) => {
       if (val === "Documentation") {
@@ -60,6 +54,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
+  private nextEditProvider: NextEditProvider | undefined;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
   private recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -84,6 +79,16 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
+    // NOTE: Only turn it on locally when testing (for review purposes).
+    if (IS_NEXT_EDIT_ACTIVE) {
+      this.nextEditProvider = new NextEditProvider(
+        this.configHandler,
+        this.ide,
+        getAutocompleteModel,
+        this.onError.bind(this),
+        getDefinitionsFromLsp,
+      );
+    }
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
@@ -207,6 +212,20 @@ export class ContinueCompletionProvider
 
       if (!outcome || !outcome.completion) {
         return null;
+      }
+
+      // NOTE: This is a very rudimentary check to see if we can call the next edit service.
+      // In the future we will have to figure out how to call this more gracefully.
+      if (this.nextEditProvider) {
+        const nextEditOutcome =
+          await this.nextEditProvider?.provideInlineCompletionItems(
+            input,
+            signal,
+          );
+
+        if (nextEditOutcome && nextEditOutcome.completion) {
+          outcome.completion = nextEditOutcome.completion;
+        }
       }
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
