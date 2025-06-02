@@ -56,7 +56,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   ];
   "edit/addCurrentSelection": [undefined, void];
   "edit/clearDecorations": [undefined, void];
-  checkForIncompatibleExtensions: [undefined, void];
+  onWebviewLoad: [undefined, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
