@@ -75,10 +75,13 @@ export async function renderPromptFileV2(
   });
 
   const contextItems = (await Promise.all(contextItemsPromises)).flat();
-  const renderedPrompt =
-    contextItems.map((item) => item.content).join("\n\n") +
-    "\n\n" +
-    renderedBody;
+  const renderedPrompt = [
+    ...contextItems.map((item) => item.content),
+    renderedBody,
+    extras.fullInput,
+  ]
+    .join("\n\n")
+    .trim();
 
   return [contextItems, renderedPrompt];
 }
