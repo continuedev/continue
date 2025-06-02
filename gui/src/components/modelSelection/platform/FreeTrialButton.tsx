@@ -99,8 +99,8 @@ export default function FreeTrialButton({
         </ListboxButton>
 
         <Transition>
-          <ListboxOptions className="min-w-80 pb-0">
-            <div className="px-4 pb-4">
+          <ListboxOptions className="pb-0">
+            <div className="max-w-96 px-4 pb-4">
               <h3 className="mb-4 text-sm font-semibold">
                 Free trial of the Models Add-On
               </h3>
