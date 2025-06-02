@@ -1,5 +1,4 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
-// import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
