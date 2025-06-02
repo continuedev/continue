@@ -4,6 +4,7 @@
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "vitest": "vitest run LocalPlatformClient",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage && open ./coverage/lcov-report/index.html",
     "tsc:check": "tsc -p ./ --noEmit",
     "build:npm": "tsc -p ./tsconfig.npm.json",
@@ -41,7 +42,8 @@
     "onnxruntime-common": "1.14.0",
     "onnxruntime-web": "1.14.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^3.1.4"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.779.0",
