@@ -1,7 +1,10 @@
+import {
+  FullSlug,
+  PackageIdentifier,
+  Registry,
+} from "@continuedev/config-yaml";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { Registry } from "./interfaces/index.js";
-import { FullSlug, PackageIdentifier } from "./interfaces/slugs.js";
 
 interface RegistryClientOptions {
   accessToken?: string;

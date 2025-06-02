@@ -1,13 +1,10 @@
 {
-  "name": "@continuedev/config-yaml",
-  "version": "1.0.91",
+  "name": "@continuedev/load-assistant",
+  "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "bin": {
-    "@continuedev/config-yaml": "./dist/cli.js"
-  },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc",
@@ -17,6 +14,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@continuedev/config-types": "^1.0.14",
+    "@continuedev/config-yaml": "^1.0.90",
     "yaml": "^2.6.1",
     "zod": "^3.24.2"
   },

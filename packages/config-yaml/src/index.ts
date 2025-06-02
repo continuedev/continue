@@ -9,7 +9,6 @@ export * from "./load/proxySecretResolution.js";
 export * from "./load/typeGuards.js";
 export * from "./load/unroll.js";
 export * from "./modelName.js";
-export * from "./registryClient.js";
 export * from "./schemas/data/index.js";
 export * from "./schemas/index.js";
 export * from "./schemas/models.js";
