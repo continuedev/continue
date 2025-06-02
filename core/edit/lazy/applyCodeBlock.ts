@@ -16,6 +16,7 @@ export async function applyCodeBlock(
   newLazyFile: string,
   filename: string,
   llm: ILLM,
+  abortController: AbortController,
 ): Promise<{
   isInstantApply: boolean;
   diffLinesGenerator: AsyncGenerator<DiffLine>;
@@ -51,6 +52,12 @@ export async function applyCodeBlock(
 
   return {
     isInstantApply: false,
-    diffLinesGenerator: streamLazyApply(oldFile, filename, newLazyFile, llm),
+    diffLinesGenerator: streamLazyApply(
+      oldFile,
+      filename,
+      newLazyFile,
+      llm,
+      abortController,
+    ),
   };
 }

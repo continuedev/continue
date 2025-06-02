@@ -16,6 +16,7 @@ export async function* streamLazyApply(
   filename: string,
   newCode: string,
   llm: ILLM,
+  abortController: AbortController,
 ): AsyncGenerator<DiffLine> {
   const promptFactory = lazyApplyPromptForModel(llm.model, llm.providerName);
   if (!promptFactory) {
@@ -23,10 +24,7 @@ export async function* streamLazyApply(
   }
 
   const promptMessages = promptFactory(oldCode, filename, newCode);
-  const lazyCompletion = llm.streamChat(
-    promptMessages,
-    new AbortController().signal,
-  );
+  const lazyCompletion = llm.streamChat(promptMessages, abortController.signal);
 
   // Do find and replace over the lazy edit response
   async function* replacementFunction(
@@ -39,6 +37,7 @@ export async function* streamLazyApply(
       linesBefore,
       linesAfter,
       llm,
+      abortController,
     )) {
       yield line;
     }

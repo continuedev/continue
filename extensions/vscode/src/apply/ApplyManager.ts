@@ -3,6 +3,7 @@ import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
+import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -116,11 +117,16 @@ export class ApplyManager {
       return;
     }
 
+    const fileUri = editor.document.uri.toString();
+    const abortManager = ApplyAbortManager.getInstance();
+    const abortController = abortManager.get(fileUri);
+
     const { isInstantApply, diffLinesGenerator } = await applyCodeBlock(
       editor.document.getText(),
       text,
-      getUriPathBasename(editor.document.uri.toString()),
+      getUriPathBasename(fileUri),
       llm,
+      abortController,
     );
 
     if (isInstantApply) {

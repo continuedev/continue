@@ -25,6 +25,7 @@ export function slashFromCustomCommand(
       config,
       selectedCode,
       fetch,
+      abortController,
     }) {
       // Render prompt template
       let renderedPrompt: string;
@@ -63,7 +64,7 @@ export function slashFromCustomCommand(
 
       for await (const chunk of llm.streamChat(
         messages,
-        new AbortController().signal,
+        abortController.signal,
         completionOptions,
       )) {
         yield renderChatMessage(chunk);

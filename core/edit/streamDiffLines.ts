@@ -20,7 +20,6 @@ import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRules";
 import { gptEditPrompt } from "../llm/templates/edit";
-import { StreamAbortManager } from "../util/abortManager";
 import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
 import { recursiveStream } from "./recursiveStream";
@@ -64,7 +63,7 @@ export async function* streamDiffLines({
   highlighted,
   suffix,
   llm,
-  abortControllerId,
+  abortController,
   input,
   language,
   onlyOneInsertion,
@@ -75,15 +74,13 @@ export async function* streamDiffLines({
   highlighted: string;
   suffix: string;
   llm: ILLM;
-  abortControllerId: string;
+  abortController: AbortController;
   input: string;
   language: string | undefined;
   onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
   rulesToInclude: RuleWithSource[] | undefined;
 }): AsyncGenerator<DiffLine> {
-  const abortManager = StreamAbortManager.getInstance();
-  const abortController = abortManager.get(abortControllerId);
   void Telemetry.capture(
     "inlineEdit",
     {

@@ -38,14 +38,14 @@ function getLastUserHistory(history: ChatMessage[]): string {
 const ReviewMessageCommand: SlashCommand = {
   name: "review",
   description: "Review code and give feedback",
-  run: async function* ({ llm, history }) {
+  run: async function* ({ llm, history, abortController }) {
     const reviewText = getLastUserHistory(history).replace("\\review", "");
 
     const content = `${prompt} \r\n ${reviewText}`;
 
     for await (const chunk of llm.streamChat(
       [{ role: "user", content: content }],
-      new AbortController().signal,
+      abortController.signal,
     )) {
       yield renderChatMessage(chunk);
     }

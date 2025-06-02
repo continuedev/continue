@@ -59,6 +59,7 @@ export async function* getReplacementWithLlm(
   linesBefore: string[],
   linesAfter: string[],
   llm: ILLM,
+  abortController: AbortController,
 ): AsyncGenerator<string> {
   const userPrompt = dedent`
     ORIGINAL CODE:
@@ -83,10 +84,13 @@ export async function* getReplacementWithLlm(
     \`\`\`
   `;
 
-  const completion = await llm.streamChat([
-    { role: "user", content: userPrompt },
-    { role: "assistant", content: assistantPrompt },
-  ], new AbortController().signal);
+  const completion = await llm.streamChat(
+    [
+      { role: "user", content: userPrompt },
+      { role: "assistant", content: assistantPrompt },
+    ],
+    abortController.signal,
+  );
 
   let lines = streamLines(completion);
   lines = filterLeadingNewline(lines);
