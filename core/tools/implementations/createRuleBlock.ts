@@ -12,7 +12,6 @@ export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
   extras,
 ) => {
-  // Create markdown content using shared utility
   const fileContent = createRuleMarkdown(args.name, args.rule, {
     description: args.description,
     globs: args.globs,
