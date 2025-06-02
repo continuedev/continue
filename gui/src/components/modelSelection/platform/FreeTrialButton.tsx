@@ -111,14 +111,17 @@ export default function FreeTrialButton({
                   allows you to use a variety of frontier models for a flat
                   monthly fee. Read more about usage limits and what models are
                   included{" "}
-                  <a
-                    href="https://hub.continue.dev/pricing"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 underline hover:text-blue-300"
+                  <span
+                    onClick={async () => {
+                      await ideMessenger.request("controlPlane/openUrl", {
+                        path: "/pricing",
+                        orgSlug: undefined,
+                      });
+                    }}
+                    className="cursor-pointer text-blue-400 underline hover:text-blue-300"
                   >
                     here
-                  </a>
+                  </span>
                   .
                 </span>
               </div>
