@@ -5,9 +5,9 @@ keywords: [rules, .continuerules, system, prompt, message]
 
 # Rules
 
-Rules are used to provide instructions to the model for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Agent](../../agent/how-to-use-it.md) requests.
+Rules provide instructions to the model for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Agent](../../agent/how-to-use-it.md) requests.
 
-Rules are not included in most other requests, such as [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
+:::info Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
 
 You can view the current rules by clicking the pen icon above the main toolbar:
 
@@ -35,21 +35,19 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 
 ```yaml title="config.yaml"
 rules:
-  - Always annotate Python functions with their parameter and return types
+  - name: Color Themes
+    rule: |
+      When adding colors to components, use tailwind color classes.
+      Do NOT use explicit colors like text-gray-400. Instead, use theme colors.
 
-  - name: TypeScript best practices
-    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
-    globs: "**/*.{ts,tsx}"
+      The common available theme colors are:
+      - For normal text: foreground, description, description-muted
+      - For other text, icons, etc: success, warning, error, accent, link
+      - For general components background, border, border-focus
+      - For specific components: 
 
-  - name: TypeScript test patterns
-    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
-    globs:
-      - "src/**/*.test.ts"
-      - "tests/**/*.ts"
-
-  - uses: myprofile/my-mood-setter
-    with:
-      TONE: concise
+      Any of these colors can be used in tailwind e.g. bg-primary, text-success, border-error, hover:bg-list-hover, etc.
+    globs: "*/*.tsx"
 ```
 
 ## Chat System Message
@@ -60,21 +58,21 @@ This can be viewed in the rules section of the toolbar (see above), or visit the
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
 
-## `.continuerules`
+## `.continue/rules`
 
-You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
+You can create project-specific rules by adding a `.continue/rules` file to the root of your project. This file is raw text and its full contents will be used as rules.
 
 ### Simple Examples
 
 - If you want concise answers:
 
-```title=.continuerules
+```title=.continue/rules
 Please provide concise answers. Don't explain obvious concepts. You can assume that I am knowledgable about most programming topics.
 ```
 
 - If you want to ensure certain practices are followed, for example in React:
 
-```title=.continuerules
+```title=.continue/rules
 Whenever you are writing React code, make sure to
 - use functional components instead of class components
 - use hooks for state management
