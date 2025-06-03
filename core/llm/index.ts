@@ -5,6 +5,7 @@ import {
   BaseLlmApi,
   ChatCompletionCreateParams,
   constructLlmApi,
+  VllmRerankResponse
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
@@ -1068,9 +1069,23 @@ export abstract class BaseLLM implements ILLM {
         documents: chunks.map((chunk) => chunk.content),
       });
 
-      // Put them in the order they were given
-      const sortedResults = results.data.sort((a, b) => a.index - b.index);
-      return sortedResults.map((result) => result.relevance_score);
+      // Handle different response formats: OpenAI (data), vLLM (results)
+      let dataArray: Array<{ index: number; relevance_score: number }>;
+      
+      if (results.data && Array.isArray(results.data)) {
+        dataArray = results.data;
+      } else if ((results as VllmRerankResponse).results && Array.isArray((results as VllmRerankResponse).results)) {
+        dataArray = (results as VllmRerankResponse).results;
+      }else {
+        throw new Error(
+          `Unexpected rerank response format from ${this.providerName}. ` +
+          `Expected 'data' or 'results' array but got: ${JSON.stringify(results)}`
+        );
+      }
+
+      return dataArray
+        .sort((a, b) => a.index - b.index)
+        .map((result) => result.relevance_score);
     }
 
     throw new Error(
