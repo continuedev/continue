@@ -9,7 +9,7 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
   DEFAULT_AGENT_SYSTEM_MESSAGE,
-  DEFAULT_AGENT_SYSTEM_MESSAGE_URL
+  DEFAULT_AGENT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
 import { useContext, useMemo } from "react";
 import { defaultBorderRadius, vscCommandCenterActiveBorder } from "../../..";
@@ -112,7 +112,8 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
               <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
             </HeaderButtonWithToolTip>{" "}
-            {rule.source === "default-chat" || rule.source === "default-agent" ? (
+            {rule.source === "default-chat" ||
+            rule.source === "default-agent" ? (
               <HeaderButtonWithToolTip onClick={handleOpen} text="View">
                 <EyeIcon className="h-3 w-3 text-gray-400" />
               </HeaderButtonWithToolTip>
@@ -195,24 +196,24 @@ export function RulesSection() {
         rules.unshift({
           rule: config.selectedModelByRole.chat?.baseAgentSystemMessage,
           source: "model-agent-options",
-        })
+        });
       } else {
         rules.unshift({
           rule: DEFAULT_AGENT_SYSTEM_MESSAGE,
           source: "default-agent",
-        })
+        });
       }
     } else {
       if (config.selectedModelByRole.chat?.baseChatSystemMessage) {
         rules.unshift({
           rule: config.selectedModelByRole.chat?.baseChatSystemMessage,
           source: "model-chat-options",
-        })
+        });
       } else {
         rules.unshift({
           rule: DEFAULT_CHAT_SYSTEM_MESSAGE,
           source: "default-chat",
-        })
+        });
       }
     }
 

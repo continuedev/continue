@@ -49,7 +49,7 @@ const SVG_CONFIG = {
     return this.fontSize;
   },
   get textY() {
-    return (this.tipHeight + this.fontSize)/2;
+    return (this.tipHeight + this.fontSize) / 2;
   },
   get chatLabelX() {
     return this.paddingX;
@@ -58,7 +58,11 @@ const SVG_CONFIG = {
     return this.chatLabelX + this.getEstimatedTextWidth(this.chatLabel + " ");
   },
   get editLabelX() {
-    return this.chatShortcutX + this.getEstimatedTextWidth(this.chatShortcut) + this.gap;
+    return (
+      this.chatShortcutX +
+      this.getEstimatedTextWidth(this.chatShortcut) +
+      this.gap
+    );
   },
   get editShortcutX() {
     return this.editLabelX + this.getEstimatedTextWidth(this.editLabel + " ");

@@ -1,9 +1,7 @@
 {
   "scopeName": "source.shaderlab",
   "name": "ShaderLab",
-  "fileTypes": [
-    "shader"
-  ],
+  "fileTypes": ["shader"],
   "patterns": [
     {
       "match": "\\b([0-9]+\\.?[0-9]*)\\b",
