@@ -7,6 +7,7 @@ import {
   RangeInFile,
   SlashCommandDescription,
 } from "core";
+import * as URI from "uri-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import { ThunkApiType } from "../store";
@@ -58,6 +59,52 @@ export const gatherContext = createAsyncThunk<
         availableSlashCommands: state.config.config.slashCommands,
         dispatch,
       });
+
+    // Automatically use currently open file
+    if (!modifiers.noContext) {
+      const usingFreeTrial = false; // TODO no longer tracking free trial count, need to hook up to hub
+
+      const currentFileResponse = await extra.ideMessenger.request(
+        "context/getContextItems",
+        {
+          name: "currentFile",
+          query: "non-mention-usage",
+          fullInput: "",
+          selectedCode: [],
+        },
+      );
+      if (currentFileResponse.status === "success") {
+        const items = currentFileResponse.content;
+        if (items.length > 0) {
+          const currentFile = items[0];
+          const uri = currentFile.uri?.value;
+
+          // don't add the file if it's already in the context items
+          if (
+            uri &&
+            !selectedContextItems.find(
+              (item) => item.uri?.value && URI.equal(item.uri.value, uri),
+            )
+          ) {
+            // Limit to 1000 lines if using free trial
+            if (usingFreeTrial) {
+              currentFile.content = currentFile.content
+                .split("\n")
+                .slice(0, 1000)
+                .join("\n");
+              if (!currentFile.content.endsWith("```")) {
+                currentFile.content += "\n```";
+              }
+            }
+            currentFile.id = {
+              providerTitle: "file",
+              itemId: uri,
+            };
+            selectedContextItems.unshift(currentFile);
+          }
+        }
+      }
+    }
 
     if (promptPreamble) {
       if (typeof content === "string") {
