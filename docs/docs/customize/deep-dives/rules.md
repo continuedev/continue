@@ -21,11 +21,31 @@ To form the system message, rules are joined with new lines, in the order they a
 Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
 
 :::info Automatically create local rule blocks
-When in Agent mode, you can simply prompt the agent to create a rule for you using the `builtin_create_rule_block` tool if enabled.
+When in Agent mode, you can prompt the agent to create a rule for you using the `builtin_create_rule_block` tool if enabled.
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::
 
+### Syntax
+
+Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
+
+- `name` (**required**): A display name/title for the rule
+- `rule` (**required**): The text content of the rule
+- `schema` (**required**): The schema version of the YAML file (e.g., `v1`)
+- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
+
+```yaml title=colors-rule.yaml"
+name: New rules
+version: 0.0.1
+schema: v1
+rules:
+  - name: Tailwind Color Themes
+    rule: |
+      When adding colors to components, use tailwind color classes.
+      Do NOT use explicit colors like text-gray-400. Instead, use theme colors.
+    globs: "*/*.tsx"
+```
 ### `.continue/rules` folder
 You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
 
@@ -39,27 +59,7 @@ rules:
 ```
 This is also done when selecting "Add Rule" in the Assistant settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.yaml`. 
 
-### Syntax
-
-Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
-
-- `name` (**required**): A display name/title for the rule
-- `rule` (**required**): The text content of the rule
-- `schema` (**required**): The schema version of the YAML file (e.g., `v1`)
-- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
-
-```yaml title=colors.yaml"
-name: New rules
-version: 0.0.1
-schema: v1
-rules:
-  - name: Tailwind Color Themes
-    rule: |
-      When adding colors to components, use tailwind color classes.
-      Do NOT use explicit colors like text-gray-400. Instead, use theme colors.
-    globs: "*/*.tsx"
-```
-## `.continuerules`
+### `.continuerules`
 
 :::warning
 
@@ -69,23 +69,29 @@ rules:
 
 You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
 
-## Simple Examples
+### Examples
 
-- If you want concise answers:
+If you want concise answers:
 
-```title=.continuerules
-Please provide concise answers. Don't explain obvious concepts. You can assume that I am knowledgable about most programming topics.
+```yaml title="concise-rule.yaml"
+rules:
+  - name: Always give concise answers
+    rule: | 
+      Please provide concise answers. Don't explain obvious concepts. 
+      You can assume that I am knowledgable about most programming topics.
 ```
+If you want to ensure certain practices are followed, for example in React:
 
-- If you want to ensure certain practices are followed, for example in React:
-
-```title=.continuerules
-Whenever you are writing React code, make sure to
-- use functional components instead of class components
-- use hooks for state management
-- define an interface for your component props
-- use Tailwind CSS for styling
-- modularize components into smaller, reusable pieces
+```yaml title="functional-rule.yaml"
+rules:
+  - name: Always use functional components
+    rule: | 
+      Whenever you are writing React code, make sure to
+      - use functional components instead of class components
+      - use hooks for state management
+      - define an interface for your component props
+      - use Tailwind CSS for styling
+      - modularize components into smaller, reusable pieces
 ```
 
 ## Chat System Message
