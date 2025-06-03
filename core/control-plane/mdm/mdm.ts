@@ -6,7 +6,6 @@ import * as plist from "plist";
 
 export interface MdmKeys {
   licenseKey: string;
-  apiUrl: string;
 }
 
 const CONTINUE_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
@@ -19,17 +18,30 @@ LXSsjLbeWHifRrQ18wj/PC990E33QaFGNFp0NcBXMPbq5eKYKEzKZ0GsxtLoGxar
 FQIDAQAB
 -----END PUBLIC KEY-----`;
 
-export interface LicenseData {
+interface LicenseKeyUnsignedData {
+  apiUrl: string;
+}
+
+export interface LicenseKey {
+  signature: string;
+  data: string;
+  unsignedData: LicenseKeyUnsignedData;
+}
+
+export interface LicenseKeyData {
   customerId: string;
   createdAt: string;
   expiresAt: string;
 }
 
-export function validateLicenseKey(licenseKey: string): boolean {
+export function validateLicenseKey(licenseKey: string): {
+  isValid: boolean;
+  licenseKeyData?: LicenseKey;
+} {
   try {
     // Decode the base64 license key
     const decodedString = Buffer.from(licenseKey, "base64").toString("utf8");
-    const { data, signature } = JSON.parse(decodedString);
+    const { data, signature, unsignedData } = JSON.parse(decodedString);
 
     // Verify the signature
     const verify = crypto.createVerify("SHA256");
@@ -38,34 +50,29 @@ export function validateLicenseKey(licenseKey: string): boolean {
 
     const isValid = verify.verify(CONTINUE_PUBLIC_KEY, signature, "base64");
 
-    if (!isValid) return false;
+    if (!isValid) return { isValid: false };
 
     // Check license expiration
-    const licenseData: LicenseData = JSON.parse(data);
+    const licenseData: LicenseKeyData = JSON.parse(data);
     const expirationDate = new Date(licenseData.expiresAt);
     const now = new Date();
 
-    return expirationDate > now;
+    const isNotExpired = expirationDate > now;
+
+    if (!isNotExpired) return { isValid: false };
+
+    // Return both validation result and license key data
+    const licenseKeyData: LicenseKey = {
+      signature,
+      data,
+      unsignedData,
+    };
+
+    return { isValid: true, licenseKeyData };
   } catch (error) {
     console.error("License validation error:", error);
-    return false;
+    return { isValid: false };
   }
-}
-
-function extractConfigFromArray(config: any[]): Record<string, string> {
-  const configObj: Record<string, string> = {};
-
-  for (let i = 0; i < config.length; i += 2) {
-    if (i + 1 < config.length) {
-      const key = config[i];
-      const value = config[i + 1];
-      if (typeof key === "string") {
-        configObj[key] = value as string;
-      }
-    }
-  }
-
-  return configObj;
 }
 
 const MACOS_MDM_PATHS = [
@@ -88,20 +95,15 @@ function readMdmKeysMacOS(): MdmKeys | undefined {
 
         try {
           // Parse the plist file using the plist package
-          const config = plist.parse(fileContent);
+          const config = plist.parse(fileContent) as
+            | { licenseKey: string | undefined }
+            | undefined;
 
-          // Extract the relevant fields from the config
-          // Config is an array of alternating keys and values
-          if (Array.isArray(config)) {
-            const configObj = extractConfigFromArray(config);
-
-            // Check if required keys are present
-            if (configObj.licenseKey && configObj.apiUrl) {
-              return {
-                licenseKey: configObj.licenseKey,
-                apiUrl: configObj.apiUrl,
-              };
-            }
+          if (config && config?.licenseKey) {
+            // Extract the license key from the configuration
+            return { licenseKey: config?.licenseKey };
+          } else {
+            console.error("Invalid MDM configuration format");
           }
         } catch (parseError) {
           console.error(`Error parsing MDM configuration: ${parseError}`);
@@ -130,17 +132,11 @@ function readMdmKeysWindows(): MdmKeys | undefined {
     try {
       // Use REG QUERY command to read registry values
       const licenseKeyCmd = `reg query "${regPath}" /v licenseKey`;
-      const apiUrlCmd = `reg query "${regPath}" /v apiUrl`;
-
       const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
-      const apiUrlOutput = execSync(apiUrlCmd, { encoding: "utf8" });
-
       // Extract values from command output
       const licenseKey = extractRegValue(licenseKeyOutput);
-      const apiUrl = extractRegValue(apiUrlOutput);
-
-      if (licenseKey && apiUrl) {
-        return { licenseKey, apiUrl };
+      if (licenseKey) {
+        return { licenseKey };
       }
     } catch (error) {
       // Registry key might not exist, fallback to HKEY_CURRENT_USER
@@ -149,17 +145,11 @@ function readMdmKeysWindows(): MdmKeys | undefined {
     // Try HKEY_CURRENT_USER if not found in HKEY_LOCAL_MACHINE
     try {
       const licenseKeyCmd = `reg query "${userRegPath}" /v licenseKey`;
-      const apiUrlCmd = `reg query "${userRegPath}" /v apiUrl`;
-
       const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
-      const apiUrlOutput = execSync(apiUrlCmd, { encoding: "utf8" });
-
       // Extract values from command output
       const licenseKey = extractRegValue(licenseKeyOutput);
-      const apiUrl = extractRegValue(apiUrlOutput);
-
-      if (licenseKey && apiUrl) {
-        return { licenseKey, apiUrl };
+      if (licenseKey) {
+        return { licenseKey };
       }
     } catch (error) {
       // Registry key might not exist in HKCU either
@@ -199,11 +189,10 @@ function readMdmKeysLinux(): MdmKeys | undefined {
           // Parse the JSON configuration file
           const config = JSON.parse(fileContent);
 
-          // Check if required keys are present
-          if (config.licenseKey && config.apiUrl) {
+          // Check if required key is present
+          if (config.licenseKey) {
             return {
               licenseKey: config.licenseKey,
-              apiUrl: config.apiUrl,
             };
           }
         } catch (parseError) {
@@ -241,22 +230,135 @@ function readMdmKeys(): MdmKeys | undefined {
 /**
  * Read and validate MDM keys from the operating system's configuration files or registry.
  */
-export function getMdmKeys(): MdmKeys | undefined {
+export function getLicenseKeyData(): LicenseKey | undefined {
   try {
     const mdmKeys = readMdmKeys();
 
     if (mdmKeys) {
-      if (!validateLicenseKey(mdmKeys.licenseKey)) {
+      const { isValid, licenseKeyData } = validateLicenseKey(
+        mdmKeys.licenseKey,
+      );
+      if (!isValid) {
         console.error("Invalid license key found: ", mdmKeys.licenseKey);
         return undefined;
       }
 
-      return mdmKeys;
+      return licenseKeyData;
     }
 
     return undefined;
   } catch (e) {
     console.warn("Error reading MDM keys: ", e);
     return undefined;
+  }
+}
+
+function writeMdmKeysMacOS(licenseKey: string): boolean {
+  try {
+    // Write to user-specific MDM plist
+    const userMdmPath = path.join(
+      os.homedir(),
+      "Library/Managed Preferences/dev.continue.app.plist",
+    );
+
+    const config = {
+      licenseKey,
+    };
+
+    // Ensure directory exists
+    fs.mkdirSync(path.dirname(userMdmPath), { recursive: true });
+
+    // Write the plist file
+    const plistContent = plist.build(config);
+    fs.writeFileSync(userMdmPath, plistContent, "utf8");
+
+    return true;
+  } catch (error) {
+    console.error("Error writing macOS MDM keys:", error);
+    return false;
+  }
+}
+
+function writeMdmKeysWindows(licenseKey: string): boolean {
+  try {
+    const { execSync } = require("child_process");
+
+    // Use HKEY_CURRENT_USER to avoid needing admin privileges
+    const userRegPath = "HKCU\\Software\\Continue\\MDM";
+
+    // Create the registry key if it doesn't exist
+    try {
+      execSync(`reg add "${userRegPath}" /f`);
+    } catch (error) {
+      // Key might already exist
+    }
+
+    // Set the license key and API URL
+    execSync(
+      `reg add "${userRegPath}" /v licenseKey /t REG_SZ /d "${licenseKey}" /f`,
+    );
+
+    return true;
+  } catch (error) {
+    console.error("Error writing Windows MDM keys:", error);
+    return false;
+  }
+}
+
+function writeMdmKeysLinux(licenseKey: string): boolean {
+  try {
+    // Write to user-specific configuration
+    const userMdmPath = path.join(os.homedir(), ".config/continue/mdm.json");
+
+    const config = {
+      licenseKey,
+    };
+
+    // Ensure directory exists
+    fs.mkdirSync(path.dirname(userMdmPath), { recursive: true });
+
+    // Write the JSON configuration file
+    fs.writeFileSync(userMdmPath, JSON.stringify(config, null, 2), "utf8");
+
+    return true;
+  } catch (error) {
+    console.error("Error writing Linux MDM keys:", error);
+    return false;
+  }
+}
+
+/**
+ * Store the license key in the appropriate OS-specific location.
+ * For now, we'll use a default API URL since it's not provided in the command.
+ */
+export function setMdmLicenseKey(licenseKey: string): boolean {
+  try {
+    // Validate the license key first
+    const { isValid } = validateLicenseKey(licenseKey);
+    if (!isValid) {
+      return false;
+    }
+
+    const platform = os.platform();
+
+    switch (platform) {
+      case "darwin":
+        return writeMdmKeysMacOS(licenseKey);
+
+      case "win32":
+        return writeMdmKeysWindows(licenseKey);
+
+      case "linux":
+        return writeMdmKeysLinux(licenseKey);
+
+      default:
+        console.error(
+          `Setting MDM keys not supported on platform: ${platform}`,
+        );
+        return false;
+    }
+  } catch (error) {
+    console.error("Error setting MDM license key:", error);
+    return false;
   }
 }

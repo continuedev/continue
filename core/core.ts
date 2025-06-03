@@ -54,6 +54,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
@@ -755,6 +756,11 @@ export class Core {
         return isBackgrounded; // Return true to indicate the message was handled successfully
       },
     );
+
+    on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
+      const isValid = setMdmLicenseKey(licenseKey);
+      return isValid;
+    });
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
