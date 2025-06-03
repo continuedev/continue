@@ -794,7 +794,7 @@ const getCommandsMap: (
         false,
       );
 
-      await vscode.window
+      void vscode.window
         .showInformationMessage(
           "Your config.json has been converted to the new config.yaml format. If you need to switch back to config.json, you can delete or rename config.yaml.",
           "Read the docs",
@@ -827,17 +827,18 @@ const getCommandsMap: (
         });
 
         if (isValid) {
-          await vscode.window.showInformationMessage(
+          void vscode.window.showInformationMessage(
             "Enterprise license key successfully validated and saved. Reloading window...",
           );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           await vscode.commands.executeCommand("workbench.action.reloadWindow");
         } else {
-          await vscode.window.showErrorMessage(
+          void vscode.window.showErrorMessage(
             "Invalid license key. Please check your license key and try again.",
           );
         }
       } catch (error) {
-        await vscode.window.showErrorMessage(
+        void vscode.window.showErrorMessage(
           `Failed to set enterprise license key: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
