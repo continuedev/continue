@@ -813,6 +813,8 @@ export interface IDE {
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
+
+  onDidChangeVisibleTextEditors(callback: (fileUris: string[]) => void): void;
 }
 
 // Slash Commands

@@ -693,14 +693,24 @@ export class Core {
       try {
         const ignore = await shouldIgnore(filepath, this.ide);
         if (!ignore) {
-          // Update the recently edited files cache
           recentlyEditedFilesCache.set(filepath, filepath);
-          // Update the cache for opened files as well
+
+          // Update the cache for opened files
           openedFilesLruCache.set(filepath, filepath);
         }
       } catch (e) {
         console.error(
           `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
+        );
+      }
+    });
+
+    on("didChangeVisibleTextEditors", async ({ data: { filepaths } }) => {
+      try {
+        // LOGIC FOR DEALING WITH FILEPATHS HERE (UPDATE #2)
+      } catch (e) {
+        console.error(
+          `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
         );
       }
     });

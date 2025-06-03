@@ -94,6 +94,14 @@ class VsCodeIde implements IDE {
     });
   }
 
+  onDidChangeVisibleTextEditors(callback: (uris: string[]) => void): void {
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        // extract list of opened files
+      }
+    });
+  }
+
   showToast: IDE["showToast"] = async (...params) => {
     const [type, message, ...otherParams] = params;
     const { showErrorMessage, showWarningMessage, showInformationMessage } =

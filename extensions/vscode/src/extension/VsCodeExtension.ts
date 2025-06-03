@@ -386,6 +386,10 @@ export class VsCodeExtension {
       void this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
+    this.ide.onDidChangeVisibleTextEditors((filepaths) => {
+      void this.core.invoke("didChangeVisibleTextEditors", { filepaths });
+    });
+
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
