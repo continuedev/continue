@@ -828,7 +828,7 @@ const getCommandsMap: (
 
         if (isValid) {
           void vscode.window.showInformationMessage(
-            "Enterprise license key successfully validated and saved. Reloading window...",
+            "Enterprise license key successfully validated and saved. Reloading window.",
           );
           await new Promise((resolve) => setTimeout(resolve, 1000));
           await vscode.commands.executeCommand("workbench.action.reloadWindow");
