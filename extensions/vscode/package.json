@@ -324,6 +324,12 @@
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
+      },
+      {
+        "command": "continue.enterEnterpriseLicenseKey",
+        "category": "Continue",
+        "title": "Enter Enterprise License Key",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -434,6 +440,9 @@
         },
         {
           "command": "continue.newSession"
+        },
+        {
+          "command": "continue.enterEnterpriseLicenseKey"
         }
       ],
       "editor/context": [

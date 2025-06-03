@@ -794,18 +794,53 @@ const getCommandsMap: (
         false,
       );
 
-      vscode.window
+      await vscode.window
         .showInformationMessage(
           "Your config.json has been converted to the new config.yaml format. If you need to switch back to config.json, you can delete or rename config.yaml.",
           "Read the docs",
         )
-        .then((selection) => {
+        .then(async (selection) => {
           if (selection === "Read the docs") {
-            vscode.env.openExternal(
+            await vscode.env.openExternal(
               vscode.Uri.parse("https://docs.continue.dev/yaml-migration"),
             );
           }
         });
+    },
+    "continue.enterEnterpriseLicenseKey": async () => {
+      captureCommandTelemetry("enterEnterpriseLicenseKey");
+
+      const licenseKey = await vscode.window.showInputBox({
+        prompt: "Enter your enterprise license key",
+        password: true,
+        ignoreFocusOut: true,
+        placeHolder: "License key",
+      });
+
+      if (!licenseKey) {
+        return;
+      }
+
+      try {
+        const isValid = core.invoke("mdm/setLicenseKey", {
+          licenseKey,
+        });
+
+        if (isValid) {
+          await vscode.window.showInformationMessage(
+            "Enterprise license key successfully validated and saved. Reloading window...",
+          );
+          await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        } else {
+          await vscode.window.showErrorMessage(
+            "Invalid license key. Please check your license key and try again.",
+          );
+        }
+      } catch (error) {
+        await vscode.window.showErrorMessage(
+          `Failed to set enterprise license key: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     },
   };
 };
