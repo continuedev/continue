@@ -3,6 +3,7 @@ import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
+import { openedFilesLruCache } from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
@@ -692,7 +693,10 @@ export class Core {
       try {
         const ignore = await shouldIgnore(filepath, this.ide);
         if (!ignore) {
+          // Update the recently edited files cache
           recentlyEditedFilesCache.set(filepath, filepath);
+          // Update the cache for opened files as well
+          openedFilesLruCache.set(filepath, filepath);
         }
       } catch (e) {
         console.error(
