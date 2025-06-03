@@ -35,7 +35,7 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 - `schema` (**required**): The schema version of the YAML file (e.g., `v1`)
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
-```yaml title=colors-rule.yaml"
+```yaml title=".continue/rules/colors-rule.yaml"
 name: New rules
 version: 0.0.1
 schema: v1
@@ -49,7 +49,7 @@ rules:
 ### `.continue/rules` folder
 You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
 
-```yaml title="new-rule.yaml"
+```yaml title=".continue/rules/new-rule.yaml"
 name: New rule
 version: 0.0.1
 schema: v1
@@ -73,7 +73,7 @@ You can create project-specific rules by adding a `.continuerules` file to the r
 
 If you want concise answers:
 
-```yaml title="concise-rule.yaml"
+```yaml title=".continue/rules/concise-rule.yaml"
 rules:
   - name: Always give concise answers
     rule: | 
@@ -82,7 +82,7 @@ rules:
 ```
 If you want to ensure certain practices are followed, for example in React:
 
-```yaml title="functional-rule.yaml"
+```yaml title=".continue/rules/functional-rule.yaml"
 rules:
   - name: Always use functional components
     rule: | 
