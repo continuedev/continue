@@ -12,3 +12,7 @@ export const openedFilesLruCache = new QuickLRU<
 >({
   maxSize: MAX_NUM_OPEN_CONTEXT_FILES,
 });
+
+export const prevFilepaths = {
+  filepaths: [] as string[],
+};

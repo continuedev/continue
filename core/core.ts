@@ -3,7 +3,10 @@ import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
-import { openedFilesLruCache } from "./autocomplete/util/openedFilesLruCache";
+import {
+  openedFilesLruCache,
+  prevFilepaths,
+} from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
@@ -695,8 +698,17 @@ export class Core {
         if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
 
-          // Set the active filepath as most recently used in the opened files cache
+          // Set the active file as most recently used (need to force recency update by deleting and re-adding)
+          if (openedFilesLruCache.has(filepath)) {
+            openedFilesLruCache.delete(filepath);
+          }
           openedFilesLruCache.set(filepath, filepath);
+
+          console.log("ACTIVE TEXT EDITOR CHANGED");
+          for (const [key, value] of openedFilesLruCache.entriesDescending()) {
+            console.log(`${key}`);
+          }
+          console.log("\n");
         }
       } catch (e) {
         console.error(
@@ -705,11 +717,25 @@ export class Core {
       }
     });
 
+    // function sleep(ms: number): Promise<void> {
+    //   return new Promise((resolve) => setTimeout(resolve, ms));
+    // }
+
     on("didCloseTextDocument", async ({ data: { filepaths } }) => {
       try {
-        console.log("Visible", filepaths.length);
+        if (!prevFilepaths.filepaths.length) {
+        }
 
-        // Remove the closed files from the opened files cache: TODO, UPDATE #2
+        if (filepaths.length < prevFilepaths.filepaths.length) {
+          // Remove the closed files from the opened files cache: TODO, UPDATE #2
+          console.log("close-text-doc");
+          for (const [key, value] of openedFilesLruCache.entriesDescending()) {
+            console.log(`${key}`);
+          }
+          console.log("\n");
+        }
+
+        prevFilepaths.filepaths = filepaths;
       } catch (e) {
         console.error(
           `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
