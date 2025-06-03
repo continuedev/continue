@@ -236,11 +236,12 @@ const WizardStep: React.FC<StepProps> = ({
             type={status ? "complete" : isActive ? "active" : "missing"}
           />
           <h3
-            className={`m-0 ml-3 text-sm font-semibold leading-[1.4] ${
-              isActive
-                ? "text-[var(--vscode-walkthrough-stepTitle\\.foreground)]"
-                : ""
-            }`}
+            className="m-0 ml-3 text-[13px] font-semibold leading-[1.4]"
+            style={{
+              // For some reason, tailwind fails to resolve text-[var(--vscode-walkthrough-stepTitle\\.foreground)], so we fall back to good ole CSS
+              // Also, why is it --vscode-walkthrough-stepTitle\\.foreground and not --vscode-walkthrough-stepTitle-foreground, like for native VS Code walkthroughs?
+              color: isActive ? "var(--vscode-walkthrough-stepTitle\\.foreground)" : "var(--vscode-descriptionForeground)"
+            }}
           >
             {title}
           </h3>
@@ -784,57 +785,93 @@ const WizardContent: React.FC = () => {
 
   return (
     <div className="h-full w-full text-[--vscode-foreground]" role="tablist">
-      {/* Main container with responsive layout */}
-      <div className="mx-auto max-w-[1200px] px-10 pt-6 md:px-16 md:pt-24">
-        <div className="flex flex-col gap-8 md:flex-row">
-          {/* Left panel with text and steps */}
-          <div className="max-w-[600px] flex-1">
-            <div className="mb-6">
-              <h2 className="mb-2 text-[40px] font-normal">
-                Granite.Code Setup
-              </h2>
-              <div className="mb-[18px] mt-[18px]">
-                <p className="mb-4">
-                  Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance.
-                </p>
-                <p className="mb-4">
-                  For a good experience, an Apple Silicon Mac or a GPU with at least 10&#x200A;GB of video memory is required.
-                </p>
-                {preselectedModel !== "large" && (
-                  <p className="mb-4 text-[--vscode-editorWarning-foreground]">
-                  Warning : this device's hardware does not meet the minimum requirements.
-                </p>
-                )}
-              </div>
-            </div>
-
-            {/* Steps list */}
-
-            <div className="space-y-[1px]">
-              {steps.map((step, index) => {
-                const StepComponent = step.component;
-                return (
-                  <StepComponent
-                    key={step.title}
-                    status={stepStatuses[index]}
-                    isActive={activeStep === index}
-                    title={step.title}
-                    onClick={() => setActiveStep(index)}
-                  />
-                );
-              })}
-            </div>
+    {/* Style partially adapted from https://github.com/microsoft/vscode/blob/998fb692680cc20d70a805df8fa59cb1443bc897/src/vs/workbench/contrib/welcomeGettingStarted/browser/media/gettingStarted.css#L534
+      *  Copyright (c) Microsoft Corporation. All rights reserved.
+      *  Licensed under the MIT License. See License.txt in the project root for license information.
+    */}
+      <style>{`
+        .granite-wizard-container {
+          display: grid;
+          grid-template-areas:
+            ". . . ."
+            ". title . media"
+            ". steps . media"
+            ". . . .";
+          grid-template-columns: 1fr 5fr 1fr 8fr;
+          grid-template-rows: calc(25% - 100px) auto auto 1fr auto;
+          max-width: 80vw;
+          height: 100%;
+          margin-left: auto;
+          margin-right: auto;
+          align-items: start;
+        }
+        .granite-wizard-title { grid-area: title; }
+        .granite-wizard-steps { grid-area: steps; max-width: 500px; width: 100%; }
+        .granite-wizard-illustration { grid-area: media; display: flex; justify-content: center; align-items: flex-start; }
+        @media (max-width: 950px) {
+          .granite-wizard-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 98vw;
+            padding-top: 16px;
+            height: auto;
+          }
+          .granite-wizard-title,
+          .granite-wizard-steps,
+          .granite-wizard-illustration {
+            grid-area: unset;
+            max-width: 500px;
+            width: 100%;
+          }
+          .granite-wizard-illustration {
+            margin-top: 40px;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+      `}</style>
+      <div className="granite-wizard-container px-16 sm:px-8">
+        <div className="mb-6 granite-wizard-title">
+          <h2 className="mb-4 text-[40px] font-normal">
+            Granite.Code Setup
+          </h2>
+          <div className="granite-wizard-description mb-[18px] mt-[18px]">
+            <p className="mb-4">
+              Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance.
+            </p>
+            <p className="mb-4">
+              For a good experience, an Apple Silicon Mac or a GPU with at least 10&#x200A;GB of video memory is required.
+            </p>
           </div>
-
-          {/* Right panel with image */}
-          {/*TODO make the image resize before being moved down*/}
-          <div className="flex flex-1 justify-center">
-            <img
-              src={`${window.vscMediaUrl}/granite/step_${activeStep + 1}.svg`}
-              alt={`Step ${activeStep + 1} illustration`}
-              className="h-auto max-h-[400px] max-w-full object-contain opacity-90"
-            />
+          {preselectedModel !== "large" && (
+            <p className="mb-4 text-[--vscode-editorWarning-foreground]">
+              Warning : this device's hardware does not meet the minimum requirements.
+            </p>
+          )}
+        </div>
+        <div className="granite-wizard-steps">
+          <div className="space-y-[1px]">
+            {steps.map((step, index) => {
+              const StepComponent = step.component;
+              return (
+                <StepComponent
+                  key={step.title}
+                  status={stepStatuses[index]}
+                  isActive={activeStep === index}
+                  title={step.title}
+                  onClick={() => setActiveStep(index)}
+                />
+              );
+            })}
           </div>
+        </div>
+        <div className="granite-wizard-illustration">
+          <img
+            src={`${window.vscMediaUrl}/granite/step_${activeStep + 1}.svg`}
+            alt={`Step ${activeStep + 1} illustration`}
+            className="h-auto max-h-[400px] max-w-full object-contain opacity-90"
+          />
         </div>
       </div>
     </div>
