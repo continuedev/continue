@@ -99,12 +99,32 @@ export class LocalPlatformClient implements PlatformClient {
 
     const results = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
 
-    // For any secret that isn't found, look in .env files
+    // For any secret that isn't found, look in .env files, then process.env
     for (let i = 0; i < results.length; i++) {
       if (!results[i]?.found) {
-        const secretFromEnv = await this.findSecretInEnvFiles(fqsns[i]);
-        if (secretFromEnv?.found) {
-          results[i] = secretFromEnv;
+        let secretResult = await this.findSecretInEnvFiles(fqsns[i]);
+
+        // If not found in .env files, try process.env
+        if (!secretResult?.found) {
+          const secretValueFromProcessEnv = process.env[fqsns[i].secretName];
+          if (secretValueFromProcessEnv !== undefined) {
+            secretResult = {
+              found: true,
+              fqsn: fqsns[i],
+              value: secretValueFromProcessEnv,
+              secretLocation: {
+                secretName: fqsns[i].secretName,
+                // Cast to SecretType.ProcessEnv is necessary because the specific type
+                // ProcessEnvSecretLocation expects secretType to be exactly SecretType.ProcessEnv,
+                // not the general enum SecretType.
+                secretType: SecretType.ProcessEnv as SecretType.ProcessEnv,
+              },
+            };
+          }
+        }
+
+        if (secretResult?.found) {
+          results[i] = secretResult;
         }
       }
     }
