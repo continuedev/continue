@@ -229,6 +229,8 @@ async function configYamlToContinueConfig(options: {
     startUrl: doc.startUrl,
     rootUrl: doc.rootUrl,
     faviconUrl: doc.faviconUrl,
+    maxDepth: doc.maxDepth,
+    useLocalCrawling: doc.useLocalCrawling,
   }));
 
   config.mcpServers?.forEach((mcpServer) => {
