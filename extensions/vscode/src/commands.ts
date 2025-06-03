@@ -4,21 +4,14 @@ import * as fs from "node:fs";
 import { ContextMenuConfig, ILLM, ModelInstaller } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
-import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { startLocalOllama } from "core/util/ollamaHelper";
-import {
-  getConfigJsonPath,
-  getConfigYamlPath,
-  getDevDataFilePath,
-} from "core/util/paths";
+import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
@@ -173,7 +166,6 @@ const getCommandsMap: (
   consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
-  continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
@@ -185,7 +177,6 @@ const getCommandsMap: (
   consoleView,
   configHandler,
   verticalDiffManager,
-  continueServerClientPromise,
   battery,
   quickEdit,
   core,
@@ -687,9 +678,6 @@ const getCommandsMap: (
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
         {
-          label: "$(feedback) Give feedback",
-        },
-        {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
         },
@@ -721,8 +709,6 @@ const getCommandsMap: (
               title: selectedOption,
             });
           }
-        } else if (selectedOption === "$(feedback) Give feedback") {
-          vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
         } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
@@ -734,23 +720,6 @@ const getCommandsMap: (
         quickPick.dispose();
       });
       quickPick.show();
-    },
-    "continue.giveAutocompleteFeedback": async () => {
-      const feedback = await vscode.window.showInputBox({
-        ignoreFocusOut: true,
-        prompt:
-          "Please share what went wrong with the last completion. The details of the completion as well as this message will be sent to the Continue team in order to improve.",
-      });
-      if (feedback) {
-        const client = await continueServerClientPromise;
-        const completionsPath = getDevDataFilePath(
-          "autocomplete",
-          LOCAL_DEV_DATA_VERSION,
-        );
-
-        const lastLines = await readLastLines.read(completionsPath, 2);
-        client.sendFeedback(feedback, lastLines);
-      }
     },
     "continue.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
@@ -931,7 +900,6 @@ export function registerAllCommands(
   consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
-  continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
@@ -945,7 +913,6 @@ export function registerAllCommands(
       consoleView,
       configHandler,
       verticalDiffManager,
-      continueServerClientPromise,
       battery,
       quickEdit,
       core,
