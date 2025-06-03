@@ -33,7 +33,7 @@ async function resolveAttachment(
     if (name.endsWith(".prompt")) {
       // Recurse
       const [items, _] = await renderPromptFileV2(
-        await extras.ide.readFile(name),
+        await extras.ide.readFile(resolvedFileUri),
         extras,
       );
       subItems.push(...items);
