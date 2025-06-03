@@ -18,7 +18,7 @@ By implementing rules, you transform the AI from a generic coding assistant into
 
 ### How Rules Work
 
-Your assistant detects rule blocks and applies the specified rules while in [Agent](agent/how-to-use-it), [Chat](chat/how-to-use-it), and [Edit](edit/how-to-use-it) modes.
+Your assistant detects rule blocks and applies the specified rules while in [Agent](../agent/how-to-use-it), [Chat](../chat/how-to-use-it), and [Edit](../edit/how-to-use-it) modes.
 
 ## Learn More
 
