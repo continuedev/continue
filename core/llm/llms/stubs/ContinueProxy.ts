@@ -85,7 +85,7 @@ class ContinueProxy extends OpenAI {
   }
 
   supportsCompletions(): boolean {
-    return false;
+    return true;
   }
 
   supportsFim(): boolean {
