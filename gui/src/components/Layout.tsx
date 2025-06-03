@@ -49,6 +49,7 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
 
   useWebviewListener(
     "newSession",
@@ -147,11 +148,16 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
+      if (isInEdit && codeToEdit && codeToEdit.length > 0) {
+        mainEditor?.commands.focus();
+        return;
+      }
+
       await ideMessenger.request("edit/addCurrentSelection", undefined);
       await dispatch(enterEdit({ editorContent: mainEditor?.getJSON() }));
       mainEditor?.commands.focus();
     },
-    [ideMessenger, mainEditor],
+    [ideMessenger, mainEditor, dispatch, isInEdit, codeToEdit],
   );
 
   useWebviewListener(

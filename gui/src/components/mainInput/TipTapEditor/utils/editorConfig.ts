@@ -360,6 +360,12 @@ export function createEditorConfig(options: {
         addRef.current(json);
       }
 
+      console.log(
+        "[Continue DEBUG editorConfig] About to call props.onEnter. isInEdit:",
+        isInEdit,
+        "codeToEdit:",
+        codeToEdit,
+      );
       props.onEnter(json, modifiers, editor);
     },
     [props.onEnter, editor, props.isMainInput, codeToEdit, isInEdit],

@@ -129,7 +129,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this._diffLinesQueue.push(diffLine);
     }
 
-    if (this._queueLock || this.editor !== vscode.window.activeTextEditor) {
+    if (this._queueLock) {
       return;
     }
 
@@ -154,6 +154,9 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
+    console.log(
+      `[Continue] VerticalDiffHandler (${this.fileUri}) run started. Active editor: ${vscode.window.activeTextEditor?.document.uri.toString()}`,
+    );
     let diffLines = [];
 
     try {
@@ -525,6 +528,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   private async _handleDiffLine(diffLine: DiffLine) {
+    // Original logic continues here
     switch (diffLine.type) {
       case "same":
         await this.insertDeletionBuffer();
