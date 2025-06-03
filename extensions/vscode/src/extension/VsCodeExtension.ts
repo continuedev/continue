@@ -386,8 +386,8 @@ export class VsCodeExtension {
       void this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
-    this.ide.onDidChangeVisibleTextEditors((filepaths) => {
-      void this.core.invoke("didChangeVisibleTextEditors", { filepaths });
+    this.ide.onDidCloseTextDocument((filepaths) => {
+      void this.core.invoke("didCloseTextDocument", { filepaths });
     });
 
     vscode.workspace.onDidChangeConfiguration(async (event) => {

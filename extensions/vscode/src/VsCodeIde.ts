@@ -94,10 +94,15 @@ class VsCodeIde implements IDE {
     });
   }
 
-  onDidChangeVisibleTextEditors(callback: (uris: string[]) => void): void {
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor) {
-        // extract list of opened files
+  onDidCloseTextDocument(callback: (uris: string[]) => void): void {
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      if (document) {
+        let openFilePaths = vscode.window.tabGroups.all // get tab groups
+          .flatMap((group) => group.tabs) // extract tabs from tab groups
+          .filter((tab) => tab.input instanceof vscode.TabInputText) // filter irrelevant tabs (settings, etc.)
+          .map((tab) => (tab.input as vscode.TabInputText).uri.fsPath); // get filepaths
+
+        callback(openFilePaths);
       }
     });
   }

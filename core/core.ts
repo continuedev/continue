@@ -695,7 +695,7 @@ export class Core {
         if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
 
-          // Update the cache for opened files
+          // Set the active filepath as most recently used in the opened files cache
           openedFilesLruCache.set(filepath, filepath);
         }
       } catch (e) {
@@ -705,9 +705,11 @@ export class Core {
       }
     });
 
-    on("didChangeVisibleTextEditors", async ({ data: { filepaths } }) => {
+    on("didCloseTextDocument", async ({ data: { filepaths } }) => {
       try {
-        // LOGIC FOR DEALING WITH FILEPATHS HERE (UPDATE #2)
+        console.log("Visible", filepaths.length);
+
+        // Remove the closed files from the opened files cache: TODO, UPDATE #2
       } catch (e) {
         console.error(
           `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,

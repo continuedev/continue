@@ -103,5 +103,5 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
 export type ToWebviewOrCoreFromIdeProtocol = {
   didChangeActiveTextEditor: [{ filepath: string }, void];
-  didChangeVisibleTextEditors: [{ filepaths: string[] }, void];
+  didCloseTextDocument: [{ filepaths: string[] }, void];
 };
