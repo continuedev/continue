@@ -93,7 +93,7 @@ export function calculateReflectOffset(i: number, w: number): number;
  * @type {new () => {(...args: any[]): any, _call(...args: any[]): any}}
  */
 export const Callable: new () => {
-    (...args: any[]): any;
-    _call(...args: any[]): any;
+  (...args: any[]): any;
+  _call(...args: any[]): any;
 };
 //# sourceMappingURL=core.d.ts.map
