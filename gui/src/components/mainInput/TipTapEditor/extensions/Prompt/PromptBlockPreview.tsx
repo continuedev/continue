@@ -40,7 +40,7 @@ export const PromptBlockPreview = ({
         inputId={inputId}
         itemId={item.id.itemId}
         onDelete={handleDelete}
-        onTitleClick={handleTitleClick}
+        onTitleClick={!item.content ? undefined : handleTitleClick}
       >
         {!item.content ? null : (
           <div
