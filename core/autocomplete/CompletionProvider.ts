@@ -263,6 +263,7 @@ export class CompletionProvider implements Disposable {
         return undefined;
       }
 
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const outcome: AutocompleteOutcome = {
         time: Date.now() - startTime,
         completion,
