@@ -72,21 +72,21 @@ type MockMessengerType = {
 // the individual CodebaseIndex classes
 describe("CodebaseIndexer", () => {
   const pauseToken = new PauseToken(false);
-  
+
   // Replace mockProgressReporter with mockMessenger
   const mockMessenger: MockMessengerType = {
     send: jest.fn(),
     request: jest.fn(async () => {}),
     invoke: jest.fn(),
     on: jest.fn(),
-    onError: jest.fn()
+    onError: jest.fn(),
   };
-  
+
   const codebaseIndexer = new TestCodebaseIndexer(
     testConfigHandler,
     testIde,
     mockMessenger as any,
-    false
+    false,
   );
   const testIndex = new TestCodebaseIndex();
 
@@ -265,109 +265,148 @@ describe("CodebaseIndexer", () => {
   describe("New methods from Core.ts", () => {
     // Simplified tests to focus on behavior, not implementation details
     test("should call messenger with progress updates when refreshing codebase index", async () => {
-      jest.spyOn(codebaseIndexer as any, 'refreshDirs').mockImplementation(async function* () {
-        yield { status: "done", progress: 1, desc: "Completed" };
-      });
-      
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(async function* () {
+          yield { status: "done", progress: 1, desc: "Completed" };
+        });
+
       await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
-      
-      expect(mockMessenger.request).toHaveBeenCalledWith("indexProgress", expect.anything());
-      expect(mockMessenger.send).toHaveBeenCalledWith("refreshSubmenuItems", { providers: "dependsOnIndexing" });
+
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.anything(),
+      );
+      expect(mockMessenger.send).toHaveBeenCalledWith("refreshSubmenuItems", {
+        providers: "dependsOnIndexing",
+      });
     });
 
     test("should call messenger with progress updates when refreshing specific files", async () => {
-      jest.spyOn(codebaseIndexer as any, 'refreshFiles').mockImplementation(async function* () {
-        yield { status: "done", progress: 1, desc: "Completed" };
-      });
-      
+      jest
+        .spyOn(codebaseIndexer as any, "refreshFiles")
+        .mockImplementation(async function* () {
+          yield { status: "done", progress: 1, desc: "Completed" };
+        });
+
       await codebaseIndexer.refreshCodebaseIndexFiles(["/test/file.ts"]);
-      
-      expect(mockMessenger.request).toHaveBeenCalledWith("indexProgress", expect.anything());
-      expect(mockMessenger.send).toHaveBeenCalledWith("refreshSubmenuItems", { providers: "all" });
+
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.anything(),
+      );
+      expect(mockMessenger.send).toHaveBeenCalledWith("refreshSubmenuItems", {
+        providers: "all",
+      });
     });
 
     test("should abort previous indexing when starting a new one", async () => {
       // Set up a situation where indexingCancellationController exists
       const mockAbort = jest.fn();
       const controller = { abort: mockAbort, signal: { aborted: false } };
-      
+
       // Access the private property in a type-safe way for testing
       (codebaseIndexer as any).indexingCancellationController = controller;
-      
+
       // Mock refreshDirs to return immediately
-      jest.spyOn(codebaseIndexer as any, 'refreshDirs').mockImplementation(async function* () {
-        yield { status: "done", progress: 1, desc: "Completed" };
-      });
-      
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(async function* () {
+          yield { status: "done", progress: 1, desc: "Completed" };
+        });
+
       // Start indexing - this should call abort on the existing controller
       await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
-      
+
       // Verify abort was called
       expect(mockAbort).toHaveBeenCalled();
     });
 
     test("should handle errors properly during indexing", async () => {
       const testError = new Error("Test indexing error");
-      
+
       // Mock console.log to avoid printing errors
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      
+      const consoleLogSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
       // Mock refreshDirs to throw an error
-      jest.spyOn(codebaseIndexer as any, 'refreshDirs').mockImplementation(() => {
-        throw testError;
-      });
-      
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(() => {
+          throw testError;
+        });
+
       // We don't need to mock AbortController because we're mocking the entire refreshDirs call
       await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
-      
+
       // Use the first argument only for the assertion since the second argument doesn't match exactly
-      expect(consoleLogSpy).toHaveBeenCalledWith(`Failed refreshing codebase index directories: Error: ${testError.message}`);
-      expect(mockMessenger.request).toHaveBeenCalledWith("indexProgress", expect.objectContaining({ 
-        status: "failed" 
-      }));
-      
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        `Failed refreshing codebase index directories: Error: ${testError.message}`,
+      );
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.objectContaining({
+          status: "failed",
+        }),
+      );
+
       consoleLogSpy.mockRestore();
     });
 
     test("should handle LLMError specially during indexing", async () => {
       // Create a mock LLM
-      const mockLlm: any = { 
+      const mockLlm: any = {
         providerName: "test-provider",
-        model: "test-model"
+        model: "test-model",
       };
-      
+
       // Create a real LLMError
       const llmError = new LLMError("Test LLM error", mockLlm);
-      
+
       // Mock console.log to avoid printing errors
-      jest.spyOn(console, 'log').mockImplementation(() => {});
-      
+      jest.spyOn(console, "log").mockImplementation(() => {});
+
       // Mock refreshDirs to throw an LLMError
-      jest.spyOn(codebaseIndexer as any, 'refreshDirs').mockImplementation(() => {
-        throw llmError;
-      });
-      
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(() => {
+          throw llmError;
+        });
+
       // We don't need to mock AbortController because we're mocking the entire refreshDirs call
       await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
-      
-      expect(mockMessenger.request).toHaveBeenCalledWith("reportError", llmError);
-      expect(mockMessenger.request).toHaveBeenCalledWith("indexProgress", expect.objectContaining({
-        status: "failed", 
-        desc: "Test LLM error"
-      }));
+
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "reportError",
+        llmError,
+      );
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.objectContaining({
+          status: "failed",
+          desc: "Test LLM error",
+        }),
+      );
     });
 
     test("should provide access to current indexing state", async () => {
-      const testState = { progress: 0.5, status: "indexing" as const, desc: "Test state" };
-      
+      const testState = {
+        progress: 0.5,
+        status: "indexing" as const,
+        desc: "Test state",
+      };
+
       // Mock refreshDirs to set a specific state
-      jest.spyOn(codebaseIndexer as any, 'refreshDirs').mockImplementation(async function* () {
-        yield testState;
-      });
-      
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(async function* () {
+          yield testState;
+        });
+
       // We don't need to mock AbortController because we're mocking the entire refreshDirs call
       await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
-      
+
       // Check that the state was updated
       expect(codebaseIndexer.currentIndexingState).toEqual(testState);
     });

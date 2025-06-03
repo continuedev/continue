@@ -64,7 +64,7 @@ export class CodebaseIndexer {
     private readonly configHandler: ConfigHandler,
     protected readonly ide: IDE,
     private readonly messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-    initialPaused: boolean = false
+    initialPaused: boolean = false,
   ) {
     this.codebaseIndexingState = {
       status: "loading",
@@ -124,12 +124,12 @@ export class CodebaseIndexer {
     }
     const continueServerClient = new ContinueServerClient(
       ideSettings.remoteConfigServerUrl,
-      ideSettings.userToken
+      ideSettings.userToken,
     );
     if (!continueServerClient) {
       return [];
     }
-    
+
     const indexes: CodebaseIndex[] = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
@@ -546,7 +546,7 @@ export class CodebaseIndexer {
       completedIndexCount += 1;
     }
   }
-  
+
   // New methods using messenger directly
 
   private async updateProgress(update: IndexingProgressUpdate) {
@@ -579,8 +579,8 @@ export class CodebaseIndexer {
     this.indexingCancellationController = new AbortController();
     try {
       for await (const update of this.refreshDirs(
-        paths, 
-        this.indexingCancellationController.signal
+        paths,
+        this.indexingCancellationController.signal,
       )) {
         await this.updateProgress(update);
 
@@ -595,7 +595,9 @@ export class CodebaseIndexer {
 
     // Directly refresh submenu items
     if (this.messenger) {
-      this.messenger.send("refreshSubmenuItems", { providers: "dependsOnIndexing" });
+      this.messenger.send("refreshSubmenuItems", {
+        providers: "dependsOnIndexing",
+      });
     }
     this.indexingCancellationController = undefined;
   }
@@ -634,14 +636,14 @@ export class CodebaseIndexer {
       // Need to report this specific error to the IDE for special handling
       await this.messenger.request("reportError", e);
     }
-    
+
     // broadcast indexing error
     const updateToSend: IndexingProgressUpdate = {
       progress: 0,
       status: "failed",
       desc: e.message,
     };
-    
+
     await this.updateProgress(updateToSend);
     void this.sendIndexingErrorTelemetry(updateToSend);
   }
