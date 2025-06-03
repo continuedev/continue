@@ -1,9 +1,9 @@
-import { jest } from "@jest/globals";
+import { afterEach, expect, test, vi } from "vitest";
 import { getProxyFromEnv, shouldBypassProxy } from "./util.js";
 
 // Reset environment variables after each test
 afterEach(() => {
-  jest.resetModules();
+  vi.resetModules();
   process.env = {};
 });
 
