@@ -26,50 +26,50 @@ When in Agent mode, you can simply prompt the agent to create a rule for you usi
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::
 
+### `.continue/rules` folder
+You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
+
+```yaml title="new-rule.yaml"
+name: New rule
+version: 0.0.1
+schema: v1
+rules:
+  - Always give concise responses
+
+```
+This is also done when selecting "Add Rule" in the Assistant settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.yaml`. 
+
 ### Syntax
 
 Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule
+- `schema` (**required**): The schema version of the YAML file (e.g., `v1`)
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
-```yaml title="config.yaml"
+```yaml title=colors.yaml"
+name: New rules
+version: 0.0.1
+schema: v1
 rules:
-  - name: Color Themes
+  - name: Tailwind Color Themes
     rule: |
       When adding colors to components, use tailwind color classes.
       Do NOT use explicit colors like text-gray-400. Instead, use theme colors.
-
-      The common available theme colors are:
-      - For normal text: foreground, description, description-muted
-      - For other text, icons, etc: success, warning, error, accent, link
-      - For general components background, border, border-focus
-      - For specific components: 
-
-      Any of these colors can be used in tailwind e.g. bg-primary, text-success, border-error, hover:bg-list-hover, etc.
     globs: "*/*.tsx"
 ```
-
-## Chat System Message
-
-Continue includes a simple default system message for [Chat](../../chat/how-to-use-it.md) and [Agent](../../agent/how-to-use-it.md) requests, to help the model provide reliable codeblock formats in its output.
-
-This can be viewed in the rules section of the toolbar (see above), or visit the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4)
-
-Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
-
 ## `.continuerules`
 
 :::warning
 
-`.contninuerules` will be deprecarted in a future release. Please use `.continue/rules` instead.
+`.contninuerules` will be deprecated in a future release. Please use the `.continue/rules` folder instead.
 
 :::
 
 You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
 
-### Simple Examples
+## Simple Examples
 
 - If you want concise answers:
 
@@ -87,3 +87,12 @@ Whenever you are writing React code, make sure to
 - use Tailwind CSS for styling
 - modularize components into smaller, reusable pieces
 ```
+
+## Chat System Message
+
+Continue includes a simple default system message for [Chat](../../chat/how-to-use-it.md) and [Agent](../../agent/how-to-use-it.md) requests, to help the model provide reliable codeblock formats in its output.
+
+This can be viewed in the rules section of the toolbar (see above), or visit the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4)
+
+Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
+
