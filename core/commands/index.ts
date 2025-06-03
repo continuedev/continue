@@ -59,7 +59,6 @@ export function slashFromCustomCommand(
         commandName,
         renderedPrompt,
         undefined,
-        customCommand.prompt,
       );
 
       for await (const chunk of llm.streamChat(

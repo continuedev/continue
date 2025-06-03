@@ -75,7 +75,6 @@ export function slashCommandFromPromptFileV1(
         name,
         renderedPrompt,
         systemMessage,
-        prompt,
       );
 
       for await (const chunk of context.llm.streamChat(
