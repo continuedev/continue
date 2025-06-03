@@ -18,7 +18,13 @@ export class FileSearch {
   private miniSearch = new MiniSearch<FileMiniSearchResult>({
     fields: ["relativePath", "id"],
     storeFields: ["relativePath", "id"],
-    tokenize: text => deduplicateArray(MiniSearch.getDefault('tokenize')(text).concat(splitCamelCaseAndNonAlphaNumeric(text)), (a, b) => a === b),
+    tokenize: (text) =>
+      deduplicateArray(
+        MiniSearch.getDefault("tokenize")(text).concat(
+          splitCamelCaseAndNonAlphaNumeric(text),
+        ),
+        (a, b) => a === b,
+      ),
     searchOptions: {
       prefix: true,
       fuzzy: 2,

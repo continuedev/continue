@@ -33,7 +33,7 @@ export function remarkTables() {
       //// header                // newline // |:---|----:|      // new line  // table rows
 
       // prevent modifying if no markdown tables are present
-      if(!buffer.match(tableRegex)) {
+      if (!buffer.match(tableRegex)) {
         return;
       }
 

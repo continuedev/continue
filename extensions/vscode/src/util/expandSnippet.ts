@@ -4,6 +4,7 @@ import { DEFAULT_IGNORE_DIRS } from "core/indexing/ignore";
 import { deduplicateArray } from "core/util";
 import { getParserForFile } from "core/util/treeSitter";
 import * as vscode from "vscode";
+
 import { getDefinitionsForNode } from "../autocomplete/lsp";
 
 import type { SyntaxNode } from "web-tree-sitter";

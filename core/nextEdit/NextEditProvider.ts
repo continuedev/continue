@@ -1,5 +1,4 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
@@ -18,7 +17,10 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import { AutocompleteLoggingService } from "../autocomplete/util/AutocompleteLoggingService.js";
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
-import { AutocompleteInput, AutocompleteOutcome } from "../autocomplete/util/types.js";
+import {
+  AutocompleteInput,
+  AutocompleteOutcome,
+} from "../autocomplete/util/types.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -75,12 +77,14 @@ export class NextEditProvider {
 
     if (llm instanceof OpenAI) {
       llm.useLegacyCompletionsEndpoint = true;
-    } else if (
-      llm.providerName === "free-trial" &&
-      llm.model !== TRIAL_FIM_MODEL
-    ) {
-      llm.model = TRIAL_FIM_MODEL;
     }
+    // TODO: Resolve import error with TRIAL_FIM_MODEL
+    // else if (
+    //   llm.providerName === "free-trial" &&
+    //   llm.model !== TRIAL_FIM_MODEL
+    // ) {
+    //   llm.model = TRIAL_FIM_MODEL;
+    // }
 
     return llm;
   }
@@ -224,11 +228,11 @@ export class NextEditProvider {
 
         const processedCompletion = helper.options.transform
           ? postprocessCompletion({
-            completion,
-            prefix: helper.prunedPrefix,
-            suffix: helper.prunedSuffix,
-            llm,
-          })
+              completion,
+              prefix: helper.prunedPrefix,
+              suffix: helper.prunedSuffix,
+              llm,
+            })
           : completion;
 
         completion = processedCompletion;
