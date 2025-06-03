@@ -8,6 +8,7 @@ keywords: [rules, .continuerules, system, prompt, message]
 Rules provide instructions to the model for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Agent](../../agent/how-to-use-it.md) requests.
 
 :::info Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
+:::
 
 You can view the current rules by clicking the pen icon above the main toolbar:
 
@@ -21,9 +22,9 @@ Rules can be added to an Assistant on the Continue Hub. Explore available rules 
 
 :::info Automatically create local rule blocks
 When in Agent mode, you can simply prompt the agent to create a rule for you using the `builtin_create_rule_block` tool if enabled.
+:::
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
-:::
 
 ### Syntax
 
@@ -66,13 +67,13 @@ You can create project-specific rules by adding a `.continue/rules` file to the 
 
 - If you want concise answers:
 
-```title=.continue/rules
+```title=.continuerules
 Please provide concise answers. Don't explain obvious concepts. You can assume that I am knowledgable about most programming topics.
 ```
 
 - If you want to ensure certain practices are followed, for example in React:
 
-```title=.continue/rules
+```title=.continuerules
 Whenever you are writing React code, make sure to
 - use functional components instead of class components
 - use hooks for state management
