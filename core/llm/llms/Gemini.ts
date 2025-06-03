@@ -1,4 +1,4 @@
-import { streamResponse } from "@continuedev/fetch";
+import { streamSse } from "@continuedev/fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
@@ -309,86 +309,53 @@ class Gemini extends BaseLLM {
     return body;
   }
 
-  public async *processGeminiResponse(
-    stream: AsyncIterable<string>,
-  ): AsyncGenerator<ChatMessage> {
-    let buffer = "";
-    for await (const chunk of stream) {
-      buffer += chunk;
-      if (buffer.startsWith("[")) {
-        buffer = buffer.slice(1);
-      }
-      if (buffer.endsWith("]")) {
-        buffer = buffer.slice(0, -1);
-      }
-      if (buffer.startsWith(",")) {
-        buffer = buffer.slice(1);
-      }
+  public processGeminiChunk(
+    response: GeminiChatResponse,
+  ): ChatMessage | undefined {
+    if ("error" in response) {
+      throw new Error(response.error.message);
+    }
 
-      const parts = buffer.split("\n,");
-
-      let foundIncomplete = false;
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        let data: GeminiChatResponse;
-        try {
-          data = JSON.parse(part) as GeminiChatResponse;
-        } catch (e) {
-          foundIncomplete = true;
-          continue; // yo!
-        }
-
-        if ("error" in data) {
-          throw new Error(data.error.message);
-        }
-
-        // Check for existence of each level before accessing the final 'text' property
-        const content = data?.candidates?.[0]?.content;
-        if (content) {
-          const textParts: MessagePart[] = [];
-          const toolCalls: ToolCallDelta[] = [];
-
-          for (const part of content.parts) {
-            if ("text" in part) {
-              textParts.push({ type: "text", text: part.text });
-            } else if ("functionCall" in part) {
-              toolCalls.push({
-                type: "function",
-                id: part.functionCall.id ?? uuidv4(),
-                function: {
-                  name: part.functionCall.name,
-                  arguments:
-                    typeof part.functionCall.args === "string"
-                      ? part.functionCall.args
-                      : JSON.stringify(part.functionCall.args),
-                },
-              });
-            } else {
-              // Note: function responses shouldn't be streamed, images not supported
-              console.warn("Unsupported gemini part type received", part);
-            }
-          }
-
-          const assistantMessage: AssistantChatMessage = {
-            role: "assistant",
-            content: textParts.length ? textParts : "",
-          };
-          if (toolCalls.length > 0) {
-            assistantMessage.toolCalls = toolCalls;
-          }
-          if (textParts.length || toolCalls.length) {
-            yield assistantMessage;
-          }
+    // Check for existence of each level before accessing the final 'text' property
+    const parts = response?.candidates?.[0]?.content?.parts;
+    console.log("GEMINI CONTENT", response?.candidates?.[0]?.content);
+    if (parts) {
+      const textParts: MessagePart[] = [];
+      const toolCalls: ToolCallDelta[] = [];
+      for (const part of parts) {
+        if ("text" in part) {
+          textParts.push({ type: "text", text: part.text });
+        } else if ("functionCall" in part) {
+          toolCalls.push({
+            type: "function",
+            id: part.functionCall.id ?? uuidv4(),
+            function: {
+              name: part.functionCall.name,
+              arguments:
+                typeof part.functionCall.args === "string"
+                  ? part.functionCall.args
+                  : JSON.stringify(part.functionCall.args),
+            },
+          });
         } else {
-          // Handle the case where the expected data structure is not found
-          console.warn("Unexpected response format:", data);
+          // Note: function responses shouldn't be streamed, images not supported
+          console.warn("Unsupported gemini part type received", part);
         }
       }
-      if (foundIncomplete) {
-        buffer = parts[parts.length - 1];
-      } else {
-        buffer = "";
+
+      const assistantMessage: AssistantChatMessage = {
+        role: "assistant",
+        content: textParts.length ? textParts : "",
+      };
+      if (toolCalls.length > 0) {
+        assistantMessage.toolCalls = toolCalls;
       }
+      if (textParts.length || toolCalls.length) {
+        return assistantMessage;
+      }
+    } else {
+      // Handle the case where the expected data structure is not found
+      console.warn("Unexpected response format:", response);
     }
   }
 
@@ -412,10 +379,11 @@ class Gemini extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
-    for await (const message of this.processGeminiResponse(
-      streamResponse(response),
-    )) {
-      yield message;
+    for await (const chunk of streamSse(response)) {
+      const message = this.processGeminiChunk(chunk);
+      if (message) {
+        yield message;
+      }
     }
   }
   private async *streamChatBison(

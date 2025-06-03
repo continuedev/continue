@@ -1,6 +1,6 @@
 import { GoogleAuth } from "google-auth-library";
 
-import { streamResponse, streamSse } from "@continuedev/fetch";
+import { streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -169,10 +169,11 @@ class VertexAI extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
-    for await (const message of this.geminiInstance.processGeminiResponse(
-      streamResponse(response),
-    )) {
-      yield message;
+    for await (const chunk of streamSse(response)) {
+      const message = this.geminiInstance.processGeminiChunk(chunk);
+      if (message) {
+        yield message;
+      }
     }
   }
 
