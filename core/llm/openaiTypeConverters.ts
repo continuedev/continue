@@ -5,14 +5,18 @@ import {
   ChatCompletionChunk,
   ChatCompletionCreateParams,
   ChatCompletionMessageParam,
-  CompletionCreateParams,
+  CompletionCreateParams
 } from "openai/resources/index";
 
-import { ChatMessage, CompletionOptions, TextMessagePart } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  TextMessagePart
+} from "..";
 
 export function toChatMessage(
   message: ChatMessage,
-): ChatCompletionMessageParam {
+): ChatCompletionMessageParam | null {
   if (message.role === "tool") {
     return {
       role: "tool",
@@ -26,6 +30,9 @@ export function toChatMessage(
       content: message.content,
     };
   }
+  if (message.role === "thinking") {
+    return null
+  }
 
   if (message.role === "assistant") {
     const msg: ChatCompletionAssistantMessageParam = {
@@ -34,8 +41,8 @@ export function toChatMessage(
         typeof message.content === "string"
           ? message.content || " " // LM Studio (and other providers) don't accept empty content
           : message.content
-              .filter((part) => part.type === "text")
-              .map((part) => part as TextMessagePart), // can remove with newer typescript version
+            .filter((part) => part.type === "text")
+            .map((part) => part as TextMessagePart), // can remove with newer typescript version
     };
 
     if (message.toolCalls) {
@@ -64,20 +71,20 @@ export function toChatMessage(
       role: "user",
       content: !message.content.some((item) => item.type !== "text")
         ? message.content
-            .map((item) => (item as TextMessagePart).text)
-            .join("") || " "
+          .map((item) => (item as TextMessagePart).text)
+          .join("") || " "
         : message.content.map((part) => {
-            if (part.type === "imageUrl") {
-              return {
-                type: "image_url" as const,
-                image_url: {
-                  url: part.imageUrl.url,
-                  detail: "auto" as const,
-                },
-              };
-            }
-            return part;
-          }),
+          if (part.type === "imageUrl") {
+            return {
+              type: "image_url" as const,
+              image_url: {
+                url: part.imageUrl.url,
+                detail: "auto" as const,
+              },
+            };
+          }
+          return part;
+        }),
     };
   }
 }
@@ -87,7 +94,7 @@ export function toChatBody(
   options: CompletionOptions,
 ): ChatCompletionCreateParams {
   const params: ChatCompletionCreateParams = {
-    messages: messages.map(toChatMessage),
+    messages: messages.map(toChatMessage).filter(m => m !== null),
     model: options.model,
     max_tokens: options.maxTokens,
     temperature: options.temperature,
@@ -191,6 +198,11 @@ export function fromChatCompletionChunk(
         },
       })),
     };
+  } else if ((delta as any)?.reasoning_content || (delta as any)?.reasoning) {
+    return {
+      role: "thinking",
+      content: (delta as any)?.reasoning_content || (delta as any)?.reasoning,
+    }
   }
 
   return undefined;

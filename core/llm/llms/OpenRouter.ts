@@ -13,6 +13,7 @@ class OpenRouter extends OpenAI {
     },
     useLegacyCompletionsEndpoint: false,
   };
+  forceStreamChat = true;
 }
 
 export default OpenRouter;
