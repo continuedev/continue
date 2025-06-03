@@ -6,9 +6,6 @@ import {
   tearDownTestDir,
 } from "../../test/testDir";
 import { renderPromptFileV2 } from "./renderPromptFile";
-// import URLContextProvider from '../binary/node_modules/core/context/providers/URLContextProvider';
-
-// Mock dependencies
 
 describe("renderPromptFileV2", () => {
   let extras: ContextProviderExtras;
@@ -70,24 +67,17 @@ describe("renderPromptFileV2", () => {
     );
   });
 
-  //   it('should handle URL attachments', async () => {
-  //     const rawContent = 'Content with URL @https://example.com';
-  //     const mockUrlProvider = {
-  //       getContextItems: jest.fn().mockResolvedValue([{
-  //         name: 'example.com',
-  //         content: 'URL content',
-  //         description: 'https://example.com'
-  //       }])
-  //     };
+  it("should handle URL attachments", async () => {
+    const rawContent = "Content with URL @https://example.com";
 
-  //     (URLContextProvider as jest.Mock).mockImplementation(() => mockUrlProvider);
+    const [contextItems, renderedPrompt] = await renderPromptFileV2(
+      rawContent,
+      extras,
+    );
 
-  //     const [contextItems, renderedPrompt] = await renderPromptFileV2(rawContent, extras);
-
-  //     expect(contextItems).toHaveLength(1);
-  //     expect(renderedPrompt).toContain('URL content');
-  //     expect(mockUrlProvider.getContextItems).toHaveBeenCalled();
-  //   });
+    expect(contextItems).toHaveLength(1);
+    expect(renderedPrompt).toContain("Example Content");
+  });
 
   it("should resolve file attachments", async () => {
     const rawContent = "Content with file attachment @test.txt";

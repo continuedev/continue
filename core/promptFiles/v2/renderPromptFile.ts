@@ -1,6 +1,6 @@
 import { ContextItem, ContextProviderExtras } from "../..";
 import { contextProviderClassFromName } from "../../context/providers";
-import URLContextProvider from "../../context/providers/URLContextProvider";
+import { getUrlContextItems } from "../../context/providers/URLContextProvider";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getUriPathBasename } from "../../util/uri";
 
@@ -52,10 +52,7 @@ async function resolveAttachment(
 
   // URLs
   if (name.startsWith("http")) {
-    const items = await new URLContextProvider({}).getContextItems(
-      name,
-      extras,
-    );
+    const items = getUrlContextItems(name, extras.fetch);
     return items;
   }
 
