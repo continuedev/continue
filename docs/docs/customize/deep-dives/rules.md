@@ -59,9 +59,15 @@ This can be viewed in the rules section of the toolbar (see above), or visit the
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
 
-## `.continue/rules`
+## `.continuerules`
 
-You can create project-specific rules by adding a `.continue/rules` file to the root of your project. This file is raw text and its full contents will be used as rules.
+:::warning
+
+`.contninuerules` will be deprecarted in a future release. Please use `.continue/rules` instead.
+
+:::
+
+You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
 
 ### Simple Examples
 
