@@ -33,19 +33,6 @@ export async function getUrlContextItems(
   query: string,
   fetchFn: FetchFunction,
 ): Promise<ContextItem[]> {
-  if (query === "https://example.com") {
-    return [
-      {
-        description: query,
-        content: "Example Content",
-        name: "Example site",
-        uri: {
-          type: "url",
-          value: query,
-        },
-      },
-    ];
-  }
   try {
     const url = new URL(query);
     const icon = await fetchFavicon(url);

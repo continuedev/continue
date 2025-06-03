@@ -7,9 +7,32 @@ import {
 } from "../../test/testDir";
 import { renderPromptFileV2 } from "./renderPromptFile";
 
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock(
+  import("../../context/providers/URLContextProvider"),
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      getUrlContextItems: vi.fn().mockResolvedValue([
+        {
+          description: "https://example.com",
+          content: "Example Content",
+          name: "Example site",
+          uri: {
+            type: "url",
+            value: "https://example.com",
+          },
+        },
+      ]),
+    };
+  },
+);
+
 describe("renderPromptFileV2", () => {
   let extras: ContextProviderExtras;
-  const mockGetContextItems = jest.fn().mockResolvedValue([
+  const mockGetContextItems = vi.fn().mockResolvedValue([
     {
       name: "custom",
       content: "Custom provider content",
@@ -31,7 +54,7 @@ describe("renderPromptFileV2", () => {
               displayTitle: "Custom Provider",
               description: "A custom context provider",
             },
-            loadSubmenuItems: jest.fn().mockResolvedValue([]),
+            loadSubmenuItems: vi.fn().mockResolvedValue([]),
             getContextItems: mockGetContextItems,
           },
         ],
@@ -42,11 +65,11 @@ describe("renderPromptFileV2", () => {
       llm: {} as ILLM,
       ide: testIde,
       selectedCode: [] as RangeInFile[],
-      fetch: jest.fn(),
+      fetch: vi.fn(),
     };
 
     // Clear all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     setUpTestDir();
   });
 
