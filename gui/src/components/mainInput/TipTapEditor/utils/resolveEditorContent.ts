@@ -16,6 +16,7 @@ import {
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
+import * as URI from "uri-js";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
 import { CodeBlock, Mention, PromptBlock } from "../extensions";
@@ -103,7 +104,7 @@ function processEditorContent(editorState: JSONContent) {
     (parts, p) => {
       switch (p.type) {
         case PromptBlock.name: {
-          slashCommandName = resvolePromptBlock(p);
+          slashCommandName = p.attrs?.item.name;
         }
 
         case Paragraph.name: {
@@ -199,6 +200,7 @@ function processSlashCommand(
   const lastTextPart = parts[lastTextIndex] as TextMessagePart;
 
   let input: string;
+  const originalPrompt = command.prompt ? " " + command.prompt : "";
 
   /**
    * Although we no longer render slash command <span /> tags from the editor,
@@ -211,10 +213,13 @@ function processSlashCommand(
       role: "user",
       content: lastTextPart.text,
     }).trimStart();
-    lastTextPart.text = `/${command.name} ${lastTextPart.text}`;
+    lastTextPart.text = `/${command.name}${originalPrompt} ${lastTextPart.text}`;
   } else {
     input = "";
-    parts.push({ type: "text", text: `/${command.name}` });
+    parts.push({
+      type: "text",
+      text: `/${command.name}${originalPrompt}`,
+    });
   }
 
   return {
@@ -269,7 +274,6 @@ async function gatherContextItems({
       contextItems.push(...result.content);
     }
   }
-
   // Include default context providers
   const defaultContextItems = await Promise.all(
     defaultContextProviders.map(async (provider) => {
@@ -288,6 +292,41 @@ async function gatherContextItems({
   );
   contextItems.push(...defaultContextItems.flat());
 
+  // alt/option+enter to use current file
+  // TODO consider limiting current file size with free trial again
+  if (!modifiers.noContext) {
+    const currentFileResponse = await ideMessenger.request(
+      "context/getContextItems",
+      {
+        name: "currentFile",
+        query: "non-mention-usage",
+        fullInput: "",
+        selectedCode: [],
+      },
+    );
+    if (currentFileResponse.status === "success") {
+      const items = currentFileResponse.content;
+      if (items.length > 0) {
+        const currentFile = items[0];
+        const uri = currentFile.uri?.value;
+
+        // don't add the file if it's already in the context items
+        if (
+          uri &&
+          !contextItems.find(
+            (item) => item.uri?.value && URI.equal(item.uri.value, uri),
+          )
+        ) {
+          currentFile.id = {
+            providerTitle: "file",
+            itemId: uri,
+          };
+          contextItems.unshift(currentFile);
+        }
+      }
+    }
+  }
+
   return contextItems;
 }
 
@@ -301,10 +340,6 @@ function findLastIndex<T>(
     }
   }
   return -1; // if no element satisfies the predicate
-}
-
-function resvolePromptBlock(p: JSONContent): string | undefined {
-  return p.attrs?.item.name;
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {

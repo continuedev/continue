@@ -5,60 +5,62 @@ export function replaceSlashCommandWithPromptInChatHistory(
   commandName: string,
   renderedPrompt: string,
   systemMessageOverride?: string,
+  originalPrompt?: string,
 ): ChatMessage[] {
-  const messages = [...history];
-
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const { role, content } = messages[i];
-    if (role !== "user") {
-      continue;
-    }
-
-    if (Array.isArray(content)) {
-      if (
-        content.some(
-          (part) =>
-            part.type === "text" && part.text?.startsWith(`/${commandName}`),
-        )
-      ) {
-        messages[i] = updateArrayContent(
-          messages[i],
-          commandName,
-          renderedPrompt,
-        );
-        break;
+  const newMessages: ChatMessage[] = [];
+  for (const message of history) {
+    if (message.role === "system") {
+      if (systemMessageOverride) {
+        newMessages.push({
+          role: "system",
+          content: systemMessageOverride,
+        });
+      } else {
+        newMessages.push(message);
       }
-    } else if (
-      typeof content === "string" &&
-      content.startsWith(`/${commandName}`)
-    ) {
-      messages[i] = { ...messages[i], content: renderedPrompt };
-      break;
-    }
-  }
-
-  if (systemMessageOverride) {
-    if (messages[0]?.role === "system") {
-      messages[0].content = systemMessageOverride;
+    } else if (message.role === "user") {
+      if (typeof message.content === "string") {
+        if (message.content.startsWith(`/${commandName}`)) {
+          newMessages.push({
+            ...message,
+            content: renderedPrompt,
+          });
+        } else {
+          newMessages.push(message);
+        }
+      } else {
+        if (
+          message.content.some(
+            (part) =>
+              part.type === "text" && part.text?.startsWith(`/${commandName}`),
+          )
+        ) {
+          newMessages.push({
+            ...message,
+            content: message.content.map((part: any) =>
+              part.text?.startsWith(`/${commandName}`)
+                ? { ...part, text: renderedPrompt }
+                : part,
+            ),
+          });
+        } else {
+          newMessages.push(message);
+        }
+      }
     } else {
-      messages.unshift({ role: "system", content: systemMessageOverride });
+      newMessages.push(message);
     }
   }
 
-  return messages;
-}
+  if (
+    systemMessageOverride &&
+    !newMessages.find((msg) => msg.role === "system")
+  ) {
+    newMessages.unshift({
+      role: "system",
+      content: systemMessageOverride,
+    });
+  }
 
-function updateArrayContent(
-  message: any,
-  commandName: string,
-  renderedPrompt: string,
-) {
-  return {
-    ...message,
-    content: message.content.map((part: any) =>
-      part.text?.startsWith(`/${commandName}`)
-        ? { ...part, text: renderedPrompt }
-        : part,
-    ),
-  };
+  return newMessages;
 }
