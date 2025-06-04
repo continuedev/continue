@@ -1,5 +1,4 @@
-import { Policy } from "@continuedev/config-yaml";
-import { ControlPlaneClient } from "./client.js";
+import { ControlPlaneClient, PolicyResponse } from "./client.js";
 
 /**
  * A singleton class that caches policy information fetched from the control plane.
@@ -7,8 +6,7 @@ import { ControlPlaneClient } from "./client.js";
  */
 export class PolicySingleton {
   private static instance: PolicySingleton;
-  private policy: Policy | null = null;
-  private orgSlug: string | null = null;
+  private policy: PolicyResponse | null = null;
 
   private constructor(private client: ControlPlaneClient) {}
 
@@ -28,14 +26,11 @@ export class PolicySingleton {
    * @param forceReload Whether to force a reload of the policy from the server
    * @returns The policy or null if it couldn't be fetched
    */
-  public async getPolicy(
-    orgSlug: string,
-    forceReload = false,
-  ): Promise<Policy | null> {
+  public async getPolicy(forceReload = false): Promise<PolicyResponse | null> {
     // If we're requesting a different org or forcing reload, update the policy
-    if (forceReload || this.orgSlug !== orgSlug || this.policy === null) {
-      this.orgSlug = orgSlug;
-      this.policy = await this.client.getPolicy(orgSlug);
+    if (forceReload || this.policy === null) {
+      const policyResponse = await this.client.getPolicy();
+      this.policy = policyResponse ?? {};
     }
 
     return this.policy;
@@ -46,6 +41,5 @@ export class PolicySingleton {
    */
   public clearCache(): void {
     this.policy = null;
-    this.orgSlug = null;
   }
 }

@@ -1,19 +1,21 @@
-import { Policy } from "@continuedev/config-yaml";
 import { jest } from "@jest/globals";
-import { ControlPlaneClient } from "./client.js";
+import { ControlPlaneClient, PolicyResponse } from "./client.js";
 import { PolicySingleton } from "./PolicySingleton.js";
 
 // Mock the ControlPlaneClient
-const mockGetPolicy = jest.fn<() => Promise<Policy | null>>();
+const mockGetPolicy = jest.fn<() => Promise<PolicyResponse | null>>();
 const mockClient = {
   getPolicy: mockGetPolicy,
 } as unknown as ControlPlaneClient;
 
 // Sample policy for testing
-const samplePolicy: Policy = {
-  allowAnonymousTelemetry: true,
-  allowLocalConfigFile: true,
-  allowOtherOrganizations: false,
+const samplePolicy: PolicyResponse = {
+  orgSlug: "test-org",
+  policy: {
+    allowAnonymousTelemetry: true,
+    allowLocalConfigFile: true,
+    allowOtherOrganizations: false,
+  },
 };
 
 test("PolicySingleton returns the same instance", () => {
@@ -32,10 +34,10 @@ test("getPolicy fetches policy on first call", async () => {
   policySingleton.clearCache();
 
   // Test
-  const policy = await policySingleton.getPolicy("test-org");
+  const policy = await policySingleton.getPolicy();
 
   // Verify
-  expect(mockGetPolicy).toHaveBeenCalledWith("test-org");
+  expect(mockGetPolicy).toHaveBeenCalled();
   expect(policy).toEqual(samplePolicy);
 });
 
@@ -48,13 +50,13 @@ test("getPolicy uses cached policy on subsequent calls", async () => {
   policySingleton.clearCache();
 
   // First call should fetch the policy
-  await policySingleton.getPolicy("test-org");
+  await policySingleton.getPolicy();
 
   // Reset the mock to verify it's not called again
   mockGetPolicy.mockClear();
 
   // Second call should use the cached policy
-  const policy = await policySingleton.getPolicy("test-org");
+  const policy = await policySingleton.getPolicy();
 
   // Verify
   expect(mockGetPolicy).not.toHaveBeenCalled();
@@ -64,60 +66,30 @@ test("getPolicy uses cached policy on subsequent calls", async () => {
 test("getPolicy refetches policy with forceReload=true", async () => {
   // Setup
   mockGetPolicy.mockResolvedValueOnce(samplePolicy);
-  const updatedPolicy: Policy = {
-    ...samplePolicy,
-    allowLocalConfigFile: false,
+  const updatedPolicy: PolicyResponse = {
+    orgSlug: "test-org",
+    policy: {
+      allowAnonymousTelemetry: true,
+      allowLocalConfigFile: false,
+      allowOtherOrganizations: false,
+    },
   };
 
   mockGetPolicy.mockResolvedValueOnce(updatedPolicy);
-
   const policySingleton = PolicySingleton.getInstance(mockClient);
 
   // Clear any cached data from previous tests
   policySingleton.clearCache();
 
   // First call to cache the initial policy
-  await policySingleton.getPolicy("test-org");
+  await policySingleton.getPolicy();
 
   // Force reload should fetch the policy again
-  const policy = await policySingleton.getPolicy("test-org", true);
+  const policy = await policySingleton.getPolicy(true);
 
   // Verify
   expect(mockGetPolicy).toHaveBeenCalledTimes(2);
   expect(policy).toEqual(updatedPolicy);
-});
-
-test("getPolicy refetches policy for different org slug", async () => {
-  // Setup
-  const policy1: Policy = {
-    ...samplePolicy,
-    allowAnonymousTelemetry: true,
-  };
-
-  const policy2: Policy = {
-    ...samplePolicy,
-    allowAnonymousTelemetry: false,
-  };
-
-  mockGetPolicy.mockResolvedValueOnce(policy1);
-  mockGetPolicy.mockResolvedValueOnce(policy2);
-
-  const policySingleton = PolicySingleton.getInstance(mockClient);
-
-  // Clear any cached data from previous tests
-  policySingleton.clearCache();
-
-  // First call for org1
-  const result1 = await policySingleton.getPolicy("org1");
-
-  // Second call for org2 should fetch new policy
-  const result2 = await policySingleton.getPolicy("org2");
-
-  // Verify
-  expect(mockGetPolicy).toHaveBeenCalledWith("org1");
-  expect(mockGetPolicy).toHaveBeenCalledWith("org2");
-  expect(result1).toEqual(policy1);
-  expect(result2).toEqual(policy2);
 });
 
 test("clearCache forces a refetch on next getPolicy call", async () => {
@@ -126,7 +98,7 @@ test("clearCache forces a refetch on next getPolicy call", async () => {
   const policySingleton = PolicySingleton.getInstance(mockClient);
 
   // First call to cache the policy
-  await policySingleton.getPolicy("test-org");
+  await policySingleton.getPolicy();
 
   // Clear the mock to verify the next call
   mockGetPolicy.mockClear();
@@ -136,8 +108,8 @@ test("clearCache forces a refetch on next getPolicy call", async () => {
   policySingleton.clearCache();
 
   // This should trigger a refetch
-  await policySingleton.getPolicy("test-org");
+  await policySingleton.getPolicy();
 
   // Verify
-  expect(mockGetPolicy).toHaveBeenCalledWith("test-org");
+  expect(mockGetPolicy).toHaveBeenCalled();
 });

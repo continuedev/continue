@@ -32,6 +32,11 @@ export interface FreeTrialStatus {
   autocompleteLimit: number;
 }
 
+export interface PolicyResponse {
+  orgSlug?: string;
+  policy?: Policy;
+}
+
 export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
@@ -184,16 +189,16 @@ export class ControlPlaneClient {
     }
   }
 
-  public async getPolicy(orgSlug: string): Promise<Policy | null> {
+  public async getPolicy(): Promise<PolicyResponse | null> {
     if (!(await this.isSignedIn())) {
       return null;
     }
 
     try {
-      const resp = await this.request(`ide/policy?orgSlug=${orgSlug}`, {
+      const resp = await this.request(`ide/policy`, {
         method: "GET",
       });
-      return (await resp.json()) as Policy;
+      return (await resp.json()) as PolicyResponse;
     } catch (e) {
       return null;
     }
