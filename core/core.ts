@@ -153,7 +153,7 @@ export class Core {
         profileId:
           this.configHandler.currentProfile?.profileDescription.id || null,
         organizations: this.configHandler.getSerializedOrgs(),
-        selectedOrgId: this.configHandler.currentOrg.id,
+        selectedOrgId: this.configHandler.currentOrg?.id ?? null,
       });
 
       // update additional submenu context providers registered via VSCode API
@@ -419,7 +419,7 @@ export class Core {
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
         organizations: this.configHandler.getSerializedOrgs(),
-        selectedOrgId: this.configHandler.currentOrg.id,
+        selectedOrgId: this.configHandler.currentOrg?.id ?? null,
       };
     });
 

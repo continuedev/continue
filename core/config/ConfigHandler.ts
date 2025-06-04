@@ -16,6 +16,7 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes.js";
 import { getControlPlaneEnv } from "../control-plane/env.js";
+import { PolicySingleton } from "../control-plane/PolicySingleton.js";
 import { logger } from "../util/logger.js";
 import {
   ASSISTANTS,
@@ -42,8 +43,8 @@ export class ConfigHandler {
   private globalLocalProfileManager: ProfileLifecycleManager;
 
   private organizations: OrgWithProfiles[] = [];
-  currentProfile: ProfileLifecycleManager | null;
-  currentOrg: OrgWithProfiles;
+  currentProfile: ProfileLifecycleManager | null = null;
+  currentOrg: OrgWithProfiles | null = null;
 
   constructor(
     private readonly ide: IDE,
@@ -68,17 +69,6 @@ export class ConfigHandler {
       ),
       this.ide,
     );
-
-    // Just to be safe, always force a default personal org with local profile manager
-    this.currentProfile = this.globalLocalProfileManager;
-    const personalOrg: OrgWithProfiles = {
-      currentProfile: this.globalLocalProfileManager,
-      profiles: [this.globalLocalProfileManager],
-      ...this.PERSONAL_ORG_DESC,
-    };
-
-    this.currentOrg = personalOrg;
-    this.organizations = [personalOrg];
 
     void this.cascadeInit();
   }
@@ -334,7 +324,7 @@ export class ConfigHandler {
 
   // Org id: check id validity, save selection, switch and reload
   async setSelectedOrgId(orgId: string, profileId?: string) {
-    if (orgId === this.currentOrg.id) {
+    if (orgId === this.currentOrg?.id) {
       return;
     }
     const org = this.organizations.find((org) => org.id === orgId);
@@ -368,10 +358,10 @@ export class ConfigHandler {
     ) {
       return;
     }
-    const profile = this.currentOrg.profiles.find(
+    const profile = this.currentOrg?.profiles.find(
       (profile) => profile.profileDescription.id === profileId,
     );
-    if (!profile) {
+    if (!profile || !this.currentOrg) {
       throw new Error(`Profile ${profileId} not found in current org`);
     }
 
@@ -472,7 +462,7 @@ export class ConfigHandler {
     if (!openProfileId) {
       return;
     }
-    const profile = this.currentOrg.profiles.find(
+    const profile = this.currentOrg?.profiles.find(
       (p) => p.profileDescription.id === openProfileId,
     );
     if (profile?.profileDescription.profileType === "local") {
