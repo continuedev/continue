@@ -1,0 +1,32 @@
+{
+  "name": "light-ide",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p ./",
+    "start": "node out/tsc/src/extensions/light-ide/src/index.js",
+    "prepare": "npm run build",
+    "build:esbuild": "node scripts/esbuild.js",
+    "build:watch": "node scripts/esbuild.js --watch",
+    "start:esbuild": "node out/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "core": "file:../../core",
+    "express": "^5.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.15.29",
+    "esbuild": "^0.25.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

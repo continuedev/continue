@@ -22,7 +22,7 @@
   "pricing": "Free",
   "description": "The leading open-source AI code assistant",
   "publisher": "Continue",
-  "engines": {
+  "engines": {  
     "vscode": "^1.70.0",
     "node": ">=20.19.0"
   },
