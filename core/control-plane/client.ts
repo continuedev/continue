@@ -4,6 +4,7 @@ import {
   ConfigResult,
   FQSN,
   FullSlug,
+  Policy,
   SecretResult,
   SecretType,
 } from "@continuedev/config-yaml";
@@ -178,6 +179,21 @@ export class ControlPlaneClient {
         method: "GET",
       });
       return (await resp.json()) as FreeTrialStatus;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async getPolicy(orgSlug: string): Promise<Policy | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.request(`ide/policy?orgSlug=${orgSlug}`, {
+        method: "GET",
+      });
+      return (await resp.json()) as Policy;
     } catch (e) {
       return null;
     }
