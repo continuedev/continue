@@ -2,11 +2,13 @@ import express from "express";
 import path from "path";
 import crypto from "crypto";
 import bodyParser from "body-parser";
+type MessageHandler = (data: any, messageId?: string) => Promise<any>;
 
 export class NodeGUI {
   private windowId: string;
   private core: any;
   private messageHandler?: (type: string, data: any, messageId?: string) => Promise<any>;
+  private handlers: Map<string, MessageHandler> = new Map(); // NEW
 
   constructor(opts: { windowId: string }) {
     this.windowId = opts.windowId;
@@ -22,6 +24,14 @@ export class NodeGUI {
   public setCore(core: any) {
     this.core = core;
   }
+
+    /**
+   * Register a handler for a specific message type from the frontend.
+   * Usage: nodeGui.on("someMessageType", async (data, messageId) => { ... })
+   */
+    public on(type: string, handler: MessageHandler) {
+      this.handlers.set(type, handler);
+    }
 
   private setupServer() {
     const app = express();

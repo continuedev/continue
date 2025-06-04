@@ -33,6 +33,7 @@ function IndexingProgress() {
   // If sidebar is opened after extension initializes, retrieve saved states.
   let initialized = false;
 
+  console.log("Indexing progress update received:");
   useWebviewListener("indexProgress", async (data) => {
     setUpdate(data);
   });
