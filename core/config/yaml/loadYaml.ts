@@ -117,39 +117,46 @@ async function loadConfigYaml(options: {
   //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
   // );
 
-  let config =
-    overrideConfigYaml ??
-    // This is how we allow use of blocks locally
-    (await unrollAssistant(
-      packageIdentifier,
-      new RegistryClient({
-        accessToken: await controlPlaneClient.getAccessToken(),
-        apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
-          .CONTROL_PLANE_URL,
-        rootPath,
-      }),
-      {
-        currentUserSlug: "",
-        onPremProxyUrl: null,
+  // This is how we allow use of blocks locally
+  const NEED_ERROR_PROPAGATION = true;
+  const unrollResult = await unrollAssistant(
+    packageIdentifier,
+    new RegistryClient({
+      accessToken: await controlPlaneClient.getAccessToken(),
+      apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
+        .CONTROL_PLANE_URL,
+      rootPath,
+    }),
+    {
+      currentUserSlug: "",
+      onPremProxyUrl: null,
+      orgScopeId,
+      platformClient: new LocalPlatformClient(
         orgScopeId,
-        platformClient: new LocalPlatformClient(
-          orgScopeId,
-          controlPlaneClient,
-          ide,
-        ),
-        renderSecrets: true,
-        injectBlocks: allLocalBlocks,
-      },
-    ));
+        controlPlaneClient,
+        ide,
+      ),
+      renderSecrets: true,
+      injectBlocks: allLocalBlocks,
+    },
+    NEED_ERROR_PROPAGATION,
+  );
 
-  const errors = isAssistantUnrolledNonNullable(config)
-    ? validateConfigYaml(config)
-    : [
-        {
+  const errors: ConfigValidationError[] = [];
+
+  let config = overrideConfigYaml ?? unrollResult.config;
+  if (config) {
+    isAssistantUnrolledNonNullable(config)
+      ? errors.push(...validateConfigYaml(config))
+      : errors.push({
           fatal: true,
           message: "Assistant includes blocks that don't exist",
-        },
-      ];
+        });
+  }
+
+  if (unrollResult.errors) {
+    errors.push(...unrollResult.errors);
+  }
 
   if (errors?.some((error) => error.fatal)) {
     return {
