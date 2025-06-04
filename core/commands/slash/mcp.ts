@@ -1,30 +1,28 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { PromptMessage } from "@modelcontextprotocol/sdk/types.js";
-import { ChatMessage, MCPPrompt, SlashCommand } from "../../index.js";
+import { ChatMessage, SlashCommand } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
-export function mcpPromptToSlashCommand(
+export function constructMcpSlashCommand(
   client: Client,
-  prompt: MCPPrompt,
+  name: string,
+  description?: string,
+  args?: string[],
 ): SlashCommand {
   return {
-    name: prompt.name,
-    description: prompt.description ?? "MCP Prompt",
+    name,
+    description: description ?? "MCP Prompt",
     params: {},
     run: async function* (context) {
       const argsObject: { [key: string]: string } = {};
       const userInput = context.input.split(" ").slice(1).join(" ");
-      if (prompt.arguments) {
-        const argNames = prompt.arguments.map((a) => a.name);
-        argNames.forEach((arg, i) => {
+      if (args) {
+        args.forEach((arg, i) => {
           argsObject[arg] = ""; // userInput
         });
       }
 
-      const result = await client.getPrompt({
-        name: prompt.name,
-        arguments: argsObject,
-      });
+      const result = await client.getPrompt({ name, arguments: argsObject });
       const mcpMessages: PromptMessage[] = result.messages;
       const messages: ChatMessage[] = mcpMessages.map((msg) => {
         if (msg.content.type !== "text") {

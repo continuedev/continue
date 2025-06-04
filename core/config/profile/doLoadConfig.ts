@@ -17,7 +17,7 @@ import {
   SerializedContinueConfig,
   Tool,
 } from "../../";
-import { mcpPromptToSlashCommand } from "../../commands/slash/mcp";
+import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
@@ -26,7 +26,8 @@ import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
-import { mcpToolToTool } from "../../tools/mcpTools";
+import { encodeMCPToolUri } from "../../tools/callTool";
+import { getMCPToolName } from "../../tools/mcpToolName";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
@@ -139,13 +140,6 @@ export default async function doLoadConfig(options: {
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
 
-  // Add tools that depend on rules etc.
-  newConfig.tools.push(
-    ...getConfigDependentToolDefinitions({
-      rules: newConfig.rules,
-    }),
-  );
-
   // Add things from MCP servers
   const mcpManager = MCPManagerSingleton.getInstance();
   const mcpServerStatuses = mcpManager.getStatuses();
@@ -157,22 +151,31 @@ export default async function doLoadConfig(options: {
   });
   newConfig.mcpServerStatuses = serializableStatuses;
 
-  // Keep track of tool names to avoid duplicates
-  const toolNames = new Set<string>();
-
-  newConfig.tools.forEach((tool) => {
-    toolNames.add(tool.function.name);
-  });
-
   for (const server of mcpServerStatuses) {
     if (server.status === "connected") {
-      const serverTools: Tool[] = server.tools.map((tool) =>
-        mcpToolToTool(server, tool),
-      );
+      const serverTools: Tool[] = server.tools.map((tool) => ({
+        displayTitle: server.name + " " + tool.name,
+        function: {
+          description: tool.description,
+          name: getMCPToolName(server, tool),
+          parameters: tool.inputSchema,
+        },
+        faviconUrl: server.faviconUrl,
+        readonly: false,
+        type: "function" as const,
+        uri: encodeMCPToolUri(server.id, tool.name),
+        group: server.name,
+        originalFunctionName: tool.name,
+      }));
       newConfig.tools.push(...serverTools);
 
       const serverSlashCommands = server.prompts.map((prompt) =>
-        mcpPromptToSlashCommand(server.client, prompt),
+        constructMcpSlashCommand(
+          server.client,
+          prompt.name,
+          prompt.description,
+          prompt.arguments?.map((a: any) => a.name),
+        ),
       );
       newConfig.slashCommands.push(...serverSlashCommands);
 
@@ -202,28 +205,45 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  // Warn user about duplicate tool names
-  // Could change this behavior in a few ways, e.g. to prepend server name to all tool names from that server if ANY are duplicate
-  // Object.entries(toolNameCounts).forEach(([toolName, count]) => {
-  //   if (count > 1) {
-  //     errors!.push({
-  //       fatal: false,
-  //       message: `Duplicate (${count}) tools named "${toolName}" detected. Permissions will conflict and usage may be unpredictable`,
-  //     });
-  //   }
-  // });
+  newConfig.tools.push(
+    ...getConfigDependentToolDefinitions({
+      rules: newConfig.rules,
+    }),
+  );
 
-  // Warn about duplicate rules
-  const ruleCounts = new Map<string, number>();
-  newConfig.rules.forEach((rule) => {
-    if (rule.name) {
-      ruleCounts.set(rule.name, (ruleCounts.get(rule.name) || 0) + 1);
+  // Detect duplicate tool names
+  const counts: Record<string, number> = {};
+  newConfig.tools.forEach((tool) => {
+    if (counts[tool.function.name]) {
+      counts[tool.function.name] = counts[tool.function.name] + 1;
+    } else {
+      counts[tool.function.name] = 1;
     }
   });
 
-  ruleCounts.forEach((count, ruleName) => {
+  Object.entries(counts).forEach(([toolName, count]) => {
     if (count > 1) {
-      errors.push({
+      errors!.push({
+        fatal: false,
+        message: `Duplicate (${count}) tools named "${toolName}" detected. Permissions will conflict and usage may be unpredictable`,
+      });
+    }
+  });
+
+  const ruleCounts: Record<string, number> = {};
+  newConfig.rules.forEach((rule) => {
+    if (rule.name) {
+      if (ruleCounts[rule.name]) {
+        ruleCounts[rule.name] = ruleCounts[rule.name] + 1;
+      } else {
+        ruleCounts[rule.name] = 1;
+      }
+    }
+  });
+
+  Object.entries(ruleCounts).forEach(([ruleName, count]) => {
+    if (count > 1) {
+      errors!.push({
         fatal: false,
         message: `Duplicate (${count}) rules named "${ruleName}" detected. This may cause unexpected behavior`,
       });
