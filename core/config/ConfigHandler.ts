@@ -132,6 +132,23 @@ export class ConfigHandler {
     if (await this.controlPlaneClient.isSignedIn()) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
       const personalHubOrg = await this.getPersonalHubOrg();
+
+      // Depending on policy, we might enforce only allowing a single org
+      // This is determined by the `allowOtherOrganizations` policy option
+      const policy = await PolicySingleton.getInstance(
+        this.controlPlaneClient,
+      ).getPolicy();
+      const enforcedOrgDesc = orgDescs.find(
+        (org) => org.slug === policy?.orgSlug,
+      );
+      if (
+        enforcedOrgDesc &&
+        policy?.policy?.allowOtherOrganizations === false
+      ) {
+        const enforcedOrg = await this.getNonPersonalHubOrg(enforcedOrgDesc);
+        return [enforcedOrg];
+      }
+
       const hubOrgs = await Promise.all(
         orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
       );
