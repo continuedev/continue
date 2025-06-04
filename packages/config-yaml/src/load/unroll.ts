@@ -17,6 +17,7 @@ import {
   configYamlSchema,
   Rule,
 } from "../schemas/index.js";
+import { ConfigResult } from "../validation.js";
 import {
   packageIdentifierToShorthandSlug,
   useProxyForUnrenderedSecrets,
@@ -204,14 +205,49 @@ export type UnrollAssistantOptions =
   | DoNotRenderSecretsUnrollAssistantOptions
   | RenderSecretsUnrollAssistantOptions;
 
+// Overload when we need error propapagation.
 export async function unrollAssistant(
   id: PackageIdentifier,
   registry: Registry,
   options: UnrollAssistantOptions,
-): Promise<AssistantUnrolled> {
+  needErrorPropagation: true,
+): Promise<ConfigResult<AssistantUnrolled>>;
+
+// Overload when we don't need error propapagation.
+export async function unrollAssistant(
+  id: PackageIdentifier,
+  registry: Registry,
+  options: UnrollAssistantOptions,
+  needErrorPropagation?: false,
+): Promise<AssistantUnrolled>;
+
+export async function unrollAssistant(
+  id: PackageIdentifier,
+  registry: Registry,
+  options: UnrollAssistantOptions,
+  needErrorPropagation: boolean = false,
+): Promise<AssistantUnrolled | ConfigResult<AssistantUnrolled>> {
   // Request the content from the registry
   const rawContent = await registry.getContent(id);
-  return unrollAssistantFromContent(id, rawContent, registry, options);
+
+  // Somewhat annoyingly, we need this redundant ternary to circumvent overload matching error.
+  // Without it TypeScript complains that no overloads of unrollAssistant
+  // has a field needErrorPropagation that accepts a boolean.
+  return needErrorPropagation
+    ? unrollAssistantFromContent(
+        id,
+        rawContent,
+        registry,
+        options,
+        needErrorPropagation,
+      )
+    : unrollAssistantFromContent(
+        id,
+        rawContent,
+        registry,
+        options,
+        needErrorPropagation,
+      );
 }
 
 function renderTemplateData(
@@ -231,12 +267,31 @@ function renderTemplateData(
   return templatedYaml;
 }
 
+// Overload when we need error propapagation.
 export async function unrollAssistantFromContent(
   id: PackageIdentifier,
   rawYaml: string,
   registry: Registry,
   options: UnrollAssistantOptions,
-): Promise<AssistantUnrolled> {
+  needErrorPropagation: true,
+): Promise<ConfigResult<AssistantUnrolled>>;
+
+// Overload when we need don't error propapagation.
+export async function unrollAssistantFromContent(
+  id: PackageIdentifier,
+  rawYaml: string,
+  registry: Registry,
+  options: UnrollAssistantOptions,
+  needErrorPropagation?: false,
+): Promise<AssistantUnrolled>;
+
+export async function unrollAssistantFromContent(
+  id: PackageIdentifier,
+  rawYaml: string,
+  registry: Registry,
+  options: UnrollAssistantOptions,
+  needErrorPropagation: boolean = false,
+): Promise<AssistantUnrolled | ConfigResult<AssistantUnrolled>> {
   // Parse string to Zod-validated YAML
   let parsedYaml = parseConfigYaml(rawYaml);
 
@@ -245,10 +300,15 @@ export async function unrollAssistantFromContent(
     parsedYaml,
     registry,
     options.injectBlocks,
+    needErrorPropagation,
   );
 
   // Back to a string so we can fill in template variables
-  const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
+  const rawUnrolledYaml = needErrorPropagation
+    ? YAML.stringify(
+        (unrolledAssistant as ConfigResult<AssistantUnrolled>).config,
+      )
+    : YAML.stringify(unrolledAssistant);
 
   // Convert all of the template variables to FQSNs
   // Secrets from the block will have the assistant slug prepended to the FQSN
@@ -277,14 +337,37 @@ export async function unrollAssistantFromContent(
     options.orgScopeId,
     options.onPremProxyUrl,
   );
+
+  if (needErrorPropagation) {
+    return {
+      config: finalConfig,
+      errors: (unrolledAssistant as ConfigResult<AssistantUnrolled>).errors,
+      configLoadInterrupted: (
+        unrolledAssistant as ConfigResult<AssistantUnrolled>
+      ).configLoadInterrupted,
+    };
+  }
+
   return finalConfig;
 }
 
+// We don't need oveloads here because
+// the only place unrollBlocks is called directly is this file.
+// unrollAssistantFromContent and unrollAssistant
+// are called elsewhere in this project
+// and imported in other projects.
 export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,
   injectBlocks: PackageIdentifier[] | undefined,
-): Promise<AssistantUnrolled> {
+  needErrorPropagation: boolean = false,
+): Promise<AssistantUnrolled | ConfigResult<AssistantUnrolled>> {
+  const configResult: ConfigResult<AssistantUnrolled> = {
+    config: undefined,
+    errors: [],
+    configLoadInterrupted: false,
+  };
+
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
@@ -316,8 +399,16 @@ export async function unrollBlocks(
               );
             }
           } catch (err) {
+            if (needErrorPropagation) {
+              configResult.errors?.push({
+                fatal: false,
+                // Using JSON.stringify to avoid printing [object Object].
+                message: `Failed to unroll block ${JSON.stringify(unrolledBlock.uses)}: ${(err as Error).message}`,
+              });
+            }
+
             console.error(
-              `Failed to unroll block ${unrolledBlock.uses}: ${(err as Error).message}`,
+              `Failed to unroll block ${JSON.stringify(unrolledBlock.uses)}: ${(err as Error).message}`,
             );
             sectionBlocks.push(null);
           }
@@ -349,8 +440,16 @@ export async function unrollBlocks(
             rules.push(block);
           }
         } catch (err) {
+          if (needErrorPropagation) {
+            configResult.errors?.push({
+              fatal: false,
+              // Using JSON.stringify to avoid printing [object Object].
+              message: `Failed to unroll block ${JSON.stringify(rule.uses)}: ${(err as Error).message}`,
+            });
+          }
+
           console.error(
-            `Failed to unroll block ${rule.uses}: ${(err as Error).message}`,
+            `Failed to unroll block ${JSON.stringify(rule.uses)}: ${(err as Error).message}`,
           );
           rules.push(null);
         }
@@ -381,10 +480,27 @@ export async function unrollBlocks(
         );
       }
     } catch (err) {
+      if (needErrorPropagation) {
+        configResult.errors?.push({
+          fatal: false,
+          // Using JSON.stringify to avoid printing [object Object].
+          message: `Failed to unroll block ${JSON.stringify(injectBlock)}: ${(err as Error).message}`,
+        });
+      }
+
       console.error(
-        `Failed to unroll block ${injectBlock}: ${(err as Error).message}`,
+        `Failed to unroll block ${JSON.stringify(injectBlock)}: ${(err as Error).message}`,
       );
     }
+  }
+
+  if (needErrorPropagation) {
+    configResult.config = unrolledAssistant;
+    if (configResult.errors?.length == 0) {
+      configResult.errors = undefined;
+    }
+    configResult.configLoadInterrupted = false;
+    return configResult;
   }
 
   return unrolledAssistant;
