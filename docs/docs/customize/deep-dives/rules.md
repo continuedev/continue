@@ -11,6 +11,7 @@ Rules provide instructions to the model for [Chat](../../chat/how-to-use-it.md),
 :::
 
 ## How it works
+
 You can view the current rules by clicking the pen icon above the main toolbar:
 
 ![rules input toolbar section](/img/notch-rules.png)
@@ -37,8 +38,8 @@ Now test your rules by asking a question about a file in chat.
 
 ![pirate rule test](/img/pirate-rule-test.png)
 
-
 ## Creating `rules` blocks
+
 Rules can be added locally using the "Add Rules" button while viewing the Local Assistant's rules.
 
 ![add local rules button](/img/add-local-rules.png)
@@ -49,7 +50,7 @@ When in Agent mode, you can prompt the agent to create a rule for you using the 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::
 
-Rules can also be added to an Assistant on the Continue Hub. 
+Rules can also be added to an Assistant on the Continue Hub.
 
 Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
 
@@ -80,7 +81,9 @@ rules:
     with:
       TONE: concise
 ```
+
 ### `.continue/rules` folder
+
 You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
 
 ```yaml title=".continue/rules/new-rule.yaml"
@@ -89,9 +92,9 @@ version: 0.0.1
 schema: v1
 rules:
   - Always give concise responses
-
 ```
-This is also done when selecting "Add Rule" in the Assistant settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.yaml`. 
+
+This is also done when selecting "Add Rule" in the Assistant settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.yaml`.
 
 ### `.continuerules`
 
@@ -110,16 +113,17 @@ If you want concise answers:
 ```yaml title=".continue/rules/concise-rule.yaml"
 rules:
   - name: Always give concise answers
-    rule: | 
+    rule: |
       Please provide concise answers. Don't explain obvious concepts. 
       You can assume that I am knowledgable about most programming topics.
 ```
+
 If you want to ensure certain practices are followed, for example in React:
 
 ```yaml title=".continue/rules/functional-rule.yaml"
 rules:
   - name: Always use functional components
-    rule: | 
+    rule: |
       Whenever you are writing React code, make sure to
       - use functional components instead of class components
       - use hooks for state management
@@ -135,4 +139,3 @@ Continue includes a simple default system message for [Chat](../../chat/how-to-u
 This can be viewed in the rules section of the toolbar (see above), or visit the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4)
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
-

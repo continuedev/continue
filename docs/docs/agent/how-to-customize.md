@@ -6,6 +6,7 @@ sidebar_position: 5
 ---
 
 ## Add Rules Blocks
+
 Adding Rules can be done in your assistant locally or in the Hub.
 
 [Explore Rules on the Hub](https://hub.continue.dev/explore/rules) and see the [Rules deep dive](../customize/deep-dives/rules.md) for more details and tips on creating rules.
