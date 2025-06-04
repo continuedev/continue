@@ -96,16 +96,6 @@ rules:
 
 This is also done when selecting "Add Rule" in the Assistant settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.yaml`.
 
-### `.continuerules`
-
-:::warning
-
-`.contninuerules` will be deprecated in a future release. Please use the `.continue/rules` folder instead.
-
-:::
-
-You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
-
 ### Examples
 
 If you want concise answers:
@@ -132,10 +122,20 @@ rules:
       - modularize components into smaller, reusable pieces
 ```
 
-## Chat System Message
+### Chat System Message
 
 Continue includes a simple default system message for [Chat](../../chat/how-to-use-it.md) and [Agent](../../agent/how-to-use-it.md) requests, to help the model provide reliable codeblock formats in its output.
 
 This can be viewed in the rules section of the toolbar (see above), or visit the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4)
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
+
+### `.continuerules`
+
+:::warning
+
+`.contninuerules` will be deprecated in a future release. Please use the `.continue/rules` folder instead.
+
+:::
+
+You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
