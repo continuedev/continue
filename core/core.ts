@@ -717,17 +717,22 @@ export class Core {
       }
     });
 
-    // function sleep(ms: number): Promise<void> {
-    //   return new Promise((resolve) => setTimeout(resolve, ms));
-    // }
-
     on("didCloseTextDocument", async ({ data: { filepaths } }) => {
       try {
         if (!prevFilepaths.filepaths.length) {
+          prevFilepaths.filepaths = filepaths;
         }
 
-        if (filepaths.length < prevFilepaths.filepaths.length) {
-          // Remove the closed files from the opened files cache: TODO, UPDATE #2
+        // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
+        if (filepaths.length <= prevFilepaths.filepaths.length) {
+          // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
+          for (const [key, value] of openedFilesLruCache.entriesDescending()) {
+            let trimmedKey = key.slice(7); // uri -> filepath
+            if (!filepaths.includes(trimmedKey)) {
+              openedFilesLruCache.delete(key);
+            }
+          }
+
           console.log("close-text-doc");
           for (const [key, value] of openedFilesLruCache.entriesDescending()) {
             console.log(`${key}`);
