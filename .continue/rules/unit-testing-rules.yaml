@@ -28,3 +28,5 @@ rules:
 
       9. Include the function name being tested in the test description for
       clarity
+
+      10. We use vitest in some places. You can ignore rules 1, 2, 3, 4, and 6 in those cases.
