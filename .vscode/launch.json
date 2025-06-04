@@ -6,6 +6,19 @@
   "compounds": [],
   "configurations": [
     {
+      "name": "[Core] Debug Vitest Tests (Current File)",
+      "type": "node",
+      "request": "launch",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "program": "${workspaceRoot}/core/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}"],
+      "cwd": "${workspaceRoot}",
+      "smartStep": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch extension",
       "type": "extensionHost",
       "request": "launch",
