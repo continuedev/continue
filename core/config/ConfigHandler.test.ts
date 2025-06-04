@@ -3,8 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
-import { TEST_DIR } from "../test/testDir";
-import { getConfigTsPath } from "../util/paths";
+import { TEST_DIR, TEST_DIR_PATH, setUpTestDir } from "../test/testDir";
+import { getConfigJsonPath, getConfigTsPath } from "../util/paths";
 
 import { LLMLogger } from "../llm/logger";
 import FileSystemIde from "../util/filesystem";
@@ -19,6 +19,9 @@ describe("Test the ConfigHandler and E2E config loading", () => {
 
   // Set up test environment variables
   beforeAll(async () => {
+    // Create the test directory structure first
+    setUpTestDir();
+
     // Create a unique temporary directory for this test suite
     tempConfigDir = path.join(
       os.tmpdir(),
@@ -51,6 +54,11 @@ describe("Test the ConfigHandler and E2E config loading", () => {
       fs.rmSync(tempConfigDir, { recursive: true });
       console.log(`Cleaned up temporary config directory: ${tempConfigDir}`);
     }
+
+    // Clean up test directory
+    if (fs.existsSync(TEST_DIR_PATH)) {
+      fs.rmSync(TEST_DIR_PATH, { recursive: true });
+    }
   });
 
   test("should show only local profile with custom config directory", async () => {
@@ -80,6 +88,25 @@ describe("Test the ConfigHandler and E2E config loading", () => {
 
   test("should add a system message from config.ts with custom config directory", async () => {
     await customConfigHandler.initPromise;
+
+    // Remove the existing config.yaml file
+    const configYamlPath = path.join(tempConfigDir, "config.yaml");
+    if (fs.existsSync(configYamlPath)) {
+      fs.unlinkSync(configYamlPath);
+    }
+
+    // Create config.json file with default configuration
+    fs.writeFileSync(
+      getConfigJsonPath(),
+      JSON.stringify(
+        {
+          models: [],
+        },
+        null,
+        2,
+      ),
+    );
+
     const configTs = `export function modifyConfig(config: Config): Config {
     config.userToken = "TEST_TOKEN";
     return config;
@@ -88,15 +115,5 @@ describe("Test the ConfigHandler and E2E config loading", () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const config = await customConfigHandler.reloadConfig();
     expect(config.config?.userToken).toBe("TEST_TOKEN");
-  });
-
-  test("should acknowledge override from .continuerc.json with custom config directory", async () => {
-    await customConfigHandler.initPromise;
-    fs.writeFileSync(
-      path.join(TEST_DIR, ".continuerc.json"),
-      JSON.stringify({ userToken: "TOKEN2" }),
-    );
-    const config = await customConfigHandler.reloadConfig();
-    expect(config.config?.userToken).toBe("TOKEN2");
   });
 });

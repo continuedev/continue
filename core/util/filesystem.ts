@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as path from "node:path";
 
 import { fileURLToPath } from "node:url";
 import {
@@ -126,8 +127,24 @@ class FileSystemIde implements IDE {
     return Promise.resolve("NOT_UNIQUE");
   }
 
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return Promise.resolve([]);
+  async getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
+    const workspaceDirs = await this.getWorkspaceDirs();
+    const configs: ContinueRcJson[] = [];
+
+    for (const dir of workspaceDirs) {
+      try {
+        const configPath = path.join(dir, ".continuerc.json");
+        if (fs.existsSync(configPath)) {
+          const configContents = await fs.promises.readFile(configPath, "utf8");
+          const config = JSON.parse(configContents) as ContinueRcJson;
+          configs.push(config);
+        }
+      } catch (error) {
+        console.error(`Error reading .continuerc.json in ${dir}:`, error);
+      }
+    }
+
+    return configs;
   }
 
   getDiff(includeUnstaged: boolean): Promise<string[]> {
