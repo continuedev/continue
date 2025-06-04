@@ -17,6 +17,27 @@ You can view the current rules by clicking the pen icon above the main toolbar:
 
 To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#chat-system-message)).
 
+## Quick Start
+
+Below is a quick example of setting up a new rule file:
+
+1. Create a folder called `.continue/rules` at the top level of your workspace
+2. Add a file called `pirates-rule.yaml` to this folder.
+3. Write the following contents to `pirates-rule.prompt` and save.
+
+```yaml title=".continue/rules/pirates-rule.yaml"
+name: Pirate rule
+version: 0.0.1
+schema: v1
+rules:
+  - Talk like a pirate.
+```
+
+Now test your rules by asking a question about a file in chat.
+
+![pirate rule test](/img/pirate-rule-test.png)
+
+
 ## Creating `rules` blocks
 Rules can be added locally using the "Add Rules" button while viewing the Local Assistant's rules.
 
@@ -28,7 +49,9 @@ When in Agent mode, you can prompt the agent to create a rule for you using the 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::
 
-Rules can also be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
+Rules can also be added to an Assistant on the Continue Hub. 
+
+Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
 
 ### Syntax
 
