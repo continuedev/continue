@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { MCPServerStatus, MCPTool } from "..";
-import { getMCPToolName } from "./mcpToolName";
+import { getMCPToolName } from "./mcpTools";
 
 const createMcpServer = (name: string): MCPServerStatus => ({
   name,
