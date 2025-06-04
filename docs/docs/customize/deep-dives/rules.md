@@ -62,16 +62,23 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 - `schema` (**required**): The schema version of the YAML file (e.g., `v1`)
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
-```yaml title=".continue/rules/colors-rule.yaml"
-name: New rules
-version: 0.0.1
-schema: v1
+```yaml title=".config.yaml"
 rules:
-  - name: Tailwind Color Themes
-    rule: |
-      When adding colors to components, use tailwind color classes.
-      Do NOT use explicit colors like text-gray-400. Instead, use theme colors.
-    globs: "*/*.tsx"
+  - Always annotate Python functions with their parameter and return types
+
+  - name: TypeScript best practices
+    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
+    globs: "**/*.{ts,tsx}"
+
+  - name: TypeScript test patterns
+    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
+    globs:
+      - "src/**/*.test.ts"
+      - "tests/**/*.ts"
+
+  - uses: myprofile/my-mood-setter
+    with:
+      TONE: concise
 ```
 ### `.continue/rules` folder
 You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
