@@ -85,13 +85,6 @@ export const GhostButton = styled.button`
   }
 `;
 
-export const InputSubtext = styled.span`
-  font-size: 0.75rem;
-  line-height: 1rem;
-  color: ${lightGray};
-  margin-top: 0.25rem;
-`;
-
 export const ButtonSubtext = styled.span`
   display: block;
   margin-top: 0;

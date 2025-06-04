@@ -87,13 +87,13 @@ function ModelOption({
             </span>
           </div>
           <div className="flex flex-shrink-0 flex-row items-center gap-1">
-            {isSelected && <CheckIcon className="h-3 w-3 flex-shrink-0" />}
-            {hovered && (
-              <Cog6ToothIcon
-                className="h-3 w-3 flex-shrink-0"
-                onClick={onClickGear}
-              />
-            )}
+            <Cog6ToothIcon
+              className="h-3 w-3 flex-shrink-0 hover:brightness-125"
+              onClick={onClickGear}
+            />
+            <CheckIcon
+              className={`block h-3 w-3 flex-shrink-0 ${isSelected ? undefined : "invisible"}`}
+            />
           </div>
         </div>
       </div>
@@ -251,7 +251,7 @@ function ModelSelect() {
                   onClick={onClickAddModel}
                   value={"addModel" as any}
                 >
-                  <div className="flex items-center py-0.5">
+                  <div className="text-description flex items-center py-0.5 hover:text-inherit">
                     <PlusIcon className="mr-2 h-3 w-3" />
                     Add Chat model
                   </div>

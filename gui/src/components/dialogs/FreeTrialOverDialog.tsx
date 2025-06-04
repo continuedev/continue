@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { PlatformOnboardingCard } from "../OnboardingCard/platform/PlatformOnboardingCard";
+import { OnboardingCard } from "../OnboardingCard";
 
 function FreeTrialOverDialog() {
   const dispatch = useDispatch();
@@ -17,7 +17,7 @@ function FreeTrialOverDialog() {
 
   return (
     <div className="flex-1">
-      <PlatformOnboardingCard isDialog />
+      <OnboardingCard isDialog />
     </div>
   );
 }

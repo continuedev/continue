@@ -1,7 +1,7 @@
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { Button, Input, InputSubtext, StyledActionButton } from "../components";
+import { Button, Input, StyledActionButton } from "../components";
 import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
 import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
@@ -169,10 +169,10 @@ function AddModelForm({
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
               />
-              <InputSubtext className="mb-0">
+              <span className="text-description-muted mb-0">
                 Don't see your provider?{" "}
                 <a
-                  className="cursor-pointer text-inherit underline hover:text-inherit"
+                  className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
                   onClick={() =>
                     ideMessenger.post("openUrl", MODEL_PROVIDERS_URL)
                   }
@@ -180,7 +180,7 @@ function AddModelForm({
                   Click here
                 </a>{" "}
                 to view the full list
-              </InputSubtext>
+              </span>
             </div>
 
             {selectedProvider.downloadUrl && (
@@ -193,7 +193,7 @@ function AddModelForm({
                   <p className="text-sm underline">
                     {selectedProvider.downloadUrl}
                   </p>
-                  <ArrowTopRightOnSquareIcon width={24} height={24} />
+                  <ArrowTopRightOnSquareIcon width={18} height={18} />
                 </StyledActionButton>
               </div>
             )}
@@ -248,9 +248,9 @@ function AddModelForm({
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
                   />
-                  <InputSubtext className="mb-0">
+                  <span className="text-description-muted">
                     <a
-                      className="cursor-pointer text-inherit underline hover:text-inherit"
+                      className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
                       onClick={() => {
                         if (selectedProviderApiKeyUrl) {
                           ideMessenger.post(
@@ -263,7 +263,7 @@ function AddModelForm({
                       Click here
                     </a>{" "}
                     to create a {selectedProvider.title} API key
-                  </InputSubtext>
+                  </span>
                 </>
               </div>
             )}

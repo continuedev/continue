@@ -9,7 +9,7 @@ function AddModelButtonSubtext() {
     <ButtonSubtext>
       This will update your{" "}
       <span
-        className="cursor-pointer underline"
+        className="cursor-pointer underline hover:brightness-125"
         onClick={() =>
           ideMessenger.post("config/openProfile", {
             profileId: undefined,

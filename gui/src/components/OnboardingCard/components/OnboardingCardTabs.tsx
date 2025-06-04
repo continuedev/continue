@@ -1,32 +1,11 @@
+import { OnboardingModes } from "core/protocol/core";
 import styled from "styled-components";
 import { vscForeground } from "../..";
-import { hasPassedFTL } from "../../../util/freeTrial";
 
 interface OnboardingCardTabsProps {
-  activeTab: TabTitle;
-  onTabClick: (tabName: TabTitle) => void;
+  activeTab: OnboardingModes;
+  onTabClick: (tabName: OnboardingModes) => void;
 }
-
-export type TabTitle = "Quickstart" | "Best" | "Local" | "ExistingUserHubIntro";
-
-export const TabTitles: { [k in TabTitle]: { md: string; default: string } } = {
-  Quickstart: {
-    md: "Quickstart",
-    default: "Quickstart",
-  },
-  Best: {
-    md: "Best",
-    default: "Best experience",
-  },
-  Local: {
-    md: "Local",
-    default: "Local with Ollama",
-  },
-  ExistingUserHubIntro: {
-    md: "Try out hub.continue.dev",
-    default: "Try out hub.continue.dev",
-  },
-};
 
 const StyledSelect = styled.select`
   width: 100%;
@@ -73,27 +52,21 @@ export function OnboardingCardTabs({
   activeTab,
   onTabClick,
 }: OnboardingCardTabsProps) {
+  console.log({ keys: Object.values(OnboardingModes) });
   return (
     <div>
       <div className="xs:block hidden">
         <TabList>
-          {Object.entries(TabTitles).map(([tabType, titles]) => {
-            if (hasPassedFTL() && tabType === "Quickstart") {
-              return undefined;
-            }
-
+          {Object.values(OnboardingModes).map((tabTitle) => {
             return (
               <TabButton
                 className="xs:py-2 xs:px-3 rounded-t-sm px-6 py-2 hover:brightness-125 sm:px-5"
-                key={tabType}
-                isActive={activeTab === tabType}
-                onClick={() => onTabClick(tabType as TabTitle)}
-                data-testid={`onboarding-tab-${tabType}`}
+                key={tabTitle}
+                isActive={activeTab === tabTitle}
+                onClick={() => onTabClick(tabTitle as OnboardingModes)}
+                data-testid={`onboarding-tab-${tabTitle}`}
               >
-                <p className="m-0 hidden font-medium md:block">
-                  {titles.default}
-                </p>
-                <p className="m-0 block font-medium md:hidden">{titles.md}</p>
+                <p className="m-0 font-medium">{tabTitle}</p>
               </TabButton>
             );
           })}
@@ -102,16 +75,12 @@ export function OnboardingCardTabs({
       <div className="xs:hidden block">
         <StyledSelect
           value={activeTab}
-          onChange={(e) => onTabClick(e.target.value as TabTitle)}
+          onChange={(e) => onTabClick(e.target.value as OnboardingModes)}
         >
-          {Object.entries(TabTitles).map(([tabType, titles]) => {
-            if (hasPassedFTL() && tabType === "Quickstart") {
-              return null;
-            }
-
+          {Object.values(OnboardingModes).map((tabTitle) => {
             return (
-              <option key={tabType} value={tabType}>
-                {titles.md}
+              <option key={tabTitle} value={tabTitle}>
+                {tabTitle}
               </option>
             );
           })}

@@ -22,6 +22,7 @@ import {
   Transition,
 } from "../../components/ui";
 import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
+
 export const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
 `;
@@ -82,6 +83,7 @@ export const StyledListboxOptions = styled(ListboxOptions)`
     outline: none;
   }
 `;
+
 export const StyledListboxOption = styled(ListboxOption)<{
   selected: boolean;
 }>`
@@ -93,6 +95,7 @@ export const StyledListboxOption = styled(ListboxOption)<{
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: space-between;
 
   &:hover {
     background-color: ${vscListActiveBackground};
@@ -128,7 +131,7 @@ function ModelSelectionListbox({
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronUpDownIcon
-              className="h-5 w-5 text-gray-400"
+              className="text-description-muted h-5 w-5"
               aria-hidden="true"
             />
           </span>
@@ -146,28 +149,27 @@ function ModelSelectionListbox({
                   <StyledListboxOption
                     selected={selectedProvider.title === option.title}
                     key={index}
-                    className="relative cursor-default select-none py-2 pr-4 text-gray-400"
+                    className="relative cursor-default select-none py-2 pr-4"
                     value={option}
                   >
                     {({ selected }) => (
                       <>
-                        {option.title === "Autodetect" ? (
-                          <CubeIcon className="mr-2 h-4 w-4 text-gray-400" />
-                        ) : (
-                          window.vscMediaUrl &&
-                          option.icon && (
-                            <img
-                              src={`${window.vscMediaUrl}/logos/${option.icon}`}
-                              className="mr-1 h-4 w-4 object-contain object-center"
-                            />
-                          )
-                        )}
-                        <span className="text-xs">{option.title}</span>
-
+                        <div className="flex items-center">
+                          {option.title === "Autodetect" ? (
+                            <CubeIcon className="mr-2 h-4 w-4" />
+                          ) : (
+                            window.vscMediaUrl &&
+                            option.icon && (
+                              <img
+                                src={`${window.vscMediaUrl}/logos/${option.icon}`}
+                                className="mr-2 h-4 w-4 object-contain object-center"
+                              />
+                            )
+                          )}
+                          <span className="text-xs">{option.title}</span>
+                        </div>
                         {selected && (
-                          <span className="inset-y-0 ml-auto flex items-center pl-3">
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
+                          <CheckIcon className="h-3 w-3" aria-hidden="true" />
                         )}
                       </>
                     )}
@@ -177,7 +179,7 @@ function ModelSelectionListbox({
             )}
 
             {topOptions.length > 0 && otherOptions.length > 0 && (
-              <div className="my-1 h-px bg-zinc-500" />
+              <div className="bg-border my-1 h-px min-h-px" />
             )}
 
             {otherOptions.length > 0 && (
@@ -186,28 +188,28 @@ function ModelSelectionListbox({
                   <StyledListboxOption
                     selected={selectedProvider.title === option.title}
                     key={index}
-                    className="relative cursor-default select-none py-2 pr-4 text-gray-400"
+                    className="relative cursor-default select-none py-2 pr-4"
                     value={option}
                   >
                     {({ selected }) => (
                       <>
-                        {option.title === "Autodetect" ? (
-                          <CubeIcon className="mr-2 h-4 w-4 text-gray-400" />
-                        ) : (
-                          window.vscMediaUrl &&
-                          option.icon && (
-                            <img
-                              src={`${window.vscMediaUrl}/logos/${option.icon}`}
-                              className="mr-1 h-4 w-4 object-contain object-center"
-                            />
-                          )
-                        )}
-                        <span className="text-xs">{option.title}</span>
+                        <div className="flex items-center">
+                          {option.title === "Autodetect" ? (
+                            <CubeIcon className="mr-2 h-4 w-4" />
+                          ) : (
+                            window.vscMediaUrl &&
+                            option.icon && (
+                              <img
+                                src={`${window.vscMediaUrl}/logos/${option.icon}`}
+                                className="mr-2 h-4 w-4 object-contain object-center"
+                              />
+                            )
+                          )}
+                          <span className="text-xs">{option.title}</span>
+                        </div>
 
                         {selected && (
-                          <span className="inset-y-0 ml-auto flex items-center pl-3">
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
+                          <CheckIcon className="h-3 w-3" aria-hidden="true" />
                         )}
                       </>
                     )}

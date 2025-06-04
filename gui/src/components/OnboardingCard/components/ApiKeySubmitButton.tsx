@@ -1,3 +1,4 @@
+import { OnboardingModes } from "core/protocol/core";
 import { useContext } from "react";
 import { useDispatch } from "react-redux";
 import { Button, ButtonSubtext } from "../..";
@@ -7,15 +8,17 @@ import { isJetBrains } from "../../../util";
 import { useSubmitOnboarding } from "../hooks";
 import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
 
-interface QuickstartSubmitButtonProps {
+interface ApiKeySubmitButtonProps {
   isDialog?: boolean;
 }
 
-function QuickstartSubmitButton({ isDialog }: QuickstartSubmitButtonProps) {
+function ApiKeySubmitButton({ isDialog }: ApiKeySubmitButtonProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
-
-  const { submitOnboarding } = useSubmitOnboarding("Quickstart", isDialog);
+  const { submitOnboarding } = useSubmitOnboarding(
+    OnboardingModes.API_KEYS,
+    isDialog,
+  );
 
   function onComplete() {
     submitOnboarding();
@@ -66,4 +69,4 @@ function QuickstartSubmitButton({ isDialog }: QuickstartSubmitButtonProps) {
   );
 }
 
-export default QuickstartSubmitButton;
+export default ApiKeySubmitButton;

@@ -1,3 +1,4 @@
+import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -13,13 +14,14 @@ import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
+import { getLocalStorage } from "../util/localStorage";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
-import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
+import { useOnboardingCard } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
@@ -131,7 +133,7 @@ const Layout = () => {
   useWebviewListener(
     "openOnboardingCard",
     async () => {
-      onboardingCard.open("Best");
+      onboardingCard.open(OnboardingModes.API_KEYS);
     },
     [],
   );
@@ -139,7 +141,7 @@ const Layout = () => {
   useWebviewListener(
     "setupLocalConfig",
     async () => {
-      onboardingCard.open("Local");
+      onboardingCard.open(OnboardingModes.OLLAMA);
     },
     [],
   );
@@ -179,7 +181,6 @@ const Layout = () => {
       if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
-          // Copy to clipboard
           setTimeout(() => {
             void navigator.clipboard.writeText(selection);
           }, 100);
@@ -196,10 +197,10 @@ const Layout = () => {
 
   useEffect(() => {
     if (
-      isNewUserOnboarding() &&
+      !getLocalStorage("onboardingStatus") &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      onboardingCard.open("Quickstart");
+      onboardingCard.open();
     }
   }, [location]);
 

@@ -54,6 +54,7 @@ import {
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
 
+import { OnboardingModes } from "core/protocol/core";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -207,7 +208,7 @@ export function Chat() {
 
           // Card in chat will only show if no history
           // Also, note that platform card ignore the "Best", always opens to main tab
-          onboardingCard.open("Best");
+          onboardingCard.open(OnboardingModes.API_KEYS);
 
           // If history, show the dialog, which will automatically close if there is not history
           if (history.length) {

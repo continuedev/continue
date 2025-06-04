@@ -5,6 +5,7 @@ import {
   LOCAL_ONBOARDING_FIM_MODEL,
   LOCAL_ONBOARDING_PROVIDER_TITLE,
 } from "core/config/onboarding";
+import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect, useState } from "react";
 import { Button, ButtonSubtext } from "../..";
 import { useAuth } from "../../../context/Auth";
@@ -12,20 +13,24 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../../redux/thunks";
+import Alert from "../../gui/Alert";
 import { useSubmitOnboarding } from "../hooks";
 import OllamaModelDownload from "./OllamaModelDownload";
 import { OllamaStatus } from "./OllamaStatus";
 
 const OLLAMA_CHECK_INTERVAL_MS = 3000;
 
-interface OnboardingLocalTabProps {
+interface OnboardingOllamaTabProps {
   isDialog?: boolean;
 }
 
-function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
+export function OnboardingOllamaTab({ isDialog }: OnboardingOllamaTabProps) {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { submitOnboarding } = useSubmitOnboarding("Local", isDialog);
+  const { submitOnboarding } = useSubmitOnboarding(
+    OnboardingModes.OLLAMA,
+    isDialog,
+  );
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
     string[]
@@ -133,10 +138,10 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
 
   return (
     <div className="mt-3 flex flex-col gap-1 px-2">
+      <Alert>Configure Continue to run models locally using Ollama</Alert>
+
       <div className="flex flex-col">
-        <p className="mb-0 pb-1 text-base font-bold leading-tight">
-          Install Ollama
-        </p>
+        <p className="mb-0 text-base font-bold leading-tight">Install Ollama</p>
         <OllamaStatus isOllamaConnected={isOllamaConnected} />
       </div>
 
@@ -175,5 +180,3 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
     </div>
   );
 }
-
-export default OnboardingLocalTab;

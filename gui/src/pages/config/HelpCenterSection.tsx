@@ -81,7 +81,12 @@ export function HelpCenterSection() {
                 generateTitle: true,
               }),
             );
-            dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+            dispatch(
+              setOnboardingCard({
+                show: true,
+                activeTab: undefined,
+              }),
+            );
             ideMessenger.post("showTutorial", undefined);
           }}
         />

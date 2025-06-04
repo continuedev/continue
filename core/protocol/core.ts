@@ -35,7 +35,10 @@ import {
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 
-export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
+export enum OnboardingModes {
+  API_KEYS = "API Keys",
+  OLLAMA = "Ollama",
+}
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -197,7 +200,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { contextItems: ContextItem[]; errorMessage?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
