@@ -104,4 +104,5 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 export type ToWebviewOrCoreFromIdeProtocol = {
   didChangeActiveTextEditor: [{ filepath: string }, void];
   didCloseTextDocument: [{ filepaths: string[] }, void];
+  initializeOpenedFileCache: [{ initialOpenedFilePaths: string[] }, void];
 };

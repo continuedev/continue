@@ -736,6 +736,22 @@ export class Core {
       }
     });
 
+    on(
+      "initializeOpenedFileCache",
+      async ({ data: { initialOpenedFilePaths } }) => {
+        try {
+          for (const filepath of initialOpenedFilePaths) {
+            openedFilesLruCache.set(`file://${filepath}`, `file://${filepath}`);
+          }
+        } catch (e) {
+          console.error(
+            `initializeOpenedFileCache: failed to update openedFilesLruCache`,
+            e,
+          );
+        }
+      },
+    );
+
     on("tools/call", async ({ data: { toolCall } }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {

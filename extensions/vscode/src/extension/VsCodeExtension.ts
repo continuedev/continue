@@ -390,6 +390,13 @@ export class VsCodeExtension {
       void this.core.invoke("didCloseTextDocument", { filepaths });
     });
 
+    // initializes openedFileLruCache with files that are already open when the extension is activated
+    let initialOpenedFilePaths = vscode.window.tabGroups.all
+      .flatMap((group) => group.tabs)
+      .filter((tab) => tab.input instanceof vscode.TabInputText)
+      .map((tab) => (tab.input as vscode.TabInputText).uri.fsPath);
+    this.core.invoke("initializeOpenedFileCache", { initialOpenedFilePaths });
+
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
