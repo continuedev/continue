@@ -13,7 +13,7 @@ import Types from "../config/types";
 
 dotenv.config();
 
-const CONTINUE_GLOBAL_DIR = (() => {
+function getContinueGlobalDirEnvVar() {
   const configPath = process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
     // Convert relative path to absolute paths based on current working directory
@@ -22,7 +22,7 @@ const CONTINUE_GLOBAL_DIR = (() => {
       : path.resolve(process.cwd(), configPath);
   }
   return path.join(os.homedir(), ".continue");
-})();
+}
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
 //   return config;
@@ -57,7 +57,7 @@ export function getGlobalContinueIgnorePath(): string {
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
-  const continuePath = CONTINUE_GLOBAL_DIR;
+  const continuePath = getContinueGlobalDirEnvVar();
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);
   }

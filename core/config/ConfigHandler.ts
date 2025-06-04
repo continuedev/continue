@@ -46,6 +46,8 @@ export class ConfigHandler {
   currentProfile: ProfileLifecycleManager | null = null;
   currentOrg: OrgWithProfiles | null = null;
 
+  initPromise: Promise<void>;
+
   constructor(
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
@@ -70,7 +72,7 @@ export class ConfigHandler {
       this.ide,
     );
 
-    void this.cascadeInit();
+    this.initPromise = this.cascadeInit();
   }
 
   private workspaceDirs: string[] | null = null;
