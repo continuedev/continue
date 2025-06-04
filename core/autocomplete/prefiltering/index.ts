@@ -1,6 +1,7 @@
 import ignore from "ignore";
 
 import { IDE } from "../..";
+import { getGlobalContinueIgArray } from "../../indexing/ignore";
 import { getConfigJsonPath } from "../../util/paths";
 import { findUriInDirs } from "../../util/uri";
 import { HelperVars } from "../util/HelperVars";
@@ -50,7 +51,11 @@ export async function shouldPrefilter(
   }
 
   // Check whether autocomplete is disabled for this file
-  const disableInFiles = [...(helper.options.disableInFiles ?? []), "*.prompt"];
+  const disableInFiles = [
+    ...(helper.options.disableInFiles ?? []),
+    "*.prompt",
+    ...getGlobalContinueIgArray(),
+  ];
   if (await isDisabledForFile(helper.filepath, disableInFiles, ide)) {
     return true;
   }
