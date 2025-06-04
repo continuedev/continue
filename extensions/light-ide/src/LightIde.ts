@@ -16,6 +16,7 @@ export class LightIde implements IDE {
   }
 
   async getIdeInfo(): Promise<IdeInfo> {
+    console.log("LightIde.getIdeInfo called");
     return {
       ideType: "vscode", // Or "node" if you prefer
       name: "LightIde",
@@ -76,6 +77,7 @@ export class LightIde implements IDE {
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
+    console.log("LightIde.getWorkspaceDirs called" + process.cwd());
     return [process.cwd()];
   }
 

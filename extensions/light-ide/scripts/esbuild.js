@@ -14,14 +14,10 @@ const esbuildConfig = {
   outfile: outFile,
   sourcemap: flags.includes("--sourcemap"),
   external: [
-    "express",        // already there
-    "esbuild",        // required to fix esbuild warning
-    "./xhr-sync-worker.js", // required to fix jsdom warning
-    // "canvas",         // optional: jsdom sometimes depends on it
-    // "bufferutil",     // optional: ws
-    // "utf-8-validate", // optional: ws
-    // "sqlite3" 
-  ], // optional: avoids bundling externals
+    "express",        
+    "esbuild",        
+    "./xhr-sync-worker.js"
+  ],
   metafile: true,
   loader: {
     ".ts": "ts",
@@ -45,7 +41,6 @@ const esbuildConfig = {
       },
     },
   ]
-
 };
 
 (async () => {
