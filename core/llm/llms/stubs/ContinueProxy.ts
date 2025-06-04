@@ -85,7 +85,10 @@ class ContinueProxy extends OpenAI {
   }
 
   supportsCompletions(): boolean {
-    return true;
+    if (this.underlyingProviderName === "relace") {
+      return true;
+    }
+    return false;
   }
 
   supportsFim(): boolean {
