@@ -53,7 +53,8 @@ describe("Test the ConfigHandler and E2E config loading", () => {
     }
   });
 
-  test("should show only local profile with custom config directory", () => {
+  test("should show only local profile with custom config directory", async () => {
+    await customConfigHandler.initPromise;
     const profiles = customConfigHandler.currentOrg?.profiles;
     expect(profiles?.length).toBe(1);
     expect(profiles?.[0].profileDescription.id).toBe("local");
@@ -62,7 +63,7 @@ describe("Test the ConfigHandler and E2E config loading", () => {
     expect(currentProfile?.profileDescription.id).toBe("local");
   });
 
-  test.only("should load the default config successfully with custom config directory", async () => {
+  test("should load the default config successfully with custom config directory", async () => {
     await customConfigHandler.initPromise;
     const result = await customConfigHandler.loadConfig();
     expect(result.config!.modelsByRole.chat.length).toBe(
@@ -78,6 +79,7 @@ describe("Test the ConfigHandler and E2E config loading", () => {
   });
 
   test("should add a system message from config.ts with custom config directory", async () => {
+    await customConfigHandler.initPromise;
     const configTs = `export function modifyConfig(config: Config): Config {
     config.userToken = "TEST_TOKEN";
     return config;
@@ -89,6 +91,7 @@ describe("Test the ConfigHandler and E2E config loading", () => {
   });
 
   test("should acknowledge override from .continuerc.json with custom config directory", async () => {
+    await customConfigHandler.initPromise;
     fs.writeFileSync(
       path.join(TEST_DIR, ".continuerc.json"),
       JSON.stringify({ userToken: "TOKEN2" }),
