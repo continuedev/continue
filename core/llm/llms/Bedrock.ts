@@ -15,6 +15,7 @@ import {
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
+import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
@@ -408,7 +409,7 @@ class Bedrock extends BaseLLM {
           toolUse: {
             toolUseId: toolCall.id,
             name: toolCall.function?.name,
-            input: JSON.parse(toolCall.function?.arguments || "{}"),
+            input: safeParseToolCallArgs(toolCall),
           },
         })),
       };

@@ -126,8 +126,12 @@ export async function* streamJSON(response: Response): AsyncGenerator<any> {
     let position;
     while ((position = buffer.indexOf("\n")) >= 0) {
       const line = buffer.slice(0, position);
-      const data = JSON.parse(line);
-      yield data;
+      try {
+        const data = JSON.parse(line);
+        yield data;
+      } catch (e) {
+        throw new Error(`Malformed JSON sent from server: ${line}`);
+      }
       buffer = buffer.slice(position + 1);
     }
   }
