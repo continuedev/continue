@@ -703,12 +703,6 @@ export class Core {
             openedFilesLruCache.delete(filepath);
           }
           openedFilesLruCache.set(filepath, filepath);
-
-          console.log("ACTIVE TEXT EDITOR CHANGED");
-          for (const [key, value] of openedFilesLruCache.entriesDescending()) {
-            console.log(`${key}`);
-          }
-          console.log("\n");
         }
       } catch (e) {
         console.error(
@@ -732,12 +726,6 @@ export class Core {
               openedFilesLruCache.delete(key);
             }
           }
-
-          console.log("close-text-doc");
-          for (const [key, value] of openedFilesLruCache.entriesDescending()) {
-            console.log(`${key}`);
-          }
-          console.log("\n");
         }
 
         prevFilepaths.filepaths = filepaths;
