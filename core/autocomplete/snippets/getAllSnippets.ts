@@ -113,7 +113,6 @@ const getSnippetsFromRecentlyOpenedFiles = async (
     return [];
   }
 
-  // stores snippets from cache
   const snippets: AutocompleteCodeSnippet[] = [];
 
   try {
