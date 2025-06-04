@@ -89,18 +89,18 @@ export async function addHighlightedCodeToContext(
 export async function addEntireFileToContext(
   uri: vscode.Uri,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
-  ideUtils: VsCodeIdeUtils
+  ideUtils: VsCodeIdeUtils,
 ) {
   // If a directory, add all files in the directory
   const stat = await ideUtils.stat(uri);
   if (stat?.type === vscode.FileType.Directory) {
-    const files = (await ideUtils.readDirectory(uri))!;//files can't be null if we reached this point
+    const files = (await ideUtils.readDirectory(uri))!; //files can't be null if we reached this point
     for (const [filename, type] of files) {
       if (type === vscode.FileType.File) {
         addEntireFileToContext(
           vscode.Uri.joinPath(uri, filename),
           webviewProtocol,
-          ideUtils
+          ideUtils,
         );
       }
     }

@@ -7,6 +7,6 @@ const version = packageJsonJson.version;
 const minor = parseInt(version.split(".")[1]);
 if (minor % 2 !== 0) {
   throw new Error(
-    "Do not publish odd-numbered version to main VS Code release!"
+    "Do not publish odd-numbered version to main VS Code release!",
   );
 }

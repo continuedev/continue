@@ -130,21 +130,13 @@
     "special_tokens": {
       "[CLS]": {
         "id": "[CLS]",
-        "ids": [
-          101
-        ],
-        "tokens": [
-          "[CLS]"
-        ]
+        "ids": [101],
+        "tokens": ["[CLS]"]
       },
       "[SEP]": {
         "id": "[SEP]",
-        "ids": [
-          102
-        ],
-        "tokens": [
-          "[SEP]"
-        ]
+        "ids": [102],
+        "tokens": ["[SEP]"]
       }
     }
   },

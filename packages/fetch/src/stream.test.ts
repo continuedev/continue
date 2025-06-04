@@ -1,4 +1,5 @@
 import { Readable } from "stream";
+import { describe, expect, it, test } from "vitest";
 import { parseDataLine, streamSse } from "./stream.js";
 
 function createMockResponse(sseLines: string[]): Response {

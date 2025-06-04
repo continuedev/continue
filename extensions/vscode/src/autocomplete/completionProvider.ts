@@ -218,7 +218,10 @@ export class ContinueCompletionProvider
       // In the future we will have to figure out how to call this more gracefully.
       if (this.nextEditProvider) {
         const nextEditOutcome =
-          await this.nextEditProvider?.provideInlineCompletionItems(input, signal);
+          await this.nextEditProvider?.provideInlineCompletionItems(
+            input,
+            signal,
+          );
 
         if (nextEditOutcome && nextEditOutcome.completion) {
           outcome.completion = nextEditOutcome.completion;
