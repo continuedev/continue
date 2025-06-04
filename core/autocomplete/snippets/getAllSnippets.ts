@@ -178,7 +178,7 @@ export const getAllSnippets = async ({
       : [],
     [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     racePromise(getClipboardSnippets(ide)),
-    racePromise(getSnippetsFromRecentlyOpenedFiles(helper, ide), 500), // giving this one a little more time to complete
+    racePromise(getSnippetsFromRecentlyOpenedFiles(helper, ide)), // giving this one a little more time to complete
   ]);
 
   return {
