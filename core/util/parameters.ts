@@ -2,9 +2,9 @@ import { TabAutocompleteOptions } from "../index.js";
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
-  maxPromptTokens: 1024,
-  prefixPercentage: 0.3,
-  maxSuffixPercentage: 0.2,
+  maxPromptTokens: 2048, // doubled from default to fit opened files
+  prefixPercentage: 0.15, // halved as a result
+  maxSuffixPercentage: 0.1, // halved as a result
   debounceDelay: 350,
   modelTimeout: 150,
   multilineCompletions: "auto",
@@ -15,6 +15,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useCache: true,
   onlyMyCode: true,
   useRecentlyEdited: true,
+  useRecentlyOpened: true,
   disableInFiles: undefined,
   useImports: true,
   transform: true,

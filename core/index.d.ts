@@ -1107,6 +1107,7 @@ export interface TabAutocompleteOptions {
   useCache: boolean;
   onlyMyCode: boolean;
   useRecentlyEdited: boolean;
+  useRecentlyOpened: boolean;
   disableInFiles?: string[];
   useImports?: boolean;
   showWhateverWeHaveAtXMs?: number;

@@ -47,6 +47,7 @@ export const getSnippets = (
     recentlyVisitedRanges: payload.recentlyVisitedRangesSnippets,
     recentlyEditedRanges: payload.recentlyEditedRangeSnippets,
     diff: payload.diffSnippets,
+    recentlyOpenedFiles: payload.recentlyOpenedFileSnippets,
     base: shuffleArray(
       filterSnippetsAlreadyInCaretWindow(
         [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],
@@ -69,10 +70,16 @@ export const getSnippets = (
       snippets: payload.clipboardSnippets,
     },
     {
+      key: "recentlyOpenedFiles",
+      enabledOrPriority: helper.options.useRecentlyOpened,
+      defaultPriority: 2,
+      snippets: payload.recentlyOpenedFileSnippets,
+    },
+    {
       key: "recentlyVisitedRanges",
       enabledOrPriority:
         helper.options.experimental_includeRecentlyVisitedRanges,
-      defaultPriority: 2,
+      defaultPriority: 3,
       snippets: payload.recentlyVisitedRangesSnippets,
       /* TODO: recentlyVisitedRanges also contain contents from other windows like terminal or output
       if they are visible. We should handle them separately so that we can control their priority
@@ -82,13 +89,13 @@ export const getSnippets = (
       key: "recentlyEditedRanges",
       enabledOrPriority:
         helper.options.experimental_includeRecentlyEditedRanges,
-      defaultPriority: 3,
+      defaultPriority: 4,
       snippets: payload.recentlyEditedRangeSnippets,
     },
     {
       key: "diff",
       enabledOrPriority: helper.options.experimental_includeDiff,
-      defaultPriority: 4,
+      defaultPriority: 5,
       snippets: payload.diffSnippets,
       // TODO: diff is commonly too large, thus anything lower in priority is not included.
     },

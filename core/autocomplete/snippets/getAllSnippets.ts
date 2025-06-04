@@ -3,6 +3,7 @@ import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
+import { openedFilesLruCache } from "../util/openedFilesLruCache";
 import { getDiffsFromCache } from "./gitDiffCache";
 
 import {
@@ -22,6 +23,7 @@ export interface SnippetPayload {
   recentlyVisitedRangesSnippets: AutocompleteCodeSnippet[];
   diffSnippets: AutocompleteDiffSnippet[];
   clipboardSnippets: AutocompleteClipboardSnippet[];
+  recentlyOpenedFileSnippets: AutocompleteCodeSnippet[];
 }
 
 function racePromise<T>(promise: Promise<T[]>, timeout = 100): Promise<T[]> {
@@ -103,6 +105,49 @@ const getDiffSnippets = async (
   });
 };
 
+const getSnippetsFromRecentlyOpenedFiles = async (
+  helper: HelperVars,
+  ide: IDE,
+): Promise<AutocompleteCodeSnippet[]> => {
+  if (helper.options.useRecentlyOpened === false) {
+    return [];
+  }
+
+  // stores snippets from cache
+  const snippets: AutocompleteCodeSnippet[] = [];
+
+  try {
+    const currentFileUri = `${helper.filepath}`;
+
+    // converts cache file URIs to autocomplete snippets
+    for (const [fileUri, _] of openedFilesLruCache.entriesDescending()) {
+      if (fileUri === currentFileUri) {
+        continue;
+      }
+
+      try {
+        const fileContent = await ide.readFile(fileUri);
+
+        if (!fileContent || fileContent.trim() === "") {
+          continue;
+        }
+
+        snippets.push({
+          filepath: fileUri,
+          content: fileContent,
+          type: AutocompleteSnippetType.Code,
+        });
+      } catch (e) {
+        console.error(`Failed to read file ${fileUri}:`, e);
+      }
+    }
+  } catch (e) {
+    console.error("Error processing opened files cache:", e);
+  }
+
+  return snippets;
+};
+
 export const getAllSnippets = async ({
   helper,
   ide,
@@ -123,6 +168,7 @@ export const getAllSnippets = async ({
     ideSnippets,
     diffSnippets,
     clipboardSnippets,
+    recentlyOpenedFileSnippets,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
     racePromise(
@@ -133,6 +179,7 @@ export const getAllSnippets = async ({
       : [],
     [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     racePromise(getClipboardSnippets(ide)),
+    racePromise(getSnippetsFromRecentlyOpenedFiles(helper, ide), 500), // giving this one a little more time to complete
   ]);
 
   return {
@@ -143,5 +190,6 @@ export const getAllSnippets = async ({
     diffSnippets,
     clipboardSnippets,
     recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
+    recentlyOpenedFileSnippets,
   };
 };
