@@ -1,5 +1,13 @@
 import * as crypto from "crypto";
-import { LicenseKeyData, validateLicenseKey } from "./mdm";
+import { LicenseKeyData, MdmManager, validateLicenseKey } from "./mdm";
+
+// Mock fs module to avoid actual file operations
+jest.mock("fs", () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn(),
+  writeFileSync: jest.fn(),
+  mkdirSync: jest.fn(),
+}));
 
 // We'll create a real key pair once for all tests
 const testKeyPair = crypto.generateKeyPairSync("rsa", {
@@ -12,6 +20,12 @@ const testKeyPair = crypto.generateKeyPairSync("rsa", {
     type: "pkcs8",
     format: "pem",
   },
+});
+
+// Clear the MdmManager cache before each test
+beforeEach(() => {
+  MdmManager.getInstance().clearCache();
+  jest.clearAllMocks();
 });
 
 // Custom function to create test licenses with the new structure including unsignedData
@@ -207,4 +221,87 @@ test("validateLicenseKey handles invalid unsignedData structure", () => {
   // Assert - should fail due to signature verification with wrong public key
   expect(result.isValid).toBe(false);
   expect(result.licenseKeyData).toBeUndefined();
+});
+
+// New tests for the Singleton implementation and caching behavior
+
+test("MdmManager singleton returns the same instance", () => {
+  const instance1 = MdmManager.getInstance();
+  const instance2 = MdmManager.getInstance();
+
+  expect(instance1).toBe(instance2);
+});
+
+test("MdmManager caches license key data", () => {
+  // Setup a mock for readMdmKeys to simulate a license key
+  const mdmManager = MdmManager.getInstance();
+
+  // Create a spy on the readMdmKeys method
+  const readMdmKeysSpy = jest.spyOn(mdmManager as any, "readMdmKeys");
+
+  // Make it return a mock value
+  const mockLicenseKey = "mockLicenseKey";
+  readMdmKeysSpy.mockReturnValue({ licenseKey: mockLicenseKey });
+
+  // Mock validateLicenseKey to return a valid result
+  const validateSpy = jest.spyOn(mdmManager as any, "validateLicenseKey");
+  validateSpy.mockReturnValue({
+    isValid: true,
+    licenseKeyData: {
+      signature: "signature",
+      data: "{}",
+      unsignedData: { apiUrl: "https://test.com" },
+    },
+  });
+
+  // First call should read keys
+  mdmManager.getLicenseKeyData();
+
+  // Second call should use the cache
+  mdmManager.getLicenseKeyData();
+
+  // The readMdmKeys method should only be called once if caching works
+  expect(readMdmKeysSpy).toHaveBeenCalledTimes(1);
+
+  // Restore the original implementations
+  readMdmKeysSpy.mockRestore();
+  validateSpy.mockRestore();
+});
+
+test("MdmManager.clearCache invalidates the cache", () => {
+  const mdmManager = MdmManager.getInstance();
+
+  // Setup spies
+  const readMdmKeysSpy = jest.spyOn(mdmManager as any, "readMdmKeys");
+  const validateSpy = jest.spyOn(mdmManager as any, "validateLicenseKey");
+
+  // Mock return values
+  const mockLicenseKey = "mockLicenseKey";
+  readMdmKeysSpy.mockReturnValue({ licenseKey: mockLicenseKey });
+  validateSpy.mockReturnValue({
+    isValid: true,
+    licenseKeyData: {
+      signature: "signature",
+      data: "{}",
+      unsignedData: { apiUrl: "https://test.com" },
+    },
+  });
+
+  // First call - should read keys and cache
+  mdmManager.getLicenseKeyData();
+  expect(readMdmKeysSpy).toHaveBeenCalledTimes(1);
+
+  // Clear the calls count
+  readMdmKeysSpy.mockClear();
+
+  // Call clearCache
+  mdmManager.clearCache();
+
+  // Second call - should read keys again because cache was cleared
+  mdmManager.getLicenseKeyData();
+  expect(readMdmKeysSpy).toHaveBeenCalledTimes(1);
+
+  // Cleanup
+  readMdmKeysSpy.mockRestore();
+  validateSpy.mockRestore();
 });
