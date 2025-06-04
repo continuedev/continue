@@ -10,21 +10,25 @@ Rules provide instructions to the model for [Chat](../../chat/how-to-use-it.md),
 :::info Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
 :::
 
+## How it works
 You can view the current rules by clicking the pen icon above the main toolbar:
 
 ![rules input toolbar section](/img/notch-rules.png)
 
 To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#chat-system-message)).
 
-## `rules` blocks
+## Creating `rules` blocks
+Rules can be added locally using the "Add Rules" button while viewing the Local Assistant's rules.
 
-Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
+![add local rules button](/img/add-local-rules.png)
 
 :::info Automatically create local rule blocks
 When in Agent mode, you can prompt the agent to create a rule for you using the `builtin_create_rule_block` tool if enabled.
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::
+
+Rules can also be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
 
 ### Syntax
 
