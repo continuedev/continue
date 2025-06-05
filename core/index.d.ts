@@ -7,6 +7,7 @@ import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
 import { Core } from "./core";
+import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 
 declare global {
   interface Window {
@@ -970,7 +971,7 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
-  core?: Core; // Reference to the Core instance
+  codeBaseIndexer?: CodebaseIndexer;
 }
 
 export interface Tool {

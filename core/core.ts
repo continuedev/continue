@@ -708,7 +708,7 @@ export class Core {
         tool,
         toolCallId: toolCall.id,
         onPartialOutput,
-        core: this, // Add a reference to the Core instance
+        codeBaseIndexer: this.codeBaseIndexer,
       });
     });
 
@@ -1025,84 +1025,5 @@ export class Core {
       },
       false,
     );
-  }
-
-  private async refreshCodebaseIndex(paths: string[]) {
-    if (this.indexingCancellationController) {
-      this.indexingCancellationController.abort();
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshDirs(paths, this.indexingCancellationController.signal)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index directories : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  private async refreshCodebaseIndexFiles(files: string[]) {
-    // Can be cancelled by codebase index but not vice versa
-    if (
-      this.indexingCancellationController &&
-      !this.indexingCancellationController.signal.aborted
-    ) {
-      return;
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshFiles(files)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index files : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  // private
-  handleIndexingError(e: any) {
-    if (e instanceof LLMError) {
-      // Need to report this specific error to the IDE for special handling
-      void this.messenger.request("reportError", e);
-    }
-    // broadcast indexing error
-    let updateToSend: IndexingProgressUpdate = {
-      progress: 0,
-      status: "failed",
-      desc: e.message,
-    };
-    void this.messenger.request("indexProgress", updateToSend);
-    this.codebaseIndexingState = updateToSend;
-    void this.sendIndexingErrorTelemetry(updateToSend);
   }
 }
