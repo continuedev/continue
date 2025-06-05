@@ -74,12 +74,13 @@ export function getRecommendedModels(systemInfo: SystemInfo) {
 }
 
 export function shouldRecommendLargeModel(systemInfo: SystemInfo): boolean {
-  const modelRequirements = MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model];
+  const modelRequirements =
+    MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model];
   if (!modelRequirements) return false;
 
   if (isHighEndApple(systemInfo.gpus)) {
     const availableMemory =
-     systemInfo.memory.totalMemory - SYSTEM_REQUIREMENTS.reservedSystemMemory;
+      systemInfo.memory.totalMemory - SYSTEM_REQUIREMENTS.reservedSystemMemory;
     return availableMemory >= modelRequirements.recommendedMemoryBytes;
   }
 

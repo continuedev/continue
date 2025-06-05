@@ -1,10 +1,13 @@
 import os from "os";
-import path from 'path';
+import path from "path";
 
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { DEFAULT_MODEL_INFO, ModelInfo } from "core/granite/commons/modelInfo";
 import { getStandardName } from "core/granite/commons/naming";
-import { ProgressData, ProgressReporter } from "core/granite/commons/progressData";
+import {
+  ProgressData,
+  ProgressReporter,
+} from "core/granite/commons/progressData";
 import { ServerState } from "core/granite/commons/serverState";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
 import { isSemVer } from "core/granite/commons/versions";
@@ -24,12 +27,20 @@ const CLI_VERSION_REGEX = /client version is (.*)/s;
 export class OllamaServer implements IModelServer, Disposable {
   private currentStatus = ServerStatus.unknown;
   protected installingModels = new Set<string>();
-  private modelInfoPromises: Map<string, Promise<ModelInfo | undefined>> = new Map();
+  private modelInfoPromises: Map<string, Promise<ModelInfo | undefined>> =
+    new Map();
   private modelInfoResults: Map<string, ModelInfo | undefined> = new Map();
-  private cachedTags?: { timestamp: number, tags: Promise<any[]> };
-  private serverState: ServerState = { status: ServerStatus.unknown, version: undefined };
+  private cachedTags?: { timestamp: number; tags: Promise<any[]> };
+  private serverState: ServerState = {
+    status: ServerStatus.unknown,
+    version: undefined,
+  };
 
-  constructor(private context: ExtensionContext, private name: string = "Ollama", private serverUrl = "http://localhost:11434") { }
+  constructor(
+    private context: ExtensionContext,
+    private name: string = "Ollama",
+    private serverUrl = "http://localhost:11434",
+  ) {}
 
   dispose(): void {
     // Clean up all caches
@@ -43,29 +54,53 @@ export class OllamaServer implements IModelServer, Disposable {
     return this.name;
   }
 
-  async supportedInstallModes(): Promise<{ id: string; label: string, supportsRefresh: boolean }[]> {
+  async supportedInstallModes(): Promise<
+    { id: string; label: string; supportsRefresh: boolean }[]
+  > {
     const modes = [];
     if (isLinux()) {
       if (isDevspaces()) {
         // sudo is not available in devspaces, so we can't use ollama's or manual install script
-        return [{ id: "devspaces", label: "See Red Hat Dev Spaces instructions", supportsRefresh: false }];
+        return [
+          {
+            id: "devspaces",
+            label: "See Red Hat Dev Spaces instructions",
+            supportsRefresh: false,
+          },
+        ];
       } else {
         // on linux
-        modes.push({ id: "script", label: "Install with script", supportsRefresh: true });
+        modes.push({
+          id: "script",
+          label: "Install with script",
+          supportsRefresh: true,
+        });
       }
     }
     if (await isHomebrewAvailable()) {
       // homebrew is available
-      modes.push({ id: "homebrew", label: "Install with Homebrew", supportsRefresh: true });
+      modes.push({
+        id: "homebrew",
+        label: "Install with Homebrew",
+        supportsRefresh: true,
+      });
     }
     if (isWin()) {
-      modes.push({ id: "windows", label: "Install automatically", supportsRefresh: true });
+      modes.push({
+        id: "windows",
+        label: "Install automatically",
+        supportsRefresh: true,
+      });
     }
-    modes.push({ id: "manual", label: "Install manually", supportsRefresh: true });
+    modes.push({
+      id: "manual",
+      label: "Install manually",
+      supportsRefresh: true,
+    });
     return modes;
   }
 
-  async getState() : Promise<ServerState> {
+  async getState(): Promise<ServerState> {
     this.serverState.status = await this.getStatus();
     this.serverState.version = await this.getOllamaVersion();
     return this.serverState;
@@ -75,14 +110,15 @@ export class OllamaServer implements IModelServer, Disposable {
     let isStarted = false;
     try {
       isStarted = await this.isServerStarted();
-    } catch (e) {
-    }
+    } catch (e) {}
     if (isStarted) {
       this.currentStatus = ServerStatus.started;
     } else {
       const ollamaInstalled = await this.isServerInstalled();
       if (this.currentStatus !== ServerStatus.installing) {
-        this.currentStatus = (ollamaInstalled) ? ServerStatus.stopped : ServerStatus.missing;
+        this.currentStatus = ollamaInstalled
+          ? ServerStatus.stopped
+          : ServerStatus.missing;
       }
     }
     return this.currentStatus;
@@ -91,9 +127,7 @@ export class OllamaServer implements IModelServer, Disposable {
   async getOllamaVersion(): Promise<string | undefined> {
     let version = undefined;
     try {
-      const json = (
-        await fetch(`${this.serverUrl}/api/version`)
-      ).json() as any;
+      const json = (await fetch(`${this.serverUrl}/api/version`)).json() as any;
       version = (await json)?.version || "";
     } catch (e) {
       //fallback to cli
@@ -141,75 +175,90 @@ export class OllamaServer implements IModelServer, Disposable {
       startCommand = [
         `$ErrorActionPreference = "Stop"`,
         `& "ollama app.exe"`,
-      ].join(' ; ');
+      ].join(" ; ");
     } else if (isMac()) {
       startCommand = [
-        'set -e',  // Exit immediately if a command exits with a non-zero status
-        'open -a Ollama.app',
-      ].join(' && ');
-    } else {//Linux
-      const start_ollama_sh = path.join(this.context.extensionPath, 'start_ollama.sh');
+        "set -e", // Exit immediately if a command exits with a non-zero status
+        "open -a Ollama.app",
+      ].join(" && ");
+    } else {
+      //Linux
+      const start_ollama_sh = path.join(
+        this.context.extensionPath,
+        "start_ollama.sh",
+      );
       startCommand = [
-        'set -e',  // Exit immediately if a command exits with a non-zero status
-        `chmod +x "${start_ollama_sh}"`,  // Ensure the script is executable
-        `"${start_ollama_sh}"`,  // Use quotes in case the path contains spaces
-      ].join(' && ');
+        "set -e", // Exit immediately if a command exits with a non-zero status
+        `chmod +x "${start_ollama_sh}"`, // Ensure the script is executable
+        `"${start_ollama_sh}"`, // Use quotes in case the path contains spaces
+      ].join(" && ");
     }
     if (startCommand) {
-      await terminalCommandRunner.runInTerminal(
-        startCommand,
-        {
-          name: "Start Ollama",
-          show: true,
-        }
-      );
+      await terminalCommandRunner.runInTerminal(startCommand, {
+        name: "Start Ollama",
+        show: true,
+      });
       return true;
     }
     return false;
   }
 
-  async installServer(mode: string, signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean> {
+  async installServer(
+    mode: string,
+    signal: AbortSignal,
+    reportProgress: (progress: ProgressData) => void,
+  ): Promise<boolean> {
     let installCommand: string | undefined;
     switch (mode) {
       case "devspaces": {
-        env.openExternal(Uri.parse("https://developers.redhat.com/articles/2024/08/12/integrate-private-ai-coding-assistant-ollama"));
+        env.openExternal(
+          Uri.parse(
+            "https://developers.redhat.com/articles/2024/08/12/integrate-private-ai-coding-assistant-ollama",
+          ),
+        );
         return false;
       }
       case "homebrew": {
         installCommand = [
-          'clear',
-          'set -e',  // Exit immediately if a command exits with a non-zero status
+          "clear",
+          "set -e", // Exit immediately if a command exits with a non-zero status
           'killall "Ollama" || true',
-          'brew install --cask ollama',
-          'sleep 3',
-          'ollama list',  // run ollama list to start the server
-        ].join(' && ');
+          "brew install --cask ollama",
+          "sleep 3",
+          "ollama list", // run ollama list to start the server
+        ].join(" && ");
         break;
       }
       case "script":
-        const start_ollama_sh = path.join(this.context.extensionPath, 'start_ollama.sh');
+        const start_ollama_sh = path.join(
+          this.context.extensionPath,
+          "start_ollama.sh",
+        );
         installCommand = [
-          'clear',
-          'set -e',  // Exit immediately if a command exits with a non-zero status
+          "clear",
+          "set -e", // Exit immediately if a command exits with a non-zero status
           'command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but not installed. Aborting."; exit 1; }',
-          'curl -fsSL https://ollama.com/install.sh | sh',
-          `chmod +x "${start_ollama_sh}"`,  // Ensure the script is executable
-          `"${start_ollama_sh}"`,  // Use quotes in case the path contains spaces
-        ].join(' && ');
+          "curl -fsSL https://ollama.com/install.sh | sh",
+          `chmod +x "${start_ollama_sh}"`, // Ensure the script is executable
+          `"${start_ollama_sh}"`, // Use quotes in case the path contains spaces
+        ].join(" && ");
         break;
       case "windows":
         this.currentStatus = ServerStatus.installing;
-        const ollamaInstallerPath = await this.downloadOllamaInstaller(signal, reportProgress);
+        const ollamaInstallerPath = await this.downloadOllamaInstaller(
+          signal,
+          reportProgress,
+        );
         if (!ollamaInstallerPath) {
           return false;
         }
         //At this point the file is guaranteed to exist
         installCommand = [
-          'clear',
+          "clear",
           `$ErrorActionPreference = "Stop"`,
           `& "${ollamaInstallerPath}" /Silent`,
           `$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")`, // refresh environment variables in the terminal
-        ].join(' ; ');
+        ].join(" ; ");
         break;
       case "manual":
       default:
@@ -217,22 +266,31 @@ export class OllamaServer implements IModelServer, Disposable {
         return true;
     }
     if (installCommand) {
-      this.currentStatus = ServerStatus.installing;//We need to detect the terminal output to know when installation stopped (successfully or not)
-      await terminalCommandRunner.runInTerminal(
-        installCommand,
-        {
-          name: "Granite Models Setup",
-          show: true,
-        }
-      );
+      this.currentStatus = ServerStatus.installing; //We need to detect the terminal output to know when installation stopped (successfully or not)
+      await terminalCommandRunner.runInTerminal(installCommand, {
+        name: "Granite Models Setup",
+        show: true,
+      });
     }
     return true;
   }
 
-  async downloadOllamaInstaller(signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<string | undefined> {
+  async downloadOllamaInstaller(
+    signal: AbortSignal,
+    reportProgress: (progress: ProgressData) => void,
+  ): Promise<string | undefined> {
     const randomSuffix = Math.random().toString(36).substring(2, 10);
-    const ollamaInstallerPath = path.join(os.tmpdir(), EXTENSION_NAME, `OllamaSetup-${randomSuffix}.exe`);
-    await downloadFileFromUrl("https://ollama.com/download/OllamaSetup.exe", ollamaInstallerPath, signal, new DownloadingProgressReporter(reportProgress));
+    const ollamaInstallerPath = path.join(
+      os.tmpdir(),
+      EXTENSION_NAME,
+      `OllamaSetup-${randomSuffix}.exe`,
+    );
+    await downloadFileFromUrl(
+      "https://ollama.com/download/OllamaSetup.exe",
+      ollamaInstallerPath,
+      signal,
+      new DownloadingProgressReporter(reportProgress),
+    );
     return ollamaInstallerPath;
   }
 
@@ -287,7 +345,7 @@ export class OllamaServer implements IModelServer, Disposable {
           status = ModelStatus.stale;
         }
       }
-    } catch (error : any) {
+    } catch (error: any) {
       if (error?.cause?.code !== "ECONNREFUSED") {
         // If it's not Ollama being turned off, what is it?
         console.log(`Error getting ${modelName} status:`, error);
@@ -298,34 +356,34 @@ export class OllamaServer implements IModelServer, Disposable {
   }
 
   async getTags(): Promise<any[]> {
-    if (!this.cachedTags || (Date.now() - this.cachedTags.timestamp) > 100) {//cache for 100ms
+    if (!this.cachedTags || Date.now() - this.cachedTags.timestamp > 100) {
+      //cache for 100ms
       this.cachedTags = {
         timestamp: Date.now(),
-        tags: this._getTags()
+        tags: this._getTags(),
       };
-    };
+    }
     return this.cachedTags.tags;
   }
 
   async _getTags(): Promise<any[]> {
-    const json = (
-      await fetch(`${this.serverUrl}/api/tags`)
-    ).json() as any;
+    const json = (await fetch(`${this.serverUrl}/api/tags`)).json() as any;
     const rawModels = (await json)?.models || [];
     return rawModels;
   }
 
   async listModels(): Promise<string[]> {
-    const json = (
-      await fetch(`${this.serverUrl}/v1/models`)
-    ).json() as any;
+    const json = (await fetch(`${this.serverUrl}/v1/models`)).json() as any;
     const rawModels = (await json)?.data;
     const models = rawModels ? rawModels.map((model: any) => model.id) : [];
     return models;
   }
 
-  async pullModels(models: string[], signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean> {
-
+  async pullModels(
+    models: string[],
+    signal: AbortSignal,
+    reportProgress: (progress: ProgressData) => void,
+  ): Promise<boolean> {
     if (signal.aborted) {
       return false;
     }
@@ -341,7 +399,10 @@ export class OllamaServer implements IModelServer, Disposable {
       }
       modelInfos.push(modelInfo);
     }
-    const expectedTotal = modelInfos.reduce((sum, modelInfo) => sum + modelInfo.size, 0);
+    const expectedTotal = modelInfos.reduce(
+      (sum, modelInfo) => sum + modelInfo.size,
+      0,
+    );
     console.log(`Expected total: ${expectedTotal}`);
     const progressReporter = new DownloadingProgressReporter(reportProgress);
     progressReporter.begin("Downloading models", expectedTotal);
@@ -355,12 +416,16 @@ export class OllamaServer implements IModelServer, Disposable {
     return true;
   }
 
-  async _pullModel(modelName: string, progressReporter: ProgressReporter, signal?: AbortSignal): Promise<void> {
+  async _pullModel(
+    modelName: string,
+    progressReporter: ProgressReporter,
+    signal?: AbortSignal,
+  ): Promise<void> {
     console.log(`Pulling ${modelName}`);
     const response = await fetch(`${this.serverUrl}/api/pull`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ name: modelName }),
       signal,
@@ -369,13 +434,16 @@ export class OllamaServer implements IModelServer, Disposable {
     let currentProgress = 0;
 
     while (true) {
-      const { done, value } = await reader?.read() || { done: true, value: undefined };
+      const { done, value } = (await reader?.read()) || {
+        done: true,
+        value: undefined,
+      };
       if (done) {
         break;
       }
 
       const chunk = new TextDecoder().decode(value);
-      const lines = chunk.split('\n').filter(Boolean);
+      const lines = chunk.split("\n").filter(Boolean);
 
       for (const line of lines) {
         const data = JSON.parse(line);
@@ -399,18 +467,26 @@ export class OllamaServer implements IModelServer, Disposable {
     try {
       modelInfo = await getRemoteModelInfo(modelName);
     } catch (error) {
-      console.log(`Failed to retrieve remote model info for ${modelName}: ${error}`);
+      console.log(
+        `Failed to retrieve remote model info for ${modelName}: ${error}`,
+      );
     }
     return modelInfo || DEFAULT_MODEL_INFO.get(modelName);
   }
 
-  private async fetchModelInfo(modelName: string, signal?: AbortSignal): Promise<ModelInfo | undefined> {
+  private async fetchModelInfo(
+    modelName: string,
+    signal?: AbortSignal,
+  ): Promise<ModelInfo | undefined> {
     try {
       const modelInfo = await getRemoteModelInfo(modelName, signal);
       this.modelInfoResults.set(modelName, modelInfo);
       return modelInfo;
     } catch (error) {
-      console.log(`Failed to retrieve remote model info for ${modelName}:`, error);
+      console.log(
+        `Failed to retrieve remote model info for ${modelName}:`,
+        error,
+      );
       return undefined;
     }
   }
@@ -443,14 +519,14 @@ function isMac(): boolean {
 
 function isDevspaces() {
   //sudo is not available on Red Hat DevSpaces
-  return process.env['DEVWORKSPACE_ID'] !== undefined;
+  return process.env["DEVWORKSPACE_ID"] !== undefined;
 }
 
 class DownloadingProgressReporter implements ProgressReporter {
   private currentProgress = 0;
   name: string | undefined;
   total: number | undefined;
-  constructor(private progress: (progress: ProgressData) => void) { }
+  constructor(private progress: (progress: ProgressData) => void) {}
   begin(name: string, total: number): void {
     this.name = name;
     this.total = total;
@@ -458,11 +534,11 @@ class DownloadingProgressReporter implements ProgressReporter {
   update(work: number, detail?: string): void {
     this.currentProgress += work;
     this.progress({
-      key: this.name ?? 'Downloading',
+      key: this.name ?? "Downloading",
       increment: work,
       status: detail,
       completed: this.currentProgress,
-      total: this.total
+      total: this.total,
     });
   }
   done(): void {

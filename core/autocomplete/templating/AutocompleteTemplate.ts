@@ -66,7 +66,7 @@ const graniteCodeFimTemplate: AutocompleteTemplate = {
     }
 
     const filePaths = snippets.map((snippet) =>
-        "filepath" in snippet ? snippet.filepath : "file:///Untitled.txt"
+      "filepath" in snippet ? snippet.filepath : "file:///Untitled.txt",
     );
     filePaths.push(filepath);
 

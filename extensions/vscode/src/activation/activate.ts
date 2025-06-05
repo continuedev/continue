@@ -74,13 +74,19 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     graniteOnboardingComplete,
   );
 
-  const initialActivationCompleted = context.globalState.get<boolean>(GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY, false);
+  const initialActivationCompleted = context.globalState.get<boolean>(
+    GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY,
+    false,
+  );
   if (!initialActivationCompleted) {
     if (!graniteOnboardingComplete) {
-      replaceCopilotWithGraniteCode()
+      replaceCopilotWithGraniteCode();
       await vscode.commands.executeCommand("granite.setup");
     }
-    await context.globalState.update(GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY, true);
+    await context.globalState.update(
+      GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY,
+      true,
+    );
   }
 
   registerModelUpdater(context);

@@ -74,44 +74,48 @@ export class SetupGranitePage {
       : ({ stepStatuses: [false, false, false] } as WizardState);
 
     // Set up dispose handler with confirmation dialog
-    this._disposables.push(this._panel.onDidDispose(
-      async () => {
-        // Verify setup is complete by checking if ollama and the models are configured
-        const isComplete =
-          this.wizardState.stepStatuses[OLLAMA_STEP] &&
-          this.wizardState.stepStatuses[MODELS_STEP];
-        let reopen = false;
-        if (!isComplete) {
-          const REOPEN_LABEL = "Open Setup";
-          const choice = await window.showInformationMessage(
-            "Granite.Code setup is incomplete",
-            REOPEN_LABEL, // Cancel is always shown
-          );
-          reopen = choice === REOPEN_LABEL;
-        }
-        this.dispose();
-        if (reopen) {
-          SetupGranitePage.render(
-            context,
-            configHandler,
-            this.chatWebViewProtocol,
-            this.wizardState,
-          );
-        }
-      },
-      null,
-      this._disposables,
-    ));
+    this._disposables.push(
+      this._panel.onDidDispose(
+        async () => {
+          // Verify setup is complete by checking if ollama and the models are configured
+          const isComplete =
+            this.wizardState.stepStatuses[OLLAMA_STEP] &&
+            this.wizardState.stepStatuses[MODELS_STEP];
+          let reopen = false;
+          if (!isComplete) {
+            const REOPEN_LABEL = "Open Setup";
+            const choice = await window.showInformationMessage(
+              "Granite.Code setup is incomplete",
+              REOPEN_LABEL, // Cancel is always shown
+            );
+            reopen = choice === REOPEN_LABEL;
+          }
+          this.dispose();
+          if (reopen) {
+            SetupGranitePage.render(
+              context,
+              configHandler,
+              this.chatWebViewProtocol,
+              this.wizardState,
+            );
+          }
+        },
+        null,
+        this._disposables,
+      ),
+    );
 
     // Add visibility change detection in the webview panel
-    this._disposables.push(this._panel.onDidChangeViewState(async (event) => {
-      await this._panel.webview.postMessage({
-        command: "visibilityChange",
-        data: {
-          isVisible: event.webviewPanel.visible
-        }
-      });
-    }));
+    this._disposables.push(
+      this._panel.onDidChangeViewState(async (event) => {
+        await this._panel.webview.postMessage({
+          command: "visibilityChange",
+          data: {
+            isVisible: event.webviewPanel.visible,
+          },
+        });
+      }),
+    );
 
     // Set the HTML content for the webview panel
     this._panel.webview.html = this._getWebviewContent(
@@ -123,9 +127,11 @@ export class SetupGranitePage {
     this._setWebviewMessageListener(this._panel);
 
     // Send a new status on configuration changes
-    const cleanupConfigUpdate = configHandler.onConfigUpdate(async ({ config }) => {
-      await this.publishStatus(this._panel.webview);
-    });
+    const cleanupConfigUpdate = configHandler.onConfigUpdate(
+      async ({ config }) => {
+        await this.publishStatus(this._panel.webview);
+      },
+    );
     this._disposables.push(new Disposable(cleanupConfigUpdate));
   }
 
@@ -434,7 +440,10 @@ export class SetupGranitePage {
   }
 
   private async hideGraniteOnboardingCard() {
-    await this.context.globalState.update(GRANITE_ONBOARDING_INCOMPLETE_KEY, false);
+    await this.context.globalState.update(
+      GRANITE_ONBOARDING_INCOMPLETE_KEY,
+      false,
+    );
     await commands.executeCommand("setContext", "granite.initialized", true);
     this.chatWebViewProtocol.send("setShowGraniteOnboardingCard", false);
   }
@@ -481,9 +490,11 @@ export class SetupGranitePage {
     ]);
     const statusByModelObject = Object.fromEntries(statusByModel); // Convert Map to Object
     const serverVersion = serverState.version;
-    this.wizardState.stepStatuses[OLLAMA_STEP] = serverVersion !== undefined && checkMinimumServerVersion(serverVersion) && (
-      serverState.status === ServerStatus.started ||
-      serverState.status === ServerStatus.stopped);
+    this.wizardState.stepStatuses[OLLAMA_STEP] =
+      serverVersion !== undefined &&
+      checkMinimumServerVersion(serverVersion) &&
+      (serverState.status === ServerStatus.started ||
+        serverState.status === ServerStatus.stopped);
 
     const prevModelStatus = this.wizardState.stepStatuses[MODELS_STEP];
     const allModelsInstalled = modelIds.every(

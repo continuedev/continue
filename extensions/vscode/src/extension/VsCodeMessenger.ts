@@ -159,9 +159,14 @@ export class VsCodeMessenger {
         //nothing to do
         return;
       }
-      await vscode.commands.executeCommand('workbench.extensions.search', extensionIds.join(" "));
+      await vscode.commands.executeCommand(
+        "workbench.extensions.search",
+        extensionIds.join(" "),
+      );
       // Open the 1st extension's page
-      await vscode.env.openExternal(vscode.Uri.parse(`vscode:extension/${extensionIds[0]}`));
+      await vscode.env.openExternal(
+        vscode.Uri.parse(`vscode:extension/${extensionIds[0]}`),
+      );
     });
 
     this.onWebview(
@@ -266,8 +271,14 @@ export class VsCodeMessenger {
     });
     this.onWebview("onWebviewLoad", async (msg) => {
       const isGraniteOnboardingComplete = ide.isGraniteOnboardingComplete();
-      this.webviewProtocol.send("setShowGraniteOnboardingCard", !isGraniteOnboardingComplete);
-      this.webviewProtocol.send("updateIncompatibleExtensions", checkForIncompatibleExtensions());
+      this.webviewProtocol.send(
+        "setShowGraniteOnboardingCard",
+        !isGraniteOnboardingComplete,
+      );
+      this.webviewProtocol.send(
+        "updateIncompatibleExtensions",
+        checkForIncompatibleExtensions(),
+      );
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

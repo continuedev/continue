@@ -37,7 +37,10 @@ export async function downloadFileFromUrl(
       progressReporter.update(chunk.length);
     });
 
-    reader.pipe(writer).on("finish", () => resolve(undefined)).on("error", reject);
+    reader
+      .pipe(writer)
+      .on("finish", () => resolve(undefined))
+      .on("error", reject);
 
     // Handle abortion
     signal.addEventListener("abort", () => {
