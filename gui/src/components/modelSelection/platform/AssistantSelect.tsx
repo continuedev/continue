@@ -38,7 +38,6 @@ import { ROUTES } from "../../../util/navigation";
 import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
-
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;
   selected: boolean;
@@ -158,7 +157,6 @@ export default function AssistantSelect() {
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
   const [loading, setLoading] = useState(false);
-
   const { profiles, session, login, selectedProfile, refreshProfiles } =
     useAuth();
 

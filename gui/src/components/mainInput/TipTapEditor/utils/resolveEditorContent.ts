@@ -198,6 +198,8 @@ function processSlashCommand(
   const lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
   const lastTextPart = parts[lastTextIndex] as TextMessagePart;
 
+  const originalPrompt = command.prompt ? " " + command.prompt : "";
+
   let input: string;
 
   /**
@@ -211,10 +213,10 @@ function processSlashCommand(
       role: "user",
       content: lastTextPart.text,
     }).trimStart();
-    lastTextPart.text = `/${command.name} ${lastTextPart.text}`;
+    lastTextPart.text = `/${command.name}${originalPrompt} ${lastTextPart.text}`;
   } else {
     input = "";
-    parts.push({ type: "text", text: `/${command.name}` });
+    parts.push({ type: "text", text: `/${command.name}${originalPrompt}` });
   }
 
   return {

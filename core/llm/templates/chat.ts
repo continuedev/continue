@@ -95,11 +95,11 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
 
 // Llama2 template with added \n to prevent Codestral from continuing user message
 function codestralTemplateMessages(msgs: ChatMessage[]): string {
-    let template = llama2TemplateMessages(msgs);
-    if (template.length === 0) {
-        return template;
-    }
-    return template + "\n";
+  let template = llama2TemplateMessages(msgs);
+  if (template.length === 0) {
+    return template;
+  }
+  return template + "\n";
 }
 
 function anthropicTemplateMessages(messages: ChatMessage[]): string {

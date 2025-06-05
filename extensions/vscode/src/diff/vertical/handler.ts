@@ -9,8 +9,8 @@ import {
   indexDecorationType,
 } from "./decorations";
 
-import type { ApplyState, DiffLine } from "core";
 import type { VerticalDiffCodeLens } from "./manager";
+import type { ApplyState, DiffLine } from "core";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
@@ -174,10 +174,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       await this.reapplyWithMyersDiff(diffLines);
 
       const range = new vscode.Range(this.startLine, 0, this.startLine, 0);
-      this.editor.revealRange(
-        range,
-        vscode.TextEditorRevealType.Default,
-      );
+      this.editor.revealRange(range, vscode.TextEditorRevealType.Default);
 
       this.options.onStatusUpdate(
         "done",
@@ -423,11 +420,13 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private incrementCurrentLineIndex() {
     this.currentLineIndex++;
     this.updateIndexLineDecorations();
-    const range = new vscode.Range(this.currentLineIndex, 0, this.currentLineIndex, 0);
-    this.editor.revealRange(
-      range,
-      vscode.TextEditorRevealType.Default,
+    const range = new vscode.Range(
+      this.currentLineIndex,
+      0,
+      this.currentLineIndex,
+      0,
     );
+    this.editor.revealRange(range, vscode.TextEditorRevealType.Default);
   }
 
   private async insertTextAboveLine(index: number, text: string) {

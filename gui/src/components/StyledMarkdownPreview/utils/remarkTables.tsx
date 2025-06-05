@@ -22,18 +22,27 @@ import { visit } from "unist-util-visit";
 */
 export function remarkTables() {
   return (tree: any) => {
-    visit(tree, "text", (node, index, parent) => {
-      const { value } = node;
+    visit(tree, "paragraph", (paragraphNode, index, parentOfParagraphNode) => {
+      let buffer = "";
+      visit(paragraphNode, "text", (textNode) => {
+        buffer += textNode.value;
+      });
 
       const tableRegex =
         /((?:\| *[^|\r\n]+ *)+\|)(?:\r?\n)((?:\|[ :]?-+[ :]?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
       //// header                // newline // |:---|----:|      // new line  // table rows
 
+      // prevent modifying if no markdown tables are present
+      if (!buffer.match(tableRegex)) {
+        return;
+      }
+
       let match: RegExpExecArray | null;
       let lastIndex = 0;
       const newNodes = [];
       let failed = false;
-      while ((match = tableRegex.exec(value)) !== null) {
+
+      while ((match = tableRegex.exec(buffer)) !== null) {
         const fullTableString = match[0];
         const headerGroup = match[1];
         const separatorGroup = match[2];
@@ -62,6 +71,11 @@ export function remarkTables() {
           const tableNode = {
             type: "table",
             align: alignments,
+            data: {
+              hProperties: {
+                class: "markdown-table",
+              },
+            },
             children: [
               {
                 type: "tableRow",
@@ -77,7 +91,6 @@ export function remarkTables() {
                   type: "tableRow",
                   data: {
                     hProperties: {
-                      class: "markdown-table",
                       key: i,
                     },
                   },
@@ -95,7 +108,7 @@ export function remarkTables() {
           if (match.index > lastIndex) {
             newNodes.push({
               type: "text",
-              value: value.slice(lastIndex, match.index),
+              value: buffer.slice(lastIndex, match.index),
             });
           }
 
@@ -117,16 +130,16 @@ export function remarkTables() {
       }
 
       // Add any remaining text after the last table
-      if (lastIndex < value.length) {
+      if (lastIndex < buffer.length) {
         newNodes.push({
           type: "text",
-          value: value.slice(lastIndex),
+          value: buffer.slice(lastIndex),
         });
       }
 
-      // Replace the original text node with the new nodes
+      // Replace the original paragraph node with the new nodes
       if (newNodes.length > 0) {
-        parent.children.splice(index, 1, ...newNodes);
+        parentOfParagraphNode.children.splice(index, 1, ...newNodes);
       }
     });
   };
