@@ -13,13 +13,6 @@ export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
 }
 
-export function extractUserInput(input: string, commandName: string): string {
-  if (input.startsWith(`/${commandName}`)) {
-    return input.slice(commandName.length + 1).trimStart();
-  }
-  return input;
-}
-
 async function renderPromptV1(
   prompt: string,
   context: ContinueSDK,
@@ -66,10 +59,9 @@ export function slashCommandFromPromptFileV1(
     prompt,
     promptFile: path,
     run: async function* (context) {
-      const userInput = extractUserInput(context.input, name);
       const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
         config: context.config,
-        fullInput: userInput,
+        fullInput: context.input,
         embeddingsProvider: context.config.modelsByRole.embed[0],
         reranker: context.config.modelsByRole.rerank[0],
         llm: context.llm,
@@ -84,18 +76,6 @@ export function slashCommandFromPromptFileV1(
         renderedPrompt,
         systemMessage,
       );
-
-      if (systemMessage) {
-        const currentSystemMsg = messages.find((msg) => msg.role === "system");
-        if (currentSystemMsg) {
-          currentSystemMsg.content = systemMessage;
-        } else {
-          messages.unshift({
-            role: "system",
-            content: systemMessage,
-          });
-        }
-      }
 
       for await (const chunk of context.llm.streamChat(
         messages,
