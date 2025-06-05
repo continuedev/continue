@@ -184,7 +184,7 @@ export class Core {
           return;
         }
 
-        await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
+        void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
       });
     });
 
