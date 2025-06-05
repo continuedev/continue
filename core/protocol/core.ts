@@ -174,6 +174,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   completeOnboarding: [
     {
       mode: OnboardingModes;
+      models?: any[];
     },
     void,
   ];

@@ -1,7 +1,17 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
-import { Button, Input, StyledActionButton } from "../components";
+import {
+  ArrowTopRightOnSquareIcon,
+  PlusCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import { useContext } from "react";
+import { FormProvider, useFieldArray, useForm } from "react-hook-form";
+import {
+  Button,
+  GhostButton,
+  Input,
+  SecondaryButton,
+  StyledActionButton,
+} from "../components";
 import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
 import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
@@ -18,7 +28,8 @@ import { updateSelectedModelByRole } from "../redux/thunks";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
 
 interface QuickModelSetupProps {
-  onDone: () => void;
+  onDone?: () => void;
+  onSubmit?: (models: any[]) => void;
   hideFreeTrialLimitMessage?: boolean;
 }
 
@@ -27,21 +38,41 @@ const MODEL_PROVIDERS_URL =
 const CODESTRAL_URL = "https://console.mistral.ai/codestral";
 const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
 
-function AddModelForm({
+interface ProviderFormData {
+  provider: ProviderInfo;
+  apiKey?: string;
+  selectedModels: string[];
+  [key: string]: any;
+}
+
+interface FormData {
+  providers: ProviderFormData[];
+}
+
+export function AddModelForm({
   onDone,
+  onSubmit: onSubmitProp,
   hideFreeTrialLimitMessage,
 }: QuickModelSetupProps) {
-  const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
-    providers["openai"]!,
-  );
   const dispatch = useAppDispatch();
   const { selectedProfile } = useAuth();
 
-  const [selectedModel, setSelectedModel] = useState(
-    selectedProvider.packages[0],
-  );
+  const formMethods = useForm<FormData>({
+    defaultValues: {
+      providers: [
+        {
+          provider: providers["openai"]!,
+          selectedModels: [],
+        },
+      ],
+    },
+  });
 
-  const formMethods = useForm();
+  const { fields, append, remove } = useFieldArray({
+    control: formMethods.control,
+    name: "providers",
+  });
+
   const ideMessenger = useContext(IdeMessengerContext);
 
   const popularProviderTitles = [
@@ -51,13 +82,14 @@ function AddModelForm({
     providers["gemini"]?.title || "",
     providers["azure"]?.title || "",
     providers["ollama"]?.title || "",
+    providers["deepseek"]?.title || "",
   ];
 
   const allProviders = Object.entries(providers)
     .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
     .map(([, provider]) => provider)
     .filter((provider) => !!provider)
-    .map((provider) => provider!); // for type checking
+    .map((provider) => provider!);
 
   const popularProviders = allProviders
     .filter((provider) => popularProviderTitles.includes(provider.title))
@@ -67,77 +99,115 @@ function AddModelForm({
     .filter((provider) => !popularProviderTitles.includes(provider.title))
     .sort((a, b) => a.title.localeCompare(b.title));
 
-  const selectedProviderApiKeyUrl = selectedModel.params.model.startsWith(
-    "codestral",
-  )
-    ? CODESTRAL_URL
-    : selectedProvider.apiKeyUrl;
-
   function isDisabled() {
-    if (
-      selectedProvider.downloadUrl ||
-      selectedProvider.provider === "free-trial"
-    ) {
-      return false;
+    const providersData = formMethods.watch("providers");
+
+    for (let i = 0; i < providersData.length; i++) {
+      const providerData = providersData[i];
+      const selectedProvider = providerData.provider;
+
+      if (providerData.selectedModels.length === 0) {
+        return true;
+      }
+
+      if (
+        !selectedProvider.downloadUrl &&
+        selectedProvider.provider !== "free-trial"
+      ) {
+        const required = selectedProvider.collectInputFor
+          ?.filter((input) => input.required)
+          .map((input) => {
+            const value = formMethods.watch(`providers.${i}.${input.key}`);
+            return value;
+          });
+
+        if (
+          !required?.every((value) => value !== undefined && value.length > 0)
+        ) {
+          return true;
+        }
+      }
     }
 
-    const required = selectedProvider.collectInputFor
-      ?.filter((input) => input.required)
-      .map((input) => {
-        const value = formMethods.watch(input.key);
-        return value;
-      });
-
-    return !required?.every((value) => value !== undefined && value.length > 0);
+    return false;
   }
-
-  useEffect(() => {
-    setSelectedModel(selectedProvider.packages[0]);
-  }, [selectedProvider]);
 
   function onSubmit() {
-    const apiKey = formMethods.watch("apiKey");
-    const hasValidApiKey = apiKey !== undefined && apiKey !== "";
-    const reqInputFields: Record<string, any> = {};
-    for (let input of selectedProvider.collectInputFor ?? []) {
-      reqInputFields[input.key] = formMethods.watch(input.key);
-    }
+    const providersData = formMethods.watch("providers");
+    const models: any[] = [];
 
-    const model = {
-      ...selectedProvider.params,
-      ...selectedModel.params,
-      ...reqInputFields,
-      provider: selectedProvider.provider,
-      title: selectedModel.title,
-      ...(hasValidApiKey ? { apiKey } : {}),
-    };
+    providersData.forEach((providerData) => {
+      const selectedProvider = providerData.provider;
 
-    ideMessenger.post("config/addModel", { model });
-    ideMessenger.post("config/openProfile", {
-      profileId: "local",
+      providerData.selectedModels.forEach((modelTitle) => {
+        const modelPackage = selectedProvider.packages.find(
+          (pkg) => pkg.title === modelTitle,
+        );
+
+        if (modelPackage) {
+          const apiKey = providerData.apiKey;
+          const hasValidApiKey = apiKey !== undefined && apiKey !== "";
+          const reqInputFields: Record<string, any> = {};
+
+          for (let input of selectedProvider.collectInputFor ?? []) {
+            if (input.key !== "apiKey") {
+              reqInputFields[input.key] = (providerData as any)[input.key];
+            }
+          }
+
+          const model = {
+            ...selectedProvider.params,
+            ...modelPackage.params,
+            ...reqInputFields,
+            provider: selectedProvider.provider,
+            title: modelPackage.title,
+            ...(hasValidApiKey ? { apiKey } : {}),
+          };
+
+          models.push(model);
+        }
+      });
     });
 
-    dispatch(
-      updateSelectedModelByRole({
-        selectedProfile,
-        role: "chat",
-        modelTitle: model.title,
-      }),
-    );
+    if (onSubmitProp) {
+      onSubmitProp(models);
+    } else {
+      models.forEach((model) => {
+        ideMessenger.post("config/addModel", { model });
+      });
 
-    onDone();
+      ideMessenger.post("config/openProfile", {
+        profileId: "local",
+      });
+
+      if (models.length > 0) {
+        void dispatch(
+          updateSelectedModelByRole({
+            selectedProfile,
+            role: "chat",
+            modelTitle: models[0].title,
+          }),
+        );
+      }
+    }
+
+    if (onDone) {
+      onDone();
+    }
   }
 
-  function onClickDownloadProvider() {
-    selectedProvider.downloadUrl &&
-      ideMessenger.post("openUrl", selectedProvider.downloadUrl);
+  function addProvider() {
+    append({
+      provider: providers["openai"]!,
+      selectedModels: [],
+    });
   }
 
   return (
     <FormProvider {...formMethods}>
       <form onSubmit={formMethods.handleSubmit(onSubmit)}>
         <div className="mx-auto max-w-md p-6">
-          <h1 className="mb-0 text-center text-2xl">Add Chat model</h1>
+          <h1 className="mb-0 text-center text-2xl">Add Chat models</h1>
           {!hideFreeTrialLimitMessage && hasPassedFTL() && (
             <p className="text-sm text-gray-400">
               You've reached the free trial limit of {FREE_TRIAL_LIMIT_REQUESTS}{" "}
@@ -153,147 +223,211 @@ function AddModelForm({
             </p>
           )}
 
-          <div className="my-8 flex flex-col gap-6">
-            <div>
-              <label className="block text-sm font-medium">Provider</label>
-              <ModelSelectionListbox
-                selectedProvider={selectedProvider}
-                setSelectedProvider={(val: DisplayInfo) => {
-                  const match = [...popularProviders, ...otherProviders].find(
-                    (provider) => provider.title === val.title,
-                  );
-                  if (match) {
-                    setSelectedProvider(match);
-                  }
-                }}
-                topOptions={popularProviders}
-                otherOptions={otherProviders}
-              />
-              <span className="text-description-muted mb-0">
-                Don't see your provider?{" "}
-                <a
-                  className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
-                  onClick={() =>
-                    ideMessenger.post("openUrl", MODEL_PROVIDERS_URL)
-                  }
+          <div className="mt-4 flex flex-col gap-4">
+            {fields.map((field, index) => {
+              const selectedProvider = formMethods.watch(
+                `providers.${index}.provider`,
+              );
+              const selectedModels =
+                formMethods.watch(`providers.${index}.selectedModels`) || [];
+
+              const selectedProviderApiKeyUrl = selectedProvider.packages.some(
+                (pkg) => pkg.params.model?.startsWith("codestral"),
+              )
+                ? CODESTRAL_URL
+                : selectedProvider.apiKeyUrl;
+
+              return (
+                <div
+                  key={field.id}
+                  className="border-border rounded-lg border border-solid px-4 py-3"
                 >
-                  Click here
-                </a>{" "}
-                to view the full list
-              </span>
-            </div>
-
-            {selectedProvider.downloadUrl && (
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Install provider
-                </label>
-
-                <StyledActionButton onClick={onClickDownloadProvider}>
-                  <p className="text-sm underline">
-                    {selectedProvider.downloadUrl}
-                  </p>
-                  <ArrowTopRightOnSquareIcon width={18} height={18} />
-                </StyledActionButton>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium">Model</label>
-              <ModelSelectionListbox
-                selectedProvider={selectedModel}
-                setSelectedProvider={(val: DisplayInfo) => {
-                  const options =
-                    Object.entries(providers).find(
-                      ([, provider]) =>
-                        provider?.title === selectedProvider.title,
-                    )?.[1]?.packages ?? [];
-                  const match = options.find(
-                    (option) => option.title === val.title,
-                  );
-                  if (match) {
-                    setSelectedModel(match);
-                  }
-                }}
-                otherOptions={
-                  Object.entries(providers).find(
-                    ([, provider]) =>
-                      provider?.title === selectedProvider.title,
-                  )?.[1]?.packages
-                }
-              />
-            </div>
-
-            {selectedModel.params.model.startsWith("codestral") && (
-              <div className="my-2">
-                <Alert>
-                  <p className="m-0 text-sm font-bold">Codestral API key</p>
-                  <p className="m-0 mt-1">
-                    Note that codestral requires a different API key from other
-                    Mistral models
-                  </p>
-                </Alert>
-              </div>
-            )}
-
-            {selectedProvider.apiKeyUrl && (
-              <div>
-                <>
-                  <label className="mb-1 block text-sm font-medium">
-                    API key
-                  </label>
-                  <Input
-                    id="apiKey"
-                    className="w-full"
-                    placeholder={`Enter your ${selectedProvider.title} API key`}
-                    {...formMethods.register("apiKey")}
-                  />
-                  <span className="text-description-muted">
-                    <a
-                      className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
-                      onClick={() => {
-                        if (selectedProviderApiKeyUrl) {
-                          ideMessenger.post(
-                            "openUrl",
-                            selectedProviderApiKeyUrl,
-                          );
-                        }
-                      }}
-                    >
-                      Click here
-                    </a>{" "}
-                    to create a {selectedProvider.title} API key
-                  </span>
-                </>
-              </div>
-            )}
-
-            {selectedProvider.collectInputFor &&
-              selectedProvider.collectInputFor
-                .filter(
-                  (field) =>
-                    !Object.values(completionParamsInputs).some(
-                      (input) => input.key === field.key,
-                    ) &&
-                    field.required &&
-                    field.key !== "apiKey",
-                )
-                .map((field) => (
-                  <div>
-                    <>
-                      <label className="mb-1 block text-sm font-medium">
-                        {field.label}
-                      </label>
-                      <Input
-                        id={field.key}
-                        className="w-full"
-                        defaultValue={field.defaultValue}
-                        placeholder={`${field.placeholder}`}
-                        {...formMethods.register(field.key)}
-                      />
-                    </>
+                  <div className="mb-4 flex items-center justify-between">
+                    <label className="text-base font-medium">
+                      {selectedProvider.title} Provider
+                    </label>
+                    {fields.length > 1 && (
+                      <GhostButton
+                        onClick={() => remove(index)}
+                        className="text-description-muted"
+                      >
+                        <XCircleIcon className="h-3 w-3" />
+                      </GhostButton>
+                    )}
                   </div>
-                ))}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="font-medium">Provider</label>
+                      <ModelSelectionListbox
+                        selectedProvider={selectedProvider}
+                        setSelectedProvider={(val: DisplayInfo) => {
+                          const match = [
+                            ...popularProviders,
+                            ...otherProviders,
+                          ].find((provider) => provider.title === val.title);
+                          if (match) {
+                            formMethods.setValue(
+                              `providers.${index}.provider`,
+                              match,
+                            );
+                            formMethods.setValue(
+                              `providers.${index}.selectedModels`,
+                              [],
+                            );
+                          }
+                        }}
+                        topOptions={popularProviders}
+                        otherOptions={otherProviders}
+                      />
+                    </div>
+
+                    {selectedProvider.downloadUrl && (
+                      <div>
+                        <label className="mb-1 block text-sm font-medium">
+                          Install provider
+                        </label>
+                        <StyledActionButton
+                          onClick={() => {
+                            selectedProvider.downloadUrl &&
+                              ideMessenger.post(
+                                "openUrl",
+                                selectedProvider.downloadUrl,
+                              );
+                          }}
+                        >
+                          <p className="text-sm underline">
+                            {selectedProvider.downloadUrl}
+                          </p>
+                          <ArrowTopRightOnSquareIcon width={24} height={24} />
+                        </StyledActionButton>
+                      </div>
+                    )}
+
+                    {selectedProvider.packages.some((pkg) =>
+                      pkg.params.model?.startsWith("codestral"),
+                    ) && (
+                      <div className="my-2">
+                        <Alert>
+                          <p className="m-0 text-sm font-bold">
+                            Codestral API key
+                          </p>
+                          <p className="m-0 mt-1">
+                            Note that codestral requires a different API key
+                            from other Mistral models
+                          </p>
+                        </Alert>
+                      </div>
+                    )}
+
+                    {selectedProvider.apiKeyUrl && (
+                      <div>
+                        <label className="mb-1 font-medium">API key</label>
+                        <Input
+                          id={`providers.${index}.apiKey`}
+                          className="w-full"
+                          placeholder={`Enter your ${selectedProvider.title} API key`}
+                          {...formMethods.register(`providers.${index}.apiKey`)}
+                        />
+                        <span className="text-description-muted text-xs">
+                          <a
+                            className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
+                            onClick={() => {
+                              if (selectedProviderApiKeyUrl) {
+                                ideMessenger.post(
+                                  "openUrl",
+                                  selectedProviderApiKeyUrl,
+                                );
+                              }
+                            }}
+                          >
+                            Click here
+                          </a>{" "}
+                          to create a {selectedProvider.title} API key
+                        </span>
+                      </div>
+                    )}
+
+                    {selectedProvider.collectInputFor &&
+                      selectedProvider.collectInputFor
+                        .filter(
+                          (field) =>
+                            !Object.values(completionParamsInputs).some(
+                              (input) => input.key === field.key,
+                            ) &&
+                            field.required &&
+                            field.key !== "apiKey",
+                        )
+                        .map((field) => (
+                          <div key={field.key}>
+                            <label className="mb-1 block text-sm font-medium">
+                              {field.label}
+                            </label>
+                            <Input
+                              id={`providers.${index}.${field.key}`}
+                              className="w-full"
+                              defaultValue={field.defaultValue}
+                              placeholder={`${field.placeholder}`}
+                              {...formMethods.register(
+                                `providers.${index}.${field.key}`,
+                              )}
+                            />
+                          </div>
+                        ))}
+
+                    <div>
+                      <label className="font-medium">Models</label>
+                      <div className="max-h-40 space-y-2 overflow-y-auto rounded border border-gray-200 py-2">
+                        {selectedProvider.packages.map((model) => (
+                          <div key={model.title} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`providers.${index}.models.${model.title}`}
+                              value={model.title}
+                              checked={selectedModels.includes(model.title)}
+                              onChange={(e) => {
+                                const currentSelected = selectedModels;
+                                if (e.target.checked) {
+                                  formMethods.setValue(
+                                    `providers.${index}.selectedModels`,
+                                    [...currentSelected, model.title],
+                                  );
+                                } else {
+                                  formMethods.setValue(
+                                    `providers.${index}.selectedModels`,
+                                    currentSelected.filter(
+                                      (m) => m !== model.title,
+                                    ),
+                                  );
+                                }
+                              }}
+                              className="mr-2"
+                            />
+                            <label
+                              htmlFor={`providers.${index}.models.${model.title}`}
+                              className="flex cursor-pointer items-center text-sm"
+                            >
+                              {window.vscMediaUrl && model.icon && (
+                                <img
+                                  src={`${window.vscMediaUrl}/logos/${model.icon}`}
+                                  className="mr-2 h-4 w-4 object-contain object-center"
+                                />
+                              )}
+                              {model.title}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <SecondaryButton onClick={addProvider} type="button">
+              <PlusCircleIcon className="mr-2 h-3 w-3" />
+              Add another provider
+            </SecondaryButton>
           </div>
 
           <div className="mt-4 w-full">
@@ -307,5 +441,3 @@ function AddModelForm({
     </FormProvider>
   );
 }
-
-export default AddModelForm;

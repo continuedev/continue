@@ -46,11 +46,7 @@ import {
 
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
-import {
-  setupBestConfig,
-  setupLocalConfig,
-  setupQuickstartConfig,
-} from "./config/onboarding";
+import { setupLocalConfig, setupQuickstartConfig } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -60,6 +56,7 @@ import { LLMError } from "./llm";
 import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { StreamAbortManager } from "./util/abortManager";
 
@@ -892,26 +889,36 @@ export class Core {
     }
   }
 
-  private async handleCompleteOnboarding(msg: Message<{ mode: string }>) {
-    const mode = msg.data.mode;
-
-    if (mode === "Custom") {
-      return;
-    }
+  private async handleCompleteOnboarding(
+    msg: Message<{ mode: OnboardingModes; models?: any[] }>,
+  ) {
+    const { mode, models } = msg.data;
 
     let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
     switch (mode) {
-      case "Local":
+      case OnboardingModes.OLLAMA:
         editConfigYamlCallback = setupLocalConfig;
         break;
 
-      case "Quickstart":
-        editConfigYamlCallback = setupQuickstartConfig;
-        break;
-
-      case "Best":
-        editConfigYamlCallback = setupBestConfig;
+      case OnboardingModes.API_KEYS:
+        if (models && models.length > 0) {
+          editConfigYamlCallback = (config: ConfigYaml) => ({
+            ...config,
+            models: [
+              ...(config.models ?? []),
+              ...models.map((model) => ({
+                name: model.title,
+                provider: model.provider,
+                model: model.model,
+                apiKey: model.apiKey,
+                roles: ["chat", "edit"] as any,
+              })),
+            ],
+          });
+        } else {
+          editConfigYamlCallback = setupQuickstartConfig;
+        }
         break;
 
       default:

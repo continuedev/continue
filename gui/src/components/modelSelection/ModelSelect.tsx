@@ -1,4 +1,5 @@
 import {
+  ArrowPathIcon,
   CheckIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
@@ -8,8 +9,9 @@ import {
 import { useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import AddModelForm from "../../forms/AddModelForm";
+import { AddModelForm } from "../../forms";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { EMPTY_CONFIG } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks";
 import {
@@ -185,6 +187,9 @@ function ModelSelect() {
     );
   }
 
+  const isConfigLoading = config === EMPTY_CONFIG;
+  const hasNoModels = allModels?.length === 0;
+
   return (
     <Listbox
       onChange={async (val: string) => {
@@ -226,18 +231,29 @@ function ModelSelect() {
           </div>
 
           <div className="no-scrollbar max-h-[300px] overflow-y-auto">
-            {sortedOptions.map((option, idx) => (
-              <ModelOption
-                option={option}
-                idx={idx}
-                key={idx}
-                showMissingApiKeyMsg={option.apiKey === ""}
-                isSelected={option.value === selectedModel?.title}
-              />
-            ))}
+            {isConfigLoading ? (
+              <div className="flex items-center justify-center gap-2 px-2 py-4 text-sm">
+                <ArrowPathIcon className="h-3 w-3 animate-spin" />
+                <span>Loading config</span>
+              </div>
+            ) : hasNoModels ? (
+              <div className="text-description-muted px-2 py-4 text-center text-sm">
+                No models configured
+              </div>
+            ) : (
+              sortedOptions.map((option, idx) => (
+                <ModelOption
+                  option={option}
+                  idx={idx}
+                  key={idx}
+                  showMissingApiKeyMsg={option.apiKey === ""}
+                  isSelected={option.value === selectedModel?.title}
+                />
+              ))
+            )}
           </div>
 
-          {selectedProfile?.profileType === "local" && (
+          {!isConfigLoading && selectedProfile?.profileType === "local" && (
             <ListboxOption
               key={options.length}
               onClick={onClickAddModel}
