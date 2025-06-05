@@ -47,6 +47,10 @@ export class MessageIde implements IDE {
     this.on("didChangeActiveTextEditor", (data) => callback(data.filepath));
   }
 
+  onDidCloseTextDocument(callback: (fileUris: string[]) => void): void {
+    this.on("didCloseTextDocument", (data) => callback(data.filepaths));
+  }
+
   getIdeSettings(): Promise<IdeSettings> {
     return this.request("getIdeSettings", undefined);
   }
