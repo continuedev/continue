@@ -34,6 +34,7 @@ class FileSystemIde implements IDE {
   ): Promise<void> {
     return Promise.resolve();
   }
+
   fileExists(fileUri: string): Promise<boolean> {
     const filepath = fileURLToPath(fileUri);
     return Promise.resolve(fs.existsSync(filepath));
@@ -42,7 +43,12 @@ class FileSystemIde implements IDE {
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return Promise.resolve([]);
   }
+
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
+    return;
+  }
+
+  onDidCloseTextDocument(callback: (fileUris: string[]) => void): void {
     return;
   }
 
@@ -55,6 +61,7 @@ class FileSystemIde implements IDE {
       pauseCodebaseIndexOnStart: false,
     };
   }
+
   async getFileStats(fileUris: string[]): Promise<FileStatsMap> {
     const result: FileStatsMap = {};
     for (const uri of fileUris) {
@@ -71,9 +78,11 @@ class FileSystemIde implements IDE {
     }
     return result;
   }
+
   getGitRootPath(dir: string): Promise<string | undefined> {
     return Promise.resolve(dir);
   }
+
   async listDir(dir: string): Promise<[string, FileType][]> {
     const filepath = fileURLToPath(dir);
     const all: [string, FileType][] = fs
