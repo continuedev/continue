@@ -971,6 +971,7 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
+  config: ContinueConfig;
   codeBaseIndexer?: CodebaseIndexer;
 }
 

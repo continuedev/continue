@@ -1009,21 +1009,4 @@ export class Core {
       return [];
     }
   };
-
-  private indexingCancellationController: AbortController | undefined;
-  private async sendIndexingErrorTelemetry(update: IndexingProgressUpdate) {
-    console.debug(
-      "Indexing failed with error: ",
-      update.desc,
-      update.debugInfo,
-    );
-    void Telemetry.capture(
-      "indexing_error",
-      {
-        error: update.desc,
-        stack: update.debugInfo,
-      },
-      false,
-    );
-  }
 }
