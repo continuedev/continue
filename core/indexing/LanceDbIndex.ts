@@ -294,17 +294,27 @@ export class LanceDbIndex implements CodebaseIndex {
       );
       const cachedItems = await stmt.all();
 
-      const lanceRows: LanceDbRow[] = cachedItems.map(
-        ({ uuid, vector, startLine, endLine, contents }) => ({
-          path,
-          uuid,
-          startLine,
-          endLine,
-          contents,
-          cachekey: cacheKey,
-          vector: JSON.parse(vector),
-        }),
-      );
+      const lanceRows: LanceDbRow[] = [];
+      for (const item of cachedItems) {
+        try {
+          const vector = JSON.parse(item.vector);
+          const { uuid, startLine, endLine, contents } = item;
+
+          cachedItems.push({
+            path,
+            uuid,
+            startLine,
+            endLine,
+            contents,
+            cachekey: cacheKey,
+            vector,
+          });
+        } catch (err) {
+          console.warn(
+            `LanceDBIndex, skipping ${item.path} due to invalid vector JSON:\n${item.vector}\n\nError: ${err}`,
+          );
+        }
+      }
 
       if (lanceRows.length > 0) {
         if (needToCreateLanceTable) {

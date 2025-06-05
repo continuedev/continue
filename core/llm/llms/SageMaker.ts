@@ -157,14 +157,23 @@ class SageMaker extends BaseLLM {
     const response = await client.send(command);
 
     if (response.Body) {
-      const responseBody = JSON.parse(new TextDecoder().decode(response.Body));
-      // If the body contains a key called "embedding" or "embeddings", return the value, otherwise return the whole body
-      if (responseBody.embedding) {
-        return responseBody.embedding;
-      } else if (responseBody.embeddings) {
-        return responseBody.embeddings;
-      } else {
-        return responseBody;
+      const decoder = new TextDecoder();
+      const decoded = decoder.decode(response.Body);
+      try {
+        const responseBody = JSON.parse(decoded);
+        // If the body contains a key called "embedding" or "embeddings", return the value, otherwise return the whole body
+        if (responseBody.embedding) {
+          return responseBody.embedding;
+        } else if (responseBody.embeddings) {
+          return responseBody.embeddings;
+        } else {
+          return responseBody;
+        }
+      } catch (e) {
+        let message = e instanceof Error ? e.message : String(e);
+        throw new Error(
+          `Failed to parse response from SageMaker:\n${decoded}\nError: ${message}`,
+        );
       }
     }
   }
