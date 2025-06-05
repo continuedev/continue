@@ -118,7 +118,6 @@ async function loadConfigYaml(options: {
   // );
 
   // This is how we allow use of blocks locally
-  const NEED_ERROR_PROPAGATION = true;
   const unrollResult = await unrollAssistant(
     packageIdentifier,
     new RegistryClient({
@@ -138,20 +137,21 @@ async function loadConfigYaml(options: {
       ),
       renderSecrets: true,
       injectBlocks: allLocalBlocks,
+      asConfigResult: true
     },
-    NEED_ERROR_PROPAGATION,
   );
 
   const errors: ConfigValidationError[] = [];
 
-  let config = overrideConfigYaml ?? unrollResult.config;
+  const config = overrideConfigYaml ?? unrollResult.config;
+
   if (config) {
     isAssistantUnrolledNonNullable(config)
       ? errors.push(...validateConfigYaml(config))
       : errors.push({
-          fatal: true,
-          message: "Assistant includes blocks that don't exist",
-        });
+        fatal: true,
+        message: "Assistant includes blocks that don't exist",
+      });
   }
 
   if (unrollResult.errors) {
