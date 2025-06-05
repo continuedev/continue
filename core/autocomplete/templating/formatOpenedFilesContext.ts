@@ -1,30 +1,28 @@
 import { countTokens, pruneStringFromBottom } from "../../llm/countTokens";
-import { AutocompleteSnippet } from "../snippets/types";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippet,
+} from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 
 let logMin: number;
 let logMax: number;
 
-// when ranking files according to scores
 const numFilesConsidered = 10;
 const defaultNumFilesUsed = 5;
-
-// for scores
-const recencyWeight = 0.5;
-const sizeWeight = 0.5;
-
-const minSize = 10; // for numerical stability in log computations
-
+const recencyWeight = 0.6;
+const sizeWeight = 0.4;
+const minSize = 10;
 const minTokensInSnippet = 125;
 
-// Reduces opened file snippets to fit within the remaining amount of tokens
+// Fits opened-file snippets into the remaining amount of prompt tokens
 export function formatOpenedFilesContext(
-  recentlyOpenedFilesSnippets: AutocompleteSnippet[],
+  recentlyOpenedFilesSnippets: AutocompleteCodeSnippet[],
   remainingTokenCount: number,
   helper: HelperVars,
   alreadyAddedSnippets: AutocompleteSnippet[], // TODO use this to deduplicate context
   TOKEN_BUFFER: number,
-): AutocompleteSnippet[] {
+): AutocompleteCodeSnippet[] {
   if (recentlyOpenedFilesSnippets.length === 0) {
     return [];
   }
@@ -51,12 +49,12 @@ export function formatOpenedFilesContext(
     }
   }
 
-  // if we can fit all untrimmed snippets, or more than some default value, return the untrimmed snippets
+  // if all the untrimmed snippets, or more than a default value, fit, return the untrimmed snippets
   if (numSnippetsThatFit >= numFilesUsed) {
     return recentlyOpenedFilesSnippets.slice(0, numSnippetsThatFit);
   }
 
-  // If we can't fit all these, we need to adaptively trim them.
+  // If they don't fit, adaptively trim them.
   setLogStats(recentlyOpenedFilesSnippets);
   const topScoredSnippets = rankByScore(recentlyOpenedFilesSnippets);
   let N = topScoredSnippets.length;
@@ -66,7 +64,7 @@ export function formatOpenedFilesContext(
     if (N === 0) break;
   }
 
-  let trimmedSnippets = new Array<AutocompleteSnippet>();
+  let trimmedSnippets = new Array<AutocompleteCodeSnippet>();
 
   while (N > 0) {
     let W = 2 / (N + 1);
@@ -91,11 +89,10 @@ export function formatOpenedFilesContext(
 
 // Rank snippets by recency and size
 const rankByScore = (
-  snippets: AutocompleteSnippet[],
-): AutocompleteSnippet[] => {
+  snippets: AutocompleteCodeSnippet[],
+): AutocompleteCodeSnippet[] => {
   if (snippets.length === 0) return [];
 
-  // Keep only the top numFilesConsidered elements (or all if fewer)
   const topSnippets = snippets.slice(0, numFilesConsidered);
 
   // Sort by score (using original index for recency calculation)
@@ -105,15 +102,22 @@ const rankByScore = (
     score: getRecencyAndSizeScore(i, snippet),
   }));
 
+  // Uncomment to debug. Logs the table of snippets with their scores (in order of recency).
+  /* console.table(
+    topSnippets.map((snippet, i) => ({
+      filepath: "filepath" in snippet ? snippet.filepath : "unknown",
+      recencyAndSizeScore: getRecencyAndSizeScore(i, snippet),
+    })),
+  ); */
+
   scoredSnippets.sort((a, b) => b.score - a.score);
 
-  // Return the top defaultNumFilesUsed (or all if fewer)
   return scoredSnippets
     .slice(0, Math.min(defaultNumFilesUsed, scoredSnippets.length))
     .map((item) => item.snippet);
 };
 
-// returns linear combination of recency and size scores
+// Returns linear combination of recency and size scores
 // recency score is exponential decay over recency; log normalized score is used for size
 const getRecencyAndSizeScore = (
   index: number,
@@ -123,12 +127,11 @@ const getRecencyAndSizeScore = (
 
   const logCurrent = Math.log(Math.max(snippet.content.length, minSize));
   const sizeScore =
-    logMax === logMin ? 0.5 : 1 - (logCurrent - logMax) / (logMax - logMin);
+    logMax === logMin ? 0.5 : 1 - (logCurrent - logMin) / (logMax - logMin);
 
   return recencyWeight * recencyScore + sizeWeight * sizeScore;
 };
 
-// Utility to set logMin and logMax
 const setLogStats = (snippets: AutocompleteSnippet[]): void => {
   let contentSizes = snippets
     .slice(0, 10)
@@ -139,31 +142,20 @@ const setLogStats = (snippets: AutocompleteSnippet[]): void => {
 };
 
 function trimSnippetForContext(
-  snippet: AutocompleteSnippet,
+  snippet: AutocompleteCodeSnippet,
   maxTokens: number,
   modelName: string,
-): { newSnippet: AutocompleteSnippet; newTokens: number } {
-  // If the code is already under the token limit, return it as is
+): { newSnippet: AutocompleteCodeSnippet; newTokens: number } {
   let numTokensInSnippet = countTokens(snippet.content, modelName);
   if (numTokensInSnippet <= maxTokens) {
     return { newSnippet: snippet, newTokens: numTokensInSnippet };
   }
 
-  // Else trim from bottom
   let trimmedCode = pruneStringFromBottom(
     modelName,
     maxTokens,
     snippet.content,
   );
-
-  // Add an indicator that the code has been trimmed
-  if (trimmedCode !== snippet.content) {
-    const lastNewline = trimmedCode.lastIndexOf("\n");
-    if (lastNewline !== -1) {
-      trimmedCode =
-        trimmedCode.substring(0, lastNewline) + "\n// remaining code trimmed";
-    }
-  }
 
   return {
     newSnippet: { ...snippet, content: trimmedCode },
