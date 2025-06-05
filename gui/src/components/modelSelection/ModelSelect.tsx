@@ -6,14 +6,17 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
-import { lightGray } from "..";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import {
+  fontSize,
+  getMetaKeyLabel,
+  isMetaEquivalentKeyPressed,
+} from "../../util";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 
 interface ModelOptionProps {
@@ -48,15 +51,6 @@ function ModelOption({
 }: ModelOptionProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const [hovered, setHovered] = useState(false);
-
-  function onClickGear(e: any) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    ideMessenger.post("config/openProfile", { profileId: undefined });
-  }
-
   function handleOptionClick(e: any) {
     if (showMissingApiKeyMsg) {
       e.preventDefault();
@@ -69,33 +63,21 @@ function ModelOption({
       key={idx}
       disabled={showMissingApiKeyMsg}
       value={option.value}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       onClick={handleOptionClick}
     >
-      <div className="flex flex-col gap-0.5">
-        <div className="flex flex-1 flex-row items-center justify-between gap-2">
-          <div className="flex flex-1 flex-row items-center gap-2">
-            <CubeIcon className="h-3 w-3 flex-shrink-0" />
-            <span className="line-clamp-1 flex-1">
-              {option.title}
-              {showMissingApiKeyMsg && (
-                <span className="ml-2 text-[10px] italic">
-                  (Missing API key)
-                </span>
-              )}
-            </span>
-          </div>
-          <div className="flex flex-shrink-0 flex-row items-center gap-1">
-            <Cog6ToothIcon
-              className="h-3 w-3 flex-shrink-0 hover:brightness-125"
-              onClick={onClickGear}
-            />
-            <CheckIcon
-              className={`block h-3 w-3 flex-shrink-0 ${isSelected ? undefined : "invisible"}`}
-            />
-          </div>
+      <div className="flex w-full items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CubeIcon className="h-3 w-3 flex-shrink-0" />
+          <span className="line-clamp-1">
+            {option.title}
+            {showMissingApiKeyMsg && (
+              <span className="ml-2 text-[10px] italic">(Missing API key)</span>
+            )}
+          </span>
         </div>
+        <CheckIcon
+          className={`h-3 w-3 flex-shrink-0 ${isSelected ? "" : "invisible"}`}
+        />
       </div>
     </ListboxOption>
   );
@@ -106,6 +88,11 @@ function ModelSelect() {
 
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const config = useAppSelector((state) => state.config.config);
+  const ideMessenger = useContext(IdeMessengerContext);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [options, setOptions] = useState<Option[]>([]);
+  const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
+  const { selectedProfile } = useAuth();
 
   let selectedModel = null;
   let allModels = null;
@@ -119,11 +106,6 @@ function ModelSelect() {
   if (!allModels || allModels.length === 0) {
     allModels = config.modelsByRole.chat;
   }
-
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [options, setOptions] = useState<Option[]>([]);
-  const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
-  const { selectedProfile } = useAuth();
 
   // Sort so that options without an API key are at the end
   useEffect(() => {
@@ -230,8 +212,20 @@ function ModelSelect() {
             aria-hidden="true"
           />
         </ListboxButton>
-        <ListboxOptions className={"min-w-[160px]"}>
-          <div className={`no-scrollbar max-h-[300px] overflow-y-auto`}>
+        <ListboxOptions className="min-w-[160px]">
+          <div className="flex items-center justify-between gap-1 px-2 py-1">
+            <span className="font-semibold">Models</span>
+            <Cog6ToothIcon
+              className="text-description h-3 w-3 cursor-pointer hover:brightness-125"
+              onClick={() =>
+                ideMessenger.post("config/openProfile", {
+                  profileId: undefined,
+                })
+              }
+            />
+          </div>
+
+          <div className="no-scrollbar max-h-[300px] overflow-y-auto">
             {sortedOptions.map((option, idx) => (
               <ModelOption
                 option={option}
@@ -243,25 +237,25 @@ function ModelSelect() {
             ))}
           </div>
 
-          <div className="">
-            {selectedProfile?.profileType === "local" && (
-              <>
-                <ListboxOption
-                  key={options.length}
-                  onClick={onClickAddModel}
-                  value={"addModel" as any}
-                >
-                  <div className="text-description flex items-center py-0.5 hover:text-inherit">
-                    <PlusIcon className="mr-2 h-3 w-3" />
-                    Add Chat model
-                  </div>
-                </ListboxOption>
-              </>
-            )}
+          {selectedProfile?.profileType === "local" && (
+            <ListboxOption
+              key={options.length}
+              onClick={onClickAddModel}
+              value={"addModel" as any}
+              className="border-border border-x-0 border-y border-solid"
+            >
+              <div className="text-description flex items-center py-0.5 hover:text-inherit">
+                <PlusIcon className="mr-2 h-3 w-3" />
+                Add Chat model
+              </div>
+            </ListboxOption>
+          )}
 
-            <span className="block px-2 py-1" style={{ color: lightGray }}>
-              {getMetaKeyLabel()}' to toggle model
-            </span>
+          <div
+            className="text-description-muted px-2 py-1"
+            style={{ fontSize: fontSize(-3) }}
+          >
+            <code>{getMetaKeyLabel()}'</code> to toggle model
           </div>
         </ListboxOptions>
       </div>
