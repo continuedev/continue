@@ -10,6 +10,16 @@ import {
 
 const asyncExec = util.promisify(childProcess.exec);
 
+// Add color-supporting environment variables
+const getColorEnv = () => ({
+  ...process.env,
+  FORCE_COLOR: "1",
+  COLORTERM: "truecolor",
+  TERM: "xterm-256color",
+  CLICOLOR: "1",
+  CLICOLOR_FORCE: "1",
+});
+
 const ENABLED_FOR_REMOTES = [
   "",
   "local",
@@ -56,10 +66,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 }
               }
 
-              // Use spawn instead of exec to get streaming output
+              // Use spawn with color environment
               const childProc = childProcess.spawn(args.command, {
                 cwd,
                 shell: true,
+                env: getColorEnv(), // Add enhanced environment for colors
               });
 
               childProc.stdout?.on("data", (data) => {
@@ -200,7 +211,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
       if (waitForCompletion) {
         // Standard execution, waiting for completion
         try {
-          const output = await asyncExec(args.command, { cwd });
+          // Use color environment for exec as well
+          const output = await asyncExec(args.command, {
+            cwd,
+            env: getColorEnv(),
+          });
           const status = "Command completed";
           return [
             {
@@ -225,10 +240,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // For non-streaming but also not waiting for completion, use spawn
         // but don't attach any listeners other than error
         try {
-          // Use spawn instead of exec but don't wait
+          // Use spawn with color environment
           const childProc = childProcess.spawn(args.command, {
             cwd,
             shell: true,
+            env: getColorEnv(), // Add color environment
             // Detach the process so it's not tied to the parent
             detached: true,
             // Redirect to /dev/null equivalent (works cross-platform)
