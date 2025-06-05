@@ -1,7 +1,10 @@
 import ignore from "ignore";
 
 import { IDE } from "../..";
-import { getGlobalContinueIgArray } from "../../indexing/ignore";
+import {
+  getGlobalContinueIgArray,
+  getWorkspaceContinueIgArray,
+} from "../../indexing/ignore";
 import { getConfigJsonPath } from "../../util/paths";
 import { findUriInDirs } from "../../util/uri";
 import { HelperVars } from "../util/HelperVars";
@@ -55,6 +58,7 @@ export async function shouldPrefilter(
     ...(helper.options.disableInFiles ?? []),
     "*.prompt",
     ...getGlobalContinueIgArray(),
+    ...(await getWorkspaceContinueIgArray(ide)),
   ];
   if (await isDisabledForFile(helper.filepath, disableInFiles, ide)) {
     return true;
