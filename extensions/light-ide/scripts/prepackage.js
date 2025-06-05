@@ -344,12 +344,13 @@ void (async () => {
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
   // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
-  if (isArmTarget) {
+  //if (isArmTarget) {
     // lancedb binary
     const packageToInstall = {
       "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
       "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
       "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
+      "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
     }[target];
     console.log(
       "[info] Downloading pre-built lancedb binary: " + packageToInstall,
@@ -371,6 +372,8 @@ void (async () => {
       // node-sqlite3 doesn't have a pre-built binary for win32-arm64
       "win32-arm64":
         "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz",
+      "win32-x64":
+        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-win32-x64.tar.gz",
     }[target];
     execCmdSync(
       `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
@@ -379,6 +382,7 @@ void (async () => {
     fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
 
     // Download and unzip esbuild
+  if (isArmTarget) {
     console.log("[info] Downloading pre-built esbuild binary");
     rimrafSync("node_modules/@esbuild");
     fs.mkdirSync("node_modules/@esbuild", { recursive: true });
@@ -388,13 +392,29 @@ void (async () => {
     execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
   } else {
+    await installNodeModuleInTempDirAndCopyToCurrent(
+      "esbuild@0.17.19",
+      "@esbuild"
+    );
+  }
+  /*} else {
     // Download esbuild from npm in tmp and copy over
     console.log("npm installing esbuild binary");
     await installNodeModuleInTempDirAndCopyToCurrent(
       "esbuild@0.17.19",
-      "@esbuild",
+      "@esbuild"
     );
-  }
+    const packageToInstall = {
+      "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
+    }[target];
+    console.log(
+      "[info] Downloading pre-built lancedb binary: " + packageToInstall,
+    );
+    await installNodeModuleInTempDirAndCopyToCurrent(
+      packageToInstall,
+      "@lancedb"
+    );
+  }*/
 
   console.log("[info] Copying sqlite node binding from core");
   await new Promise((resolve, reject) => {
@@ -430,6 +450,7 @@ void (async () => {
     );
   });
 
+
   // Copy node_modules for pre-built binaries
   const NODE_MODULES_TO_COPY = [
     "esbuild",
@@ -438,6 +459,7 @@ void (async () => {
     // "@vscode/ripgrep",
     "workerpool"
   ];
+
 
   fs.mkdirSync("out/node_modules", { recursive: true });
 
@@ -485,12 +507,11 @@ void (async () => {
 
     // onnx runtime bindngs
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
-    `bin/napi-v3/${os}/${arch}/${
-      isMacTarget
-        ? "libonnxruntime.1.14.0.dylib"
-        : isLinuxTarget
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+    `bin/napi-v3/${os}/${arch}/${isMacTarget
+      ? "libonnxruntime.1.14.0.dylib"
+      : isLinuxTarget
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
 
     // Code/styling for the sidebar
@@ -524,12 +545,11 @@ void (async () => {
 
     // out/node_modules (to be accessed by extension.js)
     // `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+    `out/node_modules/@esbuild/${target === "win32-arm64"
+      ? "esbuild.exe"
+      : target === "win32-x64"
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${target}${isWinTarget ? "-msvc" : ""}${isLinuxTarget ? "-gnu" : ""}/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
