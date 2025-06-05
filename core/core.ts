@@ -14,7 +14,7 @@ import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
-import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
+import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
@@ -41,7 +41,6 @@ import {
   type ContextItem,
   type ContextItemId,
   type IDE,
-  type IndexingProgressUpdate,
 } from ".";
 
 import { ConfigYaml } from "@continuedev/config-yaml";
@@ -54,10 +53,10 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
-import { LLMError } from "./llm";
 import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -66,17 +65,11 @@ import { StreamAbortManager } from "./util/abortManager";
 
 export class Core {
   configHandler: ConfigHandler;
-  codebaseIndexerPromise: Promise<CodebaseIndexer>;
+  codeBaseIndexer: CodebaseIndexer;
   completionProvider: CompletionProvider;
-  continueServerClientPromise: Promise<ContinueServerClient>;
-  codebaseIndexingState: IndexingProgressUpdate;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
-
-  private readonly indexingPauseToken = new PauseToken(
-    this.globalContext.get("indexingPaused") === true,
-  );
 
   private messageAbortControllers = new Map<string, AbortController>();
   private addMessageAbortController(id: string): AbortController {
@@ -115,12 +108,6 @@ export class Core {
     // Ensure .continue directory is created
     migrateV1DevDataFiles();
 
-    this.codebaseIndexingState = {
-      status: "loading",
-      desc: "loading",
-      progress: 0,
-    };
-
     const ideInfoPromise = messenger.request("getIdeInfo", undefined);
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
@@ -144,6 +131,13 @@ export class Core {
     MCPManagerSingleton.getInstance().onConnectionsRefreshed = async () => {
       await this.configHandler.reloadConfig();
     };
+
+    this.codeBaseIndexer = new CodebaseIndexer(
+      this.configHandler,
+      this.ide,
+      this.messenger,
+      this.globalContext.get("indexingPaused"),
+    );
 
     this.configHandler.onConfigUpdate(async (result) => {
       const serializedResult = await this.configHandler.getSerializedConfig();
@@ -171,38 +165,17 @@ export class Core {
     dataLogger.ideInfoPromise = ideInfoPromise;
     dataLogger.ideSettingsPromise = ideSettingsPromise;
 
-    // Codebase Indexer and ContinueServerClient depend on IdeSettings
-    let codebaseIndexerResolve: (_: any) => void | undefined;
-    this.codebaseIndexerPromise = new Promise(
-      async (resolve) => (codebaseIndexerResolve = resolve),
-    );
-
-    let continueServerClientResolve: (_: any) => void | undefined;
-    this.continueServerClientPromise = new Promise(
-      (resolve) => (continueServerClientResolve = resolve),
-    );
-
     void ideSettingsPromise.then((ideSettings) => {
       const continueServerClient = new ContinueServerClient(
         ideSettings.remoteConfigServerUrl,
         ideSettings.userToken,
-      );
-      continueServerClientResolve(continueServerClient);
-
-      codebaseIndexerResolve(
-        new CodebaseIndexer(
-          this.configHandler,
-          this.ide,
-          this.indexingPauseToken,
-          continueServerClient,
-        ),
       );
 
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
-          this.indexingPauseToken.paused = true;
+          this.codeBaseIndexer.paused = true;
           void this.messenger.request("indexProgress", {
             progress: 0,
             desc: "Initial Indexing Skipped",
@@ -211,7 +184,7 @@ export class Core {
           return;
         }
 
-        void this.refreshCodebaseIndex(dirs);
+        void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
       });
     });
 
@@ -556,25 +529,24 @@ export class Core {
       }
       walkDirCache.invalidate();
       if (data?.shouldClearIndexes) {
-        const codebaseIndexer = await this.codebaseIndexerPromise;
-        await codebaseIndexer.clearIndexes();
+        await this.codeBaseIndexer.clearIndexes();
       }
 
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
-      await this.refreshCodebaseIndex(dirs);
+      await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
       this.globalContext.update("indexingPaused", msg.data);
-      this.indexingPauseToken.paused = msg.data;
+      // Update using the new setter instead of token
+      this.codeBaseIndexer.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.codebaseIndexingState.status !== "loading") {
-        void this.messenger.request(
-          "indexProgress",
-          this.codebaseIndexingState,
-        );
+      const currentState = this.codeBaseIndexer.currentIndexingState;
+
+      if (currentState.status !== "loading") {
+        void this.messenger.request("indexProgress", currentState);
       }
     });
 
@@ -594,7 +566,7 @@ export class Core {
         });
         const { config } = await this.configHandler.loadConfig();
         if (config && !config.disableIndexing) {
-          await this.refreshCodebaseIndexFiles(toRefresh);
+          await this.codeBaseIndexer.refreshCodebaseIndexFiles(toRefresh);
         }
       }
     };
@@ -755,6 +727,11 @@ export class Core {
         return isBackgrounded; // Return true to indicate the message was handled successfully
       },
     );
+
+    on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
+      const isValid = setMdmLicenseKey(licenseKey);
+      return isValid;
+    });
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -860,7 +837,7 @@ export class Core {
             // Reindex the file
             const ignore = await shouldIgnore(uri, this.ide);
             if (!ignore) {
-              await this.refreshCodebaseIndexFiles([uri]);
+              await this.codeBaseIndexer.refreshCodebaseIndexFiles([uri]);
             }
           }
         }
@@ -1031,100 +1008,4 @@ export class Core {
       return [];
     }
   };
-
-  private indexingCancellationController: AbortController | undefined;
-  private async sendIndexingErrorTelemetry(update: IndexingProgressUpdate) {
-    console.debug(
-      "Indexing failed with error: ",
-      update.desc,
-      update.debugInfo,
-    );
-    void Telemetry.capture(
-      "indexing_error",
-      {
-        error: update.desc,
-        stack: update.debugInfo,
-      },
-      false,
-    );
-  }
-
-  private async refreshCodebaseIndex(paths: string[]) {
-    if (this.indexingCancellationController) {
-      this.indexingCancellationController.abort();
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshDirs(paths, this.indexingCancellationController.signal)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index directories : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  private async refreshCodebaseIndexFiles(files: string[]) {
-    // Can be cancelled by codebase index but not vice versa
-    if (
-      this.indexingCancellationController &&
-      !this.indexingCancellationController.signal.aborted
-    ) {
-      return;
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshFiles(files)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index files : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  // private
-  handleIndexingError(e: any) {
-    if (e instanceof LLMError) {
-      // Need to report this specific error to the IDE for special handling
-      void this.messenger.request("reportError", e);
-    }
-    // broadcast indexing error
-    let updateToSend: IndexingProgressUpdate = {
-      progress: 0,
-      status: "failed",
-      desc: e.message,
-    };
-    void this.messenger.request("indexProgress", updateToSend);
-    this.codebaseIndexingState = updateToSend;
-    void this.sendIndexingErrorTelemetry(updateToSend);
-  }
 }
