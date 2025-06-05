@@ -220,11 +220,11 @@ export class CompletionProvider {
 
         const processedCompletion = helper.options.transform
           ? postprocessCompletion({
-            completion,
-            prefix: helper.prunedPrefix,
-            suffix: helper.prunedSuffix,
-            llm,
-          })
+              completion,
+              prefix: helper.prunedPrefix,
+              suffix: helper.prunedSuffix,
+              llm,
+            })
           : completion;
 
         completion = processedCompletion;
