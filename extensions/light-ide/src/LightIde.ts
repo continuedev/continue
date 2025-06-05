@@ -16,7 +16,7 @@ export class LightIde implements IDE {
   }
 
   async getIdeInfo(): Promise<IdeInfo> {
-    console.log("LightIde.getIdeInfo called");
+    // console.log("LightIde.getIdeInfo called");
     return {
       ideType: "vscode", // Or "node" if you prefer
       name: "LightIde",
@@ -77,7 +77,7 @@ export class LightIde implements IDE {
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
-    console.log("LightIde.getWorkspaceDirs called" + process.cwd());
+    // console.log("LightIde.getWorkspaceDirs called" + process.cwd());
     return [process.cwd()];
   }
 
@@ -155,11 +155,11 @@ export class LightIde implements IDE {
     return [];
   }
 
-  async getSearchResults(): Promise<string> {
+  async getSearchResults(query: string): Promise<string> {
     return "";
   }
 
-  async getFileResults(): Promise<string[]> {
+  async getFileResults(pattern: string): Promise<string[]> {
     return [];
   }
 
@@ -168,7 +168,7 @@ export class LightIde implements IDE {
     return [stdout, stderr];
   }
 
-  async getProblems(): Promise<Problem[]> {
+  async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
     return [];
   }
 
@@ -181,7 +181,7 @@ export class LightIde implements IDE {
     }
   }
 
-  async getTags(): Promise<IndexTag[]> {
+  async getTags(artifactId: string): Promise<IndexTag[]> {
     return [];
   }
 
@@ -189,7 +189,10 @@ export class LightIde implements IDE {
     return path.basename(path.resolve(dir));
   }
 
-  async showToast(type: ToastType, message: string): Promise<void> {
+  async showToast(
+    ...params: any[]
+  ): Promise<void> {
+    const [type, message, ...otherParams] = params;
     console.log(`[${type.toUpperCase()}] ${message}`);
   }
 
@@ -232,7 +235,7 @@ export class LightIde implements IDE {
     return;
   }
 
-  async gotoDefinition(): Promise<RangeInFile[]> {
+  async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return [];
   }
 
