@@ -117,13 +117,10 @@ export {
   type Completion,
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
-  type CompletionCreateParamsStreaming,
+  type CompletionCreateParamsStreaming
 } from "openai/resources/index";
 
 // export
-export type {
-  BaseLlmApi,
-  VllmRerankItem,
-  VllmRerankResponse,
-} from "./apis/base.js";
+export type { BaseLlmApi } from "./apis/base.js";
 export type { LLMConfig } from "./types.js";
+

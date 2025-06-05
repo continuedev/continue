@@ -4,8 +4,7 @@ import { findLlmInfo } from "@continuedev/llm-info";
 import {
   BaseLlmApi,
   ChatCompletionCreateParams,
-  constructLlmApi,
-  VllmRerankResponse
+  constructLlmApi
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
@@ -1069,23 +1068,17 @@ export abstract class BaseLLM implements ILLM {
         documents: chunks.map((chunk) => chunk.content),
       });
 
-      // Handle different response formats: OpenAI (data), vLLM (results)
-      let dataArray: Array<{ index: number; relevance_score: number }>;
-      
+      // Standard OpenAI format
       if (results.data && Array.isArray(results.data)) {
-        dataArray = results.data;
-      } else if ((results as VllmRerankResponse).results && Array.isArray((results as VllmRerankResponse).results)) {
-        dataArray = (results as VllmRerankResponse).results;
-      }else {
-        throw new Error(
-          `Unexpected rerank response format from ${this.providerName}. ` +
-          `Expected 'data' or 'results' array but got: ${JSON.stringify(results)}`
-        );
+        return results.data
+          .sort((a, b) => a.index - b.index)
+          .map((result) => result.relevance_score);
       }
 
-      return dataArray
-        .sort((a, b) => a.index - b.index)
-        .map((result) => result.relevance_score);
+      throw new Error(
+        `Unexpected rerank response format from ${this.providerName}. ` +
+        `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`
+      );
     }
 
     throw new Error(

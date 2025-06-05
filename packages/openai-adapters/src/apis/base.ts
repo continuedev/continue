@@ -1,14 +1,14 @@
 import {
-  ChatCompletion,
-  ChatCompletionChunk,
-  ChatCompletionCreateParamsNonStreaming,
-  ChatCompletionCreateParamsStreaming,
-  Completion,
-  CompletionCreateParamsNonStreaming,
-  CompletionCreateParamsStreaming,
-  CreateEmbeddingResponse,
-  EmbeddingCreateParams,
-  Model,
+    ChatCompletion,
+    ChatCompletionChunk,
+    ChatCompletionCreateParamsNonStreaming,
+    ChatCompletionCreateParamsStreaming,
+    Completion,
+    CompletionCreateParamsNonStreaming,
+    CompletionCreateParamsStreaming,
+    CreateEmbeddingResponse,
+    EmbeddingCreateParams,
+    Model,
 } from "openai/resources/index";
 
 export interface FimCreateParamsStreaming
@@ -37,23 +37,7 @@ export interface CreateRerankResponse {
   };
 }
 
-// vLLM-specific rerank response format
-export interface VllmRerankItem {
-  index: number;
-  document: {
-    text: string;
-  };
-  relevance_score: number;
-}
 
-export interface VllmRerankResponse {
-  id: string;
-  model: string;
-  usage: {
-    total_tokens: number;
-  };
-  results: VllmRerankItem[];
-}
 
 export interface BaseLlmApi {
   // Chat, no stream
