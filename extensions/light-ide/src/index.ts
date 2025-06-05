@@ -5,8 +5,8 @@ import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { LightIde } from "./LightIde";
 import { NodeGUI } from "./NodeGUI";
 import { v4 as uuidv4 } from "uuid";
-import path from "path";
 import { NodeMessenger } from "./NodeMessenger";
+import { NodeGuiProtocol } from "./NodeGuiProtocol";
 
 async function main() {
   const windowId = uuidv4();
@@ -23,15 +23,15 @@ async function main() {
 
   const messenger = new InProcessMessenger<ToCoreProtocol, FromCoreProtocol>();
   messenger.externalOn("getIdeInfo", async () => ide.getIdeInfo());
-  
+  const protocol: NodeGuiProtocol = new NodeGuiProtocol();
   new NodeMessenger(
     messenger,
     nodeGui,
+    protocol,
     ide
   );
 
   const core = new Core(messenger, ide);
-
 
   nodeGui.setCore(core); // so GUI can call core.invoke
 
@@ -39,7 +39,10 @@ async function main() {
   await core.configHandler.loadConfig();
 
   console.log("Continue AI (Light IDE) initialized.");
-  console.log("Open http://localhost:3000 to use the GUI.");
+  // console.log("Open http://localhost:3000 to use the GUI.");
 }
 
-main();
+main().catch((err) => {
+  console.error("Error initializing Continue AI (Light IDE):", err);
+  process.exit(1);
+});
