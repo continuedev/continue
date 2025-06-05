@@ -210,13 +210,13 @@ export type UnrollAssistantOptions =
 export async function unrollAssistant(
   id: PackageIdentifier,
   registry: Registry,
-  options: UnrollAssistantOptions & { asConfigResult: true }
+  options: UnrollAssistantOptions & { asConfigResult: true },
 ): Promise<ConfigResult<AssistantUnrolled>>;
 
 export async function unrollAssistant(
   id: PackageIdentifier,
   registry: Registry,
-  options: UnrollAssistantOptions
+  options: UnrollAssistantOptions,
 ): Promise<AssistantUnrolled>;
 
 export async function unrollAssistant(
@@ -227,12 +227,7 @@ export async function unrollAssistant(
   // Request the content from the registry
   const rawContent = await registry.getContent(id);
 
-  const result = unrollAssistantFromContent(
-    id,
-    rawContent,
-    registry,
-    options,
-  )
+  const result = unrollAssistantFromContent(id, rawContent, registry, options);
 
   return result;
 }
@@ -268,7 +263,7 @@ export async function unrollAssistantFromContent(
     parsedYaml,
     registry,
     options.injectBlocks,
-    options.asConfigResult ?? false
+    options.asConfigResult ?? false,
   );
 
   // Back to a string so we can fill in template variables
@@ -324,7 +319,7 @@ export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,
   injectBlocks: PackageIdentifier[] | undefined,
-  asConfigError: boolean
+  asConfigError: boolean,
 ): Promise<AssistantUnrolled | ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
 
