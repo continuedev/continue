@@ -244,7 +244,12 @@ function ModelSelect() {
               value={"addModel" as any}
               className="border-border border-x-0 border-y border-solid"
             >
-              <div className="text-description flex items-center py-0.5 hover:text-inherit">
+              <div
+                className="text-description flex items-center py-0.5 hover:text-inherit"
+                style={{
+                  fontSize: fontSize(-3),
+                }}
+              >
                 <PlusIcon className="mr-2 h-3 w-3" />
                 Add Chat model
               </div>
