@@ -113,27 +113,9 @@ export const autocompleteOptionsSchema = z.object({
   modelTimeout: z.number().optional(),
   maxSuffixPercentage: z.number().optional(),
   prefixPercentage: z.number().optional(),
-  transform: z.boolean().optional(), // not in docs: https://docs.continue.dev/json-reference#models
   template: z.string().optional(),
-  multilineCompletions: z.enum(["always", "never", "auto"]).optional(), // not in docs
-  slidingWindowPrefixPercentage: z.number().optional(), // not in docs
-  slidingWindowSize: z.number().optional(), // not in docs
-  useCache: z.boolean().optional(), // not in docs
   onlyMyCode: z.boolean().optional(),
-  useRecentlyEdited: z.boolean().optional(), // not in docs
-  disableInFiles: z.array(z.string()).optional(), // not in docs
-  useImports: z.boolean().optional(), // not in docs
-  showWhateverWeHaveAtXMs: z.number().optional(), // not in docs
-  experimental_includeClipboard: z.union([z.boolean(), z.number()]).optional(), // not in docs
-  experimental_includeRecentlyVisitedRanges: z
-    .union([z.boolean(), z.number()])
-    .optional(), // not in docs
-  experimental_includeRecentlyEditedRanges: z
-    .union([z.boolean(), z.number()])
-    .optional(), // not in docs
-  experimental_includeDiff: z.union([z.boolean(), z.number()]).optional(), // not in docs
 });
-// .partial();
 
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
