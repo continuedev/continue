@@ -10,7 +10,17 @@ import {
 
 const asyncExec = util.promisify(childProcess.exec);
 
-const ENABLED_FOR_REMOTES = ["","local","wsl","dev-container","devcontainer","ssh-remote","attached-container","codespaces","tunnel"];
+const ENABLED_FOR_REMOTES = [
+  "",
+  "local",
+  "wsl",
+  "dev-container",
+  "devcontainer",
+  "ssh-remote",
+  "attached-container",
+  "codespaces",
+  "tunnel",
+];
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   // Default to waiting for completion if not specified
