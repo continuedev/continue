@@ -267,12 +267,11 @@ export async function unrollAssistantFromContent(
   );
 
   // Back to a string so we can fill in template variables
-  const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
-  // const rawUnrolledYaml = needErrorPropagation
-  //   ? YAML.stringify(
-  //     (unrolledAssistant as ConfigResult<AssistantUnrolled>).config,
-  //   )
-  //   : YAML.stringify(unrolledAssistant);
+  const rawUnrolledYaml = options.asConfigResult
+    ? YAML.stringify(
+        (unrolledAssistant as ConfigResult<AssistantUnrolled>).config,
+      )
+    : YAML.stringify(unrolledAssistant);
 
   // Convert all of the template variables to FQSNs
   // Secrets from the block will have the assistant slug prepended to the FQSN
