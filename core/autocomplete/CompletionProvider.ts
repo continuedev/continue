@@ -138,9 +138,6 @@ export class CompletionProvider {
       }
       const startTime = Date.now();
 
-      // NOTE: There shouldn't be too big of a performance penalty here.
-      // If this ends up introducing too big of a bottleneck,
-      // we should consider a more clever way of passing llm to _getAutocompleteOptions.
       const llm = await this._prepareLlm();
       if (!llm) {
         return undefined;
@@ -223,11 +220,11 @@ export class CompletionProvider {
 
         const processedCompletion = helper.options.transform
           ? postprocessCompletion({
-              completion,
-              prefix: helper.prunedPrefix,
-              suffix: helper.prunedSuffix,
-              llm,
-            })
+            completion,
+            prefix: helper.prunedPrefix,
+            suffix: helper.prunedSuffix,
+            llm,
+          })
           : completion;
 
         completion = processedCompletion;
