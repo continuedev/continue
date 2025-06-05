@@ -2,7 +2,9 @@ import express from "express";
 import path from "path";
 import crypto from "crypto";
 import bodyParser from "body-parser";
+import { Message } from "core/protocol/messenger";
 type MessageHandler = (data: any, messageId?: string) => Promise<any>;
+export type Handler<T, U> = (message: Message<T>) => Promise<U> | U;
 
 export class NodeGUI {
   private windowId: string;
@@ -60,12 +62,6 @@ export class NodeGUI {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(msg),
                     })
-                    .then(async res => {
-                      // Optionally, handle responses and post back to the window
-                      const data = await res.json();
-                      // Mimic VSCode's window.postMessage event for promise matching
-                      window.postMessage({ ...msg, data: data.result }, "*");
-                    })
                     .catch(console.error);
                   }
                 };
@@ -97,7 +93,7 @@ export class NodeGUI {
         let result;
         // console.log(`handlers are`, this.handlers);
         if (this.handlers.has(messageType)) {
-          result = await this.handlers.get(messageType)!(data, messageId);
+          result = await this.handlers.get(messageType)!({data, messageId});
         } else if (this.core.messenger.externalTypeListeners.has(messageType)) {
           // If the core has a messenger with external listeners, use that
           result = await this.core.messenger.externalTypeListeners.get(messageType)?.(data, messageId);
@@ -156,7 +152,7 @@ export class NodeGUI {
    * Register a handler for a specific message type from the frontend.
    * Usage: nodeGui.on("someMessageType", async (data, messageId) => { ... })
    */
-  public on(type: string, handler: MessageHandler) {
+  public on(type: string, handler: Handler<any, any>) {
     this.handlers.set(type, handler);
   }
 }

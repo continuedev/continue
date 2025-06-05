@@ -75,7 +75,7 @@ export class NodeMessenger {
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       // Listen for this message from the GUI, forward to core via messenger
       this.nodeGui.on(messageType, async (msg) => {
-        console.log(`NodeMessenger: Received message from GUI: ${messageType} data: ${msg.data} Id: ${msg.messageId}`);
+        // console.log(`NodeMessenger: Received message from GUI: ${messageType} data: ${msg.data} Id: ${msg.messageId}`);
         return await this.messenger.externalRequest(
           messageType,
           msg.data,
