@@ -552,7 +552,7 @@ export class CodebaseIndexer {
   private async updateProgress(update: IndexingProgressUpdate) {
     this.codebaseIndexingState = update;
     if (this.messenger) {
-      await this.messenger.request("indexProgress", update);
+      void this.messenger.request("indexProgress", update);
     }
   }
 

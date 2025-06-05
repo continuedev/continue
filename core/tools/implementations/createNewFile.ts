@@ -19,7 +19,7 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
     await extras.ide.openFile(resolvedFileUri);
     await extras.ide.saveFile(resolvedFileUri);
     if (extras.codeBaseIndexer) {
-      await extras.codeBaseIndexer?.refreshCodebaseIndexFiles([resolvedFileUri]);
+      void extras.codeBaseIndexer?.refreshCodebaseIndexFiles([resolvedFileUri]);
     }
     return [
       {
