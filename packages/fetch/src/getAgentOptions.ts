@@ -5,6 +5,24 @@ import tls from "node:tls";
 import { RequestOptions } from "@continuedev/config-types";
 
 /**
+ * Extracts content from either a file path or data URI
+ */
+function getCertificateContent(input: string): string {
+  if (input.startsWith("data:")) {
+    // Parse data URI: data:[<mediatype>][;base64],<data>
+    const [header, data] = input.split(",");
+    if (header.includes("base64")) {
+      return Buffer.from(data, "base64").toString("utf8");
+    } else {
+      return decodeURIComponent(data);
+    }
+  } else {
+    // Assume it's a file path
+    return fs.readFileSync(input, "utf8");
+  }
+}
+
+/**
  * Prepares agent options based on request options and certificates
  */
 export function getAgentOptions(requestOptions?: RequestOptions): {
@@ -30,7 +48,7 @@ export function getAgentOptions(requestOptions?: RequestOptions): {
       : requestOptions?.caBundlePath;
   if (customCerts) {
     ca.push(
-      ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8")),
+      ...customCerts.map((customCert) => getCertificateContent(customCert)),
     );
   }
 
@@ -45,16 +63,13 @@ export function getAgentOptions(requestOptions?: RequestOptions): {
 
   // Handle ClientCertificateOptions
   if (requestOptions?.clientCertificate) {
-    agentOptions.cert = fs.readFileSync(
-      requestOptions.clientCertificate.cert,
-      "utf8",
-    );
-    agentOptions.key = fs.readFileSync(
-      requestOptions.clientCertificate.key,
-      "utf8",
-    );
+    const { cert, key, passphrase } = requestOptions.clientCertificate;
+
+    agentOptions.cert = getCertificateContent(cert);
+    agentOptions.key = getCertificateContent(key);
+
     if (requestOptions.clientCertificate.passphrase) {
-      agentOptions.passphrase = requestOptions.clientCertificate.passphrase;
+      agentOptions.passphrase = passphrase;
     }
   }
 

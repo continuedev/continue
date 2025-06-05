@@ -350,12 +350,10 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
   let nestCount = 0;
 
   for await (const line of rawLines) {
-
-    
     if (!seenFirstFence) {
       if (shouldRemoveLineBeforeStart(line)) {
         // Filter out starting ``` or START block
-        continue
+        continue;
       }
       // Regardless of a fence or START block start tracking the nesting level
       seenFirstFence = true;

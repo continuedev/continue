@@ -1,6 +1,5 @@
 import { ConfigYaml } from "@continuedev/config-yaml";
 
-export const TRIAL_FIM_MODEL = "codestral-latest";
 export const LOCAL_ONBOARDING_PROVIDER_TITLE = "Ollama";
 export const LOCAL_ONBOARDING_FIM_MODEL = "qwen2.5-coder:1.5b-base";
 export const LOCAL_ONBOARDING_FIM_TITLE = "Qwen2.5-Coder 1.5B";

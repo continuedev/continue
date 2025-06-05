@@ -5,6 +5,27 @@ export const Anthropic: ModelProvider = {
   displayName: "Anthropic",
   models: [
     {
+      model: "claude-sonnet-4-20250514",
+      displayName: "Claude 4 Sonnet",
+      contextLength: 200000,
+      maxCompletionTokens: 8192,
+      description:
+        "Most intelligent model with the highest level of intelligence and capability.",
+      // Sometimes written as claude-4-sonnet, other times as claude-sonnet-4
+      regex: /claude-(?:4-sonnet|sonnet-4).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-opus-4-20250514",
+      displayName: "Claude 4 Opus",
+      contextLength: 200000,
+      maxCompletionTokens: 8192,
+      description:
+        "Most intelligent model with the highest level of intelligence and capability.",
+      regex: /claude-(?:4-opus|opus-4).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
       model: "claude-3-5-sonnet-latest",
       displayName: "Claude 3.5 Sonnet",
       contextLength: 200000,

@@ -60,14 +60,15 @@ async function logResponse(resp: Response) {
     console.log(`  ${key}: ${value}`);
   });
 
+  // TODO: For streamed responses, this caused the response to be consumed and the connection would just hang open
   // Clone response to read body without consuming it
-  const respClone = resp.clone();
-  try {
-    const responseText = await respClone.text();
-    console.log(`Response Body: ${responseText}`);
-  } catch (e) {
-    console.log("Could not read response body:", e);
-  }
+  // const respClone = resp.clone();
+  // try {
+  //   const responseText = await respClone.text();
+  //   console.log(`Response Body: ${responseText}`);
+  // } catch (e) {
+  //   console.log("Could not read response body:", e);
+  // }
   console.log("======================");
 }
 

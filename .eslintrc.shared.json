@@ -6,6 +6,7 @@
   },
   "plugins": ["@typescript-eslint", "import"],
   "rules": {
+    "no-negated-condition": "warn",
     "@typescript-eslint/naming-convention": "off",
     "@typescript-eslint/no-floating-promises": "warn",
     "@typescript-eslint/semi": "warn",

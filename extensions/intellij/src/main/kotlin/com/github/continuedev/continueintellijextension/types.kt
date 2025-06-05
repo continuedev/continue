@@ -187,22 +187,12 @@ interface IDE {
 
     suspend fun getFileStats(files: List<String>): Map<String, FileStats>
 
-    suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String?
-
     // LSP
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
-
-    fun updateLastFileSaveTimestamp() {
-        // Default implementation does nothing
-    }
 }
-
-data class GetGhTokenArgs(
-    val force: String?
-)
 
 data class Message(
     val messageType: String,
