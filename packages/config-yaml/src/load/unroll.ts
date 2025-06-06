@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as YAML from "yaml";
 import { ZodError } from "zod";
+import { getLastNUriRelativePathParts } from "../../../../core/util/uri.js";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
@@ -370,7 +371,7 @@ export async function unrollBlocks(
               typeof unrolledBlock.uses !== "string" &&
               "filePath" in unrolledBlock.uses
             ) {
-              msg = `${(err as Error).message}.\n> ${shortenedPath(unrolledBlock.uses.filePath)}`;
+              msg = `${(err as Error).message}.\n> ${getLastNUriRelativePathParts([], unrolledBlock.uses.filePath, 2)}`;
             } else {
               msg = `${(err as Error).message}.\n> ${JSON.stringify(unrolledBlock.uses)}`;
             }
@@ -452,7 +453,7 @@ export async function unrollBlocks(
     } catch (err) {
       let msg = "";
       if (injectBlock.uriType === "file") {
-        msg = `${(err as Error).message}.\n> ${shortenedPath(injectBlock.filePath)}`;
+        msg = `${(err as Error).message}.\n> ${getLastNUriRelativePathParts([], injectBlock.filePath, 2)}`;
       } else {
         msg = `${(err as Error).message}.\n> ${injectBlock.fullSlug}`;
       }
