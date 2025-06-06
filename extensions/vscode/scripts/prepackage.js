@@ -4,12 +4,14 @@ const path = require("path");
 const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
 
+const { copyLanceDB } = require("../../../scripts/util/copy-lancedb");
 const {
   validateFilesPresent,
   execCmdSync,
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
+const { copySqlite, copyEsbuild } = require("./install-copy-sqlite-esbuild");
 const {
   writeBuildTimestamp,
   installNodeModules,
@@ -265,68 +267,6 @@ void (async () => {
     );
   });
 
-  async function installNodeModuleInTempDirAndCopyToCurrent(
-    packageName,
-    toCopy,
-  ) {
-    console.log(`Copying ${packageName} to ${toCopy}`);
-    // This is a way to install only one package without npm trying to install all the dependencies
-    // Create a temporary directory for installing the package
-    const adjustedName = packageName.replace(/@/g, "").replace("/", "-");
-
-    const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
-    const currentDir = process.cwd();
-
-    // Remove the dir we will be copying to
-    rimrafSync(`node_modules/${toCopy}`);
-
-    // Ensure the temporary directory exists
-    fs.mkdirSync(tempDir, { recursive: true });
-
-    try {
-      // Move to the temporary directory
-      process.chdir(tempDir);
-
-      // Initialize a new package.json and install the package
-      execCmdSync(`npm init -y && npm i -f ${packageName} --no-save`);
-
-      console.log(
-        `Contents of: ${packageName}`,
-        fs.readdirSync(path.join(tempDir, "node_modules", toCopy)),
-      );
-
-      // Without this it seems the file isn't completely written to disk
-      // Ideally we validate file integrity in the validation at the end
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Copy the installed package back to the current directory
-      await new Promise((resolve, reject) => {
-        ncp(
-          path.join(tempDir, "node_modules", toCopy),
-          path.join(currentDir, "node_modules", toCopy),
-          { dereference: true },
-          (error) => {
-            if (error) {
-              console.error(
-                `[error] Error copying ${packageName} package`,
-                error,
-              );
-              reject(error);
-            } else {
-              resolve();
-            }
-          },
-        );
-      });
-    } finally {
-      // Clean up the temporary directory
-      // rimrafSync(tempDir);
-
-      // Return to the original directory
-      process.chdir(currentDir);
-    }
-  }
-
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
   // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
   if (isArmTarget) {
@@ -340,41 +280,14 @@ void (async () => {
       "[info] Downloading pre-built lancedb binary: " + packageToInstall,
     );
 
-    await installNodeModuleInTempDirAndCopyToCurrent(
-      packageToInstall,
-      "@lancedb",
-    );
-
-    // Replace the installed with pre-built
-    console.log("[info] Downloading pre-built sqlite3 binary");
-    rimrafSync("../../core/node_modules/sqlite3/build");
-    const downloadUrl = {
-      "darwin-arm64":
-        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
-      "linux-arm64":
-        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
-      // node-sqlite3 doesn't have a pre-built binary for win32-arm64
-      "win32-arm64":
-        "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz",
-    }[target];
-    execCmdSync(
-      `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
-    );
-    execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
-    fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
-
-    // Download and unzip esbuild
-    console.log("[info] Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild");
-    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execCmdSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
-    );
-    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
-    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
+    await Promise.all([
+      copyLanceDB(packageToInstall, "@lancedb"),
+      copySqlite(target),
+      copyEsbuild(target),
+    ]);
   } else {
     // Download esbuild from npm in tmp and copy over
-    console.log("npm installing esbuild binary");
+    console.log("[info] npm installing esbuild binary");
     await installNodeModuleInTempDirAndCopyToCurrent(
       "esbuild@0.17.19",
       "@esbuild",
