@@ -51,10 +51,6 @@ class FileSystemIde implements IDE {
     return;
   }
 
-  onDidCloseTextDocument(callback: (fileUris: string[]) => void): void {
-    return;
-  }
-
   async getIdeSettings(): Promise<IdeSettings> {
     return {
       remoteConfigServerUrl: undefined,
