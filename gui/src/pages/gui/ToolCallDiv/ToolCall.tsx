@@ -1,6 +1,7 @@
-import { Tool, ToolCallState } from "core";
+import { ContextItemWithId, Tool, ToolCallState } from "core";
 import { useMemo, useState } from "react";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
+import { OutputItems } from "./ToolCallOutput";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 
 interface ToolCallDisplayProps {
@@ -8,6 +9,7 @@ interface ToolCallDisplayProps {
   icon: React.ReactNode;
   tool: Tool | undefined;
   toolCallState: ToolCallState;
+  contextItems: ContextItemWithId[];
 }
 
 export function ToolCallDisplay({
@@ -15,6 +17,7 @@ export function ToolCallDisplay({
   toolCallState,
   children,
   icon,
+  contextItems,
 }: ToolCallDisplayProps) {
   const [argsExpanded, setArgsExpanded] = useState(false);
 
@@ -39,7 +42,7 @@ export function ToolCallDisplay({
                 toolCallState={toolCallState}
               />
             </div>
-            {!!args.length ? (
+            {!!args.length || !!contextItems.length ? (
               <ArgsToggleIcon
                 isShowing={argsExpanded}
                 setIsShowing={setArgsExpanded}
@@ -47,8 +50,9 @@ export function ToolCallDisplay({
               />
             ) : null}
           </div>
-          {argsExpanded && !!args.length && (
-            <ArgsItems args={args} isShowing={argsExpanded} />
+          {argsExpanded && <ArgsItems args={args} isShowing={argsExpanded} />}
+          {argsExpanded && (
+            <OutputItems outputItems={contextItems} isShowing={argsExpanded} />
           )}
         </div>
         <div>{children}</div>

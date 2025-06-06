@@ -25,7 +25,6 @@ import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/gui/Spinner";
 import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
-import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCall";
 
 interface ToolCallDivProps {
@@ -74,26 +73,15 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     );
   }, [availableTools, props.toolCall]);
 
-  const icon =
+  const Icon =
     props.toolCall.function?.name &&
     toolCallIcons[props.toolCall.function.name];
-
-  if (icon) {
-    return (
-      <SimpleToolCallUI
-        tool={tool}
-        toolCallState={props.toolCallState}
-        icon={
-          props.toolCallState.status === "generated" ? ArrowRightIcon : icon
-        }
-        contextItems={props.output ?? []}
-      />
-    );
-  }
+  const icon = Icon ? <Icon /> : undefined;
 
   return (
     <ToolCallDisplay
-      icon={getStatusIcon(props.toolCallState.status)}
+      contextItems={props.output ?? []}
+      icon={icon ? icon : getStatusIcon(props.toolCallState.status)}
       tool={tool}
       toolCallState={props.toolCallState}
     >
