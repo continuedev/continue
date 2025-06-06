@@ -5,20 +5,20 @@
 const fs = require("fs");
 const path = require("path");
 const ncp = require("ncp").ncp;
-const { execCmdSync } = require("../../scripts/util");
+const { execCmdSync } = require(".");
+const { fork } = require("child_process");
 
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   console.log(`Copying ${packageName} to ${toCopy}`);
   // This is a way to install only one package without npm trying to install all the dependencies
   // Create a temporary directory for installing the package
   const adjustedName = packageName.replace(/@/g, "").replace("/", "-");
+  const currentDir = process.cwd();
   const tempDir = path.join(
-    __dirname,
-    "..",
+    currentDir,
     "tmp",
     `continue-node_modules-${adjustedName}`,
   );
-  const currentDir = process.cwd();
 
   // // Remove the dir we will be copying to
   // rimrafSync(`node_modules/${toCopy}`);
@@ -80,3 +80,31 @@ process.on("message", (msg) => {
       process.send({ error: true });
     });
 });
+
+/**
+ * invoke a child process to install and copy lancedb into node modules
+ * @param {string} packageName the lancedb platform to install and copy
+ * @param {string} toCopy directory to copy into inside node modules
+ */
+async function copyLanceDB(packageName, toCopy) {
+  const child = fork(__filename, { stdio: "inherit", cwd: process.cwd() });
+  child.send({
+    payload: {
+      packageName,
+      toCopy,
+    },
+  });
+
+  return new Promise((resolve, reject) => {
+    child.on("message", (msg) => {
+      if (msg.error) {
+        reject();
+      }
+      resolve();
+    });
+  });
+}
+
+module.exports = {
+  copyLanceDB,
+};

@@ -4,9 +4,12 @@ const path = require("path");
 const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
 const { validateFilesPresent } = require("../scripts/util");
-const { downloadRipgrep } = require("./utils/ripgrep");
 const { ALL_TARGETS, TARGET_TO_LANCEDB } = require("./utils/targets");
 const { fork } = require("child_process");
+const {
+  copyLanceDBFilePath,
+  copyLanceDB,
+} = require("../scripts/util/copy-lancedb");
 
 const bin = path.join(__dirname, "bin");
 const out = path.join(__dirname, "out");
@@ -73,24 +76,6 @@ async function buildWithEsbuild() {
   });
 }
 
-/**
- * Downloads and installs ripgrep binaries for the specified target
- *
- * @param {string} target - Target platform-arch (e.g., 'darwin-x64')
- * @param {string} targetDir - Directory to install ripgrep to
- * @returns {Promise<void>}
- */
-async function downloadRipgrepForTarget(target, targetDir) {
-  console.log(`[info] Downloading ripgrep for ${target}...`);
-  try {
-    await downloadRipgrep(target, targetDir);
-    console.log(`[info] Successfully installed ripgrep for ${target}`);
-  } catch (error) {
-    console.error(`[error] Failed to download ripgrep for ${target}:`, error);
-    throw error;
-  }
-}
-
 (async () => {
   if (esbuildOnly) {
     await buildWithEsbuild();
@@ -121,22 +106,8 @@ async function downloadRipgrepForTarget(target, targetDir) {
       continue;
     }
     console.log(`[info] Downloading for ${target}...`);
-    const child = fork("./utils/copy-lancedb.js", { stdio: "inherit" });
-    child.send({
-      payload: {
-        packageName: TARGET_TO_LANCEDB[target],
-        toCopy: "@lancedb",
-      },
-    });
     copyLanceDBPromises.push(
-      new Promise((resolve, reject) => {
-        child.on("message", (msg) => {
-          if (msg.error) {
-            reject();
-          }
-          resolve();
-        });
-      }),
+      copyLanceDB(TARGET_TO_LANCEDB[target], "@lancedb"),
     );
   }
   await Promise.all(copyLanceDBPromises).catch(() => {
