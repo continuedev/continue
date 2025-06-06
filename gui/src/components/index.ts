@@ -69,7 +69,6 @@ export const SecondaryButton = styled.button`
 
 export const GhostButton = styled.button`
   padding: 6px 8px;
-  margin: 6px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
