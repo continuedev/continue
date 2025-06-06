@@ -117,45 +117,49 @@ async function loadConfigYaml(options: {
   //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
   // );
 
-  // This is how we allow use of blocks locally
-  const unrollResult = await unrollAssistant(
-    packageIdentifier,
-    new RegistryClient({
-      accessToken: await controlPlaneClient.getAccessToken(),
-      apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
-        .CONTROL_PLANE_URL,
-      rootPath,
-    }),
-    {
-      currentUserSlug: "",
-      onPremProxyUrl: null,
-      orgScopeId,
-      platformClient: new LocalPlatformClient(
-        orgScopeId,
-        controlPlaneClient,
-        ide,
-      ),
-      renderSecrets: true,
-      injectBlocks: allLocalBlocks,
-      asConfigResult: true,
-    },
-  );
-
   const errors: ConfigValidationError[] = [];
 
-  const config = overrideConfigYaml ?? unrollResult.config;
+  let config: AssistantUnrolled | undefined;
+
+  if (overrideConfigYaml) {
+    config = overrideConfigYaml;
+  } else {
+    // This is how we allow use of blocks locally
+    const unrollResult = await unrollAssistant(
+      packageIdentifier,
+      new RegistryClient({
+        accessToken: await controlPlaneClient.getAccessToken(),
+        apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
+          .CONTROL_PLANE_URL,
+        rootPath,
+      }),
+      {
+        currentUserSlug: "",
+        onPremProxyUrl: null,
+        orgScopeId,
+        platformClient: new LocalPlatformClient(
+          orgScopeId,
+          controlPlaneClient,
+          ide,
+        ),
+        renderSecrets: true,
+        injectBlocks: allLocalBlocks,
+        asConfigResult: true,
+      },
+    );
+    config = unrollResult.config;
+    if (unrollResult.errors) {
+      errors.push(...unrollResult.errors);
+    }
+  }
 
   if (config) {
     isAssistantUnrolledNonNullable(config)
       ? errors.push(...validateConfigYaml(config))
       : errors.push({
-          fatal: true,
-          message: "Assistant includes blocks that don't exist",
-        });
-  }
-
-  if (unrollResult.errors) {
-    errors.push(...unrollResult.errors);
+        fatal: true,
+        message: "Assistant includes blocks that don't exist",
+      });
   }
 
   if (errors?.some((error) => error.fatal)) {
