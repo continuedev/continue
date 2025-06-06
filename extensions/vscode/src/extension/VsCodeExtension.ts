@@ -244,7 +244,6 @@ export class VsCodeExtension {
       this.consoleView,
       this.configHandler,
       this.verticalDiffManager,
-      this.core.continueServerClientPromise,
       this.battery,
       quickEdit,
       this.core,
