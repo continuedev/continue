@@ -3,11 +3,11 @@ import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { QuickEditShowParams } from "../../../quickEdit/QuickEditQuickPick";
+import { isTutorialFile } from "../../../util/tutorial";
 import {
   CONTINUE_WORKSPACE_KEY,
   getContinueWorkspaceConfig,
 } from "../../../util/workspaceConfig";
-import { isTutorialFile } from "../../../util/tutorial";
 
 export const ENABLE_QUICK_ACTIONS_KEY = "enableQuickActions";
 

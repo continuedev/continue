@@ -1,20 +1,20 @@
 import { AutocompleteLanguageInfo } from "core/autocomplete/constants/AutocompleteLanguageInfo";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippetType,
+} from "core/autocomplete/snippets/types";
+import { GetLspDefinitionsFunction } from "core/autocomplete/types";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/util/ast";
 import {
   FUNCTION_BLOCK_NODE_TYPES,
   FUNCTION_DECLARATION_NODE_TYPEs,
 } from "core/indexing/chunk/code";
 import { intersection } from "core/util/ranges";
+import * as URI from "uri-js";
 import * as vscode from "vscode";
 
 import type { IDE, Range, RangeInFile, RangeInFileWithContents } from "core";
 import type Parser from "web-tree-sitter";
-import { GetLspDefinitionsFunction } from "core/autocomplete/types";
-import {
-  AutocompleteCodeSnippet,
-  AutocompleteSnippetType,
-} from "core/autocomplete/snippets/types";
-import * as URI from "uri-js";
 
 type GotoProviderName =
   | "vscode.executeDefinitionProvider"

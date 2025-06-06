@@ -3,9 +3,9 @@ import * as fs from "fs";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { getConfigJsonPathForRemote } from "core/util/paths";
+import { canParseUrl } from "core/util/url";
 import * as vscode from "vscode";
 
-import { canParseUrl } from "core/util/url";
 import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
 
 export class RemoteConfigSync {

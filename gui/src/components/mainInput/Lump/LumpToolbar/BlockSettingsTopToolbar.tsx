@@ -9,17 +9,22 @@ import {
   Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { ReactNode } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { vscBadgeForeground } from "../../..";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../redux/hooks";
 import { ToolTip } from "../../../gui/Tooltip";
 import AssistantSelect from "../../../modelSelection/platform/AssistantSelect";
+import FreeTrialButton from "../../../modelSelection/platform/FreeTrialButton";
 import { useFontSize } from "../../../ui/font";
 import HoverItem from "../../InputToolbar/HoverItem";
 import { useLump } from "../LumpContext";
 import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
 import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
 import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
+
+import type { FreeTrialStatus } from "core/control-plane/client";
+import { usesFreeTrialApiKey } from "../../../../util/freeTrialHelpers";
 
 interface BlockSettingsToolbarIcon {
   title: string;
@@ -141,6 +146,23 @@ export function BlockSettingsTopToolbar() {
   } = useLump();
 
   const configError = useAppSelector((store) => store.config.configError);
+  const config = useAppSelector((state) => state.config.config);
+  const ideMessenger = useContext(IdeMessengerContext);
+
+  const [freeTrialStatus, setFreeTrialStatus] =
+    useState<FreeTrialStatus | null>(null);
+  const isUsingFreeTrial = usesFreeTrialApiKey(config);
+
+  useEffect(() => {
+    ideMessenger
+      .request("controlPlane/getFreeTrialStatus", undefined)
+      .then((resp) => {
+        if (resp.status === "success") {
+          setFreeTrialStatus(resp.content);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleEllipsisClick = () => {
     if (isToolbarExpanded) {
@@ -195,9 +217,13 @@ export function BlockSettingsTopToolbar() {
           data-tooltip-id="assistant-select-tooltip"
           className="!m-0 !p-0"
         >
-          <AssistantSelect />
+          {isUsingFreeTrial ? (
+            <FreeTrialButton freeTrialStatus={freeTrialStatus} />
+          ) : (
+            <AssistantSelect />
+          )}
           <ToolTip id="assistant-select-tooltip" place="top">
-            Select Assistant
+            {isUsingFreeTrial ? "View free trial usage" : "Select Assistant"}
           </ToolTip>
         </HoverItem>
       </div>

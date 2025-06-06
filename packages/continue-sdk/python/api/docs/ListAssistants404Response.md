@@ -1,11 +1,10 @@
 # ListAssistants404Response
 
-
 ## Properties
 
-Name | Type | Description | Notes
------------- | ------------- | ------------- | -------------
-**message** | **str** |  | [optional] 
+| Name        | Type    | Description | Notes      |
+| ----------- | ------- | ----------- | ---------- |
+| **message** | **str** |             | [optional] |
 
 ## Example
 
@@ -24,6 +23,5 @@ list_assistants404_response_dict = list_assistants404_response_instance.to_dict(
 # create an instance of ListAssistants404Response from a dict
 list_assistants404_response_from_dict = ListAssistants404Response.from_dict(list_assistants404_response_dict)
 ```
+
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

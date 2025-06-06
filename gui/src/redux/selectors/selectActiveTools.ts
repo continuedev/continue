@@ -12,15 +12,13 @@ export const selectActiveTools = createSelector(
   (mode, tools, policies, groupPolicies): Tool[] => {
     if (mode === "chat") {
       return [];
-    }
-    else if (mode === "agent") {
+    } else if (mode === "agent") {
       return tools.filter(
         (tool) =>
           policies[tool.function.name] !== "disabled" &&
           groupPolicies[tool.group] !== "exclude",
       );
-    }
-    else {
+    } else {
       return [];
     }
   },

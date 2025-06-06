@@ -25,7 +25,6 @@ import {
 } from "../pages/AddNewModel/configs/providers";
 import { useAppDispatch } from "../redux/hooks";
 import { updateSelectedModelByRole } from "../redux/thunks";
-import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
 
 interface QuickModelSetupProps {
   onDone?: () => void;
@@ -86,7 +85,7 @@ export function AddModelForm({
   ];
 
   const allProviders = Object.entries(providers)
-    .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
+    .filter(([key]) => !["openai-aiohttp"].includes(key))
     .map(([, provider]) => provider)
     .filter((provider) => !!provider)
     .map((provider) => provider!);
@@ -100,26 +99,16 @@ export function AddModelForm({
     .sort((a, b) => a.title.localeCompare(b.title));
 
   function isDisabled() {
-    const providersData = formMethods.watch("providers");
+    if (selectedProvider.downloadUrl) {
+      return false;
+    }
 
-    for (let i = 0; i < providersData.length; i++) {
-      const providerData = providersData[i];
-      const selectedProvider = providerData.provider;
-
-      if (providerData.selectedModels.length === 0) {
-        return true;
-      }
-
-      if (
-        !selectedProvider.downloadUrl &&
-        selectedProvider.provider !== "free-trial"
-      ) {
-        const required = selectedProvider.collectInputFor
-          ?.filter((input) => input.required)
-          .map((input) => {
-            const value = formMethods.watch(`providers.${i}.${input.key}`);
-            return value;
-          });
+    const required = selectedProvider.collectInputFor
+      ?.filter((input) => input.required)
+      .map((input) => {
+        const value = formMethods.watch(input.key);
+        return value;
+      });
 
         if (
           !required?.every((value) => value !== undefined && value.length > 0)
@@ -207,8 +196,9 @@ export function AddModelForm({
     <FormProvider {...formMethods}>
       <form onSubmit={formMethods.handleSubmit(onSubmit)}>
         <div className="mx-auto max-w-md p-6">
-          <h1 className="mb-0 text-center text-2xl">Add Chat models</h1>
-          {!hideFreeTrialLimitMessage && hasPassedFTL() && (
+          <h1 className="mb-0 text-center text-2xl">Add Chat model</h1>
+          {/* TODO sync free trial limit with hub */}
+          {/* {!hideFreeTrialLimitMessage && hasPassedFTL() && (
             <p className="text-sm text-gray-400">
               You've reached the free trial limit of {FREE_TRIAL_LIMIT_REQUESTS}{" "}
               free inputs. To keep using Continue, you can either use your own
@@ -221,7 +211,7 @@ export function AddModelForm({
               </a>
               .
             </p>
-          )}
+          )} */}
 
           <div className="mt-4 flex flex-col gap-4">
             {fields.map((field, index) => {

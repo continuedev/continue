@@ -83,9 +83,10 @@ the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
 :::info
 Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) can read secret values:
+
 - globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
 - per-workspace, from a `.env` file located at the root of the current workspace.
-:::
+  :::
 
 ### Inputs
 
@@ -549,8 +550,7 @@ models:
   - name: qwen2.5-coder-7b
     <<: *model_defaults
     model: qwen2.5-coder-7b
-    env:
-      useLegacyCompletionsEndpoint: false
+    useLegacyCompletionsEndpoint: false
     roles:
       - autocomplete
 ```
