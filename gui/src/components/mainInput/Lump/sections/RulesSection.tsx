@@ -6,13 +6,12 @@ import {
 } from "@heroicons/react/24/outline";
 import { RuleWithSource } from "core";
 import {
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
-  DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_AGENT_SYSTEM_MESSAGE_URL,
+  DEFAULT_CHAT_SYSTEM_MESSAGE,
+  DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
 import { useContext, useMemo } from "react";
-import { defaultBorderRadius, vscCommandCenterActiveBorder } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
@@ -91,13 +90,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
   return (
-    <div
-      style={{
-        borderRadius: defaultBorderRadius,
-        border: `1px solid ${vscCommandCenterActiveBorder}`,
-      }}
-      className="flex flex-col px-2 py-1.5 transition-colors"
-    >
+    <div className="border-border flex flex-col rounded-sm px-2 py-1.5 transition-colors">
       <div className="flex flex-col">
         <div className="flex flex-row justify-between gap-1">
           <span
