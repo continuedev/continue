@@ -14,6 +14,7 @@ const {
   copyConfigSchema,
   writeBuildTimestamp,
   generateConfigYamlSchema,
+  installNodeModules,
 } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -36,10 +37,10 @@ if (args[2] === "--target") {
 
 let os;
 let arch;
-if (!target) {
-  [os, arch] = autodetectPlatformAndArch();
-} else {
+if (target) {
   [os, arch] = target.split("-");
+} else {
+  [os, arch] = autodetectPlatformAndArch();
 }
 
 if (os === "alpine") {
@@ -82,13 +83,9 @@ void (async () => {
   writeBuildTimestamp();
 
   // Install node_modules //
-  execCmdSync("npm install");
-  console.log("[info] npm install in extensions/vscode completed");
+  await installNodeModules();
 
-  process.chdir("../../gui");
-
-  execCmdSync("npm install");
-  console.log("[info] npm install in gui completed");
+  process.chdir(path.join("__dirname", "..", "..", "..", "gui"));
 
   if (isInGitHubAction) {
     execCmdSync("npm run build");
@@ -465,7 +462,7 @@ void (async () => {
   );
 
   // delete esbuild/bin because platform-specific @esbuild is downloaded
-  fs.rmdirSync(`out/node_modules/esbuild/bin`, { recursive: true });
+  fs.rmSync(`out/node_modules/esbuild/bin`, { recursive: true });
 
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 
@@ -534,4 +531,6 @@ void (async () => {
     `out/node_modules/@lancedb/vectordb-${target}${isWinTarget ? "-msvc" : ""}${isLinuxTarget ? "-gnu" : ""}/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
   ]);
+
+  process.exit(0);
 })();

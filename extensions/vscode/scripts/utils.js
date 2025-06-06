@@ -1,7 +1,10 @@
+const { fork } = require("child_process");
 const fs = require("fs");
-const ncp = require("ncp").ncp;
 const path = require("path");
+
+const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
+
 const {
   validateFilesPresent,
   execCmdSync,
@@ -77,20 +80,41 @@ function copyTokenizers() {
   console.log("[info] Copied llamaTokenizer");
 }
 
-function installNodeModules() {
-  // Make sure we are in the right directory
-  if (!process.cwd().endsWith("vscode")) {
-    process.chdir(path.join(continueDir, "extensions", "vscode"));
-  }
+async function installNodeModules() {
+  const installVscodeChild = fork(
+    path.join(__dirname, "install-nodemodules.js"),
+    {
+      stdio: "inherit",
+    },
+  );
+  installVscodeChild.send({ payload: { continueDir, targetDir: "vscode" } });
 
-  // Install node_modules //
-  execCmdSync("npm install");
-  console.log("[info] npm install in extensions/vscode completed");
+  const installGuiChild = fork(path.join(__dirname, "install-nodemodules.js"), {
+    stdio: "inherit",
+  });
+  installGuiChild.send({ payload: { continueDir, targetDir: "gui" } });
 
-  process.chdir(path.join(continueDir, "gui"));
-
-  execCmdSync("npm install");
-  console.log("[info] npm install in gui completed");
+  await Promise.all([
+    new Promise((resolve, reject) => {
+      installVscodeChild.on("message", (msg) => {
+        if (msg.error) {
+          reject();
+        }
+        resolve();
+      });
+    }),
+    new Promise((resolve, reject) => {
+      installGuiChild.on("message", (msg) => {
+        if (msg.error) {
+          reject();
+        }
+        resolve();
+      });
+    }),
+  ]).catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }
 
 async function buildGui(isGhAction) {
