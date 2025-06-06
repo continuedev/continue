@@ -278,7 +278,7 @@ describe("CodebaseIndexer", () => {
         expect.anything(),
       );
       expect(mockMessenger.send).toHaveBeenCalledWith("refreshSubmenuItems", {
-        providers: "dependsOnIndexing",
+        providers: "all",
       });
     });
 

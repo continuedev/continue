@@ -552,7 +552,7 @@ export class CodebaseIndexer {
   private async updateProgress(update: IndexingProgressUpdate) {
     this.codebaseIndexingState = update;
     if (this.messenger) {
-      await this.messenger.request("indexProgress", update);
+      void this.messenger.request("indexProgress", update);
     }
   }
 
@@ -596,7 +596,7 @@ export class CodebaseIndexer {
     // Directly refresh submenu items
     if (this.messenger) {
       this.messenger.send("refreshSubmenuItems", {
-        providers: "dependsOnIndexing",
+        providers: "all",
       });
     }
     this.indexingCancellationController = undefined;
@@ -626,7 +626,9 @@ export class CodebaseIndexer {
 
     // Directly refresh submenu items
     if (this.messenger) {
-      this.messenger.send("refreshSubmenuItems", { providers: "all" });
+      this.messenger.send("refreshSubmenuItems", {
+        providers: "all",
+      });
     }
     this.indexingCancellationController = undefined;
   }

@@ -708,6 +708,7 @@ export class Core {
         tool,
         toolCallId: toolCall.id,
         onPartialOutput,
+        codeBaseIndexer: this.codeBaseIndexer,
       });
     });
 
