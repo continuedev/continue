@@ -6,10 +6,7 @@ const { rimrafSync } = require("rimraf");
 const { validateFilesPresent } = require("../scripts/util");
 const { ALL_TARGETS, TARGET_TO_LANCEDB } = require("./utils/targets");
 const { fork } = require("child_process");
-const {
-  copyLanceDBFilePath,
-  copyLanceDB,
-} = require("../scripts/util/copy-lancedb");
+const { copyNodeModule } = require("../scripts/util/copy-nodemodule");
 
 const bin = path.join(__dirname, "bin");
 const out = path.join(__dirname, "out");
@@ -107,7 +104,7 @@ async function buildWithEsbuild() {
     }
     console.log(`[info] Downloading for ${target}...`);
     copyLanceDBPromises.push(
-      copyLanceDB(TARGET_TO_LANCEDB[target], "@lancedb"),
+      copyNodeModule(TARGET_TO_LANCEDB[target], "@lancedb"),
     );
   }
   await Promise.all(copyLanceDBPromises).catch(() => {

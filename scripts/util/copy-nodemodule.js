@@ -82,11 +82,11 @@ process.on("message", (msg) => {
 });
 
 /**
- * invoke a child process to install and copy lancedb into node modules
- * @param {string} packageName the lancedb platform to install and copy
+ * invoke a child process to install a node module into temporary directory and copy it over into node modules
+ * @param {string} packageName the module to install and copy
  * @param {string} toCopy directory to copy into inside node modules
  */
-async function copyLanceDB(packageName, toCopy) {
+async function copyNodeModule(packageName, toCopy) {
   const child = fork(__filename, { stdio: "inherit", cwd: process.cwd() });
   child.send({
     payload: {
@@ -106,5 +106,5 @@ async function copyLanceDB(packageName, toCopy) {
 }
 
 module.exports = {
-  copyLanceDB,
+  copyNodeModule,
 };
