@@ -13,10 +13,10 @@ class Scaleway extends OpenAI {
 
   private static MODEL_IDS: { [name: string]: string } = {
     "llama3.1-8b": "llama-3.1-8b-instruct",
-    "llama3.1-70b": "llama-3.1-70b-instruct",
-    "mistral-nemo": "mistral-nemo-instruct-2407",
+    "llama3.3-70b": "llama-3.3-70b-instruct",
+    "mistral-small3.1": "mistral-small-3.1-24b-instruct-2503",
+    "deepseek-r1-distill-llama-70b": "deepseek-r1-distill-llama-70b",
     "qwen2.5-coder-32b": "qwen2.5-coder-32b-instruct",
-    pixtral: "pixtral-12b-2409",
   };
 
   protected _convertModelName(model: string) {
