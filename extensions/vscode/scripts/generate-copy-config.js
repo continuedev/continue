@@ -1,5 +1,5 @@
 /**
- * @file Generate config.yaml file from template. Intended to run as a child process.
+ * @file Generate config.yaml file from template. Also intended to run as a child process.
  */
 
 const { fork } = require("child_process");

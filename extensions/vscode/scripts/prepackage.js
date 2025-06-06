@@ -13,7 +13,7 @@ const {
 const { copySqlite, copyEsbuild } = require("./download-copy-sqlite-esbuild");
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
-const { installNodeModules } = require("./install-nodemodules");
+const { npmInstall } = require("./npm-install");
 const { writeBuildTimestamp, continueDir } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -70,7 +70,7 @@ void (async () => {
   // Make sure we have an initial timestamp file
   writeBuildTimestamp();
 
-  await Promise.all([generateAndCopyConfigYamlSchema(), installNodeModules()]);
+  await Promise.all([generateAndCopyConfigYamlSchema(), npmInstall()]);
 
   process.chdir(path.join(continueDir, "gui"));
 
