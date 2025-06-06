@@ -1,4 +1,6 @@
+import * as path from "path";
 import * as YAML from "yaml";
+import { ZodError } from "zod";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
@@ -31,16 +33,25 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
     if (result.success) {
       return result.data;
     }
-    throw new Error(
-      result.error.errors
-        .map((e) => `${e.path.join(".")}: ${e.message}`)
-        .join(""),
-    );
+
+    throw new Error(formatZodError(result.error), {
+      cause: "result.success was false",
+    });
   } catch (e) {
-    console.log("Failed to parse rolled assistant:", configYaml);
-    throw new Error(
-      `Failed to parse assistant:\n${e instanceof Error ? e.message : e}`,
-    );
+    console.error("Failed to parse rolled assistant:", configYaml);
+    if (
+      e instanceof Error &&
+      "cause" in e &&
+      e.cause === "result.success was false"
+    ) {
+      throw new Error(`Failed to parse assistant: ${e.message}`);
+    } else if (e instanceof ZodError) {
+      throw new Error(`Failed to parse assistant: ${formatZodError(e)}`);
+    } else {
+      throw new Error(
+        `Failed to parse assistant: ${e instanceof Error ? e.message : e}`,
+      );
+    }
   }
 }
 
@@ -50,9 +61,10 @@ export function parseAssistantUnrolled(configYaml: string): AssistantUnrolled {
     const result = assistantUnrolledSchema.parse(parsed);
     return result;
   } catch (e: any) {
-    throw new Error(
+    console.error(
       `Failed to parse unrolled assistant: ${e.message}\n\n${configYaml}`,
     );
+    throw new Error(`Failed to parse unrolled assistant: ${formatZodError(e)}`);
   }
 }
 
@@ -62,7 +74,7 @@ export function parseBlock(configYaml: string): Block {
     const result = blockSchema.parse(parsed);
     return result;
   } catch (e: any) {
-    throw new Error(`Failed to parse block: ${e.message}`);
+    throw new Error(`Failed to parse block: ${formatZodError(e)}`);
   }
 }
 
@@ -353,10 +365,19 @@ export async function unrollBlocks(
               );
             }
           } catch (err) {
+            let msg = "";
+            if (
+              typeof unrolledBlock.uses !== "string" &&
+              "filePath" in unrolledBlock.uses
+            ) {
+              msg = `${(err as Error).message}.\n> ${shortenedPath(unrolledBlock.uses.filePath)}`;
+            } else {
+              msg = `${(err as Error).message}.\n> ${JSON.stringify(unrolledBlock.uses)}`;
+            }
+
             errors.push({
               fatal: false,
-              // Using JSON.stringify to avoid printing [object Object].
-              message: `${(err as Error).message}:\n${JSON.stringify(unrolledBlock.uses)}`,
+              message: msg,
             });
 
             console.error(
@@ -394,12 +415,11 @@ export async function unrollBlocks(
         } catch (err) {
           errors.push({
             fatal: false,
-            // Using JSON.stringify to avoid printing [object Object].
-            message: `${(err as Error).message}:\n${JSON.stringify(rule.uses)}`,
+            message: `${(err as Error).message}:\n${rule.uses}`,
           });
 
           console.error(
-            `Failed to unroll block ${JSON.stringify(rule.uses)}: ${(err as Error).message}`,
+            `Failed to unroll block ${rule.uses}: ${(err as Error).message}`,
           );
           rules.push(null);
         }
@@ -430,10 +450,15 @@ export async function unrollBlocks(
         );
       }
     } catch (err) {
+      let msg = "";
+      if (injectBlock.uriType === "file") {
+        msg = `${(err as Error).message}.\n> ${shortenedPath(injectBlock.filePath)}`;
+      } else {
+        msg = `${(err as Error).message}.\n> ${injectBlock.fullSlug}`;
+      }
       errors.push({
         fatal: false,
-        // Using JSON.stringify to avoid printing [object Object].
-        message: `${(err as Error).message}:\n${JSON.stringify(injectBlock)}`,
+        message: msg,
       });
 
       console.error(
@@ -506,4 +531,23 @@ export function mergeOverrides<T extends Record<string, any>>(
     }
   }
   return block;
+}
+
+function formatZodError(error: any): string {
+  if (error.errors && Array.isArray(error.errors)) {
+    return error.errors
+      .map((e: any) => {
+        const path = e.path.length > 0 ? `${e.path.join(".")}: ` : "";
+        return `${path}${e.message}`;
+      })
+      .join(", ");
+  }
+  return error.message || "Validation failed";
+}
+
+function shortenedPath(filePath: string): string {
+  const basename = path.posix.basename(filePath);
+  const parent = path.posix.basename(path.posix.dirname(filePath));
+  const shortenedPath = `${parent}/${basename}`;
+  return shortenedPath;
 }
