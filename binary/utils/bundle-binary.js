@@ -8,41 +8,34 @@ const {
 const { downloadRipgrep } = require("./ripgrep");
 const { TARGET_TO_LANCEDB } = require("../utils/targets");
 const fs = require("fs");
+const {
+  downloadSqlite,
+} = require("../../extensions/vscode/scripts/install-copy-sqlite-esbuild");
 
 async function downloadNodeSqlite(target, targetDir) {
-  return new Promise((resolve) => {
-    const [currentPlatform, currentArch] = autodetectPlatformAndArch();
+  const [currentPlatform, currentArch] = autodetectPlatformAndArch();
 
-    // Download and unzip prebuilt sqlite3 binary for the target
-    console.log("[info] Downloading node-sqlite3");
+  // Download and unzip prebuilt sqlite3 binary for the target
+  console.log("[info] Downloading node-sqlite3");
 
-    const downloadUrl =
-      // node-sqlite3 doesn't have a pre-built binary for win32-arm64
-      target === "win32-arm64"
-        ? "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz"
-        : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
-            target
-          }.tar.gz`;
+  await downloadSqlite(target, `${targetDir}/build.tar.gz`);
 
-    execCmdSync(`curl -L -o ${targetDir}/build.tar.gz ${downloadUrl}`);
-    execCmdSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
+  execCmdSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
 
-    // Copy to build directory for testing
-    try {
-      const [platform, arch] = target.split("-");
-      if (platform === currentPlatform && arch === currentArch) {
-        fs.copyFileSync(
-          `${targetDir}/build/Release/node_sqlite3.node`,
-          `build/node_sqlite3.node`,
-        );
-      }
-    } catch (error) {
-      console.log("[warn] Could not copy node_sqlite to build");
-      console.log(error);
+  // Copy to build directory for testing
+  try {
+    const [platform, arch] = target.split("-");
+    if (platform === currentPlatform && arch === currentArch) {
+      fs.copyFileSync(
+        `${targetDir}/build/Release/node_sqlite3.node`,
+        `build/node_sqlite3.node`,
+      );
     }
-    fs.unlinkSync(`${targetDir}/build.tar.gz`);
-    resolve();
-  });
+  } catch (error) {
+    console.log("[warn] Could not copy node_sqlite to build");
+    console.log(error);
+  }
+  fs.unlinkSync(`${targetDir}/build.tar.gz`);
 }
 
 /**
