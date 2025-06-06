@@ -13,57 +13,42 @@ const {
 
 const continueDir = path.join(__dirname, "..", "..", "..");
 
-function generateConfigYamlSchema() {
-  process.chdir(path.join(continueDir, "packages", "config-yaml"));
-  execCmdSync("npm install");
-  execCmdSync("npm run build");
-  execCmdSync("npm run generate-schema");
-  fs.copyFileSync(
-    path.join("schema", "config-yaml-schema.json"),
-    path.join(continueDir, "extensions", "vscode", "config-yaml-schema.json"),
+async function generateAndCopyConfigYamlSchema() {
+  // Generate and copy over config-yaml-schema.json
+  const generateConfigYamlChild = fork(
+    path.join(__dirname, "generate-copy-config.js"),
+    {
+      stdio: "inherit",
+    },
   );
-  console.log("[info] Generated config.yaml schema");
-}
+  generateConfigYamlChild.send({ payload: { operation: "generate" } });
 
-function copyConfigSchema() {
-  process.chdir(path.join(continueDir, "extensions", "vscode"));
-  // Modify and copy for .continuerc.json
-  const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
-  schema.$defs.SerializedContinueConfig.properties.mergeBehavior = {
-    type: "string",
-    enum: ["merge", "overwrite"],
-    default: "merge",
-    title: "Merge behavior",
-    markdownDescription:
-      "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
-    "x-intellij-html-description":
-      "<p>If set to <code>merge</code>, <code>.continuerc.json</code> will be applied on top of <code>config.json</code> (arrays and objects are merged). If set to <code>overwrite</code>, then every top-level property of <code>.continuerc.json</code> will overwrite that property from <code>config.json</code>.</p>",
-  };
-  fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
+  await new Promise((resolve, reject) => {
+    generateConfigYamlChild.on("message", (msg) => {
+      if (msg.error) {
+        reject();
+      }
+      resolve();
+    });
+  });
 
   // Copy config schemas to intellij
-  fs.copyFileSync(
-    "config_schema.json",
-    path.join(
-      "..",
-      "intellij",
-      "src",
-      "main",
-      "resources",
-      "config_schema.json",
-    ),
+  const copyConfigSchemaChild = fork(
+    path.join(__dirname, "generate-copy-config.js"),
+    {
+      stdio: "inherit",
+    },
   );
-  fs.copyFileSync(
-    "continue_rc_schema.json",
-    path.join(
-      "..",
-      "intellij",
-      "src",
-      "main",
-      "resources",
-      "continue_rc_schema.json",
-    ),
-  );
+  copyConfigSchemaChild.send({ payload: { operation: "copy" } });
+
+  await new Promise((resolve, reject) => {
+    copyConfigSchemaChild.on("message", (msg) => {
+      if (msg.error) {
+        reject();
+      }
+      resolve();
+    });
+  });
 }
 
 function copyTokenizers() {
@@ -87,12 +72,12 @@ async function installNodeModules() {
       stdio: "inherit",
     },
   );
-  installVscodeChild.send({ payload: { continueDir, targetDir: "vscode" } });
+  installVscodeChild.send({ payload: { targetDir: "vscode" } });
 
   const installGuiChild = fork(path.join(__dirname, "install-nodemodules.js"), {
     stdio: "inherit",
   });
-  installGuiChild.send({ payload: { continueDir, targetDir: "gui" } });
+  installGuiChild.send({ payload: { targetDir: "gui" } });
 
   await Promise.all([
     new Promise((resolve, reject) => {
@@ -560,14 +545,14 @@ async function copyScripts() {
 // in the build
 function writeBuildTimestamp() {
   fs.writeFileSync(
-    "src/.buildTimestamp.ts",
+    path.join(continueDir, "extensions/vscode", "src/.buildTimestamp.ts"),
     `export default "${new Date().toISOString()}";\n`,
   );
 }
 
 module.exports = {
-  generateConfigYamlSchema,
-  copyConfigSchema,
+  continueDir,
+  generateAndCopyConfigYamlSchema,
   installNodeModules,
   buildGui,
   copyOnnxRuntimeFromNodeModules,

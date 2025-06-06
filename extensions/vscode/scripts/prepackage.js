@@ -11,10 +11,10 @@ const {
 } = require("../../../scripts/util/index");
 
 const {
-  copyConfigSchema,
   writeBuildTimestamp,
-  generateConfigYamlSchema,
   installNodeModules,
+  continueDir,
+  generateAndCopyConfigYamlSchema,
 } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -68,24 +68,12 @@ const isMacTarget = target?.startsWith("darwin");
 void (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Generate and copy over config-yaml-schema.json
-  generateConfigYamlSchema();
-
-  // Copy config schemas to intellij
-  copyConfigSchema();
-
-  if (!process.cwd().endsWith("vscode")) {
-    // This is sometimes run from root dir instead (e.g. in VS Code tasks)
-    process.chdir("extensions/vscode");
-  }
-
   // Make sure we have an initial timestamp file
   writeBuildTimestamp();
 
-  // Install node_modules //
-  await installNodeModules();
+  await Promise.all([generateAndCopyConfigYamlSchema(), installNodeModules()]);
 
-  process.chdir(path.join("__dirname", "..", "..", "..", "gui"));
+  process.chdir(path.join(continueDir, "gui"));
 
   if (isInGitHubAction) {
     execCmdSync("npm run build");
