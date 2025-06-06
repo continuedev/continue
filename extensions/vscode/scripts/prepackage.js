@@ -4,7 +4,6 @@ const path = require("path");
 const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
 
-const { copyNodeModule } = require("../../../scripts/util/copy-nodemodule");
 const {
   validateFilesPresent,
   execCmdSync,
@@ -12,6 +11,7 @@ const {
 } = require("../../../scripts/util/index");
 
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
+const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
 const { copySqlite, copyEsbuild } = require("./install-copy-sqlite-esbuild");
 const { installNodeModules } = require("./install-nodemodules");
 const { writeBuildTimestamp, continueDir } = require("./utils");
@@ -280,12 +280,12 @@ void (async () => {
     await Promise.all([
       copyEsbuild(target),
       copySqlite(target),
-      copyNodeModule(packageToInstall, "@lancedb"),
+      installAndCopyNodeModules(packageToInstall, "@lancedb"),
     ]);
   } else {
     // Download esbuild from npm in tmp and copy over
     console.log("[info] npm installing esbuild binary");
-    await copyNodeModule("esbuild@0.17.19", "@esbuild");
+    await installAndCopyNodeModules("esbuild@0.17.19", "@esbuild");
   }
 
   console.log("[info] Copying sqlite node binding from core");

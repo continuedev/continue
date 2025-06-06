@@ -1,12 +1,14 @@
 /**
- * @file Copy lancedb to the current directory. It is intended to run as a child process.
+ * @file Copy lancedb to the current directory. It is also intended to run as a child process.
  */
 
+const { fork } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+
 const ncp = require("ncp").ncp;
-const { execCmdSync } = require(".");
-const { fork } = require("child_process");
+
+const { execCmdSync } = require("../../../scripts/util");
 
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   console.log(`Copying ${packageName} to ${toCopy}`);
@@ -86,7 +88,7 @@ process.on("message", (msg) => {
  * @param {string} packageName the module to install and copy
  * @param {string} toCopy directory to copy into inside node modules
  */
-async function copyNodeModule(packageName, toCopy) {
+async function installAndCopyNodeModules(packageName, toCopy) {
   const child = fork(__filename, { stdio: "inherit", cwd: process.cwd() });
   child.send({
     payload: {
@@ -106,5 +108,5 @@ async function copyNodeModule(packageName, toCopy) {
 }
 
 module.exports = {
-  copyNodeModule,
+  installAndCopyNodeModules,
 };

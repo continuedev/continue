@@ -6,7 +6,9 @@ const { rimrafSync } = require("rimraf");
 const { validateFilesPresent } = require("../scripts/util");
 const { ALL_TARGETS, TARGET_TO_LANCEDB } = require("./utils/targets");
 const { fork } = require("child_process");
-const { copyNodeModule } = require("../scripts/util/copy-nodemodule");
+const {
+  installAndCopyNodeModules,
+} = require("../extensions/vscode/scripts/install-copy-nodemodule");
 
 const bin = path.join(__dirname, "bin");
 const out = path.join(__dirname, "out");
@@ -104,7 +106,7 @@ async function buildWithEsbuild() {
     }
     console.log(`[info] Downloading for ${target}...`);
     copyLanceDBPromises.push(
-      copyNodeModule(TARGET_TO_LANCEDB[target], "@lancedb"),
+      installAndCopyNodeModules(TARGET_TO_LANCEDB[target], "@lancedb"),
     );
   }
   await Promise.all(copyLanceDBPromises).catch(() => {
