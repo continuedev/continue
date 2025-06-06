@@ -10,7 +10,7 @@ const { TARGET_TO_LANCEDB } = require("../utils/targets");
 const fs = require("fs");
 const {
   downloadSqlite,
-} = require("../../extensions/vscode/scripts/install-copy-sqlite-esbuild");
+} = require("../../extensions/vscode/scripts/download-copy-sqlite-esbuild");
 
 async function downloadNodeSqlite(target, targetDir) {
   const [currentPlatform, currentArch] = autodetectPlatformAndArch();

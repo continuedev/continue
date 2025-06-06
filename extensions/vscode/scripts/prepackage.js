@@ -10,9 +10,9 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
+const { copySqlite, copyEsbuild } = require("./download-copy-sqlite-esbuild");
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
-const { copySqlite, copyEsbuild } = require("./install-copy-sqlite-esbuild");
 const { installNodeModules } = require("./install-nodemodules");
 const { writeBuildTimestamp, continueDir } = require("./utils");
 
