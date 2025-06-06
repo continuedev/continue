@@ -47,6 +47,9 @@ class FileSystemIde implements IDE {
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     return;
   }
+  onDidCloseTextDocument(callback: (fileUris: string[]) => void): void {
+    return;
+  }
 
   onDidCloseTextDocument(callback: (fileUris: string[]) => void): void {
     return;
