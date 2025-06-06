@@ -1,6 +1,7 @@
 /**
- * @file Builds the binary for the specified target. It is intended to run as a child process.
+ * @file Builds the binary for the specified target. It is also intended to run as a child process.
  */
+
 const {
   execCmdSync,
   autodetectPlatformAndArch,
@@ -11,6 +12,7 @@ const fs = require("fs");
 const {
   downloadSqlite,
 } = require("../../extensions/vscode/scripts/download-copy-sqlite-esbuild");
+const { fork } = require("child_process");
 
 async function downloadNodeSqlite(target, targetDir) {
   const [currentPlatform, currentArch] = autodetectPlatformAndArch();
@@ -74,3 +76,27 @@ process.on("message", (msg) => {
       process.send({ error: true });
     });
 });
+
+/**
+ * @param {string} target the platform to bundle for
+ */
+async function bundleBinary(target) {
+  const child = fork(__filename, { stdio: "inherit" });
+  child.send({
+    payload: {
+      target,
+    },
+  });
+  return new Promise((resolve, reject) => {
+    child.on("message", (msg) => {
+      if (msg.error) {
+        reject();
+      }
+      resolve();
+    });
+  });
+}
+
+module.exports = {
+  bundleBinary,
+};

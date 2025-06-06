@@ -9,6 +9,7 @@ const { fork } = require("child_process");
 const {
   installAndCopyNodeModules,
 } = require("../extensions/vscode/scripts/install-copy-nodemodule");
+const { bundleBinary } = require("./utils/bundle-binary");
 
 const bin = path.join(__dirname, "bin");
 const out = path.join(__dirname, "out");
@@ -178,22 +179,7 @@ async function buildWithEsbuild() {
   const buildBinaryPromises = [];
   console.log("[info] Building binaries with pkg...");
   for (const target of targets) {
-    const child = fork("./utils/bundle-binary.js", { stdio: "inherit" });
-    child.send({
-      payload: {
-        target,
-      },
-    });
-    buildBinaryPromises.push(
-      new Promise((resolve, reject) => {
-        child.on("message", (msg) => {
-          if (msg.error) {
-            reject();
-          }
-          resolve();
-        });
-      }),
-    );
+    buildBinaryPromises.push(bundleBinary(target));
   }
   await Promise.all(buildBinaryPromises).catch(() => {
     console.error("[error] Failed to build binaries");
