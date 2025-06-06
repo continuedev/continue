@@ -4,7 +4,7 @@ import { DEEPSEEK_API_BASE } from "../apis/DeepSeek.js";
 import { INCEPTION_API_BASE } from "../apis/Inception.js";
 import { OpenAIApi } from "../apis/OpenAI.js";
 import { constructLlmApi } from "../index.js";
-import { getLlmApi, testChat, testCompletion, testEmbed } from "./util.js";
+import { getLlmApi, testChat, testEmbed } from "./util.js";
 
 dotenv.config();
 
@@ -16,10 +16,6 @@ function testConfig(config: ModelConfig) {
     apiBase: config.apiBase,
     env: config.env,
   });
-
-  if (false) {
-    testCompletion(api, model);
-  }
 
   if (
     ["chat", "summarize", "edit", "apply"].some((role) =>
@@ -106,6 +102,28 @@ const TESTS: Omit<ModelConfig, "name">[] = [
   //   apiKey: process.env.COHERE_API_KEY!,
   //   roles: ["rerank"],
   // },
+  {
+    provider: "azure",
+    model: "gpt-4.1",
+    apiBase: "https://continue-openai.openai.azure.com",
+    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    env: {
+      deployment: "gpt-4.1",
+      apiVersion: "2024-02-15-preview",
+      apiType: "azure-openai",
+    },
+    roles: ["chat"],
+  },
+  {
+    provider: "azure",
+    model: "mistral-small-2503",
+    apiBase: "https://nate-0276-resource.services.ai.azure.com/models",
+    apiKey: process.env.AZURE_FOUNDRY_API_KEY,
+    env: {
+      deployment: "mistral-small-2503",
+    },
+    roles: ["chat"],
+  },
 ];
 
 TESTS.forEach((config) => {

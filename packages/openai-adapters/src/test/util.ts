@@ -8,7 +8,6 @@ export function getLlmApi(config: LLMConfig) {
   }
   return api;
 }
-
 export function testEmbed(api: BaseLlmApi, model: string) {
   test("should successfully embed", async () => {
     const response = await api.embed({
@@ -155,7 +154,6 @@ export function testChat(api: BaseLlmApi, model: string) {
     let completion = "";
     for await (const result of stream) {
       completion += result.choices[0].delta.content ?? "";
-
       expect(result.choices.length).toBeGreaterThan(0);
     }
     expect(completion.length).toBeGreaterThan(0);
@@ -313,7 +311,6 @@ export function testChat(api: BaseLlmApi, model: string) {
       },
       new AbortController().signal,
     )) {
-      console.log(JSON.stringify(chunk, null, 2));
       response += chunk.choices[0].delta.content ?? "";
     }
 
