@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import { describe, expect, it } from "vitest";
 
+// Tests the boundary chunking patch to node fetch made in node-fetch-patch.js (see that file for details).
 describe("Chunked Transfer Encoding Patch Logic", () => {
   // The LAST_CHUNK marker "0\r\n\r\n"
   const LAST_CHUNK = Buffer.from("0\r\n\r\n");

@@ -1,3 +1,10 @@
+/*
+This is a patched version of index.js from node-fetch 3.3.2 (see packages/fetch/node_modules/node-fetch/src/index.js)
+This is to fix "Premature close" errors caused by chunked encoding assumptions - see https://github.com/continuedev/continue/issues/5502
+The patch adjusts boundary chunk detection logic (see "PATCH" comment next to patch)
+And is based on https://github.com/node-fetch/node-fetch/issues/1576
+*/
+
 /**
  * Index.js
  *
@@ -481,9 +488,8 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
     // 	previousChunk = buf;
     // };
 
-    // VENDOR note - THIS IS THE REASON I AM PATCHING THIS PACKAGE
+    // PATCH - THIS IS WHERE THE PATCH IS - FIXES BOUNDARY CHUNKING ISSUE
     // See https://github.com/node-fetch/node-fetch/issues/1576
-    // FIXES BOUNDARY CHUNKING ISSUE
     const onData = (buf) => {
       properLastChunkReceived = Buffer.compare(buf.slice(-5), LAST_CHUNK) === 0;
 
