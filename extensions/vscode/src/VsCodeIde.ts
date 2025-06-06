@@ -3,8 +3,6 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -92,6 +90,19 @@ class VsCodeIde implements IDE {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor) {
         callback(editor.document.uri.toString());
+      }
+    });
+  }
+
+  onDidCloseTextDocument(callback: (uris: string[]) => void): void {
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      if (document) {
+        let openFilePaths = vscode.window.tabGroups.all // get tab groups
+          .flatMap((group) => group.tabs) // extract tabs from tab groups
+          .filter((tab) => tab.input instanceof vscode.TabInputText) // filter irrelevant tabs (settings, etc.)
+          .map((tab) => (tab.input as vscode.TabInputText).uri.fsPath); // get filepaths
+
+        callback(openFilePaths);
       }
     });
   }

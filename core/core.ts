@@ -3,6 +3,10 @@ import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
+import {
+  openedFilesLruCache,
+  prevFilepaths,
+} from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
@@ -665,6 +669,12 @@ export class Core {
         const ignore = await shouldIgnore(filepath, this.ide);
         if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
+
+          // Set the active file as most recently used (need to force recency update by deleting and re-adding)
+          if (openedFilesLruCache.has(filepath)) {
+            openedFilesLruCache.delete(filepath);
+          }
+          openedFilesLruCache.set(filepath, filepath);
         }
       } catch (e) {
         console.error(
@@ -672,6 +682,47 @@ export class Core {
         );
       }
     });
+
+    on("didCloseTextDocument", async ({ data: { filepaths } }) => {
+      try {
+        if (!prevFilepaths.filepaths.length) {
+          prevFilepaths.filepaths = filepaths;
+        }
+
+        // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
+        if (filepaths.length <= prevFilepaths.filepaths.length) {
+          // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
+          for (const [key, value] of openedFilesLruCache.entriesDescending()) {
+            let trimmedKey = key.slice(7); // uri -> filepath
+            if (!filepaths.includes(trimmedKey)) {
+              openedFilesLruCache.delete(key);
+            }
+          }
+        }
+
+        prevFilepaths.filepaths = filepaths;
+      } catch (e) {
+        console.error(
+          `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
+        );
+      }
+    });
+
+    on(
+      "initializeOpenedFileCache",
+      async ({ data: { initialOpenedFilePaths } }) => {
+        try {
+          for (const filepath of initialOpenedFilePaths) {
+            openedFilesLruCache.set(`file://${filepath}`, `file://${filepath}`);
+          }
+        } catch (e) {
+          console.error(
+            `initializeOpenedFileCache: failed to update openedFilesLruCache`,
+            e,
+          );
+        }
+      },
+    );
 
     on("tools/call", async ({ data: { toolCall } }) => {
       const { config } = await this.configHandler.loadConfig();

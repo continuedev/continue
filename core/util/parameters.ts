@@ -15,6 +15,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useCache: true,
   onlyMyCode: true,
   useRecentlyEdited: true,
+  useRecentlyOpened: true,
   disableInFiles: undefined,
   useImports: true,
   transform: true,
