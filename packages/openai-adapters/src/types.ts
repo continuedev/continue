@@ -106,6 +106,7 @@ export const WatsonXConfigSchema = BasePlusConfig.extend({
     apiVersion: z.string().optional(),
     projectId: z.string().optional(),
     deploymentId: z.string().optional(),
+    bearerTokenRequired: z.boolean().optional(),
   }),
 });
 export type WatsonXConfig = z.infer<typeof WatsonXConfigSchema>;

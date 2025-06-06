@@ -12,7 +12,7 @@ import {
   Model,
 } from "openai/resources/index";
 import { z } from "zod";
-import { OpenAIConfigSchema } from "../types.js";
+import { AzureConfigSchema, OpenAIConfigSchema } from "../types.js";
 import { customFetch } from "../util.js";
 import {
   BaseLlmApi,
@@ -25,7 +25,11 @@ export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
 
-  constructor(protected config: z.infer<typeof OpenAIConfigSchema>) {
+  constructor(
+    protected config: z.infer<
+      typeof OpenAIConfigSchema | typeof AzureConfigSchema
+    >,
+  ) {
     this.apiBase = config.apiBase ?? this.apiBase;
     this.openai = new OpenAI({
       apiKey: config.apiKey,

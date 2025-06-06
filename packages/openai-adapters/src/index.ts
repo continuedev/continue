@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 import { AnthropicApi } from "./apis/Anthropic.js";
-import { AzureOpenAIApi } from "./apis/AzureOpenAI.js";
 import { CohereApi } from "./apis/Cohere.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
@@ -30,9 +29,8 @@ function openAICompatible(
 export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
   switch (config.provider) {
     case "openai":
-      return new OpenAIApi(config);
     case "azure":
-      return new AzureOpenAIApi(config);
+      return new OpenAIApi(config);
     case "cohere":
       return new CohereApi(config);
     case "anthropic":
