@@ -11,13 +11,10 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
+const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { copySqlite, copyEsbuild } = require("./install-copy-sqlite-esbuild");
-const {
-  writeBuildTimestamp,
-  installNodeModules,
-  continueDir,
-  generateAndCopyConfigYamlSchema,
-} = require("./utils");
+const { installNodeModules } = require("./install-nodemodules");
+const { writeBuildTimestamp, continueDir } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));

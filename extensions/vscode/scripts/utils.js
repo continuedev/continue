@@ -1,55 +1,12 @@
-const { fork } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
 const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
 
-const {
-  validateFilesPresent,
-  execCmdSync,
-  autodetectPlatformAndArch,
-} = require("../../../scripts/util/index");
+const { execCmdSync } = require("../../../scripts/util/index");
 
 const continueDir = path.join(__dirname, "..", "..", "..");
-
-async function generateAndCopyConfigYamlSchema() {
-  // Generate and copy over config-yaml-schema.json
-  const generateConfigYamlChild = fork(
-    path.join(__dirname, "generate-copy-config.js"),
-    {
-      stdio: "inherit",
-    },
-  );
-  generateConfigYamlChild.send({ payload: { operation: "generate" } });
-
-  await new Promise((resolve, reject) => {
-    generateConfigYamlChild.on("message", (msg) => {
-      if (msg.error) {
-        reject();
-      }
-      resolve();
-    });
-  });
-
-  // Copy config schemas to intellij
-  const copyConfigSchemaChild = fork(
-    path.join(__dirname, "generate-copy-config.js"),
-    {
-      stdio: "inherit",
-    },
-  );
-  copyConfigSchemaChild.send({ payload: { operation: "copy" } });
-
-  await new Promise((resolve, reject) => {
-    copyConfigSchemaChild.on("message", (msg) => {
-      if (msg.error) {
-        reject();
-      }
-      resolve();
-    });
-  });
-}
 
 function copyTokenizers() {
   fs.copyFileSync(
@@ -63,43 +20,6 @@ function copyTokenizers() {
     path.join(__dirname, "../out/llamaTokenizer.mjs"),
   );
   console.log("[info] Copied llamaTokenizer");
-}
-
-async function installNodeModules() {
-  const installVscodeChild = fork(
-    path.join(__dirname, "install-nodemodules.js"),
-    {
-      stdio: "inherit",
-    },
-  );
-  installVscodeChild.send({ payload: { targetDir: "vscode" } });
-
-  const installGuiChild = fork(path.join(__dirname, "install-nodemodules.js"), {
-    stdio: "inherit",
-  });
-  installGuiChild.send({ payload: { targetDir: "gui" } });
-
-  await Promise.all([
-    new Promise((resolve, reject) => {
-      installVscodeChild.on("message", (msg) => {
-        if (msg.error) {
-          reject();
-        }
-        resolve();
-      });
-    }),
-    new Promise((resolve, reject) => {
-      installGuiChild.on("message", (msg) => {
-        if (msg.error) {
-          reject();
-        }
-        resolve();
-      });
-    }),
-  ]).catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
 }
 
 async function buildGui(isGhAction) {
@@ -552,8 +472,6 @@ function writeBuildTimestamp() {
 
 module.exports = {
   continueDir,
-  generateAndCopyConfigYamlSchema,
-  installNodeModules,
   buildGui,
   copyOnnxRuntimeFromNodeModules,
   copyTreeSitterWasms,

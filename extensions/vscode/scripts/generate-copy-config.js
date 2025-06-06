@@ -2,6 +2,7 @@
  * @file Generate config.yaml file from template. Intended to run as a child process.
  */
 
+const { fork } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -81,3 +82,45 @@ process.on("message", (msg) => {
       });
   }
 });
+
+async function generateAndCopyConfigYamlSchema() {
+  // Generate and copy over config-yaml-schema.json
+  const generateConfigYamlChild = fork(
+    path.join(__dirname, "generate-copy-config.js"),
+    {
+      stdio: "inherit",
+    },
+  );
+  generateConfigYamlChild.send({ payload: { operation: "generate" } });
+
+  await new Promise((resolve, reject) => {
+    generateConfigYamlChild.on("message", (msg) => {
+      if (msg.error) {
+        reject();
+      }
+      resolve();
+    });
+  });
+
+  // Copy config schemas to intellij
+  const copyConfigSchemaChild = fork(
+    path.join(__dirname, "generate-copy-config.js"),
+    {
+      stdio: "inherit",
+    },
+  );
+  copyConfigSchemaChild.send({ payload: { operation: "copy" } });
+
+  await new Promise((resolve, reject) => {
+    copyConfigSchemaChild.on("message", (msg) => {
+      if (msg.error) {
+        reject();
+      }
+      resolve();
+    });
+  });
+}
+
+module.exports = {
+  generateAndCopyConfigYamlSchema,
+};

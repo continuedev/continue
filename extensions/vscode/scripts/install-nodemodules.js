@@ -2,6 +2,7 @@
  * @file Install node modules for the VS Code extension. This is intended to run as a child process.
  */
 
+const { fork } = require("child_process");
 const path = require("path");
 
 const { execCmdSync } = require("../../../scripts/util");
@@ -38,3 +39,44 @@ process.on("message", (msg) => {
       });
   }
 });
+
+async function installNodeModules() {
+  const installVscodeChild = fork(
+    path.join(__dirname, "install-nodemodules.js"),
+    {
+      stdio: "inherit",
+    },
+  );
+  installVscodeChild.send({ payload: { targetDir: "vscode" } });
+
+  const installGuiChild = fork(path.join(__dirname, "install-nodemodules.js"), {
+    stdio: "inherit",
+  });
+  installGuiChild.send({ payload: { targetDir: "gui" } });
+
+  await Promise.all([
+    new Promise((resolve, reject) => {
+      installVscodeChild.on("message", (msg) => {
+        if (msg.error) {
+          reject();
+        }
+        resolve();
+      });
+    }),
+    new Promise((resolve, reject) => {
+      installGuiChild.on("message", (msg) => {
+        if (msg.error) {
+          reject();
+        }
+        resolve();
+      });
+    }),
+  ]).catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  installNodeModules,
+};
