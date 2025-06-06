@@ -84,6 +84,19 @@ export type CohereConfig = z.infer<typeof CohereConfigSchema>;
 
 export const AzureConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("azure"),
+  env: z
+    .object({
+      apiVersion: z.string().optional(),
+      apiType: z
+        .union([
+          z.literal("azure-foundry"),
+          z.literal("azure-openai"),
+          z.literal("azure"), // Legacy
+        ])
+        .optional(),
+      deployment: z.string().optional(),
+    })
+    .optional(),
 });
 export type AzureConfig = z.infer<typeof AzureConfigSchema>;
 
