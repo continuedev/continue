@@ -1,6 +1,6 @@
 import { ContextItem, ContextProviderExtras } from "../..";
 import { contextProviderClassFromName } from "../../context/providers";
-import URLContextProvider from "../../context/providers/URLContextProvider";
+import { getUrlContextItems } from "../../context/providers/URLContextProvider";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getUriPathBasename } from "../../util/uri";
 
@@ -33,7 +33,7 @@ async function resolveAttachment(
     if (name.endsWith(".prompt")) {
       // Recurse
       const [items, _] = await renderPromptFileV2(
-        await extras.ide.readFile(name),
+        await extras.ide.readFile(resolvedFileUri),
         extras,
       );
       subItems.push(...items);
@@ -52,10 +52,7 @@ async function resolveAttachment(
 
   // URLs
   if (name.startsWith("http")) {
-    const items = await new URLContextProvider({}).getContextItems(
-      name,
-      extras,
-    );
+    const items = getUrlContextItems(name, extras.fetch);
     return items;
   }
 
@@ -75,10 +72,13 @@ export async function renderPromptFileV2(
   });
 
   const contextItems = (await Promise.all(contextItemsPromises)).flat();
-  const renderedPrompt =
-    contextItems.map((item) => item.content).join("\n\n") +
-    "\n\n" +
-    renderedBody;
+  const renderedPrompt = [
+    ...contextItems.map((item) => item.content),
+    renderedBody,
+    extras.fullInput,
+  ]
+    .join("\n\n")
+    .trim();
 
   return [contextItems, renderedPrompt];
 }

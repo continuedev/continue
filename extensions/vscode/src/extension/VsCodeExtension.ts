@@ -244,7 +244,6 @@ export class VsCodeExtension {
       this.consoleView,
       this.configHandler,
       this.verticalDiffManager,
-      this.core.continueServerClientPromise,
       this.battery,
       quickEdit,
       this.core,
@@ -282,7 +281,6 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
-      this.ide.updateLastFileSaveTimestamp();
       this.core.invoke("files/changed", {
         uris: [event.uri.toString()],
       });

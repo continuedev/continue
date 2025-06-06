@@ -1,6 +1,5 @@
 import { HTMLInputTypeAttribute } from "react";
 import { ModelProviderTags } from "../../../components/modelSelection/utils";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
@@ -748,34 +747,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.MetaLlama3,
     ],
   },
-  "free-trial": {
-    title: "Continue limited free trial",
-    provider: "free-trial",
-    refPage: "freetrial",
-    description:
-      "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key",
-    longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to set up a model for long-term use or have used all ${FREE_TRIAL_LIMIT_REQUESTS} free uses, you can enter your API key or use a local model.`,
-    icon: "openai.png",
-    tags: [ModelProviderTags.Free],
-    packages: [
-      models.llama31405bTrial,
-      models.llama3170bTrial,
-      { ...models.claude35Sonnet, title: "Claude 3.5 Sonnet (trial)" },
-      { ...models.gpt4o, title: "GPT-4o (trial)" },
-      { ...models.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
-      { ...models.claude35Haiku, title: "Claude 3.5 Haiku (trial)" },
-      models.mixtralTrial,
-      { ...models.gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
-      {
-        ...models.AUTODETECT,
-        params: {
-          ...models.AUTODETECT.params,
-          title: "Free Trial",
-        },
-      },
-    ],
-    collectInputFor: [...completionParamsInputsConfigs],
-  },
   sambanova: {
     title: "SambaNova",
     provider: "sambanova",
@@ -797,7 +768,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
       ...completionParamsInputsConfigs,
     ],
-    packages:[
+    packages: [
       models.llama4Scout,
       models.llama4Maverick,
       models.llama3370BInstruct,
@@ -808,7 +779,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.qwq32B,
       models.deepseekR1DistillLlama70B,
       models.deepseekR1,
-      models.deepseekV3
+      models.deepseekV3,
     ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
@@ -1011,9 +982,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         required: true,
       },
     ],
-    packages: [
-      {...models.AUTODETECT}
-    ],
-    apiKeyUrl: "https://venice.ai/chat"
-  }
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://venice.ai/chat",
+  },
 };

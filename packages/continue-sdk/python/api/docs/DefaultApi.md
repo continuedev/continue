@@ -2,12 +2,12 @@
 
 All URIs are relative to *https://api.continue.dev*
 
-Method | HTTP request | Description
-------------- | ------------- | -------------
-[**list_assistants**](DefaultApi.md#list_assistants) | **GET** /ide/list-assistants | List assistants for IDE
-
+| Method                                               | HTTP request                 | Description             |
+| ---------------------------------------------------- | ---------------------------- | ----------------------- |
+| [**list_assistants**](DefaultApi.md#list_assistants) | **GET** /ide/list-assistants | List assistants for IDE |
 
 # **list_assistants**
+
 > List[ListAssistants200ResponseInner] list_assistants(always_use_proxy=always_use_proxy, organization_id=organization_id)
 
 List assistants for IDE
@@ -18,10 +18,9 @@ icons, and other metadata needed by the IDE to display and use them.
 This endpoint performs a full refresh of the list of assistants, including unrolling
 configurations and resolving secrets.
 
-
 ### Example
 
-* Bearer Authentication (apiKeyAuth):
+- Bearer Authentication (apiKeyAuth):
 
 ```python
 import openapi_client
@@ -61,15 +60,12 @@ with openapi_client.ApiClient(configuration) as api_client:
         print("Exception when calling DefaultApi->list_assistants: %s\n" % e)
 ```
 
-
-
 ### Parameters
 
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **always_use_proxy** | **str**| Whether to always use the Continue-managed proxy for model requests | [optional] 
- **organization_id** | **str**| ID of the organization to scope assistants to. If not provided, personal assistants are returned. | [optional] 
+| Name                 | Type    | Description                                                                                       | Notes      |
+| -------------------- | ------- | ------------------------------------------------------------------------------------------------- | ---------- |
+| **always_use_proxy** | **str** | Whether to always use the Continue-managed proxy for model requests                               | [optional] |
+| **organization_id**  | **str** | ID of the organization to scope assistants to. If not provided, personal assistants are returned. | [optional] |
 
 ### Return type
 
@@ -81,16 +77,15 @@ Name | Type | Description  | Notes
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
- - **Accept**: application/json
+- **Content-Type**: Not defined
+- **Accept**: application/json
 
 ### HTTP response details
 
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | Successfully retrieved assistants |  -  |
-**401** | Unauthorized - Authentication failed |  -  |
-**404** | User not found |  -  |
+| Status code | Description                          | Response headers |
+| ----------- | ------------------------------------ | ---------------- |
+| **200**     | Successfully retrieved assistants    | -                |
+| **401**     | Unauthorized - Authentication failed | -                |
+| **404**     | User not found                       | -                |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
