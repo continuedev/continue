@@ -157,9 +157,9 @@ async function loadConfigYaml(options: {
     isAssistantUnrolledNonNullable(config)
       ? errors.push(...validateConfigYaml(config))
       : errors.push({
-        fatal: true,
-        message: "Assistant includes blocks that don't exist",
-      });
+          fatal: true,
+          message: "Assistant includes blocks that don't exist",
+        });
   }
 
   if (errors?.some((error) => error.fatal)) {
