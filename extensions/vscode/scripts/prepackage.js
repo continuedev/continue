@@ -281,9 +281,9 @@ void (async () => {
     );
 
     await Promise.all([
-      copyLanceDB(packageToInstall, "@lancedb"),
-      copySqlite(target),
       copyEsbuild(target),
+      copySqlite(target),
+      copyLanceDB(packageToInstall, "@lancedb"),
     ]);
   } else {
     // Download esbuild from npm in tmp and copy over
