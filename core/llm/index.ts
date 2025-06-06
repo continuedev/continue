@@ -25,6 +25,7 @@ import {
   PromptLog,
   PromptTemplate,
   RequestOptions,
+  TabAutocompleteOptions,
   TemplateType,
 } from "../index.js";
 import mergeJson from "../util/merge.js";
@@ -95,6 +96,8 @@ export abstract class BaseLLM implements ILLM {
   get underlyingProviderName(): string {
     return this.providerName;
   }
+
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
   supportsFim(): boolean {
     return false;
@@ -275,6 +278,8 @@ export abstract class BaseLLM implements ILLM {
     this.maxEmbeddingChunkSize =
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
+
+    this.autocompleteOptions = options.autocompleteOptions;
   }
 
   getConfigurationStatus() {
