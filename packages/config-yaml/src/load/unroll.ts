@@ -1,7 +1,5 @@
-import * as path from "path";
 import * as YAML from "yaml";
 import { ZodError } from "zod";
-import { getLastNUriRelativePathParts } from "../../../../core/util/uri.js";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
@@ -371,7 +369,7 @@ export async function unrollBlocks(
               typeof unrolledBlock.uses !== "string" &&
               "filePath" in unrolledBlock.uses
             ) {
-              msg = `${(err as Error).message}.\n> ${getLastNUriRelativePathParts([], unrolledBlock.uses.filePath, 2)}`;
+              msg = `${(err as Error).message}.\n> ${unrolledBlock.uses.filePath}`;
             } else {
               msg = `${(err as Error).message}.\n> ${JSON.stringify(unrolledBlock.uses)}`;
             }
@@ -453,7 +451,7 @@ export async function unrollBlocks(
     } catch (err) {
       let msg = "";
       if (injectBlock.uriType === "file") {
-        msg = `${(err as Error).message}.\n> ${getLastNUriRelativePathParts([], injectBlock.filePath, 2)}`;
+        msg = `${(err as Error).message}.\n> ${injectBlock.filePath}`;
       } else {
         msg = `${(err as Error).message}.\n> ${injectBlock.fullSlug}`;
       }
@@ -544,11 +542,4 @@ function formatZodError(error: any): string {
       .join(", ");
   }
   return error.message || "Validation failed";
-}
-
-function shortenedPath(filePath: string): string {
-  const basename = path.posix.basename(filePath);
-  const parent = path.posix.basename(path.posix.dirname(filePath));
-  const shortenedPath = `${parent}/${basename}`;
-  return shortenedPath;
 }
