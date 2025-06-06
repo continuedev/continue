@@ -24,7 +24,7 @@ jobs:
         id: root-cache
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - name: Install root dependencies
         if: steps.root-cache.outputs.cache-hit != 'true'
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - name: Check code formatting with Prettier
         run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         id: config-yaml-cache
@@ -88,7 +88,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         id: config-yaml-cache
@@ -118,7 +118,7 @@ jobs:
         id: root-cache
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         id: core-cache
@@ -146,7 +146,7 @@ jobs:
         id: root-cache
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         id: core-cache
@@ -186,7 +186,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         with:
@@ -229,7 +229,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         with:
@@ -272,7 +272,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         with:
@@ -320,7 +320,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         with:
@@ -365,7 +365,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}-2
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
         with:
