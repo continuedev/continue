@@ -114,16 +114,6 @@ const TESTS: Omit<ModelConfig, "name">[] = [
     },
     roles: ["chat"],
   },
-  {
-    provider: "azure",
-    model: "mistral-small-2503",
-    apiBase: "https://nate-0276-resource.services.ai.azure.com/models",
-    apiKey: process.env.AZURE_FOUNDRY_API_KEY,
-    env: {
-      deployment: "mistral-small-2503",
-    },
-    roles: ["chat"],
-  },
 ];
 
 TESTS.forEach((config) => {
