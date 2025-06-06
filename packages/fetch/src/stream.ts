@@ -1,5 +1,3 @@
-import { getPrematureCloseErrorMessage } from "./premature-close.js";
-
 export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
@@ -54,10 +52,22 @@ export async function* streamResponse(
         return; // In case of client-side cancellation, just return
       }
       if (e.message.toLowerCase().includes("premature close")) {
-        throw new Error(getPrematureCloseErrorMessage(chunks));
+        // Premature close can happen for various reasons, including:
+        // - Malformed chunks of data received from the server
+        // - The server closed the connection before sending the complete response
+        // - Long delays from the server during streaming
+        // - 'Keep alive' header being used in combination with an http agent and a set, low number of maxSockets
+        if (chunks === 0) {
+          throw new Error(
+            "Stream was closed before any data was received. Try again. (Premature Close)",
+          );
+        } else {
+          throw new Error(
+            "The response was cancelled mid-stream. Try again. (Premature Close).",
+          );
+        }
       }
     }
-
     throw e;
   }
 }
