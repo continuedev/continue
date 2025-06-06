@@ -36,6 +36,8 @@ const docSchema = z.object({
   startUrl: z.string(),
   rootUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
+  maxDepth: z.number().optional(),
+  useLocalCrawling: z.boolean().optional(),
 });
 
 export type DocsConfig = z.infer<typeof docSchema>;
