@@ -1,14 +1,14 @@
 import {
-    ChatCompletion,
-    ChatCompletionChunk,
-    ChatCompletionCreateParamsNonStreaming,
-    ChatCompletionCreateParamsStreaming,
-    Completion,
-    CompletionCreateParamsNonStreaming,
-    CompletionCreateParamsStreaming,
-    CreateEmbeddingResponse,
-    EmbeddingCreateParams,
-    Model,
+  ChatCompletion,
+  ChatCompletionChunk,
+  ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionCreateParamsStreaming,
+  Completion,
+  CompletionCreateParamsNonStreaming,
+  CompletionCreateParamsStreaming,
+  CreateEmbeddingResponse,
+  EmbeddingCreateParams,
+  Model,
 } from "openai/resources/index";
 
 export interface FimCreateParamsStreaming
@@ -36,8 +36,6 @@ export interface CreateRerankResponse {
     total_tokens: number;
   };
 }
-
-
 
 export interface BaseLlmApi {
   // Chat, no stream

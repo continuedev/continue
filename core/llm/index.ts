@@ -4,7 +4,7 @@ import { findLlmInfo } from "@continuedev/llm-info";
 import {
   BaseLlmApi,
   ChatCompletionCreateParams,
-  constructLlmApi
+  constructLlmApi,
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
@@ -1077,7 +1077,7 @@ export abstract class BaseLLM implements ILLM {
 
       throw new Error(
         `Unexpected rerank response format from ${this.providerName}. ` +
-        `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`
+          `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`,
       );
     }
 

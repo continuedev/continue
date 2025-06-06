@@ -36,11 +36,11 @@ class Vllm extends OpenAI {
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
     if (this.useOpenAIAdapterFor.includes("rerank") && this.openaiAdapter) {
-      const results = await this.openaiAdapter.rerank({
+      const results = (await this.openaiAdapter.rerank({
         model: this.model,
         query,
         documents: chunks.map((chunk) => chunk.content),
-      }) as unknown as VllmRerankResponse;
+      })) as unknown as VllmRerankResponse;
 
       // vLLM uses 'results' array instead of 'data'
       if (results.results && Array.isArray(results.results)) {
@@ -49,7 +49,7 @@ class Vllm extends OpenAI {
       }
 
       throw new Error(
-        `vLLM rerank response missing 'results' array. Got: ${JSON.stringify(Object.keys(results))}`
+        `vLLM rerank response missing 'results' array. Got: ${JSON.stringify(Object.keys(results))}`,
       );
     }
 
