@@ -210,6 +210,24 @@ const toolSchema = z.object({
 
 export const autoindentExtensionsSchema = z.array(z.string());
 
+export const tabAutocompleteOptionsSchema = z.object({
+  disable: z.boolean().optional(),
+  maxPromptTokens: z.number().optional(),
+  debounceDelay: z.number().optional(),
+  maxSuffixPercentage: z.number().optional(),
+  prefixPercentage: z.number().optional(),
+  transform: z.boolean().optional(),
+  template: z.string().optional(),
+  multilineCompletions: z.enum(["always", "never", "auto"]).optional(),
+  slidingWindowPrefixPercentage: z.number().optional(),
+  slidingWindowSize: z.number().optional(),
+  useCache: z.boolean().optional(),
+  onlyMyCode: z.boolean().optional(),
+  useRecentlyEdited: z.boolean().optional(),
+  disableInFiles: z.array(z.string()).optional(),
+  useImports: z.boolean().optional(),
+});
+
 export const configSchema = z.object({
   models: z.array(modelSchema).optional(),
   defaultModel: z.string().optional(),
@@ -220,6 +238,7 @@ export const configSchema = z.object({
   langMarkers: z.array(languageMarkerSchema).optional(),
   sidebar: sidebarSchema.optional(),
   tabAutocompleteModel: z.string().optional(),
+  tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
   rules: z.array(ruleObjectSchema).optional(),
   doneWithBannerForever: z.boolean().optional(),
   autoindentExtensions: autoindentExtensionsSchema.optional(),

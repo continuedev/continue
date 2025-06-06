@@ -343,9 +343,10 @@ The following top-level fields from `config.json` still work when using `config.
   - `debounceDelay`
   - `maxSuffixPercentage`
   - `prefixPercentage`
-  - `template`
   - `onlyMyCode`
 - `analytics`
+
+The `template` option under `tabAutocompleteOptions` is supported in YAML and can be used to specify a custom inline completion template.
 
 The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
 

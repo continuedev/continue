@@ -421,6 +421,10 @@ async function configYamlToContinueConfig(options: {
     continueConfig.contextProviders.push(new DocsContextProvider({}));
   }
 
+  if (config.tabAutocompleteOptions) {
+    continueConfig.tabAutocompleteOptions = config.tabAutocompleteOptions;
+  }
+
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
   mcpManager.setConnections(
