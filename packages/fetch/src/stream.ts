@@ -1,3 +1,5 @@
+import { getPrematureCloseErrorMessage } from "./premature-close.js";
+
 export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
@@ -24,6 +26,7 @@ export async function* streamResponse(
 
   // Get the major version of Node.js
   const nodeMajorVersion = parseInt(process.versions.node.split(".")[0], 10);
+  let chunks = 0;
 
   try {
     if (nodeMajorVersion >= 20) {
@@ -33,6 +36,7 @@ export async function* streamResponse(
         new TextDecoderStream("utf-8"),
       )) {
         yield chunk;
+        chunks++;
       }
     } else {
       // Fallback for Node versions below 20
@@ -41,12 +45,19 @@ export async function* streamResponse(
       const nodeStream = response.body as unknown as NodeJS.ReadableStream;
       for await (const chunk of toAsyncIterable(nodeStream)) {
         yield decoder.decode(chunk, { stream: true });
+        chunks++;
       }
     }
   } catch (e) {
-    if (e instanceof Error && e.name.startsWith("AbortError")) {
-      return; // In case of client-side cancellation, just return
+    if (e instanceof Error) {
+      if (e.name.startsWith("AbortError")) {
+        return; // In case of client-side cancellation, just return
+      }
+      if (e.message.toLowerCase().includes("premature close")) {
+        throw new Error(getPrematureCloseErrorMessage(chunks));
+      }
     }
+
     throw e;
   }
 }
