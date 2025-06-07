@@ -45,6 +45,7 @@ import {
 
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
+import { generateCommitMessage } from "./commands/slash/commit";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import {
   setupBestConfig,
@@ -732,6 +733,51 @@ export class Core {
       const isValid = setMdmLicenseKey(licenseKey);
       return isValid;
     });
+
+    on("generateCommitMessage", (msg) => {
+      return this.generateCommitMessageStream(msg);
+    });
+  }
+
+  private async *generateCommitMessageStream(
+    msg: Message<ToCoreProtocol["generateCommitMessage"][0]>,
+  ): AsyncGenerator<string> {
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Failed to load config");
+    }
+
+    const { modelTitle, diff } = msg.data;
+
+    const llm =
+      config.modelsByRole.chat.find((m) => m.title === modelTitle) ??
+      config.selectedModelByRole.chat;
+
+    if (!llm) {
+      throw new Error("No model selected");
+    }
+
+    const abortController = this.addMessageAbortController(msg.messageId);
+
+    try {
+      for await (const content of generateCommitMessage({
+        ide: this.ide,
+        llm,
+        diff,
+        signal: abortController.signal,
+      })) {
+        yield content;
+      }
+    } catch (e) {
+      // Ignore this error as it may occur during manual reruns
+      if (e instanceof Error && !e.message.includes("operation was aborted")) {
+        console.log("Failed to generate commit message", e);
+        throw e;
+      }
+    } finally {
+      // Always clean up the abortController on success/failure.
+      this.abortById(msg.messageId);
+    }
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
