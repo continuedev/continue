@@ -5,7 +5,6 @@ import {
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
-import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
   interface Window {
@@ -94,6 +93,8 @@ export interface ILLM
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
   get underlyingProviderName(): string;
+
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
   complete(
     prompt: string,
@@ -564,6 +565,7 @@ export interface LLMOptions {
   uniqueId?: string;
   baseAgentSystemMessage?: string;
   baseChatSystemMessage?: string;
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -776,10 +778,6 @@ export interface IDE {
       }
   >;
 
-  getLastFileSaveTimestamp?(): number;
-
-  updateLastFileSaveTimestamp?(): void;
-
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;
@@ -807,8 +805,6 @@ export interface IDE {
   listDir(dir: string): Promise<[string, FileType][]>;
 
   getFileStats(files: string[]): Promise<FileStatsMap>;
-
-  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // Secret Storage
   readSecrets(keys: string[]): Promise<Record<string, string>>;
@@ -996,6 +992,7 @@ export interface Tool {
   uri?: string;
   faviconUrl?: string;
   group: string;
+  originalFunctionName?: string;
 }
 
 interface ToolChoice {
@@ -1097,6 +1094,7 @@ export interface RerankerDescription {
   params?: { [key: string]: any };
 }
 
+// TODO: We should consider renaming this to AutocompleteOptions.
 export interface TabAutocompleteOptions {
   disable: boolean;
   maxPromptTokens: number;

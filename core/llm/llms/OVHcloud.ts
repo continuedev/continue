@@ -20,17 +20,20 @@ export class OVHcloud extends OpenAI {
     "mistral-7b": "Mistral-7B-Instruct-v0.3",
     "mistral-8x7b": "Mixtral-8x7B-Instruct-v0.1",
     "mistral-nemo": "Mistral-Nemo-Instruct-2407",
-    "DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-Distill-Llama-70B"
+    "DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-Distill-Llama-70B",
   };
 
   protected _convertModelName(model: string) {
     return OVHcloud.MODEL_IDS[model] || this.model;
   }
 
-  protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]): ChatCompletionCreateParams {
+  protected _convertArgs(
+    options: CompletionOptions,
+    messages: ChatMessage[],
+  ): ChatCompletionCreateParams {
     const modifiedOptions = {
       ...options,
-      model: this._convertModelName(options.model)
+      model: this._convertModelName(options.model),
     };
     return super._convertArgs(modifiedOptions, messages);
   }

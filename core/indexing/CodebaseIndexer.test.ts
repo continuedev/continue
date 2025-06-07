@@ -3,7 +3,7 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "path";
 
-import { ContinueServerClient } from "../continueServer/stubs/client.js";
+import { LLMError } from "../llm/index.js";
 import { testConfigHandler, testIde } from "../test/fixtures.js";
 import {
   addToTestDir,
@@ -59,16 +59,34 @@ class TestCodebaseIndexer extends CodebaseIndexer {
   }
 }
 
+// Create a mock messenger type that doesn't require actual protocol imports
+type MockMessengerType = {
+  send: jest.Mock;
+  request: jest.Mock;
+  invoke: jest.Mock;
+  on: jest.Mock;
+  onError: jest.Mock;
+};
+
 // These are more like integration tests, whereas we should separately test
 // the individual CodebaseIndex classes
 describe("CodebaseIndexer", () => {
   const pauseToken = new PauseToken(false);
-  const continueServerClient = new ContinueServerClient(undefined, undefined);
+
+  // Replace mockProgressReporter with mockMessenger
+  const mockMessenger: MockMessengerType = {
+    send: jest.fn(),
+    request: jest.fn(async () => {}),
+    invoke: jest.fn(),
+    on: jest.fn(),
+    onError: jest.fn(),
+  };
+
   const codebaseIndexer = new TestCodebaseIndexer(
     testConfigHandler,
     testIde,
-    pauseToken,
-    continueServerClient,
+    mockMessenger as any,
+    false,
   );
   const testIndex = new TestCodebaseIndex();
 
@@ -89,6 +107,7 @@ describe("CodebaseIndexer", () => {
 
   afterEach(() => {
     walkDirCache.invalidate();
+    jest.clearAllMocks();
   });
 
   async function refreshIndex() {
@@ -240,5 +259,156 @@ describe("CodebaseIndexer", () => {
   test.skip("shouldn't re-index anything when changing back to original branch", async () => {
     execSync(`cd ${TEST_DIR_PATH} && git checkout main`);
     await expectPlan(0, 0, 0, 0);
+  });
+
+  // New tests for the methods added from Core.ts
+  describe("New methods from Core.ts", () => {
+    // Simplified tests to focus on behavior, not implementation details
+    test("should call messenger with progress updates when refreshing codebase index", async () => {
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(async function* () {
+          yield { status: "done", progress: 1, desc: "Completed" };
+        });
+
+      await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
+
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.anything(),
+      );
+      expect(mockMessenger.send).toHaveBeenCalledWith("refreshSubmenuItems", {
+        providers: "dependsOnIndexing",
+      });
+    });
+
+    test("should call messenger with progress updates when refreshing specific files", async () => {
+      jest
+        .spyOn(codebaseIndexer as any, "refreshFiles")
+        .mockImplementation(async function* () {
+          yield { status: "done", progress: 1, desc: "Completed" };
+        });
+
+      await codebaseIndexer.refreshCodebaseIndexFiles(["/test/file.ts"]);
+
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.anything(),
+      );
+      expect(mockMessenger.send).toHaveBeenCalledWith("refreshSubmenuItems", {
+        providers: "all",
+      });
+    });
+
+    test("should abort previous indexing when starting a new one", async () => {
+      // Set up a situation where indexingCancellationController exists
+      const mockAbort = jest.fn();
+      const controller = { abort: mockAbort, signal: { aborted: false } };
+
+      // Access the private property in a type-safe way for testing
+      (codebaseIndexer as any).indexingCancellationController = controller;
+
+      // Mock refreshDirs to return immediately
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(async function* () {
+          yield { status: "done", progress: 1, desc: "Completed" };
+        });
+
+      // Start indexing - this should call abort on the existing controller
+      await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
+
+      // Verify abort was called
+      expect(mockAbort).toHaveBeenCalled();
+    });
+
+    test("should handle errors properly during indexing", async () => {
+      const testError = new Error("Test indexing error");
+
+      // Mock console.log to avoid printing errors
+      const consoleLogSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      // Mock refreshDirs to throw an error
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(() => {
+          throw testError;
+        });
+
+      // We don't need to mock AbortController because we're mocking the entire refreshDirs call
+      await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
+
+      // Use the first argument only for the assertion since the second argument doesn't match exactly
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        `Failed refreshing codebase index directories: Error: ${testError.message}`,
+      );
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.objectContaining({
+          status: "failed",
+        }),
+      );
+
+      consoleLogSpy.mockRestore();
+    });
+
+    test("should handle LLMError specially during indexing", async () => {
+      // Create a mock LLM
+      const mockLlm: any = {
+        providerName: "test-provider",
+        model: "test-model",
+      };
+
+      // Create a real LLMError
+      const llmError = new LLMError("Test LLM error", mockLlm);
+
+      // Mock console.log to avoid printing errors
+      jest.spyOn(console, "log").mockImplementation(() => {});
+
+      // Mock refreshDirs to throw an LLMError
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(() => {
+          throw llmError;
+        });
+
+      // We don't need to mock AbortController because we're mocking the entire refreshDirs call
+      await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
+
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "reportError",
+        llmError,
+      );
+      expect(mockMessenger.request).toHaveBeenCalledWith(
+        "indexProgress",
+        expect.objectContaining({
+          status: "failed",
+          desc: "Test LLM error",
+        }),
+      );
+    });
+
+    test("should provide access to current indexing state", async () => {
+      const testState = {
+        progress: 0.5,
+        status: "indexing" as const,
+        desc: "Test state",
+      };
+
+      // Mock refreshDirs to set a specific state
+      jest
+        .spyOn(codebaseIndexer as any, "refreshDirs")
+        .mockImplementation(async function* () {
+          yield testState;
+        });
+
+      // We don't need to mock AbortController because we're mocking the entire refreshDirs call
+      await codebaseIndexer.refreshCodebaseIndex([TEST_DIR]);
+
+      // Check that the state was updated
+      expect(codebaseIndexer.currentIndexingState).toEqual(testState);
+    });
   });
 });

@@ -32,7 +32,6 @@ import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
 import { ControlPlaneClient } from "../../control-plane/client";
-import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
@@ -118,10 +117,15 @@ async function loadConfigYaml(options: {
   //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
   // );
 
-  let config =
-    overrideConfigYaml ??
+  const errors: ConfigValidationError[] = [];
+
+  let config: AssistantUnrolled | undefined;
+
+  if (overrideConfigYaml) {
+    config = overrideConfigYaml;
+  } else {
     // This is how we allow use of blocks locally
-    (await unrollAssistant(
+    const unrollResult = await unrollAssistant(
       packageIdentifier,
       new RegistryClient({
         accessToken: await controlPlaneClient.getAccessToken(),
@@ -140,17 +144,23 @@ async function loadConfigYaml(options: {
         ),
         renderSecrets: true,
         injectBlocks: allLocalBlocks,
+        asConfigResult: true,
       },
-    ));
+    );
+    config = unrollResult.config;
+    if (unrollResult.errors) {
+      errors.push(...unrollResult.errors);
+    }
+  }
 
-  const errors = isAssistantUnrolledNonNullable(config)
-    ? validateConfigYaml(config)
-    : [
-        {
+  if (config) {
+    isAssistantUnrolledNonNullable(config)
+      ? errors.push(...validateConfigYaml(config))
+      : errors.push({
           fatal: true,
           message: "Assistant includes blocks that don't exist",
-        },
-      ];
+        });
+  }
 
   if (errors?.some((error) => error.fatal)) {
     return {
@@ -176,18 +186,8 @@ async function configYamlToContinueConfig(options: {
   uniqueId: string;
   llmLogger: ILLMLogger;
   workOsAccessToken: string | undefined;
-  allowFreeTrial?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
-  let {
-    config,
-    ide,
-    ideSettings,
-    ideInfo,
-    uniqueId,
-    llmLogger,
-    allowFreeTrial,
-  } = options;
-  allowFreeTrial = allowFreeTrial ?? true;
+  let { config, ide, ideSettings, ideInfo, uniqueId, llmLogger } = options;
 
   const localErrors: ConfigValidationError[] = [];
 
@@ -302,9 +302,14 @@ async function configYamlToContinueConfig(options: {
   });
 
   // Models
+  let warnAboutFreeTrial = false;
   const defaultModelRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
     model.roles = model.roles ?? defaultModelRoles; // Default to all 4 chat-esque roles if not specified
+
+    if (model.provider === "free-trial") {
+      warnAboutFreeTrial = true;
+    }
     try {
       const llms = await llmsFromModelConfig({
         model,
@@ -376,34 +381,12 @@ async function configYamlToContinueConfig(options: {
     );
   }
 
-  if (allowFreeTrial) {
-    // Obtain auth token (iff free trial being used)
-    const freeTrialModels = continueConfig.modelsByRole.chat.filter(
-      (model) => model.providerName === "free-trial",
-    );
-    if (freeTrialModels.length > 0) {
-      try {
-        const ghAuthToken = await ide.getGitHubAuthToken({});
-        for (const model of freeTrialModels) {
-          (model as FreeTrial).setupGhAuthToken(ghAuthToken);
-        }
-      } catch (e) {
-        localErrors.push({
-          fatal: false,
-          message: `Failed to obtain GitHub auth token for free trial:\n${e instanceof Error ? e.message : e}`,
-        });
-        // Remove free trial models
-        continueConfig.modelsByRole.chat =
-          continueConfig.modelsByRole.chat.filter(
-            (model) => model.providerName !== "free-trial",
-          );
-      }
-    }
-  } else {
-    // Remove free trial models
-    continueConfig.modelsByRole.chat = continueConfig.modelsByRole.chat.filter(
-      (model) => model.providerName !== "free-trial",
-    );
+  if (warnAboutFreeTrial) {
+    localErrors.push({
+      fatal: false,
+      message:
+        "Model provider 'free-trial' is no longer supported, will be ignored.",
+    });
   }
 
   // Context providers

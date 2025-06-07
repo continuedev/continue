@@ -1,4 +1,3 @@
-
 /**
  * Recursively retrieves the root cause of an error by traversing through its `cause` property.
  *
@@ -6,8 +5,8 @@
  * @returns The root cause of the error, or the original error if no further cause is found.
  */
 export function getRootCause(err: any): any {
-    if (err.cause) {
-      return getRootCause(err.cause);
-    }
-    return err;
+  if (err.cause) {
+    return getRootCause(err.cause);
+  }
+  return err;
 }

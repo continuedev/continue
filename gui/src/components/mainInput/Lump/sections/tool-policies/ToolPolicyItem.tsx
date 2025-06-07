@@ -102,7 +102,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
               />
             )}
             <span className="line-clamp-1 break-all">
-              {props.tool.function.name}
+              {props.tool.originalFunctionName ?? props.tool.function.name}
             </span>
           </div>
         </div>
@@ -124,16 +124,16 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
             </>
           ) : policy === "allowedWithoutPermission" ? (
             <>
-              <span className="text-green-500 sm:hidden">Auto</span>
-              <span className="hidden text-green-500 sm:inline-block">
+              <span className="text-success sm:hidden">Auto</span>
+              <span className="text-success hidden sm:inline-block">
                 Automatic
               </span>
             </>
           ) : (
             // allowedWithPermission
             <>
-              <span className="text-yellow-500 sm:hidden">Ask</span>
-              <span className="hidden text-yellow-500 sm:inline-block">
+              <span className="text-warning sm:hidden">Ask</span>
+              <span className="text-warning hidden sm:inline-block">
                 Ask First
               </span>
             </>

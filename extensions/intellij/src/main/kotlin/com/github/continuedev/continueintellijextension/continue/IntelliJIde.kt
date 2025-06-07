@@ -65,13 +65,6 @@ class IntelliJIDE(
         }
     }
 
-    /**
-     * Updates the timestamp when a file is saved
-     */
-    override fun updateLastFileSaveTimestamp() {
-        gitService.updateLastFileSaveTimestamp()
-    }
-
     override suspend fun getIdeInfo(): IdeInfo {
         val applicationInfo = ApplicationInfo.getInstance()
         val ideName: String = applicationInfo.fullApplicationName
@@ -573,11 +566,6 @@ class IntelliJIDE(
         return files.associateWith { file ->
             FileStats(UriUtils.uriToFile(file).lastModified(), UriUtils.uriToFile(file).length())
         }
-    }
-
-    override suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String? {
-        val continueSettingsService = service<ContinueExtensionSettings>()
-        return continueSettingsService.continueState.ghAuthToken
     }
 
     override suspend fun gotoDefinition(location: Location): List<RangeInFile> {

@@ -83,10 +83,13 @@ export async function* getReplacementWithLlm(
     \`\`\`
   `;
 
-  const completion = await llm.streamChat([
-    { role: "user", content: userPrompt },
-    { role: "assistant", content: assistantPrompt },
-  ], new AbortController().signal);
+  const completion = await llm.streamChat(
+    [
+      { role: "user", content: userPrompt },
+      { role: "assistant", content: assistantPrompt },
+    ],
+    new AbortController().signal,
+  );
 
   let lines = streamLines(completion);
   lines = filterLeadingNewline(lines);

@@ -52,7 +52,7 @@ export const SecondaryButton = styled.button`
   margin: 8px;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscInputBorder};
+  border: 1px solid ${lightGray};
   color: ${vscForeground};
   background-color: ${vscInputBackground};
 
@@ -69,7 +69,6 @@ export const SecondaryButton = styled.button`
 
 export const GhostButton = styled.button`
   padding: 6px 8px;
-  margin: 6px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
