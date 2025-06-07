@@ -23,3 +23,7 @@ Reject a full suggestion with <kbd>Esc</kbd>
 ### Partially accepting a suggestion
 
 For more granular control, use <kbd>cmd/ctrl</kbd> + <kbd>→</kbd> to accept parts of the suggestion word-by-word.
+
+### Forcing a suggestion
+
+If you want to trigger a suggestion immediately without waiting, or if you've dismissed a suggestion and want a new one, you can force it by using the keyboard shortcut **<kbd>cmd/ctrl</kbd> + <kbd>alt</kbd> + <kbd>space</kbd>**.

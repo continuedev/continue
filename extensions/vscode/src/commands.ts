@@ -624,6 +624,18 @@ const getCommandsMap: (
         }
       }
     },
+    "continue.forceAutocomplete": async () => {
+      captureCommandTelemetry("forceAutocomplete");
+
+      // 1. Explicitly hide any existing suggestion. This clears VS Code's cache for the current position.
+      await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
+
+      // 2. Now trigger a new one. VS Code has no cached suggestion, so it's forced to call our provider.
+      await vscode.commands.executeCommand(
+        "editor.action.inlineSuggest.trigger",
+      );
+    },
+
     "continue.openTabAutocompleteConfigMenu": async () => {
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
