@@ -624,6 +624,11 @@ const getCommandsMap: (
         }
       }
     },
+    "continue.forceAutocomplete": () => {
+      captureCommandTelemetry("forceAutocomplete");
+      vscode.commands.executeCommand("editor.action.inlineSuggest.trigger");
+    },
+
     "continue.openTabAutocompleteConfigMenu": async () => {
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
