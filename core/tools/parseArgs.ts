@@ -1,26 +1,14 @@
 import { ToolCallDelta } from "..";
 
-function safeParseArgs(
-  args: string | undefined,
-  errorId?: string,
-): Record<string, any> {
-  try {
-    return JSON.parse(args ?? "{}");
-  } catch (e) {
-    const identifier = errorId ? `Call: ${errorId}\nArgs:${args}\n` : "";
-    console.error(
-      `Failed to parse tool call arguments\n${identifier}Error:`,
-      e,
-    );
-    return {};
-  }
-}
-
 export function safeParseToolCallArgs(
   toolCall: ToolCallDelta,
 ): Record<string, any> {
-  return safeParseArgs(
-    toolCall.function?.arguments,
-    `${toolCall.function?.name} ${toolCall.id}`,
-  );
+  try {
+    return JSON.parse(toolCall.function?.arguments ?? "{}");
+  } catch (e) {
+    console.error(
+      `Failed to parse tool call arguments:\nTool call: ${toolCall.function?.name + " " + toolCall.id}\nArgs:${toolCall.function?.arguments}\n`,
+    );
+    return {};
+  }
 }
