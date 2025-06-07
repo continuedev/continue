@@ -445,7 +445,6 @@ const getCommandsMap: (
       });
     },
     "continue.generateCommitMessage": async (args) => {
-
       const pickRepo = async () => {
         const repos = await ide.getRepos();
         if (!repos || repos.length === 0) {
@@ -454,28 +453,28 @@ const getCommandsMap: (
         if (repos.length === 1) {
           return repos[0];
         } else {
-          const items = repos.map(repo => ({
+          const items = repos.map((repo) => ({
             label: repo.rootUri.path.split("/").pop() || "Untitled",
             description: repo.state.HEAD?.name || "No branch",
             detail: repo.rootUri.path,
             repo: repo,
           }));
-          const selected = await vscode.window.showQuickPick(
-            items,
-            {
-              placeHolder: "Select a Git repository",
-              matchOnDescription: true,
-              matchOnDetail: true,
-              canPickMany: false,
-            },
-          );
+          const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: "Select a Git repository",
+            matchOnDescription: true,
+            matchOnDetail: true,
+            canPickMany: false,
+          });
           return selected?.repo ?? null;
         }
       };
 
       const rootUri = args?.rootUri;
 
-      const repo = rootUri instanceof vscode.Uri ? await ide.getRepoDirect(rootUri) : await pickRepo();
+      const repo =
+        rootUri instanceof vscode.Uri
+          ? await ide.getRepoDirect(rootUri)
+          : await pickRepo();
 
       if (repo === undefined) {
         void vscode.window.showWarningMessage("Repository not found");
@@ -487,47 +486,49 @@ const getCommandsMap: (
 
       const inputBox = repo.inputBox;
 
-      void vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        title: `Generating Commit Message`,
-        cancellable: true,
-      }, async (_progress, token) => {
-        void vscode.commands.executeCommand("workbench.view.scm");
-        const { config } = await configHandler.loadConfig();
-        if (!config) {
-          throw new Error("Config not loaded");
-        }
+      void vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `Generating Commit Message`,
+          cancellable: true,
+        },
+        async (_progress, token) => {
+          void vscode.commands.executeCommand("workbench.view.scm");
+          const { config } = await configHandler.loadConfig();
+          if (!config) {
+            throw new Error("Config not loaded");
+          }
 
-        const abortController = new AbortController();
-        token.onCancellationRequested(() => {
-          abortController.abort();
-        });
-        const model = config.selectedModelByRole.chat;
+          const abortController = new AbortController();
+          token.onCancellationRequested(() => {
+            abortController.abort();
+          });
+          const model = config.selectedModelByRole.chat;
 
-        if (!model) {
-          void vscode.window.showWarningMessage("No chat model selected");
-          return;
-        }
-        // Currently only staged diffs are fetched
-        const stagedDiff = (await repo.diff(true)).trim();
-        // There is no need to get the diff here, which is handled by generateCommitMessage, 
-        // but currently ide.getDiff cannot get the difference of a single git repository, which needs to be fixed
-        if (!stagedDiff) {
-          void vscode.window.showWarningMessage("No staged changes");
-          return;
-        }
+          if (!model) {
+            void vscode.window.showWarningMessage("No chat model selected");
+            return;
+          }
+          // Currently only staged diffs are fetched
+          const stagedDiff = (await repo.diff(true)).trim();
+          // There is no need to get the diff here, which is handled by generateCommitMessage,
+          // but currently ide.getDiff cannot get the difference of a single git repository, which needs to be fixed
+          if (!stagedDiff) {
+            void vscode.window.showWarningMessage("No staged changes");
+            return;
+          }
 
-        inputBox.value = "";
-        for await (const content of generateCommitMessage({
-          ide,
-          llm: model,
-          diff: [stagedDiff],
-          signal: abortController.signal,
-        })) {
-          inputBox.value += content;
-        }
-      });
-
+          inputBox.value = "";
+          for await (const content of generateCommitMessage({
+            ide,
+            llm: model,
+            diff: [stagedDiff],
+            signal: abortController.signal,
+          })) {
+            inputBox.value += content;
+          }
+        },
+      );
     },
     "continue.hideInlineTip": () => {
       vscode.workspace

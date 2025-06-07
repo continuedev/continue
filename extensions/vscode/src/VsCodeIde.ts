@@ -192,11 +192,11 @@ class VsCodeIde implements IDE {
   async getRepo(dir: string): Promise<Repository | undefined> {
     return this.ideUtils.getRepo(vscode.Uri.parse(dir));
   }
-  
+
   async getRepoDirect(uri: vscode.Uri): Promise<Repository | undefined> {
     return this.ideUtils.getRepoDirect(uri);
   }
-  
+
   async getRepos(): Promise<Repository[] | undefined> {
     return this.ideUtils.getRepos();
   }

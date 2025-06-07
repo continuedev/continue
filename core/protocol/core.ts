@@ -209,7 +209,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
 
-  "generateCommitMessage": [
+  generateCommitMessage: [
     {
       modelTitle?: string;
       diff?: string[];
