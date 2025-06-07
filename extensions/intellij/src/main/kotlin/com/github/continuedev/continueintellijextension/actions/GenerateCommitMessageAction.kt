@@ -79,6 +79,11 @@ class GenerateCommitMessageAction : DumbAwareAction(TIP_TITLE_GENERATE), CustomC
         val workflowUi = commitWorkflowUi(e) ?: return
         val project = e.project ?: return
 
+        if (isActive(workflowUi)) {
+            cancelJob(workflowUi)
+            return
+        }
+
         val changes = getChanges(workflowUi)
         if (changes.isEmpty()) return
 
@@ -137,6 +142,8 @@ class GenerateCommitMessageAction : DumbAwareAction(TIP_TITLE_GENERATE), CustomC
 
     private fun isActive(workflowUi: CommitWorkflowUi?) = workflowUi?.let { activeUiToJobMap[it]?.isActive() } ?: false
 
+    private fun cancelJob(workflowUi: CommitWorkflowUi?) = activeUiToJobMap[workflowUi]?.cancel()
+
     private fun initializeGenerationJobAndModelOptions(
         project: Project, workflowUi: CommitWorkflowUi, presentation: Presentation
     ) {
@@ -149,7 +156,7 @@ class GenerateCommitMessageAction : DumbAwareAction(TIP_TITLE_GENERATE), CustomC
             project.getService(ContinuePluginService::class.java)?.coreMessenger?.let {
                 activeUiToJobMap[workflowUi] = GenerateJob(it)
                 Disposer.register(workflowUi) {
-                    activeUiToJobMap[workflowUi]?.cancel()
+                    cancelJob(workflowUi)
                     activeUiToJobMap.remove(workflowUi)
                 }
 
