@@ -7,13 +7,11 @@ import { useContext } from "react";
 import { GhostButton } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { useAppDispatch } from "../../../../redux/hooks";
 import { fontSize } from "../../../../util";
 
 export function ExploreBlocksButton(props: { blockType: string }) {
   const { selectedProfile } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
-  const dispatch = useAppDispatch();
 
   const isLocal = selectedProfile?.profileType === "local";
 
@@ -26,21 +24,11 @@ export function ExploreBlocksButton(props: { blockType: string }) {
 
   const handleClick = () => {
     if (isLocal) {
-      ideMessenger.request("config/addLocalWorkspaceBlock", {
+      void ideMessenger.request("config/addLocalWorkspaceBlock", {
         blockType: props.blockType as BlockType,
       });
-      // switch (props.blockType) {
-      //   case "docs":
-      //     dispatch(setShowDialog(true));
-      //     dispatch(setDialogMessage(<AddDocsDialog />));
-      //     break;
-      //   default:
-      //     ideMessenger.request("config/openProfile", {
-      //       profileId: selectedProfile.id,
-      //     });
-      // }
     } else {
-      ideMessenger.request("controlPlane/openUrl", {
+      void ideMessenger.request("controlPlane/openUrl", {
         path: `new?type=block&blockType=${props.blockType}`,
         orgSlug: undefined,
       });

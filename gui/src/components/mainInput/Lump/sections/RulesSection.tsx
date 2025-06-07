@@ -34,7 +34,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
   const handleOpen = async () => {
     if (rule.slug) {
-      ideMessenger.request("controlPlane/openUrl", {
+      void ideMessenger.request("controlPlane/openUrl", {
         path: `${rule.slug}/new-version`,
         orgSlug: undefined,
       });
