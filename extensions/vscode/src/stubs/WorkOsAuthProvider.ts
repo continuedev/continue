@@ -174,7 +174,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   get redirectUri() {
     if (WorkOsAuthProvider.useOnboardingUri) {
       const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/onboarding/redirect/${env.uriScheme}`;
+      url.pathname = `/auth/${env.uriScheme}-redirect`;
       return url.toString();
     }
     return this.ideRedirectUri;
