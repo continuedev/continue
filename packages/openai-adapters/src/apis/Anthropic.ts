@@ -13,6 +13,7 @@ import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
 import { AnthropicConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, customFetch } from "../util.js";
 import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
+import { safeParseArgs } from "../util/parseArgs.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -105,7 +106,10 @@ export class AnthropicApi implements BaseLlmApi {
             type: "tool_use",
             id: toolCall.id,
             name: toolCall.function?.name,
-            input: JSON.parse(toolCall.function?.arguments || "{}"),
+            input: safeParseArgs(
+              toolCall.function?.arguments,
+              `${toolCall.function?.name} ${toolCall.id}`,
+            ),
           })),
         };
       }

@@ -38,27 +38,35 @@ class GoogleContextProvider extends BaseContextProvider {
       body: payload,
     });
 
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch Google search results: ${response.statusText}`,
+      );
+    }
     const results = await response.text();
+    try {
+      const parsed = JSON.parse(results);
+      let content = `Google Search: ${query}\n\n`;
+      const answerBox = parsed.answerBox;
 
-    const jsonResults = JSON.parse(results);
-    let content = `Google Search: ${query}\n\n`;
-    const answerBox = jsonResults.answerBox;
+      if (answerBox) {
+        content += `Answer Box (${answerBox.title}): ${answerBox.answer}\n\n`;
+      }
 
-    if (answerBox) {
-      content += `Answer Box (${answerBox.title}): ${answerBox.answer}\n\n`;
+      for (const result of parsed.organic) {
+        content += `${result.title}\n${result.link}\n${result.snippet}\n\n`;
+      }
+
+      return [
+        {
+          content,
+          name: "Google Search",
+          description: "Google Search",
+        },
+      ];
+    } catch (e) {
+      throw new Error(`Failed to parse Google search results: ${results}`);
     }
-
-    for (const result of jsonResults.organic) {
-      content += `${result.title}\n${result.link}\n${result.snippet}\n\n`;
-    }
-
-    return [
-      {
-        content,
-        name: "Google Search",
-        description: "Google Search",
-      },
-    ];
   }
 }
 

@@ -699,7 +699,7 @@ export class Core {
         this.messenger.send("toolCallPartialOutput", params);
       };
 
-      return await callTool(tool, toolCall.function.arguments, {
+      return await callTool(tool, toolCall, {
         config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,

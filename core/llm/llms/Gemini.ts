@@ -9,6 +9,7 @@ import {
   TextMessagePart,
   ToolCallDelta,
 } from "../../index.js";
+import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import {
@@ -250,11 +251,11 @@ class Gemini extends BaseLLM {
             };
             if (msg.toolCalls) {
               msg.toolCalls.forEach((toolCall) => {
-                if (toolCall.function?.name && toolCall.function?.arguments) {
+                if (toolCall.function?.name) {
                   assistantMsg.parts.push({
                     functionCall: {
                       name: toolCall.function.name,
-                      args: JSON.parse(toolCall.function.arguments),
+                      args: safeParseToolCallArgs(toolCall),
                     },
                   });
                 }
