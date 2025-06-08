@@ -20,13 +20,17 @@ import {
   SessionMetadata,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
-import { renderChatMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
-import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
+import {
+  createAssistantChatHistoryItem,
+  createThinkingChatHistoryItem,
+  mergeAssistantMessageToChatHistoryItem,
+  mergeThinkingMessageToChatHistoryItem,
+} from "./mergeMessages";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -276,98 +280,32 @@ export const sessionSlice = createSlice({
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
       if (state.history.length) {
-        for (const message of action.payload) {
+        for (const incomingMessage of action.payload) {
           const lastItem = state.history[state.history.length - 1];
           const lastMessage = lastItem.message;
 
-          if (message.role === "thinking" && message.redactedThinking) {
-            console.log("add redacted_thinking blocks");
-
-            state.history.push({
-              message: {
-                role: "thinking",
-                content: "internal reasoning is hidden due to safety reasons",
-                redactedThinking: message.redactedThinking,
-                id: uuidv4(),
-              },
-              contextItems: [],
-            });
-            continue;
-          }
-
-          if (
-            lastMessage.role !== message.role ||
-            // This is for when a tool call comes immediately before/after tool call
-            (lastMessage.role === "assistant" &&
-              message.role === "assistant" &&
-              // Last message isn't completely new
-              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
-              // And there's a difference in tool call presence
-              (lastMessage.toolCalls?.length ?? 0) !==
-                (message.toolCalls?.length ?? 0))
-          ) {
-            // Create a new message
-            const historyItem: ChatHistoryItemWithMessageId = {
-              message: {
-                ...message,
-                content: renderChatMessage(message),
-                id: uuidv4(),
-              },
-              contextItems: [],
-            };
-            if (message.role === "assistant" && message.toolCalls?.[0]) {
-              const toolCallDelta = message.toolCalls[0];
-              historyItem.toolCallState = addToolCallDeltaToState(
-                toolCallDelta,
-                undefined,
-              );
+          if (incomingMessage.role !== lastMessage.role) {
+            // New message role => create new message!
+            if (incomingMessage.role === "assistant") {
+              const newHistoryItem =
+                createAssistantChatHistoryItem(incomingMessage);
+              state.history.push(newHistoryItem);
+            } else if (incomingMessage.role === "thinking") {
+              // TODO - merge various thinking message paradigms (eliminate "thinking" role)
+              const newHistoryItem =
+                createThinkingChatHistoryItem(incomingMessage);
+              state.history.push(newHistoryItem);
+            } else {
+              continue;
             }
-            state.history.push(historyItem);
           } else {
-            // Add to the existing message
-            if (message.content) {
-              const messageContent = renderChatMessage(message);
-              if (messageContent.includes("<think>")) {
-                lastItem.reasoning = {
-                  startAt: Date.now(),
-                  active: true,
-                  text: messageContent.replace("<think>", "").trim(),
-                };
-              } else if (
-                lastItem.reasoning?.active &&
-                messageContent.includes("</think>")
-              ) {
-                const [reasoningEnd, answerStart] =
-                  messageContent.split("</think>");
-                lastItem.reasoning.text += reasoningEnd.trimEnd();
-                lastItem.reasoning.active = false;
-                lastItem.reasoning.endAt = Date.now();
-                lastMessage.content += answerStart.trimStart();
-              } else if (lastItem.reasoning?.active) {
-                lastItem.reasoning.text += messageContent;
-              } else {
-                // Note this only works because new message above
-                // was already rendered from parts to string
-                lastMessage.content += messageContent;
-              }
-            } else if (message.role === "thinking" && message.signature) {
-              if (lastMessage.role === "thinking") {
-                console.log("add signature", message.signature);
-                lastMessage.signature = message.signature;
-              }
-            } else if (
-              message.role === "assistant" &&
-              message.toolCalls?.[0] &&
-              lastMessage.role === "assistant"
-            ) {
-              // Intentionally only supporting one tool call for now.
-              const toolCallDelta = message.toolCalls[0];
-              const newToolCallState = addToolCallDeltaToState(
-                toolCallDelta,
-                lastItem.toolCallState,
-              );
-              lastItem.toolCallState = newToolCallState;
-              lastMessage.toolCalls = [newToolCallState.toolCall];
+            // Matches last message role => add to exisitng message!
+            if (incomingMessage.role === "assistant") {
+              mergeAssistantMessageToChatHistoryItem(lastItem, incomingMessage);
+            } else if (incomingMessage.role === "thinking") {
+              mergeThinkingMessageToChatHistoryItem(lastItem, incomingMessage);
+            } else {
+              continue;
             }
           }
         }
