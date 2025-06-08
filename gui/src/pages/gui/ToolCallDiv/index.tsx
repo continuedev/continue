@@ -69,6 +69,7 @@ function getStatusIcon(state: ToolStatus) {
 export function ToolCallDiv(props: ToolCallDivProps) {
   const availableTools = useAppSelector((state) => state.config.config.tools);
   const tool = useMemo(() => {
+    console.log(availableTools, props.toolCall);
     return availableTools.find(
       (tool) => props.toolCall.function?.name === tool.function.name,
     );

@@ -295,6 +295,14 @@ export const sessionSlice = createSlice({
               const newHistoryItem =
                 createThinkingChatHistoryItem(incomingMessage);
               state.history.push(newHistoryItem);
+            } else if (incomingMessage.role === "tool") {
+              state.history.push({
+                message: {
+                  ...incomingMessage,
+                  id: uuidv4(),
+                },
+                contextItems: [],
+              });
             } else {
               continue;
             }
