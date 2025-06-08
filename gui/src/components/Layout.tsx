@@ -14,14 +14,13 @@ import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
-import { getLocalStorage } from "../util/localStorage";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
-import { useOnboardingCard } from "./OnboardingCard";
+import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
@@ -197,7 +196,7 @@ const Layout = () => {
 
   useEffect(() => {
     if (
-      !getLocalStorage("onboardingStatus") &&
+      isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
       onboardingCard.open();

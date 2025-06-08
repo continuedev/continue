@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@continuedev/config-yaml": "file:../packages/config-yaml",
-    "@continuedev/llm-info": "file:../packages/llm-info",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.0.18",
     "@reduxjs/toolkit": "^2.3.0",
@@ -48,7 +47,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-error-boundary": "^4.0.11",
-    "react-hook-form": "^7.57.0",
+    "react-hook-form": "^7.47.0",
     "react-intersection-observer": "^9.13.1",
     "react-markdown": "^9.0.1",
     "react-redux": "^8.0.5",
