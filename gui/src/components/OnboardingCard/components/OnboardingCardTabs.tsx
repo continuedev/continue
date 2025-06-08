@@ -33,7 +33,6 @@ export function OnboardingCardTabs({
 }: OnboardingCardTabsProps) {
   return (
     <div>
-      {/* Desktop/tablet tabs */}
       <div className="xs:block hidden">
         <div className="border-foreground border-x-0 border-b border-t-0 border-solid">
           {Object.values(OnboardingModes).map((tabTitle) => {
