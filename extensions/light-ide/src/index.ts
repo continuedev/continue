@@ -36,7 +36,8 @@ async function main() {
   nodeGui.setCore(core); // so GUI can call core.invoke
 
   // // Load config
-  await core.configHandler.loadConfig();
+  const config = await core.configHandler.loadConfig();
+  console.log("Loaded config:", config);
 
   console.log("Continue AI (Light IDE) initialized.");
   // console.log("Open http://localhost:3000 to use the GUI.");

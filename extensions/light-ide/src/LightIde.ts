@@ -29,9 +29,9 @@ export class LightIde implements IDE {
   async getIdeSettings(): Promise<IdeSettings> {
     return {
       remoteConfigServerUrl: undefined,
-      remoteConfigSyncPeriod: 3600,
+      remoteConfigSyncPeriod: 60,
       userToken: "anonymous",
-      continueTestEnvironment: "local",
+      continueTestEnvironment: "production",
       pauseCodebaseIndexOnStart: false,
     };
   }
