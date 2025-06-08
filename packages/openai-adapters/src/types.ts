@@ -99,6 +99,18 @@ export const AnthropicConfigSchema = OpenAIConfigSchema.extend({
 });
 export type AnthropicConfig = z.infer<typeof AnthropicConfigSchema>;
 
+export const BedrockConfigSchema = BaseConfig.extend({
+  provider: z.literal("bedrock"),
+  env: z.object({
+    region: z.string().optional(),
+    profile: z.string().optional(),
+    modelArn: z.string().optional(),
+    awsAccessKey: z.string().optional(),
+    awsSecretKey: z.string().optional(),
+  }),
+});
+export type BedrockConfig = z.infer<typeof BedrockConfigSchema>;
+
 export const WatsonXConfigSchema = BasePlusConfig.extend({
   provider: z.literal("watsonx"),
   apiKey: z.string(),
@@ -129,6 +141,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   AzureConfigSchema,
   GeminiConfigSchema,
   AnthropicConfigSchema,
+  BedrockConfigSchema,
   WatsonXConfigSchema,
   JinaConfigSchema,
   MockConfigSchema,
