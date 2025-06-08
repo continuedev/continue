@@ -1,7 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions } from "core";
 import { constructMessages } from "core/llm/constructMessages";
-import { modelIsGreatWithNativeTools } from "core/llm/toolSupport";
 import { ToCoreProtocol } from "core/protocol";
 import { interceptXMLToolCalls } from "core/tools/instructionTools/interceptXmlToolCalls";
 import { getBaseSystemMessage } from "../../util";
@@ -37,7 +36,8 @@ export const streamNormalInput = createAsyncThunk<
     const messageMode = state.session.mode;
 
     const activeTools = selectActiveTools(state);
-    const useNative = modelIsGreatWithNativeTools(selectedChatModel);
+    // const useNative = modelSupportsNativeTools(selectedChatModel); // modelIsGreatWithNativeTools(selectedChatModel);
+    const useNative = false;
 
     // Set up completions options with tools
     const completionOptions: LLMFullCompletionOptions =
@@ -62,7 +62,7 @@ export const streamNormalInput = createAsyncThunk<
 
     // Send request
     const streamAborter = state.session.streamAborter;
-    const gen = extra.ideMessenger.llmStreamChat(
+    let gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
@@ -71,10 +71,12 @@ export const streamNormalInput = createAsyncThunk<
       },
       streamAborter.signal,
     );
+    if (!useNative && !!activeTools.length) {
+      gen = interceptXMLToolCalls(gen);
+    }
 
     // Stream response
-    const withMiddleware = interceptXMLToolCalls(gen);
-    let next = await withMiddleware.next();
+    let next = await gen.next();
     while (!next.done) {
       if (!getState().session.isStreaming) {
         dispatch(abortStream());
@@ -82,7 +84,7 @@ export const streamNormalInput = createAsyncThunk<
       }
 
       dispatch(streamUpdate(next.value));
-      next = await withMiddleware.next();
+      next = await gen.next();
     }
 
     // Attach prompt log and end thinking for reasoning models

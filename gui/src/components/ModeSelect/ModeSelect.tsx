@@ -27,7 +27,7 @@ export function ModeSelect() {
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const isGoodInAgentMode = useMemo(() => {
     if (!selectedModel) {
-      return true; // not need to show warning if no model is selected
+      return true; // no need to show warning if no model is selected
     }
     return modelIsGreatWithNativeTools(selectedModel);
   }, [selectedModel]);
