@@ -9,6 +9,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
+import { llmToSerializedModelDescription } from "../../config/load.js";
 import {
   ChatMessage,
   Chunk,
@@ -17,7 +18,7 @@ import {
 } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
+import { modelSupportsNativeTools } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
 
 interface ModelConfig {
@@ -308,13 +309,11 @@ class Bedrock extends BaseLLM {
       };
     }
 
-    const supportsTools =
-      (this.capabilities?.tools ||
-        PROVIDER_TOOL_SUPPORT.bedrock?.(options.model)) ??
-      false;
+    const modelDesc = llmToSerializedModelDescription(this);
+    const supportsTools = modelSupportsNativeTools(modelDesc);
 
     let toolConfig =
-      supportsTools && options.tools
+      supportsTools && !!options.tools
         ? ({
             tools: options.tools.map((tool) => ({
               toolSpec: {

@@ -622,7 +622,7 @@ async function intermediateToFinalConfig({
   return { config: continueConfig, errors };
 }
 
-function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
+export function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
   return {
     provider: llm.providerName,
     underlyingProviderName: llm.underlyingProviderName,

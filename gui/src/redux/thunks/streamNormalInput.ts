@@ -1,7 +1,9 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
+import { LLMFullCompletionOptions } from "core";
+import { constructMessages } from "core/llm/constructMessages";
 import { ToCoreProtocol } from "core/protocol";
+import { interceptXMLToolCalls } from "core/tools/instructionTools/interceptXmlToolCalls";
+import { getBaseSystemMessage } from "../../util";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -17,36 +19,50 @@ import { callCurrentTool } from "./callCurrentTool";
 export const streamNormalInput = createAsyncThunk<
   void,
   {
-    messages: ChatMessage[];
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async (
-    { messages, legacySlashCommandData },
-    { dispatch, extra, getState },
-  ) => {
+  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
     // Gather state
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
-    const streamAborter = state.session.streamAborter;
     if (!selectedChatModel) {
       throw new Error("Default model not defined");
     }
 
-    let completionOptions: LLMFullCompletionOptions = {};
+    const messageMode = state.session.mode;
+
     const activeTools = selectActiveTools(state);
-    const toolsSupported = modelSupportsTools(selectedChatModel);
-    if (toolsSupported && activeTools.length > 0) {
-      completionOptions = {
-        tools: activeTools,
-      };
-    }
+    // const useNative = modelSupportsNativeTools(selectedChatModel); // modelIsGreatWithNativeTools(selectedChatModel);
+    const useNative = false;
+
+    // Set up completions options with tools
+    const completionOptions: LLMFullCompletionOptions =
+      useNative && !!activeTools.length
+        ? {
+            tools: activeTools,
+          }
+        : {};
+
+    const baseChatOrAgentSystemMessage = getBaseSystemMessage(
+      selectedChatModel,
+      messageMode,
+      useNative ? [] : activeTools,
+    );
+
+    const messages = constructMessages(
+      messageMode,
+      [...state.session.history],
+      baseChatOrAgentSystemMessage,
+      state.config.config.rules,
+    );
 
     // Send request
-    const gen = extra.ideMessenger.llmStreamChat(
+    const streamAborter = state.session.streamAborter;
+    let gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
@@ -55,6 +71,9 @@ export const streamNormalInput = createAsyncThunk<
       },
       streamAborter.signal,
     );
+    if (!useNative && !!activeTools.length) {
+      gen = interceptXMLToolCalls(gen);
+    }
 
     // Stream response
     let next = await gen.next();

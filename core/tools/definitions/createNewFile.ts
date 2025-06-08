@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../instructionTools/buildXmlToolsSystemMessage";
 
 export const createNewFileTool: Tool = {
   type: "function",
@@ -30,4 +31,9 @@ export const createNewFileTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.CreateNewFile,
+    `To create a NEW file, use the ${BuiltInToolNames.CreateNewFile} tool with the relative filepath and new contents. For example, to create a file located at 'path/to/file.txt', you would respond with:`,
+    `<filepath>path/to/the_file.txt</filepath><contents>These are the new contents of the file</contents>`,
+  ),
 };

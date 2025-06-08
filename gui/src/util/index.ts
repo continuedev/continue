@@ -1,12 +1,13 @@
-import { MessageModes, ModelDescription } from "core";
+import { MessageModes, ModelDescription, Tool } from "core";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
+import {
+  DEFAULT_AGENT_SYSTEM_MESSAGE,
+  DEFAULT_CHAT_SYSTEM_MESSAGE,
+} from "core/llm/constructMessages";
+import { generateToolsSystemMessage } from "core/tools/instructionTools/buildXmlToolsSystemMessage";
 import _ from "lodash";
 import { KeyboardEvent } from "react";
 import { getLocalStorage } from "./localStorage";
-import {
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
-  DEFAULT_AGENT_SYSTEM_MESSAGE,
-} from "core/llm/constructMessages";
 
 export type Platform = "mac" | "linux" | "windows" | "unknown";
 
@@ -126,11 +127,16 @@ export function isLocalProfile(profile: ProfileDescription): boolean {
 export function getBaseSystemMessage(
   modelDetails: ModelDescription | null,
   mode: MessageModes,
+  systemMessageTools: Tool[],
 ) {
   let baseChatOrAgentSystemMessage: string | undefined;
   if (mode === "agent") {
     baseChatOrAgentSystemMessage =
       modelDetails?.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
+    if (systemMessageTools.length > 0) {
+      const toolsSystemMessage = generateToolsSystemMessage(systemMessageTools);
+      baseChatOrAgentSystemMessage += `\n\n${toolsSystemMessage}`;
+    }
   } else {
     baseChatOrAgentSystemMessage =
       modelDetails?.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
