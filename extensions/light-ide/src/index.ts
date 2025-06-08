@@ -37,7 +37,7 @@ async function main() {
 
   // // Load config
   const config = await core.configHandler.loadConfig();
-  console.log("Loaded config:", config);
+  console.log("Loaded config:", JSON.stringify(config));
 
   console.log("Continue AI (Light IDE) initialized.");
   // console.log("Open http://localhost:3000 to use the GUI.");
