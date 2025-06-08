@@ -44,7 +44,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   ];
   "jetbrains/getColors": [undefined, Record<string, string | null | undefined>];
   "vscode/openMoveRightMarkdown": [undefined, void];
-  setGitHubAuthToken: [{ token: string }, void];
   acceptDiff: [AcceptOrRejectDiffPayload, void];
   rejectDiff: [AcceptOrRejectDiffPayload, void];
   "edit/sendPrompt": [

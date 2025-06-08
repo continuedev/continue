@@ -11,11 +11,7 @@ import {
 } from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { exitEdit } from "../../redux/thunks/edit";
-import {
-  getAltKeyLabel,
-  getMetaKeyLabel,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { getAltKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
@@ -158,32 +154,28 @@ function InputToolbar(props: InputToolbarProps) {
             <div
               className={`hover:underline" hidden transition-colors duration-200 md:flex`}
             >
-              {props.activeKey === "Alt" ? (
-                <HoverItem className="underline">
-                  {`${getAltKeyLabel()}⏎
-                  ${useActiveFile ? "No active file" : "Active file"}`}
-                </HoverItem>
-              ) : (
-                <HoverItem
-                  className={props.activeKey === "Meta" ? "underline" : ""}
-                  onClick={(e) =>
-                    props.onEnter?.({
-                      useCodebase: true,
-                      noContext: !useActiveFile,
-                    })
-                  }
-                >
-                  <span data-tooltip-id="add-codebase-context-tooltip">
-                    {getMetaKeyLabel()}⏎ @codebase
-                  </span>
-                  <ToolTip id="add-codebase-context-tooltip" place="top-end">
-                    Send With Codebase as Context ({getMetaKeyLabel()}⏎)
-                  </ToolTip>
-                </HoverItem>
-              )}
+              <HoverItem
+                className={props.activeKey === "Alt" ? "underline" : ""}
+                onClick={(e) =>
+                  props.onEnter?.({
+                    useCodebase: false,
+                    noContext: !useActiveFile,
+                  })
+                }
+              >
+                <span data-tooltip-id="add-active-file-context-tooltip">
+                  {getAltKeyLabel()}⏎{" "}
+                  {useActiveFile ? "No active file" : "Active file"}
+                </span>
+                <ToolTip id="add-active-file-context-tooltip" place="top-end">
+                  {useActiveFile
+                    ? "Send Without Active File"
+                    : "Send With Active File"}{" "}
+                  ({getAltKeyLabel()}⏎)
+                </ToolTip>
+              </HoverItem>
             </div>
           )}
-
           {isInEdit && (
             <HoverItem
               className="hidden hover:underline sm:flex"

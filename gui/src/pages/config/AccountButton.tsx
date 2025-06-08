@@ -1,13 +1,12 @@
 import { UserCircleIcon } from "@heroicons/react/24/solid";
-
-import { isHubSession } from "core/control-plane/AuthTypes";
-import { SecondaryButton } from "../../components";
+import { isOnPremSession } from "core/control-plane/AuthTypes";
 import {
   Popover,
   PopoverButton,
   PopoverPanel,
   Transition,
 } from "../../components/ui";
+import { Button } from "../../components/ui/Button";
 import { useAuth } from "../../context/Auth";
 import { selectCurrentOrg } from "../../redux";
 import { useAppSelector } from "../../redux/hooks";
@@ -19,17 +18,18 @@ export function AccountButton() {
 
   if (!session) {
     return (
-      <SecondaryButton
-        className="whitespace-nowrap"
+      <Button
+        variant="outline"
+        className="mb-1 whitespace-nowrap py-1"
         onClick={() => login(false)}
       >
         Sign in
-      </SecondaryButton>
+      </Button>
     );
   }
 
   // No login button for on-prem deployments
-  if (!isHubSession(session)) {
+  if (isOnPremSession(session)) {
     return null;
   }
 
@@ -42,7 +42,7 @@ export function AccountButton() {
               <span className="font-medium">
                 {selectedOrg === null ? "Personal" : selectedOrg.name}
               </span>
-              <UserCircleIcon className="h-6 w-6" />{" "}
+              <UserCircleIcon className="h-6 w-6" />
             </div>
           </PopoverButton>
 
@@ -65,9 +65,13 @@ export function AccountButton() {
                   </div>
                 )}
 
-                <SecondaryButton onClick={logout} className="!mx-0 w-full">
+                <Button
+                  variant="ghost"
+                  onClick={logout}
+                  className="!mx-0 w-full"
+                >
                   Sign out
-                </SecondaryButton>
+                </Button>
               </div>
             </PopoverPanel>
           </Transition>

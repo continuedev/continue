@@ -85,6 +85,12 @@ class ContinueProxy extends OpenAI {
   }
 
   supportsCompletions(): boolean {
+    // This was a hotfix and contains duplicate logic from class-specific completion support methods
+    if (this.underlyingProviderName === "vllm") {
+      return true;
+    }
+    // other providers that don't support completions include groq, mistral, nvidia, deepseek, etc.
+    // For now disabling all except vllm
     return false;
   }
 

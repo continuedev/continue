@@ -35,7 +35,7 @@ const getSourceLabel = (source: RuleSource): string => {
 };
 
 export function RulesPeekItem({ rule }: RulesPeekItemProps) {
-  const isGlobal = !rule.globs;
+  const isGlobal = rule.alwaysApply ?? !rule.globs;
   const [expanded, setExpanded] = useState(false);
 
   // Define maximum length for rule text display

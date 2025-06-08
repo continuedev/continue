@@ -1,13 +1,14 @@
 import * as YAML from "yaml";
 import { ToolImpl } from ".";
+import { RuleWithSource } from "../..";
+import { RuleFrontmatter } from "../../config/markdown/parseMarkdownRule";
 import { joinPathsToUri } from "../../util/uri";
 
-export interface CreateRuleBlockArgs {
-  name: string;
-  rule: string;
-  description: string;
-  globs?: string;
-}
+export type CreateRuleBlockArgs = Pick<
+  Required<RuleWithSource>,
+  "rule" | "description" | "alwaysApply" | "name"
+> &
+  Pick<RuleWithSource, "globs">;
 
 export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
@@ -21,15 +22,21 @@ export const createRuleBlockImpl: ToolImpl = async (
 
   const fileExtension = "md";
 
-  const frontmatter: Record<string, string> = {};
+  const frontmatter: RuleFrontmatter = {};
 
   if (args.globs) {
-    frontmatter.globs = args.globs.trim();
+    frontmatter.globs =
+      typeof args.globs === "string" ? args.globs.trim() : args.globs;
   }
 
   if (args.description) {
     frontmatter.description = args.description.trim();
   }
+
+  if (args.alwaysApply !== undefined) {
+    frontmatter.alwaysApply = args.alwaysApply;
+  }
+
   const frontmatterYaml = YAML.stringify(frontmatter).trim();
   let fileContent = `---
 ${frontmatterYaml}

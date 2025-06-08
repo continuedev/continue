@@ -14,10 +14,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmitOnError": false,
-    "types": ["node", "jest"],
+    "types": ["node"],
     "outDir": "dist",
     "declaration": true
     // "sourceMap": true
   },
-  "include": ["src/**/*", "jest.globals.d.ts"]
+  "include": ["src/**/*"]
 }

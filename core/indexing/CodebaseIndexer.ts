@@ -3,10 +3,14 @@ import * as fs from "fs/promises";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
+import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
+import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
+import { Telemetry } from "../util/posthog.js";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
+import { ContinueServerClient } from "../continueServer/stubs/client";
 import { LLMError } from "../llm/index.js";
 import { getRootCause } from "../util/errors.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
@@ -41,6 +45,9 @@ export class CodebaseIndexer {
    * - To make as few requests as possible to the embeddings providers
    */
   filesPerBatch = 500;
+  private indexingCancellationController: AbortController | undefined;
+  private codebaseIndexingState: IndexingProgressUpdate;
+  private readonly pauseToken: PauseToken;
 
   // Note that we exclude certain Sqlite errors that we do not want to clear the indexes on,
   // e.g. a `SQLITE_BUSY` error.
@@ -56,9 +63,32 @@ export class CodebaseIndexer {
   constructor(
     private readonly configHandler: ConfigHandler,
     protected readonly ide: IDE,
-    private readonly pauseToken: PauseToken,
-    private readonly continueServerClient: IContinueServerClient,
-  ) {}
+    private readonly messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+    initialPaused: boolean = false,
+  ) {
+    this.codebaseIndexingState = {
+      status: "loading",
+      desc: "loading",
+      progress: 0,
+    };
+
+    // Initialize pause token
+    this.pauseToken = new PauseToken(initialPaused);
+  }
+
+  /**
+   * Set the paused state of the indexer
+   */
+  set paused(value: boolean) {
+    this.pauseToken.paused = value;
+  }
+
+  /**
+   * Get the current paused state of the indexer
+   */
+  get paused(): boolean {
+    return this.pauseToken.paused;
+  }
 
   async clearIndexes() {
     const sqliteFilepath = getIndexSqlitePath();
@@ -88,10 +118,22 @@ export class CodebaseIndexer {
       return [];
     }
 
+    const ideSettings = await this.ide.getIdeSettings();
+    if (!ideSettings) {
+      return [];
+    }
+    const continueServerClient = new ContinueServerClient(
+      ideSettings.remoteConfigServerUrl,
+      ideSettings.userToken,
+    );
+    if (!continueServerClient) {
+      return [];
+    }
+
     const indexes: CodebaseIndex[] = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
-        this.continueServerClient,
+        continueServerClient,
         embeddingsModel.maxEmbeddingChunkSize,
       ), // Chunking must come first
     ];
@@ -249,7 +291,10 @@ export class CodebaseIndexer {
     }
 
     const { config } = await this.configHandler.loadConfig();
-    if (config?.disableIndexing) {
+    if (!config) {
+      return;
+    }
+    if (config.disableIndexing) {
       yield {
         progress,
         desc: "Indexing is disabled in config.json",
@@ -500,5 +545,110 @@ export class CodebaseIndexer {
       await markComplete(lastUpdated, IndexResultType.UpdateLastUpdated);
       completedIndexCount += 1;
     }
+  }
+
+  // New methods using messenger directly
+
+  private async updateProgress(update: IndexingProgressUpdate) {
+    this.codebaseIndexingState = update;
+    if (this.messenger) {
+      await this.messenger.request("indexProgress", update);
+    }
+  }
+
+  private async sendIndexingErrorTelemetry(update: IndexingProgressUpdate) {
+    console.debug(
+      "Indexing failed with error: ",
+      update.desc,
+      update.debugInfo,
+    );
+    void Telemetry.capture(
+      "indexing_error",
+      {
+        error: update.desc,
+        stack: update.debugInfo,
+      },
+      false,
+    );
+  }
+
+  public async refreshCodebaseIndex(paths: string[]) {
+    if (this.indexingCancellationController) {
+      this.indexingCancellationController.abort();
+    }
+    this.indexingCancellationController = new AbortController();
+    try {
+      for await (const update of this.refreshDirs(
+        paths,
+        this.indexingCancellationController.signal,
+      )) {
+        await this.updateProgress(update);
+
+        if (update.status === "failed") {
+          await this.sendIndexingErrorTelemetry(update);
+        }
+      }
+    } catch (e: any) {
+      console.log(`Failed refreshing codebase index directories: ${e}`);
+      await this.handleIndexingError(e);
+    }
+
+    // Directly refresh submenu items
+    if (this.messenger) {
+      this.messenger.send("refreshSubmenuItems", {
+        providers: "dependsOnIndexing",
+      });
+    }
+    this.indexingCancellationController = undefined;
+  }
+
+  public async refreshCodebaseIndexFiles(files: string[]) {
+    // Can be cancelled by codebase index but not vice versa
+    if (
+      this.indexingCancellationController &&
+      !this.indexingCancellationController.signal.aborted
+    ) {
+      return;
+    }
+    this.indexingCancellationController = new AbortController();
+    try {
+      for await (const update of this.refreshFiles(files)) {
+        await this.updateProgress(update);
+
+        if (update.status === "failed") {
+          await this.sendIndexingErrorTelemetry(update);
+        }
+      }
+    } catch (e: any) {
+      console.log(`Failed refreshing codebase index files: ${e}`);
+      await this.handleIndexingError(e);
+    }
+
+    // Directly refresh submenu items
+    if (this.messenger) {
+      this.messenger.send("refreshSubmenuItems", { providers: "all" });
+    }
+    this.indexingCancellationController = undefined;
+  }
+
+  public async handleIndexingError(e: any) {
+    if (e instanceof LLMError && this.messenger) {
+      // Need to report this specific error to the IDE for special handling
+      await this.messenger.request("reportError", e);
+    }
+
+    // broadcast indexing error
+    const updateToSend: IndexingProgressUpdate = {
+      progress: 0,
+      status: "failed",
+      desc: e.message,
+    };
+
+    await this.updateProgress(updateToSend);
+    void this.sendIndexingErrorTelemetry(updateToSend);
+  }
+
+  public get currentIndexingState(): IndexingProgressUpdate {
+    return this.codebaseIndexingState;
   }
 }

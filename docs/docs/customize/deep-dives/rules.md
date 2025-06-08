@@ -27,7 +27,7 @@ For example, you can say "Create a rule for this", and a rule will be created fo
 
 ### Syntax
 
-Rules blocks can be simple text, or have the following properties:
+Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule

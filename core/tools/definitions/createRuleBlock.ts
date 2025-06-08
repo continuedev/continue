@@ -25,7 +25,7 @@ export const createRuleBlock: Tool = {
       "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently. To modify existing rules, use the edit tool instead.",
     parameters: {
       type: "object",
-      required: ["name", "rule"],
+      required: ["name", "rule", "alwaysApply", "description"],
       properties: {
         name: {
           type: "string",
@@ -42,6 +42,11 @@ export const createRuleBlock: Tool = {
         globs: {
           type: "string",
           description: GLOB_ARG_DESC,
+        },
+        alwaysApply: {
+          type: "boolean",
+          description:
+            "Whether this rule should always be applied regardless of file pattern matching",
         },
       },
     },

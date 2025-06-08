@@ -93,4 +93,22 @@ describe("createRuleBlockImpl", () => {
     expect(markdown).toContain("# Complete Rule");
     expect(markdown).toContain("Follow this standard");
   });
+
+  it("should create a rule with alwaysApply set to false", async () => {
+    const args = {
+      name: "Conditional Rule",
+      rule: "This rule should not always be applied",
+      alwaysApply: false,
+    };
+
+    await createRuleBlockImpl(args, mockExtras as any);
+
+    const fileContent = mockIde.writeFile.mock.calls[0][1];
+
+    const { frontmatter } = parseMarkdownRule(fileContent);
+
+    expect(frontmatter).toEqual({
+      alwaysApply: false,
+    });
+  });
 });

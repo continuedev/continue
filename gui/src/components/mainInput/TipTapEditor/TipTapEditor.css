@@ -23,6 +23,7 @@
   height: 0;
   pointer-events: none;
   white-space: nowrap;
+  width: 1px;
 }
 
 .gap-cursor {

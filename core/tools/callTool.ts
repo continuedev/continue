@@ -10,6 +10,7 @@ import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
+import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
@@ -157,6 +158,8 @@ async function callBuiltInTool(
       return await readCurrentlyOpenFileImpl(args, extras);
     case BuiltInToolNames.CreateRuleBlock:
       return await createRuleBlockImpl(args, extras);
+    case BuiltInToolNames.RequestRule:
+      return await requestRuleImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

@@ -5,12 +5,13 @@ import { chatChunk, customFetch } from "../util.js";
 import { OpenAIApi } from "./OpenAI.js";
 import { FimCreateParamsStreaming } from "./base.js";
 
+export const INCEPTION_API_BASE = "https://api.inceptionlabs.ai/v1/";
 export class InceptionApi extends OpenAIApi {
-  apiBase: string = "https://api.inceptionlabs.ai/v1/";
   constructor(config: InceptionConfig) {
     super({
       ...config,
       provider: "openai",
+      apiBase: config.apiBase ?? INCEPTION_API_BASE,
     });
   }
 

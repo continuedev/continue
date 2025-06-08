@@ -12,7 +12,7 @@ import fetch, { RequestInit, Response } from "node-fetch";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import { IdeSettings, ModelDescription } from "../index.js";
 
-import { ControlPlaneSessionInfo, isHubSession } from "./AuthTypes.js";
+import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneWorkspace {
@@ -22,6 +22,14 @@ export interface ControlPlaneWorkspace {
 }
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
+
+export interface FreeTrialStatus {
+  optedInToFreeTrial: boolean;
+  chatCount?: number;
+  autocompleteCount?: number;
+  chatLimit: number;
+  autocompleteLimit: number;
+}
 
 export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
@@ -63,17 +71,16 @@ export class ControlPlaneClient {
 
   async getAccessToken(): Promise<string | undefined> {
     const sessionInfo = await this.sessionInfoPromise;
-    return isHubSession(sessionInfo) ? sessionInfo.accessToken : undefined;
+    return isOnPremSession(sessionInfo) ? undefined : sessionInfo?.accessToken;
   }
 
   private async request(path: string, init: RequestInit): Promise<Response> {
     const sessionInfo = await this.sessionInfoPromise;
-    const hubSession = isHubSession(sessionInfo);
-
-    const accessToken = hubSession ? sessionInfo.accessToken : undefined;
+    const onPremSession = isOnPremSession(sessionInfo);
+    const accessToken = await this.getAccessToken();
 
     // Bearer token not necessary for on-prem auth type
-    if (!accessToken && hubSession) {
+    if (!accessToken && !onPremSession) {
       throw new Error("No access token");
     }
 
@@ -156,6 +163,21 @@ export class ControlPlaneClient {
       });
       const { fullSlugs } = (await resp.json()) as any;
       return fullSlugs;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async getFreeTrialStatus(): Promise<FreeTrialStatus | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.request("ide/free-trial-status", {
+        method: "GET",
+      });
+      return (await resp.json()) as FreeTrialStatus;
     } catch (e) {
       return null;
     }

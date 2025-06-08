@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { varWithFallback } from "../styles/theme";
 
-// DEPRECATED - avoid using these where possible, use tailwind classes instead
 export const defaultBorderRadius = "5px";
 export const lightGray = "#999998";
 export const greenButtonColor = "#189e72";
@@ -53,7 +52,7 @@ export const SecondaryButton = styled.button`
   margin: 8px;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscInputBorder};
+  border: 1px solid ${lightGray};
   color: ${vscForeground};
   background-color: ${vscInputBackground};
 
@@ -70,7 +69,6 @@ export const SecondaryButton = styled.button`
 
 export const GhostButton = styled.button`
   padding: 6px 8px;
-  margin: 6px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
@@ -210,8 +208,11 @@ export const AnimatedEllipsis = styled.span`
   &::after {
     content: ".";
     animation: ellipsis 2.5s infinite;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
+    will-change: content;
     display: inline-block;
-    width: 12px;
+    width: 16px;
     text-align: left;
   }
 
@@ -224,6 +225,9 @@ export const AnimatedEllipsis = styled.span`
     }
     66% {
       content: "...";
+    }
+    100% {
+      content: ".";
     }
   }
 `;

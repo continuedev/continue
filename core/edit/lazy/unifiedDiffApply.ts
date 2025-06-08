@@ -8,7 +8,9 @@ import { DiffLine } from "../../index";
 export function isUnifiedDiffFormat(diff: string): boolean {
   const lines = diff.trim().split("\n");
 
-  if (lines.length < 3) {return false;}
+  if (lines.length < 3) {
+    return false;
+  }
 
   let hasHunkHeader = false;
   let hasValidContent = false;
@@ -35,10 +37,13 @@ function extractBeforeLines(hunkLines: string[]): string[] {
 /**
  * Applies a unified diff to source code and returns an array of DiffLine objects.
  * Each DiffLine contains a type ("same", "new", or "old") and the line content.
- * 
+ *
  * @throws Error if the diff cannot be cleanly applied to the source
  */
-export function applyUnifiedDiff(sourceCode: string, unifiedDiffText: string): DiffLine[] {
+export function applyUnifiedDiff(
+  sourceCode: string,
+  unifiedDiffText: string,
+): DiffLine[] {
   const sourceLines = sourceCode.split(/\r?\n/);
   const hunks = parseUnifiedDiff(unifiedDiffText);
   const diffResult: DiffLine[] = [];
@@ -46,7 +51,11 @@ export function applyUnifiedDiff(sourceCode: string, unifiedDiffText: string): D
 
   for (const hunk of hunks) {
     const hunkBeforeLines = extractBeforeLines(hunk.lines);
-    const hunkStart = findHunkInSource(sourceLines, hunkBeforeLines, currentPos);
+    const hunkStart = findHunkInSource(
+      sourceLines,
+      hunkBeforeLines,
+      currentPos,
+    );
     if (hunkStart === -1) {
       // All hunks must be found in the source code. If not, throw an error.
       throw new Error("Hunk could not be applied cleanly to source code.");
@@ -124,8 +133,16 @@ function parseUnifiedDiff(diffText: string): Hunk[] {
  *
  * Returns the index in sourceLines where the block begins, or -1 if no match is found.
  */
-function findHunkInSource(sourceLines: string[], hunkBeforeLines: string[], startIndex: number): number {
-  for (let i = startIndex; i <= sourceLines.length - hunkBeforeLines.length; i++) {
+function findHunkInSource(
+  sourceLines: string[],
+  hunkBeforeLines: string[],
+  startIndex: number,
+): number {
+  for (
+    let i = startIndex;
+    i <= sourceLines.length - hunkBeforeLines.length;
+    i++
+  ) {
     let match = true;
     for (let j = 0; j < hunkBeforeLines.length; j++) {
       const sl = sourceLines[i + j];

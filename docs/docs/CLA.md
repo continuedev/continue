@@ -22,7 +22,7 @@ Project a perpetual, worldwide, non‑exclusive, royalty‑free, irrevocable
 license to reproduce, prepare derivative works of, publicly display, publicly
 perform, sublicense, and distribute Your Contributions and derivative works.
 
-## 3. Patent License  
+## 3. Patent License
 
 You grant **Continue Dev, Inc.** and all recipients of the Project a perpetual,
 worldwide, non‑exclusive, royalty‑free, irrevocable (except as below) patent

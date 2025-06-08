@@ -187,7 +187,6 @@
           "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
           "enum": [
             "openai",
-            "free-trial",
             "anthropic",
             "anthropic-vertexai",
             "cohere",
@@ -233,11 +232,11 @@
             "relace",
             "morph",
             "ovhcloud",
-            "venice"
+            "venice",
+            "inception"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
-            "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/anthropicllm)",
             "### Anthropic Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### Cohere\nTo use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/cohere)",
@@ -283,7 +282,8 @@
             "### Relace\n Relace provides a fast apply model. To get started, obtain an API key from [here](https://app.relace.ai/settings/api-keys).",
             "### Morph\nMorph provides a fast apply model. To get started, obtain an API key from [here](https://morphllm.com/dashboard).",
             "### OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR. To get started, create an API key on the OVHcloud [AI Endpoints website](https://endpoints.ai.cloud.ovh.net/). For more information, including pricing, visit the OVHcloud [AI Endpoints product page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/).",
-            "### Venice\n Venice.AI is a privacy-focused generative AI platform, allowing users to interact with open-source LLMs without storing any private user data.\nHosted models support the OpenAI API standard, providing seamless integration for users seeking privacy and flexibility.\nTo get started with the Venice API, either purchase a pro account, stake $VVV for daily inference allotments, or fund your account with USD.\nVisit the [API settings page](https://venice.ai/settings/api) or learn more at the [Venice API documentation](https://venice.ai/api)."
+            "### Venice\n Venice.AI is a privacy-focused generative AI platform, allowing users to interact with open-source LLMs without storing any private user data.\nHosted models support the OpenAI API standard, providing seamless integration for users seeking privacy and flexibility.\nTo get started with the Venice API, either purchase a pro account, stake $VVV for daily inference allotments, or fund your account with USD.\nVisit the [API settings page](https://venice.ai/settings/api) or learn more at the [Venice API documentation](https://venice.ai/api).",
+            "### Inception\n Inception Labs offer a new generation of diffusion-based LLMs.\nVisit the [API settings page](https://platform.inceptionlabs.ai/) or learn more at the [Inception docs](https://platform.inceptionlabs.ai/docs)."
           ],
           "type": "string"
         },
@@ -733,33 +733,6 @@
               },
               "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models).",
               "x-intellij-html-description": "Select a pre-defined option, or find an exact model ID from Replicate <a href='https://replicate.com/collections/streaming-language-models'>here</a>."
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["free-trial"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "enum": [
-                  "gpt-4o",
-                  "codestral-latest",
-                  "llama3.1-70b",
-                  "llama3.1-405b",
-                  "gpt-3.5-turbo",
-                  "gemini-pro",
-                  "claude-3-5-sonnet-latest",
-                  "claude-3-haiku-20240307",
-                  "AUTODETECT"
-                ]
-              }
             }
           }
         },
@@ -1515,7 +1488,11 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["llama3.1-8b", "llama3.1-70b", "llama-4-scout-17b-16e-instruct"]
+                "enum": [
+                  "llama3.1-8b",
+                  "llama3.1-70b",
+                  "llama-4-scout-17b-16e-instruct"
+                ]
               }
             }
           }
@@ -2723,10 +2700,10 @@
           "x-intellij-html-description": "Learn about setting up models in <a href='https://docs.continue.dev/model-setup/overview'>the documentation</a>.",
           "default": [
             {
-              "title": "GPT-4 (trial)",
-              "provider": "free-trial",
-              "model": "gpt-4",
-              "apiKey": ""
+              "title": "Claude 3.7 Sonnet",
+              "provider": "anthropic",
+              "model": "claude-3-7-sonnet-latest",
+              "apiKey": "sk_..."
             }
           ],
           "type": "array",
@@ -2834,7 +2811,6 @@
                 "ollama",
                 "openai",
                 "cohere",
-                "free-trial",
                 "continue-proxy",
                 "gemini",
                 "voyage",
@@ -2970,7 +2946,6 @@
                 "voyage",
                 "watsonx",
                 "llm",
-                "free-trial",
                 "huggingface-tei",
                 "siliconflow"
               ]

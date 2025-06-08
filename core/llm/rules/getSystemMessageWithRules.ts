@@ -29,6 +29,39 @@ const matchesGlobs = (
 };
 
 /**
+ * Determines if a rule should be applied based on its alwaysApply property and file path matching
+ *
+ * @param rule - The rule to check
+ * @param filePaths - Array of file paths to check against the rule's globs
+ * @returns true if the rule should be applied, false otherwise
+ */
+export const shouldApplyRule = (
+  rule: RuleWithSource,
+  filePaths: string[],
+): boolean => {
+  if (rule.alwaysApply) {
+    return true;
+  }
+
+  // If alwaysApply is explicitly false, only apply if there are globs AND they match
+  if (rule.alwaysApply === false) {
+    if (!rule.globs) {
+      return false; // No globs specified, don't apply
+    }
+    return filePaths.some((path) => matchesGlobs(path, rule.globs));
+  }
+
+  // If alwaysApply is undefined, default behavior:
+  // - No globs: always apply
+  // - Has globs: only apply if they match
+  if (!rule.globs) {
+    return true;
+  }
+
+  return filePaths.some((path) => matchesGlobs(path, rule.globs));
+};
+
+/**
  * Filters rules that apply to the given message and/or context items
  *
  * @param userMessage - The user or tool message to check for file paths in code blocks
@@ -52,16 +85,7 @@ export const getApplicableRules = (
   // Combine file paths from both sources
   const allFilePaths = [...filePathsFromMessage, ...filePathsFromContextItems];
 
-  return rules.filter((rule) => {
-    // A rule is active if it has no globs (applies to all files)
-    // or if at least one file path matches its globs
-    const hasNoGlobs = !rule.globs;
-    const matchesAnyFilePath = allFilePaths.some((path) =>
-      matchesGlobs(path, rule.globs),
-    );
-
-    return hasNoGlobs || matchesAnyFilePath;
-  });
+  return rules.filter((rule) => shouldApplyRule(rule, allFilePaths));
 };
 
 /**

@@ -141,6 +141,5 @@ export function getBaseSystemMessage(
     baseChatOrAgentSystemMessage =
       modelDetails?.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
   }
-
   return baseChatOrAgentSystemMessage;
 }

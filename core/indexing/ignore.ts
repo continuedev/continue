@@ -2,6 +2,7 @@ import fs from "fs";
 
 import ignore from "ignore";
 
+import { IDE } from "..";
 import { getGlobalContinueIgnorePath } from "../util/paths";
 
 export const DEFAULT_IGNORE_FILETYPES = [
@@ -128,4 +129,21 @@ export function gitIgArrayFromFile(file: string) {
 export const getGlobalContinueIgArray = () => {
   const contents = fs.readFileSync(getGlobalContinueIgnorePath(), "utf8");
   return gitIgArrayFromFile(contents);
+};
+
+export const getWorkspaceContinueIgArray = async (ide: IDE) => {
+  const dirs = await ide.getWorkspaceDirs();
+  return await dirs.reduce(
+    async (accPromise, dir) => {
+      const acc = await accPromise;
+      try {
+        const contents = await ide.readFile(`${dir}/.continueignore`);
+        return [...acc, ...gitIgArrayFromFile(contents)];
+      } catch (err) {
+        console.error(err);
+        return acc;
+      }
+    },
+    Promise.resolve([] as string[]),
+  );
 };
