@@ -9,6 +9,7 @@ import {
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
 import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
 import { BaseLLM } from "../index";
+import { AICore } from "./AICore";
 
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
@@ -64,6 +65,7 @@ import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 
 export const LLMClasses = [
+  AICore,
   Anthropic,
   Cohere,
   FunctionNetwork,

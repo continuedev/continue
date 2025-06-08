@@ -24,6 +24,20 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "gemini",
       ].some((part) => model.toLowerCase().startsWith(part));
     },
+    aiCore: (model) => {
+      if (
+        [
+          "anthropic--claude-3.7",
+          "gpt-4o",
+          "o3-mini",
+          "gpt-4.1"
+        ].some((part) => model.toLowerCase().startsWith(part))
+      ) {
+        return true;
+      }
+
+      return false;
+    },
     anthropic: (model) => {
       if (
         [

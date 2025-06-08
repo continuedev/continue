@@ -969,6 +969,54 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  o3miniAiCore: {
+    title: "SAP AI Core o3-mini",
+    description:
+      "An even faster version of 3-mini with stronger multi-modal capabilities.",
+    params: {
+      model: "o3-mini",
+      contextLength: 200_000,
+      maxTokens: 8096,
+      title: "o3-mini",
+      providerOptions: ["aiCore"],
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt41AiCore: {
+    title: "SAP AI Core 4.1",
+    description:
+      "An even faster version of 3-mini with stronger multi-modal capabilities.",
+    params: {
+      model: "gpt-4.1",
+      contextLength: 200_000,
+      maxTokens: 8096,
+      title: "gpt-4.1",
+      providerOptions: ["aiCore"],
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt4oAiCore: {
+    title: "SAP AI Core GPT-4o",
+    description:
+      "An even faster version of GPT-4 with stronger multi-modal capabilities.",
+    params: {
+      model: "gpt-4o",
+      contextLength: 128_000,
+      maxTokens: 4096,
+      title: "GPT-4o",
+      providerOptions: ["aiCore"],
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   gpt4omini: {
     title: "GPT-4o Mini",
     description:
@@ -995,6 +1043,21 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["openai", "askSage"],
     icon: "openai.png",
+    isOpenSource: false,
+  },
+  claude37Sonnet: {
+    title: "SAP AI Core Claude 3.7",
+    description:
+      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
+    params: {
+      model: "anthropic--claude-3.7-sonnet",
+      contextLength: 200_000,
+      title: "Claude 3.7 Sonnet",
+      maxTokens: 8192,
+      apiKey: "",
+    },
+    providerOptions: ["anthropic", "aiCore"],
+    icon: "anthropic.png",
     isOpenSource: false,
   },
   claude35Sonnet: {

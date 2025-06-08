@@ -49,6 +49,18 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<string, ProviderInfo>> = {
+  aiCore: {
+    title: "AI Core",
+    provider: "aiCore",
+    description: "SAP AI Core",
+    icon: "sap.png",
+    packages: [
+      models.o3miniAiCore,
+      models.claude37Sonnet,
+      models.gpt41AiCore,
+      models.gpt4
+    ],
+  },
   openai: {
     title: "OpenAI",
     provider: "openai",
