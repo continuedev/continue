@@ -4,16 +4,6 @@ import {
   CubeIcon,
 } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
-import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscBackground,
-  vscForeground,
-  vscInputBackground,
-  vscListActiveBackground,
-  vscListActiveForeground,
-} from "..";
 import {
   Listbox,
   ListboxButton,
@@ -23,87 +13,8 @@ import {
 } from "../../components/ui";
 import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
 
-export const StyledListbox = styled(Listbox)`
-  background-color: ${vscBackground};
-`;
-
-export const StyledListboxButton = styled(ListboxButton)`
-  cursor: pointer;
-  background-color: ${vscBackground};
-  text-align: left;
-
-  padding-left: 0.75rem;
-  padding-right: 2.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-
-  border-radius: 0.5em;
-  border: 1px solid ${lightGray};
-
-  margin: 0;
-  height: 100%;
-  width: 100%;
-
-  position: relative;
-
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-
-  color: ${vscForeground};
-
-  &:focus {
-    outline: none;
-  }
-
-  &:hover {
-    background-color: ${vscInputBackground};
-  }
-`;
-
-export const StyledListboxOptions = styled(ListboxOptions)`
-  background-color: ${vscInputBackground};
-  padding: 0;
-
-  position: absolute;
-  top: 100%;
-  left: 0;
-
-  margin-top: 0.25rem;
-
-  height: fit-content;
-  max-height: 15rem;
-  width: 60%;
-
-  border-radius: ${defaultBorderRadius};
-  overflow-y: auto;
-  z-index: 10;
-
-  &:focus {
-    outline: none;
-  }
-`;
-
-export const StyledListboxOption = styled(ListboxOption)<{
-  selected: boolean;
-}>`
-  background-color: ${({ selected }) =>
-    selected ? vscListActiveBackground : vscInputBackground};
-  cursor: pointer;
-  padding: 6px 8px 6px 12px;
-
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: space-between;
-
-  &:hover {
-    background-color: ${vscListActiveBackground};
-    color: ${vscListActiveForeground};
-  }
-`;
-
 interface ModelSelectionListboxProps {
+  /** Model selection listbox for choosing AI providers */
   selectedProvider: DisplayInfo;
   setSelectedProvider: (val: DisplayInfo) => void;
   topOptions?: DisplayInfo[];
@@ -117,9 +28,9 @@ function ModelSelectionListbox({
   otherOptions = [],
 }: ModelSelectionListboxProps) {
   return (
-    <StyledListbox value={selectedProvider} onChange={setSelectedProvider}>
+    <Listbox value={selectedProvider} onChange={setSelectedProvider}>
       <div className="relative mb-2 mt-1">
-        <StyledListboxButton>
+        <ListboxButton className="bg-background border-border text-foreground hover:bg-input relative m-0 grid h-full w-full cursor-pointer grid-cols-[1fr_auto] items-center rounded-lg border border-solid py-2 pl-3 pr-10 text-left focus:outline-none">
           <span className="flex items-center">
             {window.vscMediaUrl && selectedProvider.icon && (
               <img
@@ -135,21 +46,26 @@ function ModelSelectionListbox({
               aria-hidden="true"
             />
           </span>
-        </StyledListboxButton>
+        </ListboxButton>
+
         <Transition
           as={Fragment}
           leave="transition ease-in duration-100"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <StyledListboxOptions>
+          <ListboxOptions className="bg-input rounded-default absolute left-0 top-full z-10 mt-1 h-fit w-3/5 overflow-y-auto p-0 focus:outline-none [&]:!max-h-[30vh]">
             {topOptions.length > 0 && (
               <div className="py-1">
+                <div className="text-description-muted px-3 py-1 text-xs font-medium uppercase tracking-wider">
+                  Popular
+                </div>
                 {topOptions.map((option, index) => (
-                  <StyledListboxOption
-                    selected={selectedProvider.title === option.title}
+                  <ListboxOption
                     key={index}
-                    className="relative cursor-default select-none py-2 pr-4"
+                    className={({ selected }: { selected: boolean }) =>
+                      ` ${selected ? "bg-list-active" : "bg-input"} hover:bg-list-active hover:text-list-active-foreground relative flex cursor-default cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4`
+                    }
                     value={option}
                   >
                     {({ selected }) => (
@@ -173,22 +89,24 @@ function ModelSelectionListbox({
                         )}
                       </>
                     )}
-                  </StyledListboxOption>
+                  </ListboxOption>
                 ))}
               </div>
             )}
-
             {topOptions.length > 0 && otherOptions.length > 0 && (
               <div className="bg-border my-1 h-px min-h-px" />
             )}
-
             {otherOptions.length > 0 && (
               <div className="py-1">
+                <div className="text-description-muted px-3 py-1 text-xs font-medium uppercase tracking-wider">
+                  Additional providers
+                </div>
                 {otherOptions.map((option, index) => (
-                  <StyledListboxOption
-                    selected={selectedProvider.title === option.title}
+                  <ListboxOption
                     key={index}
-                    className="relative cursor-default select-none py-2 pr-4"
+                    className={({ selected }: { selected: boolean }) =>
+                      ` ${selected ? "bg-list-active" : "bg-input"} hover:bg-list-active hover:text-list-active-foreground relative flex cursor-default cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4`
+                    }
                     value={option}
                   >
                     {({ selected }) => (
@@ -213,14 +131,14 @@ function ModelSelectionListbox({
                         )}
                       </>
                     )}
-                  </StyledListboxOption>
+                  </ListboxOption>
                 ))}
               </div>
             )}
-          </StyledListboxOptions>
+          </ListboxOptions>
         </Transition>
       </div>
-    </StyledListbox>
+    </Listbox>
   );
 }
 

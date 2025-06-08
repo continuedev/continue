@@ -12,6 +12,7 @@ import { GlobalContextModelSelections } from "../util/GlobalContext";
 import {
   BrowserSerializedContinueConfig,
   ChatMessage,
+  CompleteOnboardingPayload,
   ContextItem,
   ContextItemWithId,
   ContextSubmenuItem,
@@ -37,8 +38,8 @@ import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
 
 export enum OnboardingModes {
-  API_KEYS = "API Keys",
-  OLLAMA = "Ollama",
+  PROVIDERS = "Providers",
+  LOCAL = "Local",
 }
 
 export interface ListHistoryOptions {
@@ -172,13 +173,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "index/indexingProgressBarInitialized": [undefined, void];
-  completeOnboarding: [
-    {
-      mode: OnboardingModes;
-      models?: any[];
-    },
-    void,
-  ];
+  "onboarding/complete": [CompleteOnboardingPayload, void];
 
   // File changes
   "files/changed": [{ uris?: string[] }, void];

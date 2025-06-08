@@ -10,13 +10,16 @@ export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { close: closeOnboardingCard } = useOnboardingCard();
 
-  function submitOnboarding() {
+  function submitOnboarding(provider?: string, apiKey?: string) {
     const onboardingStatus = getLocalStorage("onboardingStatus");
 
-    // Always close the onboarding card and update config.json
+    // Always close the onboarding card and update config.yaml
     closeOnboardingCard(isDialog);
-    ideMessenger.post("completeOnboarding", {
+
+    ideMessenger.post("onboarding/complete", {
       mode,
+      provider,
+      apiKey,
     });
 
     if (onboardingStatus === "Started") {
@@ -32,6 +35,8 @@ export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
       // Move to next step in onboarding
       ideMessenger.post("showTutorial", undefined);
     }
+
+    ideMessenger.post("config/openProfile", { profileId: undefined });
   }
 
   return {

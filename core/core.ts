@@ -34,6 +34,7 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
+  CompleteOnboardingPayload,
   ContextItemWithId,
   IdeSettings,
   ModelDescription,
@@ -46,7 +47,11 @@ import {
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
-import { setupLocalConfig, setupQuickstartConfig } from "./config/onboarding";
+import {
+  setupLocalConfig,
+  setupProviderConfig,
+  setupQuickstartConfig,
+} from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
@@ -506,7 +511,7 @@ export class Core {
       abortManager.clear();
     });
 
-    on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
+    on("onboarding/complete", this.handleCompleteOnboarding.bind(this));
 
     on("addAutocompleteModel", this.handleAddAutocompleteModel.bind(this));
 
@@ -874,32 +879,21 @@ export class Core {
   }
 
   private async handleCompleteOnboarding(
-    msg: Message<{ mode: OnboardingModes; models?: any[] }>,
+    msg: Message<CompleteOnboardingPayload>,
   ) {
-    const { mode, models } = msg.data;
+    const { mode, provider, apiKey } = msg.data;
 
     let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
     switch (mode) {
-      case OnboardingModes.OLLAMA:
+      case OnboardingModes.LOCAL:
         editConfigYamlCallback = setupLocalConfig;
         break;
 
-      case OnboardingModes.API_KEYS:
-        if (models && models.length > 0) {
-          editConfigYamlCallback = (config: ConfigYaml) => ({
-            ...config,
-            models: [
-              ...(config.models ?? []),
-              ...models.map((model) => ({
-                name: model.title,
-                provider: model.provider,
-                model: model.model,
-                apiKey: model.apiKey,
-                roles: ["chat", "edit"] as any,
-              })),
-            ],
-          });
+      case OnboardingModes.PROVIDERS:
+        if (provider && apiKey) {
+          editConfigYamlCallback = (config: ConfigYaml) =>
+            setupProviderConfig(config, provider, apiKey);
         } else {
           editConfigYamlCallback = setupQuickstartConfig;
         }

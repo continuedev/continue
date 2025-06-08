@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@continuedev/config-yaml": "file:../packages/config-yaml",
+    "@continuedev/llm-info": "file:../packages/llm-info",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.0.18",
     "@reduxjs/toolkit": "^2.3.0",

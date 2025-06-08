@@ -43,7 +43,7 @@ export function useOnboardingCard(): UseOnboardingCard {
     dispatch(
       setOnboardingCard({
         show: true,
-        activeTab: tab ?? OnboardingModes.API_KEYS,
+        activeTab: tab ?? OnboardingModes.PROVIDERS,
       }),
     );
   }

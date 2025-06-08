@@ -20,7 +20,7 @@ export function isNewUserOnboarding() {
 
 export const defaultOnboardingCardState: OnboardingCardState = {
   show: false,
-  activeTab: OnboardingModes.API_KEYS,
+  activeTab: OnboardingModes.PROVIDERS,
 };
 
 export enum OllamaConnectionStatuses {

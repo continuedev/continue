@@ -38,3 +38,5 @@ export function findLlmInfo(model: string): LlmInfo | undefined {
 export function getAllRecommendedFor(useCase: UseCase): LlmInfo[] {
   return allLlms.filter((llm) => llm.recommendedFor?.includes(useCase));
 }
+
+export { Anthropic, Gemini, OpenAi };

@@ -1,6 +1,5 @@
-import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
-import { Button, ButtonSubtext } from "../..";
+import { Button, SecondaryButton } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { selectCurrentOrg } from "../../../redux";
@@ -61,7 +60,7 @@ export function OnboardingCardLanding({
         </>
       ) : (
         <>
-          <p className="w-full text-sm">
+          <p className="mb-5 mt-0 w-full text-sm">
             Log in to access a free trial of the
             <br />
             <span
@@ -90,12 +89,9 @@ export function OnboardingCardLanding({
         </>
       )}
 
-      <ButtonSubtext onClick={onSelectConfigure}>
-        <div className="mt-1 flex cursor-pointer items-center justify-center gap-1 hover:brightness-125">
-          <span>Or, configure your own models</span>
-          <ChevronRightIcon className="h-3 w-3" />
-        </div>
-      </ButtonSubtext>
+      <SecondaryButton onClick={onSelectConfigure} className="w-full">
+        Or, configure your own models
+      </SecondaryButton>
     </div>
   );
 }

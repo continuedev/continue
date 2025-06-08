@@ -3,10 +3,10 @@ import { useAppSelector } from "../../redux/hooks";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { ReusableCard } from "../ReusableCard";
 import {
-  OnboardingApiKeyTab,
   OnboardingCardLanding,
   OnboardingCardTabs,
-  OnboardingOllamaTab,
+  OnboardingLocalTab,
+  OnboardingProvidersTab,
 } from "./components";
 import { useOnboardingCard } from "./hooks";
 
@@ -29,12 +29,12 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
 
   function renderTabContent() {
     switch (activeTab) {
-      case OnboardingModes.API_KEYS:
-        return <OnboardingApiKeyTab />;
-      case OnboardingModes.OLLAMA:
-        return <OnboardingOllamaTab />;
+      case OnboardingModes.PROVIDERS:
+        return <OnboardingProvidersTab />;
+      case OnboardingModes.LOCAL:
+        return <OnboardingLocalTab />;
       default:
-        return <OnboardingApiKeyTab />;
+        return <OnboardingProvidersTab />;
     }
   }
 
@@ -58,7 +58,7 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
     >
       <div className="flex h-full w-full items-center justify-center">
         <OnboardingCardLanding
-          onSelectConfigure={() => setActiveTab(OnboardingModes.API_KEYS)}
+          onSelectConfigure={() => setActiveTab(OnboardingModes.PROVIDERS)}
           isDialog={isDialog}
         />
       </div>

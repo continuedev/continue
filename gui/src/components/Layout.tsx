@@ -133,7 +133,7 @@ const Layout = () => {
   useWebviewListener(
     "openOnboardingCard",
     async () => {
-      onboardingCard.open(OnboardingModes.API_KEYS);
+      onboardingCard.open(OnboardingModes.PROVIDERS);
     },
     [],
   );
@@ -141,7 +141,7 @@ const Layout = () => {
   useWebviewListener(
     "setupLocalConfig",
     async () => {
-      onboardingCard.open(OnboardingModes.OLLAMA);
+      onboardingCard.open(OnboardingModes.LOCAL);
     },
     [],
   );
