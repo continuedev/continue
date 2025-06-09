@@ -1578,3 +1578,9 @@ export interface RuleWithSource {
   ruleFile?: string;
   alwaysApply?: boolean;
 }
+
+export interface CompleteOnboardingPayload {
+  mode: OnboardingModes;
+  provider?: string;
+  apiKey?: string;
+}

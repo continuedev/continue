@@ -26,6 +26,7 @@ interface ModelRoleSelectorProps {
   onSelect: (model: ModelDescription | null) => void;
   displayName: string;
   description: string;
+  setupURL: string;
 }
 
 const ModelRoleSelector = ({
@@ -34,6 +35,7 @@ const ModelRoleSelector = ({
   onSelect,
   displayName,
   description,
+  setupURL,
 }: ModelRoleSelectorProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -65,102 +67,111 @@ const ModelRoleSelector = ({
   return (
     <>
       <div className="mt-2 flex flex-row items-center gap-1 sm:mt-0">
-        <span
-          style={{
-            fontSize: fontSize(-3),
-          }}
-        >
-          {displayName}
-        </span>
+        <span style={{ fontSize: fontSize(-3) }}>{displayName}</span>
         <InfoHover size="3" id={displayName} msg={description} />
         <ToolTip id={`${displayName}-description`} place={"bottom"}>
           {description}
         </ToolTip>
       </div>
+
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>
         <div className="relative">
-          <ListboxButton
-            disabled={models.length === 0}
-            className={`bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-full justify-between`}
-          >
-            {models.length === 0 || noConfiguredModels ? (
-              <span className="text-lightgray line-clamp-1 italic">
-                {`No ${models.length === 0 ? "" : "valid "}${displayName} models${
-                  ["Chat", "Apply", "Edit"].includes(displayName)
-                    ? ". Using Chat model"
-                    : ""
-                }`}
-              </span>
-            ) : (
-              <span className="line-clamp-1">
-                {selectedModel?.title ?? `Select ${displayName} model`}
-              </span>
-            )}
-            {models.length ? (
-              <div className="pointer-events-none flex items-center">
-                <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
-              </div>
-            ) : null}
-          </ListboxButton>
-
-          <Transition>
-            <ListboxOptions
-              style={{ borderRadius: defaultBorderRadius }}
-              className="min-w-40"
+          {models.length === 0 ? (
+            <ListboxButton
+              onClick={() => ideMessenger.post("openUrl", setupURL)}
+              className="bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground text-description w-full justify-between px-2 py-1 underline hover:underline"
             >
-              {[...models]
-                .sort((a, b) => a.title.localeCompare(b.title))
-                .map((option, idx) => {
-                  const showMissingApiKeyMsg =
-                    option.configurationStatus ===
-                    LLMConfigurationStatuses.MISSING_API_KEY;
+              <span className="line-clamp-1" style={{ fontSize: fontSize(-3) }}>
+                Setup {displayName} model
+              </span>
+            </ListboxButton>
+          ) : (
+            <>
+              <ListboxButton
+                disabled={models.length === 0}
+                className="bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-full justify-between px-2 py-1"
+              >
+                {models.length === 0 || noConfiguredModels ? (
+                  <span className="text-lightgray line-clamp-1 italic">
+                    {`No ${models.length === 0 ? "" : "valid "}${displayName} models${
+                      ["Chat", "Apply", "Edit"].includes(displayName)
+                        ? ". Using Chat model"
+                        : ""
+                    }`}
+                  </span>
+                ) : (
+                  <span className="line-clamp-1">
+                    {selectedModel?.title ?? `Select ${displayName} model`}
+                  </span>
+                )}
 
-                  return (
-                    <ListboxOption
-                      key={idx}
-                      value={option.title}
-                      disabled={showMissingApiKeyMsg}
-                      onMouseEnter={() => setHoveredIdx(idx)}
-                      onMouseLeave={() => setHoveredIdx(null)}
-                      onClick={(e: any) =>
-                        handleOptionClick(showMissingApiKeyMsg, e)
-                      }
-                      className={""}
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex flex-1 flex-row items-center justify-between gap-2">
-                          <div className="flex flex-1 flex-row items-center gap-2">
-                            <CubeIcon className="h-3 w-3 flex-shrink-0" />
-                            <span
-                              className="line-clamp-1 flex-1"
-                              style={{ fontSize: fontSize(-3) }}
-                            >
-                              {option.title}
-                              {showMissingApiKeyMsg && (
-                                <span className="ml-2 text-[10px] italic">
-                                  (Missing API key)
+                {models.length > 0 && (
+                  <div className="pointer-events-none flex items-center">
+                    <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
+                  </div>
+                )}
+              </ListboxButton>
+              <Transition>
+                <ListboxOptions
+                  style={{ borderRadius: defaultBorderRadius }}
+                  className="min-w-40"
+                >
+                  {[...models]
+                    .sort((a, b) => a.title.localeCompare(b.title))
+                    .map((option, idx) => {
+                      const showMissingApiKeyMsg =
+                        option.configurationStatus ===
+                        LLMConfigurationStatuses.MISSING_API_KEY;
+
+                      return (
+                        <ListboxOption
+                          key={idx}
+                          value={option.title}
+                          disabled={showMissingApiKeyMsg}
+                          onMouseEnter={() => setHoveredIdx(idx)}
+                          onMouseLeave={() => setHoveredIdx(null)}
+                          onClick={(e: any) =>
+                            handleOptionClick(showMissingApiKeyMsg, e)
+                          }
+                          className=""
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-1 flex-row items-center justify-between gap-2">
+                              <div className="flex flex-1 flex-row items-center gap-2">
+                                <CubeIcon className="h-3 w-3 flex-shrink-0" />
+                                <span
+                                  className="line-clamp-1 flex-1"
+                                  style={{ fontSize: fontSize(-3) }}
+                                >
+                                  {option.title}
+                                  {showMissingApiKeyMsg && (
+                                    <span className="ml-2 text-[10px] italic">
+                                      (Missing API key)
+                                    </span>
+                                  )}
                                 </span>
-                              )}
-                            </span>
+                              </div>
+
+                              <div className="flex flex-shrink-0 flex-row items-center gap-1">
+                                {hoveredIdx === idx && (
+                                  <Cog6ToothIcon
+                                    className="h-3 w-3 flex-shrink-0"
+                                    onClick={onClickGear}
+                                  />
+                                )}
+                                {option.title === selectedModel?.title && (
+                                  <CheckIcon className="h-3 w-3 flex-shrink-0" />
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex flex-shrink-0 flex-row items-center gap-1">
-                            {hoveredIdx === idx && (
-                              <Cog6ToothIcon
-                                className="h-3 w-3 flex-shrink-0"
-                                onClick={onClickGear}
-                              />
-                            )}
-                            {option.title === selectedModel?.title && (
-                              <CheckIcon className="h-3 w-3 flex-shrink-0" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </ListboxOption>
-                  );
-                })}
-            </ListboxOptions>
-          </Transition>
+                        </ListboxOption>
+                      );
+                    })}
+                </ListboxOptions>
+              </Transition>
+            </>
+          )}
         </div>
       </Listbox>
     </>
