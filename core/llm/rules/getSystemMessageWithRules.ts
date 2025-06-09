@@ -103,9 +103,6 @@ const isFileInDirectory = (
 
   // For logging
   const result = containsDir;
-  console.log(
-    `[RULES_DEBUG] Checking if file '${normalizedFilePath}' is in directory '${normalizedDirPath}' (dir name: ${dirName}): ${result}`,
-  );
 
   return result;
 };

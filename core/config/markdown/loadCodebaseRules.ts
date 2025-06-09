@@ -43,24 +43,11 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
       return filename === "rules.md";
     });
 
-    console.log(`Found ${rulesMdFiles.length} rules.md files in the workspace`);
-
     // Process each rules.md file
     for (const filePath of rulesMdFiles) {
       try {
         const content = await ide.readFile(filePath);
         const rule = convertMarkdownRuleToContinueRule(filePath, content);
-
-        // If the rule doesn't have globs specified, we'll log that fact for debugging
-        if (!rule.globs) {
-          console.log(
-            `Rule in ${filePath} doesn't have explicit globs - it will be applied based on directory location: ${getDirname(filePath)}`,
-          );
-        } else {
-          console.log(
-            `Rule in ${filePath} has explicit globs: ${typeof rule.globs === "string" ? rule.globs : JSON.stringify(rule.globs)}`,
-          );
-        }
 
         rules.push(rule);
       } catch (e) {
