@@ -1,6 +1,6 @@
 import { Tool, ToolCallState } from "core";
 import Mustache from "mustache";
-import { ReactNode } from "react";
+import { useFontSize } from "../../../components/ui/font";
 
 interface ToolCallStatusMessageProps {
   tool: Tool | undefined;
@@ -11,37 +11,29 @@ export function ToolCallStatusMessage({
   tool,
   toolCallState,
 }: ToolCallStatusMessageProps) {
+  const fontSize = useFontSize();
   if (!tool) return "Agent tool use";
 
-  const defaultToolDescription = (
-    <>
-      <code>{tool.displayTitle ?? tool.function.name}</code> <span>tool</span>
-    </>
-  );
+  const toolName = tool.displayTitle ?? tool.function.name;
+  const defaultToolDescription = `${toolName} tool`;
 
-  const futureMessage = tool.wouldLikeTo ? (
-    Mustache.render(tool.wouldLikeTo, toolCallState.parsedArgs)
-  ) : (
-    <>
-      <span>use the</span> {defaultToolDescription}
-    </>
-  );
+  const futureMessage: string = tool.wouldLikeTo
+    ? Mustache.render(tool.wouldLikeTo, toolCallState.parsedArgs)
+    : `use the ${defaultToolDescription}`;
+  // TODO go back and replace arg string values and tool names with <code> tags
+  // to make them more readable
 
   let intro = "";
-  let message: ReactNode = "";
+  let message = "";
 
   if (
     toolCallState.status === "done" ||
     (tool.isInstant && toolCallState.status === "calling")
   ) {
     intro = "";
-    message = tool.hasAlready ? (
-      Mustache.render(tool.hasAlready, toolCallState.parsedArgs)
-    ) : (
-      <>
-        <span>used the</span> {defaultToolDescription}
-      </>
-    );
+    message = tool.hasAlready
+      ? Mustache.render(tool.hasAlready, toolCallState.parsedArgs)
+      : `used the ${defaultToolDescription}`;
   } else if (toolCallState.status === "generating") {
     intro = "is generating output to";
     message = futureMessage;
@@ -50,13 +42,9 @@ export function ToolCallStatusMessage({
     message = futureMessage;
   } else if (toolCallState.status === "calling") {
     intro = "is";
-    message = tool.isCurrently ? (
-      Mustache.render(tool.isCurrently, toolCallState.parsedArgs)
-    ) : (
-      <>
-        <span>calling the</span> {defaultToolDescription}
-      </>
-    );
+    message = tool.isCurrently
+      ? Mustache.render(tool.isCurrently, toolCallState.parsedArgs)
+      : `calling the ${defaultToolDescription}`;
   } else if (
     toolCallState.status === "canceled" ||
     toolCallState.status === "errored"
@@ -65,8 +53,12 @@ export function ToolCallStatusMessage({
     message = futureMessage;
   }
   return (
-    <div className="block">
-      <span>Continue</span> {intro} {message}
+    <div
+      className="text-description line-clamp-4 min-w-0 break-words"
+      style={{ fontSize }}
+      data-testid="tool-call-title"
+    >
+      {`Continue ${intro} ${message}`}
     </div>
   );
 }

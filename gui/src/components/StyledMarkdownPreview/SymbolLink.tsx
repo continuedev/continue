@@ -44,14 +44,7 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
         data-tooltip-id={id}
         data-tooltip-delay-show={500}
       >
-        <code
-          className="align-middle"
-          style={{
-            color: "var(--vscode-textLink-foreground)",
-          }}
-        >
-          {content}
-        </code>
+        <code className="text-link align-middle">{content}</code>
       </span>
       <ToolTip id={id} place="top" className="m-0 p-0">
         <pre className="text-left">{processedContent ?? symbol.filepath}</pre>

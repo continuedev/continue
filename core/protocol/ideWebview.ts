@@ -1,12 +1,15 @@
 import { ToIdeFromWebviewOrCoreProtocol } from "./ide";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 
-import type {
+import {
+  AcceptOrRejectDiffPayload,
   ApplyState,
-  CodeToEdit,
   ExtensionConflictReport,
+  HighlightedCodePayload,
   MessageContent,
   RangeInFileWithContents,
+  SetCodeToEditPayload,
+  ShowFilePayload,
 } from "../";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
@@ -23,8 +26,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showSetupWizard: [undefined, void];
-  openExtensionSettings: [{extensions: string[]}, void];
-  showFile: [{ filepath: string }, void];
+  openExtensionSettings: [{ extensions: string[] }, void];
+  showFile: [ShowFilePayload, void];
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
   focusEditor: [undefined, void];
@@ -42,11 +45,10 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
       vscMediaUrl: string;
     },
   ];
-  "jetbrains/getColors": [undefined, Record<string, string>];
+  "jetbrains/getColors": [undefined, Record<string, string | null | undefined>];
   "vscode/openMoveRightMarkdown": [undefined, void];
-  setGitHubAuthToken: [{ token: string }, void];
-  acceptDiff: [{ filepath: string; streamId?: string }, void];
-  rejectDiff: [{ filepath: string; streamId?: string }, void];
+  acceptDiff: [AcceptOrRejectDiffPayload, void];
+  rejectDiff: [AcceptOrRejectDiffPayload, void];
   "edit/sendPrompt": [
     {
       prompt: MessageContent;
@@ -67,15 +69,8 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusContinueInput: [undefined, void];
   focusContinueInputWithoutClear: [undefined, void];
   focusContinueInputWithNewSession: [undefined, void];
-  highlightedCode: [
-    {
-      rangeInFileWithContents: RangeInFileWithContents;
-      prompt?: string;
-      shouldRun?: boolean;
-    },
-    void,
-  ];
-  setCodeToEdit: [CodeToEdit, void];
+  highlightedCode: [HighlightedCodePayload, void];
+  setCodeToEdit: [SetCodeToEditPayload, void];
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 

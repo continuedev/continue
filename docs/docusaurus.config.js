@@ -65,6 +65,12 @@ const config = {
     ],
   ],
 
+  scripts: [
+    {
+      src: "/scripts/custom-reo.js", // it references from static folder
+    },
+  ],
+
   themeConfig:
     /** @type {import("@docusaurus/preset-classic").ThemeConfig} */
     ({

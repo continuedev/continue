@@ -1,16 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ChatHistoryItemWithMessageId } from "../../redux/slices/sessionSlice";
+
+/**
+ * Only reset scroll state when a new user message is added to the chat.
+ * We don't want to auto-scroll on new tool response messages.
+ */
+function getNumUserMsgs(history: ChatHistoryItemWithMessageId[]) {
+  return history.filter((msg) => msg.message.role === "user").length;
+}
 
 export const useAutoScroll = (
   ref: React.RefObject<HTMLDivElement>,
-  history: unknown[],
+  history: ChatHistoryItemWithMessageId[],
 ) => {
   const [userHasScrolled, setUserHasScrolled] = useState(false);
+  const numUserMsgs = useMemo(() => getNumUserMsgs(history), [history.length]);
 
   useEffect(() => {
-    if (history.length) {
-      setUserHasScrolled(false);
-    }
-  }, [history.length]);
+    setUserHasScrolled(false);
+  }, [numUserMsgs]);
 
   useEffect(() => {
     if (!ref.current || history.length === 0) return;

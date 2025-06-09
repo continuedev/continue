@@ -37,7 +37,6 @@ import { ROUTES } from "../../../util/navigation";
 import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
-
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;
   selected: boolean;
@@ -125,7 +124,7 @@ const AssistantSelectOption = ({
             )}
             {isLocalProfile(profile) ? (
               <Cog6ToothIcon
-                className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
+                className="text-description h-3 w-3 flex-shrink-0 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -134,7 +133,7 @@ const AssistantSelectOption = ({
               />
             ) : (
               <ArrowTopRightOnSquareIcon
-                className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
+                className="text-description h-3 w-3 flex-shrink-0 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -152,15 +151,13 @@ const AssistantSelectOption = ({
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, refreshProfiles } = useAuth();
   const currentOrg = useAppSelector(selectCurrentOrg);
   const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
   const [loading, setLoading] = useState(false);
-
-  const { profiles, session, login } = useAuth();
-  const navigate = useNavigate();
+  const { profiles, session, login, selectedProfile, refreshProfiles } =
+    useAuth();
 
   function close() {
     if (buttonRef.current) {
@@ -217,6 +214,11 @@ export default function AssistantSelect() {
   }, [currentOrg, selectedProfile]);
 
   const cycleOrgs = () => {
+    if (!session) {
+      void login(false);
+      return;
+    }
+
     const orgIds = orgs.map((org) => org.id);
     if (orgIds.length < 2) {
       return;
@@ -243,12 +245,12 @@ export default function AssistantSelect() {
     return (
       <div
         onClick={() => {
-          ideMessenger.request("controlPlane/openUrl", {
+          void ideMessenger.request("controlPlane/openUrl", {
             path: "/new?type=assistant",
             orgSlug: currentOrg?.slug,
           });
         }}
-        className="flex cursor-pointer select-none items-center gap-1 text-gray-400"
+        className="text-description flex cursor-pointer select-none items-center gap-1"
         style={{ fontSize: smallFont }}
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
@@ -262,117 +264,120 @@ export default function AssistantSelect() {
     */
   }
 
-  return profiles && profiles.length > 1 && (
-    <Listbox>
-      <div className="relative">
-        <ListboxButton
-          data-testid="assistant-select-button"
-          ref={buttonRef}
-          className="border-none bg-transparent text-gray-400 hover:brightness-125"
-          style={{ fontSize: fontSize(-3) }}
-        >
-          <div className="flex flex-row items-center gap-1.5">
-            <div className="h-3 w-3 flex-shrink-0 select-none">
-              <AssistantIcon size={3} assistant={selectedProfile} />
-            </div>
-            <span
-              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-            >
-              {selectedProfile.title}
-            </span>
-          </div>
-          <ChevronDownIcon
-            className="h-2 w-2 flex-shrink-0 select-none"
-            aria-hidden="true"
-          />
-        </ListboxButton>
-
-        <Transition>
-          <ListboxOptions className="pb-0">
-            <div className="flex gap-1.5 px-2.5 py-1">
-              <span>Assistants</span>
-              <div
-                className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  setLoading(true);
-                  await refreshProfiles();
-                  setLoading(false);
-                  buttonRef.current?.click();
-                }}
-              >
-                <ArrowPathIcon
-                  className={cn(
-                    "text-lightgray h-2.5 w-2.5",
-                    loading && "animate-spin-slow",
-                  )}
-                />
+  return (
+    profiles &&
+    profiles.length > 1 && (
+      <Listbox>
+        <div className="relative">
+          <ListboxButton
+            data-testid="assistant-select-button"
+            ref={buttonRef}
+            className="text-description border-none bg-transparent hover:brightness-125"
+            style={{ fontSize: fontSize(-3) }}
+          >
+            <div className="flex flex-row items-center gap-1.5">
+              <div className="h-3 w-3 flex-shrink-0 select-none">
+                <AssistantIcon size={3} assistant={selectedProfile} />
               </div>
-            </div>
-
-            <div
-              className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
-            >
-              {profiles?.map((profile, idx) => {
-                return (
-                  <AssistantSelectOption
-                    key={idx}
-                    profile={profile}
-                    onClick={close}
-                    selected={profile.id === selectedProfile.id}
-                  />
-                );
-              })}
-            </div>
-
-            <div className="flex flex-col">
-              <div
-                className="my-0 h-[0.5px]"
-                style={{
-                  backgroundColor: vscCommandCenterInactiveBorder,
-                }}
-              />
-
-              <div
-                className="text-lightgray flex items-center justify-between px-2 py-1"
-                style={{
-                  fontSize: tinyFont,
-                }}
+              <span
+                className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
               >
-                <span
-                  className="block"
-                  style={{
-                    fontSize: tinyFont - 1,
+                {selectedProfile.title}
+              </span>
+            </div>
+            <ChevronDownIcon
+              className="h-2 w-2 flex-shrink-0 select-none"
+              aria-hidden="true"
+            />
+          </ListboxButton>
+
+          <Transition>
+            <ListboxOptions className="pb-0">
+              <div className="flex gap-1.5 px-2.5 py-1">
+                <span>Assistants</span>
+                <div
+                  className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setLoading(true);
+                    await refreshProfiles();
+                    setLoading(false);
+                    buttonRef.current?.click();
                   }}
                 >
-                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
-                </span>
-                <div
-                  className="ml-auto flex items-center gap-1"
-                  onClick={cycleOrgs}
-                >
-                  {currentOrg?.iconUrl ? (
-                    <img
-                      src={currentOrg.iconUrl}
-                      className="h-2.5 w-2.5 rounded-full"
+                  <ArrowPathIcon
+                    className={cn(
+                      "text-description h-2.5 w-2.5",
+                      loading && "animate-spin-slow",
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div
+                className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
+              >
+                {profiles?.map((profile, idx) => {
+                  return (
+                    <AssistantSelectOption
+                      key={idx}
+                      profile={profile}
+                      onClick={close}
+                      selected={profile.id === selectedProfile.id}
                     />
-                  ) : (
-                    <BuildingOfficeIcon className="h-4 w-4" />
-                  )}
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col">
+                <div
+                  className="my-0 h-[0.5px]"
+                  style={{
+                    backgroundColor: vscCommandCenterInactiveBorder,
+                  }}
+                />
+
+                <div
+                  className="text-description flex items-center justify-between gap-1.5 px-2 py-1"
+                  style={{
+                    fontSize: tinyFont,
+                  }}
+                >
                   <span
-                    className="hover:cursor-pointer hover:underline"
+                    className="block"
                     style={{
                       fontSize: tinyFont - 1,
                     }}
                   >
-                    {currentOrg?.name || "Personal"}
+                    <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
                   </span>
+                  <div
+                    className="ml-auto flex items-center gap-1"
+                    onClick={cycleOrgs}
+                  >
+                    {currentOrg?.iconUrl ? (
+                      <img
+                        src={currentOrg.iconUrl}
+                        className="h-2.5 w-2.5 rounded-full"
+                      />
+                    ) : (
+                      <BuildingOfficeIcon className="h-4 w-4" />
+                    )}
+                    <span
+                      className="hover:cursor-pointer hover:underline"
+                      style={{
+                        fontSize: tinyFont - 1,
+                      }}
+                    >
+                      {currentOrg?.name || "Personal"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </ListboxOptions>
-        </Transition>
-      </div>
-    </Listbox>
+            </ListboxOptions>
+          </Transition>
+        </div>
+      </Listbox>
+    )
   );
 }

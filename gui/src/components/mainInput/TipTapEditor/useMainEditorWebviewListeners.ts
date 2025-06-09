@@ -3,11 +3,13 @@ import { InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { MutableRefObject } from "react";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import { clearCodeToEdit } from "../../../redux/slices/editModeState";
+import { useAppSelector } from "../../../redux/hooks";
+import { clearCodeToEdit } from "../../../redux/slices/editState";
 import { setNewestToolbarPreviewForInput } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
 import { CodeBlock, PromptBlock } from "./extensions";
+import { insertCurrentFileContextMention } from "./utils/insertCurrentFileContextMention";
 
 /**
  * Hook for setting up main editor specific webview listeners
@@ -27,6 +29,14 @@ export function useMainEditorWebviewListeners({
   inputId: string;
   editorFocusedRef: MutableRefObject<boolean | undefined>;
 }) {
+  const activeContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
+  );
+  const useCurrentFileAsContext = useAppSelector(
+    (state) => state.config.config.experimental?.useCurrentFileAsContext,
+  );
+  const isInEdit = useAppSelector((state) => state.session.isInEdit);
+
   useWebviewListener(
     "isContinueInputFocused",
     async () => {
@@ -177,5 +187,15 @@ export function useMainEditorWebviewListeners({
       );
     },
     [],
+  );
+
+  useWebviewListener(
+    "newSession",
+    async () => {
+      // do not insert current file context mention if we are in edit mode or if addFileContext is disabled
+      if (!editor || isInEdit || !useCurrentFileAsContext) return;
+      insertCurrentFileContextMention(editor, activeContextProviders);
+    },
+    [editor, activeContextProviders, isInEdit, useCurrentFileAsContext],
   );
 }

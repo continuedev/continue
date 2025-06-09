@@ -89,6 +89,7 @@ export const PromptBlock = Node.create<PromptBlockOptions>({
           };
 
           return chain()
+            .clearPrompt()
             .insertContentAt(0, {
               type: this.name,
               attrs: {

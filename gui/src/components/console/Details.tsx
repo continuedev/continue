@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LLMInteraction } from "../../hooks/useLLMLog";
 import useLLMSummary from "../../hooks/useLLMSummary";
 import End from "./End";
@@ -50,6 +50,20 @@ export default function Details({ interaction }: DetailsProps) {
   const scrollTop = useRef<HTMLDivElement>(null);
   const lastResult = useRef<any>(null);
   const summary = useLLMSummary(interaction);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
+  // Handler to check if user is at the bottom
+  function handleScroll() {
+    const elt = scrollTop.current;
+    if (!elt) {
+      return;
+    }
+    // Allow a small threshold for floating point errors
+    const threshold = 5;
+    setIsAtBottom(
+      elt.scrollHeight - elt.scrollTop - elt.clientHeight < threshold,
+    );
+  }
 
   useEffect(() => {
     if (interaction.end) {
@@ -59,15 +73,17 @@ export default function Details({ interaction }: DetailsProps) {
     const last = interaction.results[interaction.results.length - 1];
     if (last != lastResult.current) {
       lastResult.current = last;
-      const lastChild = scrollTop.current?.lastChild;
-      if (lastChild) {
-        (lastChild as HTMLElement).scrollIntoView({
-          behavior: "auto",
-          block: "end",
-        });
+      if (isAtBottom) {
+        const lastChild = scrollTop.current?.lastChild;
+        if (lastChild) {
+          (lastChild as HTMLElement).scrollIntoView({
+            behavior: "auto",
+            block: "end",
+          });
+        }
       }
     }
-  });
+  }, [interaction, isAtBottom]);
 
   return (
     <div className="m-0 flex min-w-0 flex-1 shrink grow flex-col">
@@ -102,7 +118,11 @@ export default function Details({ interaction }: DetailsProps) {
           ></Cell>
         </div>
       </div>
-      <div ref={scrollTop} className="grow overflow-auto">
+      <div
+        ref={scrollTop}
+        className="grow overflow-auto"
+        onScroll={handleScroll}
+      >
         {interaction.start ? <Start item={interaction.start}></Start> : ""}
         <div className="whitespace-pre-wrap p-2">
           {interaction.results.map((group, i) => {

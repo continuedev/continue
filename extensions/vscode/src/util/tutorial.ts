@@ -1,6 +1,7 @@
 import { IDE } from "core";
-import { getExtensionUri } from "./vscode";
 import * as vscode from "vscode";
+
+import { getExtensionUri } from "./vscode";
 
 const TUTORIAL_FILE_NAME = "granitecode_tutorial.py";
 export function getTutorialUri(): vscode.Uri {

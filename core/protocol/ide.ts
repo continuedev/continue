@@ -1,5 +1,3 @@
-import { ControlPlaneSessionInfo } from "../control-plane/client";
-
 import type {
   ContinueRcJson,
   DiffLine,
@@ -16,6 +14,7 @@ import type {
   TerminalOptions,
   Thread,
 } from "../";
+import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 
 export interface GetGhTokenArgs {
   force?: boolean;
@@ -93,13 +92,12 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
-  getGitHubAuthToken: [GetGhTokenArgs, string | undefined];
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },
     ControlPlaneSessionInfo | undefined,
   ];
   logoutOfControlPlane: [undefined, void];
-  reportError:[any, void];
+  reportError: [any, void];
   closeSidebar: [undefined, void];
 };
 

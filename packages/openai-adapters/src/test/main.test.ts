@@ -1,5 +1,9 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import * as dotenv from "dotenv";
+import { DEEPSEEK_API_BASE } from "../apis/DeepSeek.js";
+import { INCEPTION_API_BASE } from "../apis/Inception.js";
+import { OpenAIApi } from "../apis/OpenAI.js";
+import { constructLlmApi } from "../index.js";
 import { getLlmApi, testChat, testCompletion, testEmbed } from "./util.js";
 
 dotenv.config();
@@ -10,6 +14,7 @@ function testConfig(config: ModelConfig) {
     provider: config.provider as any,
     apiKey: config.apiKey,
     apiBase: config.apiBase,
+    env: config.env,
   });
 
   if (false) {
@@ -106,5 +111,45 @@ const TESTS: Omit<ModelConfig, "name">[] = [
 TESTS.forEach((config) => {
   describe(`${config.provider}/${config.model}`, () => {
     testConfig({ name: config.model, ...config });
+  });
+});
+
+describe("Configuration", () => {
+  it("should configure DeepSeek OpenAI client with correct apiBase and apiKey", () => {
+    const deepseek = constructLlmApi({
+      provider: "deepseek",
+      apiKey: "sk-xxx",
+    });
+
+    expect((deepseek as OpenAIApi).openai.baseURL).toBe(DEEPSEEK_API_BASE);
+    expect((deepseek as OpenAIApi).openai.apiKey).toBe("sk-xxx");
+
+    const deepseek2 = constructLlmApi({
+      provider: "deepseek",
+      apiKey: "sk-xxx",
+      apiBase: "https://api.example.com",
+    });
+    expect((deepseek2 as OpenAIApi).openai.baseURL).toBe(
+      "https://api.example.com",
+    );
+  });
+
+  it("should configure Inception OpenAI client with correct apiBase and apiKey", () => {
+    const inception = constructLlmApi({
+      provider: "inception",
+      apiKey: "sk-xxx",
+    });
+
+    expect((inception as OpenAIApi).openai.baseURL).toBe(INCEPTION_API_BASE);
+    expect((inception as OpenAIApi).openai.apiKey).toBe("sk-xxx");
+
+    const inception2 = constructLlmApi({
+      provider: "inception",
+      apiKey: "sk-xxx",
+      apiBase: "https://api.example.com",
+    });
+    expect((inception2 as OpenAIApi).openai.baseURL).toBe(
+      "https://api.example.com",
+    );
   });
 });

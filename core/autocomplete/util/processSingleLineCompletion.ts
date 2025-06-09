@@ -1,95 +1,90 @@
 import * as Diff from "diff";
 
 interface SingleLineCompletionResult {
-    completionText: string;
-    range?: {
-        start: number;
-        end: number;
-    };
+  completionText: string;
+  range?: {
+    start: number;
+    end: number;
+  };
 }
-
 
 interface DiffType {
-    count?: number;
-    added?: boolean;
-    removed?: boolean;
-    value: string;
+  count?: number;
+  added?: boolean;
+  removed?: boolean;
+  value: string;
 }
 
-
 function diffPatternMatches(
-    diffs: DiffType[],
-    pattern: DiffPartType[],
+  diffs: DiffType[],
+  pattern: DiffPartType[],
 ): boolean {
-    if (diffs.length !== pattern.length) {
-        return false;
+  if (diffs.length !== pattern.length) {
+    return false;
+  }
+
+  for (let i = 0; i < diffs.length; i++) {
+    const diff = diffs[i];
+    const diffPartType: DiffPartType =
+      !diff.added && !diff.removed ? "=" : diff.added ? "+" : "-";
+
+    if (diffPartType !== pattern[i]) {
+      return false;
     }
+  }
 
-    for (let i = 0; i < diffs.length; i++) {
-        const diff = diffs[i];
-        const diffPartType: DiffPartType =
-            !diff.added && !diff.removed ? "=" : diff.added ? "+" : "-";
-
-        if (diffPartType !== pattern[i]) {
-            return false;
-        }
-    }
-
-    return true;
+  return true;
 }
 
 type DiffPartType = "+" | "-" | "=";
 
 export function processSingleLineCompletion(
-    completionText: string,
-    currentText: string,
-    cursorPosition: number,
-    mayChangeRange: boolean
+  completionText: string,
+  currentText: string,
+  cursorPosition: number,
+  mayChangeRange: boolean,
 ): SingleLineCompletionResult | undefined {
-    const diffs: DiffType[] = Diff.diffWords(currentText, completionText);
+  const diffs: DiffType[] = Diff.diffWords(currentText, completionText);
 
-    if (diffPatternMatches(diffs, ["+"])) {
-        // Just insert, we're already at the end of the line
-        return {
-            completionText,
-        };
-    }
-
-    if (
-        mayChangeRange &&
-        diffPatternMatches(diffs, ["+", "=", "+"])
-    ) {
-        // The model inserted something after the cursor and something at the
-        // end of the line; if we can change the range, we can replace the entire
-        // rest of the line.
-        return {
-            completionText,
-            range: {
-                start: cursorPosition,
-                end: currentText.length + cursorPosition,
-            },
-        };
-    }
-
-    if (
-        diffPatternMatches(diffs, ["+", "-"]) ||
-        diffPatternMatches(diffs, ["-", "+"])
-    ) {
-        // We are midline and the model just inserted without repeating to the end of the line
-        return {
-            completionText,
-        };
-    }
-
-    // For any other diff pattern, just use the first added part if available
-    if (diffs[0]?.added) {
-        return {
-            completionText: diffs[0].value,
-        };
-    }
-
-    // Default case: treat as simple insertion
+  if (diffPatternMatches(diffs, ["+"])) {
+    // Just insert, we're already at the end of the line
     return {
-        completionText,
+      completionText,
     };
+  }
+
+  if (mayChangeRange && diffPatternMatches(diffs, ["+", "=", "+"])) {
+    // The model inserted something after the cursor and something at the
+    // end of the line; if we can change the range, we can replace the entire
+    // rest of the line.
+    return {
+      completionText,
+      range: {
+        start: cursorPosition,
+        end: currentText.length + cursorPosition,
+      },
+    };
+  }
+
+  if (
+    diffPatternMatches(diffs, ["+", "-"]) ||
+    diffPatternMatches(diffs, ["-", "+"])
+  ) {
+    // We are midline and the model just inserted without repeating to the end of the line
+    return {
+      completionText,
+    };
+  }
+
+  // For any other diff pattern, just use the first added part if available
+  if (diffs[0]?.added) {
+    return {
+      completionText: diffs[0].value,
+    };
+  }
+
+  // Default case: treat as simple insertion
+  return {
+    completionText,
+  };
 }

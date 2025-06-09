@@ -38,11 +38,11 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-  
+
     if (this.apiKey) {
       headers["Authorization"] = `Bearer ${this.apiKey}`;
     }
-  
+
     const resp = await this.fetch(new URL("embed", this.apiBase), {
       method: "POST",
       body: JSON.stringify({

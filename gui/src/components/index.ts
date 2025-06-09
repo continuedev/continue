@@ -1,114 +1,30 @@
 import styled from "styled-components";
-import { getFontSize } from "../util";
-
-export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
-export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
-export const VSC_FOREGROUND_VAR = "--vscode-editor-foreground";
-export const VSC_BUTTON_BACKGROUND_VAR = "--vscode-button-background";
-export const VSC_BUTTON_FOREGROUND_VAR = "--vscode-button-foreground";
-export const VSC_EDITOR_BACKGROUND_VAR = "--vscode-editor-background";
-export const VSC_LIST_SELECTION_BACKGROUND_VAR =
-  "--vscode-list-activeSelectionBackground";
-export const VSC_FOCUS_BORDER_VAR = "--vscode-focusBorder";
-export const VSC_LIST_ACTIVE_FOREGROUND_VAR =
-  "--vscode-quickInputList-focusForeground";
-export const VSC_QUICK_INPUT_BACKGROUND_VAR = "--vscode-quickInput-background";
-export const VSC_INPUT_BORDER_VAR = "--vscode-input-border";
-export const VSC_BADGE_BACKGROUND_VAR = "--vscode-badge-background";
-export const VSC_BADGE_FOREGROUND_VAR = "--vscode-badge-foreground";
-export const VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR =
-  "--vscode-commandCenter-activeBorder";
-export const VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR =
-  "--vscode-commandCenter-inactiveBorder";
-export const VSC_FIND_MATCH_SELECTED_VAR =
-  "--vscode-editor-findMatchHighlightBackground";
-
-export const VSC_THEME_COLOR_VARS = [
-  VSC_INPUT_BACKGROUND_VAR,
-  VSC_BACKGROUND_VAR,
-  VSC_FOREGROUND_VAR,
-  VSC_BUTTON_BACKGROUND_VAR,
-  VSC_BUTTON_FOREGROUND_VAR,
-  VSC_EDITOR_BACKGROUND_VAR,
-  VSC_LIST_SELECTION_BACKGROUND_VAR,
-  VSC_FOCUS_BORDER_VAR,
-  VSC_LIST_ACTIVE_FOREGROUND_VAR,
-  VSC_QUICK_INPUT_BACKGROUND_VAR,
-  VSC_INPUT_BORDER_VAR,
-  VSC_BADGE_BACKGROUND_VAR,
-  VSC_BADGE_FOREGROUND_VAR,
-  VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR,
-  VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR,
-  VSC_FIND_MATCH_SELECTED_VAR,
-];
+import { varWithFallback } from "../styles/theme";
 
 export const defaultBorderRadius = "5px";
 export const lightGray = "#999998";
 export const greenButtonColor = "#189e72";
 
-export const vscInputBackground = `var(${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
-export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, ${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
-export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
-export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
-export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
-export const vscButtonForeground = `var(${VSC_BUTTON_FOREGROUND_VAR}, #ffffff)`;
-export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
-export const vscListActiveBackground = `var(${VSC_LIST_SELECTION_BACKGROUND_VAR}, #1bbe84)`;
-export const vscFocusBorder = `var(${VSC_FOCUS_BORDER_VAR}, #1bbe84)`;
-export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, ${VSC_FOREGROUND_VAR})`;
-export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
-export const vscInputBorderFocus = `var(${VSC_FOCUS_BORDER_VAR}, ${lightGray})`;
-export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
-export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #ffffff)`;
-export const vscCommandCenterActiveBorder = `var(${VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR}, #1bbe84)`;
-export const vscCommandCenterInactiveBorder = `var(${VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR}, #1bbe84)`;
-export const vscFindMatchSelected = `var(${VSC_FIND_MATCH_SELECTED_VAR}, rgba(255, 223, 0))`;
-
-export function parseHexColor(hexColor: string): {
-  r: number;
-  g: number;
-  b: number;
-} {
-  if (hexColor.startsWith("#")) {
-    hexColor = hexColor.slice(1);
-  }
-
-  if (hexColor.length > 6) {
-    hexColor = hexColor.slice(0, 6);
-  }
-
-  const r = parseInt(hexColor.substring(0, 2), 16);
-  const g = parseInt(hexColor.substring(2, 4), 16);
-  const b = parseInt(hexColor.substring(4, 6), 16);
-
-  return { r, g, b };
-}
-
-export function parseColorForHex(colorVar: string): string {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(
-    colorVar,
-  );
-  if (value.startsWith("#")) {
-    return value.slice(0, 7);
-  }
-
-  // Parse rgb/rgba
-  const rgbValues = value
-    .slice(value.startsWith("rgba") ? 5 : 4, -1)
-    .split(",")
-    .map((x) => x.trim())
-    .filter((_, i) => i < 3) // Only take the first 3 values (RGB, ignore alpha)
-    .map((x) => parseInt(x, 10));
-
-  let hex =
-    "#" +
-    rgbValues
-      .map((x) => x.toString(16))
-      .map((x) => (x.length === 1 ? "0" + x : x))
-      .join("");
-
-  return hex;
-}
+export const vscInputBackground = varWithFallback("input-background");
+export const vscQuickInputBackground = varWithFallback("input-background");
+export const vscBackground = varWithFallback("background");
+export const vscForeground = varWithFallback("foreground");
+export const vscButtonBackground = varWithFallback("primary-background");
+export const vscButtonForeground = varWithFallback("primary-foreground");
+export const vscEditorBackground = varWithFallback("editor-background");
+export const vscListActiveBackground = varWithFallback("list-active");
+export const vscFocusBorder = varWithFallback("border-focus");
+export const vscListActiveForeground = varWithFallback(
+  "list-active-foreground",
+);
+export const vscInputBorder = varWithFallback("input-border");
+export const vscInputBorderFocus = varWithFallback("border-focus");
+export const vscBadgeBackground = varWithFallback("badge-background");
+export const vscBadgeForeground = varWithFallback("badge-foreground");
+export const vscCommandCenterActiveBorder = varWithFallback(
+  "command-border-focus",
+);
+export const vscCommandCenterInactiveBorder = varWithFallback("command-border");
 
 export const Button = styled.button`
   padding: 6px 12px;
@@ -136,7 +52,7 @@ export const SecondaryButton = styled.button`
   margin: 8px;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscInputBorder};
+  border: 1px solid ${lightGray};
   color: ${vscForeground};
   background-color: ${vscInputBackground};
 
@@ -158,7 +74,7 @@ export const GhostButton = styled.button`
 
   border: none;
   color: ${vscForeground};
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(128, 128, 128, 0.4);
   &:disabled {
     color: gray;
     pointer-events: none;
@@ -224,10 +140,6 @@ export const Input = styled.input`
   &:invalid {
     outline: 1px solid red;
   }
-`;
-
-export const Label = styled.label<{ fontSize?: number }>`
-  font-size: ${(props) => props.fontSize || getFontSize()}px;
 `;
 
 export const HeaderButton = styled.button<{
@@ -297,8 +209,11 @@ export const AnimatedEllipsis = styled.span`
   &::after {
     content: ".";
     animation: ellipsis 2.5s infinite;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
+    will-change: content;
     display: inline-block;
-    width: 12px;
+    width: 16px;
     text-align: left;
   }
 
@@ -311,6 +226,9 @@ export const AnimatedEllipsis = styled.span`
     }
     66% {
       content: "...";
+    }
+    100% {
+      content: ".";
     }
   }
 `;

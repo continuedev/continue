@@ -344,7 +344,7 @@ void (async () => {
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
   // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
-  if (isInGitHubAction && isArmTarget) {
+  if (isArmTarget) {
     // lancedb binary
     const packageToInstall = {
       "darwin-arm64": "@lancedb/vectordb-darwin-arm64",

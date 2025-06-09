@@ -47,10 +47,6 @@ are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other
 `uses` clauses or explicit blocks of that type.
 
-:::info
-Note that local assistants cannot use blocks that require organization-level secrets.
-:::
-
 For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
 
 ```yaml title="Assistant models section"
@@ -85,6 +81,13 @@ Blocks:
 You can find many examples of each of these block types on
 the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
+:::info
+Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) can read secret values:
+
+- globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
+- per-workspace, from a `.env` file located at the root of the current workspace.
+  :::
+
 ### Inputs
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use
@@ -111,7 +114,7 @@ models:
       TEMP: 0.9
 ```
 
-Note that hub secrets can be passed as inputs, using the a similar mustache format: `secrets.SECRET_NAME`.
+Note that hub secrets can be passed as inputs, using a similar mustache format: `secrets.SECRET_NAME`.
 
 ### Overrides
 
@@ -186,6 +189,7 @@ chat, editing, and summarizing.
   not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on
   provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
   `chat`, [`edit`](./customize/model-roles/edit.mdx#prompt-templating), [
   `apply`](./customize/model-roles/apply.mdx#prompt-templating) and [
@@ -204,7 +208,6 @@ chat, editing, and summarizing.
   - `topP`: The cumulative probability for nucleus sampling.
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
-  - `n`: Number of completions to generate.
   - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
   - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 - `requestOptions`: HTTP request options specific to the model.
@@ -405,7 +408,7 @@ Destinations to which [development data](./customize/deep-dives/development-data
 - `destination` (**required**): The destination/endpoint that will receive the data. Can be:
   - an HTTP endpoint that will receive a POST request with a JSON blob
   - a file URL to a directory in which events will be dumpted to `.jsonl` files
-- `schema` (**required**): the schema version of the JSON blobs to be sent
+- `schema` (**required**): the schema version of the JSON blobs to be sent. Options include `0.1.0` and `0.2.0`
 - `events`: an array of event names to include. Defaults to all events if not specified.
 - `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file
   contents, prompts, and completions. Defaults to `all`
@@ -547,8 +550,7 @@ models:
   - name: qwen2.5-coder-7b
     <<: *model_defaults
     model: qwen2.5-coder-7b
-    env:
-      useLegacyCompletionsEndpoint: false
+    useLegacyCompletionsEndpoint: false
     roles:
       - autocomplete
 ```

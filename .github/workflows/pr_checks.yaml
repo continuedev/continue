@@ -32,6 +32,24 @@ jobs:
         if: steps.root-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+  prettier-check:
+    needs: install-root
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Check code formatting with Prettier
+        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
+
   install-config-yaml:
     needs: install-root
     runs-on: ubuntu-latest
@@ -237,10 +255,11 @@ jobs:
           cd packages/config-yaml
           npm run build
 
-      - name: Type check
+      - name: Type check and lint
         run: |
           cd gui
           npx tsc --noEmit
+          npm run lint
 
   binary-checks:
     needs: [install-root, install-core, install-config-yaml]
@@ -409,6 +428,7 @@ jobs:
         run: |
           cd core
           npm test
+          npm run vitest
         env:
           # Granite.Code: we don't need these tests
           IGNORE_API_KEY_TESTS: true
@@ -866,6 +886,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - install-root
+      - prettier-check
       - install-core
       - core-checks
       - install-gui

@@ -10,6 +10,7 @@ import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
+import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
@@ -29,11 +30,12 @@ async function callHttpTool(
     }),
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error(`Failed to call tool: ${url}`);
+    throw new Error(`Failed to call tool at ${url}:\n${JSON.stringify(data)}`);
   }
 
-  const data = await response.json();
   return data.output;
 }
 
@@ -84,7 +86,7 @@ async function callToolFromUri(
       });
 
       if (response.isError === true) {
-        throw new Error(`Failed to call tool: ${toolName}`);
+        throw new Error(JSON.stringify(response.content));
       }
 
       const contextItems: ContextItem[] = [];
@@ -130,6 +132,39 @@ async function callToolFromUri(
   }
 }
 
+async function callBuiltInTool(
+  functionName: string,
+  args: any,
+  extras: ToolExtras,
+): Promise<ContextItem[]> {
+  switch (functionName) {
+    case BuiltInToolNames.ReadFile:
+      return await readFileImpl(args, extras);
+    case BuiltInToolNames.CreateNewFile:
+      return await createNewFileImpl(args, extras);
+    case BuiltInToolNames.GrepSearch:
+      return await grepSearchImpl(args, extras);
+    case BuiltInToolNames.FileGlobSearch:
+      return await fileGlobSearchImpl(args, extras);
+    case BuiltInToolNames.RunTerminalCommand:
+      return await runTerminalCommandImpl(args, extras);
+    case BuiltInToolNames.SearchWeb:
+      return await searchWebImpl(args, extras);
+    case BuiltInToolNames.ViewDiff:
+      return await viewDiffImpl(args, extras);
+    case BuiltInToolNames.LSTool:
+      return await lsToolImpl(args, extras);
+    case BuiltInToolNames.ReadCurrentlyOpenFile:
+      return await readCurrentlyOpenFileImpl(args, extras);
+    case BuiltInToolNames.CreateRuleBlock:
+      return await createRuleBlockImpl(args, extras);
+    case BuiltInToolNames.RequestRule:
+      return await requestRuleImpl(args, extras);
+    default:
+      throw new Error(`Tool "${functionName}" not found`);
+  }
+}
+
 // Handles calls for core/non-client tools
 // Returns an error context item if the tool call fails
 // Note: Edit tool is handled on client
@@ -141,44 +176,11 @@ export async function callTool(
   contextItems: ContextItem[];
   errorMessage: string | undefined;
 }> {
-  const args = JSON.parse(callArgs || "{}");
-  const uri = tool.uri ?? tool.function.name;
   try {
-    let contextItems: ContextItem[] = [];
-    switch (uri) {
-      case BuiltInToolNames.ReadFile:
-        contextItems = await readFileImpl(args, extras);
-        break;
-      case BuiltInToolNames.CreateNewFile:
-        contextItems = await createNewFileImpl(args, extras);
-        break;
-      case BuiltInToolNames.GrepSearch:
-        contextItems = await grepSearchImpl(args, extras);
-        break;
-      case BuiltInToolNames.FileGlobSearch:
-        contextItems = await fileGlobSearchImpl(args, extras);
-        break;
-      case BuiltInToolNames.RunTerminalCommand:
-        contextItems = await runTerminalCommandImpl(args, extras);
-        break;
-      case BuiltInToolNames.SearchWeb:
-        contextItems = await searchWebImpl(args, extras);
-        break;
-      case BuiltInToolNames.ViewDiff:
-        contextItems = await viewDiffImpl(args, extras);
-        break;
-      case BuiltInToolNames.LSTool:
-        contextItems = await lsToolImpl(args, extras);
-        break;
-      case BuiltInToolNames.ReadCurrentlyOpenFile:
-        contextItems = await readCurrentlyOpenFileImpl(args, extras);
-        break;
-      case BuiltInToolNames.CreateRuleBlock:
-        contextItems = await createRuleBlockImpl(args, extras);
-        break;
-      default:
-        contextItems = await callToolFromUri(uri, args, extras);
-    }
+    const args = JSON.parse(callArgs || "{}");
+    const contextItems = tool.uri
+      ? await callToolFromUri(tool.uri, args, extras)
+      : await callBuiltInTool(tool.function.name, args, extras);
     if (tool.faviconUrl) {
       contextItems.forEach((item) => {
         item.icon = tool.faviconUrl;

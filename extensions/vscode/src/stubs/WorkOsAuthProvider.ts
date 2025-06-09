@@ -1,6 +1,11 @@
 import crypto from "crypto";
 
-import { ControlPlaneSessionInfo } from "core/control-plane/client";
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+  HubEnv,
+  isHubEnv,
+} from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
@@ -280,12 +285,21 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       const codeVerifier = generateRandomString(64);
       const codeChallenge = await generateCodeChallenge(codeVerifier);
-      const token = await this.login(codeChallenge, scopes);
+
+      if (!isHubEnv(controlPlaneEnv)) {
+        throw new Error("Login is disabled");
+      }
+
+      const token = await this.login(codeChallenge, controlPlaneEnv, scopes);
       if (!token) {
         throw new Error(`Continue login failure`);
       }
 
-      const userInfo = (await this.getUserInfo(token, codeVerifier)) as any;
+      const userInfo = (await this.getUserInfo(
+        token,
+        codeVerifier,
+        controlPlaneEnv,
+      )) as any;
       const { user, access_token, refresh_token } = userInfo;
 
       const session: ContinueAuthenticationSession = {
@@ -352,7 +366,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   /**
    * Log in to Continue
    */
-  private async login(codeChallenge: string, scopes: string[] = []) {
+  private async login(
+    codeChallenge: string,
+    hubEnv: HubEnv,
+    scopes: string[] = [],
+  ) {
     return await window.withProgress<string>(
       {
         location: ProgressLocation.Notification,
@@ -369,7 +387,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         const url = new URL("https://api.workos.com/user_management/authorize");
         const params = {
           response_type: "code",
-          client_id: controlPlaneEnv.WORKOS_CLIENT_ID,
+          client_id: hubEnv.WORKOS_CLIENT_ID,
           redirect_uri: this.redirectUri,
           state: stateId,
           code_challenge: codeChallenge,
@@ -458,7 +476,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
    * @param token
    * @returns
    */
-  private async getUserInfo(token: string, codeVerifier: string) {
+  private async getUserInfo(
+    token: string,
+    codeVerifier: string,
+    hubEnv: HubEnv,
+  ) {
     const resp = await fetch(
       "https://api.workos.com/user_management/authenticate",
       {
@@ -467,7 +489,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          client_id: controlPlaneEnv.WORKOS_CLIENT_ID,
+          client_id: hubEnv.WORKOS_CLIENT_ID,
           code_verifier: codeVerifier,
           grant_type: "authorization_code",
           code: token,
@@ -484,6 +506,12 @@ export async function getControlPlaneSessionInfo(
   silent: boolean,
   useOnboarding: boolean,
 ): Promise<ControlPlaneSessionInfo | undefined> {
+  if (!isHubEnv(controlPlaneEnv)) {
+    return {
+      AUTH_TYPE: AuthType.OnPrem,
+    };
+  }
+
   try {
     if (useOnboarding) {
       WorkOsAuthProvider.useOnboardingUri = true;
@@ -498,6 +526,7 @@ export async function getControlPlaneSessionInfo(
       return undefined;
     }
     return {
+      AUTH_TYPE: controlPlaneEnv.AUTH_TYPE,
       accessToken: session.accessToken,
       account: {
         id: session.account.id,

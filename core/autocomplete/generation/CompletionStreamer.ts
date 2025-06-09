@@ -3,6 +3,7 @@ import { StreamTransformPipeline } from "../filtering/streamTransforms/StreamTra
 import { HelperVars } from "../util/HelperVars";
 
 import { GeneratorReuseManager } from "./GeneratorReuseManager";
+import { stopAfterMaxProcessingTime } from "./utils";
 
 export class CompletionStreamer {
   private streamTransformPipeline = new StreamTransformPipeline();
@@ -22,22 +23,36 @@ export class CompletionStreamer {
     completionOptions: Partial<CompletionOptions> | undefined,
     helper: HelperVars,
   ) {
+    // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
+    const fullStop = () =>
+      this.generatorReuseManager.currentGenerator?.cancel();
+
     // Try to reuse pending requests if what the user typed matches start of completion
     const generator = this.generatorReuseManager.getGenerator(
       prefix,
-      (abortSignal: AbortSignal) =>
-        llm.supportsFim()
+      (abortSignal: AbortSignal) => {
+        const generator = llm.supportsFim()
           ? llm.streamFim(prefix, suffix, abortSignal, completionOptions)
           : llm.streamComplete(prompt, abortSignal, {
               ...completionOptions,
               raw: true,
-            }),
+            });
+
+        /**
+         * This transformer applies even on reused generator. We are deliberately
+         * not using streamTransformPipeline because we want to capture and stop
+         * the request even if the generator is being reused.
+         */
+        return helper.options.transform
+          ? stopAfterMaxProcessingTime(
+              generator,
+              helper.options.modelTimeout * 2.5,
+              fullStop,
+            )
+          : generator;
+      },
       multiline,
     );
-
-    // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
-    const fullStop = () =>
-      this.generatorReuseManager.currentGenerator?.cancel();
 
     // LLM
     const generatorWithCancellation = async function* () {

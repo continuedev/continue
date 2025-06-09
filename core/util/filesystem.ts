@@ -17,7 +17,6 @@ import {
   Thread,
   ToastType,
 } from "../index.js";
-import { GetGhTokenArgs } from "../protocol/ide.js";
 
 class FileSystemIde implements IDE {
   constructor(private readonly workspaceDir: string) {}
@@ -56,9 +55,6 @@ class FileSystemIde implements IDE {
       pauseCodebaseIndexOnStart: false,
       localModelSize: "large",
     };
-  }
-  async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
-    return undefined;
   }
   async getFileStats(fileUris: string[]): Promise<FileStatsMap> {
     const result: FileStatsMap = {};

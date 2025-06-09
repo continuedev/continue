@@ -17,12 +17,16 @@ export class LocalPlatformClient implements PlatformClient {
     private readonly ide: IDE,
   ) {}
 
+  /**
+   * searches for the first valid secret file in order of ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
+   */
   private async findSecretInEnvFiles(
     fqsn: FQSN,
   ): Promise<SecretResult | undefined> {
     const secretValue =
       this.findSecretInLocalEnvFile(fqsn) ??
-      (await this.findSecretInWorkspaceEnvFiles(fqsn));
+      (await this.findSecretInWorkspaceEnvFiles(fqsn, true)) ??
+      (await this.findSecretInWorkspaceEnvFiles(fqsn, false));
 
     if (secretValue) {
       return {
@@ -52,12 +56,16 @@ export class LocalPlatformClient implements PlatformClient {
 
   private async findSecretInWorkspaceEnvFiles(
     fqsn: FQSN,
+    insideContinue: boolean,
   ): Promise<string | undefined> {
     try {
       const workspaceDirs = await this.ide.getWorkspaceDirs();
-
       for (const folder of workspaceDirs) {
-        const envFilePath = joinPathsToUri(folder, ".env");
+        const envFilePath = joinPathsToUri(
+          folder,
+          insideContinue ? ".continue" : "",
+          ".env",
+        );
         try {
           const fileExists = await this.ide.fileExists(envFilePath);
           if (fileExists) {

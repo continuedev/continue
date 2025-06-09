@@ -9,7 +9,7 @@ import { AutocompleteInput } from "../autocomplete/util/types";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
-import type {
+import {
   BrowserSerializedContinueConfig,
   ChatMessage,
   ContextItem,
@@ -29,10 +29,12 @@ import type {
   SessionMetadata,
   SiteIndexingConfig,
   SlashCommandDescription,
+  StreamDiffLinesPayload,
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "../control-plane/client";
+import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
+import { FreeTrialStatus } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -45,6 +47,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
   abort: [undefined, void];
+  cancelApply: [undefined, void];
 
   // History
   "history/list": [ListHistoryOptions, SessionMetadata[]];
@@ -143,18 +146,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
-  streamDiffLines: [
-    {
-      prefix: string;
-      highlighted: string;
-      suffix: string;
-      input: string;
-      language: string | undefined;
-      modelTitle: string | undefined;
-      includeRulesInSystemMessage: boolean;
-    },
-    AsyncGenerator<DiffLine>,
-  ];
+  streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
   "chatDescriber/describe": [
     {
       text: string;
@@ -208,6 +200,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
+  "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
@@ -215,4 +208,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
+  "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
 };

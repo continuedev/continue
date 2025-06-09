@@ -143,7 +143,7 @@ describe("E2E Scenarios", () => {
     );
 
     // Test that packages were correctly unrolled and params replaced
-    expect(unrolledConfig.models?.length).toBe(3);
+    expect(unrolledConfig.models?.length).toBe(4);
 
     const openAiModel = unrolledConfig.models?.[0]!;
     expect(openAiModel.apiKey).toBe("sk-123");
@@ -162,6 +162,10 @@ describe("E2E Scenarios", () => {
     expect((anthropicModel as any).apiKeyLocation).toBe(
       anthropicSecretLocation,
     );
+
+    const proxyOllamaModel = unrolledConfig.models?.[3]!;
+    expect(proxyOllamaModel.provider).toBe("ollama");
+    expect(proxyOllamaModel.defaultCompletionOptions?.stream).toBe(false);
 
     expect(unrolledConfig.rules?.length).toBe(2);
     expect(unrolledConfig.docs?.[0]?.startUrl).toBe(

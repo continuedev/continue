@@ -3,6 +3,7 @@ import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
+import { getDiffsFromCache } from "./gitDiffCache";
 
 import {
   AutocompleteClipboardSnippet,
@@ -23,34 +24,13 @@ export interface SnippetPayload {
   clipboardSnippets: AutocompleteClipboardSnippet[];
 }
 
-function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
+function racePromise<T>(promise: Promise<T[]>, timeout = 100): Promise<T[]> {
   const timeoutPromise = new Promise<T[]>((resolve) => {
-    setTimeout(() => resolve([]), 100);
+    setTimeout(() => resolve([]), timeout);
   });
 
   return Promise.race([promise, timeoutPromise]);
 }
-
-class DiffSnippetsCache {
-  private cache: Map<number, any> = new Map();
-  private lastTimestamp: number = 0;
-
-  public set<T>(timestamp: number, value: T): T {
-    // Clear old cache entry if exists
-    if (this.lastTimestamp !== timestamp) {
-      this.cache.clear();
-    }
-    this.lastTimestamp = timestamp;
-    this.cache.set(timestamp, value);
-    return value;
-  }
-
-  public get(timestamp: number): any | undefined {
-    return this.cache.get(timestamp);
-  }
-}
-
-const diffSnippetsCache = new DiffSnippetsCache();
 
 // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
 // or they might separately track recently edited ranges)
@@ -113,31 +93,14 @@ const getClipboardSnippets = async (
 const getDiffSnippets = async (
   ide: IDE,
 ): Promise<AutocompleteDiffSnippet[]> => {
-  const currentTimestamp = ide.getLastFileSaveTimestamp ?
-    ide.getLastFileSaveTimestamp() :
-    Math.floor(Date.now() / 10000) * 10000; // Defaults to update once in every 10 seconds
+  const diffs = await getDiffsFromCache(ide);
 
-  // Check cache first
-  const cached = diffSnippetsCache.get(currentTimestamp) as AutocompleteDiffSnippet[];
-
-  if (cached) {
-    return cached;
-  }
-
-  let diff: string[] = [];
-  try {
-    diff = await ide.getDiff(true);
-  } catch (e) {
-    console.error("Error getting diff for autocomplete", e);
-  }
-
-  return diffSnippetsCache.set(currentTimestamp, diff.map((item) => {
+  return diffs.map((item) => {
     return {
       content: item,
       type: AutocompleteSnippetType.Diff,
     };
-  }));
-
+  });
 };
 
 export const getAllSnippets = async ({
@@ -162,9 +125,13 @@ export const getAllSnippets = async ({
     clipboardSnippets,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
-    racePromise(contextRetrievalService.getSnippetsFromImportDefinitions(helper)),
-    IDE_SNIPPETS_ENABLED ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)) : [],
-    racePromise(getDiffSnippets(ide)),
+    racePromise(
+      contextRetrievalService.getSnippetsFromImportDefinitions(helper),
+    ),
+    IDE_SNIPPETS_ENABLED
+      ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp))
+      : [],
+    [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     racePromise(getClipboardSnippets(ide)),
   ]);
 

@@ -1,10 +1,6 @@
 import { ConfigResult } from "@continuedev/config-yaml";
 
-import {
-  ControlPlaneClient,
-  ControlPlaneSessionInfo,
-} from "../control-plane/client.js";
-import { getControlPlaneEnv } from "../control-plane/env.js";
+import { ControlPlaneClient } from "../control-plane/client.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -16,10 +12,15 @@ import {
 import { GlobalContext } from "../util/GlobalContext.js";
 import { writeContinueConfig } from "./load.js";
 
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+} from "../control-plane/AuthTypes.js";
+import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
 import {
   ASSISTANTS,
-  getAllDotContinueYamlFiles,
+  getAllDotContinueDefinitionFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
@@ -132,8 +133,7 @@ export class ConfigHandler {
   }
 
   private async getOrgs(): Promise<OrgWithProfiles[]> {
-    const userId = await this.controlPlaneClient.userId;
-    if (userId) {
+    if (await this.controlPlaneClient.isSignedIn()) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
       const personalHubOrg = await this.getPersonalHubOrg();
       const hubOrgs = await Promise.all(
@@ -251,7 +251,7 @@ export class ConfigHandler {
     if (currentProfile) {
       this.globalContext.update("lastSelectedProfileForWorkspace", {
         ...selectedProfiles,
-        [profileKey]: selectedProfiles.id ?? null,
+        [profileKey]: currentProfile.profileDescription.id,
       });
     }
 
@@ -266,6 +266,13 @@ export class ConfigHandler {
     /**
      * Users can define as many local assistants as they want in a `.continue/assistants` folder
      */
+
+    // Local customization disabled for on-premise deployments
+    const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+    if (env.AUTH_TYPE === AuthType.OnPrem) {
+      return [];
+    }
+
     const localProfiles: ProfileLifecycleManager[] = [];
 
     if (options.includeGlobal) {
@@ -273,7 +280,7 @@ export class ConfigHandler {
     }
 
     if (options.includeWorkspace) {
-      const assistantFiles = await getAllDotContinueYamlFiles(
+      const assistantFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
         options,
         ASSISTANTS,

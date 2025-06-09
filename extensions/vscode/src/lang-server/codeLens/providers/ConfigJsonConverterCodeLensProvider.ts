@@ -1,5 +1,6 @@
-import { getConfigYamlPath } from "core/util/paths";
 import * as fs from "fs";
+
+import { getConfigYamlPath } from "core/util/paths";
 import * as vscode from "vscode";
 
 export class ConfigJsonConverterCodeLensProvider

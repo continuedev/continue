@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint --ext ts"
   },
   "dependencies": {
     "@continuedev/config-yaml": "file:../packages/config-yaml",

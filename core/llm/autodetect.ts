@@ -66,7 +66,6 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
   "gemini",
-  "free-trial",
   "msty",
   "anthropic",
   "bedrock",
@@ -148,7 +147,6 @@ const PARALLEL_PROVIDERS: string[] = [
   "huggingface-tgi",
   "mistral",
   "moonshot",
-  "free-trial",
   "replicate",
   "together",
   "novita",
@@ -389,6 +387,5 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
-  modelSupportsTools
+  modelSupportsTools,
 };
-

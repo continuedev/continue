@@ -18,6 +18,7 @@ export const sharedConfigSchema = z
     useChromiumForDocsCrawling: z.boolean(),
     readResponseTTS: z.boolean(),
     promptPath: z.string(),
+    useCurrentFileAsContext: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -26,11 +27,14 @@ export const sharedConfigSchema = z
     codeWrap: z.boolean(),
     displayRawMarkdown: z.boolean(),
     showChatScrollbar: z.boolean(),
+    autoAcceptEditToolDiffs: z.boolean(),
 
     // `tabAutocompleteOptions` in `ContinueConfig`
     useAutocompleteCache: z.boolean(),
     useAutocompleteMultilineCompletions: z.enum(["always", "never", "auto"]),
     disableAutocompleteInFiles: z.array(z.string()),
+    modelTimeout: z.number(),
+    debounceDelay: z.number(),
   })
   .partial();
 
@@ -103,6 +107,13 @@ export function modifyAnyConfigWithSharedConfig<
     configCopy.tabAutocompleteOptions.disableInFiles =
       sharedConfig.disableAutocompleteInFiles;
   }
+  if (sharedConfig.modelTimeout !== undefined) {
+    configCopy.tabAutocompleteOptions.modelTimeout = sharedConfig.modelTimeout;
+  }
+  if (sharedConfig.debounceDelay !== undefined) {
+    configCopy.tabAutocompleteOptions.debounceDelay =
+      sharedConfig.debounceDelay;
+  }
 
   configCopy.ui = {
     ...configCopy.ui,
@@ -123,6 +134,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.showChatScrollbar !== undefined) {
     configCopy.ui.showChatScrollbar = sharedConfig.showChatScrollbar;
+  }
+  if (sharedConfig.autoAcceptEditToolDiffs !== undefined) {
+    configCopy.ui.autoAcceptEditToolDiffs =
+      sharedConfig.autoAcceptEditToolDiffs;
   }
 
   if (sharedConfig.allowAnonymousTelemetry !== undefined) {
@@ -151,6 +166,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.readResponseTTS !== undefined) {
     configCopy.experimental.readResponseTTS = sharedConfig.readResponseTTS;
+  }
+  if (sharedConfig.useCurrentFileAsContext !== undefined) {
+    configCopy.experimental.useCurrentFileAsContext =
+      sharedConfig.useCurrentFileAsContext;
   }
 
   return configCopy;
