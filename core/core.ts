@@ -104,7 +104,6 @@ async function* streamDiffLinesGenerator(
     prefix,
     suffix,
     llm,
-    rulesToInclude: rules,
     input,
     language,
     onlyOneInsertion: false,
@@ -604,6 +603,20 @@ export class Core {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
 
+        // Check for rules.md files being created
+        let rulesFileCreated = false;
+        for (const uri of data.uris) {
+          const parts = uri.split("/");
+          const filename = parts[parts.length - 1];
+          if (filename === "rules.md") {
+            rulesFileCreated = true;
+            break;
+          }
+        }
+        if (rulesFileCreated) {
+          await this.configHandler.reloadConfig();
+        }
+
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
@@ -621,6 +634,20 @@ export class Core {
       if (data?.uris?.length) {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
+
+        // Check for rules.md files being deleted
+        let rulesFileDeleted = false;
+        for (const uri of data.uris) {
+          const parts = uri.split("/");
+          const filename = parts[parts.length - 1];
+          if (filename === "rules.md") {
+            rulesFileDeleted = true;
+            break;
+          }
+        }
+        if (rulesFileDeleted) {
+          await this.configHandler.reloadConfig();
+        }
       }
     });
 
@@ -811,7 +838,7 @@ export class Core {
     data,
   }: Message<{
     uris?: string[];
-  }>) {
+  }>): Promise<void> {
     if (data?.uris?.length) {
       walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
       for (const uri of data.uris) {
@@ -840,7 +867,8 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml"))
+          (uri.includes(".continue") && uri.endsWith(".yaml")) ||
+          uri.endsWith("rules.md") // Add check for rules.md files
         ) {
           await this.configHandler.reloadConfig();
         } else if (
