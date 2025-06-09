@@ -91,7 +91,6 @@ const isFileInDirectory = (
   // Extract the last parts of the paths for comparison
   // This allows matching relative paths with absolute paths
   // e.g., "nested-folder/file.py" should match "/path/to/nested-folder/"
-  const filePathParts = normalizedFilePath.split("/");
   const dirPathParts = normalizedDirPath.split("/");
 
   // Get the directory name (last part of the directory path)
