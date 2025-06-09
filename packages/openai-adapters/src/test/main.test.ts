@@ -8,7 +8,12 @@ import { getLlmApi, testChat, testEmbed } from "./util.js";
 
 dotenv.config();
 
-function testConfig(config: ModelConfig) {
+export interface TestConfigOptions {
+  skipTools: boolean;
+}
+
+function testConfig(_config: ModelConfig & { options?: TestConfigOptions }) {
+  const { options, ...config } = _config;
   const model = config.model;
   const api = getLlmApi({
     provider: config.provider as any,
@@ -22,7 +27,7 @@ function testConfig(config: ModelConfig) {
       config.roles?.includes(role as any),
     )
   ) {
-    testChat(api, model);
+    testChat(api, model, options);
   }
 
   if (config.roles?.includes("embed")) {
@@ -34,7 +39,7 @@ function testConfig(config: ModelConfig) {
   }
 }
 
-const TESTS: Omit<ModelConfig, "name">[] = [
+const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
   {
     provider: "openai",
     model: "gpt-4o",
@@ -106,13 +111,21 @@ const TESTS: Omit<ModelConfig, "name">[] = [
     provider: "azure",
     model: "gpt-4.1",
     apiBase: "https://continue-openai.openai.azure.com",
-    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    apiKey: process.env.AZURE_OPENAI_GPT41_API_KEY,
     env: {
       deployment: "gpt-4.1",
       apiVersion: "2024-02-15-preview",
       apiType: "azure-openai",
     },
     roles: ["chat"],
+  },
+  {
+    provider: "azure",
+    model: "mistral-small-2503",
+    apiBase: "https://nate-0276-resource.services.ai.azure.com/models",
+    apiKey: process.env.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY,
+    roles: ["chat"],
+    options: { skipTools: true },
   },
 ];
 

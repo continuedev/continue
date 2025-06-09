@@ -435,6 +435,8 @@ jobs:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_FOUNDRY_API_KEY: ${{ secrets.AZURE_FOUNDRY_API_KEY }}
+          AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
+          AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
 
   package-tests:
     runs-on: ubuntu-latest
