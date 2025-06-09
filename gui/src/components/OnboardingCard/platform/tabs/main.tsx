@@ -4,7 +4,8 @@ import { ButtonSubtext } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { selectCurrentOrg } from "../../../../redux";
-import { useAppSelector } from "../../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { selectFirstHubProfile } from "../../../../redux/thunks";
 import { hasPassedFTL } from "../../../../util/freeTrial";
 import ContinueLogo from "../../../gui/ContinueLogo";
 import { Button } from "../../../ui/Button";
@@ -20,12 +21,17 @@ export default function MainTab({
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const auth = useAuth();
+  const dispatch = useAppDispatch();
   const currentOrg = useAppSelector(selectCurrentOrg);
 
   function onGetStarted() {
     void auth.login(true).then((success) => {
       if (success) {
         onboardingCard.close(isDialog);
+
+        // A new assistant is created when the account is created
+        // We want to switch to this immediately
+        void dispatch(selectFirstHubProfile());
       }
     });
   }
