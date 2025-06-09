@@ -226,6 +226,7 @@ describe("Test Suite", () => {
       title: "Test Model",
       provider: "openai",
       model: "gpt-3.5-turbo",
+      underlyingProviderName: "openai",
     };
     await messenger.request("config/addModel", {
       model,
@@ -252,6 +253,7 @@ describe("Test Suite", () => {
       title: "Test Model",
       provider: "mock",
       model: "gpt-3.5-turbo",
+      underlyingProviderName: "mock",
     };
     await messenger.request("config/addModel", {
       model,

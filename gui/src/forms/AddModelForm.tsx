@@ -1,8 +1,7 @@
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { Button, Input, InputSubtext, StyledActionButton } from "../components";
-import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
+import { Button, Input, StyledActionButton } from "../components";
 import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
 import { useAuth } from "../context/Auth";
@@ -15,9 +14,8 @@ import {
 } from "../pages/AddNewModel/configs/providers";
 import { useAppDispatch } from "../redux/hooks";
 import { updateSelectedModelByRole } from "../redux/thunks";
-import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
 
-interface QuickModelSetupProps {
+interface AddModelFormProps {
   onDone: () => void;
   hideFreeTrialLimitMessage?: boolean;
 }
@@ -27,20 +25,18 @@ const MODEL_PROVIDERS_URL =
 const CODESTRAL_URL = "https://console.mistral.ai/codestral";
 const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
 
-function AddModelForm({
+export function AddModelForm({
   onDone,
   hideFreeTrialLimitMessage,
-}: QuickModelSetupProps) {
+}: AddModelFormProps) {
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
     providers["openai"]!,
   );
   const dispatch = useAppDispatch();
   const { selectedProfile } = useAuth();
-
   const [selectedModel, setSelectedModel] = useState(
     selectedProvider.packages[0],
   );
-
   const formMethods = useForm();
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -54,7 +50,7 @@ function AddModelForm({
   ];
 
   const allProviders = Object.entries(providers)
-    .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
+    .filter(([key]) => !["openai-aiohttp"].includes(key))
     .map(([, provider]) => provider)
     .filter((provider) => !!provider)
     .map((provider) => provider!); // for type checking
@@ -74,10 +70,7 @@ function AddModelForm({
     : selectedProvider.apiKeyUrl;
 
   function isDisabled() {
-    if (
-      selectedProvider.downloadUrl ||
-      selectedProvider.provider === "free-trial"
-    ) {
+    if (selectedProvider.downloadUrl) {
       return false;
     }
 
@@ -98,6 +91,7 @@ function AddModelForm({
   function onSubmit() {
     const apiKey = formMethods.watch("apiKey");
     const hasValidApiKey = apiKey !== undefined && apiKey !== "";
+
     const reqInputFields: Record<string, any> = {};
     for (let input of selectedProvider.collectInputFor ?? []) {
       reqInputFields[input.key] = formMethods.watch(input.key);
@@ -113,11 +107,12 @@ function AddModelForm({
     };
 
     ideMessenger.post("config/addModel", { model });
+
     ideMessenger.post("config/openProfile", {
       profileId: "local",
     });
 
-    dispatch(
+    void dispatch(
       updateSelectedModelByRole({
         selectedProfile,
         role: "chat",
@@ -138,7 +133,9 @@ function AddModelForm({
       <form onSubmit={formMethods.handleSubmit(onSubmit)}>
         <div className="mx-auto max-w-md p-6">
           <h1 className="mb-0 text-center text-2xl">Add Chat model</h1>
-          {!hideFreeTrialLimitMessage && hasPassedFTL() && (
+
+          {/* TODO sync free trial limit with hub */}
+          {/* {!hideFreeTrialLimitMessage && hasPassedFTL() && (
             <p className="text-sm text-gray-400">
               You've reached the free trial limit of {FREE_TRIAL_LIMIT_REQUESTS}{" "}
               free inputs. To keep using Continue, you can either use your own
@@ -151,7 +148,7 @@ function AddModelForm({
               </a>
               .
             </p>
-          )}
+          )} */}
 
           <div className="my-8 flex flex-col gap-6">
             <div>
@@ -169,7 +166,7 @@ function AddModelForm({
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
               />
-              <InputSubtext className="mb-0">
+              <span className="text-description-muted mt-1 block text-xs">
                 Don't see your provider?{" "}
                 <a
                   className="cursor-pointer text-inherit underline hover:text-inherit"
@@ -180,7 +177,7 @@ function AddModelForm({
                   Click here
                 </a>{" "}
                 to view the full list
-              </InputSubtext>
+              </span>
             </div>
 
             {selectedProvider.downloadUrl && (
@@ -188,7 +185,6 @@ function AddModelForm({
                 <label className="mb-1 block text-sm font-medium">
                   Install provider
                 </label>
-
                 <StyledActionButton onClick={onClickDownloadProvider}>
                   <p className="text-sm underline">
                     {selectedProvider.downloadUrl}
@@ -215,7 +211,7 @@ function AddModelForm({
                     setSelectedModel(match);
                   }
                 }}
-                otherOptions={
+                topOptions={
                   Object.entries(providers).find(
                     ([, provider]) =>
                       provider?.title === selectedProvider.title,
@@ -245,12 +241,13 @@ function AddModelForm({
                   <Input
                     id="apiKey"
                     className="w-full"
+                    type="password"
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
                   />
-                  <InputSubtext className="mb-0">
+                  <span className="text-description-muted mt-1 block text-xs">
                     <a
-                      className="cursor-pointer text-inherit underline hover:text-inherit"
+                      className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
                       onClick={() => {
                         if (selectedProviderApiKeyUrl) {
                           ideMessenger.post(
@@ -263,7 +260,7 @@ function AddModelForm({
                       Click here
                     </a>{" "}
                     to create a {selectedProvider.title} API key
-                  </InputSubtext>
+                  </span>
                 </>
               </div>
             )}
@@ -279,7 +276,7 @@ function AddModelForm({
                     field.key !== "apiKey",
                 )
                 .map((field) => (
-                  <div>
+                  <div key={field.key}>
                     <>
                       <label className="mb-1 block text-sm font-medium">
                         {field.label}
@@ -300,7 +297,20 @@ function AddModelForm({
             <Button type="submit" className="w-full" disabled={isDisabled()}>
               Connect
             </Button>
-            <AddModelButtonSubtext />
+
+            <span className="text-description-muted block w-full text-center text-xs">
+              This will update your{" "}
+              <span
+                className="cursor-pointer underline hover:brightness-125"
+                onClick={() =>
+                  ideMessenger.post("config/openProfile", {
+                    profileId: undefined,
+                  })
+                }
+              >
+                config file
+              </span>
+            </span>
           </div>
         </div>
       </form>

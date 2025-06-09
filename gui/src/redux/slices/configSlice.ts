@@ -8,7 +8,7 @@ export type ConfigState = {
   config: BrowserSerializedContinueConfig;
 };
 
-const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
+export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
   slashCommands: [
     {
       name: "share",

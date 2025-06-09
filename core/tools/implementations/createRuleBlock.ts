@@ -1,14 +1,14 @@
-import { ConfigYaml } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { ToolImpl } from ".";
+import { RuleWithSource } from "../..";
+import { RuleFrontmatter } from "../../config/markdown/parseMarkdownRule";
 import { joinPathsToUri } from "../../util/uri";
 
-export interface CreateRuleBlockArgs {
-  name: string;
-  rule: string;
-  globs?: string;
-  format?: "yaml" | "markdown"; // Add format option with yaml as default
-}
+export type CreateRuleBlockArgs = Pick<
+  Required<RuleWithSource>,
+  "rule" | "description" | "alwaysApply" | "name"
+> &
+  Pick<RuleWithSource, "globs">;
 
 export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
@@ -20,26 +20,25 @@ export const createRuleBlockImpl: ToolImpl = async (
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
 
-  // Default to YAML format
-  const format = args.format ?? "yaml";
-  const fileExtension = format === "markdown" ? "md" : "yaml";
+  const fileExtension = "md";
 
-  const ruleObject = {
-    name: args.name,
-    rule: args.rule,
-    ...(args.globs ? { globs: args.globs.trim() } : {}),
-  };
+  const frontmatter: RuleFrontmatter = {};
 
-  let fileContent: string;
+  if (args.globs) {
+    frontmatter.globs =
+      typeof args.globs === "string" ? args.globs.trim() : args.globs;
+  }
 
-  if (format === "markdown") {
-    // Generate markdown format with frontmatter
-    const frontmatter = {
-      ...(args.globs ? { globs: args.globs.trim() } : {}),
-    };
+  if (args.description) {
+    frontmatter.description = args.description.trim();
+  }
 
-    const frontmatterYaml = YAML.stringify(frontmatter).trim();
-    fileContent = `---
+  if (args.alwaysApply !== undefined) {
+    frontmatter.alwaysApply = args.alwaysApply;
+  }
+
+  const frontmatterYaml = YAML.stringify(frontmatter).trim();
+  let fileContent = `---
 ${frontmatterYaml}
 ---
 
@@ -47,18 +46,6 @@ ${frontmatterYaml}
 
 ${args.rule}
 `;
-  } else {
-    // Generate YAML format
-    const ruleBlock: ConfigYaml = {
-      name: args.name,
-      version: "0.0.1",
-      schema: "v1",
-      rules: [ruleObject],
-    };
-
-    fileContent = YAML.stringify(ruleBlock);
-  }
-
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
   const rulesDirUri = joinPathsToUri(
     localContinueDir,
@@ -73,12 +60,12 @@ ${args.rule}
   return [
     {
       name: "New Rule Block",
-      description: "", // No description throws an error in the GUI
+      description: args.description || "",
       uri: {
         type: "file",
         value: rulesDirUri,
       },
-      content: `Rule created successfully in ${format} format`,
+      content: `Rule created successfully`,
     },
   ];
 };

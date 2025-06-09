@@ -1,15 +1,12 @@
+import { streamResponse, streamSse } from "@continuedev/fetch";
 import {
   ChatMessage,
   Chunk,
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
-import {
-  fromChatCompletionChunk,
-} from "../openaiTypeConverters.js";
-import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse, streamSse } from "../stream.js";
+import { fromChatCompletionChunk } from "../openaiTypeConverters.js";
 
 let watsonxToken = {
   expiration: 0,
@@ -86,7 +83,7 @@ class WatsonX extends BaseLLM {
   }
 
   _getEndpoint(endpoint: string): string {
-      return `${this.apiBase}/ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}/` : ""}text/${endpoint}_stream?version=${this.apiVersion}`
+    return `${this.apiBase}/ml/v1/${this.deploymentId ? `deployments/${this.deploymentId}/` : ""}text/${endpoint}_stream?version=${this.apiVersion}`;
   }
 
   static providerName = "watsonx";
@@ -182,7 +179,6 @@ class WatsonX extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-
     await this.updateWatsonxToken();
 
     const stopSequences = options.stop?.slice(0, 6) ?? [];
@@ -214,44 +210,38 @@ class WatsonX extends BaseLLM {
       payload.project_id = this.projectId;
     }
 
-    var response = await this.fetch(url, {
+    const response = await this.fetch(url, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
       signal,
     });
 
-    if (!response.ok || response.body === null) {
-      throw new Error(
-        "Something went wrong. No response received, check your connection",
-      );
-    } else {
-      for await (const value of streamResponse(response)) {
-        const lines = value.split("\n");
-        let generatedChunk = "";
-        let generatedTextIndex = undefined;
-        lines.forEach((el: string) => {
-          // console.log(`${el}`);
-          if (el.startsWith("id:")) {
-            generatedTextIndex = parseInt(el.replace(/^id:\s+/, ""));
-            if (isNaN(generatedTextIndex)) {
-              console.error(`Unable to parse stream chunk ID: ${el}`);
-            }
-          } else if (el.startsWith("data:")) {
-            const dataStr = el.replace(/^data:\s+/, "");
-            try {
-              const data = JSON.parse(dataStr);
-              data.results.forEach((result: any) => {
-                generatedChunk += result.generated_text || "";
-              });
-            } catch (e) {
-              // parsing error is expected with streaming response
-              // console.error(`Error parsing JSON string: ${dataStr}`, e);
-            }
+    for await (const value of streamResponse(response)) {
+      const lines = value.split("\n");
+      let generatedChunk = "";
+      let generatedTextIndex = undefined;
+      lines.forEach((el: string) => {
+        // console.log(`${el}`);
+        if (el.startsWith("id:")) {
+          generatedTextIndex = parseInt(el.replace(/^id:\s+/, ""));
+          if (isNaN(generatedTextIndex)) {
+            console.error(`Unable to parse stream chunk ID: ${el}`);
           }
-        });
-        yield generatedChunk
-      }
+        } else if (el.startsWith("data:")) {
+          const dataStr = el.replace(/^data:\s+/, "");
+          try {
+            const data = JSON.parse(dataStr);
+            data.results.forEach((result: any) => {
+              generatedChunk += result.generated_text || "";
+            });
+          } catch (e) {
+            // parsing error is expected with streaming response
+            // console.error(`Error parsing JSON string: ${dataStr}`, e);
+          }
+        }
+      });
+      yield generatedChunk;
     }
   }
 
@@ -267,7 +257,7 @@ class WatsonX extends BaseLLM {
     const headers = this._getHeaders();
 
     const payload: any = {
-        messages: messages,
+      messages: messages,
       max_tokens: options.maxTokens ?? 1024,
       stop: stopSequences,
       frequency_penalty: options.frequencyPenalty || 1,
@@ -281,36 +271,30 @@ class WatsonX extends BaseLLM {
 
     if (!!options.temperature) {
       payload.temperature = options.temperature;
-     }
+    }
     if (!!options.topP) {
       payload.top_p = options.topP;
     }
     if (!!options.tools) {
       payload.tools = options.tools;
       if (options.toolChoice) {
-          payload.tool_choice = options.toolChoice;
+        payload.tool_choice = options.toolChoice;
       } else {
-          payload.tool_choice_option = "auto";
+        payload.tool_choice_option = "auto";
       }
     }
 
-    var response = await this.fetch(url, {
+    const response = await this.fetch(url, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
       signal,
     });
 
-    if (!response.ok || response.body === null) {
-      throw new Error(
-        "Something went wrong. No response received, check your connection",
-      );
-    } else {
-      for await (const value of streamSse(response)) {
-          const chunk = fromChatCompletionChunk(value);
-          if (chunk) {
-            yield chunk;
-          }
+    for await (const value of streamSse(response)) {
+      const chunk = fromChatCompletionChunk(value);
+      if (chunk) {
+        yield chunk;
       }
     }
   }

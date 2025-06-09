@@ -28,6 +28,7 @@ import {
   GeminiChatContentPart,
   GeminiToolFunctionDeclaration,
 } from "../util/gemini-types.js";
+import { safeParseArgs } from "../util/parseArgs.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -125,7 +126,10 @@ export class GeminiApi implements BaseLlmApi {
               functionCall: {
                 id: toolCall.id,
                 name: toolCall.function.name,
-                args: JSON.parse(toolCall.function.arguments || "{}"),
+                args: safeParseArgs(
+                  toolCall.function.arguments,
+                  `Call: ${toolCall.function.name} ${toolCall.id}`,
+                ),
               },
             })),
           };
@@ -287,9 +291,10 @@ export class GeminiApi implements BaseLlmApi {
           throw new Error(data.error.message);
         }
 
-        const content = data?.candidates?.[0]?.content;
-        if (content) {
-          for (const part of content.parts) {
+        // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
+        const contentParts = data?.candidates?.[0]?.content?.parts;
+        if (contentParts) {
+          for (const part of contentParts) {
             if ("text" in part) {
               yield chatChunk({
                 content: part.text,

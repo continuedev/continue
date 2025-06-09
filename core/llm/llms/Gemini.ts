@@ -1,3 +1,4 @@
+import { streamResponse } from "@continuedev/fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
@@ -8,9 +9,9 @@ import {
   TextMessagePart,
   ToolCallDelta,
 } from "../../index.js";
+import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
 import {
   GeminiChatContent,
   GeminiChatContentPart,
@@ -250,11 +251,11 @@ class Gemini extends BaseLLM {
             };
             if (msg.toolCalls) {
               msg.toolCalls.forEach((toolCall) => {
-                if (toolCall.function?.name && toolCall.function?.arguments) {
+                if (toolCall.function?.name) {
                   assistantMsg.parts.push({
                     functionCall: {
                       name: toolCall.function.name,
-                      args: JSON.parse(toolCall.function.arguments),
+                      args: safeParseToolCallArgs(toolCall),
                     },
                   });
                 }
@@ -342,13 +343,13 @@ class Gemini extends BaseLLM {
           throw new Error(data.error.message);
         }
 
-        // Check for existence of each level before accessing the final 'text' property
-        const content = data?.candidates?.[0]?.content;
-        if (content) {
+        // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
+        const contentParts = data?.candidates?.[0]?.content?.parts;
+        if (contentParts) {
           const textParts: MessagePart[] = [];
           const toolCalls: ToolCallDelta[] = [];
 
-          for (const part of content.parts) {
+          for (const part of contentParts) {
             if ("text" in part) {
               textParts.push({ type: "text", text: part.text });
             } else if ("functionCall" in part) {
@@ -438,6 +439,9 @@ class Gemini extends BaseLLM {
       body: JSON.stringify(body),
       signal,
     });
+    if (response.status === 499) {
+      return; // Aborted by user
+    }
     const data = await response.json();
     yield { role: "assistant", content: data.candidates[0].content };
   }

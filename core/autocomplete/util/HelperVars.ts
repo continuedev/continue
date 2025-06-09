@@ -43,7 +43,6 @@ export class HelperVars {
     if (this._fileContents !== undefined) {
       return;
     }
-
     this.workspaceUris = await this.ide.getWorkspaceDirs();
 
     this._fileContents =

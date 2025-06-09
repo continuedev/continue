@@ -21,7 +21,7 @@ const ListboxButton = React.forwardRef<HTMLButtonElement, ListboxButtonProps>(
         ref={ref}
         {...props}
         className={cn(
-          "border-vsc-input-border bg-vsc-input-background text-vsc-foreground m-0 flex flex-1 cursor-pointer flex-row items-center gap-1 border border-solid px-1 py-0.5 text-left transition-colors duration-200",
+          "bg-vsc-input-background text-vsc-foreground border-border m-0 flex flex-1 cursor-pointer flex-row items-center gap-1 border border-solid px-1 py-0.5 text-left transition-colors duration-200",
           props.className,
         )}
         style={{
@@ -72,7 +72,7 @@ const ListboxOption = React.forwardRef<HTMLLIElement, ListboxOptionProps>(
         ref={ref}
         {...props}
         className={cn(
-          "text-vsc-foreground flex select-none flex-row items-center justify-between px-2 py-1",
+          "text-foreground flex select-none flex-row items-center justify-between px-2 py-1",
           props.disabled
             ? "opacity-50"
             : "background-transparent hover:bg-list-active hover:text-list-active-foreground cursor-pointer opacity-100",

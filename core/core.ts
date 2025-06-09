@@ -14,7 +14,7 @@ import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
-import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
+import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
@@ -34,34 +34,36 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
+  CompleteOnboardingPayload,
   ContextItemWithId,
-  DiffLine,
   IdeSettings,
   ModelDescription,
   RangeInFile,
   type ContextItem,
   type ContextItemId,
   type IDE,
-  type IndexingProgressUpdate,
 } from ".";
 
 import { ConfigYaml } from "@continuedev/config-yaml";
+import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import {
-  setupBestConfig,
   setupLocalConfig,
+  setupProviderConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
-import { LLMError } from "./llm";
 import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { StreamAbortManager } from "./util/abortManager";
 
 // This function is used for jetbrains inline edit and apply
 async function* streamDiffLinesGenerator(
@@ -119,19 +121,24 @@ async function* streamDiffLinesGenerator(
 
 export class Core {
   configHandler: ConfigHandler;
-  codebaseIndexerPromise: Promise<CodebaseIndexer>;
+  codeBaseIndexer: CodebaseIndexer;
   completionProvider: CompletionProvider;
-  continueServerClientPromise: Promise<ContinueServerClient>;
-  codebaseIndexingState: IndexingProgressUpdate;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
 
-  private readonly indexingPauseToken = new PauseToken(
-    this.globalContext.get("indexingPaused") === true,
-  );
-
-  private abortedMessageIds: Set<string> = new Set();
+  private messageAbortControllers = new Map<string, AbortController>();
+  private addMessageAbortController(id: string): AbortController {
+    const controller = new AbortController();
+    this.messageAbortControllers.set(id, controller);
+    controller.signal.addEventListener("abort", () => {
+      this.messageAbortControllers.delete(id);
+    });
+    return controller;
+  }
+  private abortById(messageId: string) {
+    this.messageAbortControllers.get(messageId)?.abort();
+  }
 
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
@@ -157,12 +164,6 @@ export class Core {
     // Ensure .continue directory is created
     migrateV1DevDataFiles();
 
-    this.codebaseIndexingState = {
-      status: "loading",
-      desc: "loading",
-      progress: 0,
-    };
-
     const ideInfoPromise = messenger.request("getIdeInfo", undefined);
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
@@ -186,6 +187,13 @@ export class Core {
     MCPManagerSingleton.getInstance().onConnectionsRefreshed = async () => {
       await this.configHandler.reloadConfig();
     };
+
+    this.codeBaseIndexer = new CodebaseIndexer(
+      this.configHandler,
+      this.ide,
+      this.messenger,
+      this.globalContext.get("indexingPaused"),
+    );
 
     this.configHandler.onConfigUpdate(async (result) => {
       const serializedResult = await this.configHandler.getSerializedConfig();
@@ -213,38 +221,17 @@ export class Core {
     dataLogger.ideInfoPromise = ideInfoPromise;
     dataLogger.ideSettingsPromise = ideSettingsPromise;
 
-    // Codebase Indexer and ContinueServerClient depend on IdeSettings
-    let codebaseIndexerResolve: (_: any) => void | undefined;
-    this.codebaseIndexerPromise = new Promise(
-      async (resolve) => (codebaseIndexerResolve = resolve),
-    );
-
-    let continueServerClientResolve: (_: any) => void | undefined;
-    this.continueServerClientPromise = new Promise(
-      (resolve) => (continueServerClientResolve = resolve),
-    );
-
     void ideSettingsPromise.then((ideSettings) => {
       const continueServerClient = new ContinueServerClient(
         ideSettings.remoteConfigServerUrl,
         ideSettings.userToken,
-      );
-      continueServerClientResolve(continueServerClient);
-
-      codebaseIndexerResolve(
-        new CodebaseIndexer(
-          this.configHandler,
-          this.ide,
-          this.indexingPauseToken,
-          continueServerClient,
-        ),
       );
 
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
-          this.indexingPauseToken.paused = true;
+          this.codeBaseIndexer.paused = true;
           void this.messenger.request("indexProgress", {
             progress: 0,
             desc: "Initial Indexing Skipped",
@@ -253,7 +240,7 @@ export class Core {
           return;
         }
 
-        void this.refreshCodebaseIndex(dirs);
+        void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
       });
     });
 
@@ -300,7 +287,7 @@ export class Core {
     });
 
     on("abort", (msg) => {
-      this.abortedMessageIds.add(msg.messageId);
+      this.abortById(msg.data ?? msg.messageId);
     });
 
     on("ping", (msg) => {
@@ -405,6 +392,10 @@ export class Core {
       await this.messenger.request("openUrl", url);
     });
 
+    on("controlPlane/getFreeTrialStatus", async (msg) => {
+      return this.configHandler.controlPlaneClient.getFreeTrialStatus();
+    });
+
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });
@@ -469,27 +460,28 @@ export class Core {
       }
     });
 
-    on("llm/streamChat", (msg) =>
-      llmStreamChat(
+    on("llm/streamChat", (msg) => {
+      const abortController = this.addMessageAbortController(msg.messageId);
+      return llmStreamChat(
         this.configHandler,
-        this.abortedMessageIds,
+        abortController,
         msg,
         this.ide,
         this.messenger,
-      ),
-    );
+      );
+    });
 
     on("llm/complete", async (msg) => {
-      const model = (await this.configHandler.loadConfig()).config
-        ?.selectedModelByRole.chat;
-
+      const { config } = await this.configHandler.loadConfig();
+      const model = config?.selectedModelByRole.chat;
       if (!model) {
         throw new Error("No chat model selected");
       }
+      const abortController = this.addMessageAbortController(msg.messageId);
 
       const completion = await model.complete(
         msg.data.prompt,
-        new AbortController().signal,
+        abortController.signal,
         msg.data.completionOptions,
       );
       return completion;
@@ -531,11 +523,49 @@ export class Core {
       this.completionProvider.cancel();
     });
 
-    on("streamDiffLines", (msg) =>
-      streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
-    );
+    on("streamDiffLines", async (msg) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Failed to load config");
+      }
 
-    on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
+      const { data } = msg;
+
+      // Title can be an edit, chat, or apply model
+      // Fall back to chat
+      const llm =
+        config.modelsByRole.edit.find((m) => m.title === data.modelTitle) ??
+        config.modelsByRole.apply.find((m) => m.title === data.modelTitle) ??
+        config.modelsByRole.chat.find((m) => m.title === data.modelTitle) ??
+        config.selectedModelByRole.chat;
+
+      if (!llm) {
+        throw new Error("No model selected");
+      }
+
+      return streamDiffLines({
+        highlighted: data.highlighted,
+        prefix: data.prefix,
+        suffix: data.suffix,
+        llm,
+        // rules included for edit, NOT apply
+        rulesToInclude: data.includeRulesInSystemMessage
+          ? config.rules
+          : undefined,
+        input: data.input,
+        language: data.language,
+        onlyOneInsertion: false,
+        overridePrompt: undefined,
+        abortControllerId: data.fileUri ?? "current-file-stream", // not super important since currently cancelling apply will cancel all streams it's one file at a time
+      });
+    });
+
+    on("cancelApply", async (msg) => {
+      const abortManager = StreamAbortManager.getInstance();
+      abortManager.clear();
+    });
+
+    on("onboarding/complete", this.handleCompleteOnboarding.bind(this));
 
     on("addAutocompleteModel", this.handleAddAutocompleteModel.bind(this));
 
@@ -555,25 +585,24 @@ export class Core {
       }
       walkDirCache.invalidate();
       if (data?.shouldClearIndexes) {
-        const codebaseIndexer = await this.codebaseIndexerPromise;
-        await codebaseIndexer.clearIndexes();
+        await this.codeBaseIndexer.clearIndexes();
       }
 
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
-      await this.refreshCodebaseIndex(dirs);
+      await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
       this.globalContext.update("indexingPaused", msg.data);
-      this.indexingPauseToken.paused = msg.data;
+      // Update using the new setter instead of token
+      this.codeBaseIndexer.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.codebaseIndexingState.status !== "loading") {
-        void this.messenger.request(
-          "indexProgress",
-          this.codebaseIndexingState,
-        );
+      const currentState = this.codeBaseIndexer.currentIndexingState;
+
+      if (currentState.status !== "loading") {
+        void this.messenger.request("indexProgress", currentState);
       }
     });
 
@@ -593,7 +622,7 @@ export class Core {
         });
         const { config } = await this.configHandler.loadConfig();
         if (config && !config.disableIndexing) {
-          await this.refreshCodebaseIndexFiles(toRefresh);
+          await this.codeBaseIndexer.refreshCodebaseIndexFiles(toRefresh);
         }
       }
     };
@@ -754,7 +783,8 @@ export class Core {
         this.messenger.send("toolCallPartialOutput", params);
       };
 
-      return await callTool(tool, toolCall.function.arguments, {
+      return await callTool(tool, toolCall, {
+        config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
         fetch: (url, init) =>
@@ -781,6 +811,11 @@ export class Core {
         return isBackgrounded; // Return true to indicate the message was handled successfully
       },
     );
+
+    on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
+      const isValid = setMdmLicenseKey(licenseKey);
+      return isValid;
+    });
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -840,6 +875,8 @@ export class Core {
     uris?: string[];
   }>): Promise<void> {
     if (data?.uris?.length) {
+      const diffCache = GitDiffCache.getInstance(getDiffFn(this.ide));
+      diffCache.invalidate();
       walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
       for (const uri of data.uris) {
         const currentProfileUri =
@@ -885,7 +922,7 @@ export class Core {
             // Reindex the file
             const ignore = await shouldIgnore(uri, this.ide);
             if (!ignore) {
-              await this.refreshCodebaseIndexFiles([uri]);
+              await this.codeBaseIndexer.refreshCodebaseIndexFiles([uri]);
             }
           }
         }
@@ -924,26 +961,25 @@ export class Core {
     }
   }
 
-  private async handleCompleteOnboarding(msg: Message<{ mode: string }>) {
-    const mode = msg.data.mode;
-
-    if (mode === "Custom") {
-      return;
-    }
+  private async handleCompleteOnboarding(
+    msg: Message<CompleteOnboardingPayload>,
+  ) {
+    const { mode, provider, apiKey } = msg.data;
 
     let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
     switch (mode) {
-      case "Local":
+      case OnboardingModes.LOCAL:
         editConfigYamlCallback = setupLocalConfig;
         break;
 
-      case "Quickstart":
-        editConfigYamlCallback = setupQuickstartConfig;
-        break;
-
-      case "Best":
-        editConfigYamlCallback = setupBestConfig;
+      case OnboardingModes.API_KEY:
+        if (provider && apiKey) {
+          editConfigYamlCallback = (config: ConfigYaml) =>
+            setupProviderConfig(config, provider, apiKey);
+        } else {
+          editConfigYamlCallback = setupQuickstartConfig;
+        }
         break;
 
       default:
@@ -1056,100 +1092,4 @@ export class Core {
       return [];
     }
   };
-
-  private indexingCancellationController: AbortController | undefined;
-  private async sendIndexingErrorTelemetry(update: IndexingProgressUpdate) {
-    console.debug(
-      "Indexing failed with error: ",
-      update.desc,
-      update.debugInfo,
-    );
-    void Telemetry.capture(
-      "indexing_error",
-      {
-        error: update.desc,
-        stack: update.debugInfo,
-      },
-      false,
-    );
-  }
-
-  private async refreshCodebaseIndex(paths: string[]) {
-    if (this.indexingCancellationController) {
-      this.indexingCancellationController.abort();
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshDirs(paths, this.indexingCancellationController.signal)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index directories : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  private async refreshCodebaseIndexFiles(files: string[]) {
-    // Can be cancelled by codebase index but not vice versa
-    if (
-      this.indexingCancellationController &&
-      !this.indexingCancellationController.signal.aborted
-    ) {
-      return;
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshFiles(files)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index files : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  // private
-  handleIndexingError(e: any) {
-    if (e instanceof LLMError) {
-      // Need to report this specific error to the IDE for special handling
-      void this.messenger.request("reportError", e);
-    }
-    // broadcast indexing error
-    let updateToSend: IndexingProgressUpdate = {
-      progress: 0,
-      status: "failed",
-      desc: e.message,
-    };
-    void this.messenger.request("indexProgress", updateToSend);
-    this.codebaseIndexingState = updateToSend;
-    void this.sendIndexingErrorTelemetry(updateToSend);
-  }
 }

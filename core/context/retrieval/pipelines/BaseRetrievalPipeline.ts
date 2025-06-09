@@ -85,7 +85,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     }
 
     const tokens = this.getCleanedTrigrams(args.query).join(" OR ");
-    
+
     return await this.ftsIndex.retrieve({
       n,
       text: tokens,
