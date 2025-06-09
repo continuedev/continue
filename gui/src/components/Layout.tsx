@@ -132,7 +132,7 @@ const Layout = () => {
   useWebviewListener(
     "openOnboardingCard",
     async () => {
-      onboardingCard.open(OnboardingModes.PROVIDERS);
+      onboardingCard.open(OnboardingModes.API_KEY);
     },
     [],
   );

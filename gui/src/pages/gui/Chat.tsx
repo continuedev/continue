@@ -204,7 +204,7 @@ export function Chat() {
 
       // Card in chat will only show if no history
       // Also, note that platform card ignore the "Best", always opens to main tab
-      onboardingCard.open(OnboardingModes.PROVIDERS);
+      onboardingCard.open(OnboardingModes.API_KEY);
 
       //     // If history, show the dialog, which will automatically close if there is not history
       //     if (history.length) {

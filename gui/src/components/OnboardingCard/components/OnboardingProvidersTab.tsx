@@ -18,7 +18,7 @@ export function OnboardingProvidersTab({
   const formMethods = useForm();
   const dispatch = useAppDispatch();
   const { submitOnboarding } = useSubmitOnboarding(
-    OnboardingModes.PROVIDERS,
+    OnboardingModes.API_KEY,
     isDialog,
   );
 

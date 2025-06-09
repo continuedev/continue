@@ -890,7 +890,7 @@ export class Core {
         editConfigYamlCallback = setupLocalConfig;
         break;
 
-      case OnboardingModes.PROVIDERS:
+      case OnboardingModes.API_KEY:
         if (provider && apiKey) {
           editConfigYamlCallback = (config: ConfigYaml) =>
             setupProviderConfig(config, provider, apiKey);

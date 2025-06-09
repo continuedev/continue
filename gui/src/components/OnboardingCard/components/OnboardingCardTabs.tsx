@@ -9,7 +9,7 @@ interface OnboardingCardTabsProps {
 }
 
 const getTabIcon = (tabTitle: OnboardingModes) => {
-  if (tabTitle === OnboardingModes.PROVIDERS) {
+  if (tabTitle === OnboardingModes.API_KEY) {
     return <KeyIcon className="h-4 w-4" />;
   }
   if (tabTitle === OnboardingModes.LOCAL) {
