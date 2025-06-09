@@ -4,49 +4,22 @@ import { IDE } from "../..";
 import { joinPathsToUri } from "../../util/uri";
 import { RULE_FILE_EXTENSION, createRuleMarkdown } from "../markdown";
 
-export function blockTypeToSingular(blockType: BlockType): string {
-  switch (blockType) {
-    case "context":
-      return "context";
-    case "models":
-      return "model";
-    case "rules":
-      return "rule";
-    case "docs":
-      return "doc";
-    case "prompts":
-      return "prompt";
-    case "mcpServers":
-      return "MCP server";
-    default:
-      // Fallback to slice approach for any new block types
-      return blockType.slice(0, -1);
-  }
-}
-
-export function blockTypeToFilename(blockType: BlockType): string {
-  switch (blockType) {
-    case "context":
-      return "context";
-    case "models":
-      return "model";
-    case "rules":
-      return "rule";
-    case "docs":
-      return "doc";
-    case "prompts":
-      return "prompt";
-    case "mcpServers":
-      return "mcp-server";
-    default:
-      // Fallback to slice approach for any new block types
-      return blockType.slice(0, -1);
-  }
-}
+const BLOCK_TYPE_CONFIG: Record<
+  BlockType,
+  { singular: string; filename: string }
+> = {
+  context: { singular: "context", filename: "context" },
+  models: { singular: "model", filename: "model" },
+  rules: { singular: "rule", filename: "rule" },
+  docs: { singular: "doc", filename: "doc" },
+  prompts: { singular: "prompt", filename: "prompt" },
+  mcpServers: { singular: "MCP server", filename: "mcp-server" },
+  data: { singular: "data", filename: "data" },
+};
 
 function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
   const configYaml: ConfigYaml = {
-    name: `New ${blockTypeToSingular(blockType)}`,
+    name: `New ${BLOCK_TYPE_CONFIG[blockType]?.singular}`,
     version: "0.0.1",
     schema: "v1",
   };
@@ -125,7 +98,7 @@ export async function findAvailableFilename(
   fileExists: (uri: string) => Promise<boolean>,
   extension?: string,
 ): Promise<string> {
-  const baseFilename = `new-${blockTypeToFilename(blockType)}`;
+  const baseFilename = `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
   const fileExtension = extension ?? getFileExtension(blockType);
   let counter = 0;
   let fileUri: string;

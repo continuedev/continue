@@ -1,34 +1,7 @@
 import { BlockType } from "@continuedev/config-yaml";
 import { describe, expect, test } from "@jest/globals";
 import { RULE_FILE_EXTENSION } from "../markdown";
-import {
-  blockTypeToFilename,
-  blockTypeToSingular,
-  findAvailableFilename,
-  getFileContent,
-} from "./workspaceBlocks";
-
-describe("blockTypeToSingular", () => {
-  test("converts block types to singular form correctly", () => {
-    expect(blockTypeToSingular("models")).toBe("model");
-    expect(blockTypeToSingular("context")).toBe("context");
-    expect(blockTypeToSingular("rules")).toBe("rule");
-    expect(blockTypeToSingular("docs")).toBe("doc");
-    expect(blockTypeToSingular("prompts")).toBe("prompt");
-    expect(blockTypeToSingular("mcpServers")).toBe("MCP server");
-  });
-});
-
-describe("blockTypeToFilename", () => {
-  test("converts block types to filename-safe singular form correctly", () => {
-    expect(blockTypeToFilename("models")).toBe("model");
-    expect(blockTypeToFilename("context")).toBe("context");
-    expect(blockTypeToFilename("rules")).toBe("rule");
-    expect(blockTypeToFilename("docs")).toBe("doc");
-    expect(blockTypeToFilename("prompts")).toBe("prompt");
-    expect(blockTypeToFilename("mcpServers")).toBe("mcp-server");
-  });
-});
+import { findAvailableFilename, getFileContent } from "./workspaceBlocks";
 
 describe("getFileContent", () => {
   test("returns markdown content for rules block type", () => {
