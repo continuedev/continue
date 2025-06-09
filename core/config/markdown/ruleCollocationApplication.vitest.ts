@@ -1,6 +1,12 @@
 import path from "path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ContextItemWithId, RuleWithSource, UserChatMessage } from "../..";
+import {
+  ContextItemId,
+  ContextItemWithId,
+  RuleWithSource,
+  UserChatMessage,
+} from "../..";
+
 import { getApplicableRules } from "../../llm/rules/getSystemMessageWithRules";
 
 describe("Rule Colocation Application", () => {
@@ -68,86 +74,82 @@ describe("Rule Colocation Application", () => {
   beforeEach(() => {
     // Setup user messages with different code blocks
     userMessageWithComponentFile = {
-      id: "1",
       role: "user",
       content:
         "Can you help me with this component file?\n```tsx src/components/Button.tsx\nexport const Button = () => {...}\n```",
-      createdAt: new Date().toISOString(),
     };
 
     userMessageWithComponentJsxFile = {
-      id: "1b",
       role: "user",
       content:
         "Can you help me with this JSX component file?\n```jsx src/components/OldButton.jsx\nexport const OldButton = () => {...}\n```",
-      createdAt: new Date().toISOString(),
     };
 
     userMessageWithReduxFile = {
-      id: "2",
       role: "user",
       content:
         'Can you help with this redux slice?\n```ts src/redux/userSlice.ts\nimport { createSlice } from "@reduxjs/toolkit";\n```',
-      createdAt: new Date().toISOString(),
     };
 
     userMessageWithRootFile = {
-      id: "3",
       role: "user",
       content:
         "Can you help with this utility file?\n```ts src/utils/helpers.ts\nexport const formatDate = (date) => {...}\n```",
-      createdAt: new Date().toISOString(),
     };
 
     userMessageWithApiUtilFile = {
-      id: "4",
       role: "user",
       content:
         "Can you help with this API utility file?\n```ts src/utils/api/requests.ts\nexport const fetchData = () => {...}\n```",
-      createdAt: new Date().toISOString(),
     };
 
     // Setup context items
     componentTsxContextItem = {
-      id: "context1",
+      id: { providerTitle: "file", itemId: "context1" } as ContextItemId,
       uri: { type: "file", value: "src/components/Button.tsx" },
       content: "export const Button = () => {...}",
-      retrievedAt: new Date().toISOString(),
+      name: "Button.tsx",
+      description: "Component file",
     };
 
     componentJsxContextItem = {
-      id: "context1b",
+      id: { providerTitle: "file", itemId: "context1b" } as ContextItemId,
       uri: { type: "file", value: "src/components/OldButton.jsx" },
       content: "export const OldButton = () => {...}",
-      retrievedAt: new Date().toISOString(),
+      name: "OldButton.jsx",
+      description: "Component file",
     };
 
     reduxContextItem = {
-      id: "context2",
+      id: { providerTitle: "file", itemId: "context2" } as ContextItemId,
       uri: { type: "file", value: "src/redux/userSlice.ts" },
       content: 'import { createSlice } from "@reduxjs/toolkit";',
-      retrievedAt: new Date().toISOString(),
+      name: "userSlice.ts",
+      description: "Redux slice",
     };
 
     rootContextItem = {
-      id: "context3",
+      id: { providerTitle: "file", itemId: "context3" } as ContextItemId,
       uri: { type: "file", value: "src/utils/helpers.ts" },
       content: "export const formatDate = (date) => {...}",
-      retrievedAt: new Date().toISOString(),
+      name: "helpers.ts",
+      description: "Utility file",
     };
 
     apiUtilContextItem = {
-      id: "context4",
+      id: { providerTitle: "file", itemId: "context4" } as ContextItemId,
       uri: { type: "file", value: "src/utils/api/requests.ts" },
       content: "export const fetchData = () => {...}",
-      retrievedAt: new Date().toISOString(),
+      name: "requests.ts",
+      description: "API utility file",
     };
 
     otherUtilContextItem = {
-      id: "context5",
+      id: { providerTitle: "file", itemId: "context5" } as ContextItemId,
       uri: { type: "file", value: "src/utils/format.ts" },
       content: "export const formatCurrency = (amount) => {...}",
-      retrievedAt: new Date().toISOString(),
+      name: "format.ts",
+      description: "Formatting utility",
     };
   });
 
@@ -338,17 +340,19 @@ describe("Rule Colocation Application", () => {
 
       // Create context items for different files
       const modelFileContext: ContextItemWithId = {
-        id: "models1",
+        id: { providerTitle: "file", itemId: "models1" } as ContextItemId,
         uri: { type: "file", value: "src/models/user.ts" },
         content: "export interface User {...}",
-        retrievedAt: new Date().toISOString(),
+        name: "user.ts",
+        description: "User model",
       };
 
       const serviceFileContext: ContextItemWithId = {
-        id: "services1",
+        id: { providerTitle: "file", itemId: "services1" } as ContextItemId,
         uri: { type: "file", value: "src/services/auth.ts" },
         content: "export const login = () => {...}",
-        retrievedAt: new Date().toISOString(),
+        name: "auth.ts",
+        description: "Auth service",
       };
 
       // Test with model file - should apply only the models rule

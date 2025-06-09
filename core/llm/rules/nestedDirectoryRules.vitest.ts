@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ContextItemWithId, RuleWithSource, UserChatMessage } from "../..";
+import {
+  ContextItemId,
+  ContextItemWithId,
+  RuleWithSource,
+  UserChatMessage,
+} from "../..";
 import { getApplicableRules } from "./getSystemMessageWithRules";
 
 describe("Nested directory rules application", () => {
@@ -23,13 +28,14 @@ describe("Nested directory rules application", () => {
   it("should apply nested directory rules to files in that directory", () => {
     // Create a context with a file in the nested directory
     const nestedFileContext: ContextItemWithId = {
-      id: "nested1",
+      id: { providerTitle: "file", itemId: "nested1" } as ContextItemId,
       uri: {
         type: "file",
         value: "manual-testing-sandbox/nested-folder/hellonested.py",
       },
       content: 'print("Hello nested")',
-      retrievedAt: new Date().toISOString(),
+      name: "hellonested.py",
+      description: "Nested file",
     };
 
     // Apply rules with the nested file context
@@ -48,11 +54,9 @@ describe("Nested directory rules application", () => {
   it("should also work with file references in messages", () => {
     // Message with a file reference in the nested directory
     const messageWithNestedFile: UserChatMessage = {
-      id: "msg1",
       role: "user",
       content:
         'Can you explain this file?\n```python manual-testing-sandbox/nested-folder/hellonested.py\nprint("Hello nested")\n```',
-      createdAt: new Date().toISOString(),
     };
 
     // Apply rules with the message containing a nested file reference
@@ -71,10 +75,11 @@ describe("Nested directory rules application", () => {
   it("should NOT apply nested directory rules to files outside that directory", () => {
     // Context with a file outside the nested directory
     const outsideFileContext: ContextItemWithId = {
-      id: "outside1",
+      id: { providerTitle: "file", itemId: "outside1" } as ContextItemId,
       uri: { type: "file", value: "src/utils/helper.ts" },
       content: "export const helper = () => {...}",
-      retrievedAt: new Date().toISOString(),
+      name: "helper.ts",
+      description: "Helper file",
     };
 
     // Apply rules with file context outside nested directory
@@ -112,26 +117,29 @@ describe("Nested directory rules application", () => {
 
     // A file in src/
     const srcPythonFileContext: ContextItemWithId = {
-      id: "python1",
+      id: { providerTitle: "file", itemId: "python1" } as ContextItemId,
       uri: { type: "file", value: "src/pythonfile.py" },
       content: 'print("Hello")',
-      retrievedAt: new Date().toISOString(),
+      name: "pythonfile.py",
+      description: "Python file in src",
     };
 
     // A file in utils/
     const utilsPythonFileContext: ContextItemWithId = {
-      id: "python2",
+      id: { providerTitle: "file", itemId: "python2" } as ContextItemId,
       uri: { type: "file", value: "utils/pythonfile.py" },
       content: 'print("Hello")',
-      retrievedAt: new Date().toISOString(),
+      name: "pythonfile.py",
+      description: "Python file in utils",
     };
 
     // A file in manual-testing-sandbox/
     const manualTestingPythonFileContext: ContextItemWithId = {
-      id: "python3",
+      id: { providerTitle: "file", itemId: "python3" } as ContextItemId,
       uri: { type: "file", value: "manual-testing-sandbox/pythonfile.py" },
       content: 'print("Hello")',
-      retrievedAt: new Date().toISOString(),
+      name: "pythonfile.py",
+      description: "Python file in manual-testing-sandbox",
     };
 
     // Apply src rule to src file - should match
