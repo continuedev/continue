@@ -35,7 +35,7 @@ Learn more in the [MCP deep dive](../../customize/deep-dives/mcp.mdx), and view 
 
 Rules blocks are instructions that your custom AI code assistant will always keep in mind - the contents of rules are inserted into the system message for all Chat requests. [Explore rules](https://hub.continue.dev/explore/rules) on the hub.
 
-Learn more in the [rules deep dive](../../customize/deep-dives/rules.md), and view [`rules`](../../reference.md#rules) in the YAML Reference for more details.
+Learn more in the [rules deep dive](../../customize/deep-dives/rules.mdx), and view [`rules`](../../reference.md#rules) in the YAML Reference for more details.
 
 ## Prompts
 
