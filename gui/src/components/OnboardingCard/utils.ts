@@ -1,4 +1,3 @@
-import { OnboardingModes } from "core/protocol/core";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { OnboardingCardState } from "./OnboardingCard";
 
@@ -25,7 +24,7 @@ export function isNewUserOnboarding() {
 
 export const defaultOnboardingCardState: OnboardingCardState = {
   show: false,
-  activeTab: OnboardingModes.API_KEY,
+  activeTab: undefined,
 };
 
 export enum OllamaConnectionStatuses {
