@@ -11,6 +11,7 @@ export class NodeGUI {
   private core: any;
   private messageHandler?: (type: string, data: any, messageId?: string) => Promise<any>;
   private handlers: Map<string, MessageHandler> = new Map(); // NEW
+  private clients: Set<any> = new Set(); // For SSE clients
 
   constructor(opts: { windowId: string }) {
     this.windowId = opts.windowId;
@@ -27,14 +28,81 @@ export class NodeGUI {
     this.core = core;
   }
 
+
+
+  /**
+* Handle an async iterator response, streaming results via SSE
+* @param response The async iterator response
+* @param respond Function to send SSE responses
+* @param res Express response object
+* @returns Promise that resolves when the iterator is complete
+*/
+  private async handleAsyncIterator(response: any, respond: (message: any) => void, res: any): Promise<any> {
+    try {
+      let next = await response.next();
+      while (!next.done) {
+        // Send intermediate results via SSE
+        respond({
+          done: false,
+          content: next.value,
+          status: "success"
+        });
+
+        next = await response.next();
+      }
+
+      // Send final result
+      const finalResponse = {
+        done: true,
+        content: next.value,
+        status: "success"
+      };
+
+      respond(finalResponse);
+
+      // return res.json(finalResponse);
+
+    } catch (e: any) {
+      const errorResponse = {
+        done: true,
+        error: e.message,
+        status: "error"
+      };
+      respond(errorResponse);
+      return res.json(errorResponse);
+    }
+  }
+
   private setupServer() {
     const app = express();
     const guiDir = path.resolve(__dirname, "../../../gui/dist");
     console.log("Serving assets from:", guiDir);
-    
+
     app.use("/assets", express.static(path.join(guiDir, "assets")));
-    
+
     app.use(bodyParser.json());
+
+    // Add SSE endpoint for server-to-client communication
+    app.get("/events", (req, res) => {
+      console.log("Client connected to SSE stream");
+
+      // Set headers for SSE
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      // Send an initial connection message
+      res.write("data: {\"connected\":true}\n\n");
+
+      // Add this client to our set
+      this.clients.add(res);
+
+      // Remove client when connection closes
+      req.on("close", () => {
+        console.log("Client disconnected from SSE stream");
+        this.clients.delete(res);
+      });
+    });
 
     app.get("/", (_req, res) => {
       console.log("GET / called in NodeGUI");
@@ -66,6 +134,26 @@ export class NodeGUI {
                   }
                 };
               }
+              
+            // Add SSE connection for server-to-client communication
+            const eventSource = new EventSource('/events');
+            eventSource.onmessage = function(event) {
+              try {
+                const message = JSON.parse(event.data);
+                // Dispatch as a window message event to be compatible with existing code
+                window.dispatchEvent(new MessageEvent('message', { data: message }));
+              } catch (err) {
+                console.error('Error processing SSE message:', err);
+              }
+            };
+            eventSource.onerror = function(err) {
+              console.error('EventSource error:', err);
+              // Try to reconnect after a delay
+              setTimeout(() => {
+                new EventSource('/events');
+              }, 3000);
+            };
+              
             window.ide = "node-ide";
             window.windowId = "${this.windowId}";
             window.vscMediaUrl = "/assets";
@@ -82,43 +170,99 @@ export class NodeGUI {
 
       const { messageType, data, messageId } = req.body;
       console.log("Received message:", messageType, data, messageId);
-      if (!messageType) return res.status(400).json({
-        done: true,
-        status: "error",
-        error: "Missing 'type'"
-      });
 
-      // FIXME - the communcation does not work
+      if (!messageType) {
+        return res.status(400).json({
+          done: true,
+          status: "error",
+          error: "Missing 'messageType'",
+        });
+      }
+
+      // Create a respond function that uses SSE for streaming responses
+      const respond = (message: any) => {
+        // For streaming responses, send via SSE
+        const responseMsg = {
+          messageId,
+          messageType,
+          data: message
+        };
+
+        // Send to all connected clients via SSE
+        this.clients.forEach(client => {
+          try {
+            client.write(`data: ${JSON.stringify(responseMsg)}\n\n`);
+          } catch (err) {
+            console.error("Error sending to client:", err);
+            this.clients.delete(client);
+          }
+        });
+      };
+
       try {
-        let result;
-        // console.log(`handlers are`, this.handlers);
+        let handler:
+          | ((msg: { data: any; messageId?: string }) => any)
+          | undefined;
+
         if (this.handlers.has(messageType)) {
-          result = await this.handlers.get(messageType)!({data, messageId});
-        } else if (this.core.messenger.externalTypeListeners.has(messageType)) {
-          // If the core has a messenger with external listeners, use that
-          result = await this.core.messenger.externalTypeListeners.get(messageType)?.(data, messageId);
-          console.log(`Using core.messenger for ${messageType}`, result);
+          handler = this.handlers.get(messageType)!;
+        } else if (this.core?.messenger?.externalTypeListeners.has(messageType)) {
+          handler = async ({ data }) =>
+            await this.core.messenger.externalTypeListeners.get(messageType)?.(data, messageId);
         } else if (this.messageHandler) {
-          result = await this.messageHandler(messageType, data, messageId);
+          handler = async ({ data }) =>
+            await this.messageHandler!(messageType, data, messageId);
         } else if (this.core?.invoke) {
-          result = await this.core.invoke(messageType, data);
-        } else {
-          throw new Error("No message handler or core.invoke available.");
+          handler = async ({ data }) => await this.core.invoke(messageType, data);
         }
 
+        if (!handler) {
+          throw new Error(`No handler found for messageType: ${messageType}`);
+        }
 
-        res.json({
-          done: true,
-          status: "success",
-          content: result
-        });
-        console.log("Response sent:", result);
+        const result = await handler({ data, messageId });
+
+        // ✅ Support async generators (e.g. llm/streamChat)
+        if (result && typeof result[Symbol.asyncIterator] === "function") {
+
+          this.handleAsyncIterator(result, respond, res)
+          // res.writeHead(200, {
+          //   "Content-Type": "application/json",
+          //   "Transfer-Encoding": "chunked",
+          // });
+
+          // for await (const chunk of result) {
+          //   res.write(
+          //     JSON.stringify({
+          //       done: false,
+          //       content: chunk,
+          //       status: "success",
+          //     }) + "\n"
+          //   );
+          // }
+
+          // res.end(
+          //   JSON.stringify({
+          //     done: true,
+          //     status: "success",
+          //   }) + "\n"
+          // );
+
+
+        }
+        else {
+          res.json({
+            done: true,
+            status: "success",
+            content: result,
+          });
+        }
       } catch (err: any) {
         console.error("Message handling error:", err);
         res.json({
           done: true,
           status: "error",
-          error: err.message ?? "Unknown error"
+          error: err.message ?? "Unknown error",
         });
       }
     });
@@ -139,9 +283,34 @@ export class NodeGUI {
     );
   }
 
-  public sendToClient(type: string, args: any) {
-    this.core?.invoke?.(type, args);
-    // const handler = this.core.messenger.externalTypeListeners.get(type);
+  // Updated to support server-to-client communication via SSE
+  public request(type: string, data: any, messageId: string = crypto.randomBytes(16).toString("hex")): Promise<any> {
+    console.log(`Sending message to clients: ${type}`, data);
+
+    const message = {
+      messageId,
+      messageType: type,
+      data
+    };
+
+    // Send to all connected clients
+    this.clients.forEach(client => {
+      try {
+        client.write(`data: ${JSON.stringify(message)}\n\n`);
+      } catch (err) {
+        console.error("Error sending to client:", err);
+        // Remove problematic clients
+        this.clients.delete(client);
+      }
+    });
+
+    // For backward compatibility, also try to invoke on core if available
+    if (this.core?.invoke) {
+      this.core.invoke(type, data);
+    }
+
+    // Return a resolved promise for compatibility with the caller
+    return Promise.resolve(undefined);
   }
 
   // Optional, for Core → GUI future comms

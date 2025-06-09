@@ -66,8 +66,8 @@ export class NodeMessenger {
     // --- PASS-THROUGH: Core → GUI ---
     CORE_TO_WEBVIEW_PASS_THROUGH.forEach((messageType) => {
       this.messenger.externalOn(messageType, async (msg) => {
-        // nodeGui.request should forward to GUI and return a promise if a response is expected
-        return this.nodeGui.sendToClient(messageType, msg.data);
+        // Forward message to GUI clients via SSE
+        return this.nodeGui.request(messageType, msg.data, msg.messageId);
       });
     });
 
@@ -102,5 +102,5 @@ export class NodeMessenger {
   // ) {
   //   this.protocol.on(messageType, handler);
   // }
-  
+
 }
