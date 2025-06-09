@@ -1,222 +1,387 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { RuleWithSource, ContextItemWithId, UserChatMessage } from '../..';
-import { getApplicableRules } from '../../llm/rules/getSystemMessageWithRules';
+import path from "path";
+import { beforeEach, describe, expect, it } from "vitest";
+import { ContextItemWithId, RuleWithSource, UserChatMessage } from "../..";
+import { getApplicableRules } from "../../llm/rules/getSystemMessageWithRules";
 
-describe('Rule Colocation Application', () => {
+describe("Rule Colocation Application", () => {
   // Create a set of rules in different directories
   const rules: RuleWithSource[] = [
-    // Root level rule
+    // Root level rule - should apply everywhere
     {
-      name: 'Root Rule',
-      rule: 'Follow project standards',
-      source: 'rules-block',
-      ruleFile: '.continue/rules.md',
+      name: "Root Rule",
+      rule: "Follow project standards",
+      source: "rules-block",
+      ruleFile: ".continue/rules.md",
     },
-    // Nested directory rule - should only apply to files within that directory
+
+    // Nested directory rule without globs - should only apply to files in that directory
     {
-      name: 'React Components Rule',
-      rule: 'Use functional components with hooks',
-      source: 'rules-block',
-      ruleFile: 'src/components/rules.md',
+      name: "React Components Rule",
+      rule: "Use functional components with hooks",
+      source: "rules-block",
+      ruleFile: "src/components/rules.md",
       // No explicit globs - should implicitly only apply to files in that directory
     },
-    // Another nested directory rule with explicit globs
+
+    // Nested directory rule with explicit globs - should apply to matching files only
     {
-      name: 'Redux Rule',
-      rule: 'Use Redux Toolkit for state management',
-      globs: 'src/redux/**/*.{ts,tsx}',
-      source: 'rules-block',
-      ruleFile: 'src/redux/rules.md',
-    }
+      name: "Redux Rule",
+      rule: "Use Redux Toolkit for state management",
+      globs: "src/redux/**/*.{ts,tsx}",
+      source: "rules-block",
+      ruleFile: "src/redux/rules.md",
+    },
+
+    // Directory rule with specific file extension glob
+    {
+      name: "TypeScript Components Rule",
+      rule: "Use TypeScript with React components",
+      globs: "**/*.tsx", // Only apply to .tsx files
+      source: "rules-block",
+      ruleFile: "src/components/rules.md",
+    },
+
+    // Rule for a specific subdirectory with its own glob
+    {
+      name: "API Utils Rule",
+      rule: "Follow API utility conventions",
+      globs: "**/*.ts", // Only TypeScript files in this directory
+      source: "rules-block",
+      ruleFile: "src/utils/api/rules.md",
+    },
   ];
 
   // Mock user message and context for various scenarios
   let userMessageWithComponentFile: UserChatMessage;
   let userMessageWithReduxFile: UserChatMessage;
   let userMessageWithRootFile: UserChatMessage;
-  
-  let componentContextItem: ContextItemWithId;
+  let userMessageWithApiUtilFile: UserChatMessage;
+  let userMessageWithComponentJsxFile: UserChatMessage;
+
+  let componentTsxContextItem: ContextItemWithId;
+  let componentJsxContextItem: ContextItemWithId;
   let reduxContextItem: ContextItemWithId;
   let rootContextItem: ContextItemWithId;
+  let apiUtilContextItem: ContextItemWithId;
+  let otherUtilContextItem: ContextItemWithId;
 
   beforeEach(() => {
     // Setup user messages with different code blocks
     userMessageWithComponentFile = {
-      id: '1',
-      role: 'user',
-      content: 'Can you help me with this component file?\n```tsx src/components/Button.tsx\nexport const Button = () => {...}\n```',
+      id: "1",
+      role: "user",
+      content:
+        "Can you help me with this component file?\n```tsx src/components/Button.tsx\nexport const Button = () => {...}\n```",
+      createdAt: new Date().toISOString(),
+    };
+
+    userMessageWithComponentJsxFile = {
+      id: "1b",
+      role: "user",
+      content:
+        "Can you help me with this JSX component file?\n```jsx src/components/OldButton.jsx\nexport const OldButton = () => {...}\n```",
       createdAt: new Date().toISOString(),
     };
 
     userMessageWithReduxFile = {
-      id: '2',
-      role: 'user',
-      content: 'Can you help with this redux slice?\n```ts src/redux/userSlice.ts\nimport { createSlice } from "@reduxjs/toolkit";\n```',
+      id: "2",
+      role: "user",
+      content:
+        'Can you help with this redux slice?\n```ts src/redux/userSlice.ts\nimport { createSlice } from "@reduxjs/toolkit";\n```',
       createdAt: new Date().toISOString(),
     };
 
     userMessageWithRootFile = {
-      id: '3',
-      role: 'user',
-      content: 'Can you help with this utility file?\n```ts src/utils/helpers.ts\nexport const formatDate = (date) => {...}\n```',
+      id: "3",
+      role: "user",
+      content:
+        "Can you help with this utility file?\n```ts src/utils/helpers.ts\nexport const formatDate = (date) => {...}\n```",
+      createdAt: new Date().toISOString(),
+    };
+
+    userMessageWithApiUtilFile = {
+      id: "4",
+      role: "user",
+      content:
+        "Can you help with this API utility file?\n```ts src/utils/api/requests.ts\nexport const fetchData = () => {...}\n```",
       createdAt: new Date().toISOString(),
     };
 
     // Setup context items
-    componentContextItem = {
-      id: 'context1',
-      uri: { type: 'file', value: 'src/components/Button.tsx' },
-      content: 'export const Button = () => {...}',
+    componentTsxContextItem = {
+      id: "context1",
+      uri: { type: "file", value: "src/components/Button.tsx" },
+      content: "export const Button = () => {...}",
+      retrievedAt: new Date().toISOString(),
+    };
+
+    componentJsxContextItem = {
+      id: "context1b",
+      uri: { type: "file", value: "src/components/OldButton.jsx" },
+      content: "export const OldButton = () => {...}",
       retrievedAt: new Date().toISOString(),
     };
 
     reduxContextItem = {
-      id: 'context2',
-      uri: { type: 'file', value: 'src/redux/userSlice.ts' },
+      id: "context2",
+      uri: { type: "file", value: "src/redux/userSlice.ts" },
       content: 'import { createSlice } from "@reduxjs/toolkit";',
       retrievedAt: new Date().toISOString(),
     };
 
     rootContextItem = {
-      id: 'context3',
-      uri: { type: 'file', value: 'src/utils/helpers.ts' },
-      content: 'export const formatDate = (date) => {...}',
+      id: "context3",
+      uri: { type: "file", value: "src/utils/helpers.ts" },
+      content: "export const formatDate = (date) => {...}",
+      retrievedAt: new Date().toISOString(),
+    };
+
+    apiUtilContextItem = {
+      id: "context4",
+      uri: { type: "file", value: "src/utils/api/requests.ts" },
+      content: "export const fetchData = () => {...}",
+      retrievedAt: new Date().toISOString(),
+    };
+
+    otherUtilContextItem = {
+      id: "context5",
+      uri: { type: "file", value: "src/utils/format.ts" },
+      content: "export const formatCurrency = (amount) => {...}",
       retrievedAt: new Date().toISOString(),
     };
   });
 
-  describe('Directory-specific rule application', () => {
-    it('should apply root rules to all files', () => {
+  describe("Basic directory-specific rule application", () => {
+    it("should apply root rules to all files", () => {
       // Test with component file
       let applicableRules = getApplicableRules(
         userMessageWithComponentFile,
         rules,
-        [componentContextItem]
+        [componentTsxContextItem],
       );
-      expect(applicableRules.map(r => r.name)).toContain('Root Rule');
+      expect(applicableRules.map((r) => r.name)).toContain("Root Rule");
 
       // Test with redux file
-      applicableRules = getApplicableRules(
-        userMessageWithReduxFile,
-        rules,
-        [reduxContextItem]
-      );
-      expect(applicableRules.map(r => r.name)).toContain('Root Rule');
+      applicableRules = getApplicableRules(userMessageWithReduxFile, rules, [
+        reduxContextItem,
+      ]);
+      expect(applicableRules.map((r) => r.name)).toContain("Root Rule");
 
       // Test with root-level file
-      applicableRules = getApplicableRules(
-        userMessageWithRootFile, 
-        rules,
-        [rootContextItem]
-      );
-      expect(applicableRules.map(r => r.name)).toContain('Root Rule');
+      applicableRules = getApplicableRules(userMessageWithRootFile, rules, [
+        rootContextItem,
+      ]);
+      expect(applicableRules.map((r) => r.name)).toContain("Root Rule");
     });
+  });
 
-    it('should only apply component rules to component files', () => {
-      // Test with component file - should apply the rule
-      let applicableRules = getApplicableRules(
-        userMessageWithComponentFile,
-        rules,
-        [componentContextItem]
-      );
-      expect(applicableRules.map(r => r.name)).toContain('React Components Rule');
-
-      // Test with redux file - should NOT apply the component rule
-      applicableRules = getApplicableRules(
-        userMessageWithReduxFile,
-        rules,
-        [reduxContextItem]
-      );
-      
-      // THIS WILL FAIL - Current implementation doesn't restrict by directory
-      expect(applicableRules.map(r => r.name)).not.toContain('React Components Rule');
-
-      // Test with root-level file - should NOT apply the component rule
-      applicableRules = getApplicableRules(
-        userMessageWithRootFile,
-        rules,
-        [rootContextItem]
-      );
-      
-      // THIS WILL FAIL - Current implementation doesn't restrict by directory
-      expect(applicableRules.map(r => r.name)).not.toContain('React Components Rule');
-    });
-
-    it('should only apply redux rules to redux files', () => {
-      // Test with redux file - should apply the rule
-      let applicableRules = getApplicableRules(
-        userMessageWithReduxFile,
-        rules,
-        [reduxContextItem]
-      );
-      expect(applicableRules.map(r => r.name)).toContain('Redux Rule');
-
-      // Test with component file - should NOT apply the redux rule
-      applicableRules = getApplicableRules(
-        userMessageWithComponentFile,
-        rules,
-        [componentContextItem]
-      );
-      expect(applicableRules.map(r => r.name)).not.toContain('Redux Rule');
-
-      // Test with root-level file - should NOT apply the redux rule
-      applicableRules = getApplicableRules(
-        userMessageWithRootFile,
-        rules,
-        [rootContextItem]
-      );
-      expect(applicableRules.map(r => r.name)).not.toContain('Redux Rule');
-    });
-
-    it('should automatically infer glob patterns from rule file location if none specified', () => {
-      // This test demonstrates the expected behavior we want:
-      // When a rule.md file is placed in a directory without specifying globs,
-      // it should automatically be applied only to files in that directory and subdirectories
-      
-      // Create a rule without explicit globs but with a file path in a nested directory
-      const inferredGlobRule: RuleWithSource = {
-        name: 'Models Rule',
-        rule: 'Follow data model conventions',
-        source: 'rules-block',
-        ruleFile: 'src/models/rules.md',
+  describe("Directory-specific rule application with implied globs", () => {
+    it("should only apply component rules to files in the component directory when no globs specified", () => {
+      // Create a rule without explicit globs but with a file path in the components directory
+      const impliedComponentRule: RuleWithSource = {
+        name: "Implied Components Rule",
+        rule: "Use React component best practices",
+        source: "rules-block",
+        ruleFile: "src/components/rules.md",
         // No explicit globs - should infer from directory
       };
 
-      // Create context with a file in the models directory
-      const modelFileContext: ContextItemWithId = {
-        id: 'context4',
-        uri: { type: 'file', value: 'src/models/user.ts' },
-        content: 'export interface User {...}',
-        retrievedAt: new Date().toISOString(),
-      };
-
-      // Create context with a file outside the models directory
-      const nonModelFileContext: ContextItemWithId = {
-        id: 'context5',
-        uri: { type: 'file', value: 'src/utils/api.ts' },
-        content: 'export const fetchData = () => {...}',
-        retrievedAt: new Date().toISOString(),
-      };
-
-      // Test with model file - should apply the rule
+      // Test with component file - should apply the rule
       let applicableRules = getApplicableRules(
-        undefined, // No user message needed
-        [inferredGlobRule],
-        [modelFileContext]
+        userMessageWithComponentFile,
+        [impliedComponentRule],
+        [componentTsxContextItem],
       );
-      
-      // THIS WILL PASS with current implementation but shouldn't
-      expect(applicableRules.map(r => r.name)).toContain('Models Rule');
+      expect(applicableRules.map((r) => r.name)).toContain(
+        "Implied Components Rule",
+      );
 
-      // Test with non-model file - should NOT apply the rule
+      // Test with redux file - should NOT apply the component rule
+      // This is failing currently - we need to fix the implementation
       applicableRules = getApplicableRules(
-        undefined, // No user message needed
-        [inferredGlobRule],
-        [nonModelFileContext]
+        userMessageWithReduxFile,
+        [impliedComponentRule],
+        [reduxContextItem],
       );
-      
-      // THIS WILL FAIL - Current implementation doesn't infer globs from directory
-      expect(applicableRules.map(r => r.name)).not.toContain('Models Rule');
+
+      // THIS WILL FAIL - Current implementation doesn't restrict by directory
+      expect(applicableRules.map((r) => r.name)).not.toContain(
+        "Implied Components Rule",
+      );
+
+      // Test with root-level file - should NOT apply the component rule
+      // This is failing currently - we need to fix the implementation
+      applicableRules = getApplicableRules(
+        userMessageWithRootFile,
+        [impliedComponentRule],
+        [rootContextItem],
+      );
+
+      // THIS WILL FAIL - Current implementation doesn't restrict by directory
+      expect(applicableRules.map((r) => r.name)).not.toContain(
+        "Implied Components Rule",
+      );
+    });
+  });
+
+  describe("Combined directory and glob pattern matching", () => {
+    it("should respect directory + glob pattern when both are present", () => {
+      // Create a rule with explicit glob in a nested directory
+      const typescriptComponentRule: RuleWithSource = {
+        name: "TypeScript Component Rule",
+        rule: "Use TypeScript with React components",
+        globs: "**/*.tsx", // Only apply to .tsx files
+        source: "rules-block",
+        ruleFile: "src/components/rules.md",
+      };
+
+      // Test with TSX component file - should apply
+      let applicableRules = getApplicableRules(
+        userMessageWithComponentFile,
+        [typescriptComponentRule],
+        [componentTsxContextItem],
+      );
+      expect(applicableRules.map((r) => r.name)).toContain(
+        "TypeScript Component Rule",
+      );
+
+      // Test with JSX component file - should NOT apply (wrong extension)
+      // This test is likely to pass even with current implementation since the glob is explicit
+      applicableRules = getApplicableRules(
+        userMessageWithComponentJsxFile,
+        [typescriptComponentRule],
+        [componentJsxContextItem],
+      );
+      expect(applicableRules.map((r) => r.name)).not.toContain(
+        "TypeScript Component Rule",
+      );
+
+      // Test with TS file outside components directory - should NOT apply
+      // This test will fail because current implementation doesn't consider directory boundaries
+      applicableRules = getApplicableRules(
+        userMessageWithReduxFile,
+        [typescriptComponentRule],
+        [reduxContextItem],
+      );
+
+      // THIS WILL FAIL - Current impl only checks file extension, not directory
+      expect(applicableRules.map((r) => r.name)).not.toContain(
+        "TypeScript Component Rule",
+      );
+    });
+  });
+
+  describe("Nested directory rules with globs", () => {
+    it("should apply API utils rule only to files in that directory matching the glob", () => {
+      // Create a rule for a specific subdirectory with its own glob
+      const apiUtilsRule: RuleWithSource = {
+        name: "API Utils Rule",
+        rule: "Follow API utility conventions",
+        globs: "**/*.ts", // Only TypeScript files in this directory
+        source: "rules-block",
+        ruleFile: "src/utils/api/rules.md",
+      };
+
+      // Test with file in the API utils directory - should apply
+      let applicableRules = getApplicableRules(
+        userMessageWithApiUtilFile,
+        [apiUtilsRule],
+        [apiUtilContextItem],
+      );
+      expect(applicableRules.map((r) => r.name)).toContain("API Utils Rule");
+
+      // Test with TS file in general utils directory - should NOT apply
+      // This test will fail because current implementation doesn't consider directory boundaries
+      applicableRules = getApplicableRules(
+        userMessageWithRootFile,
+        [apiUtilsRule],
+        [rootContextItem],
+      );
+
+      // THIS WILL FAIL - Current impl only checks file extension, not directory
+      expect(applicableRules.map((r) => r.name)).not.toContain(
+        "API Utils Rule",
+      );
+    });
+  });
+
+  describe("Rule application inference strategy", () => {
+    it("should infer directory-specific glob patterns from rule file location", () => {
+      // This test will propose the expected behavior for the feature:
+      // When a rules.md file is colocated in a directory without explicit globs,
+      // it should automatically create an implicit glob pattern for that directory.
+
+      function createRuleWithAutomaticGlobInference(
+        ruleFilePath: string,
+      ): RuleWithSource {
+        const directory = path.dirname(ruleFilePath);
+        // The expected behavior would be to create an implicit glob like this:
+        const expectedGlob = `${directory}/**/*`;
+
+        return {
+          name: `Inferred Rule for ${directory}`,
+          rule: `Follow standards for ${directory}`,
+          source: "rules-block",
+          ruleFile: ruleFilePath,
+          // In a fixed implementation, these globs would be automatically inferred
+          // globs: expectedGlob,
+        };
+      }
+
+      // Create rules for different directories
+      const modelsRule = createRuleWithAutomaticGlobInference(
+        "src/models/rules.md",
+      );
+      const servicesRule = createRuleWithAutomaticGlobInference(
+        "src/services/rules.md",
+      );
+
+      // Create context items for different files
+      const modelFileContext: ContextItemWithId = {
+        id: "models1",
+        uri: { type: "file", value: "src/models/user.ts" },
+        content: "export interface User {...}",
+        retrievedAt: new Date().toISOString(),
+      };
+
+      const serviceFileContext: ContextItemWithId = {
+        id: "services1",
+        uri: { type: "file", value: "src/services/auth.ts" },
+        content: "export const login = () => {...}",
+        retrievedAt: new Date().toISOString(),
+      };
+
+      // Test with model file - should apply only the models rule
+      const applicableModelsRules = getApplicableRules(
+        undefined, // No user message needed
+        [modelsRule, servicesRule],
+        [modelFileContext],
+      );
+
+      // These assertions will fail with current implementation
+      // but represent the desired behavior
+      expect(applicableModelsRules.map((r) => r.name)).toContain(
+        "Inferred Rule for src/models",
+      );
+      expect(applicableModelsRules.map((r) => r.name)).not.toContain(
+        "Inferred Rule for src/services",
+      );
+
+      // Test with service file - should apply only the services rule
+      const applicableServicesRules = getApplicableRules(
+        undefined, // No user message needed
+        [modelsRule, servicesRule],
+        [serviceFileContext],
+      );
+
+      // These assertions will fail with current implementation
+      // but represent the desired behavior
+      expect(applicableServicesRules.map((r) => r.name)).not.toContain(
+        "Inferred Rule for src/models",
+      );
+      expect(applicableServicesRules.map((r) => r.name)).toContain(
+        "Inferred Rule for src/services",
+      );
     });
   });
 });
