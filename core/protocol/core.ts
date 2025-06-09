@@ -21,6 +21,7 @@ import {
   ExperimentalModelRoles,
   FileSymbolMap,
   IdeSettings,
+  IdeType,
   LLMFullCompletionOptions,
   ModelDescription,
   PromptLog,
@@ -40,6 +41,7 @@ import { FreeTrialStatus } from "../control-plane/client";
 export enum OnboardingModes {
   PROVIDERS = "Providers",
   LOCAL = "Local",
+  MODELS_ADD_ON = "Models Add-On",
 }
 
 export interface ListHistoryOptions {
@@ -199,6 +201,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
+  "controlPlane/getModelsAddOnUpgradeUrl": [
+    { ide: IdeType },
+    { url: string } | null,
+  ];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },

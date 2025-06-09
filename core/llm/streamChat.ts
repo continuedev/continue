@@ -135,10 +135,31 @@ export async function* llmStreamChat(
       true,
     );
 
+    void checkForFreeTrialExceeded(configHandler, messenger);
+
     if (!next.done) {
       throw new Error("Will never happen");
     }
 
     return next.value;
+  }
+}
+
+async function checkForFreeTrialExceeded(
+  configHandler: ConfigHandler,
+  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+) {
+  try {
+    const freeTrialStatus =
+      await configHandler.controlPlaneClient.getFreeTrialStatus();
+    if (
+      freeTrialStatus &&
+      freeTrialStatus.chatCount &&
+      freeTrialStatus.chatCount > freeTrialStatus.chatLimit
+    ) {
+      void messenger.request("freeTrialExceeded", undefined);
+    }
+  } catch (error) {
+    console.error("Error checking free trial status:", error);
   }
 }

@@ -1,0 +1,84 @@
+import { useContext } from "react";
+import { Button } from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { isJetBrains } from "../../../util";
+
+/**
+ * Models Add-On tab component displaying pricing and tier information
+ */
+export function OnboardingModelsAddOnTab() {
+  const ideMessenger = useContext(IdeMessengerContext);
+
+  function openPricingPage() {
+    ideMessenger.post("controlPlane/openUrl", {
+      path: "pricing",
+    });
+  }
+
+  async function handleUpgrade() {
+    try {
+      const ide = isJetBrains() ? "jetbrains" : "vscode";
+
+      const response = await ideMessenger.request(
+        "controlPlane/getModelsAddOnUpgradeUrl",
+        {
+          ide,
+        },
+      );
+
+      if (response.status === "success" && response.content?.url) {
+        await ideMessenger.request("openUrl", response.content.url);
+      } else {
+        console.error("Failed to get upgrade URL");
+        openPricingPage();
+      }
+    } catch (error) {
+      console.error("Error during upgrade process:", error);
+      openPricingPage();
+    }
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center text-center">
+      <h2 className="text-foreground mb-2 text-2xl font-semibold">
+        Models Add-on
+      </h2>
+
+      <div className="bg-badge text-badge-foreground rounded-full px-3 py-1 text-sm font-medium">
+        $20/month
+      </div>
+
+      <div className="mb-6 mt-4 space-y-3 text-left">
+        <p className="text-foreground text-sm">
+          <span className="font-bold">Base Tier:</span> 500 Chat/Edit and 25,000
+          Autocomplete requests per month
+        </p>
+        <p className="text-foreground text-sm">
+          <span className="font-bold">Plus Tier (2.5x):</span> 1,250 Chat/Edit
+          and 62,500 Autocomplete requests per month
+        </p>
+        <p className="text-foreground text-sm">
+          <span className="font-bold">Pro Tier (5x):</span> 2,500 Chat/Edit and
+          125,000 Autocomplete requests per month
+        </p>
+      </div>
+
+      <div className="w-full">
+        <Button onClick={handleUpgrade} className="w-full max-w-xs">
+          Upgrade
+        </Button>
+      </div>
+      <div className="w-full text-center">
+        <span className="text-description">
+          <span
+            className="cursor-pointer underline hover:brightness-125"
+            onClick={openPricingPage}
+          >
+            Click here
+          </span>{" "}
+          to view pricing details
+        </span>
+      </div>
+    </div>
+  );
+}

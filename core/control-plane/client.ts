@@ -10,7 +10,7 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IdeSettings, ModelDescription } from "../index.js";
+import { IdeSettings, IdeType, ModelDescription } from "../index.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
@@ -178,6 +178,26 @@ export class ControlPlaneClient {
         method: "GET",
       });
       return (await resp.json()) as FreeTrialStatus;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async getModelsAddOnUpgradeUrl(
+    ide: IdeType,
+  ): Promise<{ url: string } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.request(
+        `ide/get-models-add-on-upgrade-url?ide=${encodeURIComponent(ide)}`,
+        {
+          method: "GET",
+        },
+      );
+      return (await resp.json()) as { url: string };
     } catch (e) {
       return null;
     }

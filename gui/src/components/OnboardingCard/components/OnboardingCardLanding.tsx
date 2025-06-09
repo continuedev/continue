@@ -5,8 +5,8 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { selectCurrentOrg } from "../../../redux";
 import { useAppSelector } from "../../../redux/hooks";
 import { hasPassedFTL } from "../../../util/freeTrial";
-import ContinueLogo from "../../gui/ContinueLogo";
 import { ToolTip } from "../../gui/Tooltip";
+import ContinueLogo from "../../svg/ContinueLogo";
 import { useOnboardingCard } from "../hooks";
 
 export function OnboardingCardLanding({

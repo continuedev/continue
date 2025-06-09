@@ -6,7 +6,6 @@ import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { streamResponse } from "core/llm/stream";
 import { renderChatMessage } from "core/util/messageContent";
-import { usePostHog } from "posthog-js/react";
 import {
   useCallback,
   useContext,
@@ -92,7 +91,6 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 }
 
 export function Chat() {
-  const posthog = usePostHog();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();

@@ -1,11 +1,13 @@
 import { OnboardingModes } from "core/protocol/core";
 import { useAppSelector } from "../../redux/hooks";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import Alert from "../gui/Alert";
 import { ReusableCard } from "../ReusableCard";
 import {
   OnboardingCardLanding,
   OnboardingCardTabs,
   OnboardingLocalTab,
+  OnboardingModelsAddOnTab,
   OnboardingProvidersTab,
 } from "./components";
 import { useOnboardingCard } from "./hooks";
@@ -17,9 +19,13 @@ export interface OnboardingCardState {
 
 interface OnboardingCardProps {
   isDialog?: boolean;
+  showFreeTrialExceededAlert?: boolean;
 }
 
-export function OnboardingCard({ isDialog }: OnboardingCardProps) {
+export function OnboardingCard({
+  isDialog,
+  showFreeTrialExceededAlert,
+}: OnboardingCardProps) {
   const { activeTab, close, setActiveTab } = useOnboardingCard();
   const config = useAppSelector((store) => store.config.config);
 
@@ -33,6 +39,8 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
         return <OnboardingProvidersTab />;
       case OnboardingModes.LOCAL:
         return <OnboardingLocalTab />;
+      case OnboardingModes.MODELS_ADD_ON:
+        return <OnboardingModelsAddOnTab />;
       default:
         return <OnboardingProvidersTab />;
     }
@@ -45,7 +53,24 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
         onClose={close}
         testId="onboarding-card"
       >
-        <OnboardingCardTabs activeTab={activeTab} onTabClick={setActiveTab} />
+        {showFreeTrialExceededAlert && (
+          <div className="mb-3 mt-4">
+            <Alert>
+              <h4 className="mb-1 mt-0 text-sm font-semibold">
+                Free trial completed
+              </h4>
+              <span className="text-xs">
+                To keep using Continue, select an option below to setup your
+                models
+              </span>
+            </Alert>
+          </div>
+        )}
+        <OnboardingCardTabs
+          activeTab={activeTab}
+          onTabClick={setActiveTab}
+          showFreeTrialExceededAlert
+        />
         {renderTabContent()}
       </ReusableCard>
     );
