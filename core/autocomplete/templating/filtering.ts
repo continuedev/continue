@@ -130,6 +130,9 @@ export const getSnippets = (
   const finalSnippets = [];
   let remainingTokenCount = getRemainingTokenCount(helper);
 
+  // tracks already added filepaths for deduplication
+  const addedFilepaths = new Set<string>();
+
   // Process snippets in priority order
   for (const { key } of snippetOrder) {
     // Special handling for recentlyOpenedFiles
@@ -160,9 +163,10 @@ export const getSnippets = (
 
         if (remainingTokenCount >= snippetSize) {
           finalSnippets.push(snippet);
+          addedFilepaths.add(snippet.filepath);
           remainingTokenCount -= snippetSize;
         } else {
-          break; // Out of tokens
+          continue; // Not enough tokens, try again with next snippet
         }
       }
     } else {
@@ -171,7 +175,9 @@ export const getSnippets = (
         (snippet) =>
           !(snippet as AutocompleteCodeSnippet).filepath?.startsWith(
             "output:extension-output-Continue.continue",
-          ),
+          ) &&
+          ((snippet as AutocompleteCodeSnippet).filepath === undefined ||
+            !addedFilepaths.has((snippet as AutocompleteCodeSnippet).filepath)),
       );
 
       for (const snippet of snippetsToProcess) {
@@ -182,9 +188,14 @@ export const getSnippets = (
 
         if (remainingTokenCount >= snippetSize) {
           finalSnippets.push(snippet);
+
+          if ((snippet as AutocompleteCodeSnippet).filepath) {
+            addedFilepaths.add((snippet as AutocompleteCodeSnippet).filepath);
+          }
+
           remainingTokenCount -= snippetSize;
         } else {
-          break; // Out of tokens
+          continue; // Not enough tokens, try again with next snippet
         }
       }
     }
