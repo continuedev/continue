@@ -114,11 +114,6 @@ export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
 ): boolean => {
-  // If there are no file paths to check, we can't apply directory-specific rules
-  if (filePaths.length === 0) {
-    return rule.alwaysApply === true;
-  }
-
   // If alwaysApply is explicitly true, always apply the rule regardless of file paths
   if (rule.alwaysApply === true) {
     return true;
@@ -135,7 +130,6 @@ export const shouldApplyRule = (
     const filesInRuleDirectory = filePaths.filter((filePath) =>
       isFileInDirectory(filePath, ruleDirectory),
     );
-
     // If no files are in this directory, don't apply the rule
     if (filesInRuleDirectory.length === 0) {
       return false;
@@ -185,6 +179,10 @@ export const getApplicableRules = (
   rules: RuleWithSource[],
   contextItems: ContextItemWithId[],
 ): RuleWithSource[] => {
+  // First, extract any rules that should always apply regardless of context
+  const alwaysApplyRules = rules.filter((rule) => rule.alwaysApply === true);
+
+  // Get file paths from message and context for regular rule matching
   const filePathsFromMessage = userMessage
     ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
     : [];
@@ -193,10 +191,22 @@ export const getApplicableRules = (
   const filePathsFromContextItems = contextItems
     .filter((item) => item.uri?.type === "file" && item.uri?.value)
     .map((item) => item.uri!.value);
+
   // Combine file paths from both sources
   const allFilePaths = [...filePathsFromMessage, ...filePathsFromContextItems];
 
-  return rules.filter((rule) => shouldApplyRule(rule, allFilePaths));
+  // If we have no file paths and no always-apply rules, return an empty array
+  if (allFilePaths.length === 0) {
+    return alwaysApplyRules;
+  }
+
+  // Get rules that match file paths
+  const matchingRules = rules
+    .filter((rule) => rule.alwaysApply !== true) // Skip always-apply rules as we've already handled them
+    .filter((rule) => shouldApplyRule(rule, allFilePaths));
+
+  // Combine always-apply rules with matching rules, ensuring no duplicates
+  return [...alwaysApplyRules, ...matchingRules];
 };
 
 /**
