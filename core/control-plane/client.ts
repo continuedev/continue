@@ -12,6 +12,7 @@ import fetch, { RequestInit, Response } from "node-fetch";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import { IdeSettings, IdeType, ModelDescription } from "../index.js";
 
+import LocalProfileLoader from "../config/profile/LocalProfileLoader.js";
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
 
@@ -192,7 +193,7 @@ export class ControlPlaneClient {
 
     try {
       const resp = await this.request(
-        `ide/get-models-add-on-upgrade-url?ide=${encodeURIComponent(ide)}`,
+        `ide/get-models-add-on-upgrade-url?ide=${encodeURIComponent(ide)}&profile_id=${LocalProfileLoader.ID}`,
         {
           method: "GET",
         },

@@ -40,12 +40,27 @@ export function OnboardingModelsAddOnTab() {
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center text-center">
-      <h2 className="text-foreground mb-2 text-2xl font-semibold">
-        Models Add-on
-      </h2>
+      <div className="mb-4 flex flex-col items-center text-center">
+        <div className="mb-1">
+          <h2 className="text-foreground mb-1 text-2xl font-semibold">
+            Models Add-on
+          </h2>
+        </div>
 
-      <div className="bg-badge text-badge-foreground rounded-full px-3 py-1 text-sm font-medium">
-        $20/month
+        <div className="bg-badge text-badge-foreground mb-4 rounded-full px-3 py-1 text-xs font-medium">
+          $20/month
+        </div>
+
+        <span className="text-description text-base">
+          Use a{" "}
+          <span
+            className="cursor-pointer underline hover:brightness-125"
+            onClick={openPricingPage}
+          >
+            variety of frontier models
+          </span>{" "}
+          for a flat monthly fee
+        </span>
       </div>
 
       <div className="mb-6 mt-4 space-y-3 text-left">
