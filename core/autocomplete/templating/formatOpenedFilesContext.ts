@@ -164,9 +164,9 @@ function trimSnippetForContext(
 }
 
 // Uncomment for testing
-/* export {
+export {
   getRecencyAndSizeScore,
   rankByScore,
   setLogStats,
   trimSnippetForContext,
-}; */
+};

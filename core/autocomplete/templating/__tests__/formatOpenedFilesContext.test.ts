@@ -266,7 +266,7 @@ describe("rankByScore function", () => {
     expect(result.length).toBeGreaterThan(0);
 
     // The snippets should be ranked in some order, which may not match input order
-    expect(result.map((s) => s.filepath)).not.toEqual(
+    expect(result.map((s: { filepath: any }) => s.filepath)).not.toEqual(
       snippets.map((s) => s.filepath),
     );
   });
