@@ -8,7 +8,7 @@ flask==2.0.2
 django==4.2.22
 
 # Request handling
-requests==2.26.0
+requests==2.32.4
 httpx==0.19.0
 
 # Machine Learning
