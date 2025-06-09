@@ -104,6 +104,24 @@ const isRootLevelRule = (rule: RuleWithSource): boolean => {
 };
 
 /**
+ * Determines if a rule should be considered global and always applied
+ * This includes rules with alwaysApply: true OR root-level rules with no globs
+ */
+const isGlobalRule = (rule: RuleWithSource): boolean => {
+  // Rules with alwaysApply: true are always global
+  if (rule.alwaysApply === true) {
+    return true;
+  }
+
+  // Root-level rules with no globs are implicitly global
+  if (isRootLevelRule(rule) && !rule.globs && rule.alwaysApply !== false) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
  * Determines if a rule should be applied based on its alwaysApply property and file path matching
  *
  * @param rule - The rule to check
@@ -114,9 +132,16 @@ export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
 ): boolean => {
-  // If alwaysApply is explicitly true, always apply the rule regardless of file paths
-  if (rule.alwaysApply === true) {
+  // If it's a global rule, always apply it regardless of file paths
+  if (isGlobalRule(rule)) {
     return true;
+  }
+
+  // If there are no file paths to check:
+  // - We've already handled global rules above
+  // - Don't apply other rules since we have no files to match against
+  if (filePaths.length === 0) {
+    return false;
   }
 
   // Check if this is a root-level rule (in .continue directory or no file path)
@@ -130,6 +155,7 @@ export const shouldApplyRule = (
     const filesInRuleDirectory = filePaths.filter((filePath) =>
       isFileInDirectory(filePath, ruleDirectory),
     );
+
     // If no files are in this directory, don't apply the rule
     if (filesInRuleDirectory.length === 0) {
       return false;
@@ -156,14 +182,14 @@ export const shouldApplyRule = (
     return filePaths.some((path) => matchesGlobs(path, rule.globs));
   }
 
-  // Default behavior for root rules:
-  // - No globs: always apply
-  // - Has globs: only apply if they match
-  if (!rule.globs) {
-    return true;
+  // Default behavior for root rules with globs:
+  // - Only apply if they match the globs
+  if (rule.globs) {
+    return filePaths.some((path) => matchesGlobs(path, rule.globs));
   }
 
-  return filePaths.some((path) => matchesGlobs(path, rule.globs));
+  // This point should not be reached as we've handled all cases above
+  return false;
 };
 
 /**
@@ -179,8 +205,8 @@ export const getApplicableRules = (
   rules: RuleWithSource[],
   contextItems: ContextItemWithId[],
 ): RuleWithSource[] => {
-  // First, extract any rules that should always apply regardless of context
-  const alwaysApplyRules = rules.filter((rule) => rule.alwaysApply === true);
+  // First, extract any global rules that should always apply
+  const globalRules = rules.filter((rule) => isGlobalRule(rule));
 
   // Get file paths from message and context for regular rule matching
   const filePathsFromMessage = userMessage
@@ -195,18 +221,18 @@ export const getApplicableRules = (
   // Combine file paths from both sources
   const allFilePaths = [...filePathsFromMessage, ...filePathsFromContextItems];
 
-  // If we have no file paths and no always-apply rules, return an empty array
+  // If we have no file paths, just return the global rules
   if (allFilePaths.length === 0) {
-    return alwaysApplyRules;
+    return globalRules;
   }
 
   // Get rules that match file paths
   const matchingRules = rules
-    .filter((rule) => rule.alwaysApply !== true) // Skip always-apply rules as we've already handled them
+    .filter((rule) => !isGlobalRule(rule)) // Skip global rules as we've already handled them
     .filter((rule) => shouldApplyRule(rule, allFilePaths));
 
-  // Combine always-apply rules with matching rules, ensuring no duplicates
-  return [...alwaysApplyRules, ...matchingRules];
+  // Combine global rules with matching rules, ensuring no duplicates
+  return [...globalRules, ...matchingRules];
 };
 
 /**
