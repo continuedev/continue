@@ -5,7 +5,8 @@
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/extensions/intellij" />
-        <option name="gradleJvm" value="homebrew-17" />
+        <option name="gradleHome" value="C:\Program Files\gradle-8.3\gradle-8.3" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/extensions/intellij" />

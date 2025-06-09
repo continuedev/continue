@@ -336,7 +336,7 @@ async function downloadEsbuildBinary(target) {
   fs.mkdirSync(`out/node_modules/@esbuild/${target}/bin`, { recursive: true });
   fs.mkdirSync(`out/tmp`, { recursive: true });
   const downloadUrl = {
-    "darwin-arm64":
+    /**"darwin-arm64":
       "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.17.19.tgz",
     "linux-arm64":
       "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.17.19.tgz",
@@ -344,8 +344,8 @@ async function downloadEsbuildBinary(target) {
       "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.17.19.tgz",
     "linux-x64":
       "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.19.tgz",
-    "darwin-x64":
-      "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.17.19.tgz",
+    "darwin-x64:
+      "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.17.19.tgz",*/
     "win32-x64":
       "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.17.19.tgz",
   }[target];
@@ -381,7 +381,7 @@ async function downloadSqliteBinary(target) {
   console.log("[info] Downloading pre-built sqlite3 binary");
   rimrafSync("../../core/node_modules/sqlite3/build");
   const downloadUrl = {
-    "darwin-arm64":
+    /* "darwin-arm64":
       "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
     "linux-arm64":
       "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
@@ -390,7 +390,7 @@ async function downloadSqliteBinary(target) {
     "linux-x64":
       "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-x64.tar.gz",
     "darwin-x64":
-      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-x64.tar.gz",
+      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-x64.tar.gz",*/
     "win32-x64":
       "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-win32-x64.tar.gz",
   }[target];
@@ -427,7 +427,7 @@ async function downloadRipgrepBinary(target) {
   fs.mkdirSync("node_modules/@vscode/ripgrep/bin", { recursive: true });
   4;
   const downloadUrl = {
-    "darwin-arm64":
+    /*  "darwin-arm64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-apple-darwin.tar.gz",
     "linux-arm64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-unknown-linux-gnu.tar.gz",
@@ -436,7 +436,7 @@ async function downloadRipgrepBinary(target) {
     "linux-x64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-unknown-linux-musl.tar.gz",
     "darwin-x64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-apple-darwin.tar.gz",
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-apple-darwin.tar.gz",*/
     "win32-x64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-pc-windows-msvc.zip",
   }[target];

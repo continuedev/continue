@@ -347,8 +347,8 @@ void (async () => {
   if (isArmTarget) {
     // lancedb binary
     const packageToInstall = {
-      "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-      "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+      /* "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+      // "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",*/
       "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
     }[target];
     console.log(
@@ -364,10 +364,10 @@ void (async () => {
     console.log("[info] Downloading pre-built sqlite3 binary");
     rimrafSync("../../core/node_modules/sqlite3/build");
     const downloadUrl = {
-      "darwin-arm64":
-        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
+      /*"darwin-arm64":
+       "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
       "linux-arm64":
-        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
+        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",*/
       // node-sqlite3 doesn't have a pre-built binary for win32-arm64
       "win32-arm64":
         "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz",

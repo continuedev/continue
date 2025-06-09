@@ -154,7 +154,7 @@ export async function fetchwithRequestOptions(
       headers: headers,
       agent: agent,
     });
-
+    console.log("请求结果", resp.json());
     // Verbose logging for debugging - log response details
     if (process.env.VERBOSE_FETCH) {
       await logResponse(resp);

@@ -12,13 +12,13 @@ function execCmdSync(cmd) {
 
 function autodetectPlatformAndArch() {
   platform = {
-    aix: "linux",
-    alpine: "linux",
-    darwin: "darwin",
-    freebsd: "linux",
-    linux: "linux",
-    openbsd: "linux",
-    sunos: "linux",
+    // aix: "linux",
+    // alpine: "linux",
+    // darwin: "darwin",
+    // freebsd: "linux",
+    // linux: "linux",
+    // openbsd: "linux",
+    // sunos: "linux",
     win32: "win32",
   }[process.platform];
   arch = {

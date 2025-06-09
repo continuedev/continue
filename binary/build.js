@@ -9,6 +9,12 @@ const {
   autodetectPlatformAndArch,
 } = require("../scripts/util");
 const { downloadRipgrep } = require("./utils/ripgrep");
+
+/**
+ * ALL_Targets:win32-x64
+ * TARGET_TO_LANCEDB:"win32-x64": "@lancedb/vectordb-win32-x64-msvc","win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
+ */
+
 const { ALL_TARGETS, TARGET_TO_LANCEDB } = require("./utils/targets");
 
 const bin = path.join(__dirname, "bin");
@@ -37,6 +43,7 @@ const assetBackups = [
 ];
 
 let esbuildOnly = false;
+console.log("[info]:process.argv", JSON.stringify(process.argv));
 for (let i = 2; i < process.argv.length; i++) {
   if (process.argv[i] === "--esbuild-only") {
     esbuildOnly = true;
@@ -83,6 +90,10 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   // This is a way to install only one package without npm trying to install all the dependencies
   // Create a temporary directory for installing the package
   const adjustedName = packageName.replace(/@/g, "").replace("/", "-");
+  console.log(
+    `[info] Creating temporary directory for installing ${packageName}`,
+    adjustedName,
+  );
   const tempDir = path.join(
     __dirname,
     "tmp",
@@ -263,15 +274,17 @@ async function downloadRipgrepForTarget(target, targetDir) {
 
     // Download and unzip prebuilt sqlite3 binary for the target
     console.log("[info] Downloading node-sqlite3");
-
-    const downloadUrl =
-      // node-sqlite3 doesn't have a pre-built binary for win32-arm64
-      target === "win32-arm64"
-        ? "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz"
-        : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
-            target
-          }.tar.gz`;
-
+    // only win32-x64
+    const downloadUrl = `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${target}.tar.gz`;
+    // node-sqlite3 doesn't have a pre-built binary for win32-arm64
+    /*** 原来的代码
+     const downloadUrl = target === "win32-arm64"
+      ? "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz"
+      : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
+          target
+        }.tar.gz`;
+    */
+    // target
     execCmdSync(`curl -L -o ${targetDir}/build.tar.gz ${downloadUrl}`);
     execCmdSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
 

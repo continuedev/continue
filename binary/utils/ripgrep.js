@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { rimrafSync } = require("rimraf");
 const tar = require("tar");
+// RIPGREP_VERSION = "14.1.1"
 const { RIPGREP_VERSION, TARGET_TO_RIPGREP_RELEASE } = require("./targets");
 const AdmZip = require("adm-zip");
 
@@ -88,6 +89,7 @@ async function downloadRipgrep(target, targetDir) {
   try {
     // Download the ripgrep release
     console.log(`[info] Downloading ripgrep from ${downloadUrl}`);
+    console.log(`[info] Downloading ripgrep to ${archivePath}`);
     await downloadFile(downloadUrl, archivePath);
 
     // Extract the archive
