@@ -4,6 +4,7 @@ import {
   PromptTemplates,
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
 
 declare global {
@@ -972,6 +973,7 @@ export interface ToolExtras {
     contextItems: ContextItem[];
   }) => void;
   config: ContinueConfig;
+  codeBaseIndexer?: CodebaseIndexer;
 }
 
 export interface Tool {
