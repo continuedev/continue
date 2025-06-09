@@ -591,6 +591,11 @@
           "id": "continue",
           "title": "Continue",
           "icon": "media/sidebar-icon.png"
+        },
+        {
+          "id": "graniteMoveChatDestination",
+          "title": "Chat",
+          "icon": "comment-discussion"
         }
       ],
       "panel": [

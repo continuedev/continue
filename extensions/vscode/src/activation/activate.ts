@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { registerModelUpdater } from "../granite/ollama/modelUpdater";
+import { replaceCopilotWithGraniteCode } from "../granite/utils/compatibilityUtils";
 import { isGraniteOnboardingComplete } from "../granite/utils/extensionUtils";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
@@ -63,6 +64,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   const initialActivationCompleted = context.globalState.get<boolean>(GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY, false);
   if (!initialActivationCompleted) {
     if (!graniteOnboardingComplete) {
+      replaceCopilotWithGraniteCode()
       await vscode.commands.executeCommand("granite.setup");
     }
     await context.globalState.update(GRANITE_INITIAL_ACTIVATION_COMPLETED_KEY, true);
