@@ -28,6 +28,7 @@ import {
   GeminiChatContentPart,
   GeminiToolFunctionDeclaration,
 } from "../util/gemini-types.js";
+import { safeParseArgs } from "../util/parseArgs.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -125,7 +126,10 @@ export class GeminiApi implements BaseLlmApi {
               functionCall: {
                 id: toolCall.id,
                 name: toolCall.function.name,
-                args: JSON.parse(toolCall.function.arguments || "{}"),
+                args: safeParseArgs(
+                  toolCall.function.arguments,
+                  `Call: ${toolCall.function.name} ${toolCall.id}`,
+                ),
               },
             })),
           };

@@ -1,5 +1,6 @@
 import { streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
@@ -66,7 +67,7 @@ class Anthropic extends BaseLLM {
           type: "tool_use",
           id: toolCall.id,
           name: toolCall.function?.name,
-          input: JSON.parse(toolCall.function?.arguments || "{}"),
+          input: safeParseToolCallArgs(toolCall),
         })),
       };
     } else if (message.role === "thinking" && !message.redactedThinking) {
