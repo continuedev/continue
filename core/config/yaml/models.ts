@@ -68,6 +68,7 @@ async function modelConfigToBaseLLM({
       tools: model.capabilities?.includes("tool_use"),
       uploadImage: model.capabilities?.includes("image_input"),
     },
+    autocompleteOptions: model.autocompleteOptions,
   };
 
   // Model capabilities - need to be undefined if not found

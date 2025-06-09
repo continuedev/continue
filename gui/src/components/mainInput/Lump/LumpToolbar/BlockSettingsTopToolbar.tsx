@@ -104,7 +104,7 @@ function BlockSettingsToolbarIcon(
                 ? "bg-error"
                 : "bg-badge"
               : undefined
-          } relative flex select-none items-center rounded-full px-[3px] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
+          } relative flex select-none items-center rounded-full px-[3px] py-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
         >
           <props.icon
             className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
@@ -154,15 +154,31 @@ export function BlockSettingsTopToolbar() {
   const isUsingFreeTrial = usesFreeTrialApiKey(config);
 
   useEffect(() => {
-    ideMessenger
-      .request("controlPlane/getFreeTrialStatus", undefined)
-      .then((resp) => {
-        if (resp.status === "success") {
-          setFreeTrialStatus(resp.content);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const fetchFreeTrialStatus = () => {
+      ideMessenger
+        .request("controlPlane/getFreeTrialStatus", undefined)
+        .then((resp) => {
+          if (resp.status === "success") {
+            setFreeTrialStatus(resp.content);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchFreeTrialStatus();
+
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (isUsingFreeTrial) {
+      intervalId = setInterval(fetchFreeTrialStatus, 15000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [ideMessenger, isUsingFreeTrial]);
 
   const handleEllipsisClick = () => {
     if (isToolbarExpanded) {
@@ -180,7 +196,7 @@ export function BlockSettingsTopToolbar() {
   return (
     <div className="flex flex-1 items-center justify-between gap-2">
       <div className="flex flex-row">
-        <div className="xs:flex text-description hidden items-center justify-center">
+        <div className="xs:flex text-description hidden items-center justify-center gap-0.5">
           <BlockSettingsToolbarIcon
             className="-ml-1.5"
             icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}

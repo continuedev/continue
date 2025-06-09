@@ -32,7 +32,6 @@ import {
 
 import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useNavigate } from "react-router-dom";
-import { vscCommandCenterInactiveBorder } from "../..";
 import { cn } from "../../../util/cn";
 import { ROUTES } from "../../../util/navigation";
 import { useLump } from "../../mainInput/Lump/LumpContext";
@@ -115,7 +114,7 @@ const AssistantSelectOption = ({
             {profile.errors && profile.errors?.length > 0 && (
               <ExclamationTriangleIcon
                 data-tooltip-id={`${profile.id}-errors-tooltip`}
-                className="h-3 w-3 flex-shrink-0 cursor-pointer text-red-500"
+                className="text-error h-3 w-3 flex-shrink-0 cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -290,7 +289,7 @@ export default function AssistantSelect() {
         <Transition>
           <ListboxOptions className="pb-0">
             <div className="flex gap-1.5 px-2.5 py-1">
-              <span>Assistants</span>
+              <span className="font-semibold">Assistants</span>
               <div
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
                 onClick={async (e) => {
@@ -326,18 +325,11 @@ export default function AssistantSelect() {
             </div>
 
             <div className="flex flex-col">
-              <div
-                className="my-0 h-[0.5px]"
-                style={{
-                  backgroundColor: vscCommandCenterInactiveBorder,
-                }}
-              />
-
               <div className="flex flex-row items-center">
                 <ListboxOption
-                  className="w-full"
                   value={"new-assistant"}
                   fontSizeModifier={-2}
+                  className="border-border w-full border-x-0 border-y border-solid"
                   onClick={session ? onNewAssistant : () => login(false)}
                 >
                   <div
@@ -351,13 +343,6 @@ export default function AssistantSelect() {
                   </div>
                 </ListboxOption>
               </div>
-
-              <div
-                className="my-0 h-[0.5px]"
-                style={{
-                  backgroundColor: vscCommandCenterInactiveBorder,
-                }}
-              />
 
               <div
                 className="text-description flex items-center justify-between gap-1.5 px-2 py-1"

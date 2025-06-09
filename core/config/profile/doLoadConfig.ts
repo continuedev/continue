@@ -27,6 +27,7 @@ import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
+import { getMCPToolName } from "../../tools/mcpToolName";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
@@ -156,7 +157,7 @@ export default async function doLoadConfig(options: {
         displayTitle: server.name + " " + tool.name,
         function: {
           description: tool.description,
-          name: tool.name,
+          name: getMCPToolName(server, tool),
           parameters: tool.inputSchema,
         },
         faviconUrl: server.faviconUrl,
@@ -164,6 +165,7 @@ export default async function doLoadConfig(options: {
         type: "function" as const,
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
+        originalFunctionName: tool.name,
       }));
       newConfig.tools.push(...serverTools);
 

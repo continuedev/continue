@@ -94,6 +94,8 @@ export interface ILLM
   get providerName(): string;
   get underlyingProviderName(): string;
 
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
+
   complete(
     prompt: string,
     signal: AbortSignal,
@@ -563,6 +565,7 @@ export interface LLMOptions {
   uniqueId?: string;
   baseAgentSystemMessage?: string;
   baseChatSystemMessage?: string;
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -989,6 +992,7 @@ export interface Tool {
   uri?: string;
   faviconUrl?: string;
   group: string;
+  originalFunctionName?: string;
 }
 
 interface ToolChoice {
@@ -1090,6 +1094,7 @@ export interface RerankerDescription {
   params?: { [key: string]: any };
 }
 
+// TODO: We should consider renaming this to AutocompleteOptions.
 export interface TabAutocompleteOptions {
   disable: boolean;
   maxPromptTokens: number;
@@ -1572,4 +1577,10 @@ export interface RuleWithSource {
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
+}
+
+export interface CompleteOnboardingPayload {
+  mode: OnboardingModes;
+  provider?: string;
+  apiKey?: string;
 }
