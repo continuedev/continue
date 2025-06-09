@@ -65,60 +65,6 @@ import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { StreamAbortManager } from "./util/abortManager";
 
-// This function is used for jetbrains inline edit and apply
-async function* streamDiffLinesGenerator(
-  configHandler: ConfigHandler,
-  abortedMessageIds: Set<string>,
-  msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
-): AsyncGenerator<DiffLine> {
-  const {
-    highlighted,
-    prefix,
-    suffix,
-    input,
-    language,
-    modelTitle,
-    includeRulesInSystemMessage,
-  } = msg.data;
-
-  const { config } = await configHandler.loadConfig();
-  if (!config) {
-    throw new Error("Failed to load config");
-  }
-
-  // Title can be an edit, chat, or apply model
-  // Fall back to chat
-  const llm =
-    config.modelsByRole.edit.find((m) => m.title === modelTitle) ??
-    config.modelsByRole.apply.find((m) => m.title === modelTitle) ??
-    config.modelsByRole.chat.find((m) => m.title === modelTitle) ??
-    config.selectedModelByRole.chat;
-
-  if (!llm) {
-    throw new Error("No model selected");
-  }
-
-  // rules included for edit, NOT apply
-  const rules = includeRulesInSystemMessage ? config.rules : undefined;
-
-  for await (const diffLine of streamDiffLines({
-    highlighted,
-    prefix,
-    suffix,
-    llm,
-    input,
-    language,
-    onlyOneInsertion: false,
-    overridePrompt: undefined,
-  })) {
-    if (abortedMessageIds.has(msg.messageId)) {
-      abortedMessageIds.delete(msg.messageId);
-      break;
-    }
-    yield diffLine;
-  }
-}
-
 export class Core {
   configHandler: ConfigHandler;
   codeBaseIndexer: CodebaseIndexer;
