@@ -7,6 +7,8 @@ import { NodeGUI } from "./NodeGUI";
 import { v4 as uuidv4 } from "uuid";
 import { NodeMessenger } from "./NodeMessenger";
 import { NodeGuiProtocol } from "./NodeGuiProtocol";
+import { getConfigYamlPath } from "core/util/paths";
+import fs from "fs";
 
 async function main() {
   const windowId = uuidv4();
@@ -37,8 +39,20 @@ async function main() {
 
   // // Load config
   const config = await core.configHandler.loadConfig();
-  console.log("Loaded config:", JSON.stringify(config));
+  // console.log("Loaded config:", JSON.stringify(config));
 
+  // Watch YAML config file specific to your Node IDE
+  fs.watchFile(
+    getConfigYamlPath("vscode"), // <-- Change this if your environment is named differently
+    { interval: 1000 },
+    async (stats) => {
+      if (stats.size === 0) {
+        return;
+      }
+      await core.configHandler.reloadConfig();
+      console.log("🔁 YAML config reloaded due to file change.");
+    }
+  );
   console.log("Continue AI (Light IDE) initialized.");
   // console.log("Open http://localhost:3000 to use the GUI.");
 }

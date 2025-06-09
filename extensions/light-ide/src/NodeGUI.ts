@@ -112,6 +112,7 @@ export class NodeGUI {
           status: "success",
           content: result
         });
+        console.log("Response sent:", result);
       } catch (err: any) {
         console.error("Message handling error:", err);
         res.json({
@@ -138,9 +139,9 @@ export class NodeGUI {
     );
   }
 
-  // Optional, not currently used — may be deprecated
-  public request(type: string, args: any) {
+  public sendToClient(type: string, args: any) {
     this.core?.invoke?.(type, args);
+    // const handler = this.core.messenger.externalTypeListeners.get(type);
   }
 
   // Optional, for Core → GUI future comms
