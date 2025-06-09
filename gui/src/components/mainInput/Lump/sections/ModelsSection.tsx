@@ -5,7 +5,6 @@ import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { updateSelectedModelByRole } from "../../../../redux/thunks";
 import { isJetBrains } from "../../../../util";
-import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 export function ModelsSection() {
   const { selectedProfile } = useAuth();
@@ -30,7 +29,7 @@ export function ModelsSection() {
 
   return (
     <div>
-      <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 pb-2 sm:grid-cols-[auto_1fr]">
+      <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 sm:grid-cols-[auto_1fr]">
         <ModelRoleSelector
           displayName="Chat"
           description="Used in the chat interface"
@@ -83,7 +82,6 @@ export function ModelsSection() {
           setupURL="https://docs.continue.dev/customize/model-roles/reranking"
         />
       </div>
-      <ExploreBlocksButton blockType={"models"} />
     </div>
   );
 }
