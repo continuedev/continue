@@ -81,15 +81,33 @@ const isFileInDirectory = (
   directoryPath: string,
 ): boolean => {
   // Normalize paths for consistent comparison
-  const normalizedFilePath = filePath.replace(/\\/g, "/");
-  const normalizedDirPath = directoryPath.replace(/\\/g, "/");
+  let normalizedFilePath = filePath.replace(/\\/g, "/");
+  let normalizedDirPath = directoryPath.replace(/\\/g, "/");
 
-  // Ensure directory path ends with a slash for proper prefix matching
-  const dirPathWithSlash = normalizedDirPath.endsWith("/")
-    ? normalizedDirPath
-    : `${normalizedDirPath}/`;
+  // Strip the file:// protocol if present
+  normalizedFilePath = normalizedFilePath.replace(/^file:\/\//, "");
+  normalizedDirPath = normalizedDirPath.replace(/^file:\/\//, "");
 
-  return normalizedFilePath.startsWith(dirPathWithSlash);
+  // Extract the last parts of the paths for comparison
+  // This allows matching relative paths with absolute paths
+  // e.g., "nested-folder/file.py" should match "/path/to/nested-folder/"
+  const filePathParts = normalizedFilePath.split("/");
+  const dirPathParts = normalizedDirPath.split("/");
+
+  // Get the directory name (last part of the directory path)
+  const dirName = dirPathParts[dirPathParts.length - 1];
+
+  // Check if the file path contains this directory followed by a slash
+  // This is a simple check to see if the file might be in this directory
+  const containsDir = normalizedFilePath.includes(`${dirName}/`);
+
+  // For logging
+  const result = containsDir;
+  console.log(
+    `[RULES_DEBUG] Checking if file '${normalizedFilePath}' is in directory '${normalizedDirPath}' (dir name: ${dirName}): ${result}`,
+  );
+
+  return result;
 };
 
 /**
