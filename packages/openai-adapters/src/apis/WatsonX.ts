@@ -35,14 +35,6 @@ export class WatsonXApi implements BaseLlmApi {
     this.deploymentId = config.env.deploymentId;
   }
 
-  private async getHeaders(): Promise<Record<string, string>> {
-    const bearer = await this.getBearerToken();
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${bearer.token}`,
-    };
-  }
-
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
     if (this.apiBase?.includes("cloud.ibm.com")) {
       // watsonx SaaS
@@ -64,48 +56,80 @@ export class WatsonXApi implements BaseLlmApi {
       };
     } else {
       // watsonx Software
-      if (!this.config.apiKey?.includes(":")) {
-        // Using ZenApiKey auth
-        return {
-          token: this.config.apiKey ?? "",
-          expiration: -1,
-        };
-      } else {
-        // Using username/password auth
-        const userPass = this.config.apiKey?.split(":");
-        const wxToken = (await (
-          await customFetch(this.config.requestOptions)(
-            `${this.apiBase}/icp4d-api/v1/authorize`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify({
-                username: userPass[0],
-                password: userPass[1],
-              }),
+      // if (this.config.env.bearerTokenRequired) {
+      // In certain WatsonX environments, ZenApiKey authentication is disabled,
+      // and it's necessary to call this endpoint with username+api_key to get a bearer token.
+      // See the docs: https://www.ibm.com/docs/en/watsonx/w-and-w/2.1.0?topic=keys-generating-bearer-token
+      // Ask @sestinj why the rest is commented out.
+      const base64Decoded = Buffer.from(
+        this.config.apiKey ?? "",
+        "base64",
+      ).toString();
+      const [username, api_key] = base64Decoded.split(":");
+
+      const wxToken = (await (
+        await customFetch(this.config.requestOptions)(
+          new URL("icp4d-api/v1/authorize", this.apiBase),
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
             },
-          )
-        ).json()) as any;
-        const wxTokenExpiry = (await (
-          await customFetch(this.config.requestOptions)(
-            `${this.apiBase}/usermgmt/v1/user/tokenExpiry`,
-            {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${wxToken["token"]}`,
-              },
-            },
-          )
-        ).json()) as any;
-        return {
-          token: wxToken["token"],
-          expiration: wxTokenExpiry["exp"],
-        };
-      }
+            body: JSON.stringify({
+              username: username?.trim(),
+              api_key: api_key?.trim(),
+            }),
+          },
+        )
+      ).json()) as any;
+
+      return {
+        token: wxToken["access_token"] ?? wxToken["token"],
+        expiration: 0,
+      };
+      // } else if (!this.config.apiKey?.includes(":")) {
+      //   // Using ZenApiKey auth
+      //   return {
+      //     token: this.config.apiKey ?? "",
+      //     expiration: -1,
+      //   };
+      // } else {
+      //   // Using username/password auth
+      //   const userPass = this.config.apiKey?.split(":");
+      //   const wxToken = (await (
+      //     await customFetch(this.config.requestOptions)(
+      //       `${this.apiBase}/icp4d-api/v1/authorize`,
+      //       {
+      //         method: "POST",
+      //         headers: {
+      //           "Content-Type": "application/json",
+      //           Accept: "application/json",
+      //         },
+      //         body: JSON.stringify({
+      //           username: userPass[0],
+      //           password: userPass[1],
+      //         }),
+      //       },
+      //     )
+      //   ).json()) as any;
+      //   const wxTokenExpiry = (await (
+      //     await customFetch(this.config.requestOptions)(
+      //       `${this.apiBase}/usermgmt/v1/user/tokenExpiry`,
+      //       {
+      //         method: "GET",
+      //         headers: {
+      //           Accept: "application/json",
+      //           Authorization: `Bearer ${wxToken["token"]}`,
+      //         },
+      //       },
+      //     )
+      //   ).json()) as any;
+      //   return {
+      //     token: wxToken["token"],
+      //     expiration: wxTokenExpiry["exp"],
+      //   };
+      // }
     }
   }
 
@@ -153,6 +177,17 @@ export class WatsonXApi implements BaseLlmApi {
     return payload;
   }
 
+  private async getHeaders(): Promise<Record<string, string>> {
+    const bearer = await this.getBearerToken();
+    // const isZenApiKey = bearer.expiration === -1;
+
+    return {
+      "Content-Type": "application/json",
+      // Authorization: `${isZenApiKey ? "ZenApiKey" : "Bearer"} ${bearer.token}`,
+      Authorization: `Bearer ${bearer.token}`,
+    };
+  }
+
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
@@ -181,7 +216,11 @@ export class WatsonXApi implements BaseLlmApi {
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const url = this.getEndpoint("chat");
     const headers = await this.getHeaders();
-    const stringifiedBody = JSON.stringify(this._convertBody(body));
+    const stringifiedBody = JSON.stringify({
+      time_limit: 8000,
+      ...this._convertBody(body),
+      stream: true,
+    });
     const response = await customFetch(this.config.requestOptions)(url, {
       method: "POST",
       headers,
