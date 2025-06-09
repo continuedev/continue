@@ -41,6 +41,7 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -49,6 +50,7 @@ export class VsCodeExtension {
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
+  private ideUtils: VsCodeIdeUtils;
   private consoleView: ContinueConsoleWebviewViewProvider;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
@@ -76,6 +78,7 @@ export class VsCodeExtension {
       },
     );
     this.ide = new VsCodeIde(this.webviewProtocolPromise, context);
+    this.ideUtils = new VsCodeIdeUtils();
     this.extensionContext = context;
     this.windowId = uuidv4();
 
@@ -292,10 +295,14 @@ export class VsCodeExtension {
       });
     });
 
-    vscode.workspace.onDidCloseTextDocument(async (event) => {
-      this.core.invoke("files/closed", {
-        uris: [event.uri.toString()],
-      });
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      if (document) {
+        let openFiles = this.ideUtils.getOpenFileUrisAsStrings();
+        this.core.invoke("files/closed", {
+          uris: [document.uri.toString()],
+          fileUris: openFiles,
+        });
+      }
     });
 
     vscode.workspace.onDidCreateFiles(async (event) => {
@@ -382,19 +389,12 @@ export class VsCodeExtension {
     context.subscriptions.push(linkProvider);
 
     this.ide.onDidChangeActiveTextEditor((filepath) => {
-      void this.core.invoke("didChangeActiveTextEditor", { filepath });
-    });
-
-    this.ide.onDidCloseTextDocument((filepaths) => {
-      void this.core.invoke("didCloseTextDocument", { filepaths });
+      void this.core.invoke("files/opened", { uris: [filepath] });
     });
 
     // initializes openedFileLruCache with files that are already open when the extension is activated
-    let initialOpenedFilePaths = vscode.window.tabGroups.all
-      .flatMap((group) => group.tabs)
-      .filter((tab) => tab.input instanceof vscode.TabInputText)
-      .map((tab) => (tab.input as vscode.TabInputText).uri.fsPath);
-    this.core.invoke("initializeOpenedFileCache", { initialOpenedFilePaths });
+    let initialOpenedFilePaths = this.ideUtils.getOpenFileUrisAsStrings();
+    this.core.invoke("files/opened", { uris: initialOpenedFilePaths });
 
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {

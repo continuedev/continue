@@ -12,7 +12,6 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFile
 import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
-import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
@@ -601,6 +600,29 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
+      try {
+        const filepaths = data.fileUris;
+        if (!prevFilepaths.filepaths.length) {
+          prevFilepaths.filepaths = filepaths;
+        }
+
+        // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
+        if (filepaths.length <= prevFilepaths.filepaths.length) {
+          // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
+          for (const [key, _] of openedFilesLruCache.entriesDescending()) {
+            if (!filepaths.includes(key)) {
+              openedFilesLruCache.delete(key);
+            }
+          }
+        }
+
+        prevFilepaths.filepaths = filepaths;
+      } catch (e) {
+        console.error(
+          `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
+        );
+      }
+
       if (data.uris) {
         this.messenger.send("didCloseFiles", {
           uris: data.uris,
@@ -608,7 +630,26 @@ export class Core {
       }
     });
 
-    on("files/opened", async () => {});
+    on("files/opened", async ({ data: { uris } }) => {
+      if (uris) {
+        for (const filepath of uris) {
+          try {
+            const ignore = await shouldIgnore(filepath, this.ide);
+            if (!ignore) {
+              // Set the active file as most recently used (need to force recency update by deleting and re-adding)
+              if (openedFilesLruCache.has(filepath)) {
+                openedFilesLruCache.delete(filepath);
+              }
+              openedFilesLruCache.set(filepath, filepath);
+            }
+          } catch (e) {
+            console.error(
+              `files/opened: failed to update openedFiles cache for ${filepath}`,
+            );
+          }
+        }
+      }
+    });
 
     // Docs, etc. indexing
     on("indexing/reindex", async (msg) => {
@@ -663,66 +704,6 @@ export class Core {
       );
       return { url };
     });
-
-    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      try {
-        const ignore = await shouldIgnore(filepath, this.ide);
-        if (!ignore) {
-          recentlyEditedFilesCache.set(filepath, filepath);
-
-          // Set the active file as most recently used (need to force recency update by deleting and re-adding)
-          if (openedFilesLruCache.has(filepath)) {
-            openedFilesLruCache.delete(filepath);
-          }
-          openedFilesLruCache.set(filepath, filepath);
-        }
-      } catch (e) {
-        console.error(
-          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
-        );
-      }
-    });
-
-    on("didCloseTextDocument", async ({ data: { filepaths } }) => {
-      try {
-        if (!prevFilepaths.filepaths.length) {
-          prevFilepaths.filepaths = filepaths;
-        }
-
-        // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
-        if (filepaths.length <= prevFilepaths.filepaths.length) {
-          // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
-          for (const [key, value] of openedFilesLruCache.entriesDescending()) {
-            let trimmedKey = key.slice(7); // uri -> filepath
-            if (!filepaths.includes(trimmedKey)) {
-              openedFilesLruCache.delete(key);
-            }
-          }
-        }
-
-        prevFilepaths.filepaths = filepaths;
-      } catch (e) {
-        console.error(
-          `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
-        );
-      }
-    });
-
-    on(
-      "initializeOpenedFileCache",
-      async ({ data: { initialOpenedFilePaths } }) => {
-        try {
-          for (const filepath of initialOpenedFilePaths) {
-            openedFilesLruCache.set(`file://${filepath}`, `file://${filepath}`);
-          }
-        } catch (e) {
-          console.error(
-            `initializeOpenedFileCache: failed to update openedFilesLruCache`,
-            e,
-          );
-        }
-      },
-    );
 
     on("tools/call", async ({ data: { toolCall } }) => {
       const { config } = await this.configHandler.loadConfig();

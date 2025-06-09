@@ -94,19 +94,6 @@ class VsCodeIde implements IDE {
     });
   }
 
-  onDidCloseTextDocument(callback: (uris: string[]) => void): void {
-    vscode.workspace.onDidCloseTextDocument((document) => {
-      if (document) {
-        let openFilePaths = vscode.window.tabGroups.all // get tab groups
-          .flatMap((group) => group.tabs) // extract tabs from tab groups
-          .filter((tab) => tab.input instanceof vscode.TabInputText) // filter irrelevant tabs (settings, etc.)
-          .map((tab) => (tab.input as vscode.TabInputText).uri.fsPath); // get filepaths
-
-        callback(openFilePaths);
-      }
-    });
-  }
-
   showToast: IDE["showToast"] = async (...params) => {
     const [type, message, ...otherParams] = params;
     const { showErrorMessage, showWarningMessage, showInformationMessage } =
