@@ -1,8 +1,26 @@
 import { ConfigValidationError } from "@continuedev/config-yaml";
-import path from "path";
 import { IDE, RuleWithSource } from "../..";
 import { walkDirs } from "../../indexing/walkDir";
 import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
+
+/**
+ * Gets the directory part of a path (without using Node.js path module)
+ */
+const getDirname = (filePath: string): string => {
+  // Normalize path separators to forward slash
+  const normalizedPath = filePath.replace(/\\/g, "/");
+
+  // Find the last slash
+  const lastSlashIndex = normalizedPath.lastIndexOf("/");
+
+  // If no slash found, return empty string (current directory)
+  if (lastSlashIndex === -1) {
+    return "";
+  }
+
+  // Return everything up to the last slash
+  return normalizedPath.substring(0, lastSlashIndex);
+};
 
 /**
  * Loads rules from rules.md files colocated in the codebase
@@ -36,7 +54,7 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
         // If the rule doesn't have globs specified, we'll log that fact for debugging
         if (!rule.globs) {
           console.log(
-            `Rule in ${filePath} doesn't have explicit globs - it will be applied based on directory location: ${path.dirname(filePath)}`,
+            `Rule in ${filePath} doesn't have explicit globs - it will be applied based on directory location: ${getDirname(filePath)}`,
           );
         } else {
           console.log(
