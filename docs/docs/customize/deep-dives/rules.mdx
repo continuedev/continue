@@ -3,6 +3,9 @@ description: Rules are used to provide instructions to the model for Chat, Edit,
 keywords: [rules, .continuerules, system, prompt, message]
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # Rules
 
 Rules provide instructions to the model for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Agent](../../agent/how-to-use-it.md) requests.
@@ -60,27 +63,56 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule
-- `schema` (**required**): The schema version of the YAML file (e.g., `v1`)
+- `alwaysApply` (optional): Always include the rule, regardless of file context
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
-```yaml title=".config.yaml"
-rules:
-  - Always annotate Python functions with their parameter and return types
+<Tabs groupId="rules-example">
+  <TabItem value="md" label="Markdown">
+  ```yaml title="doc-standards.md"
+  ---
+  name: Documentation Standards
+  globs: docs/**/*.{md,mdx}
+  alwaysApply: false
+  description: Standards for writing and maintaining Continue Docs
+  ---
 
-  - name: TypeScript best practices
-    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
-    globs: "**/*.{ts,tsx}"
+# Continue Docs Standards
 
-  - name: TypeScript test patterns
-    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
-    globs:
-      - "src/**/*.test.ts"
-      - "tests/**/*.ts"
+- Follow Docusaurus documentation standards
+- Include YAML frontmatter with title, description, and keywords
+- Use consistent heading hierarchy starting with h2 (##)
+- Include relevant Admonition components for tips, warnings, and info
+- Use descriptive alt text for images
+- Include cross-references to related documentation
+- Reference other docs with relative paths
+- Keep paragraphs concise and scannable
+- Use code blocks with appropriate language tags
 
-  - uses: myprofile/my-mood-setter
-    with:
-      TONE: concise
-```
+  ````
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+
+  ```yaml title="doc-standards.yaml"
+  name: Documentation Standards
+  globs: docs/**/*.{md,mdx}
+  alwaysApply: false
+  rules:
+    - name: Documentation Standards
+      rule: >
+        - Follow Docusaurus documentation standards
+        - Include YAML frontmatter with title, description, and keywords
+        - Use consistent heading hierarchy starting with h2 (##)
+        - Include relevant Admonition components for tips, warnings, and info
+        - Use descriptive alt text for images
+        - Include cross-references to related documentation
+        - Reference other docs with relative paths
+        - Keep paragraphs concise and scannable
+        - Use code blocks with appropriate language tags
+  ````
+
+      </TabItem>
+
+  </Tabs>
 
 ### `.continue/rules` folder
 
