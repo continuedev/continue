@@ -1,13 +1,13 @@
-import { jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { stopAfterMaxProcessingTime } from "./utils";
 
 describe("stopAfterMaxProcessingTime", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   async function* createMockStream(chunks: string[]): AsyncGenerator<string> {
@@ -28,7 +28,7 @@ describe("stopAfterMaxProcessingTime", () => {
 
   it("should yield all chunks when maxTimeMs is not reached", async () => {
     const mockStream = createMockStream(["Hello", " world", "!"]);
-    const fullStop = jest.fn();
+    const fullStop = vi.fn();
     const result = stopAfterMaxProcessingTime(mockStream, 1000, fullStop);
 
     const output = await streamToString(result);
@@ -41,7 +41,7 @@ describe("stopAfterMaxProcessingTime", () => {
     // Mock implementation of Date.now
     let currentTime = 0;
     const originalDateNow = Date.now;
-    Date.now = jest.fn(() => currentTime);
+    Date.now = vi.fn(() => currentTime);
 
     // Create a generator that we can control
     async function* controlledGenerator(): AsyncGenerator<string> {
@@ -54,7 +54,7 @@ describe("stopAfterMaxProcessingTime", () => {
       }
     }
 
-    const fullStop = jest.fn();
+    const fullStop = vi.fn();
     const maxTimeMs = 500;
 
     const transformedGenerator = stopAfterMaxProcessingTime(
@@ -84,10 +84,10 @@ describe("stopAfterMaxProcessingTime", () => {
   it("should check time only periodically based on checkInterval", async () => {
     const chunks = Array(100).fill("x");
     const mockStream = createMockStream(chunks);
-    const fullStop = jest.fn();
+    const fullStop = vi.fn();
 
     // Spy on Date.now to count how many times it's called
-    const dateSpy = jest.spyOn(Date, "now");
+    const dateSpy = vi.spyOn(Date, "now");
 
     // Stream should complete normally (not hitting the timeout)
     await streamToString(
@@ -105,7 +105,7 @@ describe("stopAfterMaxProcessingTime", () => {
 
   it("should handle empty stream gracefully", async () => {
     const mockStream = createMockStream([]);
-    const fullStop = jest.fn();
+    const fullStop = vi.fn();
     const result = stopAfterMaxProcessingTime(mockStream, 1000, fullStop);
 
     const output = await streamToString(result);
@@ -117,7 +117,7 @@ describe("stopAfterMaxProcessingTime", () => {
   it("should pass through all chunks if there's no timeout", async () => {
     const chunks = Array(100).fill("test chunk");
     const mockStream = createMockStream(chunks);
-    const fullStop = jest.fn();
+    const fullStop = vi.fn();
 
     // Use undefined as timeout to simulate no timeout
     const result = stopAfterMaxProcessingTime(
