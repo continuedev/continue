@@ -154,15 +154,31 @@ export function BlockSettingsTopToolbar() {
   const isUsingFreeTrial = usesFreeTrialApiKey(config);
 
   useEffect(() => {
-    ideMessenger
-      .request("controlPlane/getFreeTrialStatus", undefined)
-      .then((resp) => {
-        if (resp.status === "success") {
-          setFreeTrialStatus(resp.content);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const fetchFreeTrialStatus = () => {
+      ideMessenger
+        .request("controlPlane/getFreeTrialStatus", undefined)
+        .then((resp) => {
+          if (resp.status === "success") {
+            setFreeTrialStatus(resp.content);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchFreeTrialStatus();
+
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (isUsingFreeTrial) {
+      intervalId = setInterval(fetchFreeTrialStatus, 15000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [ideMessenger, isUsingFreeTrial]);
 
   const handleEllipsisClick = () => {
     if (isToolbarExpanded) {

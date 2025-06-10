@@ -640,6 +640,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     capabilities: llm.capabilities,
     roles: llm.roles,
     configurationStatus: llm.getConfigurationStatus(),
+    apiKeyLocation: llm.apiKeyLocation,
   };
 }
 

@@ -8,6 +8,15 @@ export function addToolCallDeltaToState(
   toolCallDelta: ToolCallDelta,
   currentState: ToolCallState | undefined,
 ): ToolCallState {
+  // This prevents multiple tool calls for now, by ignoring new tool call ids
+  if (
+    toolCallDelta.id &&
+    currentState?.toolCallId &&
+    toolCallDelta.id !== currentState?.toolCallId
+  ) {
+    return currentState;
+  }
+
   const currentCall = currentState?.toolCall;
 
   // These will/should not be partially streamed
@@ -21,8 +30,18 @@ export function addToolCallDeltaToState(
   const nameDelta = toolCallDelta.function?.name ?? "";
   const argsDelta = toolCallDelta.function?.arguments ?? "";
 
-  const mergedName =
-    currentName === nameDelta ? currentName : currentName + nameDelta; // Some models may include the name repeatedly. This doesn't account for an edge case where the name is like "dothisdothis" and it happens to stream name in chunks "dothis" and "dothis" but that's a super edge case
+  let mergedName = currentName;
+  if (nameDelta.startsWith(currentName)) {
+    // Case where model progresssively streams name but full name each time e.g. "readFi" -> "readFil" -> "readFile"
+    mergedName = nameDelta;
+  } else if (currentName.startsWith(nameDelta)) {
+    // Case where model streams in full name each time e.g. readFile -> readFile -> readFile
+    // do nothing
+  } else {
+    // Case where model streams in name in parts e.g. "read" -> "File"
+    mergedName = currentName + nameDelta;
+  }
+
   const mergedArgs = currentArgs + argsDelta;
 
   const [_, parsedArgs] = incrementalParseJson(mergedArgs || "{}");

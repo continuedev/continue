@@ -393,6 +393,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           code_challenge: codeChallenge,
           code_challenge_method: "S256",
           provider: "authkit",
+          screen_hint: WorkOsAuthProvider.useOnboardingUri
+            ? "sign-up"
+            : "sign-in",
         };
 
         Object.keys(params).forEach((key) =>

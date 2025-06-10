@@ -82,7 +82,7 @@ const ModelRoleSelector = ({
               className="bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground text-description w-full justify-between px-2 py-1 underline hover:underline"
             >
               <span className="line-clamp-1" style={{ fontSize: fontSize(-3) }}>
-                Setup a {displayName} model
+                Setup {displayName} model
               </span>
             </ListboxButton>
           ) : (

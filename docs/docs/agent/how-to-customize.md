@@ -5,6 +5,12 @@ keywords: [customize, chat]
 sidebar_position: 5
 ---
 
+## Add Rules Blocks
+
+Adding Rules can be done in your assistant locally or in the Hub.
+
+[Explore Rules on the Hub](https://hub.continue.dev/explore/rules) and see the [Rules deep dive](../customize/deep-dives/rules.md) for more details and tips on creating rules.
+
 ## Add MCP tools
 
 You can add MCP servers to your assistant to give Agent access to more tools. [Explore MCP Servers on the Hub](https://hub.continue.dev/explore/mcp) and see the [MCP guide](../customize/deep-dives/mcp.mdx) for more details.

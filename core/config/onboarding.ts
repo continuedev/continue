@@ -13,13 +13,13 @@ const ANTHROPIC_MODEL_CONFIG = {
   apiKeyInputName: "ANTHROPIC_API_KEY",
 };
 const OPENAI_MODEL_CONFIG = {
-  slugs: ["openai/o3", "openai/gpt-4.1-mini", "openai/gpt-4.1"],
+  slugs: ["openai/gpt-4.1", "openai/o3", "openai/gpt-4.1-mini"],
   apiKeyInputName: "OPENAI_API_KEY",
 };
 
 // TODO: These need updating on the hub
 const GEMINI_MODEL_CONFIG = {
-  slugs: ["google/gemini-2.0-flash", "google/gemini-2.5-pro"],
+  slugs: ["google/gemini-2.5-pro", "google/gemini-2.0-flash"],
   apiKeyInputName: "GEMINI_API_KEY",
 };
 

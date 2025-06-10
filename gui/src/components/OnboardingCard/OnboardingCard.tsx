@@ -35,7 +35,7 @@ export function OnboardingCard({
 
   function renderTabContent() {
     switch (activeTab) {
-      case OnboardingModes.PROVIDERS:
+      case OnboardingModes.API_KEY:
         return <OnboardingProvidersTab />;
       case OnboardingModes.LOCAL:
         return <OnboardingLocalTab />;
@@ -83,7 +83,7 @@ export function OnboardingCard({
     >
       <div className="flex h-full w-full items-center justify-center">
         <OnboardingCardLanding
-          onSelectConfigure={() => setActiveTab(OnboardingModes.PROVIDERS)}
+          onSelectConfigure={() => setActiveTab(OnboardingModes.API_KEY)}
           isDialog={isDialog}
         />
       </div>

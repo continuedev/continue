@@ -211,7 +211,7 @@ export function AddModelForm({
                     setSelectedModel(match);
                   }
                 }}
-                otherOptions={
+                topOptions={
                   Object.entries(providers).find(
                     ([, provider]) =>
                       provider?.title === selectedProvider.title,

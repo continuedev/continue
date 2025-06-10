@@ -707,7 +707,7 @@ export class Core {
         this.messenger.send("toolCallPartialOutput", params);
       };
 
-      return await callTool(tool, toolCall.function.arguments, {
+      return await callTool(tool, toolCall, {
         config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
@@ -716,6 +716,7 @@ export class Core {
         tool,
         toolCallId: toolCall.id,
         onPartialOutput,
+        codeBaseIndexer: this.codeBaseIndexer,
       });
     });
 
@@ -896,7 +897,7 @@ export class Core {
         editConfigYamlCallback = setupLocalConfig;
         break;
 
-      case OnboardingModes.PROVIDERS:
+      case OnboardingModes.API_KEY:
         if (provider && apiKey) {
           editConfigYamlCallback = (config: ConfigYaml) =>
             setupProviderConfig(config, provider, apiKey);

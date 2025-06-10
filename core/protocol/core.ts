@@ -38,7 +38,7 @@ import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
 
 export enum OnboardingModes {
-  PROVIDERS = "Providers",
+  API_KEY = "API Key",
   LOCAL = "Local",
   MODELS_ADD_ON = "Models Add-On",
 }
