@@ -34,6 +34,10 @@ class ContinueProxy extends OpenAI {
   constructor(options: LLMOptions) {
     super(options);
     this.configEnv = options.env;
+    // This it set to `undefined` to handle the case where we are proxying requests to Azure. We pass the correct env vars
+    // needed to do this in `extraBodyProperties` below, but if we don't set `apiType` to `undefined`, we end up proxying to
+    // `/openai/deployments/` which is invalid since that URL construction happens on the proxy.
+    this.apiType = undefined;
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
     this.orgScopeId = options.orgScopeId;
