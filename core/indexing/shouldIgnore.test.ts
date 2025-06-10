@@ -28,8 +28,10 @@ describe("shouldIgnore", () => {
     const result = await shouldIgnore(TEST_DIR + "/ignored-file.txt", testIde, [
       TEST_DIR,
     ]);
+
     expect(result).toBe(true);
   });
+
   test("should return true if a folder is ignored by .continueignore", async () => {
     addToTestDir([
       ["ignored-folder/file.txt", "content"],
@@ -163,5 +165,85 @@ describe("shouldIgnore", () => {
       TEST_DIR,
     ]);
     expect(result).toBe(true);
+  });
+
+  // Test cases for .graniteignore
+  test("should return true if a folder is ignored by .graniteignore", async () => {
+    addToTestDir([
+      ["ignored-folder/file.txt", "content"],
+      [".graniteignore", "ignored-folder/"],
+    ]);
+    const result = await shouldIgnore(
+      TEST_DIR + "/ignored-folder/file.txt",
+      testIde,
+      [TEST_DIR],
+    );
+    expect(result).toBe(true);
+  });
+
+  test("should ignore the content of .continueignore when .graniteignore exists", async () => {
+    addToTestDir([
+      ["keep.txt", "content"],
+      ["ignore.txt", "content"],
+      [".continueignore", "keep.txt"],
+      [".graniteignore", "ignore.txt"],
+    ]);
+
+    const keptResult = await shouldIgnore(TEST_DIR + "/keep.txt", testIde, [
+      TEST_DIR,
+    ]);
+    expect(keptResult).toBe(false);
+
+    const ignoredResult = await shouldIgnore(
+      TEST_DIR + "/ignore.txt",
+      testIde,
+      [TEST_DIR],
+    );
+    expect(ignoredResult).toBe(true);
+  });
+
+  test("should return true if a .graniteignore override ignores file", async () => {
+    addToTestDir([
+      ["override-file.txt", "content"],
+      [".gitignore", "override-file.txt"],
+      [".graniteignore", "!override-file.txt"],
+    ]);
+    const result = await shouldIgnore(
+      TEST_DIR + "/override-file.txt",
+      testIde,
+      [TEST_DIR],
+    );
+    expect(result).toBe(false);
+  });
+
+  test("should return true for deeply nested file ignored by ignore files at multiple levels", async () => {
+    addToTestDir([
+      ["level1/level2-a/level3/ignored-file.txt", "content"],
+      ["level1/level2-b/level3-a/ignored-file.txt", "content"],
+      ["level1/level2-b/level3-b/kept-file.txt", "content"],
+      ["level1/.gitignore", "level2-a/"],
+      ["level1/level2-b/.graniteignore", "level3-a/"],
+    ]);
+
+    const ignoredResult1 = await shouldIgnore(
+      TEST_DIR + "/level1/level2-a/level3/ignored-file.txt",
+      testIde,
+      [TEST_DIR],
+    );
+    expect(ignoredResult1).toBe(true);
+
+    const ignoredResult2 = await shouldIgnore(
+      TEST_DIR + "/level1/level2-b/level3-a/ignored-file.txt",
+      testIde,
+      [TEST_DIR],
+    );
+    expect(ignoredResult2).toBe(true);
+
+    const keptResult = await shouldIgnore(
+      TEST_DIR + "/level1/level2-b/level3-b/kept-file.txt",
+      testIde,
+      [TEST_DIR],
+    );
+    expect(keptResult).toBe(false);
   });
 });

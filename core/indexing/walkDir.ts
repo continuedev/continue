@@ -3,11 +3,12 @@ import ignore, { Ignore } from "ignore";
 import type { FileType, IDE } from "..";
 
 import { joinPathsToUri } from "../util/uri";
+import { defaultIgnoreFileAndDir, gitIgArrayFromFile } from "./ignore";
+
 import {
-  defaultIgnoreFileAndDir,
-  getGlobalContinueIgArray,
-  gitIgArrayFromFile,
-} from "./ignore";
+  getGlobalIgnoreArray,
+  getIgnoreDotFile,
+} from "../granite/config/graniteDotFiles";
 
 export interface WalkerOptions {
   include?: "dirs" | "files" | "both";
@@ -92,9 +93,10 @@ class DFSWalker {
     let ignoreCacheHits = 0;
 
     let section = Date.now();
+    const ignoreArray = await getGlobalIgnoreArray(this.ide);
     const defaultAndGlobalIgnores = ignore()
       .add(this.options.overrideDefaultIgnores ?? defaultIgnoreFileAndDir)
-      .add(getGlobalContinueIgArray());
+      .add(ignoreArray);
     ignoreFileTime += Date.now() - section;
 
     const rootContext: WalkContext = {
@@ -309,12 +311,12 @@ export async function getIgnoreContext(
     .filter(([_, entryType]) => entryType === (1 as FileType.File))
     .map(([name, _]) => name);
 
+  const ignoreFile = await getIgnoreDotFile(ide, currentDir);
+
   // Find ignore files and get ignore arrays from their contexts
   // These are done separately so that .continueignore can override .gitignore
   const gitIgnoreFile = dirFiles.find((name) => name === ".gitignore");
-  const continueIgnoreFile = dirFiles.find(
-    (name) => name === ".continueignore",
-  );
+  const continueIgnoreFile = dirFiles.find((name) => name === ignoreFile);
 
   const getGitIgnorePatterns = async () => {
     if (gitIgnoreFile) {
@@ -325,7 +327,7 @@ export async function getIgnoreContext(
   };
   const getContinueIgnorePatterns = async () => {
     if (continueIgnoreFile) {
-      const contents = await ide.readFile(`${currentDir}/.continueignore`);
+      const contents = await ide.readFile(`${currentDir}/${ignoreFile}`);
       return gitIgArrayFromFile(contents);
     }
     return [];

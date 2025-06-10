@@ -1,5 +1,7 @@
 import { ConfigValidationError } from "@continuedev/config-yaml";
+import type { RuleSource } from "..";
 import { IDE, RuleWithSource } from "..";
+import { getRulesDotFile } from "../granite/config/graniteDotFiles";
 import { joinPathsToUri } from "../util/uri";
 export const SYSTEM_PROMPT_DOT_FILE = ".continuerules";
 
@@ -10,14 +12,15 @@ export async function getWorkspaceContinueRuleDotFiles(ide: IDE) {
   const rules: RuleWithSource[] = [];
   for (const dir of dirs) {
     try {
-      const dotFile = joinPathsToUri(dir, SYSTEM_PROMPT_DOT_FILE);
+      const rulesFileName = await getRulesDotFile(ide, dir);
+      const dotFile = joinPathsToUri(dir, rulesFileName);
       const exists = await ide.fileExists(dotFile);
       if (exists) {
         const content = await ide.readFile(dotFile);
         rules.push({
           rule: content,
           ruleFile: dotFile,
-          source: ".continuerules",
+          source: rulesFileName as RuleSource,
         });
       }
     } catch (e) {

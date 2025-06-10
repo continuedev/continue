@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
-import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
@@ -14,6 +13,10 @@ import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
+import {
+  getIgnoreDotFile,
+  GRANITE_SYSTEM_PROMPT_DOT_FILE,
+} from "./granite/config/graniteDotFiles";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
@@ -32,6 +35,7 @@ import {
 } from "./util/processTerminalBackgroundStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
+import { getDirectParentDir } from "./util/uri";
 
 import {
   ContextItemWithId,
@@ -45,6 +49,7 @@ import {
 
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
+import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import {
   setupBestConfig,
@@ -819,17 +824,18 @@ export class Core {
           continue;
         }
 
+        const curDir = getDirectParentDir(uri);
+        const ignoreFile = await getIgnoreDotFile(this.ide, curDir);
+
         if (
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
+          uri.endsWith(GRANITE_SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".granite-code") && uri.endsWith(".yaml"))
         ) {
           await this.configHandler.reloadConfig();
-        } else if (
-          uri.endsWith(".continueignore") ||
-          uri.endsWith(".gitignore")
-        ) {
+        } else if (uri.endsWith(ignoreFile) || uri.endsWith(".gitignore")) {
           // Reindex the workspaces
           this.invoke("index/forceReIndex", {
             shouldClearIndexes: true,

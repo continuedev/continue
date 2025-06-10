@@ -1,11 +1,8 @@
 import ignore from "ignore";
 
 import type { FileType, IDE, SlashCommand } from "../..";
-import {
-  DEFAULT_IGNORE,
-  getGlobalContinueIgArray,
-  gitIgArrayFromFile,
-} from "../../indexing/ignore";
+import { getGlobalIgnoreArray } from "../../granite/config/graniteDotFiles";
+import { DEFAULT_IGNORE, gitIgArrayFromFile } from "../../indexing/ignore";
 import { renderChatMessage } from "../../util/messageContent";
 import {
   findUriInDirs,
@@ -57,7 +54,8 @@ const OnboardSlashCommand: SlashCommand = {
 };
 
 async function getEntriesFilteredByIgnore(dir: string, ide: IDE) {
-  const ig = ignore().add(DEFAULT_IGNORE).add(getGlobalContinueIgArray());
+  const ignoreArray = await getGlobalIgnoreArray(ide);
+  const ig = ignore().add(DEFAULT_IGNORE).add(ignoreArray);
   const entries = await ide.listDir(dir);
 
   const ignoreUri = joinPathsToUri(dir, ".gitignore");

@@ -31,6 +31,7 @@ export function findUriInDirs(
   foundInDir: string | null;
 } {
   const uriComps = URI.parse(uri);
+
   if (!uriComps.scheme) {
     throw new Error(`Invalid uri: ${uri}`);
   }
@@ -196,4 +197,10 @@ export function getUriDescription(uri: string, dirUriCandidates: string[]) {
     last2Parts,
     baseName,
   };
+}
+
+export function getDirectParentDir(filePath: string): string {
+  const parts = filePath.split("/");
+  parts.pop();
+  return parts.join("/");
 }

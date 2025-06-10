@@ -3,8 +3,8 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigFile, getConfigJsonPath } from "core/util/paths";
+import { getIgnoreDotFile } from "core/granite/config/graniteDotFiles";
+import { getDirectParentDir } from "core/util/uri";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -445,9 +445,26 @@ class VsCodeIde implements IDE {
       // throw new Error("Ripgrep not supported, this workspace is remote");
 
       // IMPORTANT: findFiles automatically accounts for .gitignore
-      const ignoreFiles = await vscode.workspace.findFiles(
-        "**/.continueignore",
+      const continueIgnoreFiles = await vscode.workspace.findFiles(
+        `**/.continueignore`,
         null,
+      );
+
+      const graniteIgnoreFiles = await vscode.workspace.findFiles(
+        `**/.graniteignore`,
+        null,
+      );
+
+      // Create a set of directories where .graniteignore exists so we can filter
+      // out .continueignore at these directories
+      const graniteDirs = new Set(
+        graniteIgnoreFiles.map((uri) => getDirectParentDir(uri.path)),
+      );
+
+      const ignoreFiles = graniteIgnoreFiles.concat(
+        continueIgnoreFiles.filter(
+          (uri) => !graniteDirs.has(getDirectParentDir(uri.path)),
+        ),
       );
 
       const ignoreGlobs: Set<string> = new Set();
@@ -512,12 +529,13 @@ class VsCodeIde implements IDE {
     } else {
       const results: string[] = [];
       for (const dir of await this.getWorkspaceDirs()) {
+        const ignoreFileSuffix = await getIgnoreDotFile(this, dir);
         const dirResults = await this.runRipgrepQuery(dir, [
           "--files",
           "--iglob",
           pattern,
           "--ignore-file",
-          ".continueignore",
+          ignoreFileSuffix,
           "--ignore-file",
           ".gitignore",
         ]);
@@ -535,10 +553,11 @@ class VsCodeIde implements IDE {
     }
     const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
+      const ignoreFileSuffix = await getIgnoreDotFile(this, dir);
       const dirResults = await this.runRipgrepQuery(dir, [
         "-i", // Case-insensitive search
         "--ignore-file",
-        ".continueignore",
+        ignoreFileSuffix,
         "--ignore-file",
         ".gitignore",
         "-C",

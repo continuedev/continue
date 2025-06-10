@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
+import { GRANITE_IGNORE_DOT_FILE } from "../granite/config/graniteDotFiles";
 
 dotenv.config();
 
@@ -53,6 +54,14 @@ export function getGlobalContinueIgnorePath(): string {
     fs.writeFileSync(continueIgnorePath, "");
   }
   return continueIgnorePath;
+}
+
+export function getGlobalGraniteIgnorePath(): string {
+  const graniteIgnorePath = path.join(
+    getContinueGlobalPath(),
+    GRANITE_IGNORE_DOT_FILE,
+  );
+  return graniteIgnorePath;
 }
 
 export function getContinueGlobalPath(): string {

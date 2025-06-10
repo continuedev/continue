@@ -381,5 +381,53 @@ describe("walkDir functions", () => {
       expect(files).not.toContain("xyz/xyz");
       expect(files).toContain("xyz/normal.txt");
     });
+
+    it("should handle both gitignore and graniteignore", async () => {
+      addToTestDir([
+        [".gitignore", "*.py"],
+        [".graniteignore", "*.ts"],
+        ["a.txt", "content"],
+        ["b.py", "content"],
+        ["c.ts", "content"],
+        ["d.js", "content"],
+      ]);
+
+      const files = await walkDir(
+        (await testIde.getWorkspaceDirs())[0],
+        testIde,
+        {
+          returnRelativeUrisPaths: true,
+        },
+      );
+
+      expect(files).toContain("a.txt");
+      expect(files).toContain("d.js");
+      expect(files).not.toContain("b.py");
+      expect(files).not.toContain("c.ts");
+    });
+
+    it("should bypass the content of continueignore when graniteignore exists", async () => {
+      addToTestDir([
+        [".continueignore", "*.py"],
+        [".graniteignore", "*.ts"],
+        ["a.txt", "content"],
+        ["b.py", "content"],
+        ["c.ts", "content"],
+        ["d.js", "content"],
+      ]);
+
+      const files = await walkDir(
+        (await testIde.getWorkspaceDirs())[0],
+        testIde,
+        {
+          returnRelativeUrisPaths: true,
+        },
+      );
+
+      expect(files).toContain("a.txt");
+      expect(files).toContain("d.js");
+      expect(files).toContain("b.py");
+      expect(files).not.toContain("c.ts");
+    });
   });
 });

@@ -1,7 +1,8 @@
 import ignore from "ignore";
 import type { FileType, IDE } from "../";
+import { getGlobalIgnoreArray } from "../granite/config/graniteDotFiles";
 import { findUriInDirs, getUriPathBasename } from "../util/uri";
-import { defaultIgnoreFileAndDir, getGlobalContinueIgArray } from "./ignore";
+import { defaultIgnoreFileAndDir } from "./ignore";
 import { getIgnoreContext } from "./walkDir";
 
 /*
@@ -23,9 +24,11 @@ export async function shouldIgnore(
     return true;
   }
 
+  const ignoreArray = await getGlobalIgnoreArray(ide);
+
   const defaultAndGlobalIgnores = ignore()
     .add(defaultIgnoreFileAndDir)
-    .add(getGlobalContinueIgArray());
+    .add(ignoreArray);
 
   let currentDir = uri;
   let directParent = true;
