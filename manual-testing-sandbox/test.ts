@@ -14,7 +14,7 @@ class Calculator {
     this.result -= number;
     return this;
   }
-  
+
   multiply(number: number): Calculator {
     this.result *= number;
     return this;
