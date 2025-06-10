@@ -601,22 +601,25 @@ export class Core {
 
     on("files/closed", async ({ data }) => {
       try {
-        const filepaths = data.fileUris;
-        if (!prevFilepaths.filepaths.length) {
-          prevFilepaths.filepaths = filepaths;
-        }
+        const fileUris = await this.ide.getOpenFiles();
+        if (fileUris) {
+          const filepaths = fileUris.map((uri) => uri.toString());
 
-        // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
-        if (filepaths.length <= prevFilepaths.filepaths.length) {
-          // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
-          for (const [key, _] of openedFilesLruCache.entriesDescending()) {
-            if (!filepaths.includes(key)) {
-              openedFilesLruCache.delete(key);
+          if (!prevFilepaths.filepaths.length) {
+            prevFilepaths.filepaths = filepaths;
+          }
+
+          // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
+          if (filepaths.length <= prevFilepaths.filepaths.length) {
+            // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
+            for (const [key, _] of openedFilesLruCache.entriesDescending()) {
+              if (!filepaths.includes(key)) {
+                openedFilesLruCache.delete(key);
+              }
             }
           }
+          prevFilepaths.filepaths = filepaths;
         }
-
-        prevFilepaths.filepaths = filepaths;
       } catch (e) {
         console.error(
           `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,

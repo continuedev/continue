@@ -295,14 +295,10 @@ export class VsCodeExtension {
       });
     });
 
-    vscode.workspace.onDidCloseTextDocument((document) => {
-      if (document) {
-        let openFiles = this.ideUtils.getOpenFileUrisAsStrings();
-        this.core.invoke("files/closed", {
-          uris: [document.uri.toString()],
-          fileUris: openFiles,
-        });
-      }
+    vscode.workspace.onDidCloseTextDocument(async (event) => {
+      this.core.invoke("files/closed", {
+        uris: [event.uri.toString()],
+      });
     });
 
     vscode.workspace.onDidCreateFiles(async (event) => {
@@ -393,7 +389,10 @@ export class VsCodeExtension {
     });
 
     // initializes openedFileLruCache with files that are already open when the extension is activated
-    let initialOpenedFilePaths = this.ideUtils.getOpenFileUrisAsStrings();
+    let initialOpenedFilePaths = this.ideUtils
+      .getOpenFiles()
+      .map((uri) => uri.toString());
+    console.log("initial", initialOpenedFilePaths);
     this.core.invoke("files/opened", { uris: initialOpenedFilePaths });
 
     vscode.workspace.onDidChangeConfiguration(async (event) => {

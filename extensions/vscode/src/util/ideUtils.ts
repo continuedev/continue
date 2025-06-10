@@ -267,25 +267,15 @@ export class VsCodeIdeUtils {
     return uri.scheme === "file" || uri.scheme === "vscode-remote";
   }
 
-  // Gets the URIs of open tabs in the editor
-  // Stricter criteria than getOpenFiles()
-  getOpenFileUrisAsStrings(): string[] {
-    return vscode.window.tabGroups.all
-      .flatMap((group) => group.tabs)
-      .filter((tab) => tab.input instanceof vscode.TabInputText)
-      .map((tab) => (tab.input as vscode.TabInputText).uri.toString());
-  }
-
   getOpenFiles(): vscode.Uri[] {
     return vscode.window.tabGroups.all
-      .map((group) => {
-        return group.tabs.map((tab) => {
-          return (tab.input as any)?.uri;
-        });
-      })
-      .flat()
-      .filter(Boolean) // filter out undefined values
-      .filter((uri) => this.documentIsCode(uri)); // Filter out undesired documents
+      .flatMap((group) => group.tabs)
+      .filter(
+        (tab) =>
+          tab.input instanceof vscode.TabInputText &&
+          this.documentIsCode((tab.input as vscode.TabInputText).uri),
+      )
+      .map((tab) => (tab.input as vscode.TabInputText).uri);
   }
 
   saveFile(uri: vscode.Uri) {
