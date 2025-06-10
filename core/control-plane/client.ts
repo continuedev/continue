@@ -10,9 +10,8 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IdeSettings, IdeType, ModelDescription } from "../index.js";
+import { IdeSettings, ModelDescription } from "../index.js";
 
-import LocalProfileLoader from "../config/profile/LocalProfileLoader.js";
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
 
@@ -184,16 +183,30 @@ export class ControlPlaneClient {
     }
   }
 
-  public async getModelsAddOnUpgradeUrl(
-    ide: IdeType,
+  /**
+   * JetBrains does not support deep links, so we only check for `vsCodeUriScheme`
+   * @param vsCodeUriScheme
+   * @returns
+   */
+  public async getModelsAddOnCheckoutUrl(
+    vsCodeUriScheme?: string,
   ): Promise<{ url: string } | null> {
     if (!(await this.isSignedIn())) {
       return null;
     }
 
     try {
+      const params = new URLSearchParams({
+        // LocalProfileLoader ID
+        profile_id: "local",
+      });
+
+      if (vsCodeUriScheme) {
+        params.set("vscode_uri_scheme", vsCodeUriScheme);
+      }
+
       const resp = await this.request(
-        `ide/get-models-add-on-upgrade-url?ide=${encodeURIComponent(ide)}&profile_id=${LocalProfileLoader.ID}`,
+        `ide/get-models-add-on-checkout-url?${params.toString()}`,
         {
           method: "GET",
         },

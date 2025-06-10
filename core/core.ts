@@ -343,8 +343,8 @@ export class Core {
     });
 
     on("controlPlane/getModelsAddOnUpgradeUrl", async (msg) => {
-      return this.configHandler.controlPlaneClient.getModelsAddOnUpgradeUrl(
-        msg.data.ide,
+      return this.configHandler.controlPlaneClient.getModelsAddOnCheckoutUrl(
+        msg.data.vsCodeUriScheme,
       );
     });
 

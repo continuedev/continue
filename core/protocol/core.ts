@@ -21,7 +21,6 @@ import {
   ExperimentalModelRoles,
   FileSymbolMap,
   IdeSettings,
-  IdeType,
   LLMFullCompletionOptions,
   ModelDescription,
   PromptLog,
@@ -202,7 +201,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
   "controlPlane/getModelsAddOnUpgradeUrl": [
-    { ide: IdeType },
+    { vsCodeUriScheme?: string },
     { url: string } | null,
   ];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];

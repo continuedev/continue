@@ -1,13 +1,32 @@
-import { useContext } from "react";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { useContext, useEffect, useState } from "react";
 import { Button } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { isJetBrains } from "../../../util";
+import { getLocalStorage } from "../../../util/localStorage";
+import { useOnboardingCard } from "../hooks";
 
 /**
  * Models Add-On tab component displaying pricing and tier information
  */
 export function OnboardingModelsAddOnTab() {
   const ideMessenger = useContext(IdeMessengerContext);
+  const { close } = useOnboardingCard();
+  const [isPolling, setIsPolling] = useState(false);
+
+  const isJetbrains = getLocalStorage("ide") === "jetbrains";
+
+  // Polling effect for JetBrains
+  useEffect(() => {
+    if (!isPolling || !isJetbrains) return;
+
+    const interval = setInterval(() => {
+      ideMessenger.post("config/refreshProfiles", {
+        selectProfileId: "local",
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isPolling, isJetbrains, ideMessenger]);
 
   function openPricingPage() {
     ideMessenger.post("controlPlane/openUrl", {
@@ -17,12 +36,10 @@ export function OnboardingModelsAddOnTab() {
 
   async function handleUpgrade() {
     try {
-      const ide = isJetBrains() ? "jetbrains" : "vscode";
-
       const response = await ideMessenger.request(
         "controlPlane/getModelsAddOnUpgradeUrl",
         {
-          ide,
+          vsCodeUriScheme: getLocalStorage("vsCodeUriScheme"),
         },
       );
 
@@ -35,7 +52,25 @@ export function OnboardingModelsAddOnTab() {
     } catch (error) {
       console.error("Error during upgrade process:", error);
       openPricingPage();
+    } finally {
+      if (isJetbrains) {
+        setIsPolling(true);
+      } else {
+        close();
+      }
     }
+  }
+
+  // Show polling UI for JetBrains after upgrade
+  if (isPolling && isJetbrains) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center text-center">
+        <h2 className="text-foreground mb-4 items-center text-lg font-semibold">
+          <ArrowPathIcon className="text-foreground animate-spin-slow mr-2 h-4 w-4" />
+          You may close this dialog after upgrading
+        </h2>
+      </div>
+    );
   }
 
   return (
