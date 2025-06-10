@@ -1,6 +1,7 @@
 import { SecretType } from "@continuedev/config-yaml";
-import { BrowserSerializedContinueConfig } from "core";
-import { usesFreeTrialApiKey } from "./freeTrialHelpers";
+import { vi } from "vitest";
+import { BrowserSerializedContinueConfig } from "..";
+import { usesFreeTrialApiKey } from "./usesFreeTrialApiKey";
 
 // Mock the decodeSecretLocation function
 vi.mock("@continuedev/config-yaml", async () => {

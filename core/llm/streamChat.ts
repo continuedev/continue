@@ -1,6 +1,7 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ChatMessage, IDE, PromptLog } from "..";
 import { ConfigHandler } from "../config/ConfigHandler";
+import { usesFreeTrialApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
 import { Telemetry } from "../util/posthog";
@@ -149,6 +150,13 @@ async function checkForFreeTrialExceeded(
   configHandler: ConfigHandler,
   messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
 ) {
+  const { config } = await configHandler.getSerializedConfig();
+
+  // Only check if the user is using the free trial
+  if (!usesFreeTrialApiKey(config)) {
+    return;
+  }
+
   try {
     const freeTrialStatus =
       await configHandler.controlPlaneClient.getFreeTrialStatus();
