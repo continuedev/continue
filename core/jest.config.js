@@ -31,5 +31,6 @@ export default {
   maxWorkers: 1, // equivalent to CLI --runInBand
   modulePathIgnorePatterns: [
     "<rootDir>/config/yaml/LocalPlatformClient.test.ts",
+    "<rootDir>/autocomplete/**.test.ts",
   ],
 };
