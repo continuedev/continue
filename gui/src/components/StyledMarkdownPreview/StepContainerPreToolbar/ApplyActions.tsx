@@ -31,7 +31,7 @@ export function ApplyActions(props: ApplyActionsProps) {
       );
     case "done":
       return (
-        <div className="flex select-none items-center rounded bg-zinc-700 px-1.5 sm:gap-1">
+        <div className="flex select-none items-center rounded bg-zinc-700 sm:gap-1 md:px-1.5">
           <span className="text-lightgray text-center text-xs max-md:hidden">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
           </span>
