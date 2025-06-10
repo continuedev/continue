@@ -798,7 +798,7 @@ const WizardContent: React.FC = () => {
             ". steps . media"
             ". . . .";
           grid-template-columns: 1fr 5fr 1fr 8fr;
-          grid-template-rows: calc(25% - 100px) auto auto 1fr auto;
+          grid-template-rows: calc(25% - 100px) auto 1fr auto;
           max-width: 80vw;
           height: 100%;
           margin-left: auto;
@@ -828,6 +828,9 @@ const WizardContent: React.FC = () => {
             margin-top: 40px;
             justify-content: center;
             align-items: center;
+          }
+          .granite-wizard-illustration img {
+            max-height: 400px;
           }
         }
       `}</style>
@@ -870,7 +873,7 @@ const WizardContent: React.FC = () => {
           <img
             src={`${window.vscMediaUrl}/granite/step_${activeStep + 1}.svg`}
             alt={`Step ${activeStep + 1} illustration`}
-            className="h-auto max-h-[400px] max-w-full object-contain opacity-90"
+            className="h-auto max-h-[640px] max-w-full object-contain opacity-90"
           />
         </div>
       </div>
