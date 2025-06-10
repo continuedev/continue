@@ -1,3 +1,6 @@
+import { decodeSecretLocation, SecretType } from "@continuedev/config-yaml";
+import { BrowserSerializedContinueConfig } from "..";
+
 /**
  * Helper function to determine if the config uses a free trial API key
  * @param config The serialized config object
