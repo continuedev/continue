@@ -17,7 +17,7 @@ const renderTabButton = (
 ) => {
   const baseButtonClass = `text-foreground -mb-px cursor-pointer rounded-t-sm border-none bg-transparent py-2 font-medium hover:brightness-125 focus:outline-none ${index === 0 ? "pl-1.5 pr-3" : "px-3"} ${activeTab === tabTitle ? "brightness-125" : "brightness-75"}`;
 
-  if (tabTitle === OnboardingModes.PROVIDERS) {
+  if (tabTitle === OnboardingModes.API_KEY) {
     return (
       <button
         className={baseButtonClass}
@@ -81,11 +81,11 @@ export function OnboardingCardTabs({
   const tabs = showFreeTrialExceededAlert
     ? [
         OnboardingModes.MODELS_ADD_ON,
-        OnboardingModes.PROVIDERS,
+        OnboardingModes.API_KEY,
         OnboardingModes.LOCAL,
       ]
     : [
-        OnboardingModes.PROVIDERS,
+        OnboardingModes.API_KEY,
         OnboardingModes.LOCAL,
         OnboardingModes.MODELS_ADD_ON,
       ];
