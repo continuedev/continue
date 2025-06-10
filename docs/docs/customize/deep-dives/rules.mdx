@@ -62,8 +62,10 @@ Explore available rules [here](https://hub.continue.dev/explore/rules), or [crea
 Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
 
 - `name` (**required** for YAML): A display name/title for the rule
-- `alwaysApply` (optional): Always include the rule, regardless of file context
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
+- `alwaysApply`: true - Always include the rule, regardless of file context
+- `alwaysApply`: false - Only include if globs exist AND match file context
+- `alwaysApply`: undefined - Default behavior: include if no globs exist OR globs exist and match
 
 <Tabs groupId="rules-example">
   <TabItem value="md" label="Markdown">
