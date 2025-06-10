@@ -37,7 +37,7 @@ describe("stopAfterMaxProcessingTime", () => {
     expect(fullStop).not.toHaveBeenCalled();
   });
 
-  it.only("should stop processing after max time is reached", async () => {
+  it("should stop processing after max time is reached", async () => {
     // Mock implementation of Date.now
     let currentTime = 0;
     const originalDateNow = Date.now;
