@@ -6,7 +6,8 @@ import {
   KeyIcon,
 } from "@heroicons/react/24/outline";
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
-import { useContext, useMemo } from "react";
+import posthog from "posthog-js";
+import { useContext, useEffect, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import { DiscordIcon } from "../../components/svg/DiscordIcon";
@@ -110,6 +111,20 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       }
     }
   }
+
+  // Capture error event with PostHog
+  useEffect(() => {
+    if (error) {
+      const errorData = {
+        error_type: statusCode ? `HTTP ${statusCode}` : "Unknown",
+        error_message: parsedError,
+        model_provider: providerName,
+        model_title: modelTitle,
+      };
+
+      posthog.capture("gui_stream_error", errorData);
+    }
+  }, [error, parsedError, statusCode, providerName, modelTitle]);
 
   const checkKeysButton = apiKeyUrl ? (
     <GhostButton
