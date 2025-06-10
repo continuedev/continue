@@ -153,7 +153,7 @@ async function checkForFreeTrialExceeded(
   const { config } = await configHandler.getSerializedConfig();
 
   // Only check if the user is using the free trial
-  if (!usesFreeTrialApiKey(config)) {
+  if (config && !usesFreeTrialApiKey(config)) {
     return;
   }
 
