@@ -136,7 +136,7 @@ export async function* stopAtStartOf(
   // We use sequenceLength * 1.5 as a heuristic to make sure we don't miss the sequence if the
   // stream is not perfectly aligned with the sequence (small whitespace differences etc).
   const targetPart = suffix
-    .trimStart()
+    .replace(/^\s+/, '')
     .slice(0, Math.floor(sequenceLength * 1.5));
 
   let buffer = "";
@@ -145,7 +145,8 @@ export async function* stopAtStartOf(
     buffer += chunk;
 
     // Check if the targetPart contains contains the buffer at any point
-    if (buffer.length >= sequenceLength && targetPart.includes(buffer)) {
+    const trimmedBuffer = buffer.replace(/^\s+/, '');
+    if (trimmedBuffer.length >= sequenceLength && targetPart.includes(trimmedBuffer)) {
       return; // Stop processing when the sequence is found
     }
 
