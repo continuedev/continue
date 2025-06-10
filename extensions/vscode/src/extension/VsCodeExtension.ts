@@ -392,7 +392,6 @@ export class VsCodeExtension {
     let initialOpenedFilePaths = this.ideUtils
       .getOpenFiles()
       .map((uri) => uri.toString());
-    console.log("initial", initialOpenedFilePaths);
     this.core.invoke("files/opened", { uris: initialOpenedFilePaths });
 
     vscode.workspace.onDidChangeConfiguration(async (event) => {
