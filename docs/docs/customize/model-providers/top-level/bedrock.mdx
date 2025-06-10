@@ -10,15 +10,15 @@ Amazon Bedrock is a fully managed service on AWS that provides access to foundat
 
 ## Chat model
 
-We recommend configuring **Claude 3.5 Sonnet** as your chat model.
+We recommend configuring **Claude 3.7 Sonnet** as your chat model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude 3.5 Sonnet
+    - name: Claude 3.7 Sonnet
       provider: bedrock
-      model: anthropic.claude-3-5-sonnet-20240620-v1:0
+      model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
       env:
         region: us-east-1
         profile: bedrock
@@ -31,9 +31,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
   {
     "models": [
       {
-        "title": "Claude 3.5 Sonnet", 
+        "title": "Claude 3.7 Sonnet",
         "provider": "bedrock",
-        "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
         "region": "us-east-1",
         "profile": "bedrock"
       }
@@ -146,6 +146,36 @@ We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may
   ```
   </TabItem>
 </Tabs>
+
+## Prompt caching
+
+Bedrock allows Claude models to cache tool payloads, system messages, and chat
+messages between requests. Enable this behavior by adding
+`promptCaching: true` under `defaultCompletionOptions` in your model
+configuration.
+
+Prompt caching is generally available for:
+
+- Claude 3.7 Sonnet
+- Claude 3.5 Haiku
+- Amazon Nova Micro
+- Amazon Nova Lite
+- Amazon Nova Pro
+
+Customers who were granted access to Claude 3.5 Sonnet v2 during the prompt
+caching preview will retain that access, but it cannot be enabled for new users
+on that model.
+
+```yaml title="config.yaml"
+models:
+  - name: Claude 3.7 Sonnet
+    provider: bedrock
+    model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+    defaultCompletionOptions:
+      promptCaching: true
+```
+
+Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
 
 ## Authentication
 
