@@ -48,7 +48,6 @@ import { streamEditThunk } from "../../redux/thunks/edit";
 import { loadLastSession } from "../../redux/thunks/session";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 
-import { OnboardingModes } from "core/protocol/core";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -199,10 +198,6 @@ export function Chat() {
       //       "error",
       //       "You've reached the free trial limit. Please configure a model to continue.",
       //     );
-
-      // Card in chat will only show if no history
-      // Also, note that platform card ignore the "Best", always opens to main tab
-      onboardingCard.open(OnboardingModes.API_KEY);
 
       //     // If history, show the dialog, which will automatically close if there is not history
       //     if (history.length) {
