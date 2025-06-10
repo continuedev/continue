@@ -32,7 +32,7 @@ export function ApplyActions(props: ApplyActionsProps) {
     case "done":
       return (
         <div className="flex select-none items-center rounded bg-zinc-700 px-1.5 sm:gap-1">
-          <span className="max-xs:hidden text-lightgray text-center text-xs">
+          <span className="text-lightgray text-center text-xs max-md:hidden">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
           </span>
 
@@ -42,7 +42,7 @@ export function ApplyActions(props: ApplyActionsProps) {
               onClick={onClickReject}
               tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
             >
-              <XMarkIcon className="h-3.5 w-3.5 text-red-600 hover:brightness-125" />
+              <XMarkIcon className="text-error h-3.5 w-3.5 hover:brightness-125" />
             </ToolbarButtonWithTooltip>
 
             <ToolbarButtonWithTooltip
@@ -50,7 +50,7 @@ export function ApplyActions(props: ApplyActionsProps) {
               onClick={props.onClickAccept}
               tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
             >
-              <CheckIcon className="h-3.5 w-3.5 text-green-600 hover:brightness-125" />
+              <CheckIcon className="text-success h-3.5 w-3.5 hover:brightness-125" />
             </ToolbarButtonWithTooltip>
           </div>
         </div>
