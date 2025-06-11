@@ -6,8 +6,10 @@ import {
   ConfigValidationError,
   ModelRole,
   PackageIdentifier,
+  RegistryClient,
 } from "@continuedev/config-yaml";
 
+import { dirname } from "path";
 import {
   ContinueConfig,
   ContinueRcJson,
@@ -22,7 +24,10 @@ import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { getControlPlaneEnv } from "../../control-plane/env.js";
+import {
+  getControlPlaneEnv,
+  getControlPlaneEnvSync,
+} from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
@@ -32,6 +37,7 @@ import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
+import { getCleanUriPath } from "../../util/uri";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
@@ -70,6 +76,25 @@ export default async function doLoadConfig(options: {
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
+  let registryClient: RegistryClient | undefined = undefined;
+  const getRegistryClient = () => {
+    if (registryClient) {
+      return registryClient;
+    }
+    const rootPath =
+      packageIdentifier.uriType === "file"
+        ? dirname(getCleanUriPath(packageIdentifier.filePath))
+        : undefined;
+
+    registryClient = new RegistryClient({
+      accessToken: workOsAccessToken,
+      apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
+        .CONTROL_PLANE_URL,
+      rootPath,
+    });
+    return registryClient;
+  };
+
   // Migrations for old config files
   // Removes
   const configJsonPath = getConfigJsonPath();
@@ -80,12 +105,13 @@ export default async function doLoadConfig(options: {
   const configYamlPath = localPathOrUriToPath(
     overrideConfigYamlByPath || getConfigYamlPath(ideInfo.ideType),
   );
+  const useLocalYamlAssistant = fs.existsSync(configYamlPath);
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
-  if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
+  if (overrideConfigYaml || useLocalYamlAssistant) {
     const result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
@@ -97,6 +123,7 @@ export default async function doLoadConfig(options: {
       orgScopeId,
       packageIdentifier,
       workOsAccessToken,
+      getRegistryClient,
     });
     newConfig = result.config;
     errors = result.errors;
