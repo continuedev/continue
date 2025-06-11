@@ -8,7 +8,6 @@ import {
 import { renderChatMessage } from "../../util/messageContent";
 import { getCleanUriPath } from "../../util/uri";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
-import { RULES_MARKDOWN_FILENAME } from "./constants";
 
 /**
  * Checks if a path matches any of the provided globs
@@ -90,11 +89,7 @@ const isFileInDirectory = (
  * Checks if a rule is a root-level rule (.continue directory or no file path)
  */
 const isRootLevelRule = (rule: RuleWithSource): boolean => {
-  return (
-    !rule.ruleFile ||
-    rule.ruleFile.startsWith(".continue/") ||
-    rule.ruleFile === `.continue/${RULES_MARKDOWN_FILENAME}`
-  );
+  return !rule.ruleFile || rule.ruleFile.startsWith(".continue/");
 };
 
 /**
