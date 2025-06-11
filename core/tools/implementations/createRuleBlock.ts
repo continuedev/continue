@@ -1,8 +1,6 @@
-import * as YAML from "yaml";
 import { ToolImpl } from ".";
 import { RuleWithSource } from "../..";
-import { RuleFrontmatter } from "../../config/markdown/parseMarkdownRule";
-import { joinPathsToUri, pathToUriPathSegment } from "../../util/uri";
+import { createRuleFilePath, createRuleMarkdown } from "../../config/markdown";
 
 export type CreateRuleBlockArgs = Pick<
   Required<RuleWithSource>,
@@ -14,49 +12,16 @@ export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
   extras,
 ) => {
-  // Use the pathToUriPathSegment utility for sanitizing the name
-  const safeRuleName = pathToUriPathSegment(args.name)
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "") // Further sanitize to remove any remaining special chars
-    .replace(/-+/g, "-") // Replace multiple dashes with a single dash
-    .replace(/^-|-$/g, ""); // Remove leading/trailing dashes
+  const fileContent = createRuleMarkdown(args.name, args.rule, {
+    description: args.description,
+    globs: args.globs,
+  });
 
-  const fileExtension = "md";
-
-  const frontmatter: RuleFrontmatter = {};
-
-  if (args.globs) {
-    frontmatter.globs =
-      typeof args.globs === "string" ? args.globs.trim() : args.globs;
-  }
-
-  if (args.description) {
-    frontmatter.description = args.description.trim();
-  }
-
-  if (args.alwaysApply !== undefined) {
-    frontmatter.alwaysApply = args.alwaysApply;
-  }
-
-  const frontmatterYaml = YAML.stringify(frontmatter).trim();
-  let fileContent = `---
-${frontmatterYaml}
----
-
-# ${args.name}
-
-${args.rule}
-`;
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
-  const rulesDirUri = joinPathsToUri(
-    localContinueDir,
-    ".continue",
-    "rules",
-    `${safeRuleName}.${fileExtension}`,
-  );
+  const ruleFilePath = createRuleFilePath(localContinueDir, args.name);
 
-  await extras.ide.writeFile(rulesDirUri, fileContent);
-  await extras.ide.openFile(rulesDirUri);
+  await extras.ide.writeFile(ruleFilePath, fileContent);
+  await extras.ide.openFile(ruleFilePath);
 
   return [
     {
@@ -64,7 +29,7 @@ ${args.rule}
       description: args.description || "",
       uri: {
         type: "file",
-        value: rulesDirUri,
+        value: ruleFilePath,
       },
       content: `Rule created successfully`,
     },

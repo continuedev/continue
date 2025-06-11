@@ -19,9 +19,6 @@ export class AzureApi extends OpenAIApi {
     this.openai = new OpenAI({
       apiKey: azureConfig.apiKey,
       baseURL: this._getAzureBaseURL(azureConfig),
-      defaultQuery: azureConfig.env?.apiVersion
-        ? { "api-version": azureConfig.env.apiVersion }
-        : {},
       fetch: customFetch(azureConfig.requestOptions),
     });
   }
@@ -42,11 +39,17 @@ export class AzureApi extends OpenAIApi {
     if (this._isAzureOpenAI(config.env?.apiType)) {
       if (!config.env?.deployment) {
         throw new Error(
-          "Azure deployment is required if `apiType` is `azure-openai` or `azure`",
+          "`env.deployment` is a required configuration property for Azure OpenAI",
         );
       }
 
-      return `${baseURL}/openai/deployments/${config.env.deployment}`;
+      if (!config.env?.apiVersion) {
+        throw new Error(
+          "`env.apiVersion` is a required configuration property for Azure OpenAI",
+        );
+      }
+
+      return `${baseURL}/openai/deployments/${config.env.deployment}?api-version=${config.env.apiVersion}`;
     }
 
     return baseURL;
