@@ -173,3 +173,11 @@ function trimSnippetForContext(
     newTokens: countTokens(trimmedCode, modelName),
   };
 }
+
+// Uncomment for testing
+export {
+  getRecencyAndSizeScore,
+  rankByScore,
+  setLogStats,
+  trimSnippetForContext,
+};

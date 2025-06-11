@@ -113,38 +113,55 @@ const getSnippetsFromRecentlyOpenedFiles = async (
     return [];
   }
 
-  const snippets: AutocompleteCodeSnippet[] = [];
-
   try {
     const currentFileUri = `${helper.filepath}`;
 
-    // converts cache file URIs to autocomplete snippets
-    for (const [fileUri, _] of openedFilesLruCache.entriesDescending()) {
-      if (fileUri === currentFileUri) {
-        continue;
-      }
+    // Get all file URIs excluding the current file
+    const fileUrisToRead = [...openedFilesLruCache.entriesDescending()]
+      .filter(([fileUri, _]) => fileUri !== currentFileUri)
+      .map(([fileUri, _]) => fileUri);
 
-      try {
-        const fileContent = await ide.readFile(fileUri);
+    // Create an array of promises that each read a file with timeout
+    const fileReadPromises = fileUrisToRead.map((fileUri) => {
+      // Create a promise that resolves to a snippet or null
+      const readPromise = new Promise<AutocompleteCodeSnippet | null>(
+        (resolve) => {
+          ide
+            .readFile(fileUri)
+            .then((fileContent) => {
+              if (!fileContent || fileContent.trim() === "") {
+                resolve(null);
+                return;
+              }
 
-        if (!fileContent || fileContent.trim() === "") {
-          continue;
-        }
+              resolve({
+                filepath: fileUri,
+                content: fileContent,
+                type: AutocompleteSnippetType.Code,
+              });
+            })
+            .catch((e) => {
+              console.error(`Failed to read file ${fileUri}:`, e);
+              resolve(null);
+            });
+        },
+      );
+      // Cut off at 80ms via racing promises
+      return Promise.race([
+        readPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 80)),
+      ]);
+    });
 
-        snippets.push({
-          filepath: fileUri,
-          content: fileContent,
-          type: AutocompleteSnippetType.Code,
-        });
-      } catch (e) {
-        console.error(`Failed to read file ${fileUri}:`, e);
-      }
-    }
+    // Execute all file reads in parallel
+    const results = await Promise.all(fileReadPromises);
+
+    // Filter out null results
+    return results.filter(Boolean) as AutocompleteCodeSnippet[];
   } catch (e) {
     console.error("Error processing opened files cache:", e);
+    return [];
   }
-
-  return snippets;
 };
 
 export const getAllSnippets = async ({

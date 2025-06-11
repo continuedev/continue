@@ -24,6 +24,7 @@ export async function* streamResponse(
 
   // Get the major version of Node.js
   const nodeMajorVersion = parseInt(process.versions.node.split(".")[0], 10);
+  let chunks = 0;
 
   try {
     if (nodeMajorVersion >= 20) {
@@ -33,6 +34,7 @@ export async function* streamResponse(
         new TextDecoderStream("utf-8"),
       )) {
         yield chunk;
+        chunks++;
       }
     } else {
       // Fallback for Node versions below 20
@@ -41,11 +43,30 @@ export async function* streamResponse(
       const nodeStream = response.body as unknown as NodeJS.ReadableStream;
       for await (const chunk of toAsyncIterable(nodeStream)) {
         yield decoder.decode(chunk, { stream: true });
+        chunks++;
       }
     }
   } catch (e) {
-    if (e instanceof Error && e.name.startsWith("AbortError")) {
-      return; // In case of client-side cancellation, just return
+    if (e instanceof Error) {
+      if (e.name.startsWith("AbortError")) {
+        return; // In case of client-side cancellation, just return
+      }
+      if (e.message.toLowerCase().includes("premature close")) {
+        // Premature close can happen for various reasons, including:
+        // - Malformed chunks of data received from the server
+        // - The server closed the connection before sending the complete response
+        // - Long delays from the server during streaming
+        // - 'Keep alive' header being used in combination with an http agent and a set, low number of maxSockets
+        if (chunks === 0) {
+          throw new Error(
+            "Stream was closed before any data was received. Try again. (Premature Close)",
+          );
+        } else {
+          throw new Error(
+            "The response was cancelled mid-stream. Try again. (Premature Close).",
+          );
+        }
+      }
     }
     throw e;
   }
@@ -126,8 +147,12 @@ export async function* streamJSON(response: Response): AsyncGenerator<any> {
     let position;
     while ((position = buffer.indexOf("\n")) >= 0) {
       const line = buffer.slice(0, position);
-      const data = JSON.parse(line);
-      yield data;
+      try {
+        const data = JSON.parse(line);
+        yield data;
+      } catch (e) {
+        throw new Error(`Malformed JSON sent from server: ${line}`);
+      }
       buffer = buffer.slice(position + 1);
     }
   }

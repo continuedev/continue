@@ -2,8 +2,9 @@ import { RequestOptions } from "@continuedev/config-types";
 import * as followRedirects from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import fetch, { BodyInit, RequestInit, Response } from "node-fetch";
+import { BodyInit, RequestInit, Response } from "node-fetch";
 import { getAgentOptions } from "./getAgentOptions.js";
+import fetch from "./node-fetch-patch.js";
 import { getProxyFromEnv, shouldBypassProxy } from "./util.js";
 
 const { http, https } = (followRedirects as any).default;

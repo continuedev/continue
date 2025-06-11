@@ -114,11 +114,12 @@ export class CompletionProvider {
     this.loggingService.markDisplayed(completionId, outcome);
   }
 
-  private async _getAutocompleteOptions() {
+  private async _getAutocompleteOptions(llm: ILLM) {
     const { config } = await this.configHandler.loadConfig();
     const options = {
       ...DEFAULT_AUTOCOMPLETE_OPTS,
       ...config?.tabAutocompleteOptions,
+      ...llm.autocompleteOptions,
     };
     return options;
   }
@@ -136,15 +137,16 @@ export class CompletionProvider {
         token = controller.signal;
       }
       const startTime = Date.now();
-      const options = await this._getAutocompleteOptions();
-
-      // Debounce
-      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
-        return undefined;
-      }
 
       const llm = await this._prepareLlm();
       if (!llm) {
+        return undefined;
+      }
+
+      const options = await this._getAutocompleteOptions(llm);
+
+      // Debounce
+      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
       }
 

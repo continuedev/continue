@@ -1,3 +1,4 @@
+import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -131,7 +132,7 @@ const Layout = () => {
   useWebviewListener(
     "openOnboardingCard",
     async () => {
-      onboardingCard.open("Best");
+      onboardingCard.open(OnboardingModes.API_KEY);
     },
     [],
   );
@@ -139,7 +140,7 @@ const Layout = () => {
   useWebviewListener(
     "setupLocalConfig",
     async () => {
-      onboardingCard.open("Local");
+      onboardingCard.open(OnboardingModes.LOCAL);
     },
     [],
   );
@@ -179,7 +180,6 @@ const Layout = () => {
       if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
-          // Copy to clipboard
           setTimeout(() => {
             void navigator.clipboard.writeText(selection);
           }, 100);
@@ -199,7 +199,7 @@ const Layout = () => {
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      onboardingCard.open("Quickstart");
+      onboardingCard.open();
     }
   }, [location]);
 

@@ -106,6 +106,17 @@ const templateSchema = z.enum([
   "codestral",
 ]);
 
+export const autocompleteOptionsSchema = z.object({
+  disable: z.boolean().optional(),
+  maxPromptTokens: z.number().optional(),
+  debounceDelay: z.number().optional(),
+  modelTimeout: z.number().optional(),
+  maxSuffixPercentage: z.number().optional(),
+  prefixPercentage: z.number().optional(),
+  template: z.string().optional(),
+  onlyMyCode: z.boolean().optional(),
+});
+
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
@@ -133,6 +144,7 @@ const baseModelFields = {
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),
+  autocompleteOptions: autocompleteOptionsSchema.optional(),
 };
 
 export const modelSchema = z.union([
