@@ -179,6 +179,7 @@ export class CompletionProvider {
         snippetPayload,
         workspaceDirs,
         helper,
+        llm
       });
 
       // Completion
@@ -196,6 +197,8 @@ export class CompletionProvider {
       } else {
         const multiline =
           !helper.options.transform || shouldCompleteMultiline(helper);
+        
+        const rawGeneration = await llm.complete(prompt, token, completionOptions);
 
         const completionStream =
           this.completionStreamer.streamCompletionWithFilters(

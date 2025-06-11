@@ -4,13 +4,17 @@ import { CompletionOptions } from "../..";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
+import { ILLM } from "../../index.js";
+import { DEFAULT_MAX_TOKENS } from "../../llm/constants.js";
+import { countTokens, getTokenCountingBufferSafety, pruneLinesFromBottom, pruneLinesFromTop } from "../../llm/countTokens";
+import { getUriPathBasename } from "../../util/uri";
 import { SnippetPayload } from "../snippets";
+import { AutocompleteSnippet } from "../snippets/types";
 import {
   AutocompleteTemplate,
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getSnippets } from "./filtering";
-import { getUriPathBasename } from "../../util/uri";
 import { formatSnippets } from "./formatting";
 import { getStopTokens } from "./getStopTokens";
 
@@ -45,14 +49,71 @@ function renderStringTemplate(
   });
 }
 
+/** Builds the final prompt by applying prefix/suffix compilation or snippet formatting, then rendering the template. */
+function buildPrompt(
+  template: AutocompleteTemplate["template"],
+  compilePrefixSuffix: AutocompleteTemplate["compilePrefixSuffix"] | undefined,
+  prefix: string,
+  suffix: string,
+  helper: HelperVars,
+  snippets: AutocompleteSnippet[],
+  workspaceDirs: string[],
+  reponame: string,
+): { prompt: string; prefix: string; suffix: string } {
+  if (compilePrefixSuffix) {
+    [prefix, suffix] = compilePrefixSuffix(
+      prefix,
+      suffix,
+      helper.filepath,
+      reponame,
+      snippets,
+      helper.workspaceUris,
+    );
+  } else {
+    const formatted = formatSnippets(helper, snippets, workspaceDirs);
+    prefix = [formatted, prefix].join("\n");
+  }
+  const prompt =
+    typeof template === "string"
+      ? renderStringTemplate(
+          template,
+          prefix,
+          suffix,
+          helper.lang,
+          helper.filepath,
+          reponame,
+        )
+      : template(
+          prefix,
+          suffix,
+          helper.filepath,
+          reponame,
+          helper.lang.name,
+          snippets,
+          helper.workspaceUris,
+        );
+  return { prompt, prefix, suffix };
+}
+
+function pruneLength(llm: ILLM, prompt: string): number {
+  const contextLength = llm.contextLength;
+  const reservedTokens = llm.completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const safetyBuffer = getTokenCountingBufferSafety(contextLength);
+  const maxAllowedPromptTokens = contextLength - reservedTokens - safetyBuffer;
+  const promptTokenCount = countTokens(prompt, llm.model);
+  return promptTokenCount - maxAllowedPromptTokens
+}
+
 export function renderPrompt({
   snippetPayload,
   workspaceDirs,
   helper,
+  llm,
 }: {
   snippetPayload: SnippetPayload;
   workspaceDirs: string[];
   helper: HelperVars;
+  llm: ILLM | undefined
 }): {
   prompt: string;
   prefix: string;
@@ -73,42 +134,45 @@ export function renderPrompt({
 
   const snippets = getSnippets(helper, snippetPayload);
 
-  // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
-  // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
-  if (compilePrefixSuffix) {
-    [prefix, suffix] = compilePrefixSuffix(
-      prefix,
-      suffix,
-      helper.filepath,
-      reponame,
-      snippets,
-      helper.workspaceUris,
-    );
-  } else {
-    const formattedSnippets = formatSnippets(helper, snippets, workspaceDirs);
-    prefix = [formattedSnippets, prefix].join("\n");
+  let { prompt, prefix: compiledPrefix, suffix: compiledSuffix } = buildPrompt(
+    template,
+    compilePrefixSuffix,
+    prefix,
+    suffix,
+    helper,
+    snippets,
+    workspaceDirs,
+    reponame,
+  );
+  
+  // Truncate prefix and suffix if prompt tokens exceed maxAllowedPromptTokens
+  if (llm) {
+    const prune = pruneLength(llm, prompt);
+    if (prune > 0) {
+      const tokensToDrop = prune;
+      const prefixTokenCount = countTokens(prefix, helper.modelName);
+      const suffixTokenCount = countTokens(suffix, helper.modelName);
+      const totalContextTokens = prefixTokenCount + suffixTokenCount;
+      if (totalContextTokens > 0) {
+        const dropPrefix = Math.ceil(tokensToDrop * (prefixTokenCount / totalContextTokens));
+        const dropSuffix = Math.ceil(tokensToDrop - dropPrefix);
+        const allowedPrefixTokens = Math.max(0, prefixTokenCount - dropPrefix);
+        const allowedSuffixTokens = Math.max(0, suffixTokenCount - dropSuffix);
+        prefix = pruneLinesFromTop(prefix, allowedPrefixTokens, helper.modelName);
+        suffix = pruneLinesFromBottom(suffix, allowedSuffixTokens, helper.modelName);
+      }
+      ({ prompt, prefix: compiledPrefix, suffix: compiledSuffix } = buildPrompt(
+        template,
+        compilePrefixSuffix,
+        prefix,
+        suffix,
+        helper,
+        snippets,
+        workspaceDirs,
+        reponame,
+      ));
+    }
   }
-
-  const prompt =
-    // Templates can be passed as a Handlebars template string or a function
-    typeof template === "string"
-      ? renderStringTemplate(
-          template,
-          prefix,
-          suffix,
-          helper.lang,
-          helper.filepath,
-          reponame,
-        )
-      : template(
-          prefix,
-          suffix,
-          helper.filepath,
-          reponame,
-          helper.lang.name,
-          snippets,
-          helper.workspaceUris,
-        );
 
   const stopTokens = getStopTokens(
     completionOptions,
@@ -118,8 +182,8 @@ export function renderPrompt({
 
   return {
     prompt,
-    prefix,
-    suffix,
+    prefix: compiledPrefix,
+    suffix: compiledSuffix,
     completionOptions: {
       ...completionOptions,
       stop: stopTokens,

@@ -298,7 +298,7 @@ function pruneStringFromTop(
 
 const MAX_TOKEN_SAFETY_BUFFER = 1000;
 const TOKEN_SAFETY_PROPORTION = 0.02;
-function getTokenCountingBufferSafety(contextLength: number) {
+export function getTokenCountingBufferSafety(contextLength: number) {
   return Math.min(
     MAX_TOKEN_SAFETY_BUFFER,
     contextLength * TOKEN_SAFETY_PROPORTION,
@@ -480,5 +480,5 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop,
+  pruneStringFromTop
 };

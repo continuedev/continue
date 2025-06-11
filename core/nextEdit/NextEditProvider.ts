@@ -187,6 +187,7 @@ export class NextEditProvider {
         snippetPayload,
         workspaceDirs,
         helper,
+        llm,
       });
 
       // Completion
