@@ -39,7 +39,7 @@ Below is a quick example of setting up a new mcp server for use in your assistan
 2. Add a file called `playwright-mcp.yaml` to this folder.
 3. Write the following contents to `playwright-mcp.yaml` and save.
 
-```yaml title=".continue/rules/playwright-mcp.yaml"
+```yaml title=".continue/mcpServers/playwright-mcp.yaml"
 name: Playwright mcpServer
 version: 0.0.1
 schema: v1
@@ -72,7 +72,7 @@ server block to your [config file](./configuration.md):
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   mcpServers:
-    - name: SQLite MCP     
+    - name: SQLite MCP
       command: npx
       args:
         - "-y"
