@@ -53,7 +53,7 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.GrepSearch]: "allowedWithoutPermission",
       [BuiltInToolNames.FileGlobSearch]: "allowedWithoutPermission",
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
-      [BuiltInToolNames.ReadUrl]: "disabled",
+      [BuiltInToolNames.ReadUrl]: "allowedWithPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
       [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
       [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
