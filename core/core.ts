@@ -59,6 +59,7 @@ import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
+import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
@@ -583,7 +584,7 @@ export class Core {
         let rulesFileCreated = false;
         for (const uri of data.uris) {
           const filename = getUriPathBasename(uri);
-          if (filename === "rules.md") {
+          if (filename === RULES_MARKDOWN_FILENAME) {
             rulesFileCreated = true;
             break;
           }
@@ -614,7 +615,7 @@ export class Core {
         let rulesFileDeleted = false;
         for (const uri of data.uris) {
           const filename = getUriPathBasename(uri);
-          if (filename === "rules.md") {
+          if (filename === RULES_MARKDOWN_FILENAME) {
             rulesFileDeleted = true;
             break;
           }
@@ -850,7 +851,7 @@ export class Core {
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith("rules.md")
+          uri.endsWith(RULES_MARKDOWN_FILENAME)
         ) {
           await this.configHandler.reloadConfig();
         } else if (

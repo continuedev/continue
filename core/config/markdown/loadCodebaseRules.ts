@@ -1,6 +1,7 @@
 import { ConfigValidationError } from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
 import { walkDirs } from "../../indexing/walkDir";
+import { RULES_MARKDOWN_FILENAME } from "../../llm/rules/constants";
 import { getUriPathBasename } from "../../util/uri";
 import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
 
@@ -21,7 +22,7 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
     // Filter to just rules.md files
     const rulesMdFiles = allFiles.filter((file) => {
       const filename = getUriPathBasename(file);
-      return filename === "rules.md";
+      return filename === RULES_MARKDOWN_FILENAME;
     });
 
     // Process each rules.md file
