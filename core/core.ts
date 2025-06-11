@@ -59,11 +59,23 @@ import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
+import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { StreamAbortManager } from "./util/abortManager";
+import { getUriPathBasename } from "./util/uri";
+
+const hasRulesFiles = (uris: string[]): boolean => {
+  for (const uri of uris) {
+    const filename = getUriPathBasename(uri);
+    if (filename === RULES_MARKDOWN_FILENAME) {
+      return true;
+    }
+  }
+  return false;
+};
 
 export class Core {
   configHandler: ConfigHandler;
@@ -578,6 +590,10 @@ export class Core {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
 
+        if (hasRulesFiles(data.uris)) {
+          await this.configHandler.reloadConfig();
+        }
+
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
@@ -595,6 +611,10 @@ export class Core {
       if (data?.uris?.length) {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
+
+        if (hasRulesFiles(data.uris)) {
+          await this.configHandler.reloadConfig();
+        }
       }
     });
 
@@ -792,7 +812,7 @@ export class Core {
     data,
   }: Message<{
     uris?: string[];
-  }>) {
+  }>): Promise<void> {
     if (data?.uris?.length) {
       const diffCache = GitDiffCache.getInstance(getDiffFn(this.ide));
       diffCache.invalidate();
@@ -823,7 +843,8 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml"))
+          (uri.includes(".continue") && uri.endsWith(".yaml")) ||
+          uri.endsWith(RULES_MARKDOWN_FILENAME)
         ) {
           await this.configHandler.reloadConfig();
         } else if (
