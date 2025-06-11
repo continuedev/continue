@@ -105,13 +105,12 @@ export default async function doLoadConfig(options: {
   const configYamlPath = localPathOrUriToPath(
     overrideConfigYamlByPath || getConfigYamlPath(ideInfo.ideType),
   );
-  const useLocalYamlAssistant = fs.existsSync(configYamlPath);
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
-  if (overrideConfigYaml || useLocalYamlAssistant) {
+  if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
     const result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
