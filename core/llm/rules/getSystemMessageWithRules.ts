@@ -6,6 +6,7 @@ import {
   UserChatMessage,
 } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
+import { getCleanUriPath } from "../../util/uri";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
 
 /**
@@ -51,25 +52,6 @@ const matchesGlobs = (
 };
 
 /**
- * Gets the directory part of a path (without using Node.js path module)
- */
-const getDirname = (filePath: string): string => {
-  // Normalize path separators to forward slash
-  const normalizedPath = filePath.replace(/\\/g, "/");
-
-  // Find the last slash
-  const lastSlashIndex = normalizedPath.lastIndexOf("/");
-
-  // If no slash found, return empty string (current directory)
-  if (lastSlashIndex === -1) {
-    return "";
-  }
-
-  // Return everything up to the last slash
-  return normalizedPath.substring(0, lastSlashIndex);
-};
-
-/**
  * Determines if a file path is within a specific directory or its subdirectories
  *
  * @param filePath - The file path to check
@@ -100,10 +82,7 @@ const isFileInDirectory = (
   // This is a simple check to see if the file might be in this directory
   const containsDir = normalizedFilePath.includes(`${dirName}/`);
 
-  // For logging
-  const result = containsDir;
-
-  return result;
+  return containsDir;
 };
 
 /**
@@ -163,11 +142,14 @@ export const shouldApplyRule = (
 
   // For non-root rules, we need to check if any files are in the rule's directory
   if (!isRootRule && rule.ruleFile) {
-    const ruleDirectory = getDirname(rule.ruleFile);
+    const ruleDirectory = getCleanUriPath(rule.ruleFile);
+    const lastSlashIndex = ruleDirectory.lastIndexOf("/");
+    const ruleDirPath =
+      lastSlashIndex !== -1 ? ruleDirectory.substring(0, lastSlashIndex) : "";
 
     // Filter to only files in this directory or its subdirectories
     const filesInRuleDirectory = filePaths.filter((filePath) =>
-      isFileInDirectory(filePath, ruleDirectory),
+      isFileInDirectory(filePath, ruleDirPath),
     );
 
     // If no files are in this directory, don't apply the rule

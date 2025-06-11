@@ -1,26 +1,8 @@
 import { ConfigValidationError } from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
 import { walkDirs } from "../../indexing/walkDir";
+import { getUriPathBasename } from "../../util/uri";
 import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
-
-/**
- * Gets the directory part of a path (without using Node.js path module)
- */
-const getDirname = (filePath: string): string => {
-  // Normalize path separators to forward slash
-  const normalizedPath = filePath.replace(/\\/g, "/");
-
-  // Find the last slash
-  const lastSlashIndex = normalizedPath.lastIndexOf("/");
-
-  // If no slash found, return empty string (current directory)
-  if (lastSlashIndex === -1) {
-    return "";
-  }
-
-  // Return everything up to the last slash
-  return normalizedPath.substring(0, lastSlashIndex);
-};
 
 /**
  * Loads rules from rules.md files colocated in the codebase
@@ -38,8 +20,7 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
 
     // Filter to just rules.md files
     const rulesMdFiles = allFiles.filter((file) => {
-      const parts = file.split("/");
-      const filename = parts[parts.length - 1];
+      const filename = getUriPathBasename(file);
       return filename === "rules.md";
     });
 

@@ -64,6 +64,7 @@ import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { StreamAbortManager } from "./util/abortManager";
+import { getUriPathBasename } from "./util/uri";
 
 export class Core {
   configHandler: ConfigHandler;
@@ -581,8 +582,7 @@ export class Core {
         // Check for rules.md files being created
         let rulesFileCreated = false;
         for (const uri of data.uris) {
-          const parts = uri.split("/");
-          const filename = parts[parts.length - 1];
+          const filename = getUriPathBasename(uri);
           if (filename === "rules.md") {
             rulesFileCreated = true;
             break;
@@ -613,8 +613,7 @@ export class Core {
         // Check for rules.md files being deleted
         let rulesFileDeleted = false;
         for (const uri of data.uris) {
-          const parts = uri.split("/");
-          const filename = parts[parts.length - 1];
+          const filename = getUriPathBasename(uri);
           if (filename === "rules.md") {
             rulesFileDeleted = true;
             break;
@@ -851,7 +850,7 @@ export class Core {
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith("rules.md") // Add check for rules.md files
+          uri.endsWith("rules.md")
         ) {
           await this.configHandler.reloadConfig();
         } else if (

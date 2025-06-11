@@ -2,7 +2,7 @@ import * as YAML from "yaml";
 import { ToolImpl } from ".";
 import { RuleWithSource } from "../..";
 import { RuleFrontmatter } from "../../config/markdown/parseMarkdownRule";
-import { joinPathsToUri } from "../../util/uri";
+import { joinPathsToUri, pathToUriPathSegment } from "../../util/uri";
 
 export type CreateRuleBlockArgs = Pick<
   Required<RuleWithSource>,
@@ -14,11 +14,12 @@ export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
   extras,
 ) => {
-  // Sanitize rule name for use in filename (remove special chars, replace spaces with dashes)
-  const safeRuleName = args.name
+  // Use the pathToUriPathSegment utility for sanitizing the name
+  const safeRuleName = pathToUriPathSegment(args.name)
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-");
+    .replace(/[^a-z0-9-]/g, "") // Further sanitize to remove any remaining special chars
+    .replace(/-+/g, "-") // Replace multiple dashes with a single dash
+    .replace(/^-|-$/g, ""); // Remove leading/trailing dashes
 
   const fileExtension = "md";
 
