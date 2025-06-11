@@ -67,6 +67,16 @@ import type { IMessenger, Message } from "./protocol/messenger";
 import { StreamAbortManager } from "./util/abortManager";
 import { getUriPathBasename } from "./util/uri";
 
+const hasRulesFiles = (uris: string[]): boolean => {
+  for (const uri of uris) {
+    const filename = getUriPathBasename(uri);
+    if (filename === RULES_MARKDOWN_FILENAME) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export class Core {
   configHandler: ConfigHandler;
   codeBaseIndexer: CodebaseIndexer;
@@ -580,16 +590,7 @@ export class Core {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
 
-        // Check for rules.md files being created
-        let rulesFileCreated = false;
-        for (const uri of data.uris) {
-          const filename = getUriPathBasename(uri);
-          if (filename === RULES_MARKDOWN_FILENAME) {
-            rulesFileCreated = true;
-            break;
-          }
-        }
-        if (rulesFileCreated) {
+        if (hasRulesFiles(data.uris)) {
           await this.configHandler.reloadConfig();
         }
 
@@ -611,16 +612,7 @@ export class Core {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
 
-        // Check for rules.md files being deleted
-        let rulesFileDeleted = false;
-        for (const uri of data.uris) {
-          const filename = getUriPathBasename(uri);
-          if (filename === RULES_MARKDOWN_FILENAME) {
-            rulesFileDeleted = true;
-            break;
-          }
-        }
-        if (rulesFileDeleted) {
+        if (hasRulesFiles(data.uris)) {
           await this.configHandler.reloadConfig();
         }
       }
