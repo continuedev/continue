@@ -11,6 +11,7 @@ export enum BuiltInToolNames {
   LSTool = "builtin_ls",
   CreateRuleBlock = "builtin_create_rule_block",
   RequestRule = "builtin_request_rule",
+  ReadUrl = "builtin_read_url",
 
   // excluded from allTools for now
   ViewRepoMap = "builtin_view_repo_map",
