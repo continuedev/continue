@@ -2,7 +2,7 @@
 // Examples for vscode https://github.com/githubocto/tailwind-vscode/blob/main/index.js
 
 // The current default theme is dark with blue accents
-export const THEME_COLORS = {
+export const THEME_COLORS_OLD = {
   background: {
     vars: [
       "--vscode-sideBar-background",
@@ -166,6 +166,171 @@ export const THEME_COLORS = {
     default: "#ffffff", // white
   },
 };
+
+export const THEME_COLORS = {
+  background: {
+    vars: [
+      "--vscode-sideBar-background",
+      "--vscode-editor-background",
+      "--vscode-panel-background",
+    ],
+    default: "#ffffff", // light gray/white
+  },
+  foreground: {
+    vars: [
+      "--vscode-sideBar-foreground",
+      "--vscode-editor-foreground",
+      "--vscode-panel-foreground",
+    ],
+    default: "#222222", // dark gray/black for text
+  },
+  "editor-background": {
+    vars: ["--vscode-editor-background"],
+    default: "#ffffff", // white
+  },
+  "editor-foreground": {
+    vars: ["--vscode-editor-foreground"],
+    default: "#222222", // dark for text
+  },
+  "primary-background": {
+    vars: ["--vscode-button-background"],
+    default: "#005FB8", // blue
+  },
+  "primary-foreground": {
+    vars: ["--vscode-button-foreground"],
+    default: "#ffffff", // white
+  },
+  "primary-hover": {
+    vars: ["--vscode-button-hoverBackground"],
+    default: "#0258A8", // darker blue
+  },
+  "secondary-background": {
+    vars: ["--vscode-button-secondaryBackground"],
+    default: "#E5E5E5", // very light gray
+  },
+  "secondary-foreground": {
+    vars: ["--vscode-button-secondaryForeground"],
+    default: "#3B3B3B", // dark gray text
+  },
+  "secondary-hover": {
+    vars: ["--vscode-button-secondaryHoverBackground"],
+    default: "#CCCCCC", // light gray
+  },
+  border: {
+    vars: ["--vscode-sideBar-border", "--vscode-panel-border"],
+    default: "#CECECE", // light border
+  },
+  "border-focus": {
+    vars: ["--vscode-focusBorder"],
+    default: "#005FB8", // blue
+  },
+  // Command styles are used for tip-tap editor
+  "command-background": {
+    vars: ["--vscode-commandCenter-background"],
+    default: "#F8F8F8", // very light gray
+  },
+  "command-foreground": {
+    vars: ["--vscode-commandCenter-foreground"],
+    default: "#3B3B3B", // dark text
+  },
+  "command-border": {
+    vars: ["--vscode-commandCenter-inactiveBorder"],
+    default: "#CECECE", // light border
+  },
+  "command-border-focus": {
+    vars: ["--vscode-commandCenter-activeBorder"],
+    default: "#005FB8", // blue
+  },
+  description: {
+    vars: ["--vscode-descriptionForeground"],
+    default: "#3B3B3B", // dark gray
+  },
+  "description-muted": {
+    vars: ["--vscode-list-deemphasizedForeground"],
+    default: "#767676", // medium gray
+  },
+  "input-background": {
+    vars: ["--vscode-input-background"],
+    default: "#FFFFFF", // white
+  },
+  "input-foreground": {
+    vars: ["--vscode-input-foreground"],
+    default: "#3B3B3B", // dark
+  },
+  "input-border": {
+    vars: [
+      "--vscode-input-border",
+      "--vscode-commandCenter-inactiveBorder",
+      "vscode-border",
+    ],
+    default: "#CECECE", // light border
+  },
+  "input-placeholder": {
+    vars: ["--vscode-input-placeholderForeground"],
+    default: "#767676", // muted
+  },
+  "table-oddRow": {
+    vars: ["--vscode-tree-tableOddRowsBackground"],
+    default: "#F8F8F8", // very light gray
+  },
+  "badge-background": {
+    vars: ["--vscode-badge-background"],
+    default: "#CCCCCC", // light gray
+  },
+  "badge-foreground": {
+    vars: ["--vscode-badge-foreground"],
+    default: "#3B3B3B", // dark
+  },
+  success: {
+    vars: [
+      "--vscode-notebookStatusSuccessIcon-foreground",
+      "--vscode-testing-iconPassed",
+      "--vscode-gitDecoration-addedResourceForeground",
+      "--vscode-charts-green",
+    ],
+    default: "#369432", // green
+  },
+  warning: {
+    vars: [
+      "--vscode-editorWarning-foreground",
+      "--vscode-list-warningForeground",
+    ],
+    default: "#ffb74d", // amber/yellow (same)
+  },
+  error: {
+    vars: ["--vscode-editorError-foreground", "--vscode-list-errorForeground"],
+    default: "#C72E0F", // red
+  },
+  link: {
+    vars: ["--vscode-textLink-foreground"],
+    default: "#005FB8", // blue
+  },
+  accent: {
+    vars: ["--vscode-tab-activeBorderTop", "--vscode-focusBorder"],
+    default: "#005FB8", // blue
+  },
+  "find-match": {
+    vars: ["--vscode-editor-findMatchBackground"],
+    default: "#264f7840", // translucent blue (can keep)
+  },
+  "find-match-selected": {
+    vars: ["--vscode-editor-findMatchHighlightBackground"],
+    default: "#ffb74d40", // translucent amber
+  },
+  "list-hover": {
+    vars: ["--vscode-list-hoverBackground"],
+    default: "#F2F2F2", // very light gray
+  },
+  "list-active": {
+    vars: ["--vscode-list-activeSelectionBackground"],
+    default: "#E8E8E8", // lighter blue/gray
+  },
+  "list-active-foreground": {
+    vars: ["--vscode-list-activeSelectionForeground"],
+    default: "#000000", // black
+  },
+};
+
 
 // TODO: add fonts - GUI fonts in jetbrains differ from IDE:
 // --vscode-editor-font-family;
