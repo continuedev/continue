@@ -20,17 +20,17 @@ const TEST_EVENT: DevDataLogEvent = {
 };
 
 const TEST_AGENT_INTERACTION_EVENT: DevDataLogEvent = {
-  name: 'chatInteraction',
+  name: "chatInteraction",
   data: {
     prompt: "Hello, world!",
     completion: "Hello, world!",
     modelProvider: "openai",
     modelTitle: "gpt-4",
     sessionId: "1234",
-    tools: ['test-tool1']
+    tools: ["test-tool1"],
   },
-}
- 
+};
+
 const SCHEMA = "0.2.0";
 
 describe("DataLogger", () => {
@@ -171,22 +171,25 @@ describe("DataLogger", () => {
       expect(fileContent).toContain('"eventName":"tokensGenerated"');
     });
 
-    it('should write agent interaction data to local file', async () => {
+    it("should write agent interaction data to local file", async () => {
       // Call the method to log data locally
       await dataLogger.logLocalData(TEST_AGENT_INTERACTION_EVENT);
 
       // Verify the file was created
-      const filepath = getDevDataFilePath(TEST_AGENT_INTERACTION_EVENT.name, SCHEMA);
+      const filepath = getDevDataFilePath(
+        TEST_AGENT_INTERACTION_EVENT.name,
+        SCHEMA,
+      );
       expect(fs.existsSync(filepath)).toBe(true);
 
       // Read file contents and verify
       const fileContent = fs.readFileSync(filepath, "utf8");
-      console.log('debug1 filecontent', fileContent)
+      console.log("debug1 filecontent", fileContent);
       expect(fileContent).toContain('"eventName":"chatInteraction"');
       expect(fileContent).toContain('"prompt":"Hello, world!"');
       expect(fileContent).toContain('"completion":"Hello, world!"');
       expect(fileContent).toContain('"tools":["test-tool1"]');
-    })
+    });
   });
 
   describe("logDevData", () => {

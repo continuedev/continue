@@ -8,7 +8,7 @@ const mockDecodeSecretLocation = jest.fn();
 jest.unstable_mockModule("@continuedev/config-yaml", () => ({
   SecretType: {
     User: "user",
-    Organization: "organization", 
+    Organization: "organization",
     FreeTrial: "free_trial",
   },
   decodeSecretLocation: mockDecodeSecretLocation,
