@@ -722,8 +722,14 @@
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.20",
+    "vitest": "^3.1.4",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"
+  },
+  "overrides": {
+    "vitest": {
+      "@types/node": "^16.18.119"
+    }
   }
 }
