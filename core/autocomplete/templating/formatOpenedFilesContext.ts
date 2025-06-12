@@ -2,6 +2,7 @@ import { countTokens, pruneStringFromBottom } from "../../llm/countTokens";
 import {
   AutocompleteCodeSnippet,
   AutocompleteSnippet,
+  AutocompleteSnippetType,
 } from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 
@@ -20,11 +21,21 @@ export function formatOpenedFilesContext(
   recentlyOpenedFilesSnippets: AutocompleteCodeSnippet[],
   remainingTokenCount: number,
   helper: HelperVars,
-  alreadyAddedSnippets: AutocompleteSnippet[], // TODO use this to deduplicate context
+  alreadyAddedSnippets: AutocompleteSnippet[],
   TOKEN_BUFFER: number,
 ): AutocompleteCodeSnippet[] {
   if (recentlyOpenedFilesSnippets.length === 0) {
     return [];
+  }
+
+  // deduplication; if a snippet is already added, don't include it here
+  for (const snippet of alreadyAddedSnippets) {
+    if (snippet.type !== AutocompleteSnippetType.Code) {
+      continue;
+    }
+    recentlyOpenedFilesSnippets = recentlyOpenedFilesSnippets.filter(
+      (s) => s.filepath !== snippet.filepath,
+    );
   }
 
   // Calculate how many full snippets would fit within the remaining token count
