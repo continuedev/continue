@@ -3,6 +3,7 @@ import { SnippetPayload } from "../snippets";
 import {
   AutocompleteCodeSnippet,
   AutocompleteSnippet,
+  AutocompleteSnippetType,
 } from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 import { formatOpenedFilesContext } from "./formatOpenedFilesContext";
@@ -137,17 +138,9 @@ export const getSnippets = (
   for (const { key } of snippetOrder) {
     // Special handling for recentlyOpenedFiles
     if (key === "recentlyOpenedFiles" && helper.options.useRecentlyOpened) {
-      const recentlyOpenedFilesSnippets =
-        payload.recentlyOpenedFileSnippets.filter(
-          (snippet) =>
-            !(snippet as AutocompleteCodeSnippet).filepath?.startsWith(
-              "output:extension-output-Continue.continue",
-            ),
-        );
-
       // Custom trimming
       const processedSnippets = formatOpenedFilesContext(
-        recentlyOpenedFilesSnippets,
+        payload.recentlyOpenedFileSnippets,
         remainingTokenCount,
         helper,
         finalSnippets,
@@ -173,11 +166,8 @@ export const getSnippets = (
       // Normal processing for other snippet types
       const snippetsToProcess = snippets[key].filter(
         (snippet) =>
-          !(snippet as AutocompleteCodeSnippet).filepath?.startsWith(
-            "output:extension-output-Continue.continue",
-          ) &&
-          ((snippet as AutocompleteCodeSnippet).filepath === undefined ||
-            !addedFilepaths.has((snippet as AutocompleteCodeSnippet).filepath)),
+          snippet.type !== AutocompleteSnippetType.Code ||
+          !addedFilepaths.has(snippet.filepath),
       );
 
       for (const snippet of snippetsToProcess) {
