@@ -77,12 +77,10 @@ export class LightIde implements IDE {
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
-    const workspaceDir = path.join(process.cwd(), "projects"); // Make "projects" as the workspace directory
-    console.log("LightIde.getWorkspaceDirs called" + workspaceDir);
-    // TODO: sometimes file: should be added
-    // When running a command the implementation goes to runTerminalCommandImpl and then it uses fileURLToPath which expects file:/
-    // We need to debug VSCode to understand what is expected to return because in some other flows it is an issue it starts with file:/
-    return [workspaceDir];
+    const projectsPath = path.join(process.cwd(), "projects");
+    // Create a proper file URL that works cross-platform
+    const fileUrl = new URL(projectsPath, "file://");
+    return [fileUrl.toString()];
   }
 
   async getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
@@ -105,6 +103,7 @@ export class LightIde implements IDE {
   }
 
   async writeFile(filePath: string, contents: string): Promise<void> {
+    filePath = filePath.replace(/^file:\/\//, '')
     await fs.writeFile(filePath, contents, "utf-8");
   }
 
@@ -133,7 +132,15 @@ export class LightIde implements IDE {
   }
 
   async saveFile(fileUri: string): Promise<void> {
-    return;
+    try {
+
+      // Write the content back to the file
+      await this.writeFile(fileUri, '');
+      return;
+    } catch (error) {
+      console.error(`Error saving file ${fileUri}:`, error);
+      throw error; // Propagate the error to the caller
+    }
   }
 
   async readFile(fileUri: string): Promise<string> {

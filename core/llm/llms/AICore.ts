@@ -1,4 +1,4 @@
-import { ChatMessage as AICoreChatMessage, ChatMessages as AICoreChatMessages, ChatCompletionTool, MessageToolCalls, OrchestrationClient, OrchestrationModuleConfig, Prompt, TextContent, ToolCallChunk } from "@sap-ai-sdk/orchestration";
+import { ChatMessage as AICoreChatMessage, ChatMessages as AICoreChatMessages, ChatCompletionTool, MessageToolCall, MessageToolCalls, OrchestrationClient, OrchestrationModuleConfig, Prompt, TextContent, ToolCallChunk } from "@sap-ai-sdk/orchestration";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -55,14 +55,22 @@ export class AICore extends BaseLLM {
         const content = this.convertContentMessage(chatMessage.content)
         switch (chatMessage.role) {
             case "assistant":
+                if(chatMessage.toolCalls){
+                    const toolCalls = this.convertToolCalls(chatMessage.toolCalls)
+                    return {
+                        role: chatMessage.role,
+                        content: "",
+                        tool_calls: toolCalls
+                    }
+                }
                 return {
                     role: chatMessage.role,
                     content: content,
-
                 }
             case "tool":
                 return {
-                    role: "assistant",
+                    role: "tool",
+                    tool_call_id: chatMessage.toolCallId,
                     content: content,
                 }
             case "system":
@@ -83,6 +91,22 @@ export class AICore extends BaseLLM {
                 }
         }
 
+    }
+    convertToolCalls(toolCalls: ToolCallDelta[]): MessageToolCalls {
+       const messageToolCalls = toolCalls.map((toolCallDelta) => {
+            const toolFunction = toolCallDelta.function;
+            if(!toolCallDelta.id || !toolFunction || !toolFunction.arguments || !toolFunction.name){
+                return undefined
+            }
+            const messageToolCall: MessageToolCall =  {
+                type: "function",
+                id: toolCallDelta.id,
+                function: {name: toolFunction.name, arguments: toolFunction.arguments}
+                
+            }
+            return messageToolCall
+       }).filter((messageToolCall) => messageToolCall !== undefined)
+       return messageToolCalls
     }
 
     private convertMessages(messages: ChatMessage[]): AICoreChatMessages {
