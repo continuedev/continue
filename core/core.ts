@@ -357,6 +357,12 @@ export class Core {
       return this.configHandler.controlPlaneClient.getFreeTrialStatus();
     });
 
+    on("controlPlane/getModelsAddOnUpgradeUrl", async (msg) => {
+      return this.configHandler.controlPlaneClient.getModelsAddOnCheckoutUrl(
+        msg.data.vsCodeUriScheme,
+      );
+    });
+
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });

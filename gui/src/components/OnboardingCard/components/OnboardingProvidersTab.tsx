@@ -109,7 +109,7 @@ export function OnboardingProvidersTab({
               </Button>
 
               <div className="w-full text-center">
-                <span className="text-description-muted">
+                <span className="text-description">
                   <span
                     className="cursor-pointer underline hover:brightness-125"
                     onClick={handleClickMoreProviders}
