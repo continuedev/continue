@@ -1,12 +1,11 @@
-import { FromCoreProtocol, FromWebviewProtocol, ToCoreProtocol } from "core/protocol";
-import { InProcessMessenger, Message } from "core/protocol/messenger";
+import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
+import { InProcessMessenger, Message } from "core/protocol/messenger";
 
+import { CORE_TO_WEBVIEW_PASS_THROUGH, WEBVIEW_TO_CORE_PASS_THROUGH } from "core/protocol/passThrough";
 import { LightIde } from "./LightIde";
 import { NodeGUI } from "./NodeGUI";
-import { WEBVIEW_TO_CORE_PASS_THROUGH, CORE_TO_WEBVIEW_PASS_THROUGH } from "core/protocol/passThrough";
-import { Handler, NodeGuiProtocol } from "./NodeGuiProtocol";
 
 // Combine protocols that target the IDE from either Core or Webview
 export type ToIdeProtocol = ToIdeFromCoreProtocol & ToIdeFromWebviewOrCoreProtocol;
@@ -15,9 +14,8 @@ export class NodeMessenger {
   constructor(
     private readonly messenger: InProcessMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly nodeGui: NodeGUI,
-    // TBD - Trying to resolve message but protoct currently not used
-    private protocol: NodeGuiProtocol,
-    private readonly ide: LightIde
+    private readonly ide: LightIde,
+    private lastSentMessages = new Map<string, string>()
   ) {
     // Allow GUI to send messages to Core (via InProcessMessenger)
     this.nodeGui.setMessageHandler(async (type: any, data: any, messageId: any) => {
@@ -66,10 +64,19 @@ export class NodeMessenger {
     // --- PASS-THROUGH: Core → GUI ---
     CORE_TO_WEBVIEW_PASS_THROUGH.forEach((messageType) => {
       this.messenger.externalOn(messageType, async (msg) => {
-        // Forward message to GUI clients via SSE
+        const dataStr = JSON.stringify(msg.data);
+        const last = this.lastSentMessages.get(messageType);
+    
+        // Skip sending if content hasn't changed
+        if (last === dataStr) {
+          return;
+        }
+    
+        this.lastSentMessages.set(messageType, dataStr);
         return this.nodeGui.request(messageType, msg.data, msg.messageId);
       });
     });
+    
 
     // Pass-through: Webview/GUI -> Core
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {

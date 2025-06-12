@@ -1,12 +1,10 @@
 import { Core } from "core/core";
-import { ConfigHandler } from "core/config/ConfigHandler";
 import { InProcessMessenger } from "core/protocol/messenger";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { LightIde } from "./LightIde";
 import { NodeGUI } from "./NodeGUI";
 import { v4 as uuidv4 } from "uuid";
 import { NodeMessenger } from "./NodeMessenger";
-import { NodeGuiProtocol } from "./NodeGuiProtocol";
 import { getConfigYamlPath } from "core/util/paths";
 import fs from "fs";
 
@@ -25,11 +23,9 @@ async function main() {
 
   const messenger = new InProcessMessenger<ToCoreProtocol, FromCoreProtocol>();
   messenger.externalOn("getIdeInfo", async () => ide.getIdeInfo());
-  const protocol: NodeGuiProtocol = new NodeGuiProtocol();
   new NodeMessenger(
     messenger,
     nodeGui,
-    protocol,
     ide
   );
 
@@ -37,7 +33,7 @@ async function main() {
 
   nodeGui.setCore(core); // so GUI can call core.invoke
 
-  // // Load config
+  // Load config
   const config = await core.configHandler.loadConfig();
   // console.log("Loaded config:", JSON.stringify(config));
 

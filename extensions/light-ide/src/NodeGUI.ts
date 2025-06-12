@@ -60,7 +60,7 @@ export class NodeGUI {
 
       respond(finalResponse);
 
-      // return res.json(finalResponse);
+      return res.json(finalResponse);
 
     } catch (e: any) {
       const errorResponse = {
@@ -207,14 +207,21 @@ export class NodeGUI {
         if (this.handlers.has(messageType)) {
           handler = this.handlers.get(messageType)!;
         } else if (this.core?.messenger?.externalTypeListeners.has(messageType)) {
-          handler = async ({ data }) =>
-            await this.core.messenger.externalTypeListeners.get(messageType)?.(data, messageId);
-        } else if (this.messageHandler) {
-          handler = async ({ data }) =>
-            await this.messageHandler!(messageType, data, messageId);
-        } else if (this.core?.invoke) {
-          handler = async ({ data }) => await this.core.invoke(messageType, data);
-        }
+          const handler2 = this.core.messenger.externalTypeListeners.get(messageType);
+          const result1 = await handler2({ data, messageId });
+          return res.json({
+            done: true,
+            status: "success",
+            content: result1,
+          });
+          
+        } 
+        // else if (this.messageHandler) {
+        //   handler = async ({ data }) =>
+        //     await this.messageHandler!(messageType, data, messageId);
+        // } else if (this.core?.invoke) {
+        //   handler = async ({ data }) => await this.core.invoke(messageType, data);
+        // }
 
         if (!handler) {
           throw new Error(`No handler found for messageType: ${messageType}`);
@@ -224,33 +231,14 @@ export class NodeGUI {
 
         // ✅ Support async generators (e.g. llm/streamChat)
         if (result && typeof result[Symbol.asyncIterator] === "function") {
-
-          this.handleAsyncIterator(result, respond, res)
-          // res.writeHead(200, {
-          //   "Content-Type": "application/json",
-          //   "Transfer-Encoding": "chunked",
-          // });
-
-          // for await (const chunk of result) {
-          //   res.write(
-          //     JSON.stringify({
-          //       done: false,
-          //       content: chunk,
-          //       status: "success",
-          //     }) + "\n"
-          //   );
-          // }
-
-          // res.end(
-          //   JSON.stringify({
-          //     done: true,
-          //     status: "success",
-          //   }) + "\n"
-          // );
-
-
+          return this.handleAsyncIterator(result, respond, res);
         }
         else {
+          respond({
+            done: true,
+            content: result,
+            status: "success"
+          });
           res.json({
             done: true,
             status: "success",
@@ -259,11 +247,17 @@ export class NodeGUI {
         }
       } catch (err: any) {
         console.error("Message handling error:", err);
+        // respond({
+        //   done: true,
+        //   content: err.message ?? "Unknown error",
+        //   status: "error"
+        // });
         res.json({
           done: true,
           status: "error",
           error: err.message ?? "Unknown error",
         });
+   
       }
     });
 
@@ -305,9 +299,9 @@ export class NodeGUI {
     });
 
     // For backward compatibility, also try to invoke on core if available
-    if (this.core?.invoke) {
-      this.core.invoke(type, data);
-    }
+    // if (this.core?.invoke) {
+    //   this.core.invoke(type, data);
+    // }
 
     // Return a resolved promise for compatibility with the caller
     return Promise.resolve(undefined);

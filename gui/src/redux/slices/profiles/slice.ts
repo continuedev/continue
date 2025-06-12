@@ -55,7 +55,7 @@ export const profilesSlice = createSlice({
   reducers: {
     setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedProfileId = payload;
-      const currentOrg = state.organizations.find(
+      const currentOrg = state.organizations?.find(
         (o) => o.id === state.selectedOrganizationId,
       );
       if (currentOrg) {
@@ -70,7 +70,7 @@ export const profilesSlice = createSlice({
     },
     setSelectedOrgId: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedOrganizationId = payload;
-      const org = state.organizations.find((o) => o.id === payload);
+      const org = state.organizations?.find((o) => o.id === payload);
       if (org) {
         state.selectedProfileId = org.selectedProfileId;
       } else {
@@ -142,11 +142,11 @@ export const profilesSlice = createSlice({
   },
   selectors: {
     selectSelectedProfile: (state) => {
-      const selectedOrg = state.organizations.find(
+      const selectedOrg = state.organizations?.find(
         (org) => org.id === state.selectedOrganizationId,
       );
       if (selectedOrg) {
-        const profile = selectedOrg.profiles.find(
+        const profile = selectedOrg.profiles?.find(
           (profile) => profile.id === state.selectedProfileId,
         );
         return profile ?? null;
@@ -157,7 +157,7 @@ export const profilesSlice = createSlice({
 
     selectCurrentOrg: (state) => {
       return (
-        state.organizations.find(
+        state.organizations?.find(
           (org) => org.id === state.selectedOrganizationId,
         ) ?? null
       );
