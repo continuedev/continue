@@ -1,7 +1,7 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
-export const readUrlTool: Tool = {
+export const fetchUrlContentTool: Tool = {
   type: "function",
   displayTitle: "Read URL",
   wouldLikeTo: "fetch {{{ url }}}",
@@ -11,7 +11,7 @@ export const readUrlTool: Tool = {
   isInstant: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
-    name: BuiltInToolNames.ReadUrl,
+    name: BuiltInToolNames.FetchUrlContent,
     description:
       "Can be used to view the contents of a website using a URL. Do NOT use this for files.",
     parameters: {
