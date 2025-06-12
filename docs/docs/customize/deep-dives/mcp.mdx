@@ -126,6 +126,20 @@ mcpServers:
     url: https://....
 ```
 
+#### Standard Input/Output (stdio)
+
+For local MCP servers that communicate via standard input and output:
+
+```yaml
+mcpServers:
+  - name: Name
+    type: stdio
+    command: npx
+    args:
+      - "@modelcontextprotocol/server-sqlite"
+      - "/path/to/your/database.db"
+```
+
 #### Streamable HTTP Transport
 
 For standard HTTP-based communication with streaming capabilities:
@@ -144,24 +158,24 @@ For detailed information about transport mechanisms and their use cases, refer t
 ### Working with Secrets
 
 With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environments secrets
-as well as access hosted secrets in the Continue Hub.
+as well as access hosted secrets in the Continue Hub. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.
 
 ```yaml
 mcpServers:
-- name: Supabase MCP
-  command: npx
-  args:
-    - -y
-    - "@supabase/mcp-server-supabase@latest"
-    - --access-token
-    - ${{ secrets.SUPABASE_TOKEN }}
-  env:
-    SUPABASE_TOKEN: ${{ inputs.SUPABASE_TOKEN }}
-- name: GitHub
-  command: npx
-  args:
-    - "-y"
-    - "@modelcontextprotocol/server-github"
-  env:
-    GITHUB_PERSONAL_ACCESS_TOKEN: ${{ inputs.GITHUB_PERSONAL_ACCESS_TOKEN }}
+  - name: Supabase MCP
+    command: npx
+    args:
+      - -y
+      - "@supabase/mcp-server-supabase@latest"
+      - --access-token
+      - ${{ secrets.SUPABASE_TOKEN }}
+    env:
+      SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+  - name: GitHub
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-github"
+    env:
+      GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
 ```
