@@ -120,23 +120,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       : WorkOsAuthProvider.EXPIRATION_TIME_MS;
   }
 
-  private jwtIsExpiredOrInvalid(jwt: string): boolean {
-    const decodedToken = this.decodeJwt(jwt);
-    if (!decodedToken) {
-      return true;
-    }
-    return decodedToken.exp * 1000 < Date.now();
-  }
-
-  private async debugAccessTokenValidity(jwt: string, refreshToken: string) {
-    const expiredOrInvalid = this.jwtIsExpiredOrInvalid(jwt);
-    if (expiredOrInvalid) {
-      console.debug("Invalid JWT");
-    } else {
-      console.debug("Valid JWT");
-    }
-  }
-
   private async storeSessions(value: ContinueAuthenticationSession[]) {
     const data = JSON.stringify(value, null, 2);
     await this.secretStorage.store(SESSIONS_SECRET_KEY, data);
@@ -207,10 +190,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       } catch (e: any) {
         // If the refresh token doesn't work, we just drop the session
         console.debug(`Error refreshing session token: ${e.message}`);
-        await this.debugAccessTokenValidity(
-          session.accessToken,
-          session.refreshToken,
-        );
+
         this._sessionChangeEmitter.fire({
           added: [],
           removed: [session],
