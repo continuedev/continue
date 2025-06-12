@@ -172,23 +172,17 @@ export class OllamaServer implements IModelServer, Disposable {
 
     let startCommand: string | undefined;
     if (isWin()) {
-      startCommand = [
-        `$ErrorActionPreference = "Stop"`,
-        `& "ollama app.exe"`,
-      ].join(" ; ");
+      startCommand = `try { Clear-Host; $ErrorActionPreference = "Stop"; & "ollama app.exe" ; exit } catch { Write-Host "Failed to start ollama: $_" -ForegroundColor Red }`;
     } else if (isMac()) {
-      startCommand = [
-        "set -e", // Exit immediately if a command exits with a non-zero status
-        "open -a Ollama.app",
-      ].join(" && ");
+      startCommand = "open -a Ollama.app; if [ $? -eq 0 ]; then exit; fi";
     } else {
       //Linux
       const start_ollama_sh = this.getStartOllamaScript();
-      startCommand = [
-        "set -e", // Exit immediately if a command exits with a non-zero status
-        `chmod +x "${start_ollama_sh}"`, // Ensure the script is executable
-        `"${start_ollama_sh}"`, // Use quotes in case the path contains spaces
-      ].join(" && ");
+      startCommand =
+        [
+          `chmod +x "${start_ollama_sh}"`, // Ensure the script is executable
+          `"${start_ollama_sh}"`, // Use quotes in case the path contains spaces
+        ].join(" && ") + "; if [ $? -eq 0 ]; then exit; fi"; // exit the terminal if there was no error
     }
     if (startCommand) {
       await terminalCommandRunner.runInTerminal(startCommand, {
@@ -208,7 +202,7 @@ export class OllamaServer implements IModelServer, Disposable {
     let installCommand: string | undefined;
     switch (mode) {
       case "devspaces": {
-        env.openExternal(
+        await env.openExternal(
           Uri.parse(
             "https://developers.redhat.com/articles/2024/08/12/integrate-private-ai-coding-assistant-ollama",
           ),
@@ -216,26 +210,26 @@ export class OllamaServer implements IModelServer, Disposable {
         return false;
       }
       case "homebrew": {
-        installCommand = [
-          "clear",
-          "set -e", // Exit immediately if a command exits with a non-zero status
-          'killall "Ollama" || true',
-          "brew install --cask ollama",
-          "sleep 3",
-          "ollama list", // run ollama list to start the server
-        ].join(" && ");
+        installCommand =
+          [
+            "clear",
+            'killall "Ollama" || true',
+            "brew install --cask ollama",
+            "sleep 3",
+            "ollama list", // run ollama list to start the server
+          ].join(" && ") + "; if [ $? -eq 0 ]; then exit; fi"; // exit the terminal if there was no error
         break;
       }
       case "script":
         const start_ollama_sh = this.getStartOllamaScript();
-        installCommand = [
-          "clear",
-          "set -e", // Exit immediately if a command exits with a non-zero status
-          'command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but not installed. Aborting."; exit 1; }',
-          "curl -fsSL https://ollama.com/install.sh | sh",
-          `chmod +x "${start_ollama_sh}"`, // Ensure the script is executable
-          `"${start_ollama_sh}"`, // Use quotes in case the path contains spaces
-        ].join(" && ");
+        installCommand =
+          [
+            "clear",
+            'command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but not installed. Aborting."; exit 1; }',
+            "curl -fsSL https://ollama.com/install.sh | sh",
+            `chmod +x "${start_ollama_sh}"`, // Ensure the script is executable
+            `"${start_ollama_sh}"`, // Use quotes in case the path contains spaces
+          ].join(" && ") + "; if [ $? -eq 0 ]; then exit; fi"; // exit the terminal if there was no error
         break;
       case "windows":
         this.currentStatus = ServerStatus.installing;
@@ -247,16 +241,11 @@ export class OllamaServer implements IModelServer, Disposable {
           return false;
         }
         //At this point the file is guaranteed to exist
-        installCommand = [
-          "clear",
-          `$ErrorActionPreference = "Stop"`,
-          `& "${ollamaInstallerPath}" /Silent`,
-          `$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")`, // refresh environment variables in the terminal
-        ].join(" ; ");
+        installCommand = `try { Clear-Host; $ErrorActionPreference = "Stop"; & "${ollamaInstallerPath}" /Silent; $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User"); exit } catch { Write-Host "Installation failed: $_" -ForegroundColor Red }`;
         break;
       case "manual":
       default:
-        env.openExternal(Uri.parse("https://ollama.com/download"));
+        await env.openExternal(Uri.parse("https://ollama.com/download"));
         return true;
     }
     if (installCommand) {
