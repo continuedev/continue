@@ -4,7 +4,7 @@
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "vitest": "vitest run LocalPlatformClient",
+    "vitest": "vitest run",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage && open ./coverage/lcov-report/index.html",
     "tsc:check": "tsc -p ./ --noEmit",
     "build:npm": "tsc -p ./tsconfig.npm.json",
