@@ -178,7 +178,7 @@
       {
         "command": "continue.focusEdit",
         "category": "Continue",
-        "title": "Generate Code",
+        "title": "Edit Highlighted Code",
         "group": "Continue"
       },
       {
@@ -462,6 +462,11 @@
           "command": "continue.focusContinueInputWithoutClear",
           "group": "Continue",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.focusEdit",
+          "group": "Continue",
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.writeCommentsForCode",
