@@ -3,6 +3,7 @@ import { SnippetPayload } from "../snippets";
 import {
   AutocompleteCodeSnippet,
   AutocompleteSnippet,
+  AutocompleteSnippetType,
 } from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 import { formatOpenedFilesContext } from "./formatOpenedFilesContext";
@@ -130,21 +131,16 @@ export const getSnippets = (
   const finalSnippets = [];
   let remainingTokenCount = getRemainingTokenCount(helper);
 
+  // tracks already added filepaths for deduplication
+  const addedFilepaths = new Set<string>();
+
   // Process snippets in priority order
   for (const { key } of snippetOrder) {
     // Special handling for recentlyOpenedFiles
     if (key === "recentlyOpenedFiles" && helper.options.useRecentlyOpened) {
-      const recentlyOpenedFilesSnippets =
-        payload.recentlyOpenedFileSnippets.filter(
-          (snippet) =>
-            !(snippet as AutocompleteCodeSnippet).filepath?.startsWith(
-              "output:extension-output-Continue.continue",
-            ),
-        );
-
       // Custom trimming
       const processedSnippets = formatOpenedFilesContext(
-        recentlyOpenedFilesSnippets,
+        payload.recentlyOpenedFileSnippets,
         remainingTokenCount,
         helper,
         finalSnippets,
@@ -160,18 +156,18 @@ export const getSnippets = (
 
         if (remainingTokenCount >= snippetSize) {
           finalSnippets.push(snippet);
+          addedFilepaths.add(snippet.filepath);
           remainingTokenCount -= snippetSize;
         } else {
-          break; // Out of tokens
+          continue; // Not enough tokens, try again with next snippet
         }
       }
     } else {
       // Normal processing for other snippet types
       const snippetsToProcess = snippets[key].filter(
         (snippet) =>
-          !(snippet as AutocompleteCodeSnippet).filepath?.startsWith(
-            "output:extension-output-Continue.continue",
-          ),
+          snippet.type !== AutocompleteSnippetType.Code ||
+          !addedFilepaths.has(snippet.filepath),
       );
 
       for (const snippet of snippetsToProcess) {
@@ -182,9 +178,14 @@ export const getSnippets = (
 
         if (remainingTokenCount >= snippetSize) {
           finalSnippets.push(snippet);
+
+          if ((snippet as AutocompleteCodeSnippet).filepath) {
+            addedFilepaths.add((snippet as AutocompleteCodeSnippet).filepath);
+          }
+
           remainingTokenCount -= snippetSize;
         } else {
-          break; // Out of tokens
+          continue; // Not enough tokens, try again with next snippet
         }
       }
     }

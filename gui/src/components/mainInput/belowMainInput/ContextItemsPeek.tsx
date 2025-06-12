@@ -33,27 +33,21 @@ export function ContextItemsPeekItem({
   function openContextItem() {
     const { uri, name, content } = contextItem;
 
-    if (isUrl) {
-      if (uri?.value) {
-        ideMessenger.post("openUrl", uri.value);
-      } else {
-        console.error("Couldn't open url", uri);
-      }
-    } else if (uri) {
+    if (uri && uri?.type === "file") {
       const isRangeInFile = name.includes(" (") && name.endsWith(")");
 
       if (isRangeInFile) {
         const rif = ctxItemToRifWithContents(contextItem, true);
-        ideMessenger.ide.showLines(
+        void ideMessenger.ide.showLines(
           rif.filepath,
           rif.range.start.line,
           rif.range.end.line,
         );
       } else {
-        ideMessenger.ide.openFile(uri.value);
+        void ideMessenger.ide.openFile(uri.value);
       }
     } else {
-      ideMessenger.ide.showVirtualFile(name, content);
+      void ideMessenger.ide.showVirtualFile(name, content);
     }
   }
 
@@ -136,6 +130,18 @@ export function ContextItemsPeekItem({
           </div>
           <div
             className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
+            onClick={
+              isUrl
+                ? (e) => {
+                    if (contextItem.uri?.value) {
+                      e.stopPropagation();
+                      ideMessenger.post("openUrl", contextItem.uri.value);
+                    } else {
+                      console.error("Couldn't open url", contextItem.uri);
+                    }
+                  }
+                : undefined
+            }
           >
             {contextItem.uri?.type === "file"
               ? getUriPathBasename(contextItem.description)
