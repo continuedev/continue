@@ -380,7 +380,41 @@ export const sessionSlice = createSlice({
             // Add to the existing message
             if (message.content) {
               const messageContent = renderChatMessage(message);
-              if (messageContent.includes("<think>")) {
+
+              const thinkMatches = messageContent.match(
+                /([\s\S]*)<think>([\s\S]*)<\/think>([\s\S]*)/,
+              );
+              if (thinkMatches) {
+                // Qwen3 models in agent mode seem to send all of their thinking in one message.
+                // The order that they seem to consistently use is:
+                //
+                // Tool call: { tool call information }
+                // <think>Thinking text</think>
+                // Text to show to the user
+                state.history.push({
+                  message: {
+                    role: "thinking",
+                    content: thinkMatches[2].trim(),
+                    id: uuidv4(),
+                  },
+                  contextItems: [],
+                });
+
+                if (thinkMatches[1].trim().length > 0) {
+                  // TODO: Tool call
+                }
+
+                if (thinkMatches[3].trim().length > 0) {
+                  state.history.push({
+                    message: {
+                      role: "assistant",
+                      content: thinkMatches[3].trim(),
+                      id: uuidv4(),
+                    },
+                    contextItems: [],
+                  });
+                }
+              } else if (messageContent.includes("<think>")) {
                 lastItem.reasoning = {
                   startAt: Date.now(),
                   active: true,
