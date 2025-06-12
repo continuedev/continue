@@ -11,7 +11,7 @@ export default defineConfig({
     fileParallelism: false,
     include: [
       "**/*.vitest.ts",
-      "config/yaml/LocalPlatformClient.test.ts",
+      "config/**/*.test.ts",
       "autocomplete/**/*.test.ts",
     ],
   },
