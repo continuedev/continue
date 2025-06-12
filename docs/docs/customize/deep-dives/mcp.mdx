@@ -33,7 +33,7 @@ MCP can only be used in the **agent** mode.
 
 ## Quick Start
 
-Below is a quick example of setting up a new mcp server for use in your assistant:
+Below is a quick example of setting up a new MCP server for use in your assistant:
 
 1. Create a folder called `.continue/mcpServers` at the top level of your workspace
 2. Add a file called `playwright-mcp.yaml` to this folder.
@@ -50,7 +50,7 @@ mcpServers:
       - "@playwright/mcp@latest"
 ```
 
-Now test your mcp server by prompting the following command:
+Now test your MCP server by prompting the following command:
 
 ```
 Open the browser and navigate Hacker News. Save the top 10 headlines in a hn.txt file.
@@ -58,7 +58,7 @@ Open the browser and navigate Hacker News. Save the top 10 headlines in a hn.txt
 
 The result will be a generated file called `hn.txt` in the current working directory.
 
-![pirate rule test](/img/mcp-playwright.png)
+![playwright mcp](/img/mcp-playwright.png)
 
 ## Using MCP Servers
 
@@ -106,9 +106,8 @@ server block to your [config file](./configuration.md):
 MCP blocks follow the established syntax for blocks, with a few additional properties specific to MCP servers.
 
 - `name` (**required**): A display name for the MCP server.
-- `command` (**required**): The command to run.
-- `schema` (**required**): The schema version of the YAML file (e.g., `v1`)
-- `type` (optional): The type of the MCP server (e.g., `stdio`, `sse`)
+- `command` (**required**): The command to run to start the MCP server.
+- `type` (optional): The type of the MCP server: `sse`, `stdio`, `streamable-http`
 - `args` (optional): Arguments to pass to the command.
 - `env` (optional): Secrets to be injected into the command as environment variables.
 
@@ -144,10 +143,10 @@ For detailed information about transport mechanisms and their use cases, refer t
 
 ### Working with Secrets
 
-With some MCP servers you will need to use API keys of secrets. You can leverage locally stored environments secrets
+With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environments secrets
 as well as access hosted secrets in the Continue Hub.
 
-```
+```yaml
 mcpServers:
 - name: Supabase MCP
   command: npx
