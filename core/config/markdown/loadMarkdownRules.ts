@@ -17,7 +17,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     // Get all .md files from .continue/rules
     const markdownFiles = await getAllDotContinueDefinitionFiles(
       ide,
-      { includeGlobal: true, includeWorkspace: true },
+      { includeGlobal: true, includeWorkspace: true, fileExtType: "markdown" },
       "rules",
     );
 

@@ -49,7 +49,7 @@ import {
 
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
-import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import {
   setupLocalConfig,
   setupProviderConfig,
@@ -608,7 +608,7 @@ export class Core {
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
-          if (isLocalAssistantFile(uri)) {
+          if (isLocalDefinitionFile(uri)) {
             localAssistantCreated = true;
           }
         }
