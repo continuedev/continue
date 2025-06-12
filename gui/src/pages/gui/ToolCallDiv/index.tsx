@@ -41,6 +41,7 @@ const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.LSTool]: FolderIcon,
   [BuiltInToolNames.ReadCurrentlyOpenFile]: DocumentTextIcon,
   [BuiltInToolNames.ReadFile]: DocumentIcon,
+  [BuiltInToolNames.FetchUrlContent]: GlobeAltIcon,
   [BuiltInToolNames.SearchWeb]: GlobeAltIcon,
   [BuiltInToolNames.ViewDiff]: CodeBracketIcon,
   [BuiltInToolNames.ViewRepoMap]: MapIcon,

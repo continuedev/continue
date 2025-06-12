@@ -14,6 +14,7 @@ export const editFileTool: Tool = {
   hasAlready: "edited {{{ filepath }}}",
   group: BUILT_IN_GROUP_NAME,
   readonly: false,
+  isInstant: false,
   function: {
     name: BuiltInToolNames.EditExistingFile,
     description:
