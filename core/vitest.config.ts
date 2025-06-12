@@ -13,6 +13,7 @@ export default defineConfig({
       "**/*.vitest.ts",
       "config/yaml/LocalPlatformClient.test.ts",
       "autocomplete/**/*.test.ts",
+      "commands/**/*.test.ts",
     ],
   },
 });

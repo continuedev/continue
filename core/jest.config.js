@@ -35,5 +35,6 @@ export default {
   testPathIgnorePatterns: [
     "<rootDir>/config/yaml/LocalPlatformClient.test.ts",
     "<rootDir>/autocomplete/",
+    "<rootDir>/commands/",
   ],
 };
