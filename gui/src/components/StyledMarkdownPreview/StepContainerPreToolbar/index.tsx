@@ -291,7 +291,7 @@ export function StepContainerPreToolbar({
   return (
     <TopDiv>
       <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
-        <div className="flex max-w-72 flex-row items-center">
+        <div className="max-w-[50% flex flex-row items-center">
           <ChevronDownIcon
             onClick={() => setIsExpanded(!isExpanded)}
             className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
