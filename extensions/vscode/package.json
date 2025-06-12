@@ -613,6 +613,7 @@
     "lint:fix": "eslint . --ext ts --fix",
     "build-test": "npm run esbuild && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
+    "vitest": "vitest run",
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "write-build-timestamp": "node scripts/write-build-timestamp.js",
     "prepackage": "node scripts/prepackage.js",
