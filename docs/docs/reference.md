@@ -296,7 +296,7 @@ context:
 
 List of rules that the LLM should follow. These are concatenated into the system message for
 all [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Agent](./agent/how-to-use-it.md) requests.
-See the [rules deep dive](./customize/deep-dives/rules.md) for details.
+See the [rules deep dive](./customize/deep-dives/rules.mdx) for details.
 
 Explicit rules can either be simple text or an object with the following properties:
 

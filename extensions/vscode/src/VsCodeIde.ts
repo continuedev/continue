@@ -3,8 +3,6 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
