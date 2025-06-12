@@ -10,7 +10,7 @@ import {
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as URI from "uri-js";
 import { fileURLToPath } from "url";
-import { ZodSchema } from "zod";
+import { AnyZodObject } from "zod";
 import { Core } from "../core.js";
 import { ContinueConfig, IdeInfo, IdeSettings } from "../index.js";
 import { getDevDataFilePath } from "../util/paths.js";
@@ -37,33 +37,31 @@ export class DataLogger {
     body: Record<string, any>,
     eventName: string,
     schema: string,
-    zodSchema: ZodSchema,
+    zodSchema: AnyZodObject,
   ): Promise<Record<string, any>> {
     const newBody = { ...body };
     const ideSettings = await this.ideSettingsPromise;
     const ideInfo = await this.ideInfoPromise;
 
-    // Check if the schema has the expected properties using a type-safe approach
-    const schemaShape = (zodSchema as any).shape;
-    if (schemaShape && "eventName" in schemaShape) {
+    if ("eventName" in zodSchema.shape) {
       newBody.eventName = eventName;
     }
-    if (!newBody.timestamp && schemaShape && "timestamp" in schemaShape) {
+    if (!newBody.timestamp && "timestamp" in zodSchema.shape) {
       newBody.timestamp = new Date().toISOString();
     }
-    if (schemaShape && "schema" in schemaShape) {
+    if ("schema" in zodSchema.shape) {
       newBody.schema = schema;
     }
-    if (schemaShape && "userAgent" in schemaShape) {
+    if ("userAgent" in zodSchema.shape) {
       newBody.userAgent = ideInfo
         ? `${ideInfo.name}/${ideInfo.version} (Continue/${ideInfo.extensionVersion})`
         : "Unknown/Unknown (Continue/Unknown)";
     }
-    if (schemaShape && "selectedProfileId" in schemaShape) {
+    if ("selectedProfileId" in zodSchema.shape) {
       newBody.selectedProfileId =
         this.core?.configHandler.currentProfile?.profileDescription.id ?? "";
     }
-    if (schemaShape && "userId" in schemaShape) {
+    if ("userId" in zodSchema.shape) {
       newBody.userId = ideSettings?.userToken ?? "";
     }
 
