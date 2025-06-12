@@ -63,8 +63,9 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 
 - `name` (**required** for YAML): A display name/title for the rule
 - `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
+- `description` (optional): A description for the rule. Agents may read this description when `alwaysApply` is false to determine whether the rule should be pulled into context.
 - `alwaysApply`: true - Always include the rule, regardless of file context
-- `alwaysApply`: false - Only include if globs exist AND match file context
+- `alwaysApply`: false - Included if globs exist AND match file context, or the agent decides to pull the rule into context based on it's description
 - `alwaysApply`: undefined - Default behavior: include if no globs exist OR globs exist and match
 
 <Tabs groupId="rules-example">
