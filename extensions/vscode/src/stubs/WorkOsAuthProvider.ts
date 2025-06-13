@@ -190,7 +190,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     const finalSessions = [];
     for (const session of sessions) {
       try {
-        const newSession = await this._refreshSession(session.refreshToken);
+        const newSession = await this._refreshSessionWithRetry(
+          session.refreshToken,
+        );
         finalSessions.push({
           ...session,
           accessToken: newSession.accessToken,
@@ -214,6 +216,49 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       removed: [],
       changed: finalSessions,
     });
+  }
+
+  private async _refreshSessionWithRetry(
+    refreshToken: string,
+    attempt = 1,
+    maxAttempts = 3,
+    baseDelay = 1000,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    expiresInMs: number;
+  }> {
+    try {
+      return await this._refreshSession(refreshToken);
+    } catch (error: any) {
+      // Don't retry for auth errors (401 Unauthorized) or server errors that indicate invalid token
+      if (
+        error.message?.includes("401") ||
+        error.message?.includes("Invalid refresh token") ||
+        attempt >= maxAttempts
+      ) {
+        throw error;
+      }
+
+      // For network errors or transient server issues, retry with backoff
+      // Calculate exponential backoff delay with jitter
+      const delay =
+        baseDelay * Math.pow(2, attempt - 1) * (0.5 + Math.random() * 0.5);
+
+      // Schedule retry after delay
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          this._refreshSessionWithRetry(
+            refreshToken,
+            attempt + 1,
+            maxAttempts,
+            baseDelay,
+          )
+            .then(resolve)
+            .catch(reject);
+        }, delay);
+      });
+    }
   }
 
   private async _refreshSession(refreshToken: string): Promise<{
