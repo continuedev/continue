@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { EventEmitter } from "vscode";
 
 // Don't import WorkOsAuthProvider directly here
@@ -84,9 +84,15 @@ function createJwt({ expired }: { expired: boolean }): string {
   return `${base64Header}.${base64Payload}.${signature}`;
 }
 
+beforeEach(() => {
+  // Set up fake timers before each test
+  vi.useFakeTimers();
+});
+
 afterEach(() => {
   vi.clearAllMocks();
   vi.clearAllTimers();
+  vi.useRealTimers(); // Restore real timers after each test
 });
 
 it("should refresh tokens on initialization when sessions exist", async () => {
@@ -141,11 +147,11 @@ it("should refresh tokens on initialization when sessions exist", async () => {
   // Import WorkOsAuthProvider after setting up all mocks
   const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
 
-  // Create provider instance
+  // Create provider instance - this will automatically call refreshSessions
   const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Manually call refreshSessions (don't wait for auto-refresh)
-  await provider.refreshSessions();
+  // Run microtasks to process promises
+  await Promise.resolve();
 
   // Verify that the token refresh endpoint was called
   expect(fetchMock).toHaveBeenCalledWith(
@@ -167,10 +173,6 @@ it("should refresh tokens on initialization when sessions exist", async () => {
 });
 
 it("should not remove sessions during transient network errors", async () => {
-  // Mock setInterval to prevent the refresh interval
-  const originalSetInterval = global.setInterval;
-  global.setInterval = vi.fn().mockReturnValue(123 as any);
-
   // Setup existing sessions with a valid token
   const validToken = createJwt({ expired: false });
   const mockSession = {
@@ -221,11 +223,14 @@ it("should not remove sessions during transient network errors", async () => {
   // Import WorkOsAuthProvider after setting up all mocks
   const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
 
-  // Create provider instance
+  // Allow setInterval to work normally with fake timers
+  // We're not mocking it anymore, instead we'll control when it fires
+
+  // Create provider instance - this will automatically call refreshSessions with the network error
   const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Call refresh sessions
-  await provider.refreshSessions();
+  // Run microtasks to process promises from the initial refresh call
+  await Promise.resolve();
 
   // Check that sessions were not cleared after network error
   expect(mockSecretStorageStore).not.toHaveBeenCalledWith(
@@ -233,19 +238,17 @@ it("should not remove sessions during transient network errors", async () => {
     expect.stringMatching(/\[\]/),
   );
 
-  // Restore original timers for the setTimeout to work if needed
-  global.setInterval = originalSetInterval;
+  // Reset the fetch mock call count to verify the next call
+  fetchMock.mockClear();
 
-  // The test mentions we should advance timers to trigger retry
-  // But we need to understand what kind of retry mechanism exists
-  // in the WorkOsAuthProvider class. Let's look at the test content again:
+  // Advance timers to the next refresh interval to simulate the timer firing
+  vi.advanceTimersByTime(WorkOsAuthProvider.REFRESH_INTERVAL_MS);
 
-  // Since we're not relying on the automatic refresh interval,
-  // we need to manually trigger a second refresh to test retry behavior
-  await provider.refreshSessions();
+  // Run microtasks to process promises from the interval-triggered refresh
+  await Promise.resolve();
 
-  // Verify second attempt was made
-  expect(fetchMock).toHaveBeenCalledTimes(2);
+  // Verify the second attempt was made via the interval
+  expect(fetchMock).toHaveBeenCalledTimes(1);
 
   // Clean up
   if (provider._refreshInterval) {
