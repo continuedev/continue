@@ -207,15 +207,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       removed: [],
       changed: finalSessions,
     });
-
-    if (finalSessions[0]?.expiresInMs) {
-      setTimeout(
-        async () => {
-          await this._refreshSessions();
-        },
-        (finalSessions[0].expiresInMs * 2) / 3,
-      );
-    }
   }
 
   private async _refreshSession(refreshToken: string): Promise<{
