@@ -535,6 +535,7 @@ it("should remove session if access token is expired and refresh fails", async (
 
   // Wait for all promises to resolve, including any nested promise chains
   await new Promise(process.nextTick);
+  await new Promise(process.nextTick); // Wait twice to ensure all nested promises resolve
 
   // Verify that the token refresh endpoint was called
   expect(fetchMock).toHaveBeenCalledWith(
