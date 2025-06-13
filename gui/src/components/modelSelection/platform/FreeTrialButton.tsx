@@ -114,7 +114,7 @@ export default function FreeTrialButton({
                   <span
                     onClick={async () => {
                       await ideMessenger.request("controlPlane/openUrl", {
-                        path: "/pricing",
+                        path: "pricing",
                         orgSlug: undefined,
                       });
                     }}
@@ -141,7 +141,7 @@ export default function FreeTrialButton({
                   className="flex-1"
                   onClick={async () => {
                     await ideMessenger.request("controlPlane/openUrl", {
-                      path: "/setup-models",
+                      path: "setup-models",
                       orgSlug: undefined,
                     });
                   }}
@@ -152,7 +152,7 @@ export default function FreeTrialButton({
                   className="flex-1"
                   onClick={async () => {
                     await ideMessenger.request("controlPlane/openUrl", {
-                      path: "/settings/billing",
+                      path: "settings/billing",
                       orgSlug: undefined,
                     });
                   }}

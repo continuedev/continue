@@ -174,7 +174,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   get redirectUri() {
     if (WorkOsAuthProvider.useOnboardingUri) {
       const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/onboarding/redirect/${env.uriScheme}`;
+      url.pathname = `/auth/${env.uriScheme}-redirect`;
       return url.toString();
     }
     return this.ideRedirectUri;
@@ -393,6 +393,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           code_challenge: codeChallenge,
           code_challenge_method: "S256",
           provider: "authkit",
+          screen_hint: WorkOsAuthProvider.useOnboardingUri
+            ? "sign-up"
+            : "sign-in",
         };
 
         Object.keys(params).forEach((key) =>

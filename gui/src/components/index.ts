@@ -69,7 +69,6 @@ export const SecondaryButton = styled.button`
 
 export const GhostButton = styled.button`
   padding: 6px 8px;
-  margin: 6px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
@@ -84,13 +83,6 @@ export const GhostButton = styled.button`
     cursor: pointer;
     filter: brightness(125%);
   }
-`;
-
-export const InputSubtext = styled.span`
-  font-size: 0.75rem;
-  line-height: 1rem;
-  color: ${lightGray};
-  margin-top: 0.25rem;
 `;
 
 export const ButtonSubtext = styled.span`

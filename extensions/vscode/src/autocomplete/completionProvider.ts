@@ -189,6 +189,10 @@ export class ContinueCompletionProvider
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
 
+      // handle manual autocompletion trigger
+      const wasManuallyTriggered =
+        context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
+
       const input: AutocompleteInput = {
         pos,
         manuallyPassFileContents,
@@ -208,6 +212,7 @@ export class ContinueCompletionProvider
         await this.completionProvider.provideInlineCompletionItems(
           input,
           signal,
+          wasManuallyTriggered,
         );
 
       if (!outcome || !outcome.completion) {
