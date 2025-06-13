@@ -37,5 +37,6 @@ export default {
     "<rootDir>/autocomplete/",
     "<rootDir>/commands/",
     "<rootDir>/control-plane/",
+    "<rootDir>/data/",
   ],
 };

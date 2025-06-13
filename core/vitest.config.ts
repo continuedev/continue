@@ -15,6 +15,7 @@ export default defineConfig({
       "autocomplete/**/*.test.ts",
       "commands/**/*.test.ts",
       "control-plane/**/*.test.ts",
+      "data/**/*.test.ts",
     ],
   },
 });
