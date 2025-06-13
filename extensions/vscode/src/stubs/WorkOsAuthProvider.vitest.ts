@@ -150,8 +150,8 @@ it("should refresh tokens on initialization when sessions exist", async () => {
   // Create provider instance - this will automatically call refreshSessions
   const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Run microtasks to process promises
-  await Promise.resolve();
+  // Wait for all promises to resolve, including any nested promise chains
+  await new Promise(process.nextTick);
 
   // Verify that the token refresh endpoint was called
   expect(fetchMock).toHaveBeenCalledWith(
