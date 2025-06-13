@@ -173,11 +173,6 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Run vitest tests
-        run: |
-          cd extensions/vscode
-          npm run vitest
-
   install-gui:
     needs: [install-root, install-core, install-config-yaml]
     runs-on: ubuntu-latest
@@ -400,6 +395,11 @@ jobs:
           npm run write-build-timestamp
           npx tsc --noEmit
           npm run lint
+
+      - name: Run vitest tests
+        run: |
+          cd extensions/vscode
+          npm run vitest
 
   core-tests:
     needs: [install-core, install-config-yaml]
