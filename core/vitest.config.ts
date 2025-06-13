@@ -14,6 +14,7 @@ export default defineConfig({
       "config/yaml/LocalPlatformClient.test.ts",
       "autocomplete/**/*.test.ts",
       "commands/**/*.test.ts",
+      "control-plane/**/*.test.ts",
     ],
   },
 });

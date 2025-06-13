@@ -36,5 +36,6 @@ export default {
     "<rootDir>/config/yaml/LocalPlatformClient.test.ts",
     "<rootDir>/autocomplete/",
     "<rootDir>/commands/",
+    "<rootDir>/control-plane/",
   ],
 };
