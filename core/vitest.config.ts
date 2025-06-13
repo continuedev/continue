@@ -16,6 +16,7 @@ export default defineConfig({
       "commands/**/*.test.ts",
       "control-plane/**/*.test.ts",
       "data/**/*.test.ts",
+      "diff/**/*.test.ts",
     ],
   },
 });

@@ -38,5 +38,6 @@ export default {
     "<rootDir>/commands/",
     "<rootDir>/control-plane/",
     "<rootDir>/data/",
+    "<rootDir>/diff/",
   ],
 };
