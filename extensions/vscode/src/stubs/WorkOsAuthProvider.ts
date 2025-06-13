@@ -196,9 +196,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           removed: [session],
           changed: [],
         });
-        // We don't need to refresh the sessions again, since we'll get a new one when we need it
-        // setTimeout(() => this._refreshSessions(), 60 * 1000);
-        // return;
       }
     }
     await this.storeSessions(finalSessions);
@@ -293,11 +290,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         removed: [],
         changed: [],
       });
-
-      setTimeout(
-        () => this._refreshSessions(),
-        (this.getExpirationTimeMs(session.accessToken) * 2) / 3,
-      );
 
       return session;
     } catch (e) {
