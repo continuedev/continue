@@ -183,6 +183,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
   async refreshSessions() {
     try {
+      debugger;
       await this._refreshSessions();
     } catch (e) {
       console.error(`Error refreshing sessions: ${e}`);
@@ -246,6 +247,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       if (
         error.message?.includes("401") ||
         error.message?.includes("Invalid refresh token") ||
+        error.message?.includes("400") ||
+        error.message?.includes("Unauthorized") ||
         attempt >= maxAttempts
       ) {
         throw error;
