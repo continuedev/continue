@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MCPOptions } from "../..";
 import MCPConnection from "./MCPConnection";
 import { MCPManagerSingleton } from "./MCPManagerSingleton";
@@ -18,8 +19,8 @@ class TestMCPConnection extends MCPConnection {
     } as any;
 
     this.abortController = new AbortController();
-    this.connectClient = jest.fn().mockResolvedValue(undefined);
-    this.getStatus = jest
+    this.connectClient = vi.fn().mockResolvedValue(undefined);
+    this.getStatus = vi
       .fn()
       .mockReturnValue({ status: "connected", errors: [] });
   }
@@ -54,13 +55,12 @@ describe("MCPManagerSingleton", () => {
       id: string,
       options: MCPOptions,
     ): MCPConnection {
-      if (!this.connections.has(id)) {
-        const connection = new TestMCPConnection(options);
-        this.connections.set(id, connection);
-        return connection;
-      } else {
+      if (this.connections.has(id)) {
         return this.connections.get(id)!;
       }
+      const connection = new TestMCPConnection(options);
+      this.connections.set(id, connection);
+      return connection;
     };
   });
 
@@ -103,7 +103,7 @@ describe("MCPManagerSingleton", () => {
         "test-id",
         testOptions,
       ) as TestMCPConnection;
-      const closeSpy = jest.spyOn(connection.client, "close");
+      const closeSpy = vi.spyOn(connection.client, "close");
 
       await manager.removeConnection("test-id");
 
@@ -133,8 +133,8 @@ describe("MCPManagerSingleton", () => {
         "test-id",
         testOptions,
       ) as TestMCPConnection;
-      const abortSpy = jest.spyOn(connection.abortController, "abort");
-      const closeSpy = jest.spyOn(connection.client, "close");
+      const abortSpy = vi.spyOn(connection.abortController, "abort");
+      const closeSpy = vi.spyOn(connection.client, "close");
 
       // Remove it by setting empty server list
       manager.setConnections([], false);
@@ -192,7 +192,7 @@ describe("MCPManagerSingleton", () => {
     });
 
     it("should call onConnectionsRefreshed if defined", async () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       manager.onConnectionsRefreshed = mockCallback;
       manager.createConnection("test-id", testOptions);
 
@@ -209,7 +209,7 @@ describe("MCPManagerSingleton", () => {
         testOptions,
       ) as TestMCPConnection;
       const mockStatus = { status: "connected", errors: [] };
-      connection.getStatus = jest.fn().mockReturnValue(mockStatus);
+      connection.getStatus = vi.fn().mockReturnValue(mockStatus);
 
       const statuses = manager.getStatuses();
       expect(statuses).toHaveLength(1);

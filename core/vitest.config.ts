@@ -13,6 +13,7 @@ export default defineConfig({
       "**/*.vitest.ts",
       "config/**/*.test.ts",
       "autocomplete/**/*.test.ts",
+      "context/**/*.test.ts",
     ],
   },
 });

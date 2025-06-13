@@ -32,5 +32,9 @@ export default {
   // modulePathIgnorePatterns: [
   //   "<rootDir>/config/yaml/LocalPlatformClient.test.ts",
   // ],
-  testPathIgnorePatterns: ["<rootDir>/config/", "<rootDir>/autocomplete/"],
+  testPathIgnorePatterns: [
+    "<rootDir>/config/",
+    "<rootDir>/autocomplete/",
+    "<rootDir>/context/",
+  ],
 };
