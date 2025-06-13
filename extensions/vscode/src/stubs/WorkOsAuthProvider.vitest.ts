@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fetch from "node-fetch";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { EventEmitter } from "vscode";
