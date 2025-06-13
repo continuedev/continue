@@ -266,3 +266,113 @@ it("should not remove sessions during transient network errors", async () => {
     provider._refreshInterval = null;
   }
 });
+
+it("should refresh tokens at regular intervals rather than based on expiration", async () => {
+  // Setup existing sessions with a valid token
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 3600000, // 1 hour
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Setup fetch mock
+  const fetchMock = fetch as any;
+  fetchMock.mockClear();
+
+  // Setup successful token refresh responses for multiple calls
+  fetchMock.mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      accessToken: createJwt({ expired: false }),
+      refreshToken: "new-refresh-token",
+    }),
+    text: async () => "",
+  });
+
+  // Create a mock UriHandler
+  const mockUriHandler = {
+    event: new EventEmitter(),
+    handleCallback: vi.fn(),
+  };
+
+  // Create a mock ExtensionContext
+  const mockContext = {
+    secrets: {
+      store: vi.fn(),
+      get: vi.fn(),
+    },
+    subscriptions: [],
+  };
+
+  // Set up our SecretStorage mock to return the session
+  mockSecretStorageGet.mockResolvedValue(JSON.stringify([mockSession]));
+
+  // Import WorkOsAuthProvider after setting up all mocks
+  const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
+
+  // Capture the original setInterval to restore it later
+  const originalSetInterval = global.setInterval;
+
+  // Create our own implementation of setInterval that we can control better
+  let intervalCallback: Function;
+  global.setInterval = vi.fn((callback, ms) => {
+    intervalCallback = callback;
+    return 123 as any; // Return a dummy interval ID
+  });
+
+  // Create provider instance - this will automatically call refreshSessions
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Wait for all promises to resolve, including any nested promise chains
+  await new Promise(process.nextTick);
+
+  // First refresh should happen immediately on initialization
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  fetchMock.mockClear();
+
+  // Verify that setInterval was called to set up regular refreshes
+  expect(global.setInterval).toHaveBeenCalled();
+
+  // Get the interval time from the call to setInterval
+  const intervalTime = (global.setInterval as any).mock.calls[0][1];
+
+  // Should be a reasonable interval (less than the expiration time)
+  expect(intervalTime).toBeLessThan(mockSession.expiresInMs);
+
+  // Now manually trigger the interval callback
+  if (intervalCallback) {
+    intervalCallback();
+
+    // Wait for all promises to resolve
+    await new Promise(process.nextTick);
+
+    // Verify that refresh was called again when the interval callback fired
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // Check that we're making refresh calls to the right endpoint with the right data
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/auth/refresh" }),
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
+        body: expect.stringContaining("refresh-token"),
+      }),
+    );
+  }
+
+  // Restore the original setInterval
+  global.setInterval = originalSetInterval;
+
+  // Clean up
+  if (provider._refreshInterval) {
+    clearInterval(provider._refreshInterval);
+    provider._refreshInterval = null;
+  }
+});
