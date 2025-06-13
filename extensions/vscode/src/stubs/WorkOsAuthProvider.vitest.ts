@@ -344,8 +344,7 @@ it("should refresh tokens at regular intervals rather than based on expiration",
   // Should be a reasonable interval (less than the expiration time)
   expect(intervalTime).toBeLessThan(mockSession.expiresInMs);
 
-  // Now manually trigger the interval callback
-
+  // Now manually trigger the interval callback - First interval
   intervalCallback();
 
   // Wait for all promises to resolve
@@ -355,6 +354,30 @@ it("should refresh tokens at regular intervals rather than based on expiration",
   expect(fetchMock).toHaveBeenCalledTimes(1);
 
   // Check that we're making refresh calls to the right endpoint with the right data
+  expect(fetchMock).toHaveBeenCalledWith(
+    expect.objectContaining({ pathname: "/auth/refresh" }),
+    expect.objectContaining({
+      method: "POST",
+      headers: expect.objectContaining({
+        "Content-Type": "application/json",
+      }),
+      body: expect.stringContaining("refresh-token"),
+    }),
+  );
+
+  // Clear mock calls for the second interval test
+  fetchMock.mockClear();
+
+  // Trigger the callback again - Second interval
+  intervalCallback();
+
+  // Wait for all promises to resolve
+  await new Promise(process.nextTick);
+
+  // Verify the refresh was called a second time
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+
+  // Verify the second call has the same correct parameters
   expect(fetchMock).toHaveBeenCalledWith(
     expect.objectContaining({ pathname: "/auth/refresh" }),
     expect.objectContaining({
