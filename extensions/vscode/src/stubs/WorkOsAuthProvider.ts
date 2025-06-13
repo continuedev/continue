@@ -198,9 +198,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     const finalSessions = [];
     for (const session of sessions) {
       try {
-        const newSession = await this._refreshSessionWithRetry(
-          session.refreshToken,
-        );
+        // For expired tokens, don't use retries - if refresh fails, we drop the session
+        const refreshMethod = this.jwtIsExpiredOrInvalid(session.accessToken)
+          ? this._refreshSession.bind(this) // Direct refresh for expired tokens
+          : this._refreshSessionWithRetry.bind(this); // Retry for valid tokens
+
+        const newSession = await refreshMethod(session.refreshToken);
         finalSessions.push({
           ...session,
           accessToken: newSession.accessToken,
@@ -208,9 +211,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           expiresInMs: newSession.expiresInMs,
         });
       } catch (e: any) {
-        // If the refresh token doesn't work, we just drop the session
+        // If refresh fails (after retries for valid tokens), drop the session
         console.debug(`Error refreshing session token: ${e.message}`);
-
         this._sessionChangeEmitter.fire({
           added: [],
           removed: [session],
@@ -218,6 +220,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         });
       }
     }
+
     await this.storeSessions(finalSessions);
     this._sessionChangeEmitter.fire({
       added: [],

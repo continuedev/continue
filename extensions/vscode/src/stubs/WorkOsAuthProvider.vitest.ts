@@ -497,7 +497,17 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
   // Setup fetch mock for valid token - it will fail with network error
   const fetchMock = fetch as any;
   fetchMock.mockClear();
+
+  // We'll have the network error then a success - the retry should work
   fetchMock.mockRejectedValueOnce(new Error("Network error"));
+  fetchMock.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      accessToken: createJwt({ expired: false }),
+      refreshToken: "new-refresh-token",
+    }),
+    text: async () => "",
+  });
 
   // Mock UriHandler & Context
   const mockUriHandler = { event: new EventEmitter(), handleCallback: vi.fn() };
@@ -510,6 +520,11 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
   const originalSetInterval = global.setInterval;
   global.setInterval = vi.fn().mockReturnValue(123 as any);
 
+  // Make sure Date.now returns a consistent value for our tests
+  const originalDateNow = Date.now;
+  const currentTime = Date.now();
+  Date.now = vi.fn(() => currentTime);
+
   // Set up SecretStorage to return valid session
   mockSecretStorageGet.mockResolvedValue(JSON.stringify([validSession]));
   mockSecretStorageStore.mockClear();
@@ -518,12 +533,12 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
   const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
   const provider1 = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Wait for async operations
+  // Wait for async operations and trigger retry
   await new Promise(process.nextTick);
   await vi.runAllTimersAsync();
   await new Promise(process.nextTick);
 
-  // For valid tokens with network errors, the session should NOT be removed
+  // For valid tokens with network errors, the session should NOT be removed due to retry
   expect(mockSecretStorageStore).not.toHaveBeenCalledWith(
     "workos.sessions",
     expect.stringMatching(/\[\]/),
@@ -541,7 +556,7 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
   mockSecretStorageStore.mockClear();
 
   // Setup existing session with an EXPIRED token
-  const expiredToken = createJwt({ expired: false });
+  const expiredToken = createJwt({ expired: true });
   const expiredSession = {
     id: "expired-id",
     accessToken: expiredToken,
@@ -552,7 +567,7 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
     loginNeeded: false,
   };
 
-  // Setup fetch mock for expired token - same network error
+  // Setup fetch mock for expired token - same network error (should not retry)
   fetchMock.mockRejectedValueOnce(new Error("Network error"));
 
   // Set up SecretStorage to return expired session
@@ -561,12 +576,10 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
   // Create new provider with expired session
   const provider2 = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Wait for async operations
-  await new Promise(process.nextTick);
-  await vi.runAllTimersAsync();
+  // Wait for async operations (no need to run timers as we shouldn't retry)
   await new Promise(process.nextTick);
 
-  // For expired tokens, a refresh failure should result in session removal
+  // For expired tokens, a refresh failure should result in immediate session removal
   expect(mockSecretStorageStore).toHaveBeenCalledWith(
     "workos.sessions",
     expect.stringMatching(/\[\]/),
@@ -574,6 +587,7 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
 
   // Restore mocks
   global.setInterval = originalSetInterval;
+  Date.now = originalDateNow;
 
   // Clean up second provider
   if (provider2._refreshInterval) {
@@ -581,6 +595,7 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
     provider2._refreshInterval = null;
   }
 });
+
 it("should implement exponential backoff for failed refresh attempts", async () => {
   // Setup existing sessions with a valid token
   const validToken = createJwt({ expired: false });
