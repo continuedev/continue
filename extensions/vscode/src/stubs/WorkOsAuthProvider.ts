@@ -120,6 +120,14 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     }
   }
 
+  private jwtIsExpiredOrInvalid(jwt: string): boolean {
+    const decodedToken = this.decodeJwt(jwt);
+    if (!decodedToken) {
+      return true;
+    }
+    return decodedToken.exp * 1000 < Date.now();
+  }
+
   private getExpirationTimeMs(jwt: string): number {
     const decodedToken = this.decodeJwt(jwt);
     if (!decodedToken) {
@@ -231,11 +239,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
-      // Don't retry for auth errors (401 Unauthorized) or server errors that indicate invalid token
+      // Don't retry for auth errors (401 Unauthorized) or if we've reached max attempts
       if (
         error.message?.includes("401") ||
         error.message?.includes("Invalid refresh token") ||
-        error.message?.includes("500") || // Consider server errors fatal for expired tokens
         attempt >= maxAttempts
       ) {
         throw error;

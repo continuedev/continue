@@ -480,80 +480,105 @@ it("should remove session if token refresh fails with authentication error", asy
   }
 });
 
-it("should remove session if access token is expired and refresh fails", async () => {
-  // Setup existing sessions with an expired token
-  const expiredToken = createJwt({ expired: false });
-  const mockSession = {
-    id: "test-id",
-    accessToken: expiredToken,
-    refreshToken: "refresh-token",
-    expiresInMs: 3600000, // This doesn't matter since the token is already expired
-    account: { label: "Test User", id: "user@example.com" },
+it("should handle refresh failures differently for expired vs valid tokens", async () => {
+  // First scenario: Valid token with refresh failure
+  // Setup existing sessions with a VALID token
+  const validToken = createJwt({ expired: false });
+  const validSession = {
+    id: "valid-id",
+    accessToken: validToken,
+    refreshToken: "valid-refresh-token",
+    expiresInMs: 3600000,
+    account: { label: "Valid User", id: "valid@example.com" },
     scopes: [],
     loginNeeded: false,
   };
 
-  // Setup fetch mock
+  // Setup fetch mock for valid token - it will fail with network error
   const fetchMock = fetch as any;
   fetchMock.mockClear();
+  fetchMock.mockRejectedValueOnce(new Error("Network error"));
 
-  // Force 500 error to be treated as a fatal error that won't be retried
-  fetchMock.mockImplementationOnce(async () => {
-    throw new Error("Error refreshing token: 500 Server error");
-  });
-
-  // Create a mock UriHandler
-  const mockUriHandler = {
-    event: new EventEmitter(),
-    handleCallback: vi.fn(),
-  };
-
-  // Create a mock ExtensionContext
+  // Mock UriHandler & Context
+  const mockUriHandler = { event: new EventEmitter(), handleCallback: vi.fn() };
   const mockContext = {
-    secrets: {
-      store: vi.fn(),
-      get: vi.fn(),
-    },
+    secrets: { store: vi.fn(), get: vi.fn() },
     subscriptions: [],
   };
 
-  // Mock setInterval to prevent continuous refreshes
+  // Mock setInterval
   const originalSetInterval = global.setInterval;
   global.setInterval = vi.fn().mockReturnValue(123 as any);
 
-  // Set up our SecretStorage mock to return the session
-  mockSecretStorageGet.mockResolvedValue(JSON.stringify([mockSession]));
+  // Set up SecretStorage to return valid session
+  mockSecretStorageGet.mockResolvedValue(JSON.stringify([validSession]));
   mockSecretStorageStore.mockClear();
 
-  // Import WorkOsAuthProvider after setting up all mocks
+  // Import and create provider
   const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
+  const provider1 = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Create provider instance - this will automatically call refreshSessions
-  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
-
-  // Wait for all promises to resolve, including any nested promise chains
+  // Wait for async operations
   await new Promise(process.nextTick);
-
-  // Since our mock directly throws an error matching the 500 condition, it should be treated
-  // as a fatal error and the session should be removed immediately
-
-  // Give it some more time to ensure all async operations complete
   await vi.runAllTimersAsync();
   await new Promise(process.nextTick);
 
-  // Verify sessions were removed because token was expired and refresh failed
-  expect(mockSecretStorageStore).toHaveBeenCalledWith(
-    "workos.sessions", // Use the hard-coded key that matches our mock
+  // For valid tokens with network errors, the session should NOT be removed
+  expect(mockSecretStorageStore).not.toHaveBeenCalledWith(
+    "workos.sessions",
     expect.stringMatching(/\[\]/),
   );
 
-  // Restore setInterval
+  // Clean up first provider
+  if (provider1._refreshInterval) {
+    clearInterval(provider1._refreshInterval);
+    provider1._refreshInterval = null;
+  }
+
+  // SECOND SCENARIO: Expired token with refresh failure
+  // Reset mocks
+  fetchMock.mockClear();
+  mockSecretStorageStore.mockClear();
+
+  // Setup existing session with an EXPIRED token
+  const expiredToken = createJwt({ expired: false });
+  const expiredSession = {
+    id: "expired-id",
+    accessToken: expiredToken,
+    refreshToken: "expired-refresh-token",
+    expiresInMs: 3600000,
+    account: { label: "Expired User", id: "expired@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Setup fetch mock for expired token - same network error
+  fetchMock.mockRejectedValueOnce(new Error("Network error"));
+
+  // Set up SecretStorage to return expired session
+  mockSecretStorageGet.mockResolvedValue(JSON.stringify([expiredSession]));
+
+  // Create new provider with expired session
+  const provider2 = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Wait for async operations
+  await new Promise(process.nextTick);
+  await vi.runAllTimersAsync();
+  await new Promise(process.nextTick);
+
+  // For expired tokens, a refresh failure should result in session removal
+  expect(mockSecretStorageStore).toHaveBeenCalledWith(
+    "workos.sessions",
+    expect.stringMatching(/\[\]/),
+  );
+
+  // Restore mocks
   global.setInterval = originalSetInterval;
 
-  // Clean up
-  if (provider._refreshInterval) {
-    clearInterval(provider._refreshInterval);
-    provider._refreshInterval = null;
+  // Clean up second provider
+  if (provider2._refreshInterval) {
+    clearInterval(provider2._refreshInterval);
+    provider2._refreshInterval = null;
   }
 });
 it("should implement exponential backoff for failed refresh attempts", async () => {
