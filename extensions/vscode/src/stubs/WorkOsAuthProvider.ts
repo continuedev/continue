@@ -247,7 +247,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       if (
         error.message?.includes("401") ||
         error.message?.includes("Invalid refresh token") ||
-        error.message?.includes("400") ||
         error.message?.includes("Unauthorized") ||
         attempt >= maxAttempts
       ) {
