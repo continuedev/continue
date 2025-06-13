@@ -560,3 +560,103 @@ it("should remove session if access token is expired and refresh fails", async (
     provider._refreshInterval = null;
   }
 });
+
+it("should implement exponential backoff for failed refresh attempts", async () => {
+  // Setup existing sessions with a valid token
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 300000, // 5 minutes
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Setup fetch mock
+  const fetchMock = fetch as any;
+  fetchMock.mockClear();
+
+  // Setup repeated network errors followed by success
+  fetchMock.mockRejectedValueOnce(new Error("Network error 1"));
+  fetchMock.mockRejectedValueOnce(new Error("Network error 2"));
+  fetchMock.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      accessToken: createJwt({ expired: false }),
+      refreshToken: "new-refresh-token",
+    }),
+    text: async () => "",
+  });
+
+  // Create a mock UriHandler
+  const mockUriHandler = {
+    event: new EventEmitter(),
+    handleCallback: vi.fn(),
+  };
+
+  // Create a mock ExtensionContext
+  const mockContext = {
+    secrets: {
+      store: vi.fn(),
+      get: vi.fn(),
+    },
+    subscriptions: [],
+  };
+
+  // Mock setInterval to prevent continuous refreshes
+  const originalSetInterval = global.setInterval;
+  global.setInterval = vi.fn().mockReturnValue(123 as any);
+
+  // Track setTimeout calls
+  const setTimeoutSpy = vi.spyOn(global, "setTimeout");
+
+  // Set up our SecretStorage mock to return the session
+  mockSecretStorageGet.mockResolvedValue(JSON.stringify([mockSession]));
+
+  // Import WorkOsAuthProvider after setting up all mocks
+  const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
+
+  // Create provider instance - this will automatically call refreshSessions
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Wait for all promises to resolve for the initial refresh attempt
+  await new Promise(process.nextTick);
+
+  // Verify the first fetch attempt was made
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+
+  // Trigger first retry
+  vi.advanceTimersByTime(1000); // Initial backoff
+  await new Promise(process.nextTick);
+
+  // Verify the second fetch attempt was made
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+
+  // Trigger second retry
+  vi.advanceTimersByTime(2000); // Double the backoff
+  await new Promise(process.nextTick);
+
+  // Verify the third fetch attempt was made
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+
+  // Verify setTimeout was called with increasing delays
+  expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
+
+  // Check that the backoff periods increased
+  const firstDelay = setTimeoutSpy.mock.calls[0][1];
+  const secondDelay = setTimeoutSpy.mock.calls[1][1];
+
+  // Check that backoff increased
+  expect(secondDelay).toBeGreaterThan(firstDelay);
+
+  // Restore setInterval
+  global.setInterval = originalSetInterval;
+
+  // Clean up
+  if (provider._refreshInterval) {
+    clearInterval(provider._refreshInterval);
+    provider._refreshInterval = null;
+  }
+});
