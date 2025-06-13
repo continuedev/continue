@@ -479,3 +479,84 @@ it("should remove session if token refresh fails with authentication error", asy
     provider._refreshInterval = null;
   }
 });
+
+it("should remove session if access token is expired and refresh fails", async () => {
+  // Setup existing sessions with an expired token
+  const expiredToken = createJwt({ expired: true });
+  const mockSession = {
+    id: "test-id",
+    accessToken: expiredToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 3600000, // This doesn't matter since the token is already expired
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Setup fetch mock
+  const fetchMock = fetch as any;
+  fetchMock.mockClear();
+
+  // Setup refresh to fail with server error
+  fetchMock.mockResolvedValueOnce({
+    ok: false,
+    status: 500,
+    text: async () => "Server error",
+  });
+
+  // Create a mock UriHandler
+  const mockUriHandler = {
+    event: new EventEmitter(),
+    handleCallback: vi.fn(),
+  };
+
+  // Create a mock ExtensionContext
+  const mockContext = {
+    secrets: {
+      store: vi.fn(),
+      get: vi.fn(),
+    },
+    subscriptions: [],
+  };
+
+  // Mock setInterval to prevent continuous refreshes
+  const originalSetInterval = global.setInterval;
+  global.setInterval = vi.fn().mockReturnValue(123 as any);
+
+  // Set up our SecretStorage mock to return the session
+  mockSecretStorageGet.mockResolvedValue(JSON.stringify([mockSession]));
+  mockSecretStorageStore.mockClear();
+
+  // Import WorkOsAuthProvider after setting up all mocks
+  const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
+
+  // Create provider instance - this will automatically call refreshSessions
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Wait for all promises to resolve, including any nested promise chains
+  await new Promise(process.nextTick);
+
+  // Verify that the token refresh endpoint was called
+  expect(fetchMock).toHaveBeenCalledWith(
+    expect.any(URL),
+    expect.objectContaining({
+      method: "POST",
+      body: expect.stringContaining("refresh-token"),
+    }),
+  );
+
+  // Verify sessions were removed because token was expired and refresh failed
+  expect(mockSecretStorageStore).toHaveBeenCalledWith(
+    "workos.sessions", // Use the hard-coded key that matches our mock
+    expect.stringMatching(/\[\]/),
+  );
+
+  // Restore setInterval
+  global.setInterval = originalSetInterval;
+
+  // Clean up
+  if (provider._refreshInterval) {
+    clearInterval(provider._refreshInterval);
+    provider._refreshInterval = null;
+  }
+});
