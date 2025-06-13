@@ -4,6 +4,7 @@ const { rimrafSync } = require("rimraf");
 const tar = require("tar");
 const { RIPGREP_VERSION, TARGET_TO_RIPGREP_RELEASE } = require("./targets");
 const AdmZip = require("adm-zip");
+const { ProxyAgent } = require('undici');
 
 const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}`;
 
@@ -16,8 +17,13 @@ const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/downloa
  */
 async function downloadFile(url, destPath) {
   // Use the built-in fetch API instead of node-fetch
+  // Use proxy if set in environment variables
+  const proxy = process.env.https_proxy || process.env.HTTPS_PROXY;
+  const agent = proxy ? new ProxyAgent(proxy) : undefined;
+
   const response = await fetch(url, {
     redirect: "follow", // Automatically follow redirects
+    dispatcher: agent,
   });
 
   if (!response.ok) {
