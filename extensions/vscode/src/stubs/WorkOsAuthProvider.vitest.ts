@@ -398,3 +398,84 @@ it("should refresh tokens at regular intervals rather than based on expiration",
     provider._refreshInterval = null;
   }
 });
+
+it("should remove session if token refresh fails with authentication error", async () => {
+  // Setup existing sessions with a valid token
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "invalid-refresh-token",
+    expiresInMs: 300000, // 5 minutes
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Setup fetch mock
+  const fetchMock = fetch as any;
+  fetchMock.mockClear();
+
+  // Setup refresh to fail with 401 unauthorized
+  fetchMock.mockResolvedValueOnce({
+    ok: false,
+    status: 401,
+    text: async () => "Invalid refresh token",
+  });
+
+  // Create a mock UriHandler
+  const mockUriHandler = {
+    event: new EventEmitter(),
+    handleCallback: vi.fn(),
+  };
+
+  // Create a mock ExtensionContext
+  const mockContext = {
+    secrets: {
+      store: vi.fn(),
+      get: vi.fn(),
+    },
+    subscriptions: [],
+  };
+
+  // Mock setInterval to prevent continuous refreshes
+  const originalSetInterval = global.setInterval;
+  global.setInterval = vi.fn().mockReturnValue(123 as any);
+
+  // Set up our SecretStorage mock to return the session
+  mockSecretStorageGet.mockResolvedValue(JSON.stringify([mockSession]));
+  mockSecretStorageStore.mockClear();
+
+  // Import WorkOsAuthProvider after setting up all mocks
+  const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
+
+  // Create provider instance - this will automatically call refreshSessions
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Wait for all promises to resolve, including any nested promise chains
+  await new Promise(process.nextTick);
+
+  // Verify that the token refresh endpoint was called
+  expect(fetchMock).toHaveBeenCalledWith(
+    expect.any(URL),
+    expect.objectContaining({
+      method: "POST",
+      body: expect.stringContaining("invalid-refresh-token"),
+    }),
+  );
+
+  // Verify sessions were removed due to auth error
+  expect(mockSecretStorageStore).toHaveBeenCalledWith(
+    "workos.sessions", // Use the hard-coded key that matches our mock
+    expect.stringMatching(/\[\]/),
+  );
+
+  // Restore setInterval
+  global.setInterval = originalSetInterval;
+
+  // Clean up
+  if (provider._refreshInterval) {
+    clearInterval(provider._refreshInterval);
+    provider._refreshInterval = null;
+  }
+});
