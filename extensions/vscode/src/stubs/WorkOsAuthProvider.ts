@@ -76,8 +76,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     string,
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
+  private _refreshInterval: NodeJS.Timeout | null = null;
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
+  private static REFRESH_INTERVAL_MS = 1000 * 60 * 5; // 5 minutes
 
   private secretStorage: SecretStorage;
 
@@ -96,6 +98,14 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     );
 
     this.secretStorage = new SecretStorage(context);
+
+    // Immediately refresh any existing sessions
+    this.refreshSessions();
+
+    // Set up a regular interval to refresh tokens
+    this._refreshInterval = setInterval(() => {
+      this.refreshSessions();
+    }, WorkOsAuthProvider.REFRESH_INTERVAL_MS);
   }
 
   private decodeJwt(jwt: string): Record<string, any> | null {
@@ -323,6 +333,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
    * Dispose the registered services
    */
   public async dispose() {
+    if (this._refreshInterval) {
+      clearInterval(this._refreshInterval);
+      this._refreshInterval = null;
+    }
     this._disposable.dispose();
   }
 
