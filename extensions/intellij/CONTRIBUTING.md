@@ -7,26 +7,26 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
 
 - [Architecture Overview](#architecture-overview)
 - [Environment Setup](#environment-setup)
-    - [IDE Installation](#ide-installation)
-    - [IDE configuration](#ide-configuration)
-    - [Node.js Requirements](#nodejs-requirements)
-    - [Install all dependencies](#install-all-dependencies)
-    - [Misc](#misc)
+  - [IDE Installation](#ide-installation)
+  - [IDE configuration](#ide-configuration)
+  - [Node.js Requirements](#nodejs-requirements)
+  - [Install all dependencies](#install-all-dependencies)
+  - [Misc](#misc)
 - [Development Workflow](#development-workflow)
-    - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
-    - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
-    - [Viewing logs](#viewing-logs)
-    - [Reloading changes](#reloading-changes)
-    - [Setting breakpoints](#setting-breakpoints)
-    - [Available Gradle tasks](#available-gradle-tasks)
-    - [Packaging](#packaging)
-        - [Installing the packaged extension](#installing-the-packaged-extension)
+  - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
+  - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
+  - [Viewing logs](#viewing-logs)
+  - [Reloading changes](#reloading-changes)
+  - [Setting breakpoints](#setting-breakpoints)
+  - [Available Gradle tasks](#available-gradle-tasks)
+  - [Packaging](#packaging)
+    - [Installing the packaged extension](#installing-the-packaged-extension)
 - [Testing](#testing)
-    - [e2e testing](#e2e-testing)
-        - [Overview](#overview)
-        - [Setup](#setup)
-        - [Running the tests](#running-the-tests)
-        - [Identifying selectors](#identifying-selectors)
+  - [e2e testing](#e2e-testing)
+    - [Overview](#overview)
+    - [Setup](#setup)
+    - [Running the tests](#running-the-tests)
+    - [Identifying selectors](#identifying-selectors)
 
 ## Architecture Overview
 
@@ -96,7 +96,7 @@ When using the `Run Continue` task, we automatically tail both prompt logs and I
 
 - `extensions/intellij`: Attempt to reload changed classes by selecting
   _Run | Debugging Actions | Reload Changed Classes`_
-    - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
+  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
 - `core`: Run `npm run build -- --os [darwin | linux | win32]` from the `binary` directory (requires
   restarting the
@@ -107,8 +107,8 @@ When using the `Run Continue` task, we automatically tail both prompt logs and I
 - `extensions/intellij`: Breakpoints can be set in Intellij
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
 - `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task)
-    - If you have Community Edition installed, you won't be able to use breakpoints in IntelliJ. Instead, you can start
-      the `Core Binary` task in VS Code and set breakpoints in that IDE.
+  - If you have Community Edition installed, you won't be able to use breakpoints in IntelliJ. Instead, you can start
+    the `Core Binary` task in VS Code and set breakpoints in that IDE.
 
 ### Available Gradle tasks
 
@@ -171,6 +171,12 @@ to run.
 
 ```sh
 ./gradlew test
+```
+
+Run a single test
+
+```sh
+./gradlew test --tests "com.github.continuedev.continueintellijextension.e2e.TESTNAME"
 ```
 
 #### Identifying selectors

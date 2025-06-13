@@ -43,7 +43,7 @@ export function addToTestDir(pathsOrUris: (string | [string, string])[]) {
     if (Array.isArray(p)) {
       fs.writeFileSync(filepath, p[1]);
     } else if (p.endsWith("/")) {
-      fs.mkdirSync(p, { recursive: true });
+      fs.mkdirSync(filepath, { recursive: true });
     } else {
       fs.writeFileSync(filepath, "");
     }

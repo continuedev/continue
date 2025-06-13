@@ -1,3 +1,4 @@
+import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -7,9 +8,9 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setCodeToEdit } from "../redux/slices/editModeState";
-import { setShowDialog } from "../redux/slices/uiSlice";
-import { enterEditMode, exitEditMode } from "../redux/thunks/editMode";
+import { setCodeToEdit } from "../redux/slices/editState";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
@@ -19,7 +20,11 @@ import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
-import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
+import {
+  isNewUserOnboarding,
+  OnboardingCard,
+  useOnboardingCard,
+} from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
@@ -48,14 +53,14 @@ const Layout = () => {
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
-  const mode = useAppSelector((state) => state.session.mode);
+  const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   useWebviewListener(
     "newSession",
     async () => {
       navigate(ROUTES.HOME);
-      if (mode === "edit") {
-        await dispatch(exitEditMode({}));
+      if (isInEdit) {
+        await dispatch(exitEdit({}));
       } else {
         await dispatch(
           saveCurrentSession({
@@ -65,7 +70,7 @@ const Layout = () => {
         );
       }
     },
-    [mode],
+    [isInEdit],
   );
 
   useWebviewListener(
@@ -81,9 +86,9 @@ const Layout = () => {
     "focusContinueInputWithNewSession",
     async () => {
       navigate(ROUTES.HOME);
-      if (mode === "edit") {
+      if (isInEdit) {
         await dispatch(
-          exitEditMode({
+          exitEdit({
             openNewSession: true,
           }),
         );
@@ -96,7 +101,7 @@ const Layout = () => {
         );
       }
     },
-    [location.pathname, mode],
+    [location.pathname, isInEdit],
     location.pathname === ROUTES.HOME,
   );
 
@@ -129,17 +134,33 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "openOnboardingCard",
+    "setupLocalConfig",
     async () => {
-      onboardingCard.open("Best");
+      onboardingCard.open(OnboardingModes.LOCAL);
     },
     [],
   );
 
   useWebviewListener(
-    "setupLocalConfig",
+    "freeTrialExceeded",
     async () => {
-      onboardingCard.open("Local");
+      dispatch(setShowDialog(true));
+      onboardingCard.setActiveTab(OnboardingModes.MODELS_ADD_ON);
+      dispatch(
+        setDialogMessage(
+          <div className="flex-1">
+            <OnboardingCard isDialog showFreeTrialExceededAlert />
+          </div>,
+        ),
+      );
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "setupApiKey",
+    async () => {
+      onboardingCard.open(OnboardingModes.API_KEY);
     },
     [],
   );
@@ -148,7 +169,7 @@ const Layout = () => {
     "focusEdit",
     async () => {
       await ideMessenger.request("edit/addCurrentSelection", undefined);
-      await dispatch(enterEditMode({}));
+      await dispatch(enterEdit({ editorContent: mainEditor?.getJSON() }));
       mainEditor?.commands.focus();
     },
     [ideMessenger, mainEditor],
@@ -169,7 +190,7 @@ const Layout = () => {
   useWebviewListener(
     "exitEditMode",
     async () => {
-      await dispatch(exitEditMode({}));
+      await dispatch(exitEdit({}));
     },
     [],
   );
@@ -179,9 +200,8 @@ const Layout = () => {
       if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
-          // Copy to clipboard
           setTimeout(() => {
-            navigator.clipboard.writeText(selection);
+            void navigator.clipboard.writeText(selection);
           }, 100);
         }
       }
@@ -199,7 +219,7 @@ const Layout = () => {
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      onboardingCard.open("Quickstart");
+      onboardingCard.open();
     }
   }, [location]);
 

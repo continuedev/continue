@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension.activities
 
-import IntelliJIDE
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
@@ -183,8 +182,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Notify core of content changes
                     if (changedURIs.isNotEmpty()) {
-                        continuePluginService.updateLastFileSaveTimestamp()
-
                         val data = mapOf("uris" to changedURIs)
                         continuePluginService.coreMessenger?.request("files/changed", data, null) { _ -> }
                     }

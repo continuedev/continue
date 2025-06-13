@@ -1,6 +1,7 @@
 import {
   ContinueProperties,
   decodeSecretLocation,
+  parseProxyModelName,
   SecretType,
 } from "@continuedev/config-yaml";
 
@@ -27,8 +28,16 @@ class ContinueProxy extends OpenAI {
   // to call whatever LLM API is chosen
   private actualApiBase?: string;
 
+  // Contains extra properties that we pass along to the proxy. Originally from `env` property on LLMOptions
+  private configEnv?: Record<string, any>;
+
   constructor(options: LLMOptions) {
     super(options);
+    this.configEnv = options.env;
+    // This it set to `undefined` to handle the case where we are proxying requests to Azure. We pass the correct env vars
+    // needed to do this in `extraBodyProperties` below, but if we don't set `apiType` to `undefined`, we end up proxying to
+    // `/openai/deployments/` which is invalid since that URL construction happens on the proxy.
+    this.apiType = undefined;
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
     this.orgScopeId = options.orgScopeId;
@@ -43,11 +52,17 @@ class ContinueProxy extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
+  get underlyingProviderName(): string {
+    const { provider } = parseProxyModelName(this.model);
+    return provider;
+  }
+
   protected extraBodyProperties(): Record<string, any> {
     const continueProperties: ContinueProperties = {
       apiKeyLocation: this.apiKeyLocation,
       apiBase: this.actualApiBase,
       orgScopeId: this.orgScopeId ?? null,
+      env: this.configEnv,
     };
     return {
       continueProperties,
@@ -74,10 +89,20 @@ class ContinueProxy extends OpenAI {
   }
 
   supportsCompletions(): boolean {
+    // This was a hotfix and contains duplicate logic from class-specific completion support methods
+    if (this.underlyingProviderName === "vllm") {
+      return true;
+    }
+    // other providers that don't support completions include groq, mistral, nvidia, deepseek, etc.
+    // For now disabling all except vllm
     return false;
   }
 
   supportsFim(): boolean {
+    const { provider } = parseProxyModelName(this.model);
+    if (provider === "vllm") {
+      return false;
+    }
     return true;
   }
 

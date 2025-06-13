@@ -25,6 +25,7 @@ import {
   PromptLog,
   PromptTemplate,
   RequestOptions,
+  TabAutocompleteOptions,
   TemplateType,
 } from "../index.js";
 import mergeJson from "../util/merge.js";
@@ -87,6 +88,16 @@ export abstract class BaseLLM implements ILLM {
   get providerName(): string {
     return (this.constructor as typeof BaseLLM).providerName;
   }
+
+  /**
+   * This exists because for the continue-proxy, sometimes we want to get the value of the underlying provider that is used on the server
+   * For example, the underlying provider should always be sent with dev data
+   */
+  get underlyingProviderName(): string {
+    return this.providerName;
+  }
+
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
   supportsFim(): boolean {
     return false;
@@ -267,6 +278,8 @@ export abstract class BaseLLM implements ILLM {
     this.maxEmbeddingChunkSize =
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
+
+    this.autocompleteOptions = options.autocompleteOptions;
   }
 
   getConfigurationStatus() {
@@ -332,7 +345,7 @@ export abstract class BaseLLM implements ILLM {
       name: "tokensGenerated",
       data: {
         model: model,
-        provider: this.providerName,
+        provider: this.underlyingProviderName,
         promptTokens: promptTokens,
         generatedTokens: generatedTokens,
       },
@@ -382,6 +395,9 @@ export abstract class BaseLLM implements ILLM {
 
         // Error mapping to be more helpful
         if (!resp.ok) {
+          if (resp.status === 499) {
+            return resp; // client side cancellation
+          }
           let text = await resp.text();
           if (resp.status === 404 && !resp.url.includes("/v1")) {
             const error = JSON.parse(text)?.error?.replace(/"/g, "'");

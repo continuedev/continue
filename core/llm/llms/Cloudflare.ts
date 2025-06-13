@@ -1,7 +1,7 @@
+import { streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { streamSse } from "../stream.js";
 
 export default class Cloudflare extends BaseLLM {
   static providerName = "cloudflare";

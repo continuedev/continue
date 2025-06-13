@@ -2,7 +2,7 @@ import {
   OrganizationDescription,
   ProfileDescription,
 } from "core/config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "core/control-plane/client";
+import { ControlPlaneSessionInfo } from "core/control-plane/AuthTypes";
 import React, {
   createContext,
   useCallback,

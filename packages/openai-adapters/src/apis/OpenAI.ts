@@ -33,7 +33,6 @@ export class OpenAIApi implements BaseLlmApi {
       fetch: customFetch(config.requestOptions),
     });
   }
-
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
     // o-series models - only apply for official OpenAI API
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
@@ -70,6 +69,7 @@ export class OpenAIApi implements BaseLlmApi {
     );
     return response;
   }
+
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,

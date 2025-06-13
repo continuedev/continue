@@ -30,6 +30,24 @@ jobs:
         if: steps.root-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+  prettier-check:
+    needs: install-root
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Check code formatting with Prettier
+        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
+
   install-config-yaml:
     needs: install-root
     runs-on: ubuntu-latest
@@ -235,10 +253,11 @@ jobs:
           cd packages/config-yaml
           npm run build
 
-      - name: Type check
+      - name: Type check and lint
         run: |
           cd gui
           npx tsc --noEmit
+          npm run lint
 
   binary-checks:
     needs: [install-root, install-core, install-config-yaml]
@@ -407,6 +426,7 @@ jobs:
         run: |
           cd core
           npm test
+          npm run vitest
         env:
           IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -415,6 +435,8 @@ jobs:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_FOUNDRY_API_KEY: ${{ secrets.AZURE_FOUNDRY_API_KEY }}
+          AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
+          AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
 
   package-tests:
     runs-on: ubuntu-latest
@@ -858,6 +880,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - install-root
+      - prettier-check
       - install-core
       - core-checks
       - install-gui

@@ -6,12 +6,24 @@
 }
 
 .keyboard-key-normal {
-  font-family: "JetBrains Mono", "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace; 
+  font-family:
+    "JetBrains Mono", "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono",
+    "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
   font-weight: 300;
 }
 
 .keyboard-key-special {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "HelveticaNeue-Light", system-ui, "Ubuntu", "Droid Sans", sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe WPC",
+    "Segoe UI",
+    "HelveticaNeue-Light",
+    system-ui,
+    "Ubuntu",
+    "Droid Sans",
+    sans-serif;
   font-weight: 300;
 }
 

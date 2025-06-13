@@ -3,6 +3,8 @@ import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
+import { openedFilesLruCache } from "../util/openedFilesLruCache";
+import { getDiffsFromCache } from "./gitDiffCache";
 
 import {
   AutocompleteClipboardSnippet,
@@ -21,36 +23,16 @@ export interface SnippetPayload {
   recentlyVisitedRangesSnippets: AutocompleteCodeSnippet[];
   diffSnippets: AutocompleteDiffSnippet[];
   clipboardSnippets: AutocompleteClipboardSnippet[];
+  recentlyOpenedFileSnippets: AutocompleteCodeSnippet[];
 }
 
-function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
+function racePromise<T>(promise: Promise<T[]>, timeout = 100): Promise<T[]> {
   const timeoutPromise = new Promise<T[]>((resolve) => {
-    setTimeout(() => resolve([]), 100);
+    setTimeout(() => resolve([]), timeout);
   });
 
   return Promise.race([promise, timeoutPromise]);
 }
-
-class DiffSnippetsCache {
-  private cache: Map<number, any> = new Map();
-  private lastTimestamp: number = 0;
-
-  public set<T>(timestamp: number, value: T): T {
-    // Clear old cache entry if exists
-    if (this.lastTimestamp !== timestamp) {
-      this.cache.clear();
-    }
-    this.lastTimestamp = timestamp;
-    this.cache.set(timestamp, value);
-    return value;
-  }
-
-  public get(timestamp: number): any | undefined {
-    return this.cache.get(timestamp);
-  }
-}
-
-const diffSnippetsCache = new DiffSnippetsCache();
 
 // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
 // or they might separately track recently edited ranges)
@@ -113,31 +95,73 @@ const getClipboardSnippets = async (
 const getDiffSnippets = async (
   ide: IDE,
 ): Promise<AutocompleteDiffSnippet[]> => {
-  const currentTimestamp = ide.getLastFileSaveTimestamp ?
-    ide.getLastFileSaveTimestamp() :
-    Math.floor(Date.now() / 10000) * 10000; // Defaults to update once in every 10 seconds
+  const diffs = await getDiffsFromCache(ide);
 
-  // Check cache first
-  const cached = diffSnippetsCache.get(currentTimestamp) as AutocompleteDiffSnippet[];
-
-  if (cached) {
-    return cached;
-  }
-
-  let diff: string[] = [];
-  try {
-    diff = await ide.getDiff(true);
-  } catch (e) {
-    console.error("Error getting diff for autocomplete", e);
-  }
-
-  return diffSnippetsCache.set(currentTimestamp, diff.map((item) => {
+  return diffs.map((item) => {
     return {
       content: item,
       type: AutocompleteSnippetType.Diff,
     };
-  }));
+  });
+};
 
+const getSnippetsFromRecentlyOpenedFiles = async (
+  helper: HelperVars,
+  ide: IDE,
+): Promise<AutocompleteCodeSnippet[]> => {
+  if (helper.options.useRecentlyOpened === false) {
+    return [];
+  }
+
+  try {
+    const currentFileUri = `${helper.filepath}`;
+
+    // Get all file URIs excluding the current file
+    const fileUrisToRead = [...openedFilesLruCache.entriesDescending()]
+      .filter(([fileUri, _]) => fileUri !== currentFileUri)
+      .map(([fileUri, _]) => fileUri);
+
+    // Create an array of promises that each read a file with timeout
+    const fileReadPromises = fileUrisToRead.map((fileUri) => {
+      // Create a promise that resolves to a snippet or null
+      const readPromise = new Promise<AutocompleteCodeSnippet | null>(
+        (resolve) => {
+          ide
+            .readFile(fileUri)
+            .then((fileContent) => {
+              if (!fileContent || fileContent.trim() === "") {
+                resolve(null);
+                return;
+              }
+
+              resolve({
+                filepath: fileUri,
+                content: fileContent,
+                type: AutocompleteSnippetType.Code,
+              });
+            })
+            .catch((e) => {
+              console.error(`Failed to read file ${fileUri}:`, e);
+              resolve(null);
+            });
+        },
+      );
+      // Cut off at 80ms via racing promises
+      return Promise.race([
+        readPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 80)),
+      ]);
+    });
+
+    // Execute all file reads in parallel
+    const results = await Promise.all(fileReadPromises);
+
+    // Filter out null results
+    return results.filter(Boolean) as AutocompleteCodeSnippet[];
+  } catch (e) {
+    console.error("Error processing opened files cache:", e);
+    return [];
+  }
 };
 
 export const getAllSnippets = async ({
@@ -160,12 +184,18 @@ export const getAllSnippets = async ({
     ideSnippets,
     diffSnippets,
     clipboardSnippets,
+    recentlyOpenedFileSnippets,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
-    racePromise(contextRetrievalService.getSnippetsFromImportDefinitions(helper)),
-    IDE_SNIPPETS_ENABLED ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)) : [],
-    racePromise(getDiffSnippets(ide)),
+    racePromise(
+      contextRetrievalService.getSnippetsFromImportDefinitions(helper),
+    ),
+    IDE_SNIPPETS_ENABLED
+      ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp))
+      : [],
+    [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     racePromise(getClipboardSnippets(ide)),
+    racePromise(getSnippetsFromRecentlyOpenedFiles(helper, ide)), // giving this one a little more time to complete
   ]);
 
   return {
@@ -176,5 +206,6 @@ export const getAllSnippets = async ({
     diffSnippets,
     clipboardSnippets,
     recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
+    recentlyOpenedFileSnippets,
   };
 };

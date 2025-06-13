@@ -41,6 +41,7 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -49,6 +50,7 @@ export class VsCodeExtension {
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
+  private ideUtils: VsCodeIdeUtils;
   private consoleView: ContinueConsoleWebviewViewProvider;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
@@ -76,6 +78,7 @@ export class VsCodeExtension {
       },
     );
     this.ide = new VsCodeIde(this.webviewProtocolPromise, context);
+    this.ideUtils = new VsCodeIdeUtils();
     this.extensionContext = context;
     this.windowId = uuidv4();
 
@@ -130,7 +133,6 @@ export class VsCodeExtension {
     this.configHandler.loadConfig();
 
     this.verticalDiffManager = new VerticalDiffManager(
-      this.configHandler,
       this.sidebar.webviewProtocol,
       this.editDecorationManager,
     );
@@ -245,7 +247,6 @@ export class VsCodeExtension {
       this.consoleView,
       this.configHandler,
       this.verticalDiffManager,
-      this.core.continueServerClientPromise,
       this.battery,
       quickEdit,
       this.core,
@@ -283,7 +284,6 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
-      this.ide.updateLastFileSaveTimestamp();
       this.core.invoke("files/changed", {
         uris: [event.uri.toString()],
       });
@@ -385,8 +385,14 @@ export class VsCodeExtension {
     context.subscriptions.push(linkProvider);
 
     this.ide.onDidChangeActiveTextEditor((filepath) => {
-      void this.core.invoke("didChangeActiveTextEditor", { filepath });
+      void this.core.invoke("files/opened", { uris: [filepath] });
     });
+
+    // initializes openedFileLruCache with files that are already open when the extension is activated
+    let initialOpenedFilePaths = this.ideUtils
+      .getOpenFiles()
+      .map((uri) => uri.toString());
+    this.core.invoke("files/opened", { uris: initialOpenedFilePaths });
 
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {

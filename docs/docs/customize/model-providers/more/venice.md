@@ -1,6 +1,6 @@
 # Venice
 
-Venice.AI is a privacy focused generative AI platform, allowing users to interact with open-source LLMs without storing any private user data. To get started with Venice's API, either purchase a pro account, stake $VVV to obtain daily inference allotments or fund your account with USD and head over to https://venice.ai/settings/api. Venice hosts state of the art open-source AI models and supports the OpenAI API  standard, allowing users to easily interact with the platform. Learn more about the Venice API at https://venice.ai/api.
+Venice.AI is a privacy focused generative AI platform, allowing users to interact with open-source LLMs without storing any private user data. To get started with Venice's API, either purchase a pro account, stake $VVV to obtain daily inference allotments or fund your account with USD and head over to https://venice.ai/settings/api. Venice hosts state of the art open-source AI models and supports the OpenAI API standard, allowing users to easily interact with the platform. Learn more about the Venice API at https://venice.ai/api.
 
 Change `~/.continue/config.json` to look like the following.
 
@@ -28,7 +28,7 @@ For example, to use models with no system prompt, you can explicitly turn off th
         "include_venice_system_prompt" : false
       },
     ...
-  }    
+  }
 }
 ```
 

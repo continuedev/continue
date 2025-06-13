@@ -1,5 +1,4 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
@@ -75,11 +74,6 @@ export class CompletionProvider {
 
     if (llm instanceof OpenAI) {
       llm.useLegacyCompletionsEndpoint = true;
-    } else if (
-      llm.providerName === "free-trial" &&
-      llm.model !== TRIAL_FIM_MODEL
-    ) {
-      llm.model = TRIAL_FIM_MODEL;
     }
 
     return llm;
@@ -120,11 +114,12 @@ export class CompletionProvider {
     this.loggingService.markDisplayed(completionId, outcome);
   }
 
-  private async _getAutocompleteOptions() {
+  private async _getAutocompleteOptions(llm: ILLM) {
     const { config } = await this.configHandler.loadConfig();
     const options = {
       ...DEFAULT_AUTOCOMPLETE_OPTS,
       ...config?.tabAutocompleteOptions,
+      ...llm.autocompleteOptions,
     };
     return options;
   }
@@ -132,6 +127,7 @@ export class CompletionProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
+    force?: boolean,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
       // Create abort signal if not given
@@ -142,16 +138,21 @@ export class CompletionProvider {
         token = controller.signal;
       }
       const startTime = Date.now();
-      const options = await this._getAutocompleteOptions();
-
-      // Debounce
-      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
-        return undefined;
-      }
 
       const llm = await this._prepareLlm();
       if (!llm) {
         return undefined;
+      }
+
+      const options = await this._getAutocompleteOptions(llm);
+
+      // Debounce
+      if (!force) {
+        if (
+          await this.debouncer.delayAndShouldDebounce(options.debounceDelay)
+        ) {
+          return undefined;
+        }
       }
 
       if (llm.promptTemplates?.autocomplete) {
@@ -244,7 +245,7 @@ export class CompletionProvider {
         prefix,
         suffix,
         prompt,
-        modelProvider: llm.providerName,
+        modelProvider: llm.underlyingProviderName,
         modelName: llm.model,
         completionOptions,
         cacheHit,

@@ -159,7 +159,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
       contentEditable={false}
     >
       <div
-        className="border-b-vsc-commandCenter-inactiveBorder m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid px-[5px] py-1.5 hover:opacity-90"
+        className="border-b-command-border m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid px-[5px] py-1.5 hover:opacity-90"
         style={{
           fontSize: getFontSize() - 3,
         }}
@@ -168,7 +168,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
         }}
       >
         <div
-          className="flex items-center gap-1 text-[11px] hover:underline"
+          className={`flex items-center gap-1 text-[11px] ${!!props.onTitleClick ? "hover:underline" : ""}`}
           onClick={(e) => {
             e.stopPropagation();
             if (props.onTitleClick) {

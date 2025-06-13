@@ -1,6 +1,7 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ChatMessage, IDE, PromptLog } from "..";
 import { ConfigHandler } from "../config/ConfigHandler";
+import { usesFreeTrialApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
 import { Telemetry } from "../util/posthog";
@@ -8,7 +9,7 @@ import { TTS } from "../util/tts";
 
 export async function* llmStreamChat(
   configHandler: ConfigHandler,
-  abortedMessageIds: Set<string>,
+  abortController: AbortController,
   msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
   ide: IDE,
   messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
@@ -75,52 +76,44 @@ export async function* llmStreamChat(
       selectedCode,
       config,
       fetch: (url, init) =>
-        fetchwithRequestOptions(url, init, config.requestOptions),
+        fetchwithRequestOptions(
+          url,
+          {
+            ...init,
+            signal: abortController.signal,
+          },
+          config.requestOptions,
+        ),
       completionOptions,
     });
-    const checkActiveInterval = setInterval(() => {
-      if (abortedMessageIds.has(msg.messageId)) {
-        abortedMessageIds.delete(msg.messageId);
-        clearInterval(checkActiveInterval);
+    let next = await gen.next();
+    while (!next.done) {
+      if (abortController.signal.aborted) {
+        next = await gen.return(errorPromptLog);
+        break;
       }
-    }, 100);
-    try {
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return(errorPromptLog);
-          clearInterval(checkActiveInterval);
-          break;
-        }
-        if (next.value) {
-          yield {
-            role: "assistant",
-            content: next.value,
-          };
-        }
-        next = await gen.next();
+      if (next.value) {
+        yield {
+          role: "assistant",
+          content: next.value,
+        };
       }
-      if (!next.done) {
-        throw new Error("Will never happen");
-      }
-
-      return next.value;
-    } catch (e) {
-      throw e;
-    } finally {
-      clearInterval(checkActiveInterval);
+      next = await gen.next();
     }
+    if (!next.done) {
+      throw new Error("Will never happen");
+    }
+
+    return next.value;
   } else {
     const gen = model.streamChat(
       messages,
-      new AbortController().signal,
+      abortController.signal,
       completionOptions,
     );
     let next = await gen.next();
     while (!next.done) {
-      if (abortedMessageIds.has(msg.messageId)) {
-        abortedMessageIds.delete(msg.messageId);
+      if (abortController.signal.aborted) {
         next = await gen.return(errorPromptLog);
         break;
       }
@@ -143,10 +136,38 @@ export async function* llmStreamChat(
       true,
     );
 
+    void checkForFreeTrialExceeded(configHandler, messenger);
+
     if (!next.done) {
       throw new Error("Will never happen");
     }
 
     return next.value;
+  }
+}
+
+async function checkForFreeTrialExceeded(
+  configHandler: ConfigHandler,
+  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+) {
+  const { config } = await configHandler.getSerializedConfig();
+
+  // Only check if the user is using the free trial
+  if (config && !usesFreeTrialApiKey(config)) {
+    return;
+  }
+
+  try {
+    const freeTrialStatus =
+      await configHandler.controlPlaneClient.getFreeTrialStatus();
+    if (
+      freeTrialStatus &&
+      freeTrialStatus.chatCount &&
+      freeTrialStatus.chatCount > freeTrialStatus.chatLimit
+    ) {
+      void messenger.request("freeTrialExceeded", undefined);
+    }
+  } catch (error) {
+    console.error("Error checking free trial status:", error);
   }
 }

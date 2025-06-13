@@ -4,8 +4,8 @@ import {
   PromptTemplates,
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
-import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
   interface Window {
@@ -93,6 +93,9 @@ export interface ILLM
   extends Omit<LLMOptions, RequiredLLMOptions>,
     Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
+  get underlyingProviderName(): string;
+
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
   complete(
     prompt: string,
@@ -197,15 +200,14 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
-
-  loadSubmenuItems?: (
-    args: LoadSubmenuItemsArgs,
-  ) => Promise<ContextSubmenuItem[]>;
 }
 
 export interface ContextSubmenuItem {
@@ -424,7 +426,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "edit" | "agent";
+export type MessageModes = "chat" | "agent";
 
 export type ToolStatus =
   | "generating"
@@ -459,6 +461,7 @@ export interface ChatHistoryItem {
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
+  appliedRules?: RuleWithSource[];
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -563,6 +566,7 @@ export interface LLMOptions {
   uniqueId?: string;
   baseAgentSystemMessage?: string;
   baseChatSystemMessage?: string;
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -775,10 +779,6 @@ export interface IDE {
       }
   >;
 
-  getLastFileSaveTimestamp?(): number;
-
-  updateLastFileSaveTimestamp?(): void;
-
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;
@@ -806,8 +806,6 @@ export interface IDE {
   listDir(dir: string): Promise<[string, FileType][]>;
 
   getFileStats(files: string[]): Promise<FileStatsMap>;
-
-  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // Secret Storage
   readSecrets(keys: string[]): Promise<Record<string, string>>;
@@ -842,6 +840,7 @@ export interface SlashCommand {
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
+  promptFile?: string;
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
@@ -973,6 +972,8 @@ export interface ToolExtras {
     toolCallId: string;
     contextItems: ContextItem[];
   }) => void;
+  config: ContinueConfig;
+  codeBaseIndexer?: CodebaseIndexer;
 }
 
 export interface Tool {
@@ -993,6 +994,7 @@ export interface Tool {
   uri?: string;
   faviconUrl?: string;
   group: string;
+  originalFunctionName?: string;
 }
 
 interface ToolChoice {
@@ -1001,6 +1003,12 @@ interface ToolChoice {
     name: string;
   };
 }
+
+export interface ConfigDependentToolParams {
+  rules: RuleWithSource[];
+}
+
+export type GetTool = (params: ConfigDependentToolParams) => Tool;
 
 export interface BaseCompletionOptions {
   temperature?: number;
@@ -1034,6 +1042,7 @@ export interface ModelCapability {
 export interface ModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
 
@@ -1087,6 +1096,7 @@ export interface RerankerDescription {
   params?: { [key: string]: any };
 }
 
+// TODO: We should consider renaming this to AutocompleteOptions.
 export interface TabAutocompleteOptions {
   disable: boolean;
   maxPromptTokens: number;
@@ -1102,6 +1112,7 @@ export interface TabAutocompleteOptions {
   useCache: boolean;
   onlyMyCode: boolean;
   useRecentlyEdited: boolean;
+  useRecentlyOpened: boolean;
   disableInFiles?: string[];
   useImports?: boolean;
   showWhateverWeHaveAtXMs?: number;
@@ -1132,7 +1143,17 @@ export interface SSEOptions {
   requestOptions?: RequestOptions;
 }
 
-export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+export interface StreamableHTTPOptions {
+  type: "streamable-http";
+  url: string;
+  requestOptions?: RequestOptions;
+}
+
+export type TransportOptions =
+  | StdioOptions
+  | WebSocketOptions
+  | SSEOptions
+  | StreamableHTTPOptions;
 
 export interface MCPOptions {
   name: string;
@@ -1161,12 +1182,22 @@ export interface MCPPrompt {
 // Leaving here to ideate on
 // export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
 
+// https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
 export interface MCPResource {
   name: string;
   uri: string;
   description?: string;
   mimeType?: string;
 }
+
+// https://modelcontextprotocol.io/docs/concepts/resources#resource-templates
+export interface MCPResourceTemplate {
+  uriTemplate: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+}
+
 export interface MCPTool {
   name: string;
   description?: string;
@@ -1183,6 +1214,7 @@ export interface MCPServerStatus extends MCPOptions {
   prompts: MCPPrompt[];
   tools: MCPTool[];
   resources: MCPResource[];
+  resourceTemplates: MCPResourceTemplate[];
 }
 
 export interface ContinueUIConfig {
@@ -1192,6 +1224,7 @@ export interface ContinueUIConfig {
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
   showSessionTabs?: boolean;
+  autoAcceptEditToolDiffs?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1229,6 +1262,32 @@ export interface ApplyState {
   toolCallId?: string;
 }
 
+export interface StreamDiffLinesPayload {
+  prefix: string;
+  highlighted: string;
+  suffix: string;
+  input: string;
+  language: string | undefined;
+  modelTitle: string | undefined;
+  includeRulesInSystemMessage: boolean;
+  fileUri?: string;
+}
+
+export interface HighlightedCodePayload {
+  rangeInFileWithContents: RangeInFileWithContents;
+  prompt?: string;
+  shouldRun?: boolean;
+}
+
+export interface AcceptOrRejectDiffPayload {
+  filepath: string;
+  streamId?: string;
+}
+
+export interface ShowFilePayload {
+  filepath: string;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1238,7 +1297,7 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
  * Represents the configuration for a quick action in the Code Lens.
@@ -1293,6 +1352,11 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   modelContextProtocolServers?: ExperimentalMCPOptions[];
+
+  /**
+   * If enabled, will add the current file as context.
+   */
+  useCurrentFileAsContext?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1304,6 +1368,7 @@ export interface AnalyticsConfig {
 export interface JSONModelDescription {
   title: string;
   provider: string;
+  underlyingProviderName: string;
   model: string;
   apiKey?: string;
   apiBase?: string;
@@ -1497,19 +1562,28 @@ export interface TerminalOptions {
   waitForCompletion?: boolean;
 }
 
+export type RuleSource =
+  | "default-chat"
+  | "default-agent"
+  | "model-chat-options"
+  | "model-agent-options"
+  | "rules-block"
+  | "json-systemMessage"
+  | ".continuerules";
+
 export interface RuleWithSource {
   name?: string;
   slug?: string;
-  source:
-    | "default-chat"
-    | "default-agent"
-    | "model-chat-options"
-    | "model-agent-options"
-    | "rules-block"
-    | "json-systemMessage"
-    | ".continuerules";
+  source: RuleSource;
   globs?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;
+  alwaysApply?: boolean;
+}
+
+export interface CompleteOnboardingPayload {
+  mode: OnboardingModes;
+  provider?: string;
+  apiKey?: string;
 }

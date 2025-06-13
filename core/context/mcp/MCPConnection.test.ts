@@ -4,7 +4,7 @@ import MCPConnection from "./MCPConnection";
 
 describe("MCPConnection", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe("constructor", () => {
@@ -111,6 +111,7 @@ describe("MCPConnection", () => {
         errors: [],
         prompts: [],
         resources: [],
+        resourceTemplates: [],
         tools: [],
         status: "not-connected",
       });
@@ -173,11 +174,11 @@ describe("MCPConnection", () => {
     });
 
     it("should handle custom connection timeout", async () => {
-      const conn = new MCPConnection({ ...options, timeout: 11 });
+      const conn = new MCPConnection({ ...options, timeout: 1500 });
       const mockConnect = jest
         .spyOn(Client.prototype, "connect")
         .mockImplementation(
-          () => new Promise((resolve) => setTimeout(resolve, 10)),
+          () => new Promise((resolve) => setTimeout(resolve, 1000)),
         );
 
       const abortController = new AbortController();
@@ -228,6 +229,38 @@ describe("MCPConnection", () => {
       expect(conn.status).toBe("error");
       expect(conn.errors[0]).toContain('command "test-cmd" not found');
       expect(mockConnect).toHaveBeenCalled();
+    });
+
+    it.skip("should include stderr output in error message when stdio command fails", async () => {
+      // Clear any existing mocks to ensure we get real behavior
+      jest.restoreAllMocks();
+
+      // Use a command that will definitely fail and produce stderr output
+      const failingOptions = {
+        name: "failing-mcp",
+        id: "failing-id",
+        transport: {
+          type: "stdio" as const,
+          command: "node",
+          args: [
+            "-e",
+            "console.error('Custom error message from stderr'); process.exit(1);",
+          ],
+        },
+        timeout: 5000, // Give enough time for the command to run and fail
+      };
+
+      const conn = new MCPConnection(failingOptions);
+      const abortController = new AbortController();
+
+      await conn.connectClient(false, abortController.signal);
+
+      expect(conn.status).toBe("error");
+      expect(conn.errors).toHaveLength(1);
+      expect(conn.errors[0]).toContain("Failed to connect");
+      expect(conn.errors[0]).toContain("Process output:");
+      expect(conn.errors[0]).toContain("STDERR:");
+      expect(conn.errors[0]).toContain("Custom error message from stderr");
     });
   });
 

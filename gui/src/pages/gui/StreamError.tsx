@@ -1,18 +1,24 @@
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
-  Cog8ToothIcon,
+  ClipboardIcon,
+  Cog6ToothIcon,
+  KeyIcon,
 } from "@heroicons/react/24/outline";
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
-import { Button, SecondaryButton } from "../../components";
+import { GhostButton, SecondaryButton } from "../../components";
+import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
+import ToggleDiv from "../../components/ToggleDiv";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { selectSelectedProfile } from "../../redux/";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { streamResponseThunk } from "../../redux/thunks";
 import { isLocalProfile } from "../../util";
 import { providers } from "../AddNewModel/configs/providers";
 import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
@@ -41,6 +47,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
+  const { mainEditor } = useMainEditor();
 
   const parsedError = useMemo<string>(
     () => parseErrorMessage((error as any)?.message || ""),
@@ -48,10 +55,16 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   );
 
   const handleRefreshProfiles = () => {
-    refreshProfiles();
+    void refreshProfiles();
     dispatch(setShowDialog(false));
     dispatch(setDialogMessage(undefined));
   };
+
+  const copyErrorToClipboard = () => {
+    void navigator.clipboard.writeText(parsedError);
+  };
+
+  const history = useAppSelector((store) => store.session.history);
 
   // Collect model information to display useful error info
   let modelTitle = "Chat model";
@@ -99,30 +112,71 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   }
 
   const checkKeysButton = apiKeyUrl ? (
-    <Button
-      className="cursor-pointer hover:underline"
+    <GhostButton
+      className="flex items-center"
       onClick={() => {
         ideMessenger.post("openUrl", apiKeyUrl!);
       }}
     >
-      Check keys/usage
-    </Button>
+      <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
+      <span>View key</span>
+    </GhostButton>
   ) : null;
 
   const configButton = (
-    <SecondaryButton
-      className="flex flex-row items-center gap-1.5 hover:underline hover:opacity-70"
+    <GhostButton
+      className="flex items-center"
       onClick={() => {
         ideMessenger.post("config/openProfile", {
           profileId: undefined,
         });
       }}
     >
-      <div>
-        <Cog8ToothIcon className="h-4 w-4" />
-      </div>
-      <span>Open Assistant configuration</span>
-    </SecondaryButton>
+      <Cog6ToothIcon className="mr-1.5 h-3.5 w-3.5" />
+      <span>View config</span>
+    </GhostButton>
+  );
+
+  const resubmitButton = (
+    <GhostButton
+      className="flex items-center"
+      onClick={() => {
+        let index = -1;
+        for (let i = history.length - 1; i >= 0; i--) {
+          if (
+            history[i].message.role === "user" ||
+            history[i].message.role === "tool"
+          ) {
+            index = i;
+            break;
+          }
+        }
+
+        if (!mainEditor) {
+          console.error("Main editor not found, cannot resubmit message.");
+          return;
+        }
+
+        const editorState =
+          index === -1 ? mainEditor.getJSON() : history[index].editorState;
+
+        void dispatch(
+          streamResponseThunk({
+            editorState,
+            modifiers: {
+              noContext: true,
+              useCodebase: false,
+            },
+            index: index === -1 ? 0 : index,
+          }),
+        );
+        dispatch(setShowDialog(false));
+        dispatch(setDialogMessage(undefined));
+      }}
+    >
+      <ArrowPathIcon className="mr-1.5 h-3.5 w-3.5" />
+      <span>Resubmit last message</span>
+    </GhostButton>
   );
 
   if (
@@ -131,7 +185,21 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     return <ModelsAddOnLimitDialog />;
   }
 
-  let errorContent: React.ReactNode = <></>;
+  let errorContent = (
+    <div className="mb-1 mt-3">
+      <div className="m-0 p-0">
+        <p className="m-0 mb-2 p-0">
+          There was an error handling the response from{" "}
+          {selectedModel?.title || "the model"}.
+        </p>
+        <p className="m-0 p-0">
+          Please try to submit your message again, and if the error persists,
+          let us know by reporting the issue using the buttons below.
+        </p>
+        <div className="mt-3">{resubmitButton}</div>
+      </div>
+    </div>
+  );
 
   // Display components for specific errors
   if (statusCode === 429) {
@@ -141,7 +209,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           {`This might mean your ${modelTitle} usage has been rate limited
                 by ${providerName}.`}
         </span>
-        <div className="flex flex-row flex-wrap gap-2">
+        <div className="flex flex-row flex-wrap justify-start gap-3 py-4">
           {checkKeysButton}
           {configButton}
         </div>
@@ -214,7 +282,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (
     message &&
     (message.toLowerCase().includes("overloaded") ||
-      message.toLowerCase().includes("malformed"))
+      message.toLowerCase().includes("malformed json"))
   ) {
     errorContent = (
       <div className="flex flex-col gap-2">
@@ -230,51 +298,71 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     );
   }
 
+  console.log({ message });
+
   return (
-    <div className={`flex flex-col gap-1 px-3 pb-2 pt-3`}>
-      <p className="m-0 p-0 text-lg text-red-500">
-        {statusCode ? `Error (status code ${statusCode})` : "Error"}
-      </p>
+    <div className="flex flex-col gap-4 px-3 pb-3 pt-3">
+      {/* Concise error title */}
+      <h3 className="text-error m-0 p-0 text-lg font-medium">
+        Error handling model response
+      </h3>
 
-      {message ? (
-        <div className="mt-2 flex flex-col gap-0 rounded-sm">
-          <code className="max-h-20 overflow-y-auto p-2 font-mono">
-            {parsedError}
-          </code>
-          <div
-            className="flex cursor-pointer flex-row items-center justify-end px-1 py-1 text-gray-500 hover:underline"
-            onClick={() => {
-              ideMessenger.post("toggleDevTools", undefined);
-            }}
-          >
-            <span className="px-2">View Logs</span>
-            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-          </div>
+      {errorContent}
+
+      {/* Expandable technical details using ToggleDiv */}
+      {message && (
+        <div className="mb-2">
+          <ToggleDiv title="View error output" testId="error-output-toggle">
+            <div className="flex flex-col gap-0 rounded-sm">
+              <code className="text-editor-foreground block max-h-48 overflow-y-auto p-3 font-mono text-xs">
+                {parsedError}
+              </code>
+
+              <div className="flex flex-row items-center justify-end gap-2 p-2">
+                <GhostButton
+                  onClick={copyErrorToClipboard}
+                  className="flex items-center"
+                >
+                  <ClipboardIcon className="mr-1.5 h-3.5 w-3.5" />
+                  <span>Copy output</span>
+                </GhostButton>
+
+                <GhostButton
+                  onClick={() => {
+                    ideMessenger.post("toggleDevTools", undefined);
+                  }}
+                  className="flex items-center"
+                >
+                  <ArrowTopRightOnSquareIcon className="mr-1.5 h-4 w-4" />
+                  <span className="text-xs">View Logs</span>
+                </GhostButton>
+              </div>
+            </div>
+          </ToggleDiv>
         </div>
-      ) : null}
-      <div className="mt-3">{errorContent}</div>
+      )}
 
-      <div className="mt-2 flex flex-col gap-1.5">
-        <span>Report this error:</span>
-        <div className="flex flex-row flex-wrap items-center gap-2">
-          <SecondaryButton
-            className="flex flex-row items-center gap-2 hover:opacity-70"
+      <div>
+        <span className="text-base font-medium">Report this error</span>
+        <div className="mt-2 flex flex-row flex-wrap items-center gap-2">
+          <GhostButton
+            className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
               ideMessenger.post("openUrl", GITHUB_LINK);
             }}
           >
             <GithubIcon className="h-5 w-5" />
             <span className="xs:flex hidden">Github</span>
-          </SecondaryButton>
-          <SecondaryButton
-            className="flex flex-row items-center gap-2 hover:opacity-70"
+          </GhostButton>
+          <GhostButton
+            className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
               ideMessenger.post("openUrl", DISCORD_LINK);
             }}
           >
             <DiscordIcon className="h-5 w-5" />
             <span className="xs:flex hidden">Discord</span>
-          </SecondaryButton>
+          </GhostButton>
         </div>
       </div>
     </div>

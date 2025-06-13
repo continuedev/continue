@@ -14,28 +14,52 @@ import {
   IDE,
   IdeSettings,
   ILLMLogger,
+  RuleWithSource,
   SerializedContinueConfig,
   Tool,
 } from "../../";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
+import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
+import { getMCPToolName } from "../../tools/mcpToolName";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
+import { loadCodebaseRules } from "../markdown/loadCodebaseRules";
+import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
+async function loadRules(ide: IDE) {
+  const rules: RuleWithSource[] = [];
+  const errors = [];
+
+  // Add rules from .continuerules files
+  const { rules: yamlRules, errors: continueRulesErrors } =
+    await getWorkspaceContinueRuleDotFiles(ide);
+  rules.unshift(...yamlRules);
+  errors.push(...continueRulesErrors);
+
+  // Add rules from markdown files in .continue/rules
+  const { rules: markdownRules, errors: markdownRulesErrors } =
+    await loadMarkdownRules(ide);
+  rules.unshift(...markdownRules);
+  errors.push(...markdownRulesErrors);
+
+  return { rules, errors };
+}
 export default async function doLoadConfig(options: {
   ide: IDE;
   ideSettingsPromise: Promise<IdeSettings>;
@@ -122,11 +146,17 @@ export default async function doLoadConfig(options: {
   // Remove ability have undefined errors, just have an array
   errors = [...(errors ?? [])];
 
-  // Add rules from .continuerules files
-  const { rules, errors: continueRulesErrors } =
-    await getWorkspaceContinueRuleDotFiles(ide);
+  // Load rules and always include the RulesContextProvider
+  const { rules, errors: rulesErrors } = await loadRules(ide);
+  errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
-  errors.push(...continueRulesErrors);
+  newConfig.contextProviders.push(new RulesContextProvider({}));
+
+  // Add rules from colocated rules.md files in the codebase
+  const { rules: codebaseRules, errors: codebaseRulesErrors } =
+    await loadCodebaseRules(ide);
+  newConfig.rules.unshift(...codebaseRules);
+  errors.push(...codebaseRulesErrors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
@@ -148,7 +178,7 @@ export default async function doLoadConfig(options: {
         displayTitle: server.name + " " + tool.name,
         function: {
           description: tool.description,
-          name: tool.name,
+          name: getMCPToolName(server, tool),
           parameters: tool.inputSchema,
         },
         faviconUrl: server.faviconUrl,
@@ -156,6 +186,7 @@ export default async function doLoadConfig(options: {
         type: "function" as const,
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
+        originalFunctionName: tool.name,
       }));
       newConfig.tools.push(...serverTools);
 
@@ -169,12 +200,21 @@ export default async function doLoadConfig(options: {
       );
       newConfig.slashCommands.push(...serverSlashCommands);
 
-      const submenuItems = server.resources.map((resource) => ({
-        title: resource.name,
-        description: resource.description ?? resource.name,
-        id: resource.uri,
-        icon: server.faviconUrl,
-      }));
+      const submenuItems = server.resources
+        .map((resource) => ({
+          title: resource.name,
+          description: resource.description ?? resource.name,
+          id: resource.uri,
+          icon: server.faviconUrl,
+        }))
+        .concat(
+          server.resourceTemplates.map((template) => ({
+            title: template.name,
+            description: template.description ?? template.name,
+            id: template.uriTemplate,
+            icon: server.faviconUrl,
+          })),
+        );
       if (submenuItems.length > 0) {
         const serverContextProvider = new MCPContextProvider({
           submenuItems,
@@ -186,6 +226,12 @@ export default async function doLoadConfig(options: {
     }
   }
 
+  newConfig.tools.push(
+    ...getConfigDependentToolDefinitions({
+      rules: newConfig.rules,
+    }),
+  );
+
   // Detect duplicate tool names
   const counts: Record<string, number> = {};
   newConfig.tools.forEach((tool) => {
@@ -195,11 +241,32 @@ export default async function doLoadConfig(options: {
       counts[tool.function.name] = 1;
     }
   });
+
   Object.entries(counts).forEach(([toolName, count]) => {
     if (count > 1) {
       errors!.push({
         fatal: false,
         message: `Duplicate (${count}) tools named "${toolName}" detected. Permissions will conflict and usage may be unpredictable`,
+      });
+    }
+  });
+
+  const ruleCounts: Record<string, number> = {};
+  newConfig.rules.forEach((rule) => {
+    if (rule.name) {
+      if (ruleCounts[rule.name]) {
+        ruleCounts[rule.name] = ruleCounts[rule.name] + 1;
+      } else {
+        ruleCounts[rule.name] = 1;
+      }
+    }
+  });
+
+  Object.entries(ruleCounts).forEach(([ruleName, count]) => {
+    if (count > 1) {
+      errors!.push({
+        fatal: false,
+        message: `Duplicate (${count}) rules named "${ruleName}" detected. This may cause unexpected behavior`,
       });
     }
   });

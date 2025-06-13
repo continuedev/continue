@@ -144,7 +144,9 @@ Icon?
 .continuerc.json
 .aider*
 
+*.notes.md
 notes.md
+*.notes.md
 
 manual-testing-sandbox/.idea/**
 manual-testing-sandbox/.continue/**
@@ -162,5 +164,9 @@ extensions/.continue-debug/
 
 *.vsix
 
+# intellij module library files
+*.iml
+
 .continuerules
 **/.continue/assistants/
+keys

@@ -79,9 +79,12 @@ export const streamNormalInput = createAsyncThunk<
             data: {
               prompt: next.value.prompt,
               completion: next.value.completion,
-              modelProvider: selectedChatModel.provider,
+              modelProvider: selectedChatModel.underlyingProviderName,
               modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
+              ...(state.session.mode === "agent" && {
+                tools: activeTools.map((tool) => tool.function.name),
+              }),
             },
           });
         }

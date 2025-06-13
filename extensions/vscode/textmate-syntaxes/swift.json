@@ -1,8 +1,6 @@
 {
   "scopeName": "source.swift",
-  "fileTypes": [
-    "swift"
-  ],
+  "fileTypes": ["swift"],
   "name": "Swift",
   "firstLineMatch": "^#!\\s*/.*\\bswift",
   "patterns": [

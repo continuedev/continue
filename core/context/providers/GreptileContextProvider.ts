@@ -81,13 +81,17 @@ class GreptileContextProvider extends BaseContextProvider {
       }
 
       // Parse the response as JSON
-      const json = JSON.parse(rawText);
-
-      return json.sources.map((source: any) => ({
-        description: source.filepath,
-        content: `File: ${source.filepath}\nLines: ${source.linestart}-${source.lineend}\n\n${source.summary}`,
-        name: (source.filepath.split("/").pop() ?? "").split("\\").pop() ?? "",
-      }));
+      try {
+        const json = JSON.parse(rawText);
+        return json.sources.map((source: any) => ({
+          description: source.filepath,
+          content: `File: ${source.filepath}\nLines: ${source.linestart}-${source.lineend}\n\n${source.summary}`,
+          name:
+            (source.filepath.split("/").pop() ?? "").split("\\").pop() ?? "",
+        }));
+      } catch (jsonError) {
+        throw new Error(`Failed to parse Greptile response:\n${rawText}`);
+      }
     } catch (error) {
       console.error("Error getting context items from Greptile:", error);
       throw new Error("Error getting context items from Greptile");

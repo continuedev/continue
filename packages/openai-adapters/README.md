@@ -64,7 +64,7 @@ They are concerned with:
 - [x] Vllm
 - [ ] Vertex AI
 - [x] Voyage AI
-- [ ] WatsonX
+- [x] WatsonX
 - [x] xAI
 - [x] Fireworks
 - [x] Moonshot

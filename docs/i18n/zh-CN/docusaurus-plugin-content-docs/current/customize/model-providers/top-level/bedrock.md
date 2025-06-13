@@ -5,15 +5,15 @@ slug: ../bedrock
 
 ## 聊天模型
 
-我们推荐配置 **Claude 3.5 Sonnet** 作为你的聊天模型。
+我们推荐配置 **Claude 3.7 Sonnet** 作为你的聊天模型。
 
 ```json title="config.json"
 {
   "models": [
     {
-      "title": "Claude 3.5 Sonnet",
+      "title": "Claude 3.7 Sonnet",
       "provider": "bedrock",
-      "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
       "region": "us-east-1",
       "profile": "bedrock"
     }
@@ -47,6 +47,32 @@ Bedrock 当前不支持任何自动补全模型。
 Bedrock 当前没有任何重排序模型。
 
 [点击这里](../../model-roles/reranking.md) 查看重排序模型提供者列表。
+
+## 提示词缓存
+
+Bedrock 支持 Claude 模型的提示词缓存。 在 `defaultCompletionOptions`
+中设置 `promptCaching: true` 即可缓存工具调用、系统消息和聊天消息。
+
+提示词缓存目前适用于以下模型：
+
+- Claude 3.7 Sonnet
+- Claude 3.5 Haiku
+- Amazon Nova Micro
+- Amazon Nova Lite
+- Amazon Nova Pro
+
+在预览期间获准使用 Claude 3.5 Sonnet v2 的用户仍可继续使用提示词缓存，但该模型不会再向新的用户开放此功能。
+
+```yaml title="config.yaml"
+models:
+  - name: Claude 3.7 Sonnet
+    provider: bedrock
+    model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+    defaultCompletionOptions:
+      promptCaching: true
+```
+
+提示词缓存不支持 JSON 配置文件，只能在 YAML 中启用。
 
 ## 认证
 

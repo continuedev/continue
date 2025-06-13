@@ -23,6 +23,11 @@ import {
   chatInteractionEventSchema_0_2_0,
   chatInteractionEventSchema_0_2_0_noCode,
 } from "./chatInteraction/v0.2.0.js";
+import { editInteractionEventAllSchema } from "./editInteraction/index.js";
+import {
+  editInteractionEventSchema_0_2_0,
+  editInteractionEventSchema_0_2_0_noCode,
+} from "./editInteraction/v0.2.0.js";
 import { quickEditEventAllSchema } from "./quickEdit/index.js";
 import {
   quickEditEventSchema_0_1_0,
@@ -66,7 +71,7 @@ const devEventAllVersionDataSchemas = z.object({
   chatFeedback: chatFeedbackEventAllSchema,
   tokensGenerated: tokensGeneratedEventAllSchema,
   chatInteraction: chatInteractionEventAllSchema,
-  // editInteraction: editInteractionEventAllSchema,
+  editInteraction: editInteractionEventAllSchema,
 });
 
 // Version and level specific schemas are organized here
@@ -91,14 +96,14 @@ export const devDataVersionedSchemas = {
       chatFeedback: chatFeedbackEventSchema_0_2_0,
       tokensGenerated: tokensGeneratedEventSchema_0_2_0,
       chatInteraction: chatInteractionEventSchema_0_2_0,
-      // editInteraction: editInteractionEventSchema_0_2_0,
+      editInteraction: editInteractionEventSchema_0_2_0,
     },
     noCode: {
       autocomplete: autocompleteEventSchema_0_2_0_noCode,
       chatFeedback: chatFeedbackEventSchema_0_2_0_noCode,
       tokensGenerated: tokensGeneratedEventSchema_0_2_0_noCode,
       chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
-      // editInteraction: editInteractionEventSchema_0_2_0_noCode,
+      editInteraction: editInteractionEventSchema_0_2_0_noCode,
     },
   },
 };

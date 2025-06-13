@@ -15,23 +15,22 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
+  RuleWithSource,
   Session,
   SessionMetadata,
-  ToolCallDelta,
-  ToolCallState,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
-import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
+import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
-type ChatHistoryItemWithMessageId = ChatHistoryItem & {
+export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
 
@@ -46,6 +45,7 @@ type SessionState = {
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
+  isInEdit: boolean;
   codeBlockApplyStates: {
     states: ApplyState[];
     curIndex: number;
@@ -62,6 +62,7 @@ const initialState: SessionState = {
   streamAborter: new AbortController(),
   symbols: {},
   mode: "chat",
+  isInEdit: false,
   codeBlockApplyStates: {
     states: [],
     curIndex: 0,
@@ -247,6 +248,19 @@ export const sessionSlice = createSlice({
         ...payload.contextItems,
       ];
     },
+    setAppliedRulesAtIndex: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        index: number;
+        appliedRules: RuleWithSource[];
+      }>,
+    ) => {
+      if (state.history[payload.index]) {
+        state.history[payload.index].appliedRules = payload.appliedRules;
+      }
+    },
     setInactive: (state) => {
       const curMessage = state.history.at(-1);
 
@@ -262,27 +276,6 @@ export const sessionSlice = createSlice({
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
       if (state.history.length) {
-        function toolCallDeltaToState(
-          toolCallDelta: ToolCallDelta,
-        ): ToolCallState {
-          const [_, parsedArgs] = incrementalParseJson(
-            toolCallDelta.function?.arguments ?? "{}",
-          );
-          return {
-            status: "generating",
-            toolCall: {
-              id: toolCallDelta.id ?? "",
-              type: toolCallDelta.type ?? "function",
-              function: {
-                name: toolCallDelta.function?.name ?? "",
-                arguments: toolCallDelta.function?.arguments ?? "",
-              },
-            },
-            toolCallId: toolCallDelta.id ?? "",
-            parsedArgs,
-          };
-        }
-
         for (const message of action.payload) {
           const lastItem = state.history[state.history.length - 1];
           const lastMessage = lastItem.message;
@@ -324,21 +317,10 @@ export const sessionSlice = createSlice({
             };
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
-              if (
-                !(
-                  toolCallDelta.id &&
-                  toolCallDelta.function?.arguments !== undefined &&
-                  toolCallDelta.function?.name &&
-                  toolCallDelta.type
-                )
-              ) {
-                console.warn(
-                  "Received streamed tool call without required fields",
-                  toolCallDelta,
-                );
-              }
-
-              historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
+              historyItem.toolCallState = addToolCallDeltaToState(
+                toolCallDelta,
+                undefined,
+              );
             }
             state.history.push(historyItem);
           } else {
@@ -380,34 +362,12 @@ export const sessionSlice = createSlice({
             ) {
               // Intentionally only supporting one tool call for now.
               const toolCallDelta = message.toolCalls[0];
-
-              // Update message tool call with delta data
-              const newArgs =
-                (lastMessage.toolCalls?.[0]?.function?.arguments ?? "") +
-                (toolCallDelta.function?.arguments ?? "");
-              if (lastMessage.toolCalls?.[0]) {
-                lastMessage.toolCalls[0].function = {
-                  name:
-                    toolCallDelta.function?.name ??
-                    lastMessage.toolCalls[0].function?.name ??
-                    "",
-                  arguments: newArgs,
-                };
-              } else {
-                lastMessage.toolCalls = [toolCallDelta];
-              }
-
-              // Update current tool call state
-              if (!lastItem.toolCallState) {
-                console.warn(
-                  "Received streamed tool call response prior to initial tool call delta",
-                );
-                lastItem.toolCallState = toolCallDeltaToState(toolCallDelta);
-              }
-
-              const [_, parsedArgs] = incrementalParseJson(newArgs);
-              lastItem.toolCallState.parsedArgs = parsedArgs;
-              lastItem.toolCallState.toolCall.function.arguments = newArgs;
+              const newToolCallState = addToolCallDeltaToState(
+                toolCallDelta,
+                lastItem.toolCallState,
+              );
+              lastItem.toolCallState = newToolCallState;
+              lastMessage.toolCalls = [newToolCallState.toolCall];
             }
           }
         }
@@ -631,6 +591,9 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    setIsInEdit: (state, action: PayloadAction<boolean>) => {
+      state.isInEdit = action.payload;
+    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -698,6 +661,7 @@ export const {
   updateFileSymbols,
   setContextItemsAtIndex,
   addContextItemsAtIndex,
+  setAppliedRulesAtIndex,
   setInactive,
   streamUpdate,
   newSession,
@@ -726,6 +690,7 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
+  setIsInEdit,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

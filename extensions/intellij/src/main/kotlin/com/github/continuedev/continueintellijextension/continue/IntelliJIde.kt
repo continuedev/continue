@@ -1,3 +1,5 @@
+package com.github.continuedev.continueintellijextension.`continue`
+
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
@@ -62,13 +64,6 @@ class IntelliJIDE(
         } catch (e: Throwable) {
             e.printStackTrace()
         }
-    }
-
-    /**
-     * Updates the timestamp when a file is saved
-     */
-    override fun updateLastFileSaveTimestamp() {
-        gitService.updateLastFileSaveTimestamp()
     }
 
     override suspend fun getIdeInfo(): IdeInfo {
@@ -167,7 +162,7 @@ class IntelliJIDE(
                 // Find any .continuerc.json files
                 for (file in contents) {
                     if (file.endsWith(".continuerc.json")) {
-                        val fileContent = File(URI(file)).readText()
+                        val fileContent = UriUtils.uriToFile(file).readText()
                         configs.add(fileContent)
                     }
                 }
@@ -178,12 +173,12 @@ class IntelliJIDE(
     }
 
     override suspend fun fileExists(filepath: String): Boolean {
-        val file = File(URI(filepath))
+        val file = UriUtils.uriToFile(filepath)
         return file.exists()
     }
 
     override suspend fun writeFile(path: String, contents: String) {
-        val file = File(URI(path))
+        val file = UriUtils.uriToFile(path)
         file.parentFile?.mkdirs()
         file.writeText(contents)
     }
@@ -201,7 +196,7 @@ class IntelliJIDE(
 
     override suspend fun openFile(path: String) {
         // Convert URI path to absolute file path
-        val filePath = File(URI(path)).absolutePath
+        val filePath = UriUtils.uriToFile(path).absolutePath
         // Find the file using the absolute path
         val file = withContext(Dispatchers.IO) {
             LocalFileSystem.getInstance().refreshAndFindFileByPath(filePath)
@@ -216,7 +211,7 @@ class IntelliJIDE(
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {
-            Desktop.browse(java.net.URI(url))
+            Desktop.browse(URI(url))
         }
     }
 
@@ -226,7 +221,8 @@ class IntelliJIDE(
 
     override suspend fun saveFile(filepath: String) {
         ApplicationManager.getApplication().invokeLater {
-            val file = LocalFileSystem.getInstance().findFileByPath(URI(filepath).path) ?: return@invokeLater
+            val file =
+                LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path) ?: return@invokeLater
             val fileDocumentManager = FileDocumentManager.getInstance()
             val document = fileDocumentManager.getDocument(file)
 
@@ -239,7 +235,7 @@ class IntelliJIDE(
     override suspend fun readFile(filepath: String): String {
         return try {
             val content = ApplicationManager.getApplication().runReadAction<String?> {
-                val virtualFile = LocalFileSystem.getInstance().findFileByPath(URI(filepath).path)
+                val virtualFile = LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path)
                 if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
                     return@runReadAction FileDocumentManager.getInstance().getDocument(virtualFile)?.text
                 }
@@ -249,7 +245,7 @@ class IntelliJIDE(
             if (content != null) {
                 content
             } else {
-                val file = File(URI(filepath))
+                val file = UriUtils.uriToFile(filepath)
                 if (!file.exists() || file.isDirectory) return ""
                 withContext(Dispatchers.IO) {
                     FileInputStream(file).use { fis ->
@@ -455,7 +451,7 @@ class IntelliJIDE(
         return withContext(Dispatchers.IO) {
             try {
                 val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-                builder.directory(File(URI(dir)))
+                builder.directory(UriUtils.uriToFile(dir))
                 val process = builder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 val output = reader.readLine()
@@ -485,7 +481,7 @@ class IntelliJIDE(
 
     override suspend fun getRepoName(dir: String): String? {
         return withContext(Dispatchers.IO) {
-            val directory = File(URI(dir))
+            val directory = UriUtils.uriToFile(dir)
             val targetDir = if (directory.isFile) directory.parentFile else directory
             val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
             builder.directory(targetDir)
@@ -549,7 +545,7 @@ class IntelliJIDE(
     override suspend fun getGitRootPath(dir: String): String? {
         return withContext(Dispatchers.IO) {
             val builder = ProcessBuilder("git", "rev-parse", "--show-toplevel")
-            builder.directory(File(URI(dir)))
+            builder.directory(UriUtils.uriToFile(dir))
             val process = builder.start()
 
             val reader = BufferedReader(InputStreamReader(process.inputStream))
@@ -560,7 +556,7 @@ class IntelliJIDE(
     }
 
     override suspend fun listDir(dir: String): List<List<Any>> {
-        val files = File(URI(dir)).listFiles()?.map {
+        val files = UriUtils.uriToFile(dir).listFiles()?.map {
             listOf(it.name, if (it.isDirectory) FileType.DIRECTORY.value else FileType.FILE.value)
         } ?: emptyList()
 
@@ -569,13 +565,8 @@ class IntelliJIDE(
 
     override suspend fun getFileStats(files: List<String>): Map<String, FileStats> {
         return files.associateWith { file ->
-            FileStats(File(URI(file)).lastModified(), File(URI(file)).length())
+            FileStats(UriUtils.uriToFile(file).lastModified(), UriUtils.uriToFile(file).length())
         }
-    }
-
-    override suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String? {
-        val continueSettingsService = service<ContinueExtensionSettings>()
-        return continueSettingsService.continueState.ghAuthToken
     }
 
     override suspend fun gotoDefinition(location: Location): List<RangeInFile> {
@@ -587,7 +578,7 @@ class IntelliJIDE(
     }
 
     private fun setFileOpen(filepath: String, open: Boolean = true) {
-        val file = LocalFileSystem.getInstance().findFileByPath(URI(filepath).path)
+        val file = LocalFileSystem.getInstance().findFileByPath(UriUtils.uriToFile(filepath).path)
 
         file?.let {
             if (open) {

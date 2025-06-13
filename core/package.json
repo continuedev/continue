@@ -4,6 +4,7 @@
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "vitest": "vitest run",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage && open ./coverage/lcov-report/index.html",
     "tsc:check": "tsc -p ./ --noEmit",
     "build:npm": "tsc -p ./tsconfig.npm.json",
@@ -27,6 +28,7 @@
     "@types/mustache": "^4.2.5",
     "@types/node-fetch": "^2.6.11",
     "@types/pg": "^8.11.6",
+    "@types/plist": "^3.0.5",
     "@types/request": "^2.48.12",
     "@types/tar": "^6.1.13",
     "@types/uuid": "^9.0.7",
@@ -40,7 +42,8 @@
     "onnxruntime-common": "1.14.0",
     "onnxruntime-web": "1.14.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^3.1.4"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.779.0",
@@ -48,10 +51,10 @@
     "@aws-sdk/credential-providers": "^3.778.0",
     "@continuedev/config-types": "^1.0.13",
     "@continuedev/config-yaml": "file:../packages/config-yaml",
-    "@continuedev/fetch": "^1.0.6",
+    "@continuedev/fetch": "^1.0.13",
     "@continuedev/llm-info": "^1.0.8",
-    "@continuedev/openai-adapters": "^1.0.19",
-    "@modelcontextprotocol/sdk": "^1.5.0",
+    "@continuedev/openai-adapters": "^1.0.32",
+    "@modelcontextprotocol/sdk": "^1.12.0",
     "@mozilla/readability": "^0.5.0",
     "@octokit/rest": "^20.1.1",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
@@ -89,6 +92,7 @@
     "p-limit": "^6.1.0",
     "partial-json": "^0.1.7",
     "pg": "^8.11.3",
+    "plist": "^3.1.0",
     "posthog-node": "^3.6.3",
     "puppeteer": "^22.4.0",
     "puppeteer-chromium-resolver": "^23.0.0",

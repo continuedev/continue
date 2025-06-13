@@ -160,6 +160,7 @@ export const continuePropertiesSchema = z.object({
   apiKeyLocation: z.string().optional(),
   apiBase: z.string().optional(),
   orgScopeId: z.string().nullable(),
+  env: z.record(z.string(), z.any()).optional(),
 });
 
 export type ContinueProperties = z.infer<typeof continuePropertiesSchema>;
