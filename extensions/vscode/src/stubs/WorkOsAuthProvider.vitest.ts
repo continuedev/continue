@@ -249,6 +249,16 @@ it("should not remove sessions during transient network errors", async () => {
 
   // Verify the second attempt was made via the interval
   expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(fetchMock).toHaveBeenCalledWith(
+    expect.any(URL),
+    expect.objectContaining({
+      method: "POST",
+      headers: expect.objectContaining({
+        "Content-Type": "application/json",
+      }),
+      body: expect.stringContaining("refresh-token"),
+    }),
+  );
 
   // Clean up
   if (provider._refreshInterval) {
