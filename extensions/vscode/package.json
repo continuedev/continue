@@ -226,6 +226,11 @@
         "group": "Continue"
       },
       {
+        "command": "continue.forceAutocomplete",
+        "title": "Continue: Force Autocomplete",
+        "category": "Continue"
+      },
+      {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
         "title": "Select Files as Context",
@@ -410,6 +415,12 @@
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "continue.forceAutocomplete",
+        "key": "ctrl+alt+space",
+        "mac": "cmd+alt+space",
+        "when": "editorTextFocus && !editorHasSelection && !editorReadOnly && !inSnippetMode"
       },
       {
         "command": "continue.applyCodeFromChat",
