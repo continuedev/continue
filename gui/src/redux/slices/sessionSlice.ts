@@ -348,48 +348,17 @@ export const sessionSlice = createSlice({
             continue;
           }
 
-          if (
-            lastMessage.role !== message.role ||
-            // This is for when a tool call comes immediately before/after tool call
-            (lastMessage.role === "assistant" &&
-              message.role === "assistant" &&
-              // Last message isn't completely new
-              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
-              // And there's a difference in tool call presence
-              (lastMessage.toolCalls?.length ?? 0) !==
-                (message.toolCalls?.length ?? 0))
-          ) {
-            // Create a new message
-            const historyItem: ChatHistoryItemWithMessageId = {
-              message: {
-                ...message,
-                content: renderChatMessage(message),
-                id: uuidv4(),
-              },
-              contextItems: [],
-            };
-            if (message.role === "assistant" && message.toolCalls?.[0]) {
-              const toolCallDelta = message.toolCalls[0];
-              historyItem.toolCallState = addToolCallDeltaToState(
-                toolCallDelta,
-                undefined,
-              );
-            }
-            state.history.push(historyItem);
-            lastItem = state.history[state.history.length - 1];
-            lastMessage = lastItem.message;
-          }
+          const messageContent = message.content
+            ? renderChatMessage(message)
+            : "";
 
-          // Add to the existing message
-          if (message.content) {
-            const messageContent = renderChatMessage(message);
-
+          // OpenAI-compatible models in agent mode sometimes send
+          // all of their data in one message, so we handle that case early.
+          if (messageContent) {
             const thinkMatches = messageContent.match(
               /<think>([\s\S]*)<\/think>([\s\S]*)/,
             );
             if (thinkMatches) {
-              // OpenAI-compatible models in agent mode seem to send
-              // all of their thinking in one message.
               // The order that they seem to consistently use is:
               //
               // <think>Thinking text</think>
@@ -402,6 +371,7 @@ export const sessionSlice = createSlice({
                 },
                 contextItems: [],
               });
+
               lastItem = state.history[state.history.length - 1];
               lastMessage = lastItem.message;
 
@@ -444,7 +414,47 @@ export const sessionSlice = createSlice({
                   curMessage.toolCalls = [newToolCallState.toolCall];
                 }
               }
-            } else if (messageContent.includes("<think>")) {
+
+              return;
+            }
+          }
+
+          // The remainder of this function handles streaming messages
+          if (
+            lastMessage.role !== message.role ||
+            // This is for when a tool call comes immediately before/after tool call
+            (lastMessage.role === "assistant" &&
+              message.role === "assistant" &&
+              // Last message isn't completely new
+              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
+              // And there's a difference in tool call presence
+              (lastMessage.toolCalls?.length ?? 0) !==
+                (message.toolCalls?.length ?? 0))
+          ) {
+            // Create a new message
+            const historyItem: ChatHistoryItemWithMessageId = {
+              message: {
+                ...message,
+                content: "",
+                id: uuidv4(),
+              },
+              contextItems: [],
+            };
+            if (message.role === "assistant" && message.toolCalls?.[0]) {
+              const toolCallDelta = message.toolCalls[0];
+              historyItem.toolCallState = addToolCallDeltaToState(
+                toolCallDelta,
+                undefined,
+              );
+            }
+            state.history.push(historyItem);
+            lastItem = state.history[state.history.length - 1];
+            lastMessage = lastItem.message;
+          }
+
+          // Add to the existing message
+          if (messageContent) {
+            if (messageContent.includes("<think>")) {
               lastItem.reasoning = {
                 startAt: Date.now(),
                 active: true,
@@ -461,11 +471,21 @@ export const sessionSlice = createSlice({
               lastItem.reasoning.endAt = Date.now();
               lastMessage.content += answerStart.trimStart();
             } else if (lastItem.reasoning?.active) {
-              lastItem.reasoning.text += messageContent;
+              if (
+                lastItem.reasoning.text.length > 0 ||
+                messageContent.trim().length > 0
+              ) {
+                lastItem.reasoning.text += messageContent;
+              }
             } else {
               // Note this only works because new message above
               // was already rendered from parts to string
-              lastMessage.content += messageContent;
+              if (
+                lastMessage.content.length > 0 ||
+                messageContent.trim().length > 0
+              ) {
+                lastMessage.content += messageContent;
+              }
             }
           } else if (message.role === "thinking" && message.signature) {
             if (lastMessage.role === "thinking") {
