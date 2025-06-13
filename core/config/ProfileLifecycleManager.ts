@@ -87,38 +87,40 @@ export class ProfileLifecycleManager {
     }
 
     // Set pending config promise
-    this.pendingConfigPromise = new Promise(async (resolve, reject) => {
-      let result: ConfigResult<ContinueConfig>;
-      // This try catch is expected to catch high-level errors that aren't block-specific
-      // Like invalid json, invalid yaml, file read errors, etc.
-      // NOT block-specific loading errors
-      try {
-        result = await this.profileLoader.doLoadConfig();
-      } catch (e) {
-        const message =
-          e instanceof Error
-            ? `${e.message}\n${e.stack ? e.stack : ""}`
-            : "Error loading config";
-        result = {
-          errors: [
-            {
-              fatal: true,
-              message,
-            },
-          ],
-          config: undefined,
-          configLoadInterrupted: true,
-        };
-      }
+    this.pendingConfigPromise = new Promise((resolve) => {
+      void (async () => {
+        let result: ConfigResult<ContinueConfig>;
+        // This try catch is expected to catch high-level errors that aren't block-specific
+        // Like invalid json, invalid yaml, file read errors, etc.
+        // NOT block-specific loading errors
+        try {
+          result = await this.profileLoader.doLoadConfig();
+        } catch (e) {
+          const message =
+            e instanceof Error
+              ? `${e.message}\n${e.stack ? e.stack : ""}`
+              : "Error loading config";
+          result = {
+            errors: [
+              {
+                fatal: true,
+                message,
+              },
+            ],
+            config: undefined,
+            configLoadInterrupted: true,
+          };
+        }
 
-      if (result.config) {
-        // Add registered context providers
-        result.config.contextProviders = (
-          result.config.contextProviders ?? []
-        ).concat(additionalContextProviders);
-      }
+        if (result.config) {
+          // Add registered context providers
+          result.config.contextProviders = (
+            result.config.contextProviders ?? []
+          ).concat(additionalContextProviders);
+        }
 
-      resolve(result);
+        resolve(result);
+      })();
     });
 
     // Wait for the config promise to resolve
