@@ -480,9 +480,13 @@ it("should remove session if token refresh fails with authentication error", asy
   }
 });
 
-it("should handle refresh failures differently for expired vs valid tokens", async () => {
-  // First scenario: Valid token with refresh failure
-  // Setup existing sessions with a VALID token
+it("should preserve valid tokens during network errors by retrying", async () => {
+  // Mock Date.now to return a fixed timestamp for token validation
+  const originalDateNow = Date.now;
+  const currentTimestamp = Date.now();
+  Date.now = vi.fn(() => currentTimestamp);
+
+  // Setup with a valid token
   const validToken = createJwt({ expired: false });
   const validSession = {
     id: "valid-id",
@@ -494,11 +498,28 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
     loginNeeded: false,
   };
 
-  // Setup fetch mock for valid token - it will fail with network error
+  // Setup fetch mock
   const fetchMock = fetch as any;
   fetchMock.mockClear();
 
-  // We'll have the network error then a success - the retry should work
+  // Create mock objects
+  const mockUriHandler = { event: new EventEmitter(), handleCallback: vi.fn() };
+  const mockContext = {
+    secrets: { store: vi.fn(), get: vi.fn() },
+    subscriptions: [],
+  };
+
+  // Mock setInterval and setTimeout
+  const originalSetInterval = global.setInterval;
+  global.setInterval = vi.fn().mockReturnValue(123 as any);
+
+  const originalSetTimeout = global.setTimeout;
+  global.setTimeout = vi.fn((callback) => {
+    callback();
+    return 123 as any;
+  });
+
+  // Network error followed by success
   fetchMock.mockRejectedValueOnce(new Error("Network error"));
   fetchMock.mockResolvedValueOnce({
     ok: true,
@@ -509,53 +530,41 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
     text: async () => "",
   });
 
-  // Mock UriHandler & Context
-  const mockUriHandler = { event: new EventEmitter(), handleCallback: vi.fn() };
-  const mockContext = {
-    secrets: { store: vi.fn(), get: vi.fn() },
-    subscriptions: [],
-  };
-
-  // Mock setInterval
-  const originalSetInterval = global.setInterval;
-  global.setInterval = vi.fn().mockReturnValue(123 as any);
-
-  // Make sure Date.now returns a consistent value for our tests
-  const originalDateNow = Date.now;
-  const currentTime = Date.now();
-  Date.now = vi.fn(() => currentTime);
-
-  // Set up SecretStorage to return valid session
+  // Setup storage
   mockSecretStorageGet.mockResolvedValue(JSON.stringify([validSession]));
   mockSecretStorageStore.mockClear();
 
   // Import and create provider
   const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
-  const provider1 = new WorkOsAuthProvider(mockContext, mockUriHandler);
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Wait for async operations and trigger retry
-  await new Promise(process.nextTick);
-  await vi.runAllTimersAsync();
+  // Wait for promises to resolve
   await new Promise(process.nextTick);
 
-  // For valid tokens with network errors, the session should NOT be removed due to retry
-  expect(mockSecretStorageStore).not.toHaveBeenCalledWith(
-    "workos.sessions",
-    expect.stringMatching(/\[\]/),
-  );
+  // Check that a non-empty session array was stored (session was preserved)
+  const storeCall = mockSecretStorageStore.mock.calls[0];
+  expect(storeCall[0]).toBe("workos.sessions");
+  expect(JSON.parse(storeCall[1])).toHaveLength(1); // Should contain one session
 
-  // Clean up first provider
-  if (provider1._refreshInterval) {
-    clearInterval(provider1._refreshInterval);
-    provider1._refreshInterval = null;
+  // Restore originals
+  global.setTimeout = originalSetTimeout;
+  global.setInterval = originalSetInterval;
+  Date.now = originalDateNow;
+
+  // Clean up provider
+  if (provider._refreshInterval) {
+    clearInterval(provider._refreshInterval);
+    provider._refreshInterval = null;
   }
+});
 
-  // SECOND SCENARIO: Expired token with refresh failure
-  // Reset mocks
-  fetchMock.mockClear();
-  mockSecretStorageStore.mockClear();
+it("should remove expired tokens when refresh fails", async () => {
+  // Mock Date.now to return a time that makes tokens appear expired
+  const originalDateNow = Date.now;
+  const futureTime = Date.now() + 7200000; // 2 hours in the future
+  Date.now = vi.fn(() => futureTime);
 
-  // Setup existing session with an EXPIRED token
+  // Setup with an expired token
   const expiredToken = createJwt({ expired: true });
   const expiredSession = {
     id: "expired-id",
@@ -567,32 +576,48 @@ it("should handle refresh failures differently for expired vs valid tokens", asy
     loginNeeded: false,
   };
 
-  // Setup fetch mock for expired token - same network error (should not retry)
+  // Setup fetch mock
+  const fetchMock = fetch as any;
+  fetchMock.mockClear();
+
+  // Create mock objects
+  const mockUriHandler = { event: new EventEmitter(), handleCallback: vi.fn() };
+  const mockContext = {
+    secrets: { store: vi.fn(), get: vi.fn() },
+    subscriptions: [],
+  };
+
+  // Mock setInterval
+  const originalSetInterval = global.setInterval;
+  global.setInterval = vi.fn().mockReturnValue(123 as any);
+
+  // Refresh will fail with network error
   fetchMock.mockRejectedValueOnce(new Error("Network error"));
 
-  // Set up SecretStorage to return expired session
+  // Setup storage
   mockSecretStorageGet.mockResolvedValue(JSON.stringify([expiredSession]));
+  mockSecretStorageStore.mockClear();
 
-  // Create new provider with expired session
-  const provider2 = new WorkOsAuthProvider(mockContext, mockUriHandler);
+  // Import and create provider
+  const { WorkOsAuthProvider } = await import("./WorkOsAuthProvider");
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-  // Wait for async operations (no need to run timers as we shouldn't retry)
+  // Wait for promises to resolve
   await new Promise(process.nextTick);
 
-  // For expired tokens, a refresh failure should result in immediate session removal
-  expect(mockSecretStorageStore).toHaveBeenCalledWith(
-    "workos.sessions",
-    expect.stringMatching(/\[\]/),
-  );
+  // Check that an empty session array was stored (session was removed)
+  const storeCall = mockSecretStorageStore.mock.calls[0];
+  expect(storeCall[0]).toBe("workos.sessions");
+  expect(JSON.parse(storeCall[1])).toHaveLength(0); // Should be empty
 
-  // Restore mocks
+  // Restore originals
   global.setInterval = originalSetInterval;
   Date.now = originalDateNow;
 
-  // Clean up second provider
-  if (provider2._refreshInterval) {
-    clearInterval(provider2._refreshInterval);
-    provider2._refreshInterval = null;
+  // Clean up provider
+  if (provider._refreshInterval) {
+    clearInterval(provider._refreshInterval);
+    provider._refreshInterval = null;
   }
 });
 
