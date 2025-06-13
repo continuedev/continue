@@ -52,8 +52,8 @@ export function getReqOptionsNoProxyPatterns(
 
 export function patternMatchesHostname(hostname: string, pattern: string) {
   // Split hostname and pattern to separate hostname and port
-  const [hostnameWithoutPort, hostnamePort] = hostname.split(":");
-  const [patternWithoutPort, patternPort] = pattern.split(":");
+  const [hostnameWithoutPort, hostnamePort] = hostname.toLowerCase().split(":");
+  const [patternWithoutPort, patternPort] = pattern.toLowerCase().split(":");
 
   // If pattern specifies a port but hostname doesn't match it, no match
   if (patternPort && (!hostnamePort || hostnamePort !== patternPort)) {
