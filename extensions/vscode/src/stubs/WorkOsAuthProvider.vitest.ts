@@ -482,7 +482,7 @@ it("should remove session if token refresh fails with authentication error", asy
 
 it("should remove session if access token is expired and refresh fails", async () => {
   // Setup existing sessions with an expired token
-  const expiredToken = createJwt({ expired: true });
+  const expiredToken = createJwt({ expired: false });
   const mockSession = {
     id: "test-id",
     accessToken: expiredToken,
