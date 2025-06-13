@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { EventEmitter } from "vscode";
 import { WorkOsAuthProvider } from "./WorkOsAuthProvider";
 
@@ -75,324 +75,349 @@ function createJwt({ expired }: { expired: boolean }): string {
   return `${base64Header}.${base64Payload}.${signature}`;
 }
 
-describe("WorkOsAuthProvider", () => {
-  let provider: WorkOsAuthProvider;
-  let mockFetch: any;
-  let mockUriHandler: any;
-  let mockContext: any;
+// Setup function for tests
+function setupTest() {
+  // Clear all mocks
+  vi.clearAllMocks();
 
-  beforeEach(() => {
-    // Clear all mocks
-    vi.clearAllMocks();
+  // Setup mocks for fetch
+  const mockFetch = fetch as any;
+  mockFetch.mockClear();
 
-    // Setup mocks for fetch
-    mockFetch = fetch as any;
-    mockFetch.mockClear();
+  // Create a mock UriHandler
+  const mockUriHandler = {
+    event: new EventEmitter(),
+    handleCallback: vi.fn(),
+  };
 
-    // Create a mock UriHandler
-    mockUriHandler = {
-      event: new EventEmitter(),
-      handleCallback: vi.fn(),
-    };
+  // Create a mock ExtensionContext
+  const mockContext = {
+    secrets: {
+      store: vi.fn(),
+      get: vi.fn(),
+    },
+    subscriptions: [],
+  };
 
-    // Create a mock ExtensionContext
-    mockContext = {
-      secrets: {
-        store: vi.fn(),
-        get: vi.fn(),
-      },
-      subscriptions: [],
-    };
+  // Setup timing mocks
+  vi.useFakeTimers();
 
-    // Setup timing mocks
-    vi.useFakeTimers();
+  return { mockFetch, mockUriHandler, mockContext };
+}
+afterEach(() => {
+  vi.clearAllTimers();
+});
 
-    // Create instance of provider
-    provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+it("should refresh tokens on initialization when sessions exist", async () => {
+  // Setup the test
+  const { mockFetch, mockUriHandler, mockContext } = setupTest();
+
+  // Setup existing sessions with a valid token
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 3600000, // 1 hour
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Setup successful token refresh
+  mockFetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      accessToken: createJwt({ expired: false }),
+      refreshToken: "new-refresh-token",
+    }),
+    text: async () => "",
   });
 
-  afterEach(() => {
-    vi.clearAllTimers();
+  // Create the provider after setting up the mocks
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+  // Mock SecretStorage.get to return a session
+  vi.mocked(provider["secretStorage"].get).mockResolvedValue(
+    JSON.stringify([mockSession]),
+  );
+
+  // Initialize by getting sessions
+  await provider.getSessions();
+
+  // Verify that the token refresh endpoint was called
+  expect(mockFetch).toHaveBeenCalledWith(
+    expect.objectContaining({ pathname: "/auth/refresh" }),
+    expect.objectContaining({
+      method: "POST",
+      body: expect.stringContaining("refresh-token"),
+    }),
+  );
+});
+
+it("should not remove sessions during transient network errors", async () => {
+  // Setup the test
+  const { mockFetch, mockUriHandler, mockContext } = setupTest();
+  // Setup a session
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 300000, // 5 minutes
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Create the provider after setting up the mocks
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Mock SecretStorage.get to return a session
+  vi.mocked(provider["secretStorage"].get).mockResolvedValue(
+    JSON.stringify([mockSession]),
+  );
+
+  // First refresh attempt fails with network error
+  mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+  // Second refresh attempt should succeed
+  mockFetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      accessToken: createJwt({ expired: false }),
+      refreshToken: "new-refresh-token",
+    }),
+    text: async () => "",
   });
 
-  it("should refresh tokens on initialization when sessions exist", async () => {
-    // Setup existing sessions with a valid token
-    const validToken = createJwt({ expired: false });
-    const mockSession = {
-      id: "test-id",
-      accessToken: validToken,
-      refreshToken: "refresh-token",
-      expiresInMs: 3600000, // 1 hour
-      account: { label: "Test User", id: "user@example.com" },
-      scopes: [],
-      loginNeeded: false,
-    };
+  // Call refresh sessions
+  await provider.refreshSessions();
 
-    // Mock SecretStorage.get to return a session
-    vi.mocked(provider["secretStorage"].get).mockResolvedValue(
-      JSON.stringify([mockSession]),
-    );
+  // Check that sessions were not cleared after network error
+  expect(provider["secretStorage"].store).not.toHaveBeenCalledWith(
+    expect.anything(),
+    "[]",
+  );
 
-    // Setup successful token refresh
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        accessToken: createJwt({ expired: false }),
-        refreshToken: "new-refresh-token",
-      }),
-      text: async () => "",
-    });
+  // Advance timer to trigger retry
+  vi.advanceTimersByTime(1000);
 
-    // Initialize by getting sessions
-    await provider.getSessions();
+  // Verify second attempt was made
+  expect(mockFetch).toHaveBeenCalledTimes(2);
+});
 
-    // Verify that the token refresh endpoint was called
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: "/auth/refresh" }),
-      expect.objectContaining({
-        method: "POST",
-        body: expect.stringContaining("refresh-token"),
-      }),
-    );
+it("should refresh tokens at regular intervals rather than based on expiration", async () => {
+  // Setup the test
+  const { mockFetch, mockUriHandler, mockContext } = setupTest();
+
+  // Setup a session with a token that has a long expiration
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 3600000, // 1 hour
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Setup successful token refresh responses
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      accessToken: createJwt({ expired: false }),
+      refreshToken: "new-refresh-token",
+    }),
+    text: async () => "",
   });
 
-  it("should not remove sessions during transient network errors", async () => {
-    // Setup a session
-    const validToken = createJwt({ expired: false });
-    const mockSession = {
-      id: "test-id",
-      accessToken: validToken,
-      refreshToken: "refresh-token",
-      expiresInMs: 300000, // 5 minutes
-      account: { label: "Test User", id: "user@example.com" },
-      scopes: [],
-      loginNeeded: false,
-    };
+  // Spy on setInterval
+  const setIntervalSpy = vi.spyOn(global, "setInterval");
 
-    // Mock SecretStorage.get to return a session
-    vi.mocked(provider["secretStorage"].get).mockResolvedValue(
-      JSON.stringify([mockSession]),
-    );
+  // Create the provider after setting up the mocks
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-    // First refresh attempt fails with network error
-    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+  // Mock SecretStorage.get to return a session
+  vi.mocked(provider["secretStorage"].get).mockResolvedValue(
+    JSON.stringify([mockSession]),
+  );
 
-    // Call refresh sessions
-    await provider.refreshSessions();
+  // Initialize by getting sessions
+  await provider.getSessions();
 
-    // Check that sessions were not cleared after network error
-    expect(provider["secretStorage"].store).not.toHaveBeenCalledWith(
-      expect.anything(),
-      "[]",
-    );
+  // First refresh should happen immediately on initialization
+  expect(mockFetch).toHaveBeenCalledTimes(1);
+  mockFetch.mockClear();
 
-    // Second refresh attempt should happen after backoff
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        accessToken: createJwt({ expired: false }),
-        refreshToken: "new-refresh-token",
-      }),
-      text: async () => "",
-    });
+  // Verify that setInterval was called to set up regular refreshes
+  expect(setIntervalSpy).toHaveBeenCalled();
 
-    // Advance timer to trigger retry
-    vi.advanceTimersByTime(1000);
+  // Get the interval time
+  const intervalTime = setIntervalSpy.mock.calls[0][1];
 
-    // Verify second attempt was made
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+  // Should be a reasonable interval (less than the expiration time)
+  expect(intervalTime).toBeLessThan(mockSession.expiresInMs);
+
+  // Advance time to trigger the interval
+  vi.advanceTimersByTime(intervalTime as number);
+
+  // Verify that refresh was called again at the interval
+  expect(mockFetch).toHaveBeenCalledTimes(1);
+  mockFetch.mockClear();
+
+  // Advance time again to trigger another interval
+  vi.advanceTimersByTime(intervalTime as number);
+
+  // Verify that refresh was called again
+  expect(mockFetch).toHaveBeenCalledTimes(1);
+
+  // Check that we're making refresh calls to the right endpoint
+  expect(mockFetch).toHaveBeenCalledWith(
+    expect.objectContaining({ pathname: "/auth/refresh" }),
+    expect.any(Object),
+  );
+});
+
+it("should remove session if token refresh fails with authentication error", async () => {
+  // Setup the test
+  const { mockFetch, mockUriHandler, mockContext } = setupTest();
+
+  // Setup a session
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "invalid-refresh-token",
+    expiresInMs: 300000,
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
+
+  // Create the provider after setting up the mocks
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Mock SecretStorage.get to return a session
+  vi.mocked(provider["secretStorage"].get).mockResolvedValue(
+    JSON.stringify([mockSession]),
+  );
+
+  // Refresh fails with 401 unauthorized
+  mockFetch.mockResolvedValueOnce({
+    ok: false,
+    status: 401,
+    text: async () => "Invalid refresh token",
   });
 
-  it("should refresh tokens at regular intervals rather than based on expiration", async () => {
-    // Setup a session with a token that has a long expiration
-    const validToken = createJwt({ expired: false });
-    const mockSession = {
-      id: "test-id",
-      accessToken: validToken,
-      refreshToken: "refresh-token",
-      expiresInMs: 3600000, // 1 hour
-      account: { label: "Test User", id: "user@example.com" },
-      scopes: [],
-      loginNeeded: false,
-    };
+  // Call refresh sessions
+  await provider.refreshSessions();
 
-    // Mock SecretStorage.get to return a session
-    vi.mocked(provider["secretStorage"].get).mockResolvedValue(
-      JSON.stringify([mockSession]),
-    );
+  // Verify sessions were removed due to auth error
+  expect(provider["secretStorage"].store).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.stringMatching(/\[\]/),
+  );
+});
 
-    // Setup successful token refresh responses
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        accessToken: createJwt({ expired: false }),
-        refreshToken: "new-refresh-token",
-      }),
-      text: async () => "",
-    });
+it("should remove session if access token is expired and refresh fails", async () => {
+  // Setup the test
+  const { mockFetch, mockUriHandler, mockContext } = setupTest();
 
-    // Spy on setInterval
-    const setIntervalSpy = vi.spyOn(global, "setInterval");
+  // Setup a session with an expired token
+  const expiredToken = createJwt({ expired: true });
+  const mockSession = {
+    id: "test-id",
+    accessToken: expiredToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 3600000, // This doesn't matter since the token is already expired
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
 
-    // Initialize by getting sessions
-    await provider.getSessions();
+  // Create the provider after setting up the mocks
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
 
-    // First refresh should happen immediately on initialization
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    mockFetch.mockClear();
+  // Mock SecretStorage.get to return a session
+  vi.mocked(provider["secretStorage"].get).mockResolvedValue(
+    JSON.stringify([mockSession]),
+  );
 
-    // Verify that setInterval was called to set up regular refreshes
-    expect(setIntervalSpy).toHaveBeenCalled();
-
-    // Get the interval time
-    const intervalTime = setIntervalSpy.mock.calls[0][1];
-
-    // Should be a reasonable interval (less than the expiration time)
-    expect(intervalTime).toBeLessThan(mockSession.expiresInMs);
-
-    // Advance time to trigger the interval
-    vi.advanceTimersByTime(intervalTime as number);
-
-    // Verify that refresh was called again at the interval
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    mockFetch.mockClear();
-
-    // Advance time again to trigger another interval
-    vi.advanceTimersByTime(intervalTime as number);
-
-    // Verify that refresh was called again
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-
-    // Check that we're making refresh calls to the right endpoint
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: "/auth/refresh" }),
-      expect.any(Object),
-    );
+  // Refresh fails with server error
+  mockFetch.mockResolvedValueOnce({
+    ok: false,
+    status: 500,
+    text: async () => "Server error",
   });
 
-  it("should remove session if token refresh fails with authentication error", async () => {
-    // Setup a session
-    const validToken = createJwt({ expired: false });
-    const mockSession = {
-      id: "test-id",
-      accessToken: validToken,
-      refreshToken: "invalid-refresh-token",
-      expiresInMs: 300000,
-      account: { label: "Test User", id: "user@example.com" },
-      scopes: [],
-      loginNeeded: false,
-    };
+  // Call refresh sessions
+  await provider.refreshSessions();
 
-    // Mock SecretStorage.get to return a session
-    vi.mocked(provider["secretStorage"].get).mockResolvedValue(
-      JSON.stringify([mockSession]),
-    );
+  // Verify sessions were removed because token was expired
+  expect(provider["secretStorage"].store).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.stringMatching(/\[\]/),
+  );
+});
 
-    // Refresh fails with 401 unauthorized
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-      text: async () => "Invalid refresh token",
-    });
+it("should implement exponential backoff for failed refresh attempts", async () => {
+  // Setup the test
+  const { mockFetch, mockUriHandler, mockContext } = setupTest();
 
-    // Call refresh sessions
-    await provider.refreshSessions();
+  // Setup a session
+  const validToken = createJwt({ expired: false });
+  const mockSession = {
+    id: "test-id",
+    accessToken: validToken,
+    refreshToken: "refresh-token",
+    expiresInMs: 300000,
+    account: { label: "Test User", id: "user@example.com" },
+    scopes: [],
+    loginNeeded: false,
+  };
 
-    // Verify sessions were removed due to auth error
-    expect(provider["secretStorage"].store).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.stringMatching(/\[\]/),
-    );
+  // Create the provider after setting up the mocks
+  const provider = new WorkOsAuthProvider(mockContext, mockUriHandler);
+
+  // Mock SecretStorage.get to return a session
+  vi.mocked(provider["secretStorage"].get).mockResolvedValue(
+    JSON.stringify([mockSession]),
+  );
+
+  // Setup repeated network errors
+  mockFetch.mockRejectedValueOnce(new Error("Network error 1"));
+  mockFetch.mockRejectedValueOnce(new Error("Network error 2"));
+  mockFetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      accessToken: createJwt({ expired: false }),
+      refreshToken: "new-refresh-token",
+    }),
+    text: async () => "",
   });
 
-  it("should remove session if access token is expired and refresh fails", async () => {
-    // Setup a session with an expired token
-    const expiredToken = createJwt({ expired: true });
-    const mockSession = {
-      id: "test-id",
-      accessToken: expiredToken,
-      refreshToken: "refresh-token",
-      expiresInMs: 3600000, // This doesn't matter since the token is already expired
-      account: { label: "Test User", id: "user@example.com" },
-      scopes: [],
-      loginNeeded: false,
-    };
+  // Track setTimeout calls
+  const setTimeoutSpy = vi.spyOn(global, "setTimeout");
 
-    // Mock SecretStorage.get to return a session
-    vi.mocked(provider["secretStorage"].get).mockResolvedValue(
-      JSON.stringify([mockSession]),
-    );
+  // Call refresh sessions
+  await provider.refreshSessions();
+  // Trigger first retry
+  vi.advanceTimersByTime(1000); // Initial backoff
 
-    // Refresh fails with server error
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      text: async () => "Server error",
-    });
+  // Trigger second retry
+  vi.advanceTimersByTime(2000); // Double the backoff
 
-    // Call refresh sessions
-    await provider.refreshSessions();
+  // Verify setTimeout was called with increasing delays
+  expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
 
-    // Verify sessions were removed because token was expired
-    expect(provider["secretStorage"].store).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.stringMatching(/\[\]/),
-    );
-  });
+  // Get the backoff periods
+  const firstDelay = setTimeoutSpy.mock.calls[0][1];
+  const secondDelay = setTimeoutSpy.mock.calls[1][1];
 
-  it("should implement exponential backoff for failed refresh attempts", async () => {
-    // Setup a session
-    const validToken = createJwt({ expired: false });
-    const mockSession = {
-      id: "test-id",
-      accessToken: validToken,
-      refreshToken: "refresh-token",
-      expiresInMs: 300000,
-      account: { label: "Test User", id: "user@example.com" },
-      scopes: [],
-      loginNeeded: false,
-    };
+  // Check that backoff increased
+  expect(secondDelay).toBeGreaterThan(firstDelay);
 
-    // Mock SecretStorage.get to return a session
-    vi.mocked(provider["secretStorage"].get).mockResolvedValue(
-      JSON.stringify([mockSession]),
-    );
-
-    // Setup repeated network errors
-    mockFetch.mockRejectedValueOnce(new Error("Network error 1"));
-    mockFetch.mockRejectedValueOnce(new Error("Network error 2"));
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        accessToken: createJwt({ expired: false }),
-        refreshToken: "new-refresh-token",
-      }),
-      text: async () => "",
-    });
-
-    // Track setTimeout calls
-    const setTimeoutSpy = vi.spyOn(global, "setTimeout");
-
-    // Call refresh sessions
-    await provider.refreshSessions();
-
-    // Trigger first retry
-    vi.advanceTimersByTime(1000); // Initial backoff
-
-    // Trigger second retry
-    vi.advanceTimersByTime(2000); // Double the backoff
-
-    // Verify setTimeout was called with increasing delays
-    expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
-
-    // Get the backoff periods
-    const firstDelay = setTimeoutSpy.mock.calls[0][1];
-    const secondDelay = setTimeoutSpy.mock.calls[1][1];
-
-    // Check that backoff increased
-    expect(secondDelay).toBeGreaterThan(firstDelay);
-
-    // Verify all three attempts were made
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-  });
+  // Verify all three attempts were made
+  expect(mockFetch).toHaveBeenCalledTimes(3);
 });
