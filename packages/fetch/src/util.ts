@@ -18,6 +18,17 @@ export function getProxyFromEnv(protocol: string): string | undefined {
   }
 }
 
+// Note that request options proxy (per model) takes precedence over environment variables
+export function getProxy(
+  protocol: string,
+  requestOptions?: RequestOptions,
+): string | undefined {
+  if (requestOptions?.proxy) {
+    return requestOptions.proxy;
+  }
+  return getProxyFromEnv(protocol);
+}
+
 export function getEnvNoProxyPatterns(): string[] {
   const envValue = process.env.NO_PROXY || process.env.no_proxy;
   if (envValue) {
