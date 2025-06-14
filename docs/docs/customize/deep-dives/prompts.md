@@ -95,3 +95,24 @@ The "preamble" is everything above the `---` separator, and lets you specify mod
 - `version` - Can be either "1" (for legacy prompt files) or "2" (this is the default and does not need to be set)
 
 If you don't need any of these parameters, you can leave out the preamble and do not need to include the `---` separator.
+
+## Composition Order Flow
+
+The composition order is as follows:
+
+1. **Mode** (visible only in Chat/Agent Mode)
+2. **Rules** (`.continuerules`)
+3. **Context Providers → User Message** (old/previous user messages)
+   - Repeat step 3 until history is current
+4. **Prompt** (`.prompt`)
+
+> **Note:** The latest User Message (new/current messages) does not display in continue console logs when a `.prompt` is included. If you omit the `.prompt` from the User Message, the latest entry displays correctly.
+
+---
+
+When no `.prompt` is present, the flow simplifies to:
+
+1. **Mode**
+2. **Rules**
+3. **Context Providers → User Message** (all user messages display as expected)
+   - Repeat step 3 until history is current
