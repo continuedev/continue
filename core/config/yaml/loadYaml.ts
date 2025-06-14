@@ -97,7 +97,7 @@ async function loadConfigYaml(options: {
   for (const blockType of BLOCK_TYPES) {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
-      { includeGlobal: true, includeWorkspace: true },
+      { includeGlobal: true, includeWorkspace: true, fileExtType: "yaml" },
       blockType,
     );
     allLocalBlocks.push(
