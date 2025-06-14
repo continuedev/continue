@@ -7,15 +7,15 @@ Before using Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/a
 
 ## Chat model
 
-We recommend configuring **Command-R Plus** as your chat model.
+We recommend configuring **Command A** as your chat model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Cohere
+    - name: Command A 03-2025
       provider: cohere
-      model: command-r-plus
+      model: command-a-03-2025
       apiKey: <YOUR_COHERE_API_KEY>
   ```
   </TabItem>
@@ -24,9 +24,9 @@ We recommend configuring **Command-R Plus** as your chat model.
   {
     "models": [
       {
-        "title": "Cohere",
+        "title": "Command A 03-2025",
         "provider": "cohere",
-        "model": "command-r-plus",
+        "model": "command-a-03-2025",
         "apiKey": "<YOUR_COHERE_API_KEY>"
       }
     ]
@@ -43,15 +43,15 @@ Cohere currently does not offer any autocomplete models.
 
 ## Embeddings model
 
-We recommend configuring **embed-english-v3.0** as your embeddings model.
+We recommend configuring **embed-v4.0** as your embeddings model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Cohere Embed
+    - name: Cohere Embed v4.0
       provider: cohere
-      model: embed-english-v3.0
+      model: embed-v4.0
       apiKey: <YOUR_COHERE_API_KEY>
       roles:
         - embed
@@ -62,7 +62,7 @@ We recommend configuring **embed-english-v3.0** as your embeddings model.
   {
     "embeddingsProvider": {
       "provider": "cohere",
-      "model": "embed-english-v3.0",
+      "model": "embed-v4.0",
       "apiKey": "<YOUR_COHERE_API_KEY>"
     }
   }
@@ -72,15 +72,15 @@ We recommend configuring **embed-english-v3.0** as your embeddings model.
 
 ## Reranking model
 
-We recommend configuring **rerank-english-v3.0** as your reranking model.
+We recommend configuring **rerank-v3.5** as your reranking model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Cohere Reranker
+    - name: Cohere Rerank v3.5
       provider: cohere
-      model: rerank-english-v3.0
+      model: rerank-v3.5
       apiKey: <YOUR_COHERE_API_KEY>
       roles:
         - rerank
@@ -92,7 +92,7 @@ We recommend configuring **rerank-english-v3.0** as your reranking model.
     "reranker": {
       "name": "cohere",
       "params": {
-        "model": "rerank-english-v3.0",
+        "model": "rerank-v3.5",
         "apiKey": "<YOUR_COHERE_API_KEY>"
       }
     }
