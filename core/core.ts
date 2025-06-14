@@ -101,6 +101,38 @@ export class Core {
     this.messageAbortControllers.get(messageId)?.abort();
   }
 
+
+  /**
+   * Wraps async task execution with automatic AbortController cleanup.
+   */
+  private runWithAbortController<T extends Promise<any> | AsyncGenerator<any>>(
+    id: string,
+    task: (controller: AbortController) => T
+  ): T {
+    const controller = this.addMessageAbortController(id);
+    const cleanup = () => this.abortById(id);
+
+    try {
+      const result = task(controller);
+
+      if (result instanceof Promise) {
+        return result.finally(cleanup) as T;
+      }
+
+      // AsyncGenerator handling (intentionally skipping return/throw as caller only consumes via next())
+      return (async function* () {
+        try {
+          yield* result;
+        } finally {
+          cleanup();
+        }
+      })() as T;
+    } catch (error) {
+      cleanup();
+      throw error;
+    }
+  }
+
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
     data: ToCoreProtocol[T][0],
@@ -430,13 +462,14 @@ export class Core {
     });
 
     on("llm/streamChat", (msg) => {
-      const abortController = this.addMessageAbortController(msg.messageId);
-      return llmStreamChat(
-        this.configHandler,
-        abortController,
-        msg,
-        this.ide,
-        this.messenger,
+      return this.runWithAbortController(msg.messageId, (abortController) =>
+        llmStreamChat(
+          this.configHandler,
+          abortController,
+          msg,
+          this.ide,
+          this.messenger,
+        ),
       );
     });
 
@@ -446,12 +479,15 @@ export class Core {
       if (!model) {
         throw new Error("No chat model selected");
       }
-      const abortController = this.addMessageAbortController(msg.messageId);
 
-      const completion = await model.complete(
-        msg.data.prompt,
-        abortController.signal,
-        msg.data.completionOptions,
+      const completion = await this.runWithAbortController(
+        msg.messageId,
+        (abortController) =>
+          model.complete(
+            msg.data.prompt,
+            abortController.signal,
+            msg.data.completionOptions,
+          ),
       );
       return completion;
     });
