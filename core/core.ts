@@ -121,7 +121,7 @@ export class Core {
       // AsyncGenerator handling (intentionally skipping return/throw as caller only consumes via next())
       return (async function* () {
         try {
-          yield* result;
+          yield* result as AsyncGenerator<any>;
         } finally {
           cleanup();
         }
