@@ -66,6 +66,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
+  "cohere",
   "gemini",
   "msty",
   "anthropic",
@@ -90,6 +91,8 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "gpt-4o-mini",
   "gpt-4-vision",
   "claude-3",
+  "c4ai-aya-vision-8b",
+  "c4ai-aya-vision-32b",
   "gemini-ultra",
   "gemini-1.5-pro",
   "gemini-1.5-flash",

@@ -26,9 +26,25 @@ class Cohere extends BaseLLM {
       }
       switch (m.role) {
         case "user":
+          if (typeof m.content === "string") {
+            messages.push({
+              role: m.role,
+              content: m.content,
+            });
+            break;
+          }
+
           messages.push({
             role: m.role,
-            content: m.content,
+            content: m.content.map((part) => {
+              if (part.type === "imageUrl") {
+                return {
+                  type: "image_url",
+                  image_url: { url: part.imageUrl.url },
+                };
+              }
+              return part;
+            }),
           });
           break;
         case "thinking":
