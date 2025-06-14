@@ -1,29 +1,23 @@
 import {
   AssistantUnrolled,
-  BLOCK_TYPES,
   ConfigResult,
   ConfigValidationError,
   isAssistantUnrolledNonNullable,
-  MCPServer,
   ModelRole,
   PackageIdentifier,
   RegistryClient,
-  Rule,
   TEMPLATE_VAR_REGEX,
   unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
-import { dirname } from "node:path";
 
 import {
   ContinueConfig,
-  ExperimentalMCPOptions,
   IContextProvider,
   IDE,
   IdeInfo,
   IdeSettings,
   ILLMLogger,
-  RuleWithSource,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
@@ -38,80 +32,37 @@ import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
-import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { baseToolDefinitions } from "../../tools";
-import { getCleanUriPath } from "../../util/uri";
-import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
+import {
+  getLocalPackageIdentifiers,
+  mergeUnrolledAssistants,
+  unrollLocalYamlBlocks,
+} from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
-
-function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
-  if (typeof rule === "string") {
-    return {
-      rule: rule,
-      source: "rules-block",
-    };
-  } else {
-    return {
-      source: "rules-block",
-      rule: rule.rule,
-      globs: rule.globs,
-      name: rule.name,
-    };
-  }
-}
-
-function convertYamlMcpToContinueMcp(
-  server: MCPServer,
-): ExperimentalMCPOptions {
-  return {
-    transport: {
-      type: "stdio",
-      command: server.command,
-      args: server.args ?? [],
-      env: server.env,
-    } as any, // TODO: Fix the mcpServers types in config-yaml (discriminated union)
-    timeout: server.connectionTimeout,
-  };
-}
+import {
+  convertYamlMcpToContinueMcp,
+  convertYamlRuleToContinueRule,
+} from "./yamlToContinueConfig";
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
   controlPlaneClient: ControlPlaneClient;
   orgScopeId: string | null;
-  ideSettings: IdeSettings;
   ide: IDE;
   packageIdentifier: PackageIdentifier;
+  getRegistryClient: () => RegistryClient;
 }): Promise<ConfigResult<AssistantUnrolled>> {
   const {
     overrideConfigYaml,
     controlPlaneClient,
     orgScopeId,
-    ideSettings,
     ide,
     packageIdentifier,
+    getRegistryClient,
   } = options;
 
-  // Add local .continue blocks
-  const allLocalBlocks: PackageIdentifier[] = [];
-  for (const blockType of BLOCK_TYPES) {
-    const localBlocks = await getAllDotContinueDefinitionFiles(
-      ide,
-      { includeGlobal: true, includeWorkspace: true },
-      blockType,
-    );
-    allLocalBlocks.push(
-      ...localBlocks.map((b) => ({
-        uriType: "file" as const,
-        filePath: b.path,
-      })),
-    );
-  }
-
-  const rootPath =
-    packageIdentifier.uriType === "file"
-      ? dirname(getCleanUriPath(packageIdentifier.filePath))
-      : undefined;
+  const localPackages = await getLocalPackageIdentifiers(ide);
 
   // logger.info(
   //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
@@ -123,16 +74,26 @@ async function loadConfigYaml(options: {
 
   if (overrideConfigYaml) {
     config = overrideConfigYaml;
+    if (localPackages.length > 0) {
+      const unrolledLocal = await unrollLocalYamlBlocks(
+        localPackages,
+        ide,
+        getRegistryClient,
+        orgScopeId,
+        controlPlaneClient,
+      );
+      if (unrolledLocal.errors) {
+        errors.push(...unrolledLocal.errors);
+      }
+      if (unrolledLocal.config) {
+        config = mergeUnrolledAssistants(config, unrolledLocal.config);
+      }
+    }
   } else {
     // This is how we allow use of blocks locally
     const unrollResult = await unrollAssistant(
       packageIdentifier,
-      new RegistryClient({
-        accessToken: await controlPlaneClient.getAccessToken(),
-        apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
-          .CONTROL_PLANE_URL,
-        rootPath,
-      }),
+      getRegistryClient(),
       {
         currentUserSlug: "",
         onPremProxyUrl: null,
@@ -143,7 +104,7 @@ async function loadConfigYaml(options: {
           ide,
         ),
         renderSecrets: true,
-        injectBlocks: allLocalBlocks,
+        injectBlocks: localPackages,
         asConfigResult: true,
       },
     );
@@ -462,6 +423,7 @@ export async function loadContinueConfigFromYaml(options: {
   controlPlaneClient: ControlPlaneClient;
   orgScopeId: string | null;
   packageIdentifier: PackageIdentifier;
+  getRegistryClient: () => RegistryClient;
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
     ide,
@@ -474,15 +436,16 @@ export async function loadContinueConfigFromYaml(options: {
     controlPlaneClient,
     orgScopeId,
     packageIdentifier,
+    getRegistryClient,
   } = options;
 
   const configYamlResult = await loadConfigYaml({
     overrideConfigYaml,
     controlPlaneClient,
     orgScopeId,
-    ideSettings,
     ide,
     packageIdentifier,
+    getRegistryClient,
   });
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
