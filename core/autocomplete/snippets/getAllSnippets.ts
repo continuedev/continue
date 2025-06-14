@@ -145,3 +145,44 @@ export const getAllSnippets = async ({
     recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
   };
 };
+
+export const getAllSnippetsWithoutRace = async ({
+  helper,
+  ide,
+  getDefinitionsFromLsp,
+  contextRetrievalService,
+}: {
+  helper: HelperVars;
+  ide: IDE;
+  getDefinitionsFromLsp: GetLspDefinitionsFunction;
+  contextRetrievalService: ContextRetrievalService;
+}): Promise<SnippetPayload> => {
+  const recentlyEditedRangeSnippets =
+    getSnippetsFromRecentlyEditedRanges(helper);
+
+  const [
+    rootPathSnippets,
+    importDefinitionSnippets,
+    ideSnippets,
+    diffSnippets,
+    clipboardSnippets,
+  ] = await Promise.all([
+    contextRetrievalService.getRootPathSnippets(helper),
+    contextRetrievalService.getSnippetsFromImportDefinitions(helper),
+    IDE_SNIPPETS_ENABLED
+      ? getIdeSnippets(helper, ide, getDefinitionsFromLsp)
+      : [],
+    [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
+    getClipboardSnippets(ide),
+  ]);
+
+  return {
+    rootPathSnippets,
+    importDefinitionSnippets,
+    ideSnippets,
+    recentlyEditedRangeSnippets,
+    diffSnippets,
+    clipboardSnippets,
+    recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
+  };
+};
