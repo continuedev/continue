@@ -1068,9 +1068,17 @@ export abstract class BaseLLM implements ILLM {
         documents: chunks.map((chunk) => chunk.content),
       });
 
-      // Put them in the order they were given
-      const sortedResults = results.data.sort((a, b) => a.index - b.index);
-      return sortedResults.map((result) => result.relevance_score);
+      // Standard OpenAI format
+      if (results.data && Array.isArray(results.data)) {
+        return results.data
+          .sort((a, b) => a.index - b.index)
+          .map((result) => result.relevance_score);
+      }
+
+      throw new Error(
+        `Unexpected rerank response format from ${this.providerName}. ` +
+          `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`,
+      );
     }
 
     throw new Error(
