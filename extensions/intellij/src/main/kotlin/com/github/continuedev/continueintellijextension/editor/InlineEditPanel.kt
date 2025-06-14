@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.editor
 
+import com.github.continuedev.continueintellijextension.ContinueIcons
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -357,8 +358,7 @@ class CustomPanel(
     }
 
     private fun createCloseButton(): JComponent {
-        val closeIcon = IconLoader.getIcon("/icons/close.svg", javaClass)
-        return JLabel(closeIcon).apply {
+        return JLabel(ContinueIcons.CLOSE).apply {
             background = Color(0, 0, 0, 0)
             border = JBUI.Borders.empty(2, 6, 2, 0)
             toolTipText = "`esc` to cancel"
