@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["**/*.vitest.ts"],
+    testTransformMode: {
+      web: ["/.[jt]s?$/"],
+      ssr: ["/.[jt]s?$/"],
+    },
+    globalSetup: "./test/vitest.global-setup.ts",
+    setupFiles: "./test/vitest.setup.ts",
+    fileParallelism: false,
+    include: [
+      "**/*.vitest.ts",
+      "config/yaml/LocalPlatformClient.test.ts",
+      "autocomplete/**/*.test.ts",
+    ],
   },
 });
