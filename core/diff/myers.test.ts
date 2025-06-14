@@ -1,3 +1,5 @@
+import { describe, expect, test } from "vitest";
+
 import { dedent } from "../util";
 
 import { myersDiff } from "./myers";
