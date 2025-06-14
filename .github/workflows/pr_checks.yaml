@@ -396,6 +396,11 @@ jobs:
           npx tsc --noEmit
           npm run lint
 
+      - name: Run vitest tests
+        run: |
+          cd extensions/vscode
+          npm run vitest
+
   core-tests:
     needs: [install-core, install-config-yaml]
     runs-on: ubuntu-latest
