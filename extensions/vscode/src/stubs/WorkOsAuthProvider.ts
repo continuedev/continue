@@ -79,7 +79,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   private _refreshInterval: NodeJS.Timeout | null = null;
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
-  private static REFRESH_INTERVAL_MS = 1000 * 60 * 5; // 5 minutes
+  private static REFRESH_INTERVAL_MS = 1000 * 60 * 10; // 10 minutes
 
   private secretStorage: SecretStorage;
 
