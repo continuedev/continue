@@ -101,13 +101,12 @@ export class Core {
     this.messageAbortControllers.get(messageId)?.abort();
   }
 
-
   /**
    * Wraps async task execution with automatic AbortController cleanup.
    */
   private runWithAbortController<T extends Promise<any> | AsyncGenerator<any>>(
     id: string,
-    task: (controller: AbortController) => T
+    task: (controller: AbortController) => T,
   ): T {
     const controller = this.addMessageAbortController(id);
     const cleanup = () => this.abortById(id);
