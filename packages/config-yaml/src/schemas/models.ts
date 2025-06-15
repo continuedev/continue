@@ -69,6 +69,8 @@ export type EmbeddingPrefixes = z.infer<typeof embeddingPrefixesSchema>;
 export const cacheBehaviorSchema = z.object({
   cacheSystemMessage: z.boolean().optional(),
   cacheConversation: z.boolean().optional(),
+  useExtendedCacheTtlBeta: z.boolean().optional(),
+  cacheTtl: z.enum(["5m", "1h"]).optional(),
 });
 export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
 
