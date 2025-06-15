@@ -54,7 +54,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
-  private nextEditProvider: NextEditProvider | undefined;
+  private nextEditProvider: NextEditProvider;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
   private recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -80,13 +80,15 @@ export class ContinueCompletionProvider
       getDefinitionsFromLsp,
     );
     // NOTE: Only turn it on locally when testing (for review purposes).
-    if (IS_NEXT_EDIT_ACTIVE) {
+    // TODO: revert back
+    if (IS_NEXT_EDIT_ACTIVE || true) {
       this.nextEditProvider = new NextEditProvider(
         this.configHandler,
         this.ide,
         getAutocompleteModel,
         this.onError.bind(this),
         getDefinitionsFromLsp,
+        "fineTuned",
       );
     }
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
@@ -148,6 +150,10 @@ export class ContinueCompletionProvider
         line: position.line,
         character: position.character,
       };
+      // const pos = {
+      //   line: 0,
+      //   character: 0,
+      // };
       let manuallyPassFileContents: string | undefined = undefined;
       if (document.uri.scheme === "vscode-notebook-cell") {
         const notebook = vscode.workspace.notebookDocuments.find((notebook) =>
@@ -204,11 +210,10 @@ export class ContinueCompletionProvider
       };
 
       setupStatusBar(undefined, true);
+      // TODO: revert back
       const outcome =
-        await this.completionProvider.provideInlineCompletionItems(
-          input,
-          signal,
-        );
+        // await this.completionProvider.provideInlineCompletionItems(
+        await this.nextEditProvider.provideInlineCompletionItems(input, signal);
 
       if (!outcome || !outcome.completion) {
         return null;
@@ -216,17 +221,18 @@ export class ContinueCompletionProvider
 
       // NOTE: This is a very rudimentary check to see if we can call the next edit service.
       // In the future we will have to figure out how to call this more gracefully.
-      if (this.nextEditProvider) {
-        const nextEditOutcome =
-          await this.nextEditProvider?.provideInlineCompletionItems(
-            input,
-            signal,
-          );
+      // TODO: revert back
+      // if (this.nextEditProvider) {
+      //   const nextEditOutcome =
+      //     await this.nextEditProvider?.provideInlineCompletionItems(
+      //       input,
+      //       signal,
+      //     );
 
-        if (nextEditOutcome && nextEditOutcome.completion) {
-          outcome.completion = nextEditOutcome.completion;
-        }
-      }
+      //   if (nextEditOutcome && nextEditOutcome.completion) {
+      //     outcome.completion = nextEditOutcome.completion;
+      //   }
+      // }
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
       // We should first always make sure we have a valid completion, but if it goes wrong we
@@ -260,7 +266,10 @@ export class ContinueCompletionProvider
 
       // Construct the range/text to show
       const startPos = selectedCompletionInfo?.range.start ?? position;
+      // const startPos = new vscode.Position(0, 0);
+      // const endPos = new vscode.Position(0, 5);
       let range = new vscode.Range(startPos, startPos);
+      // let range = new vscode.Range(startPos, endPos);
       let completionText = outcome.completion;
       const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
 
@@ -287,14 +296,20 @@ export class ContinueCompletionProvider
             new vscode.Position(startPos.line, result.range.end),
           );
         }
+        console.log("range", range.start, range.end);
       } else {
         // Extend the range to the end of the line for multiline completions
         range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
+        console.log("range", range.start, range.end);
       }
 
       const completionItem = new vscode.InlineCompletionItem(
         completionText,
         range,
+        // new vscode.Range(
+        //   new vscode.Position(36, 3),
+        //   new vscode.Position(36, 3),
+        // ),
         {
           title: "Log Autocomplete Outcome",
           command: "continue.logAutocompleteOutcome",
