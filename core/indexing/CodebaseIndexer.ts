@@ -1,7 +1,12 @@
 import * as fs from "fs/promises";
 
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
+import {
+  ContinueConfig,
+  IDE,
+  IndexingProgressUpdate,
+  IndexTag,
+} from "../index.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
@@ -9,6 +14,8 @@ import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { Telemetry } from "../util/posthog.js";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
+import { ConfigResult } from "@continuedev/config-yaml";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import { ContinueServerClient } from "../continueServer/stubs/client";
 import { LLMError } from "../llm/index.js";
 import { getRootCause } from "../util/errors.js";
@@ -44,6 +51,8 @@ export class CodebaseIndexer {
    * - To make as few requests as possible to the embeddings providers
    */
   filesPerBatch = 500;
+  public isInitialized: Promise<void>;
+  private config!: ContinueConfig;
   private indexingCancellationController: AbortController | undefined;
   private codebaseIndexingState: IndexingProgressUpdate;
   private readonly pauseToken: PauseToken;
@@ -73,6 +82,17 @@ export class CodebaseIndexer {
 
     // Initialize pause token
     this.pauseToken = new PauseToken(initialPaused);
+
+    this.isInitialized = this.init(configHandler);
+  }
+
+  // Initialization - load config and attach config listener
+  private async init(configHandler: ConfigHandler) {
+    const result = await configHandler.loadConfig();
+    await this.handleConfigUpdate(result);
+    configHandler.onConfigUpdate(
+      this.handleConfigUpdate.bind(this) as (arg: any) => void,
+    );
   }
 
   /**
@@ -651,5 +671,36 @@ export class CodebaseIndexer {
 
   public get currentIndexingState(): IndexingProgressUpdate {
     return this.codebaseIndexingState;
+  }
+
+  private hasCodebaseContextProvider() {
+    return !!this.config.contextProviders?.some(
+      (provider) =>
+        provider.description.title ===
+        CodebaseContextProvider.description.title,
+    );
+  }
+
+  private async handleConfigUpdate({
+    config: newConfig,
+  }: ConfigResult<ContinueConfig>) {
+    if (newConfig) {
+      this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
+
+      // No point in indexing if no codebase context provider
+      const hasCodebaseContextProvider = this.hasCodebaseContextProvider();
+      if (!hasCodebaseContextProvider) {
+        return;
+      }
+
+      // Skip codebase indexing if not supported
+      // No warning message here because would show on ANY config update
+      if (!this.config.selectedModelByRole.embed) {
+        return;
+      }
+
+      const dirs = await this.ide.getWorkspaceDirs();
+      await this.refreshCodebaseIndex(dirs);
+    }
   }
 }
