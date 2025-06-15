@@ -3,9 +3,34 @@ import util from "node:util";
 
 import { fileURLToPath } from "node:url";
 import { ToolImpl } from ".";
-import { isProcessBackgrounded, removeBackgroundedProcess } from "../../util/processTerminalBackgroundStates";
+import {
+  isProcessBackgrounded,
+  removeBackgroundedProcess,
+} from "../../util/processTerminalBackgroundStates";
 
 const asyncExec = util.promisify(childProcess.exec);
+
+// Add color-supporting environment variables
+const getColorEnv = () => ({
+  ...process.env,
+  FORCE_COLOR: "1",
+  COLORTERM: "truecolor",
+  TERM: "xterm-256color",
+  CLICOLOR: "1",
+  CLICOLOR_FORCE: "1",
+});
+
+const ENABLED_FOR_REMOTES = [
+  "",
+  "local",
+  "wsl",
+  "dev-container",
+  "devcontainer",
+  "ssh-remote",
+  "attached-container",
+  "codespaces",
+  "tunnel",
+];
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   // Default to waiting for completion if not specified
@@ -13,7 +38,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  if (ideInfo.remoteName === "local" || ideInfo.remoteName === "") {
+  if (ENABLED_FOR_REMOTES.includes(ideInfo.remoteName)) {
     // For streaming output
     if (extras.onPartialOutput) {
       return new Promise((resolve, reject) => {
@@ -41,10 +66,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 }
               }
 
-              // Use spawn instead of exec to get streaming output
+              // Use spawn with color environment
               const childProc = childProcess.spawn(args.command, {
                 cwd,
                 shell: true,
+                env: getColorEnv(), // Add enhanced environment for colors
               });
 
               childProc.stdout?.on("data", (data) => {
@@ -56,7 +82,9 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
                 // Send partial output to UI
                 if (extras.onPartialOutput) {
-                  const status = waitForCompletion ? "" : "Command is running in the background...";
+                  const status = waitForCompletion
+                    ? ""
+                    : "Command is running in the background...";
                   extras.onPartialOutput({
                     toolCallId,
                     contextItems: [
@@ -113,12 +141,36 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                   return;
                 }
 
-                if (!waitForCompletion) {
+                if (waitForCompletion) {
+                  // Normal completion, resolve now
+                  if (code === 0) {
+                    const status = "Command completed";
+                    resolve([
+                      {
+                        name: "Terminal",
+                        description: "Terminal command output",
+                        content: terminalOutput,
+                        status: status,
+                      },
+                    ]);
+                  } else {
+                    const status = `Command failed with exit code ${code}`;
+                    resolve([
+                      {
+                        name: "Terminal",
+                        description: "Terminal command output",
+                        content: terminalOutput,
+                        status: status,
+                      },
+                    ]);
+                  }
+                } else {
                   // Already resolved, just update the UI with final output
                   if (extras.onPartialOutput) {
-                    const status = (code === 0 || !code
-                      ? "\nBackground command completed"
-                      : `\nBackground command failed with exit code ${code}`)
+                    const status =
+                      code === 0 || !code
+                        ? "\nBackground command completed"
+                        : `\nBackground command failed with exit code ${code}`;
                     extras.onPartialOutput({
                       toolCallId,
                       contextItems: [
@@ -130,30 +182,6 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                         },
                       ],
                     });
-                  }
-                } else {
-                  // Normal completion, resolve now
-                  if (code === 0) {
-                    const status = "Command completed";
-                    resolve([
-                      {
-                        name: "Terminal",
-                        description: "Terminal command output",
-                        content: terminalOutput,
-                        status: status
-                      },
-                    ]);
-                  } else {
-                    const status = `Command failed with exit code ${code}`;
-                    resolve([
-                      {
-                        name: "Terminal",
-                        description: "Terminal command output",
-                        content:
-                          terminalOutput,
-                          status: status,
-                      },
-                    ]);
                   }
                 }
               });
@@ -180,18 +208,47 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
       const workspaceDirs = await extras.ide.getWorkspaceDirs();
       const cwd = fileURLToPath(workspaceDirs[0]);
 
-      if (!waitForCompletion) {
+      if (waitForCompletion) {
+        // Standard execution, waiting for completion
+        try {
+          // Use color environment for exec as well
+          const output = await asyncExec(args.command, {
+            cwd,
+            env: getColorEnv(),
+          });
+          const status = "Command completed";
+          return [
+            {
+              name: "Terminal",
+              description: "Terminal command output",
+              content: output.stdout ?? "",
+              status: status,
+            },
+          ];
+        } catch (error: any) {
+          const status = `Command failed with: ${error.message || error.toString()}`;
+          return [
+            {
+              name: "Terminal",
+              description: "Terminal command output",
+              content: error.stderr ?? error.toString(),
+              status: status,
+            },
+          ];
+        }
+      } else {
         // For non-streaming but also not waiting for completion, use spawn
         // but don't attach any listeners other than error
         try {
-          // Use spawn instead of exec but don't wait
+          // Use spawn with color environment
           const childProc = childProcess.spawn(args.command, {
             cwd,
             shell: true,
+            env: getColorEnv(), // Add color environment
             // Detach the process so it's not tied to the parent
             detached: true,
             // Redirect to /dev/null equivalent (works cross-platform)
-            stdio: 'ignore',
+            stdio: "ignore",
           });
 
           // Even for detached processes, add event handlers to clean up the background process map
@@ -225,30 +282,6 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               name: "Terminal",
               description: "Terminal command output",
               content: status,
-              status: status
-            },
-          ];
-        }
-      } else {
-        // Standard execution, waiting for completion
-        try {
-          const output = await asyncExec(args.command, { cwd });
-          const status = "Command completed";
-          return [
-            {
-              name: "Terminal",
-              description: "Terminal command output",
-              content: output.stdout ?? "",
-              status: status,
-            },
-          ];
-        } catch (error: any) {
-          const status = `Command failed with: ${error.message || error.toString()}`;
-          return [
-            {
-              name: "Terminal",
-              description: "Terminal command output",
-              content: error.stderr ?? error.toString(),
               status: status,
             },
           ];
@@ -269,4 +302,4 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
       status: "Command failed",
     },
   ];
-}
+};

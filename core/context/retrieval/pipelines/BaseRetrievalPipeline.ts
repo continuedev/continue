@@ -2,10 +2,10 @@
 import nlp from "wink-nlp-utils";
 
 import { BranchAndDir, Chunk, ContinueConfig, IDE, ILLM } from "../../../";
+import { openedFilesLruCache } from "../../../autocomplete/util/openedFilesLruCache";
 import { chunkDocument } from "../../../indexing/chunk/chunk";
 import { FullTextSearchCodebaseIndex } from "../../../indexing/FullTextSearchCodebaseIndex";
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
-import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache";
 
 const DEFAULT_CHUNK_SIZE = 384;
 
@@ -85,7 +85,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     }
 
     const tokens = this.getCleanedTrigrams(args.query).join(" OR ");
-    
+
     return await this.ftsIndex.retrieve({
       n,
       text: tokens,
@@ -98,7 +98,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     n: number,
   ): Promise<Chunk[]> {
     const recentlyEditedFilesSlice = Array.from(
-      recentlyEditedFilesCache.keys(),
+      openedFilesLruCache.keys(),
     ).slice(0, n);
 
     // If the number of recently edited files is less than the retrieval limit,

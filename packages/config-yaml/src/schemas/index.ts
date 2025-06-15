@@ -13,7 +13,7 @@ export const contextSchema = z.object({
 const mcpServerSchema = z.object({
   name: z.string(),
   command: z.string().optional(),
-  type: z.enum(["sse", "stdio"]).optional(),
+  type: z.enum(["sse", "stdio", "streamable-http"]).optional(),
   url: z.string().optional(),
   faviconUrl: z.string().optional(),
   args: z.array(z.string()).optional(),

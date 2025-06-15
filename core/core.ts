@@ -3,18 +3,21 @@ import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
+import {
+  openedFilesLruCache,
+  prevFilepaths,
+} from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
-import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
-import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
+import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
@@ -34,6 +37,7 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
+  CompleteOnboardingPayload,
   ContextItemWithId,
   IdeSettings,
   ModelDescription,
@@ -41,41 +45,48 @@ import {
   type ContextItem,
   type ContextItemId,
   type IDE,
-  type IndexingProgressUpdate,
 } from ".";
 
 import { ConfigYaml } from "@continuedev/config-yaml";
-import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
+import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import {
-  setupBestConfig,
   setupLocalConfig,
+  setupProviderConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
-import { LLMError } from "./llm";
 import { LLMLogger } from "./llm/logger";
+import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { getUriPathBasename } from "./util/uri";
+
+const hasRulesFiles = (uris: string[]): boolean => {
+  for (const uri of uris) {
+    const filename = getUriPathBasename(uri);
+    if (filename === RULES_MARKDOWN_FILENAME) {
+      return true;
+    }
+  }
+  return false;
+};
 
 export class Core {
   configHandler: ConfigHandler;
-  codebaseIndexerPromise: Promise<CodebaseIndexer>;
+  codeBaseIndexer: CodebaseIndexer;
   completionProvider: CompletionProvider;
-  continueServerClientPromise: Promise<ContinueServerClient>;
-  codebaseIndexingState: IndexingProgressUpdate;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
-
-  private readonly indexingPauseToken = new PauseToken(
-    this.globalContext.get("indexingPaused") === true,
-  );
 
   private messageAbortControllers = new Map<string, AbortController>();
   private addMessageAbortController(id: string): AbortController {
@@ -114,12 +125,6 @@ export class Core {
     // Ensure .continue directory is created
     migrateV1DevDataFiles();
 
-    this.codebaseIndexingState = {
-      status: "loading",
-      desc: "loading",
-      progress: 0,
-    };
-
     const ideInfoPromise = messenger.request("getIdeInfo", undefined);
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
@@ -140,28 +145,37 @@ export class Core {
       this.messenger,
     );
 
-    MCPManagerSingleton.getInstance().onConnectionsRefreshed = async () => {
-      await this.configHandler.reloadConfig();
+    MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
+      void this.configHandler.reloadConfig();
     };
 
-    this.configHandler.onConfigUpdate(async (result) => {
-      const serializedResult = await this.configHandler.getSerializedConfig();
-      this.messenger.send("configUpdate", {
-        result: serializedResult,
-        profileId:
-          this.configHandler.currentProfile?.profileDescription.id || null,
-        organizations: this.configHandler.getSerializedOrgs(),
-        selectedOrgId: this.configHandler.currentOrg.id,
-      });
+    this.codeBaseIndexer = new CodebaseIndexer(
+      this.configHandler,
+      this.ide,
+      this.messenger,
+      this.globalContext.get("indexingPaused"),
+    );
 
-      // update additional submenu context providers registered via VSCode API
-      const additionalProviders =
-        this.configHandler.getAdditionalSubmenuContextProviders();
-      if (additionalProviders.length > 0) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: additionalProviders,
+    this.configHandler.onConfigUpdate((result) => {
+      void (async () => {
+        const serializedResult = await this.configHandler.getSerializedConfig();
+        this.messenger.send("configUpdate", {
+          result: serializedResult,
+          profileId:
+            this.configHandler.currentProfile?.profileDescription.id || null,
+          organizations: this.configHandler.getSerializedOrgs(),
+          selectedOrgId: this.configHandler.currentOrg.id,
         });
-      }
+
+        // update additional submenu context providers registered via VSCode API
+        const additionalProviders =
+          this.configHandler.getAdditionalSubmenuContextProviders();
+        if (additionalProviders.length > 0) {
+          this.messenger.send("refreshSubmenuItems", {
+            providers: additionalProviders,
+          });
+        }
+      })();
     });
 
     // Dev Data Logger
@@ -170,38 +184,17 @@ export class Core {
     dataLogger.ideInfoPromise = ideInfoPromise;
     dataLogger.ideSettingsPromise = ideSettingsPromise;
 
-    // Codebase Indexer and ContinueServerClient depend on IdeSettings
-    let codebaseIndexerResolve: (_: any) => void | undefined;
-    this.codebaseIndexerPromise = new Promise(
-      async (resolve) => (codebaseIndexerResolve = resolve),
-    );
-
-    let continueServerClientResolve: (_: any) => void | undefined;
-    this.continueServerClientPromise = new Promise(
-      (resolve) => (continueServerClientResolve = resolve),
-    );
-
     void ideSettingsPromise.then((ideSettings) => {
       const continueServerClient = new ContinueServerClient(
         ideSettings.remoteConfigServerUrl,
         ideSettings.userToken,
-      );
-      continueServerClientResolve(continueServerClient);
-
-      codebaseIndexerResolve(
-        new CodebaseIndexer(
-          this.configHandler,
-          this.ide,
-          this.indexingPauseToken,
-          continueServerClient,
-        ),
       );
 
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
-          this.indexingPauseToken.paused = true;
+          this.codeBaseIndexer.paused = true;
           void this.messenger.request("indexProgress", {
             progress: 0,
             desc: "Initial Indexing Skipped",
@@ -210,7 +203,7 @@ export class Core {
           return;
         }
 
-        void this.refreshCodebaseIndex(dirs);
+        void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
       });
     });
 
@@ -360,6 +353,16 @@ export class Core {
         url += `?org=${msg.data.orgSlug}`;
       }
       await this.messenger.request("openUrl", url);
+    });
+
+    on("controlPlane/getFreeTrialStatus", async (msg) => {
+      return this.configHandler.controlPlaneClient.getFreeTrialStatus();
+    });
+
+    on("controlPlane/getModelsAddOnUpgradeUrl", async (msg) => {
+      return this.configHandler.controlPlaneClient.getModelsAddOnCheckoutUrl(
+        msg.data.vsCodeUriScheme,
+      );
     });
 
     on("mcp/reloadServer", async (msg) => {
@@ -536,7 +539,7 @@ export class Core {
       abortManager.clear(); // for now abort all streams
     });
 
-    on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
+    on("onboarding/complete", this.handleCompleteOnboarding.bind(this));
 
     on("addAutocompleteModel", this.handleAddAutocompleteModel.bind(this));
 
@@ -556,25 +559,24 @@ export class Core {
       }
       walkDirCache.invalidate();
       if (data?.shouldClearIndexes) {
-        const codebaseIndexer = await this.codebaseIndexerPromise;
-        await codebaseIndexer.clearIndexes();
+        await this.codeBaseIndexer.clearIndexes();
       }
 
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
-      await this.refreshCodebaseIndex(dirs);
+      await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
       this.globalContext.update("indexingPaused", msg.data);
-      this.indexingPauseToken.paused = msg.data;
+      // Update using the new setter instead of token
+      this.codeBaseIndexer.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.codebaseIndexingState.status !== "loading") {
-        void this.messenger.request(
-          "indexProgress",
-          this.codebaseIndexingState,
-        );
+      const currentState = this.codeBaseIndexer.currentIndexingState;
+
+      if (currentState.status !== "loading") {
+        void this.messenger.request("indexProgress", currentState);
       }
     });
 
@@ -594,7 +596,7 @@ export class Core {
         });
         const { config } = await this.configHandler.loadConfig();
         if (config && !config.disableIndexing) {
-          await this.refreshCodebaseIndexFiles(toRefresh);
+          await this.codeBaseIndexer.refreshCodebaseIndexFiles(toRefresh);
         }
       }
     };
@@ -604,10 +606,14 @@ export class Core {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
 
+        if (hasRulesFiles(data.uris)) {
+          await this.configHandler.reloadConfig();
+        }
+
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
-          if (isLocalAssistantFile(uri)) {
+          if (isLocalDefinitionFile(uri)) {
             localAssistantCreated = true;
           }
         }
@@ -621,10 +627,40 @@ export class Core {
       if (data?.uris?.length) {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
+
+        if (hasRulesFiles(data.uris)) {
+          await this.configHandler.reloadConfig();
+        }
       }
     });
 
     on("files/closed", async ({ data }) => {
+      try {
+        const fileUris = await this.ide.getOpenFiles();
+        if (fileUris) {
+          const filepaths = fileUris.map((uri) => uri.toString());
+
+          if (!prevFilepaths.filepaths.length) {
+            prevFilepaths.filepaths = filepaths;
+          }
+
+          // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
+          if (filepaths.length <= prevFilepaths.filepaths.length) {
+            // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
+            for (const [key, _] of openedFilesLruCache.entriesDescending()) {
+              if (!filepaths.includes(key)) {
+                openedFilesLruCache.delete(key);
+              }
+            }
+          }
+          prevFilepaths.filepaths = filepaths;
+        }
+      } catch (e) {
+        console.error(
+          `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
+        );
+      }
+
       if (data.uris) {
         this.messenger.send("didCloseFiles", {
           uris: data.uris,
@@ -632,7 +668,26 @@ export class Core {
       }
     });
 
-    on("files/opened", async () => {});
+    on("files/opened", async ({ data: { uris } }) => {
+      if (uris) {
+        for (const filepath of uris) {
+          try {
+            const ignore = await shouldIgnore(filepath, this.ide);
+            if (!ignore) {
+              // Set the active file as most recently used (need to force recency update by deleting and re-adding)
+              if (openedFilesLruCache.has(filepath)) {
+                openedFilesLruCache.delete(filepath);
+              }
+              openedFilesLruCache.set(filepath, filepath);
+            }
+          } catch (e) {
+            console.error(
+              `files/opened: failed to update openedFiles cache for ${filepath}`,
+            );
+          }
+        }
+      }
+    });
 
     // Docs, etc. indexing
     on("indexing/reindex", async (msg) => {
@@ -688,19 +743,6 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      try {
-        const ignore = await shouldIgnore(filepath, this.ide);
-        if (!ignore) {
-          recentlyEditedFilesCache.set(filepath, filepath);
-        }
-      } catch (e) {
-        console.error(
-          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
-        );
-      }
-    });
-
     on("tools/call", async ({ data: { toolCall } }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
@@ -727,7 +769,8 @@ export class Core {
         this.messenger.send("toolCallPartialOutput", params);
       };
 
-      return await callTool(tool, toolCall.function.arguments, {
+      return await callTool(tool, toolCall, {
+        config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
         fetch: (url, init) =>
@@ -735,6 +778,7 @@ export class Core {
         tool,
         toolCallId: toolCall.id,
         onPartialOutput,
+        codeBaseIndexer: this.codeBaseIndexer,
       });
     });
 
@@ -754,6 +798,11 @@ export class Core {
         return isBackgrounded; // Return true to indicate the message was handled successfully
       },
     );
+
+    on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
+      const isValid = setMdmLicenseKey(licenseKey);
+      return isValid;
+    });
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -811,8 +860,10 @@ export class Core {
     data,
   }: Message<{
     uris?: string[];
-  }>) {
+  }>): Promise<void> {
     if (data?.uris?.length) {
+      const diffCache = GitDiffCache.getInstance(getDiffFn(this.ide));
+      diffCache.invalidate();
       walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
       for (const uri of data.uris) {
         const currentProfileUri =
@@ -840,7 +891,8 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml"))
+          (uri.includes(".continue") && uri.endsWith(".yaml")) ||
+          uri.endsWith(RULES_MARKDOWN_FILENAME)
         ) {
           await this.configHandler.reloadConfig();
         } else if (
@@ -857,7 +909,7 @@ export class Core {
             // Reindex the file
             const ignore = await shouldIgnore(uri, this.ide);
             if (!ignore) {
-              await this.refreshCodebaseIndexFiles([uri]);
+              await this.codeBaseIndexer.refreshCodebaseIndexFiles([uri]);
             }
           }
         }
@@ -896,26 +948,25 @@ export class Core {
     }
   }
 
-  private async handleCompleteOnboarding(msg: Message<{ mode: string }>) {
-    const mode = msg.data.mode;
-
-    if (mode === "Custom") {
-      return;
-    }
+  private async handleCompleteOnboarding(
+    msg: Message<CompleteOnboardingPayload>,
+  ) {
+    const { mode, provider, apiKey } = msg.data;
 
     let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
     switch (mode) {
-      case "Local":
+      case OnboardingModes.LOCAL:
         editConfigYamlCallback = setupLocalConfig;
         break;
 
-      case "Quickstart":
-        editConfigYamlCallback = setupQuickstartConfig;
-        break;
-
-      case "Best":
-        editConfigYamlCallback = setupBestConfig;
+      case OnboardingModes.API_KEY:
+        if (provider && apiKey) {
+          editConfigYamlCallback = (config: ConfigYaml) =>
+            setupProviderConfig(config, provider, apiKey);
+        } else {
+          editConfigYamlCallback = setupQuickstartConfig;
+        }
         break;
 
       default:
@@ -1028,100 +1079,4 @@ export class Core {
       return [];
     }
   };
-
-  private indexingCancellationController: AbortController | undefined;
-  private async sendIndexingErrorTelemetry(update: IndexingProgressUpdate) {
-    console.debug(
-      "Indexing failed with error: ",
-      update.desc,
-      update.debugInfo,
-    );
-    void Telemetry.capture(
-      "indexing_error",
-      {
-        error: update.desc,
-        stack: update.debugInfo,
-      },
-      false,
-    );
-  }
-
-  private async refreshCodebaseIndex(paths: string[]) {
-    if (this.indexingCancellationController) {
-      this.indexingCancellationController.abort();
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshDirs(paths, this.indexingCancellationController.signal)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index directories : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  private async refreshCodebaseIndexFiles(files: string[]) {
-    // Can be cancelled by codebase index but not vice versa
-    if (
-      this.indexingCancellationController &&
-      !this.indexingCancellationController.signal.aborted
-    ) {
-      return;
-    }
-    this.indexingCancellationController = new AbortController();
-    try {
-      for await (const update of (
-        await this.codebaseIndexerPromise
-      ).refreshFiles(files)) {
-        let updateToSend = { ...update };
-
-        void this.messenger.request("indexProgress", updateToSend);
-        this.codebaseIndexingState = updateToSend;
-
-        if (update.status === "failed") {
-          void this.sendIndexingErrorTelemetry(update);
-        }
-      }
-    } catch (e: any) {
-      console.log(`Failed refreshing codebase index files : ${e}`);
-      this.handleIndexingError(e);
-    }
-
-    this.messenger.send("refreshSubmenuItems", {
-      providers: "dependsOnIndexing",
-    });
-    this.indexingCancellationController = undefined;
-  }
-
-  // private
-  handleIndexingError(e: any) {
-    if (e instanceof LLMError) {
-      // Need to report this specific error to the IDE for special handling
-      void this.messenger.request("reportError", e);
-    }
-    // broadcast indexing error
-    let updateToSend: IndexingProgressUpdate = {
-      progress: 0,
-      status: "failed",
-      desc: e.message,
-    };
-    void this.messenger.request("indexProgress", updateToSend);
-    this.codebaseIndexingState = updateToSend;
-    void this.sendIndexingErrorTelemetry(updateToSend);
-  }
 }

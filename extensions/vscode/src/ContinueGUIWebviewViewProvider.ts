@@ -2,7 +2,7 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import * as vscode from "vscode";
 
 import { getTheme } from "./util/getTheme";
-import { getExtensionVersion } from "./util/util";
+import { getExtensionVersion, getvsCodeUriScheme } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -161,6 +161,7 @@ export class ContinueGUIWebviewViewProvider
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
         <script>localStorage.setItem("ide", '"vscode"')</script>
+        <script>localStorage.setItem("vsCodeUriScheme", '"${getvsCodeUriScheme()}"')</script>
         <script>localStorage.setItem("extensionVersion", '"${getExtensionVersion()}"')</script>
         <script>window.windowId = "${this.windowId}"</script>
         <script>window.vscMachineId = "${getUniqueId()}"</script>

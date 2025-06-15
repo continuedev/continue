@@ -11,20 +11,20 @@ import * as vscode from "vscode";
 
 function stripInLineComment(line: string): string {
   let inString = false;
-  let pCh = '';
+  let pCh = "";
 
-  for (let i = 0; i < line.length-1; i++) {
+  for (let i = 0; i < line.length - 1; i++) {
     const ch = line[i];
     const nCh = line[i + 1];
 
     // If we're not in a string and we see '//' this is a comment.
-    if (!inString && ch === '/' && nCh === '/') {
+    if (!inString && ch === "/" && nCh === "/") {
       // Stop processing this line from here.
       return line.substring(0, i);
     }
 
     // Toggle inString state if we see a double quote not escaped by a backslash.
-    if (ch === '"' && pCh !== '\\') {
+    if (ch === '"' && pCh !== "\\") {
       inString = !inString;
     }
 

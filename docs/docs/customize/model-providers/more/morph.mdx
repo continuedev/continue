@@ -12,6 +12,18 @@ Morph provides a fast apply model that helps you quickly and accurately apply co
      - uses: morphllm/morph-v0
        with:
          MORPH_API_KEY: ${{ secrets.MORPH_API_KEY }}
+```
+or
+```yaml title="config.yaml"
+     - name: Morph Fast Apply
+       provider: openai
+       model: morph-v2
+       apiKey: <YOUR_MORPH_API_KEY>
+       apiBase: https://api.morphllm.com/v1/
+       roles:
+         - apply
+       promptTemplates:
+         apply: "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
    ```
    </TabItem>
    <TabItem value="json" label="JSON">
@@ -21,10 +33,10 @@ Morph provides a fast apply model that helps you quickly and accurately apply co
        {
          "title": "Morph Fast Apply",
          "provider": "openai",
-         "model": "morph-v0",
+         "model": "morph-v2",
          "apiKey": "<YOUR_MORPH_API_KEY>",
          "apiBase": "https://api.morphllm.com/v1/",
-         "roles": ["apply", "chat"],
+         "roles": ["apply"],
          "promptTemplates": {
            "apply": "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
          }
@@ -33,4 +45,68 @@ Morph provides a fast apply model that helps you quickly and accurately apply co
    }
    ```
    </TabItem>
+</Tabs>
+
+## Embeddings model
+
+We recommend configuring **morph-embedding-v2** as your embeddings model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Morph Embeddings
+      provider: openai
+      model: morph-embedding-v2
+      apiKey: <YOUR_MORPH_API_KEY>
+      apiBase: https://api.morphllm.com/v1/
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "openai",
+      "model": "morph-embedding-v2",
+      "apiKey": "<YOUR_MORPH_API_KEY>",
+      "apiBase": "https://api.morphllm.com/v1/"
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Reranking model
+
+We recommend configuring **morph-rerank-v2** as your reranking model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Morph Reranker
+      provider: cohere
+      model: morph-rerank-v2
+      apiKey: <YOUR_MORPH_API_KEY>
+      apiBase: https://api.morphllm.com/v1/
+      roles:
+        - rerank
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "cohere",
+      "params": {
+        "model": "morph-rerank-v2",
+        "apiKey": "<YOUR_MORPH_API_KEY>",
+        "apiBase": "https://api.morphllm.com/v1/"
+      }
+    }
+  }
+  ```
+  </TabItem>
 </Tabs>

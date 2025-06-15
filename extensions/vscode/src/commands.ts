@@ -4,21 +4,14 @@ import * as fs from "node:fs";
 import { ContextMenuConfig, ILLM, ModelInstaller } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
-import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { startLocalOllama } from "core/util/ollamaHelper";
-import {
-  getConfigJsonPath,
-  getConfigYamlPath,
-  getDevDataFilePath,
-} from "core/util/paths";
+import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
@@ -124,7 +117,6 @@ const getCommandsMap: (
   consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
-  continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
@@ -136,7 +128,6 @@ const getCommandsMap: (
   consoleView,
   configHandler,
   verticalDiffManager,
-  continueServerClientPromise,
   battery,
   quickEdit,
   core,
@@ -588,6 +579,18 @@ const getCommandsMap: (
         }
       }
     },
+    "continue.forceAutocomplete": async () => {
+      captureCommandTelemetry("forceAutocomplete");
+
+      // 1. Explicitly hide any existing suggestion. This clears VS Code's cache for the current position.
+      await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
+
+      // 2. Now trigger a new one. VS Code has no cached suggestion, so it's forced to call our provider.
+      await vscode.commands.executeCommand(
+        "editor.action.inlineSuggest.trigger",
+      );
+    },
+
     "continue.openTabAutocompleteConfigMenu": async () => {
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
@@ -642,9 +645,6 @@ const getCommandsMap: (
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
         {
-          label: "$(feedback) Give feedback",
-        },
-        {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
         },
@@ -676,8 +676,6 @@ const getCommandsMap: (
               title: selectedOption,
             });
           }
-        } else if (selectedOption === "$(feedback) Give feedback") {
-          vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
         } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
@@ -689,23 +687,6 @@ const getCommandsMap: (
         quickPick.dispose();
       });
       quickPick.show();
-    },
-    "continue.giveAutocompleteFeedback": async () => {
-      const feedback = await vscode.window.showInputBox({
-        ignoreFocusOut: true,
-        prompt:
-          "Please share what went wrong with the last completion. The details of the completion as well as this message will be sent to the Continue team in order to improve.",
-      });
-      if (feedback) {
-        const client = await continueServerClientPromise;
-        const completionsPath = getDevDataFilePath(
-          "autocomplete",
-          LOCAL_DEV_DATA_VERSION,
-        );
-
-        const lastLines = await readLastLines.read(completionsPath, 2);
-        client.sendFeedback(feedback, lastLines);
-      }
     },
     "continue.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
@@ -749,18 +730,54 @@ const getCommandsMap: (
         false,
       );
 
-      vscode.window
+      void vscode.window
         .showInformationMessage(
           "Your config.json has been converted to the new config.yaml format. If you need to switch back to config.json, you can delete or rename config.yaml.",
           "Read the docs",
         )
-        .then((selection) => {
+        .then(async (selection) => {
           if (selection === "Read the docs") {
-            vscode.env.openExternal(
+            await vscode.env.openExternal(
               vscode.Uri.parse("https://docs.continue.dev/yaml-migration"),
             );
           }
         });
+    },
+    "continue.enterEnterpriseLicenseKey": async () => {
+      captureCommandTelemetry("enterEnterpriseLicenseKey");
+
+      const licenseKey = await vscode.window.showInputBox({
+        prompt: "Enter your enterprise license key",
+        password: true,
+        ignoreFocusOut: true,
+        placeHolder: "License key",
+      });
+
+      if (!licenseKey) {
+        return;
+      }
+
+      try {
+        const isValid = core.invoke("mdm/setLicenseKey", {
+          licenseKey,
+        });
+
+        if (isValid) {
+          void vscode.window.showInformationMessage(
+            "Enterprise license key successfully validated and saved. Reloading window.",
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        } else {
+          void vscode.window.showErrorMessage(
+            "Invalid license key. Please check your license key and try again.",
+          );
+        }
+      } catch (error) {
+        void vscode.window.showErrorMessage(
+          `Failed to set enterprise license key: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     },
   };
 };
@@ -850,7 +867,6 @@ export function registerAllCommands(
   consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
-  continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
@@ -864,7 +880,6 @@ export function registerAllCommands(
       consoleView,
       configHandler,
       verticalDiffManager,
-      continueServerClientPromise,
       battery,
       quickEdit,
       core,

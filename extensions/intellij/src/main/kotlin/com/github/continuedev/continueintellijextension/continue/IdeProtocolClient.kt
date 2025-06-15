@@ -50,10 +50,6 @@ class IdeProtocolClient(
         )
     }
 
-    fun updateLastFileSaveTimestamp() {
-        (ide as IntelliJIDE).updateLastFileSaveTimestamp()
-    }
-
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(limitedDispatcher) {
             val message = Gson().fromJson(msg, Message::class.java)
@@ -388,33 +384,6 @@ class IdeProtocolClient(
                         respond(pinnedFiles)
                     }
 
-                    "getGitHubAuthToken" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            GetGhTokenArgs::class.java
-                        )
-
-                        val ghAuthToken = ide.getGitHubAuthToken(params)
-
-                        if (ghAuthToken == null) {
-                            // Open a dialog so user can enter their GitHub token
-                            continuePluginService.sendToWebview("openOnboardingCard", null, uuid())
-                            respond(null)
-                        } else {
-                            respond(ghAuthToken)
-                        }
-                    }
-
-                    "setGitHubAuthToken" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            SetGitHubAuthTokenParams::class.java
-                        )
-                        val continueSettingsService = service<ContinueExtensionSettings>()
-                        continueSettingsService.continueState.ghAuthToken = params.token
-                        respond(null)
-                    }
-
                     "openUrl" -> {
                         val url = Gson().fromJson(
                             dataElement.toString(),
@@ -504,10 +473,16 @@ class IdeProtocolClient(
         val editor = EditorUtils.getEditor(project)
         val rif = editor?.getHighlightedRIF() ?: return
 
+       val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
+            filepath = rif.filepath,
+            range = rif.range,
+            contents = rif.contents
+        )
+
         continuePluginService.sendToWebview(
             "highlightedCode",
             HighlightedCodePayload(
-                rangeInFileWithContents = rif,
+                rangeInFileWithContents = serializedRif,
                 shouldRun = edit
             )
         )

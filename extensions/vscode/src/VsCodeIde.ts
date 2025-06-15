@@ -3,8 +3,6 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -33,7 +31,6 @@ import type {
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
   secretStorage: SecretStorage;
-  private lastFileSaveTimestamp: number = Date.now();
 
   constructor(
     private readonly vscodeWebviewProtocolPromise: Promise<VsCodeWebviewProtocol>,
@@ -41,14 +38,6 @@ class VsCodeIde implements IDE {
   ) {
     this.ideUtils = new VsCodeIdeUtils();
     this.secretStorage = new SecretStorage(context);
-  }
-
-  public updateLastFileSaveTimestamp(): void {
-    this.lastFileSaveTimestamp = Date.now();
-  }
-
-  public getLastFileSaveTimestamp(): number {
-    return this.lastFileSaveTimestamp;
   }
 
   async readSecrets(keys: string[]): Promise<Record<string, string>> {
@@ -103,157 +92,6 @@ class VsCodeIde implements IDE {
         callback(editor.document.uri.toString());
       }
     });
-  }
-
-  private authToken: string | undefined;
-  private askedForAuth = false;
-
-  async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
-    // Saved auth token
-    if (this.authToken) {
-      return this.authToken;
-    }
-
-    // Try to ask silently
-    const session = await vscode.authentication.getSession("github", [], {
-      silent: true,
-    });
-
-    if (session) {
-      this.authToken = session.accessToken;
-      return this.authToken;
-    }
-
-    try {
-      if (args.force) {
-        this.askedForAuth = true;
-        this.authToken = await vscode.authentication
-          .getSession("github", [], { createIfNone: true })
-          .then((session) => session.accessToken);
-        return this.authToken;
-      }
-
-      // If we haven't asked yet, give explanation of what is happening and why
-      // But don't wait to return this immediately
-      // We will use a callback to refresh the config
-      if (!this.askedForAuth) {
-        vscode.window
-          .showInformationMessage(
-            "Continue will request read access to your GitHub email so that we can prevent abuse of the free trial. If you prefer not to sign in, you can use Continue with your own API keys or local model.",
-            "Sign in",
-            "Use API key / local model",
-            "Learn more",
-          )
-          .then(async (selection) => {
-            if (selection === "Use API key / local model") {
-              await vscode.commands.executeCommand(
-                "continue.continueGUIView.focus",
-              );
-              (await this.vscodeWebviewProtocolPromise).request(
-                "openOnboardingCard",
-                undefined,
-              );
-
-              // Remove free trial models
-              editConfigFile(
-                (config) => {
-                  let tabAutocompleteModel = undefined;
-                  if (Array.isArray(config.tabAutocompleteModel)) {
-                    tabAutocompleteModel = config.tabAutocompleteModel.filter(
-                      (model) => model.provider !== "free-trial",
-                    );
-                  } else if (
-                    config.tabAutocompleteModel?.provider === "free-trial"
-                  ) {
-                    tabAutocompleteModel = undefined;
-                  }
-
-                  return {
-                    ...config,
-                    models: config.models.filter(
-                      (model) => model.provider !== "free-trial",
-                    ),
-                    tabAutocompleteModel,
-                  };
-                },
-                (config) => {
-                  return {
-                    ...config,
-                    models: config.models?.filter(
-                      (model) =>
-                        !(
-                          "provider" in model && model.provider === "free-trial"
-                        ),
-                    ),
-                  };
-                },
-              );
-            } else if (selection === "Learn more") {
-              vscode.env.openExternal(
-                vscode.Uri.parse(
-                  "https://docs.continue.dev/reference/Model%20Providers/freetrial",
-                ),
-              );
-            } else if (selection === "Sign in") {
-              const session = await vscode.authentication.getSession(
-                "github",
-                [],
-                {
-                  createIfNone: true,
-                },
-              );
-              if (session) {
-                this.authToken = session.accessToken;
-              }
-            }
-          });
-        this.askedForAuth = true;
-        return undefined;
-      }
-
-      const session = await vscode.authentication.getSession("github", [], {
-        silent: this.askedForAuth,
-        createIfNone: !this.askedForAuth,
-      });
-      if (session) {
-        this.authToken = session.accessToken;
-        return session.accessToken;
-      } else if (!this.askedForAuth) {
-        // User cancelled the login prompt
-        // Explain that they can avoid the prompt by removing free trial models from config.json
-        vscode.window
-          .showInformationMessage(
-            "We'll only ask you to log in if using the free trial. To avoid this prompt, make sure to remove free trial models from your config.json",
-            "Remove for me",
-            "Open Assistant configuration",
-          )
-          .then((selection) => {
-            if (selection === "Remove for me") {
-              editConfigFile(
-                (configJson) => {
-                  configJson.models = configJson.models.filter(
-                    (model) => model.provider !== "free-trial",
-                  );
-                  configJson.tabAutocompleteModel = undefined;
-                  return configJson;
-                },
-                (config) => {
-                  config.models = config.models?.filter(
-                    (model) =>
-                      !("provider" in model && model.provider === "free-trial"),
-                  );
-                  return config;
-                },
-              );
-            } else if (selection === "Open Assistant configuration") {
-              this.openFile(getConfigJsonPath());
-            }
-          });
-      }
-    } catch (error) {
-      console.error("Failed to get GitHub authentication session:", error);
-    }
-    return undefined;
   }
 
   showToast: IDE["showToast"] = async (...params) => {

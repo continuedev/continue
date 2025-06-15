@@ -4,6 +4,7 @@ export * from "./cancelStream";
 export * from "./edit";
 export * from "./gatherContext";
 export * from "./resetStateForNewMessage";
+export * from "./selectFirstHubProfile";
 export * from "./streamNormalInput";
 export * from "./streamResponse";
 export * from "./streamResponseAfterToolCall";
