@@ -100,7 +100,11 @@ class Anthropic extends BaseLLM {
           {
             type: "text",
             text: message.content,
-            ...(addCaching ? { cache_control: { type: "ephemeral" } } : {}),
+            ...(addCaching 
+              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta 
+                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" } 
+                : { type: "ephemeral" } }
+              : {}),
           },
         ],
       };
@@ -115,7 +119,9 @@ class Anthropic extends BaseLLM {
             ...part,
             // If multiple text parts, only add cache_control to the last one
             ...(addCaching && contentIdx === message.content.length - 1
-              ? { cache_control: { type: "ephemeral" } }
+              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
+                : { type: "ephemeral" } }
               : {}),
           };
           return newpart;
@@ -194,9 +200,12 @@ class Anthropic extends BaseLLM {
         Accept: "application/json",
         "anthropic-version": "2023-06-01",
         "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
-          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-          : {}),
+        ...(this.cacheBehavior?.useExtendedCacheTtlBeta
+          ? { "anthropic-beta": "extended-cache-ttl-2025-04-11" }
+          : (shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+            ? { "anthropic-beta": "prompt-caching-2024-07-31" }
+            : {})
+          ),
       },
       body: JSON.stringify({
         ...this.convertArgs(options),
@@ -206,7 +215,9 @@ class Anthropic extends BaseLLM {
               {
                 type: "text",
                 text: systemMessage,
-                cache_control: { type: "ephemeral" },
+                cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                  ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
+                  : { type: "ephemeral" },
               },
             ]
           : systemMessage,
