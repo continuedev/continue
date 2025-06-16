@@ -2,7 +2,7 @@ name: Submit Gradle Dependency Graph For Dependabot
 
 on:
   push:
-    branches: ['main']
+    branches: ["main"]
 
 permissions:
   contents: write
@@ -11,15 +11,15 @@ jobs:
   dependency-submission:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v4
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: 17
-    - name: Generate and submit dependency graph
-      uses: gradle/actions/dependency-submission@v4
-      with:
-        # The gradle project is not in the root of the repository.
-        build-root-directory: extensions/intellij
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: 17
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v4
+        with:
+          # The gradle project is not in the root of the repository.
+          build-root-directory: extensions/intellij

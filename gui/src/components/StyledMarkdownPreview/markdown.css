@@ -194,7 +194,8 @@ body[data-color-mode*="light"] {
 }
 .wmde-markdown {
   -webkit-text-size-adjust: 100%;
-  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif,
+  font-family:
+    -apple-system, "Segoe UI", Helvetica, Arial, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
   font-size: 16px;
   line-height: 1.5;

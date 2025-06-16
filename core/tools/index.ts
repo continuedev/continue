@@ -2,6 +2,7 @@ import { ConfigDependentToolParams, Tool } from "..";
 import { createNewFileTool } from "./definitions/createNewFile";
 import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
+import { fetchUrlContentTool } from "./definitions/fetchUrlContent";
 import { globSearchTool } from "./definitions/globSearch";
 import { grepSearchTool } from "./definitions/grepSearch";
 import { lsTool } from "./definitions/lsTool";
@@ -24,6 +25,7 @@ export const baseToolDefinitions = [
   readCurrentlyOpenFileTool,
   lsTool,
   createRuleBlock,
+  fetchUrlContentTool,
   // replacing with ls tool for now
   // viewSubdirectoryTool,
   // viewRepoMapTool,
