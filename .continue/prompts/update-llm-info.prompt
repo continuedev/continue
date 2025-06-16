@@ -44,8 +44,8 @@ export const AllMediaTypes = [
 
 2. EXTRACT NEW INFORMATION
 
-New information will be pulled from the internet.
-If you do not see a web search tool, let me know.
+Fetch information from the internet using the search web and read url tools.
+If you do not see either of these tools, stop and let me know.
 
 Retrieve the following sites per these providers, and consider these notes on how to extract the information:
 - "gemini": https://ai.google.dev/gemini-api/docs/models - maxCompletionTokens is called "Output token limit", contextLength is called "Input token limit"

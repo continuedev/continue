@@ -18,7 +18,7 @@ export async function getLocalPackageIdentifiers(ide: IDE) {
   const blockPromises = BLOCK_TYPES.map(async (blockType) => {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
-      { includeGlobal: true, includeWorkspace: true },
+      { includeGlobal: true, includeWorkspace: true, fileExtType: "yaml" },
       blockType,
     );
     return localBlocks.map((b) => ({

@@ -186,7 +186,9 @@ export default class DocsService {
   private async init(configHandler: ConfigHandler) {
     const result = await configHandler.loadConfig();
     await this.handleConfigUpdate(result);
-    configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
+    configHandler.onConfigUpdate(
+      this.handleConfigUpdate.bind(this) as (arg: any) => void,
+    );
   }
 
   readonly statuses: Map<string, IndexingStatus> = new Map();

@@ -22,4 +22,4 @@ Your assistant detects rule blocks and applies the specified rules while in [Age
 
 ## Learn More
 
-Learn more in the [rules deep dive](../customize/deep-dives/rules.md), and view [`rules`](../reference.md#rules) in the YAML Reference for more details.
+Learn more in the [rules deep dive](../customize/deep-dives/rules.mdx), and view [`rules`](../reference.md#rules) in the YAML Reference for more details.
