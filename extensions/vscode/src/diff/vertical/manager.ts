@@ -350,6 +350,10 @@ export class VerticalDiffManager {
       await existingHandler.clear(false);
     }
 
+    if(onlyOneInsertion) {
+      endLine = startLine
+    }
+
     await new Promise((resolve) => {
       setTimeout(resolve, 150);
     });
