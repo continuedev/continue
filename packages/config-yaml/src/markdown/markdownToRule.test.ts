@@ -1,6 +1,13 @@
+import { PackageIdentifier } from "../browser.js";
 import { markdownToRule } from "./markdownToRule.js";
 
 describe("markdownToRule", () => {
+  // Use a mock PackageIdentifier for testing
+  const mockId: PackageIdentifier = {
+    uriType: "file",
+    filePath: "/path/to/file",
+  };
+
   it("should convert markdown with frontmatter to a rule", () => {
     const content = `---
 globs: "**/test/**/*.kt"
@@ -11,7 +18,7 @@ name: Custom Name
 
 This is a test rule.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
     expect(result.globs).toBe("**/test/**/*.kt");
     expect(result.name).toBe("Custom Name");
@@ -26,10 +33,10 @@ globs: "**/test/**/*.kt"
 
 This is a test rule.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.globs).toBe("**/test/**/*.kt");
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
-    expect(result.name).toBe("Rule"); // Default name when not specified
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
   it("should handle missing frontmatter", () => {
@@ -37,10 +44,10 @@ This is a test rule.`;
 
 This is a test rule without frontmatter.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.globs).toBeUndefined();
     expect(result.rule).toBe(content);
-    expect(result.name).toBe("Rule");
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
   it("should handle empty frontmatter", () => {
@@ -51,12 +58,12 @@ This is a test rule without frontmatter.`;
 
 This is a test rule with empty frontmatter.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.globs).toBeUndefined();
     expect(result.rule).toBe(
       "# Test Rule\n\nThis is a test rule with empty frontmatter.",
     );
-    expect(result.name).toBe("Rule");
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
   it("should handle frontmatter with whitespace", () => {
@@ -68,10 +75,10 @@ globs: "**/test/**/*.kt"
 
 This is a test rule.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.globs).toBe("**/test/**/*.kt");
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
-    expect(result.name).toBe("Rule");
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
   it("should handle Windows line endings (CRLF)", () => {
@@ -84,11 +91,11 @@ globs: "**/test/**/*.kt"\r
 \r
 This is a test rule.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.globs).toBe("**/test/**/*.kt");
     // The result should be normalized to \n
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
-    expect(result.name).toBe("Rule");
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
   it("should handle malformed frontmatter", () => {
@@ -102,13 +109,13 @@ invalid: yaml: content
 This is a test rule.`;
 
     // Should treat as only markdown when frontmatter is malformed
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.globs).toBeUndefined();
     expect(result.rule).toBe(content);
-    expect(result.name).toBe("Rule");
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
-  it("should use default name if no heading or frontmatter name", () => {
+  it("should use packageIdentifierToDisplayName if no heading or frontmatter name", () => {
     const content = `---
 globs: "**/test/**/*.kt"
 ---
@@ -117,19 +124,19 @@ globs: "**/test/**/*.kt"
 
 This is a test rule.`;
 
-    const result = markdownToRule(content);
-    expect(result.name).toBe("Rule"); // markdownToRule defaults to "Rule" when no name in frontmatter
+    const result = markdownToRule(content, mockId);
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
-  it("should use default name if no heading or frontmatter name (no heading)", () => {
+  it("should use packageIdentifierToDisplayName if no heading or frontmatter name (no heading)", () => {
     const content = `---
 globs: "**/test/**/*.kt"
 ---
 
 This is a test rule without a heading.`;
 
-    const result = markdownToRule(content);
-    expect(result.name).toBe("Rule"); // markdownToRule defaults to "Rule" when no name in frontmatter
+    const result = markdownToRule(content, mockId);
+    expect(result.name).toBe("/path/to/file"); // Should use packageIdentifierToDisplayName result
   });
 
   it("should include description from frontmatter", () => {
@@ -143,7 +150,7 @@ description: This is a rule description from frontmatter
 
 This is the content of the rule.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.description).toBe(
       "This is a rule description from frontmatter",
     );
@@ -160,7 +167,7 @@ alwaysApply: false
 
 This is a rule with alwaysApply explicitly set to false.`;
 
-    const result = markdownToRule(content);
+    const result = markdownToRule(content, mockId);
     expect(result.alwaysApply).toBe(false);
   });
 });

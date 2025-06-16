@@ -1,4 +1,8 @@
 import * as YAML from "yaml";
+import {
+  PackageIdentifier,
+  packageIdentifierToDisplayName,
+} from "../browser.js";
 import { RuleObject } from "../schemas/index.js";
 
 export interface RuleFrontmatter {
@@ -42,11 +46,14 @@ function parseMarkdownRule(content: string): {
   return { frontmatter: {}, markdown: normalizedContent };
 }
 
-export function markdownToRule(rule: string): RuleObject {
+export function markdownToRule(
+  rule: string,
+  id: PackageIdentifier,
+): RuleObject {
   const { frontmatter, markdown } = parseMarkdownRule(rule);
 
   return {
-    name: frontmatter.name ?? "Rule",
+    name: frontmatter.name ?? packageIdentifierToDisplayName(id),
     rule: markdown,
     globs: frontmatter.globs,
     description: frontmatter.description,

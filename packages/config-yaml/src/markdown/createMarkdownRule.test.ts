@@ -1,9 +1,16 @@
+import { PackageIdentifier } from "../browser.js";
 import {
   createMarkdownWithFrontmatter,
   createRuleMarkdown,
   sanitizeRuleName,
 } from "./createMarkdownRule.js";
 import { markdownToRule } from "./markdownToRule.js";
+
+// Mock package identifier for testing
+const mockPackageId: PackageIdentifier = {
+  uriType: "file",
+  filePath: "/path/to/file",
+};
 
 describe("sanitizeRuleName", () => {
   it("should sanitize rule names for filenames", () => {
@@ -74,7 +81,7 @@ Just markdown content.`;
       originalFrontmatter,
       originalMarkdown,
     );
-    const parsed = markdownToRule(created);
+    const parsed = markdownToRule(created, mockPackageId);
 
     expect(parsed.name).toBe(originalFrontmatter.name);
     expect(parsed.description).toBe(originalFrontmatter.description);
@@ -92,7 +99,7 @@ describe("createRuleMarkdown", () => {
       alwaysApply: true,
     });
 
-    const parsed = markdownToRule(result);
+    const parsed = markdownToRule(result, mockPackageId);
 
     expect(parsed.description).toBe("Test description");
     expect(parsed.globs).toEqual(["*.ts", "*.js"]);
@@ -103,7 +110,7 @@ describe("createRuleMarkdown", () => {
   it("should create rule markdown with minimal options", () => {
     const result = createRuleMarkdown("Simple Rule", "Simple content");
 
-    const parsed = markdownToRule(result);
+    const parsed = markdownToRule(result, mockPackageId);
 
     expect(parsed.description).toBeUndefined();
     expect(parsed.globs).toBeUndefined();
@@ -116,7 +123,7 @@ describe("createRuleMarkdown", () => {
       globs: "*.py",
     });
 
-    const parsed = markdownToRule(result);
+    const parsed = markdownToRule(result, mockPackageId);
     expect(parsed.globs).toBe("*.py");
   });
 
@@ -126,7 +133,7 @@ describe("createRuleMarkdown", () => {
       globs: "  *.ts  ",
     });
 
-    const parsed = markdownToRule(result);
+    const parsed = markdownToRule(result, mockPackageId);
     expect(parsed.description).toBe("spaced description");
     expect(parsed.globs).toBe("*.ts");
   });
@@ -136,7 +143,7 @@ describe("createRuleMarkdown", () => {
       alwaysApply: false,
     });
 
-    const parsed = markdownToRule(result);
+    const parsed = markdownToRule(result, mockPackageId);
     expect(parsed.alwaysApply).toBe(false);
   });
 });

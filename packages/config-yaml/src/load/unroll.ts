@@ -411,7 +411,10 @@ export async function unrollBlocks(
   for (const injectBlock of injectBlocks ?? []) {
     try {
       const blockConfigYaml = await registry.getContent(injectBlock);
-      const parsedBlock = parseMarkdownRuleOrConfigYaml(blockConfigYaml);
+      const parsedBlock = parseMarkdownRuleOrConfigYaml(
+        blockConfigYaml,
+        injectBlock,
+      );
       const blockType = getBlockType(parsedBlock);
       const resolvedBlock = await resolveBlock(
         injectBlock,
@@ -478,11 +481,12 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
-  return parseMarkdownRuleOrAssistantUnrolled(templatedYaml);
+  return parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
 }
 
 function parseMarkdownRuleOrAssistantUnrolled(
   content: string,
+  id: PackageIdentifier,
 ): AssistantUnrolled {
   // Try to parse as YAML first, then as markdown rule if that fails
   let parsedYaml: AssistantUnrolled;
@@ -491,7 +495,7 @@ function parseMarkdownRuleOrAssistantUnrolled(
   } catch (yamlError) {
     // If YAML parsing fails, try parsing as markdown rule
     try {
-      const rule = markdownToRule(content);
+      const rule = markdownToRule(content, id);
       // Convert the rule object to the expected format
       parsedYaml = {
         name: rule.name,
@@ -507,7 +511,10 @@ function parseMarkdownRuleOrAssistantUnrolled(
   return parsedYaml;
 }
 
-function parseMarkdownRuleOrConfigYaml(content: string): ConfigYaml {
+function parseMarkdownRuleOrConfigYaml(
+  content: string,
+  id: PackageIdentifier,
+): ConfigYaml {
   // Try to parse as YAML first, then as markdown rule if that fails
   let parsedYaml: ConfigYaml;
   try {
@@ -515,7 +522,7 @@ function parseMarkdownRuleOrConfigYaml(content: string): ConfigYaml {
   } catch (yamlError) {
     // If YAML parsing fails, try parsing as markdown rule
     try {
-      const rule = markdownToRule(content);
+      const rule = markdownToRule(content, id);
       // Convert the rule object to the expected format
       parsedYaml = {
         name: rule.name,
