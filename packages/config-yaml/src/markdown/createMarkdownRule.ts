@@ -52,7 +52,5 @@ export function createRuleMarkdown(
     frontmatter.alwaysApply = options.alwaysApply;
   }
 
-  const markdownBody = `# ${name}\n\n${ruleContent}`;
-
-  return createMarkdownWithFrontmatter(frontmatter, markdownBody);
+  return createMarkdownWithFrontmatter(frontmatter, ruleContent);
 }

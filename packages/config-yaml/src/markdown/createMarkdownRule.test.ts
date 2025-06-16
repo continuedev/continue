@@ -94,7 +94,7 @@ describe("createRuleMarkdown", () => {
     expect(parsed.frontmatter.description).toBe("Test description");
     expect(parsed.frontmatter.globs).toEqual(["*.ts", "*.js"]);
     expect(parsed.frontmatter.alwaysApply).toBe(true);
-    expect(parsed.markdown).toBe("# Test Rule\n\nThis is the rule content");
+    expect(parsed.markdown).toBe("This is the rule content");
   });
 
   it("should create rule markdown with minimal options", () => {
@@ -105,7 +105,7 @@ describe("createRuleMarkdown", () => {
     expect(parsed.frontmatter.description).toBeUndefined();
     expect(parsed.frontmatter.globs).toBeUndefined();
     expect(parsed.frontmatter.alwaysApply).toBeUndefined();
-    expect(parsed.markdown).toBe("# Simple Rule\n\nSimple content");
+    expect(parsed.markdown).toBe("Simple content");
   });
 
   it("should handle string globs", () => {
