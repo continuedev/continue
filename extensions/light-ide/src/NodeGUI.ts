@@ -151,7 +151,7 @@ export class NodeGUI {
               // Try to reconnect after a delay
               setTimeout(() => {
                 new EventSource('/events');
-              }, 3000);
+              }, 10127);
             };
               
             window.ide = "node-ide";
@@ -261,8 +261,8 @@ export class NodeGUI {
       }
     });
 
-    const server = app.listen(3000, () => {
-      console.log("Continue GUI available at http://localhost:3000");
+    const server = app.listen(10127, () => {
+      console.log("Continue GUI available at http://localhost:10127");
     });
 
     server.on("error", (err: any) => {
