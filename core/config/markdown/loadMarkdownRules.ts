@@ -29,7 +29,10 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     // Process each markdown file
     for (const file of mdFiles) {
       try {
-        const rule = markdownToRule(file.content);
+        const rule = markdownToRule(file.content, {
+          uriType: "file",
+          filePath: file.path,
+        });
         rules.push({ ...rule, source: "rules-block" });
       } catch (e) {
         errors.push({
