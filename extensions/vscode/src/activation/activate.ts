@@ -89,7 +89,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     );
   }
 
-  registerModelUpdater(context);
+  await registerModelUpdater(context);
 
   const continuePublicApi = {
     registerCustomContextProvider: api.registerCustomContextProvider.bind(api),

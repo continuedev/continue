@@ -64,10 +64,10 @@ export class ModelUpdater implements Disposable {
 
   private async checkModelUpdates(): Promise<void> {
     try {
-      console.log("Checking for model updates...");
       const type = workspace
         .getConfiguration(EXTENSION_NAME)
-        .get<LocalModelSize>("modelSize");
+        .get<LocalModelSize>("localModelSize", "large");
+      console.log(`Checking for [${type}] model updates...`);
       const modelsToCheck =
         type === "large"
           ? DEFAULT_GRANITE_MODEL_IDS_LARGE
@@ -157,7 +157,7 @@ export class ModelUpdater implements Disposable {
         } catch (error) {
           if (!abortController.signal.aborted) {
             console.error("Failed to update models:", error);
-            window.showErrorMessage(
+            await window.showErrorMessage(
               "Failed to update models. Please try again later.",
             );
           }
