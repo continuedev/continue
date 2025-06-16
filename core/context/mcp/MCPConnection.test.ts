@@ -1,10 +1,10 @@
-import { jest } from "@jest/globals";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import MCPConnection from "./MCPConnection";
 
 describe("MCPConnection", () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("constructor", () => {
@@ -131,10 +131,10 @@ describe("MCPConnection", () => {
 
     it("should connect successfully", async () => {
       const conn = new MCPConnection(options);
-      const mockConnect = jest
+      const mockConnect = vi
         .spyOn(Client.prototype, "connect")
         .mockResolvedValue(undefined);
-      const mockGetServerCapabilities = jest
+      const mockGetServerCapabilities = vi
         .spyOn(Client.prototype, "getServerCapabilities")
         .mockReturnValue({
           resources: {},
@@ -142,12 +142,12 @@ describe("MCPConnection", () => {
           prompts: {},
         });
 
-      const mockListResources = jest
+      const mockListResources = vi
         .spyOn(Client.prototype, "listResources")
         .mockResolvedValue({
           resources: [{ name: "test-resource", uri: "test-uri" }],
         });
-      const mockListTools = jest
+      const mockListTools = vi
         .spyOn(Client.prototype, "listTools")
         .mockResolvedValue({
           tools: [
@@ -159,7 +159,7 @@ describe("MCPConnection", () => {
             },
           ],
         });
-      const mockListPrompts = jest
+      const mockListPrompts = vi
         .spyOn(Client.prototype, "listPrompts")
         .mockResolvedValue({ prompts: [{ name: "test-prompt" }] });
 
@@ -175,7 +175,7 @@ describe("MCPConnection", () => {
 
     it("should handle custom connection timeout", async () => {
       const conn = new MCPConnection({ ...options, timeout: 1500 });
-      const mockConnect = jest
+      const mockConnect = vi
         .spyOn(Client.prototype, "connect")
         .mockImplementation(
           () => new Promise((resolve) => setTimeout(resolve, 1000)),
@@ -190,7 +190,7 @@ describe("MCPConnection", () => {
 
     it("should handle connection timeout", async () => {
       const conn = new MCPConnection({ ...options, timeout: 1 });
-      const mockConnect = jest
+      const mockConnect = vi
         .spyOn(Client.prototype, "connect")
         .mockImplementation(
           () => new Promise((resolve) => setTimeout(resolve, 100)),
@@ -208,7 +208,7 @@ describe("MCPConnection", () => {
       const conn = new MCPConnection(options);
       conn.status = "connected";
 
-      const mockConnect = jest.spyOn(Client.prototype, "connect");
+      const mockConnect = vi.spyOn(Client.prototype, "connect");
       const abortController = new AbortController();
 
       await conn.connectClient(false, abortController.signal);
@@ -219,7 +219,7 @@ describe("MCPConnection", () => {
 
     it("should handle transport errors", async () => {
       const conn = new MCPConnection(options);
-      const mockConnect = jest
+      const mockConnect = vi
         .spyOn(Client.prototype, "connect")
         .mockRejectedValue(new Error("spawn test-cmd ENOENT"));
 
@@ -233,7 +233,7 @@ describe("MCPConnection", () => {
 
     it.skip("should include stderr output in error message when stdio command fails", async () => {
       // Clear any existing mocks to ensure we get real behavior
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
 
       // Use a command that will definitely fail and produce stderr output
       const failingOptions = {

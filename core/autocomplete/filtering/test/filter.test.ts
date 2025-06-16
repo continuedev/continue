@@ -1,4 +1,9 @@
-import { setUpTestDir, tearDownTestDir } from "../../../test/testDir";
+import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import {
+  addToTestDir,
+  setUpTestDir,
+  tearDownTestDir,
+} from "../../../test/testDir";
 
 import { TEST_CASES_WITH_DIFF, TEST_CASES_WITHOUT_DIFF } from "./testCases";
 import {
@@ -18,6 +23,7 @@ describe("Autocomplete filtering tests", () => {
   beforeAll(async () => {
     tearDownTestDir();
     setUpTestDir();
+    addToTestDir([".continueignore"]);
   });
 
   afterAll(async () => {
