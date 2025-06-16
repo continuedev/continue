@@ -18,6 +18,9 @@ import {
   AutocompleteInput,
   AutocompleteOutcome,
 } from "../autocomplete/util/types.js";
+import { myersDiff } from "../diff/myers.js";
+import { replaceEscapedCharacters } from "../util/text.js";
+import { getRenderableDiff } from "./diff/diff.js";
 import {
   Prompt,
   renderDefaultSystemPrompt,
@@ -259,11 +262,20 @@ export class NextEditProvider {
         // const testToken = testController.signal;
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
-          const nextCompletion = msg.content;
+          const nextCompletion = replaceEscapedCharacters(
+            msg.content
+              .split("<|editable_region_start|>\n")[1]
+              .slice(1)
+              .slice(0, -2),
+          );
+
+          const diffLines = myersDiff(helper.fileContents, nextCompletion);
+
+          const diff = getRenderableDiff(diffLines);
 
           const outcomeNext: AutocompleteOutcome = {
             time: Date.now() - startTime,
-            completion: nextCompletion,
+            completion: diff,
             prefix: "",
             suffix: "",
             prompt: "",
@@ -272,7 +284,7 @@ export class NextEditProvider {
             completionOptions: null,
             cacheHit: false,
             filepath: helper.filepath,
-            numLines: nextCompletion.split("\n").length,
+            numLines: diff.split("\n").length,
             completionId: helper.input.completionId,
             gitRepo: await this.ide.getRepoName(helper.filepath),
             uniqueId: await this.ide.getUniqueId(),
