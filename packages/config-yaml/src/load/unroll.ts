@@ -196,7 +196,6 @@ async function extractRenderedSecretsMap(
 export interface BaseUnrollAssistantOptions {
   renderSecrets: boolean;
   injectBlocks?: PackageIdentifier[];
-  asConfigResult?: boolean; // TODO: Decide
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions
@@ -218,24 +217,11 @@ export type UnrollAssistantOptions =
   | DoNotRenderSecretsUnrollAssistantOptions
   | RenderSecretsUnrollAssistantOptions;
 
-// Overload to satisfy existing consumers of unrollAssistant.
-export async function unrollAssistant(
-  id: PackageIdentifier,
-  registry: Registry,
-  options: UnrollAssistantOptions & { asConfigResult: true },
-): Promise<ConfigResult<AssistantUnrolled>>;
-
 export async function unrollAssistant(
   id: PackageIdentifier,
   registry: Registry,
   options: UnrollAssistantOptions,
-): Promise<AssistantUnrolled>;
-
-export async function unrollAssistant(
-  id: PackageIdentifier,
-  registry: Registry,
-  options: UnrollAssistantOptions,
-): Promise<AssistantUnrolled | ConfigResult<AssistantUnrolled>> {
+): Promise<ConfigResult<AssistantUnrolled>> {
   // Request the content from the registry
   const rawContent = await registry.getContent(id);
 
@@ -266,7 +252,7 @@ export async function unrollAssistantFromContent(
   rawYaml: string,
   registry: Registry,
   options: UnrollAssistantOptions,
-): Promise<AssistantUnrolled | ConfigResult<AssistantUnrolled>> {
+): Promise<ConfigResult<AssistantUnrolled>> {
   // Parse string to Zod-validated YAML
   let parsedYaml = parseConfigYaml(rawYaml);
 
@@ -275,15 +261,10 @@ export async function unrollAssistantFromContent(
     parsedYaml,
     registry,
     options.injectBlocks,
-    options.asConfigResult ?? false,
   );
 
   // Back to a string so we can fill in template variables
-  const rawUnrolledYaml = options.asConfigResult
-    ? YAML.stringify(
-        (unrolledAssistant as ConfigResult<AssistantUnrolled>).config,
-      )
-    : YAML.stringify(unrolledAssistant);
+  const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
 
   // Convert all of the template variables to FQSNs
   // Secrets from the block will have the assistant slug prepended to the FQSN
@@ -292,7 +273,11 @@ export async function unrollAssistantFromContent(
   });
 
   if (!options.renderSecrets) {
-    return parseAssistantUnrolled(templatedYaml);
+    return {
+      config: parseAssistantUnrolled(templatedYaml),
+      errors: [],
+      configLoadInterrupted: false,
+    };
   }
 
   // Render secret values/locations for client
@@ -313,25 +298,20 @@ export async function unrollAssistantFromContent(
     options.onPremProxyUrl,
   );
 
-  if (options.asConfigResult) {
-    return {
-      config: finalConfig,
-      errors: (unrolledAssistant as ConfigResult<AssistantUnrolled>).errors,
-      configLoadInterrupted: (
-        unrolledAssistant as ConfigResult<AssistantUnrolled>
-      ).configLoadInterrupted,
-    };
-  }
-
-  return finalConfig;
+  return {
+    config: finalConfig,
+    errors: (unrolledAssistant as ConfigResult<AssistantUnrolled>).errors,
+    configLoadInterrupted: (
+      unrolledAssistant as ConfigResult<AssistantUnrolled>
+    ).configLoadInterrupted,
+  };
 }
 
 export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,
   injectBlocks: PackageIdentifier[] | undefined,
-  asConfigError: boolean,
-): Promise<AssistantUnrolled | ConfigResult<AssistantUnrolled>> {
+): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
 
   const unrolledAssistant: AssistantUnrolled = {
@@ -467,20 +447,16 @@ export async function unrollBlocks(
     }
   }
 
-  if (asConfigError) {
-    const configResult: ConfigResult<AssistantUnrolled> = {
-      config: undefined,
-      errors: undefined,
-      configLoadInterrupted: false,
-    };
-    configResult.config = unrolledAssistant;
-    if (errors.length > 0) {
-      configResult.errors = errors;
-    }
-    return configResult;
+  const configResult: ConfigResult<AssistantUnrolled> = {
+    config: undefined,
+    errors: undefined,
+    configLoadInterrupted: false,
+  };
+  configResult.config = unrolledAssistant;
+  if (errors.length > 0) {
+    configResult.errors = errors;
   }
-
-  return unrolledAssistant;
+  return configResult;
 }
 
 export async function resolveBlock(
