@@ -215,12 +215,16 @@ export class ContinueCompletionProvider
 
       setupStatusBar(undefined, true);
       // TODO: revert back
-      const outcome =
-        await this.completionProvider.provideInlineCompletionItems(
-          input,
-          signal,
-          wasManuallyTriggered,
-        );
+      // const outcome =
+      //   await this.completionProvider.provideInlineCompletionItems(
+      //     input,
+      //     signal,
+      //     wasManuallyTriggered,
+      //   );
+      const outcome = await this.nextEditProvider.provideInlineCompletionItems(
+        input,
+        signal,
+      );
 
       if (!outcome || !outcome.completion) {
         return null;
