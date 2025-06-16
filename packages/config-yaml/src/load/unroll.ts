@@ -411,7 +411,7 @@ export async function unrollBlocks(
   for (const injectBlock of injectBlocks ?? []) {
     try {
       const blockConfigYaml = await registry.getContent(injectBlock);
-      const parsedBlock = parseConfigYaml(blockConfigYaml);
+      const parsedBlock = parseMarkdownRuleOrConfigYaml(blockConfigYaml);
       const blockType = getBlockType(parsedBlock);
       const resolvedBlock = await resolveBlock(
         injectBlock,
@@ -478,14 +478,44 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
+  return parseMarkdownRuleOrAssistantUnrolled(templatedYaml);
+}
+
+function parseMarkdownRuleOrAssistantUnrolled(
+  content: string,
+): AssistantUnrolled {
   // Try to parse as YAML first, then as markdown rule if that fails
   let parsedYaml: AssistantUnrolled;
   try {
-    parsedYaml = parseBlock(templatedYaml);
+    parsedYaml = parseBlock(content);
   } catch (yamlError) {
     // If YAML parsing fails, try parsing as markdown rule
     try {
-      const rule = markdownToRule(templatedYaml);
+      const rule = markdownToRule(content);
+      // Convert the rule object to the expected format
+      parsedYaml = {
+        name: rule.name,
+        version: "1.0.0",
+        rules: [rule],
+      };
+    } catch (markdownError) {
+      // If both fail, throw the original YAML error
+      throw yamlError;
+    }
+  }
+
+  return parsedYaml;
+}
+
+function parseMarkdownRuleOrConfigYaml(content: string): ConfigYaml {
+  // Try to parse as YAML first, then as markdown rule if that fails
+  let parsedYaml: ConfigYaml;
+  try {
+    parsedYaml = parseConfigYaml(content);
+  } catch (yamlError) {
+    // If YAML parsing fails, try parsing as markdown rule
+    try {
+      const rule = markdownToRule(content);
       // Convert the rule object to the expected format
       parsedYaml = {
         name: rule.name,
