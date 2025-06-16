@@ -73,10 +73,10 @@ void (async () => {
   // Copy config schemas to intellij
   copyConfigSchema();
 
-  if (!process.cwd().endsWith("vscode")) {
-    // This is sometimes run from root dir instead (e.g. in VS Code tasks)
-    process.chdir("extensions/vscode");
-  }
+  // if (!process.cwd().endsWith("vscode")) {
+  //   // This is sometimes run from root dir instead (e.g. in VS Code tasks)
+  //   process.chdir("extensions/vscode");
+  // }
 
   // Make sure we have an initial timestamp file
   writeBuildTimestamp();

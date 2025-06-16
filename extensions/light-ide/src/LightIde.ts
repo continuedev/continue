@@ -77,7 +77,7 @@ export class LightIde implements IDE {
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
-    const projectsPath = path.join(process.cwd(), "projects");
+    const projectsPath = path.join(os.homedir(), "projects");
     // Create a proper file URL that works cross-platform
     const fileUrl = new URL(projectsPath, "file://");
     return [fileUrl.toString()];
