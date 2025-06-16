@@ -349,6 +349,7 @@ void (async () => {
     const packageToInstall = {
       "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
       "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+      "linux-x64": "@lancedb/vectordb-linux-x64-gnu",
       "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
       "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
     }[target];
@@ -369,6 +370,8 @@ void (async () => {
         "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
       "linux-arm64":
         "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
+      "linux-x64":
+        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-x64.tar.gz",
       // node-sqlite3 doesn't have a pre-built binary for win32-arm64
       "win32-arm64":
         "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz",
