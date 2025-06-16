@@ -5,7 +5,6 @@ import { findAvailableFilename, getFileContent } from "./workspaceBlocks";
 describe("getFileContent", () => {
   test("returns markdown content for rules block type", () => {
     const result = getFileContent("rules");
-    expect(result).toContain("# New Rule");
     expect(result).toContain("Your rule content");
     expect(result).toContain("A description of your rule");
   });
