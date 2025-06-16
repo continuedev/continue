@@ -254,8 +254,10 @@ export class NextEditProvider {
 
         // TODO: Do some zod schema validation here if needed.
       } else {
-        const testController = new AbortController();
-        const msg: ChatMessage = await llm.chat(prompts, testController.signal);
+        // const testController = new AbortController();
+        // const msg: ChatMessage = await llm.chat(prompts, testController.signal);
+        // const testToken = testController.signal;
+        const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
           const nextCompletion = msg.content;
 
