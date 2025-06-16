@@ -12,15 +12,15 @@ You can get an API key from the [Anthropic console](https://console.anthropic.co
 
 ## Chat model
 
-We recommend configuring **Claude 3.5 Sonnet** as your chat model.
+We recommend configuring **Claude 4 Sonnet** as your chat model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude 3.5 Sonnet
+    - name: Claude 4 Sonnet
       provider: anthropic
-      model: claude-3-5-sonnet-latest
+      model: claude-sonnet-4-20250514
       apiKey: <YOUR_ANTHROPIC_API_KEY>
   ```
   </TabItem>
@@ -29,9 +29,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
   {
     "models": [
       {
-        "title": "Claude 3.5 Sonnet",
+        "title": "Claude 4 Sonnet",
         "provider": "anthropic",
-        "model": "claude-3-5-sonnet-latest",
+        "model": "claude-sonnet-4-20250514",
         "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
@@ -60,9 +60,19 @@ Anthropic currently does not offer any reranking models.
 
 ## Prompt caching
 
-Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching).
+Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
 
-To enable caching of the system message and the turn-by-turn conversation, update your your model configuration as following:
+Prompt caching is generally available for:
+
+- Claude 4 Sonnet
+- Claude 3.7 Sonnet
+- Claude 3.5 Sonnet
+- Claude 3.5 Haiku
+- Claude 3 Opus
+- Claude 3 Sonnet
+- Claude 3 Haiku
+
+To enable caching of the system message and the turn-by-turn conversation, update your model configuration as follows:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -70,7 +80,7 @@ To enable caching of the system message and the turn-by-turn conversation, updat
   models:
     - name: Anthropic
       provider: anthropic
-      model: claude-3-5-sonnet-latest
+      model: claude-sonnet-4-20250514
       apiKey: <YOUR_ANTHROPIC_API_KEY>
       roles:
         - chat
@@ -90,7 +100,7 @@ To enable caching of the system message and the turn-by-turn conversation, updat
         },
         "title": "Anthropic",
         "provider": "anthropic",
-        "model": "claude-3-5-sonnet-latest",
+        "model": "claude-sonnet-4-20250514",
         "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
