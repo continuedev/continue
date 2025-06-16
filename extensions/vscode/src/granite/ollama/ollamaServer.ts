@@ -183,10 +183,7 @@ export class OllamaServer implements IModelServer, Disposable {
       ].join(" && ");
     } else {
       //Linux
-      const start_ollama_sh = path.join(
-        this.context.extensionPath,
-        "start_ollama.sh",
-      );
+      const start_ollama_sh = this.getStartOllamaScript();
       startCommand = [
         "set -e", // Exit immediately if a command exits with a non-zero status
         `chmod +x "${start_ollama_sh}"`, // Ensure the script is executable
@@ -230,10 +227,7 @@ export class OllamaServer implements IModelServer, Disposable {
         break;
       }
       case "script":
-        const start_ollama_sh = path.join(
-          this.context.extensionPath,
-          "start_ollama.sh",
-        );
+        const start_ollama_sh = this.getStartOllamaScript();
         installCommand = [
           "clear",
           "set -e", // Exit immediately if a command exits with a non-zero status
@@ -273,6 +267,10 @@ export class OllamaServer implements IModelServer, Disposable {
       });
     }
     return true;
+  }
+
+  private getStartOllamaScript() {
+    return path.join(this.context.extensionPath, "out", "start_ollama.sh");
   }
 
   async downloadOllamaInstaller(
