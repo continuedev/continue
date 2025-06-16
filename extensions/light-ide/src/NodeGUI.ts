@@ -108,6 +108,14 @@ export class NodeGUI {
       console.log("GET / called in NodeGUI");
 
       const nonce = crypto.randomBytes(16).toString("base64");
+
+      const initialPrompt: string = typeof _req.query.prompt === "string"
+        ? _req.query.prompt
+        : "";
+
+    // turn it into a JS literal we can embed safely
+    const initialPromptJS = JSON.stringify(initialPrompt);
+
       const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -159,6 +167,24 @@ export class NodeGUI {
             window.vscMediaUrl = "/assets";
             window.workspacePaths = ${JSON.stringify([process.cwd()])};
             window.isFullScreen = false;
+
+
+            // Inject prompt into editor if ?prompt=... is provided
+            const initialPrompt = ${initialPromptJS};
+
+            if (initialPrompt) {
+              const interval = setInterval(() => {
+                const inputDiv = document.evaluate("//div[@contenteditable='true' and contains(@class, 'ProseMirror')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                if (!inputDiv) return;
+                clearInterval(interval);
+
+                inputDiv.focus();
+                inputDiv.innerHTML = "<p>" + initialPrompt + "</p>";
+                inputDiv.dispatchEvent(new Event("input", { bubbles: true }));
+                inputDiv.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
+              }, 150);
+            }
+
           </script>
         </body>
       </html>`;
