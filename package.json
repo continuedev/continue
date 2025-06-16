@@ -7,9 +7,10 @@
     "tsc:watch:binary": "tsc --project binary/tsconfig.json --watch --noEmit --pretty",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .gitignore",
-    "ci": "npm run install-core && npm run install-vscode",
+    "ci": "npm run install-core && npm run install-gui && npm run install-vscode",
+    "install-gui": "cd gui && npm install && npm run build && cd -",
     "install-core": "cd core && npm install && npm link && cd -",
-    "install-vscode": "cd extensions/vscode && npm install && npm link @continuedev/core && npm run package"
+    "install-vscode": "cd extensions/vscode && npm install && npm link @continuedev/core && npm run package && cd -"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^7.8.0",

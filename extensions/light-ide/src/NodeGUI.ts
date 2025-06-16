@@ -80,7 +80,7 @@ export class NodeGUI {
 
     app.use("/assets", express.static(path.join(guiDir, "assets")));
 
-    app.use(bodyParser.json());
+    app.use(bodyParser.json({ limit: '50mb' }));
 
     // Add SSE endpoint for server-to-client communication
     app.get("/events", (req, res) => {

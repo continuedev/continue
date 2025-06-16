@@ -1,4 +1,4 @@
-import { ChatMessage as AICoreChatMessage, ChatMessages as AICoreChatMessages, ChatCompletionTool, MessageToolCall, MessageToolCalls, OrchestrationClient, OrchestrationModuleConfig, Prompt, TextContent, ToolCallChunk } from "@sap-ai-sdk/orchestration";
+import { ChatMessage as AICoreChatMessage, ChatMessages as AICoreChatMessages, ChatCompletionTool, MessageToolCall, MessageToolCalls, OrchestrationClient, OrchestrationModuleConfig, OrchestrationStream, Prompt, TextContent, ToolCallChunk } from "@sap-ai-sdk/orchestration";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -56,7 +56,10 @@ export class AICore extends BaseLLM {
         switch (chatMessage.role) {
             case "assistant":
                 if(chatMessage.toolCalls){
-                    const toolCalls = this.convertToolCalls(chatMessage.toolCalls)
+                    let toolCalls = this.convertToolCalls(chatMessage.toolCalls)
+                    if(toolCalls.length >= 1){
+                        toolCalls = [toolCalls[0]];
+                    }
                     return {
                         role: chatMessage.role,
                         content: "",
@@ -141,11 +144,15 @@ export class AICore extends BaseLLM {
         options: CompletionOptions,
     ): AsyncGenerator<ChatMessage> {
         const tools = this.convertTools(options.tools);
-        const aiCoreMessages = this.convertMessages(messages)
-
+        const allAiCoreMessages = this.convertMessages(messages)
+        const messagesHistory = allAiCoreMessages.slice(0, -1); // All items except last
+        const aiCoreMessages = [allAiCoreMessages[allAiCoreMessages.length - 1]]; // Last item in array
+        
         const aiCorePrompt: Prompt = {
-            messages: aiCoreMessages
+            messages: aiCoreMessages, 
+            messagesHistory: messagesHistory
         }
+
         const config: OrchestrationModuleConfig = {
             llm: {
                 model_name: options.model,
@@ -158,51 +165,54 @@ export class AICore extends BaseLLM {
             }
         }
         const orchestrationClient = new OrchestrationClient(config);
-        // let response;
 
         // // Chat Completion
-        // try {
-        //     response = await orchestrationClient.chatCompletion(aiCorePrompt);
-        // }
-        // catch (e) {
-        //     throw e;
-        // }
-        // const toolsCallsAiCore = response.getToolCalls();
-        // const toolCalls: ToolCallDelta[] = (!toolsCallsAiCore) ? [] : this.parseToolsResponce(toolsCallsAiCore)
 
-        // const content = response.getContent() || ""
-
-        // // Yield the assistant message with tool calls
-        // const assistantMessage: ChatMessage = {
-        //     role: "assistant",
-        //     content: content,
-        //     toolCalls: toolCalls
-        // };
-        // yield assistantMessage;
-
-        // Streaming
+        let response;
         try {
-            const response = await orchestrationClient.stream(aiCorePrompt)
-            for await (const chunk of response.stream) {
-                const toolsCallsAiCore = chunk.getDeltaToolCalls();
-                const toolCalls: ToolCallDelta[] = (!toolsCallsAiCore) ? [] : this.parseDeltaToolResponce(toolsCallsAiCore)
-                const content = chunk.getDeltaContent() || ""
-                if(!content && toolCalls.length === 0){
-                }
-                else{
-                    // Yield the assistant message with tool calls
-                    const assistantMessage: ChatMessage = {
-                        role: "assistant",
-                        content: content,
-                        toolCalls: toolCalls
-                    };
-                    yield assistantMessage;
-                }
-            }
+            response = await orchestrationClient.chatCompletion(aiCorePrompt);
         }
         catch (e) {
             throw e;
         }
+        
+        const toolsCallsAiCore = response.getToolCalls();
+        const toolCalls: ToolCallDelta[] = (!toolsCallsAiCore) ? [] : this.parseToolsResponce(toolsCallsAiCore)
+
+        const content = response.getContent() || ""
+
+        // Yield the assistant message with tool calls
+        const assistantMessage: ChatMessage = {
+            role: "assistant",
+            content: content,
+            toolCalls: toolCalls
+        };
+        yield assistantMessage;
+
+        // Streaming
+        // try {
+            
+        //     let response = await orchestrationClient.stream(aiCorePrompt)
+        //     for await (const chunk of response.stream) {
+        //         const toolsCallsAiCore = chunk.getDeltaToolCalls();
+        //         const toolCalls: ToolCallDelta[] = (!toolsCallsAiCore) ? [] : this.parseDeltaToolResponce(toolsCallsAiCore)
+        //         const content = chunk.getDeltaContent() || ""
+        //         if(!content && toolCalls.length === 0){
+        //         }
+        //         else{
+        //             // Yield the assistant message with tool calls
+        //             const assistantMessage: ChatMessage = {
+        //                 role: "assistant",
+        //                 content: content,
+        //                 toolCalls: toolCalls
+        //             };
+        //             yield assistantMessage;
+        //         }
+        //     }
+        // }
+        // catch (e) {
+        //     throw e;
+        // }
 
     }
     parseDeltaToolResponce(toolsCallsAiCore: ToolCallChunk[]): ToolCallDelta[] {

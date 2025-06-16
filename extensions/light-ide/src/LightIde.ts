@@ -93,9 +93,10 @@ export class LightIde implements IDE {
     }
   }
 
-  async fileExists(fileUri: string): Promise<boolean> {
+  async fileExists(filePath: string): Promise<boolean> {
     try {
-      await fs.access(fileUri);
+      filePath = this.revertFilePath(filePath);
+      await fs.access(filePath);
       return true;
     } catch {
       return false;
@@ -103,8 +104,13 @@ export class LightIde implements IDE {
   }
 
   async writeFile(filePath: string, contents: string): Promise<void> {
-    filePath = filePath.replace(/^file:\/\//, '')
+    filePath = this.revertFilePath(filePath);
     await fs.writeFile(filePath, contents, "utf-8");
+  }
+
+  private revertFilePath(filePath: string) {
+    filePath = filePath.replace(/^file:\/\//, '');
+    return filePath;
   }
 
   async showVirtualFile(title: string, contents: string): Promise<void> {
@@ -144,6 +150,7 @@ export class LightIde implements IDE {
   }
 
   async readFile(fileUri: string): Promise<string> {
+    fileUri = this.revertFilePath(fileUri);
     return await fs.readFile(fileUri, "utf-8");
   }
 
@@ -222,6 +229,7 @@ export class LightIde implements IDE {
   }
 
   async listDir(dir: string): Promise<[string, FileType][]> {
+    dir = this.revertFilePath(dir);
     const entries = await fs.readdir(dir, { withFileTypes: true });
     return entries.map((entry) => [
       entry.name,
