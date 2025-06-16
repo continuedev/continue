@@ -1,2 +1,2 @@
 export * from "./createMarkdownRule.js";
-export * from "./parseMarkdownRule.js";
+export * from "./markdownToRule.js";

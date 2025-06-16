@@ -3,7 +3,7 @@ import {
   createRuleMarkdown,
   sanitizeRuleName,
 } from "./createMarkdownRule.js";
-import { parseMarkdownRule } from "./parseMarkdownRule.js";
+import { markdownToRule } from "./markdownToRule.js";
 
 describe("sanitizeRuleName", () => {
   it("should sanitize rule names for filenames", () => {
@@ -74,10 +74,13 @@ Just markdown content.`;
       originalFrontmatter,
       originalMarkdown,
     );
-    const parsed = parseMarkdownRule(created);
+    const parsed = markdownToRule(created);
 
-    expect(parsed.frontmatter).toEqual(originalFrontmatter);
-    expect(parsed.markdown).toBe(originalMarkdown);
+    expect(parsed.name).toBe(originalFrontmatter.name);
+    expect(parsed.description).toBe(originalFrontmatter.description);
+    expect(parsed.globs).toEqual(originalFrontmatter.globs);
+    expect(parsed.alwaysApply).toBe(originalFrontmatter.alwaysApply);
+    expect(parsed.rule).toBe(originalMarkdown);
   });
 });
 
@@ -89,23 +92,23 @@ describe("createRuleMarkdown", () => {
       alwaysApply: true,
     });
 
-    const parsed = parseMarkdownRule(result);
+    const parsed = markdownToRule(result);
 
-    expect(parsed.frontmatter.description).toBe("Test description");
-    expect(parsed.frontmatter.globs).toEqual(["*.ts", "*.js"]);
-    expect(parsed.frontmatter.alwaysApply).toBe(true);
-    expect(parsed.markdown).toBe("This is the rule content");
+    expect(parsed.description).toBe("Test description");
+    expect(parsed.globs).toEqual(["*.ts", "*.js"]);
+    expect(parsed.alwaysApply).toBe(true);
+    expect(parsed.rule).toBe("This is the rule content");
   });
 
   it("should create rule markdown with minimal options", () => {
     const result = createRuleMarkdown("Simple Rule", "Simple content");
 
-    const parsed = parseMarkdownRule(result);
+    const parsed = markdownToRule(result);
 
-    expect(parsed.frontmatter.description).toBeUndefined();
-    expect(parsed.frontmatter.globs).toBeUndefined();
-    expect(parsed.frontmatter.alwaysApply).toBeUndefined();
-    expect(parsed.markdown).toBe("Simple content");
+    expect(parsed.description).toBeUndefined();
+    expect(parsed.globs).toBeUndefined();
+    expect(parsed.alwaysApply).toBeUndefined();
+    expect(parsed.rule).toBe("Simple content");
   });
 
   it("should handle string globs", () => {
@@ -113,8 +116,8 @@ describe("createRuleMarkdown", () => {
       globs: "*.py",
     });
 
-    const parsed = parseMarkdownRule(result);
-    expect(parsed.frontmatter.globs).toBe("*.py");
+    const parsed = markdownToRule(result);
+    expect(parsed.globs).toBe("*.py");
   });
 
   it("should trim description and globs", () => {
@@ -123,9 +126,9 @@ describe("createRuleMarkdown", () => {
       globs: "  *.ts  ",
     });
 
-    const parsed = parseMarkdownRule(result);
-    expect(parsed.frontmatter.description).toBe("spaced description");
-    expect(parsed.frontmatter.globs).toBe("*.ts");
+    const parsed = markdownToRule(result);
+    expect(parsed.description).toBe("spaced description");
+    expect(parsed.globs).toBe("*.ts");
   });
 
   it("should handle alwaysApply false explicitly", () => {
@@ -133,7 +136,7 @@ describe("createRuleMarkdown", () => {
       alwaysApply: false,
     });
 
-    const parsed = parseMarkdownRule(result);
-    expect(parsed.frontmatter.alwaysApply).toBe(false);
+    const parsed = markdownToRule(result);
+    expect(parsed.alwaysApply).toBe(false);
   });
 });

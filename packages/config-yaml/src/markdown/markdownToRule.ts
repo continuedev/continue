@@ -11,7 +11,7 @@ export interface RuleFrontmatter {
 /**
  * Parses markdown content with YAML frontmatter
  */
-export function parseMarkdownRule(content: string): {
+function parseMarkdownRule(content: string): {
   frontmatter: RuleFrontmatter;
   markdown: string;
 } {

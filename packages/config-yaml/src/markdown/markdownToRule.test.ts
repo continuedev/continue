@@ -1,92 +1,4 @@
-import { markdownToRule, parseMarkdownRule } from "./parseMarkdownRule.js";
-
-describe("parseMarkdownRule", () => {
-  it("should correctly parse markdown with YAML frontmatter", () => {
-    const content = `---
-globs: "**/test/**/*.kt"
----
-
-# Test Rule
-
-This is a test rule.`;
-
-    const result = parseMarkdownRule(content);
-    expect(result.frontmatter).toEqual({ globs: "**/test/**/*.kt" });
-    expect(result.markdown).toBe("# Test Rule\n\nThis is a test rule.");
-  });
-
-  it("should handle missing frontmatter", () => {
-    const content = `# Test Rule
-
-This is a test rule without frontmatter.`;
-
-    const result = parseMarkdownRule(content);
-    expect(result.frontmatter).toEqual({});
-    expect(result.markdown).toBe(content);
-  });
-
-  it("should handle empty frontmatter", () => {
-    const content = `---
----
-
-# Test Rule
-
-This is a test rule with empty frontmatter.`;
-
-    const result = parseMarkdownRule(content);
-
-    expect(result.frontmatter).toEqual({});
-    expect(result.markdown).toBe(
-      "# Test Rule\n\nThis is a test rule with empty frontmatter.",
-    );
-  });
-
-  it("should handle frontmatter with whitespace", () => {
-    const content = `---
-globs: "**/test/**/*.kt"
----
-
-# Test Rule
-
-This is a test rule.`;
-
-    const result = parseMarkdownRule(content);
-    expect(result.frontmatter).toEqual({ globs: "**/test/**/*.kt" });
-    expect(result.markdown).toBe("# Test Rule\n\nThis is a test rule.");
-  });
-
-  it("should handle Windows line endings (CRLF)", () => {
-    // Using \r\n for CRLF line endings
-    const content = `---\r
-globs: "**/test/**/*.kt"\r
----\r
-\r
-# Test Rule\r
-\r
-This is a test rule.`;
-
-    const result = parseMarkdownRule(content);
-    expect(result.frontmatter).toEqual({ globs: "**/test/**/*.kt" });
-    // The result should be normalized to \n
-    expect(result.markdown).toBe("# Test Rule\n\nThis is a test rule.");
-  });
-
-  it("should handle malformed frontmatter", () => {
-    const content = `---
-globs: - "**/test/**/*.kt"
-invalid: yaml: content
----
-
-# Test Rule
-
-This is a test rule.`;
-
-    // Should treat as only markdown when frontmatter is malformed
-    const result = parseMarkdownRule(content);
-    expect(result.frontmatter).toEqual({});
-    expect(result.markdown).toBe(content);
-  });
-});
+import { markdownToRule } from "./markdownToRule.js";
 
 describe("markdownToRule", () => {
   it("should convert markdown with frontmatter to a rule", () => {
@@ -105,6 +17,97 @@ This is a test rule.`;
     expect(result.name).toBe("Custom Name");
   });
 
+  it("should correctly parse markdown with YAML frontmatter", () => {
+    const content = `---
+globs: "**/test/**/*.kt"
+---
+
+# Test Rule
+
+This is a test rule.`;
+
+    const result = markdownToRule(content);
+    expect(result.globs).toBe("**/test/**/*.kt");
+    expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
+    expect(result.name).toBe("Rule"); // Default name when not specified
+  });
+
+  it("should handle missing frontmatter", () => {
+    const content = `# Test Rule
+
+This is a test rule without frontmatter.`;
+
+    const result = markdownToRule(content);
+    expect(result.globs).toBeUndefined();
+    expect(result.rule).toBe(content);
+    expect(result.name).toBe("Rule");
+  });
+
+  it("should handle empty frontmatter", () => {
+    const content = `---
+---
+
+# Test Rule
+
+This is a test rule with empty frontmatter.`;
+
+    const result = markdownToRule(content);
+    expect(result.globs).toBeUndefined();
+    expect(result.rule).toBe(
+      "# Test Rule\n\nThis is a test rule with empty frontmatter.",
+    );
+    expect(result.name).toBe("Rule");
+  });
+
+  it("should handle frontmatter with whitespace", () => {
+    const content = `---
+globs: "**/test/**/*.kt"
+---
+
+# Test Rule
+
+This is a test rule.`;
+
+    const result = markdownToRule(content);
+    expect(result.globs).toBe("**/test/**/*.kt");
+    expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
+    expect(result.name).toBe("Rule");
+  });
+
+  it("should handle Windows line endings (CRLF)", () => {
+    // Using \r\n for CRLF line endings
+    const content = `---\r
+globs: "**/test/**/*.kt"\r
+---\r
+\r
+# Test Rule\r
+\r
+This is a test rule.`;
+
+    const result = markdownToRule(content);
+    expect(result.globs).toBe("**/test/**/*.kt");
+    // The result should be normalized to \n
+    expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
+    expect(result.name).toBe("Rule");
+  });
+
+  it("should handle malformed frontmatter", () => {
+    const content = `---
+globs: - "**/test/**/*.kt"
+invalid: yaml: content
+---
+
+# Test Rule
+
+This is a test rule.`;
+
+    // Should treat as only markdown when frontmatter is malformed
+    const result = markdownToRule(content);
+    expect(result.globs).toBeUndefined();
+    expect(result.rule).toBe(content);
+    expect(result.name).toBe("Rule");
+  });
+
   it("should use default name if no heading or frontmatter name", () => {
     const content = `---
 globs: "**/test/**/*.kt"
@@ -118,7 +121,7 @@ This is a test rule.`;
     expect(result.name).toBe("Rule"); // markdownToRule defaults to "Rule" when no name in frontmatter
   });
 
-  it("should use default name if no heading or frontmatter name", () => {
+  it("should use default name if no heading or frontmatter name (no heading)", () => {
     const content = `---
 globs: "**/test/**/*.kt"
 ---
@@ -146,7 +149,7 @@ This is the content of the rule.`;
     );
   });
 
-  it("should include `alwaysApply` from frontmatter", () => {
+  it("should include alwaysApply from frontmatter", () => {
     const content = `---
 globs: "**/test/**/*.kt"
 name: Test Rule

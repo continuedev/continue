@@ -1,5 +1,5 @@
 import * as YAML from "yaml";
-import { RuleFrontmatter } from "./parseMarkdownRule.js";
+import { RuleFrontmatter } from "./markdownToRule.js";
 
 export const RULE_FILE_EXTENSION = "md";
 

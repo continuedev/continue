@@ -1,4 +1,3 @@
-import { parseMarkdownRule } from "@continuedev/config-yaml";
 import { ToolImpl } from ".";
 
 export const requestRuleImpl: ToolImpl = async (args, extras) => {
@@ -11,14 +10,11 @@ export const requestRuleImpl: ToolImpl = async (args, extras) => {
     );
   }
 
-  const fileContent = await extras.ide.readFile(rule.ruleFile);
-  const { markdown, frontmatter } = parseMarkdownRule(fileContent);
-
   return [
     {
-      name: frontmatter.name ?? "",
-      description: frontmatter.description ?? "",
-      content: markdown,
+      name: rule.name ?? "",
+      description: rule.description ?? "",
+      content: rule.rule,
       uri: {
         type: "file",
         value: rule.ruleFile,
