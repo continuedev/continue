@@ -1,5 +1,5 @@
+import { parseMarkdownRule } from "@continuedev/config-yaml";
 import { ToolImpl } from ".";
-import { parseMarkdownRule } from "../../config/markdown/parseMarkdownRule";
 
 export const requestRuleImpl: ToolImpl = async (args, extras) => {
   // Find the rule by name in the config

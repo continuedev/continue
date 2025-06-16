@@ -1,5 +1,5 @@
+import { parseMarkdownRule } from "@continuedev/config-yaml";
 import { jest } from "@jest/globals";
-import { parseMarkdownRule } from "../../config/markdown";
 import { createRuleBlockImpl } from "./createRuleBlock";
 
 const mockIde = {

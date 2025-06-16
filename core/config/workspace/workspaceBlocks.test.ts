@@ -1,6 +1,5 @@
-import { BlockType } from "@continuedev/config-yaml";
+import { BlockType, RULE_FILE_EXTENSION } from "@continuedev/config-yaml";
 import { describe, expect, test } from "@jest/globals";
-import { RULE_FILE_EXTENSION } from "../markdown";
 import { findAvailableFilename, getFileContent } from "./workspaceBlocks";
 
 describe("getFileContent", () => {
