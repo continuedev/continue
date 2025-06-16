@@ -1,5 +1,5 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { IDE, ILLM } from "../index.js";
+import { ChatMessage, IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
@@ -207,101 +207,125 @@ export class NextEditProvider {
         );
       }
 
-      // const msg: ChatMessage = await llm.chat(prompts, token);
-
-      const defaultEndpoint = process.env.DEFAULT_ENDPOINT!;
-      const fineTunedEndpoint = process.env.FINE_TUNED_ENDPOINT!;
-      const mercuryToken = process.env.MERCURY_TOKEN!;
-      const defaultModel = process.env.DEFAULT_MODEL!;
-      const fineTunedModel = process.env.FINE_TUNED_MODEL!;
-
       if (this.endpointType === "default") {
-        const body = {
-          model: defaultModel,
-          messages: prompts,
-          // max_tokens: 15000,
-          // stop: ["<|editable_region_end|>"],
-        };
+        const msg: ChatMessage = await llm.chat(prompts, token);
+        if (typeof msg.content === "string") {
+          const nextCompletion = JSON.parse(msg.content).newCode;
 
-        const resp = await fetch(defaultEndpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${mercuryToken} `,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-        });
-
-        const respJson = await resp.json();
-
-        const nextCompletion = respJson.choices[0].message.content.newCode;
+          const outcomeNext: AutocompleteOutcome = {
+            time: Date.now() - startTime,
+            completion: nextCompletion,
+            prefix: "",
+            suffix: "",
+            prompt: "",
+            modelProvider: llm.underlyingProviderName,
+            modelName: llm.model,
+            completionOptions: null,
+            cacheHit: false,
+            filepath: helper.filepath,
+            numLines: nextCompletion.split("\n").length,
+            completionId: helper.input.completionId,
+            gitRepo: await this.ide.getRepoName(helper.filepath),
+            uniqueId: await this.ide.getUniqueId(),
+            timestamp: Date.now(),
+            ...helper.options,
+          };
+          return outcomeNext;
+        } else {
+          return undefined;
+        }
+        // const body = {
+        //   model: defaultModel,
+        //   messages: prompts,
+        //   // max_tokens: 15000,
+        //   // stop: ["<|editable_region_end|>"],
+        // };
+        //
+        // const resp = await fetch(defaultEndpoint, {
+        //   method: "POST",
+        //   headers: {
+        //     Authorization: `Bearer ${mercuryToken} `,
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify(body),
+        // });
+        //
+        // const respJson = await resp.json();
 
         // TODO: Do some zod schema validation here if needed.
-        const outcomeNext: AutocompleteOutcome = {
-          time: Date.now() - startTime,
-          completion: nextCompletion,
-          prefix: "",
-          suffix: "",
-          prompt: "",
-          modelProvider: llm.underlyingProviderName,
-          modelName: llm.model,
-          completionOptions: null,
-          cacheHit: false,
-          filepath: helper.filepath,
-          numLines: nextCompletion.split("\n").length,
-          completionId: helper.input.completionId,
-          gitRepo: await this.ide.getRepoName(helper.filepath),
-          uniqueId: await this.ide.getUniqueId(),
-          timestamp: Date.now(),
-          ...helper.options,
-        };
-        return outcomeNext;
       } else {
-        const body = {
-          model: fineTunedModel,
-          messages: prompts,
-          max_tokens: 15000,
-          stop: ["<|editable_region_end|>"],
-        };
+        const testController = new AbortController();
+        const msg: ChatMessage = await llm.chat(prompts, testController.signal);
+        if (typeof msg.content === "string") {
+          const nextCompletion = msg.content;
 
-        const resp = await fetch(fineTunedEndpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${mercuryToken} `,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-        });
-
-        const respJson = await resp.json();
-
-        const nextCompletion = respJson.choices[0].message.content
-          .split("<|editable_region_start|>\n")[1]
-          .split("<|editable_region_end|>")[0]
-          .slice(1)
-          .slice(0, -1)
-          .replaceAll("\\n", "\n")
-          .replaceAll('\\"', '"');
-
-        const outcomeNext: AutocompleteOutcome = {
-          time: Date.now() - startTime,
-          completion: nextCompletion,
-          prefix: "",
-          suffix: "",
-          prompt: "",
-          modelProvider: llm.underlyingProviderName,
-          modelName: llm.model,
-          completionOptions: null,
-          cacheHit: false,
-          filepath: helper.filepath,
-          numLines: nextCompletion.split("\n").length,
-          completionId: helper.input.completionId,
-          gitRepo: await this.ide.getRepoName(helper.filepath),
-          uniqueId: await this.ide.getUniqueId(),
-          timestamp: Date.now(),
-          ...helper.options,
-        };
-        return outcomeNext;
+          const outcomeNext: AutocompleteOutcome = {
+            time: Date.now() - startTime,
+            completion: nextCompletion,
+            prefix: "",
+            suffix: "",
+            prompt: "",
+            modelProvider: llm.underlyingProviderName,
+            modelName: llm.model,
+            completionOptions: null,
+            cacheHit: false,
+            filepath: helper.filepath,
+            numLines: nextCompletion.split("\n").length,
+            completionId: helper.input.completionId,
+            gitRepo: await this.ide.getRepoName(helper.filepath),
+            uniqueId: await this.ide.getUniqueId(),
+            timestamp: Date.now(),
+            ...helper.options,
+          };
+          return outcomeNext;
+        } else {
+          return undefined;
+        }
+        // const body = {
+        //   model: fineTunedModel,
+        //   messages: prompts,
+        //   max_tokens: 15000,
+        //   stop: ["<|editable_region_end|>"],
+        // };
+        //
+        // const resp = await fetch(fineTunedEndpoint, {
+        //   method: "POST",
+        //   headers: {
+        //     Authorization: `Bearer ${mercuryToken} `,
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify(body),
+        // });
+        //
+        // const respJson = await resp.json();
+        //
+        // const nextCompletion = respJson.choices[0].message.content
+        //   .split("<|editable_region_start|>\n")[1]
+        //   .split("<|editable_region_end|>")[0]
+        //   .slice(1)
+        //   .slice(0, -1)
+        //   .replaceAll("\\n", "\n")
+        //   .replaceAll('\\"', '"');
+        //
+        // const outcomeNext: AutocompleteOutcome = {
+        //   time: Date.now() - startTime,
+        //   completion: nextCompletion,
+        //   prefix: "",
+        //   suffix: "",
+        //   prompt: "",
+        //   modelProvider: llm.underlyingProviderName,
+        //   modelName: llm.model,
+        //   completionOptions: null,
+        //   cacheHit: false,
+        //   filepath: helper.filepath,
+        //   numLines: nextCompletion.split("\n").length,
+        //   completionId: helper.input.completionId,
+        //   gitRepo: await this.ide.getRepoName(helper.filepath),
+        //   uniqueId: await this.ide.getUniqueId(),
+        //   timestamp: Date.now(),
+        //   ...helper.options,
+        // };
+        // return outcomeNext;
       }
 
       // // Completion
