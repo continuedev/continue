@@ -129,7 +129,7 @@ export class VsCodeWebviewProtocol
               .showInformationMessage(message, "Add API Key", "Use Local Model")
               .then((selection) => {
                 if (selection === "Add API Key") {
-                  this.request("addApiKey", undefined);
+                  this.request("setupApiKey", undefined);
                 } else if (selection === "Use Local Model") {
                   this.request("setupLocalConfig", undefined);
                 }

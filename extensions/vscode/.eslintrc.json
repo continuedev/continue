@@ -6,6 +6,7 @@
   "extends": ["../../.eslintrc.shared.json"],
   "rules": {
     "@typescript-eslint/naming-convention": "off",
-    "@typescript-eslint/no-floating-promises": "warn"
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/no-misused-promises": "warn"
   }
 }

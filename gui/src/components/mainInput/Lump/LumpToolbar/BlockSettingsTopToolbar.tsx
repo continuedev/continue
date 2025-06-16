@@ -23,8 +23,8 @@ import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
 import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
 import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
 
+import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
-import { usesFreeTrialApiKey } from "../../../../util/freeTrialHelpers";
 
 interface BlockSettingsToolbarIcon {
   title: string;

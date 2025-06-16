@@ -40,7 +40,7 @@ export async function testRootPathContext(
     // @ts-ignore
     .spyOn(service, "getSnippets")
     // @ts-ignore
-    .mockImplementation(async (_filepath, _endPosition) => {
+    .mockImplementation((_filePath, _endPosition) => {
       return [];
     });
 

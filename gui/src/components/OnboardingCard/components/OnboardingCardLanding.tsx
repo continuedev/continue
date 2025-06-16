@@ -6,8 +6,8 @@ import { selectCurrentOrg } from "../../../redux";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectFirstHubProfile } from "../../../redux/thunks";
 import { hasPassedFTL } from "../../../util/freeTrial";
-import ContinueLogo from "../../gui/ContinueLogo";
 import { ToolTip } from "../../gui/Tooltip";
+import ContinueLogo from "../../svg/ContinueLogo";
 import { useOnboardingCard } from "../hooks";
 
 export function OnboardingCardLanding({

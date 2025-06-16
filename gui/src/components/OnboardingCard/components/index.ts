@@ -4,4 +4,5 @@ export * from "./OllamaStatus";
 export * from "./OnboardingCardLanding";
 export * from "./OnboardingCardTabs";
 export * from "./OnboardingLocalTab";
+export * from "./OnboardingModelsAddOnTab";
 export * from "./OnboardingProvidersTab";
