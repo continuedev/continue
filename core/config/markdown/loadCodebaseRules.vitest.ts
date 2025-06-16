@@ -9,7 +9,7 @@ vi.mock("../../indexing/walkDir", () => ({
   walkDirs: vi.fn(),
 }));
 
-vi.mock("./parseMarkdownRule", () => ({
+vi.mock("@continuedev/config-yaml", () => ({
   markdownToRule: vi.fn(),
 }));
 
@@ -84,8 +84,8 @@ describe("loadCodebaseRules", () => {
 
     // Mock markdownToRule to return converted rules
     (markdownToRule as any).mockImplementation(
-      (path: string, content: string) => {
-        return mockConvertedRules[path];
+      (content: string, options: any) => {
+        return mockConvertedRules[options.filePath];
       },
     );
   });
