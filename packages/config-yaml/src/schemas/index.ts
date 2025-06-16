@@ -49,7 +49,9 @@ const ruleObjectSchema = z.object({
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
-// TODO: What should be required?
+/**
+ * A schema for rules.json files
+ */
 export const rulesJsonSchema = z.object({
   name: z.string(),
   version: z.string(),
@@ -60,6 +62,9 @@ export const rulesJsonSchema = z.object({
 
 export type Rule = z.infer<typeof ruleSchema>;
 export type RuleObject = z.infer<typeof ruleObjectSchema>;
+/**
+ * A schema for rules.json files
+ */
 export type RulesJson = z.infer<typeof rulesJsonSchema>;
 
 const defaultUsesSchema = z.string();
