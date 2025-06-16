@@ -257,11 +257,11 @@ export async function unrollAssistantFromContent(
   let parsedYaml = parseConfigYaml(rawYaml);
 
   // Unroll blocks and convert their secrets to FQSNs
-  const unrolledAssistant = await unrollBlocks(
-    parsedYaml,
-    registry,
-    options.injectBlocks,
-  );
+  const {
+    config: unrolledAssistant,
+    configLoadInterrupted,
+    errors,
+  } = await unrollBlocks(parsedYaml, registry, options.injectBlocks);
 
   // Back to a string so we can fill in template variables
   const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
@@ -300,10 +300,8 @@ export async function unrollAssistantFromContent(
 
   return {
     config: finalConfig,
-    errors: (unrolledAssistant as ConfigResult<AssistantUnrolled>).errors,
-    configLoadInterrupted: (
-      unrolledAssistant as ConfigResult<AssistantUnrolled>
-    ).configLoadInterrupted,
+    errors,
+    configLoadInterrupted,
   };
 }
 
