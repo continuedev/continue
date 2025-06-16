@@ -1,12 +1,11 @@
-import { basename } from "path";
 import * as YAML from "yaml";
-import { RuleWithSource } from "../..";
+import { RuleObject } from "../schemas/index.js";
 
 export interface RuleFrontmatter {
-  globs?: RuleWithSource["globs"];
-  name?: RuleWithSource["name"];
-  description?: RuleWithSource["description"];
-  alwaysApply?: RuleWithSource["alwaysApply"];
+  globs?: RuleObject["globs"];
+  name?: RuleObject["name"];
+  description?: RuleObject["description"];
+  alwaysApply?: RuleObject["alwaysApply"];
 }
 
 /**
@@ -43,35 +42,14 @@ export function parseMarkdownRule(content: string): {
   return { frontmatter: {}, markdown: normalizedContent };
 }
 
-/**
- * Converts a markdown file with YAML frontmatter to a RuleWithSource object
- */
-export function convertMarkdownRuleToContinueRule(
-  path: string,
-  content: string,
-): RuleWithSource {
-  const { frontmatter, markdown } = parseMarkdownRule(content);
-
-  // Try to extract title from first heading if no name in frontmatter
-  let name = frontmatter.name;
-  if (!name) {
-    // Look for a heading in the markdown
-    const headingMatch = markdown.match(/^#\s+(.+)$/m);
-    if (headingMatch) {
-      name = headingMatch[1].trim();
-    } else {
-      // Fall back to filename
-      name = basename(path).replace(/\.md$/, "");
-    }
-  }
+export function markdownToRule(rule: string): RuleObject {
+  const { frontmatter, markdown } = parseMarkdownRule(rule);
 
   return {
-    name,
+    name: frontmatter.name ?? "Rule",
     rule: markdown,
     globs: frontmatter.globs,
     description: frontmatter.description,
     alwaysApply: frontmatter.alwaysApply,
-    source: "rules-block",
-    ruleFile: path,
   };
 }

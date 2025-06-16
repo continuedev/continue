@@ -1,10 +1,9 @@
 import {
   createMarkdownWithFrontmatter,
-  createRuleFilePath,
   createRuleMarkdown,
   sanitizeRuleName,
-} from "./createMarkdownRule";
-import { parseMarkdownRule } from "./parseMarkdownRule";
+} from "./createMarkdownRule.js";
+import { parseMarkdownRule } from "./parseMarkdownRule.js";
 
 describe("sanitizeRuleName", () => {
   it("should sanitize rule names for filenames", () => {
@@ -22,23 +21,6 @@ describe("sanitizeRuleName", () => {
     expect(sanitizeRuleName("rule-with-numbers-123")).toBe(
       "rule-with-numbers-123",
     );
-  });
-});
-
-describe("createRuleFilePath", () => {
-  it("should create correct rule file path", () => {
-    const result = createRuleFilePath("/workspace", "My Test Rule");
-    expect(result).toBe("/workspace/.continue/rules/my-test-rule.md");
-  });
-
-  it("should handle special characters in rule name", () => {
-    const result = createRuleFilePath("/home/user", "Rule with @#$% chars");
-    expect(result).toBe("/home/user/.continue/rules/rule-with-chars.md");
-  });
-
-  it("should handle edge case rule names", () => {
-    const result = createRuleFilePath("/test", "   Multiple   Spaces   ");
-    expect(result).toBe("/test/.continue/rules/multiple-spaces.md");
   });
 });
 

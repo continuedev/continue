@@ -9,6 +9,7 @@ import {
   FQSN,
   PackageIdentifier,
 } from "../interfaces/slugs.js";
+import { markdownToRule } from "../markdown/index.js";
 import {
   AssistantUnrolled,
   assistantUnrolledSchema,
@@ -195,7 +196,7 @@ async function extractRenderedSecretsMap(
 export interface BaseUnrollAssistantOptions {
   renderSecrets: boolean;
   injectBlocks?: PackageIdentifier[];
-  asConfigResult?: true;
+  asConfigResult?: boolean; // TODO: Decide
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions
@@ -503,7 +504,26 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
-  const parsedYaml = parseBlock(templatedYaml);
+  // Try to parse as YAML first, then as markdown rule if that fails
+  let parsedYaml: AssistantUnrolled;
+  try {
+    parsedYaml = parseBlock(templatedYaml);
+  } catch (yamlError) {
+    // If YAML parsing fails, try parsing as markdown rule
+    try {
+      const rule = markdownToRule(templatedYaml);
+      // Convert the rule object to the expected format
+      parsedYaml = {
+        name: rule.name,
+        version: "1.0.0",
+        rules: [rule],
+      };
+    } catch (markdownError) {
+      // If both fail, throw the original YAML error
+      throw yamlError;
+    }
+  }
+
   return parsedYaml;
 }
 
