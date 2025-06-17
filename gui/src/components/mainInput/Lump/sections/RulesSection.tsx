@@ -2,6 +2,7 @@ import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowsPointingOutIcon,
   EyeIcon,
+  InformationCircleIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { RuleWithSource } from "core";
@@ -11,7 +12,7 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
@@ -22,6 +23,8 @@ import {
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 import { useFontSize } from "../../../ui/font";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
+import { RulePolicyItem } from "./rules/RulePolicyItem";
+import { RulesSectionTooltip } from "./rules/RulesSectionTooltip";
 
 interface RuleCardProps {
   rule: RuleWithSource;
@@ -146,6 +149,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
 export function RulesSection() {
   const { selectedProfile } = useAuth();
+  const [showPolicies, setShowPolicies] = useState(false);
 
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
@@ -213,12 +217,48 @@ export function RulesSection() {
     return rules;
   }, [config, selectedProfile, mode]);
 
+  const namedRules = useMemo(() => {
+    return sortedRules.filter((rule) => rule.name);
+  }, [sortedRules]);
+
   return (
     <div className="flex flex-col gap-3">
-      {sortedRules.map((rule, index) => (
-        <RuleCard key={index} rule={rule} />
-      ))}
-      <ExploreBlocksButton blockType="rules" />
+      <div className="flex flex-row items-center justify-between">
+        <button
+          className="flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-gray-400 hover:bg-gray-800 hover:text-gray-300"
+          onClick={() => setShowPolicies(!showPolicies)}
+        >
+          {showPolicies ? "View Rules" : "Manage Policies"}
+        </button>
+        <HeaderButtonWithToolTip text="Rule Policies Info">
+          <div className="group relative">
+            <InformationCircleIcon className="h-4 w-4 text-gray-400" />
+            <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
+              <RulesSectionTooltip />
+            </div>
+          </div>
+        </HeaderButtonWithToolTip>
+      </div>
+
+      {showPolicies ? (
+        <div className="flex flex-col gap-2">
+          {namedRules.map((rule, index) => (
+            <RulePolicyItem key={index} rule={rule} />
+          ))}
+          {namedRules.length === 0 && (
+            <div className="p-2 text-xs text-gray-400">
+              No rules with names available to configure policies.
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {sortedRules.map((rule, index) => (
+            <RuleCard key={index} rule={rule} />
+          ))}
+          <ExploreBlocksButton blockType="rules" />
+        </>
+      )}
     </div>
   );
 }
