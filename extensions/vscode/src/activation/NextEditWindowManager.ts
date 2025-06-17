@@ -125,6 +125,7 @@ export class NextEditWindowManager {
 
     // Clear any existing decorations first (very important to prevent overlapping)
     this.hideAllTooltips();
+    // this.dispose();
 
     // Get cursor position
     const position = editor.selection.active;
@@ -137,6 +138,7 @@ export class NextEditWindowManager {
    * Hide all tooltips in all editors
    */
   public hideAllTooltips() {
+    console.log("hideAllTooltips");
     if (this.currentDecoration) {
       // Remove decoration from all editors to be extra safe
       vscode.window.visibleTextEditors.forEach((editor) => {
@@ -153,6 +155,7 @@ export class NextEditWindowManager {
       this.currentDecoration.dispose();
       this.currentDecoration = null;
     }
+    this.dispose();
   }
 
   public dispose() {
@@ -229,6 +232,7 @@ export class NextEditWindowManager {
    * Create an SVG with the given text, supporting multiple lines
    */
   private createSvgTooltip(text: string): vscode.Uri | undefined {
+    console.log("createSvgTooltip");
     const baseTextConfig = {
       "font-family": SVG_CONFIG.fontFamily,
       "font-size": SVG_CONFIG.fontSize,
@@ -239,31 +243,44 @@ export class NextEditWindowManager {
       const tipWidth = SVG_CONFIG.getTipWidth(text);
       const tipHeight = SVG_CONFIG.getTipHeight(text);
 
-      // Split text into lines
       const lines = text.split("\n");
+      const globalIndent =
+        lines.length > 0 ? (lines[0].match(/^[ \t]*/) || [""])[0].length : 0;
 
-      // Create SVG builder
-      let svg = svgBuilder.width(tipWidth).height(tipHeight);
+      // Create a fresh SVG builder instance each time.
+      // This ensures we don't have state accumulation between calls.
+      const svg = svgBuilder.newInstance().width(tipWidth).height(tipHeight);
 
-      // Add each line as a separate text element
+      // Add each line as a separate text element.
       lines.forEach((line, index) => {
         const y =
           SVG_CONFIG.paddingY +
           SVG_CONFIG.fontSize +
           index * SVG_CONFIG.lineHeight;
 
-        svg = svg.text(
+        svg.text(
           {
             ...baseTextConfig,
             x: SVG_CONFIG.paddingX,
             y: y,
           },
-          line,
+          line.slice(globalIndent),
         );
       });
 
-      // Render the SVG
-      const svgContent = svg.render();
+      // Render the SVG.
+      let svgContent = svg.render();
+
+      // Manually add whitespace styling.
+      // svg-builder does not support styles. To be exact,
+      // there is a style function but it's broken and there are no docs.
+      if (!svgContent.includes('style="white-space: pre"')) {
+        svgContent = svgContent.replaceAll(
+          "<text ",
+          '<text style="white-space: pre" ',
+        );
+      }
+      // console.log(svgContent);
 
       const dataUri = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString("base64")}`;
       return vscode.Uri.parse(dataUri);
@@ -279,6 +296,7 @@ export class NextEditWindowManager {
   private createSvgDecoration(
     text: string,
   ): vscode.TextEditorDecorationType | undefined {
+    console.log("createSvgDecoration");
     const svgUri = this.createSvgTooltip(text);
     if (!svgUri) {
       return undefined;
@@ -306,8 +324,8 @@ export class NextEditWindowManager {
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
       },
-      // Set a negative margin to make the decoration float rather than displace text
-      // Also use absolute positioning
+      // Set a negative margin to make the decoration float if it starts to displace text.
+      // Also use absolute positioning.
       rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     });
   }
@@ -342,6 +360,7 @@ export class NextEditWindowManager {
     position: vscode.Position,
     text: string,
   ) {
+    console.log("renderTooltip");
     // Create a new decoration with the text
     const decoration = this.createSvgDecoration(text);
     if (!decoration) {
@@ -357,6 +376,7 @@ export class NextEditWindowManager {
     const offsetPosition = this.getOffsetPosition(editor, position);
 
     // Apply the decoration at the offset position
+    editor.setDecorations(decoration, []);
     editor.setDecorations(decoration, [
       {
         range: new vscode.Range(offsetPosition, offsetPosition),
