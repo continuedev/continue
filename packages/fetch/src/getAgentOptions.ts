@@ -12,7 +12,8 @@ export async function getAgentOptions(
   const TIMEOUT = 7200; // 7200 seconds = 2 hours
   const timeout = (requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
 
-  const ca = await CertsCache.getInstance().getCa(requestOptions?.caBundlePath);
+  const certsCache = CertsCache.getInstance();
+  const ca = await certsCache.getCa(requestOptions?.caBundlePath);
 
   const agentOptions: { [key: string]: any } = {
     ca,
@@ -22,19 +23,6 @@ export async function getAgentOptions(
     keepAlive: true,
     keepAliveMsecs: timeout,
   };
-
-  if (process.env.VERBOSE_FETCH) {
-    console.log("=== CERTIFICATE CONFIGURATION ===");
-    console.log(`Number of CA certificates: ${ca.length}`);
-    console.log(
-      `Global agent CA certificates: ${globalAgent.options.ca ? "Present" : "Not present"}`,
-    );
-    console.log(
-      `Custom certificates provided: ${customCerts?.length ? "Yes" : "No"}`,
-    );
-    console.log(`rejectUnauthorized: ${agentOptions.rejectUnauthorized}`);
-    console.log("================================");
-  }
 
   // Handle ClientCertificateOptions
   if (requestOptions?.clientCertificate) {
@@ -46,6 +34,22 @@ export async function getAgentOptions(
     if (requestOptions.clientCertificate.passphrase) {
       agentOptions.passphrase = passphrase;
     }
+  }
+
+  if (process.env.VERBOSE_FETCH) {
+    console.log(
+      `Fetch agent: rejectUnauthorized/verifySsl: ${agentOptions.rejectUnauthorized ?? "not set (defaulting to true)"}`,
+    );
+    console.log(`Fetch agent options:`);
+    console.log(
+      `\tTimeout (sessionTimeout/keepAliveMsecs): ${agentOptions.timeout}`,
+    );
+    console.log(`\tTotal CA certs: ${ca.length}`);
+    console.log(`\tGlobal/Root CA certs: ${certsCache.fixedCa.length}`);
+    console.log(`\tCustom CA certs: ${ca.length - certsCache.fixedCa.length}`);
+    console.log(
+      `\tClient certificate: ${requestOptions?.clientCertificate ? "Yes" : "No"}`,
+    );
   }
 
   return agentOptions;
