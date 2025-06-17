@@ -89,7 +89,7 @@ export async function fetchwithRequestOptions(
     url.host = "127.0.0.1";
   }
 
-  const agentOptions = getAgentOptions(requestOptions);
+  const agentOptions = await getAgentOptions(requestOptions);
 
   // Get proxy from options or environment variables
   let proxy = requestOptions?.proxy;
