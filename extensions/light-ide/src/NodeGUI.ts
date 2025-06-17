@@ -176,12 +176,29 @@ export class NodeGUI {
               const interval = setInterval(() => {
                 const inputDiv = document.evaluate("//div[@contenteditable='true' and contains(@class, 'ProseMirror')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (!inputDiv) return;
-                clearInterval(interval);
-
+               
                 inputDiv.focus();
-                inputDiv.innerHTML = "<p>" + initialPrompt + "</p>";
-                inputDiv.dispatchEvent(new Event("input", { bubbles: true }));
-                inputDiv.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
+
+                if (inputDiv.innerText.trim() !== initialPrompt.trim()) {
+                  inputDiv.innerHTML = "<p>" + initialPrompt + "</p>";
+                  inputDiv.dispatchEvent(new Event("input", { bubbles: true }));
+                  return;
+                }
+                 
+                // Only dispatch Enter if the innerText is correct and not empty
+                if (inputDiv.innerText.trim() === initialPrompt.trim()) {
+                  const enterEventOptions = {
+                    key: "Enter",
+                    code: "Enter",
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true,
+                    cancelable: true
+                  };
+                  inputDiv.dispatchEvent(new KeyboardEvent("keydown", enterEventOptions));
+                  inputDiv.dispatchEvent(new KeyboardEvent("keyup", enterEventOptions));
+                  clearInterval(interval); // Done!
+                }
               }, 150);
             }
 
