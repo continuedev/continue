@@ -8,6 +8,7 @@ import {
 import { renderChatMessage } from "../../util/messageContent";
 import { getCleanUriPath } from "../../util/uri";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
+import { RulePolicies } from "./types";
 
 /**
  * Checks if a path matches any of the provided globs
