@@ -2,7 +2,6 @@ import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowsPointingOutIcon,
   EyeIcon,
-  InformationCircleIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { RuleWithSource } from "core";
@@ -25,7 +24,6 @@ import {
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 import { useFontSize } from "../../../ui/font";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
-import { RulesSectionTooltip } from "./rules/RulesSectionTooltip";
 
 interface RuleCardProps {
   rule: RuleWithSource;
@@ -250,20 +248,6 @@ export function RulesSection() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-row items-center justify-between">
-        <div className="flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-gray-400">
-          Available Rules
-        </div>
-        <HeaderButtonWithToolTip text="Rule Policies Info">
-          <div className="group relative">
-            <InformationCircleIcon className="h-4 w-4 text-gray-400" />
-            <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
-              <RulesSectionTooltip />
-            </div>
-          </div>
-        </HeaderButtonWithToolTip>
-      </div>
-
       {sortedRules.map((rule, index) => (
         <RuleCard key={index} rule={rule} />
       ))}
