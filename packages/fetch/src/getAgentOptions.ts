@@ -37,9 +37,6 @@ export async function getAgentOptions(
   }
 
   if (process.env.VERBOSE_FETCH) {
-    console.log(
-      `Fetch agent: rejectUnauthorized/verifySsl: ${agentOptions.rejectUnauthorized ?? "not set (defaulting to true)"}`,
-    );
     console.log(`Fetch agent options:`);
     console.log(
       `\tTimeout (sessionTimeout/keepAliveMsecs): ${agentOptions.timeout}`,
@@ -49,6 +46,9 @@ export async function getAgentOptions(
     console.log(`\tCustom CA certs: ${ca.length - certsCache.fixedCa.length}`);
     console.log(
       `\tClient certificate: ${requestOptions?.clientCertificate ? "Yes" : "No"}`,
+    );
+    console.log(
+      `\trejectUnauthorized/verifySsl: ${agentOptions.rejectUnauthorized ?? "not set (defaults to true)"}`,
     );
   }
 
