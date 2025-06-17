@@ -11,12 +11,11 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
-  addRule,
   setDialogMessage,
   setShowDialog,
   toggleRuleSetting,
@@ -34,13 +33,6 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const ideMessenger = useContext(IdeMessengerContext);
   const mode = useAppSelector((store) => store.session.mode);
   const policy = useAppSelector((state) => state.ui.ruleSettings[rule.name]);
-
-  // Ensure the rule is added to settings
-  useEffect(() => {
-    if (rule.name && !policy) {
-      dispatch(addRule(rule));
-    }
-  }, [rule.name, policy, dispatch, rule]);
 
   const handleOpen = async () => {
     if (rule.slug) {
