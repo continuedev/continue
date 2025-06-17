@@ -3,12 +3,12 @@
 
 <svg
    width="600"
-   height="800"
-   viewBox="0 0 158.75 211.66667"
+   height="500"
+   viewBox="0 0 158.75 132.29167"
    version="1.1"
    id="svg1"
-   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
-   sodipodi:docname="step1-ollama.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   sodipodi:docname="step_1.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -25,14 +25,28 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="1"
-     inkscape:cx="261.5"
+     inkscape:cx="261"
      inkscape:cy="467.5"
-     inkscape:window-width="2190"
-     inkscape:window-height="1190"
+     inkscape:window-width="2299"
+     inkscape:window-height="1226"
      inkscape:window-x="26"
      inkscape:window-y="23"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer1"
+     showguides="true">
+    <sodipodi:guide
+       position="177.40312,122.13633"
+       orientation="0,1"
+       id="guide1"
+       inkscape:locked="false"
+       inkscape:label=""
+       inkscape:color="rgb(0,134,229)" />
+    <sodipodi:guide
+       position="152.13542,34.934633"
+       orientation="1,0"
+       id="guide2"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
   <defs
      id="defs1">
     <inkscape:path-effect
@@ -137,7 +151,7 @@
      id="layer1">
     <g
        id="g90"
-       transform="matrix(1.4084595,0,0,1.4084595,-345.08313,-184.92925)">
+       transform="matrix(1.4084595,0,0,1.4084595,-343.49562,-224.61675)">
       <path
          id="rect90"
          style="font-variation-settings:'opsz' 32;opacity:1;fill:#2b2b2b;fill-opacity:1;stroke:#0078d4;stroke-width:0.264583;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
@@ -156,7 +170,8 @@
          height="31.749994"
          x="251.35417"
          y="211.66664"
-         ry="5.2916598" />
+         ry="5.2916598"
+         rx="5.2916598" />
       <g
          id="g5"
          transform="matrix(0.01983302,0,0,0.01983302,260.8231,219.07497)"
@@ -194,7 +209,8 @@
          height="31.749994"
          x="285.75003"
          y="166.68745"
-         ry="5.2916598" />
+         ry="5.2916598"
+         rx="5.2916598" />
       <rect
          style="font-variation-settings:'opsz' 32;fill:#3d3846;fill-opacity:1;stroke-width:0.529167;stroke-dasharray:0.529167, 1.5875;paint-order:stroke markers fill"
          id="rect16"
@@ -202,7 +218,8 @@
          height="31.749994"
          x="320.14584"
          y="211.66664"
-         ry="5.2916598" />
+         ry="5.2916598"
+         rx="5.2916598" />
       <g
          id="g10-5-7"
          inkscape:label="chip configure ok ai llm"
