@@ -12,18 +12,19 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
+  addRule,
   setDialogMessage,
   setShowDialog,
+  toggleRuleSetting,
 } from "../../../../redux/slices/uiSlice";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 import { useFontSize } from "../../../ui/font";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
-import { RulePolicyItem } from "./rules/RulePolicyItem";
 import { RulesSectionTooltip } from "./rules/RulesSectionTooltip";
 
 interface RuleCardProps {
@@ -34,6 +35,14 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const mode = useAppSelector((store) => store.session.mode);
+  const policy = useAppSelector((state) => state.ui.ruleSettings[rule.name]);
+
+  // Ensure the rule is added to settings
+  useEffect(() => {
+    if (rule.name && !policy) {
+      dispatch(addRule(rule));
+    }
+  }, [rule.name, policy, dispatch, rule]);
 
   const handleOpen = async () => {
     if (rule.slug) {
@@ -53,6 +62,14 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
       });
+    }
+  };
+
+  const handleTogglePolicy = (e) => {
+    if (rule.name) {
+      dispatch(toggleRuleSetting(rule.name));
+      e.stopPropagation();
+      e.preventDefault();
     }
   };
 
@@ -104,20 +121,36 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
           >
             {title}
           </span>
-          <div className="flex flex-row items-start gap-1">
-            <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
-              <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
-            </HeaderButtonWithToolTip>{" "}
-            {rule.source === "default-chat" ||
-            rule.source === "default-agent" ? (
-              <HeaderButtonWithToolTip onClick={handleOpen} text="View">
-                <EyeIcon className="h-3 w-3 text-gray-400" />
-              </HeaderButtonWithToolTip>
-            ) : (
-              <HeaderButtonWithToolTip onClick={handleOpen} text="Edit">
-                <PencilIcon className="h-3 w-3 text-gray-400" />
-              </HeaderButtonWithToolTip>
+          <div className="flex flex-row items-center gap-2">
+            {rule.name && policy && (
+              <div
+                className={`hover:bg-list-active hover:text-list-active-foreground flex cursor-pointer flex-row items-center justify-end gap-1 px-2 py-0.5`}
+                onClick={handleTogglePolicy}
+              >
+                {policy === "never" ? (
+                  <span className="text-lightgray text-xs">Never</span>
+                ) : policy === "auto" ? (
+                  <span className="text-success text-xs">Auto</span>
+                ) : (
+                  <span className="text-warning text-xs">Always</span>
+                )}
+              </div>
             )}
+            <div className="flex flex-row items-start gap-1">
+              <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
+                <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
+              </HeaderButtonWithToolTip>{" "}
+              {rule.source === "default-chat" ||
+              rule.source === "default-agent" ? (
+                <HeaderButtonWithToolTip onClick={handleOpen} text="View">
+                  <EyeIcon className="h-3 w-3 text-gray-400" />
+                </HeaderButtonWithToolTip>
+              ) : (
+                <HeaderButtonWithToolTip onClick={handleOpen} text="Edit">
+                  <PencilIcon className="h-3 w-3 text-gray-400" />
+                </HeaderButtonWithToolTip>
+              )}
+            </div>
           </div>
         </div>
 
@@ -149,8 +182,6 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
 export function RulesSection() {
   const { selectedProfile } = useAuth();
-  const [showPolicies, setShowPolicies] = useState(false);
-
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
   const sortedRules: RuleWithSource[] = useMemo(() => {
@@ -217,19 +248,12 @@ export function RulesSection() {
     return rules;
   }, [config, selectedProfile, mode]);
 
-  const namedRules = useMemo(() => {
-    return sortedRules.filter((rule) => rule.name);
-  }, [sortedRules]);
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-row items-center justify-between">
-        <button
-          className="flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-gray-400 hover:bg-gray-800 hover:text-gray-300"
-          onClick={() => setShowPolicies(!showPolicies)}
-        >
-          {showPolicies ? "View Rules" : "Manage Policies"}
-        </button>
+        <div className="flex items-center gap-1 rounded-sm px-2 py-1 text-xs text-gray-400">
+          Available Rules
+        </div>
         <HeaderButtonWithToolTip text="Rule Policies Info">
           <div className="group relative">
             <InformationCircleIcon className="h-4 w-4 text-gray-400" />
@@ -240,25 +264,10 @@ export function RulesSection() {
         </HeaderButtonWithToolTip>
       </div>
 
-      {showPolicies ? (
-        <div className="flex flex-col gap-2">
-          {namedRules.map((rule, index) => (
-            <RulePolicyItem key={index} rule={rule} />
-          ))}
-          {namedRules.length === 0 && (
-            <div className="p-2 text-xs text-gray-400">
-              No rules with names available to configure policies.
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
-          {sortedRules.map((rule, index) => (
-            <RuleCard key={index} rule={rule} />
-          ))}
-          <ExploreBlocksButton blockType="rules" />
-        </>
-      )}
+      {sortedRules.map((rule, index) => (
+        <RuleCard key={index} rule={rule} />
+      ))}
+      <ExploreBlocksButton blockType="rules" />
     </div>
   );
 }
