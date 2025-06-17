@@ -120,7 +120,20 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
 export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
+  rulePolicies: RulePolicies = {},
 ): boolean => {
+  const policy = rulePolicies[rule.name];
+
+  // Always apply if policy is "always"
+  if (policy === "always") {
+    return true;
+  }
+
+  // Never apply if policy is "never"
+  if (policy === "never") {
+    return false;
+  }
+
   // If it's a global rule, always apply it regardless of file paths
   if (isGlobalRule(rule)) {
     return true;
@@ -196,6 +209,7 @@ export const getApplicableRules = (
   userMessage: UserChatMessage | ToolResultChatMessage | undefined,
   rules: RuleWithSource[],
   contextItems: ContextItemWithId[],
+  rulePolicies: RulePolicies = {},
 ): RuleWithSource[] => {
   // First, extract any global rules that should always apply
   const globalRules = rules.filter((rule) => isGlobalRule(rule));
@@ -221,33 +235,31 @@ export const getApplicableRules = (
   // Get rules that match file paths
   const matchingRules = rules
     .filter((rule) => !isGlobalRule(rule)) // Skip global rules as we've already handled them
-    .filter((rule) => shouldApplyRule(rule, allFilePaths));
+    .filter((rule) => shouldApplyRule(rule, allFilePaths, rulePolicies));
 
   // Combine global rules with matching rules, ensuring no duplicates
   return [...globalRules, ...matchingRules];
 };
 
-/**
- * Creates a system message string with applicable rules appended
- *
- * @param baseSystemMessage - The base system message to start with
- * @param userMessage - The user message to check for file paths
- * @param rules - The list of rules to filter
- * @param contextItems - Context items to check for file paths
- * @returns System message with applicable rules appended
- */
 export const getSystemMessageWithRules = ({
   baseSystemMessage,
   userMessage,
   rules,
   contextItems,
+  rulePolicies = {},
 }: {
   baseSystemMessage?: string;
   userMessage: UserChatMessage | ToolResultChatMessage | undefined;
   rules: RuleWithSource[];
   contextItems: ContextItemWithId[];
+  rulePolicies?: RulePolicies;
 }) => {
-  const applicableRules = getApplicableRules(userMessage, rules, contextItems);
+  const applicableRules = getApplicableRules(
+    userMessage,
+    rules,
+    contextItems,
+    rulePolicies,
+  );
   let systemMessage = baseSystemMessage ?? "";
 
   for (const rule of applicableRules) {
