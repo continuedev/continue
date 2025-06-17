@@ -111,7 +111,7 @@ describe("Chat page test", () => {
     });
   });
 
-  describe.only("unrecommended agent model warning", () => {
+  describe("unrecommended agent model warning", () => {
     it("should not show warning if there are no models", async () => {
       await renderWithProviders(<Chat />);
       expect(
