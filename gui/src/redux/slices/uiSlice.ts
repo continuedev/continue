@@ -134,7 +134,7 @@ export const uiSlice = createSlice({
     },
     // Rules
     addRule: (state, action: PayloadAction<RuleWithSource>) => {
-      state.ruleSettings[action.payload.name] = DEFAULT_RULE_SETTING;
+      state.ruleSettings[action.payload.name!] = DEFAULT_RULE_SETTING;
     },
     toggleRuleSetting: (state, action: PayloadAction<string>) => {
       const setting = state.ruleSettings[action.payload];
