@@ -32,7 +32,9 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const mode = useAppSelector((store) => store.session.mode);
-  const policy = useAppSelector((state) => state.ui.ruleSettings[rule.name]);
+  const policy = useAppSelector(
+    (state) => state.ui.ruleSettings[rule.name || ""],
+  );
 
   const handleOpen = async () => {
     if (rule.slug) {
