@@ -16,6 +16,7 @@ import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
+  DEFAULT_RULE_SETTING,
   setDialogMessage,
   setShowDialog,
   toggleRuleSetting,
@@ -32,8 +33,10 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const mode = useAppSelector((store) => store.session.mode);
-  const policy = useAppSelector(
-    (state) => state.ui.ruleSettings[rule.name || ""],
+  const policy = useAppSelector((state) =>
+    rule.name
+      ? state.ui.ruleSettings[rule.name] || DEFAULT_RULE_SETTING
+      : undefined,
   );
 
   const handleOpen = async () => {
