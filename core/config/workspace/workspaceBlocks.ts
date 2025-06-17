@@ -1,8 +1,12 @@
-import { BlockType, ConfigYaml } from "@continuedev/config-yaml";
+import {
+  BlockType,
+  ConfigYaml,
+  createRuleMarkdown,
+  RULE_FILE_EXTENSION,
+} from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
 import { joinPathsToUri } from "../../util/uri";
-import { RULE_FILE_EXTENSION, createRuleMarkdown } from "../markdown";
 
 const BLOCK_TYPE_CONFIG: Record<
   BlockType,
