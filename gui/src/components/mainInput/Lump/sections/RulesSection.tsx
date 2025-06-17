@@ -11,7 +11,7 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
-import { useContext, useMemo } from "react";
+import { MouseEventHandler, useContext, useMemo } from "react";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
@@ -60,7 +60,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     }
   };
 
-  const handleTogglePolicy = (e) => {
+  const handleTogglePolicy: MouseEventHandler<HTMLDivElement> = (e) => {
     if (rule.name) {
       dispatch(toggleRuleSetting(rule.name));
       e.stopPropagation();
