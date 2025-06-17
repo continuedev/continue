@@ -289,13 +289,20 @@ export class NextEditWindowManager {
     const tipWidth = SVG_CONFIG.getTipWidth(text);
     const tipHeight = SVG_CONFIG.getTipHeight(text);
 
-    // Use renderOptions.before instead of after to prevent text displacement
     return vscode.window.createTextEditorDecorationType({
       after: {
         contentIconPath: svgUri,
-        border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px ${backgroundColour};
-                  border-radius: ${SVG_CONFIG.radius}px;
-                  filter: ${SVG_CONFIG.filter}`,
+        // border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px ${backgroundColour};
+        //           border-radius: ${SVG_CONFIG.radius}px;
+        //           filter: ${SVG_CONFIG.filter}`,
+        // width: `${tipWidth}px`,
+        // height: `${tipHeight}px`,
+        border: `transparent; position: absolute; z-index: 1000;
+               box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, 
+                          inset 0 0 0 ${tipHeight}px ${backgroundColour};
+               border-radius: ${SVG_CONFIG.radius}px;
+               filter: ${SVG_CONFIG.filter};
+               margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
       },
