@@ -30,15 +30,16 @@ export function useOnboardingCard(): UseOnboardingCard {
     "hasDismissedOnboardingCard",
   );
 
-  let show: boolean;
+  // Vision Customization - we do not want to show the onboarding card
+  let show: boolean = false;
 
   // Always show if we explicitly want to, e.g. passing free trial
   // and setting up keys
-  if (onboardingCard.show) {
-    show = true;
-  } else {
-    show = onboardingStatus !== "Completed" && !hasDismissedOnboardingCard;
-  }
+  // if (onboardingCard.show) {
+  //   show = true;
+  // } else {
+  //   show = onboardingStatus !== "Completed" && !hasDismissedOnboardingCard;
+  // }
 
   async function open(tab: TabTitle) {
     navigate("/");
