@@ -687,7 +687,7 @@ export class Core {
 
     on("files/smallEdit", async ({ data }) => {
       const EDIT_AGGREGATION_OPTIONS = {
-        deltaT: 0.75,
+        deltaT: 1.0,
         deltaL: 5,
         maxEdits: 250,
         maxDuration: 100.0,
@@ -699,8 +699,8 @@ export class Core {
         global._editAggregator = new EditAggregator(
           EDIT_AGGREGATION_OPTIONS,
           (diff: string) => {
-            // callback for when a diff is finalized
-            // TODO: add the diff to devData from here
+            console.log(diff, "\n");
+            // TODO handle devData logging here
           },
         );
       }

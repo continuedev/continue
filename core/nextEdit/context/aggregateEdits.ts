@@ -113,10 +113,7 @@ export class EditAggregator {
 
     const editSize = edit.editText.length;
     if (editSize > this.config.maxEditSize) {
-      console.log(
-        `Large edit discarded: size ${editSize} characters exceeds max_edit_size ${this.config.maxEditSize}`,
-      );
-      return; // Exit early without processing this edit
+      return;
     }
 
     const editLine = edit.range.start.line;
@@ -203,12 +200,6 @@ export class EditAggregator {
         await this.finalizeCluster(filePath, cluster, fileState);
       }
     }
-
-    if (this.config.verbose) {
-      console.log(
-        `Processed edit in ${filePath} at line ${editLine}: "${edit.editText.substring(0, 30)}${edit.editText.length > 30 ? "..." : ""}"`,
-      );
-    }
   }
 
   private isWhitespaceOnlyEdit(
@@ -248,17 +239,12 @@ export class EditAggregator {
   async processEdits(edits: RangeInFileWithContentsAndEdit[]): Promise<void> {
     const timestamp = Date.now();
 
-    // Skip processing during rapid typing
+    // Only process the last edit during rapid typing
     if (this.getProcessingQueueSize() > 15) {
-      // Only process the last edit
       if (edits.length > 0) {
         await this.processEdit(edits[edits.length - 1], timestamp);
       }
       return;
-    }
-
-    if (this.config.verbose) {
-      console.log(`Queueing batch of ${edits.length} edits`);
     }
 
     for (const edit of edits) {
@@ -267,10 +253,6 @@ export class EditAggregator {
   }
 
   async finalizeAllClusters(): Promise<void> {
-    if (this.config.verbose) {
-      console.log("Finalizing all active clusters");
-    }
-
     const filePromises: Promise<void>[] = [];
 
     this.fileStates.forEach((fileState, filePath) => {
@@ -348,10 +330,10 @@ export class EditAggregator {
     fileState.activeClusters.forEach((cluster) => {
       const timeSinceLastEdit = (timestamp - cluster.lastTimestamp) / 1000;
 
-      // Important fix: Only consider the line changed if it's a DIFFERENT line
+      // Only consider the line changed if it's a DIFFERENT line
       const isOnDifferentLine = cluster.lastLine !== editLine;
 
-      // Only finalize if we moved to a different line AND the time gap exceeds deltaT
+      // Finalize if we moved to a different line AND the time gap exceeds deltaT
       const shouldFinalizeByTime =
         isOnDifferentLine && timeSinceLastEdit > this.config.deltaT;
 
@@ -372,25 +354,6 @@ export class EditAggregator {
         shouldFinalizeByStructuralEdit
       ) {
         clustersToFinalize.push(cluster);
-
-        if (this.config.verbose || true) {
-          const reasons = [];
-          if (shouldFinalizeByTime)
-            reasons.push(
-              `time gap (${timeSinceLastEdit.toFixed(2)}s > ${this.config.deltaT}s)`,
-            );
-          if (shouldFinalizeByCount)
-            reasons.push(
-              `edit count (${cluster.edits.length} >= ${this.config.maxEdits})`,
-            );
-          if (shouldFinalizeByDuration)
-            reasons.push(
-              `duration (${((timestamp - cluster.firstTimestamp) / 1000).toFixed(2)}s > ${this.config.maxDuration}s)`,
-            );
-          if (shouldFinalizeByStructuralEdit)
-            reasons.push("structural edit on different line");
-          console.log(`Finalizing cluster due to: ${reasons.join(", ")}`);
-        }
       }
     });
 
@@ -434,9 +397,6 @@ export class EditAggregator {
       beforeContent.replace(/\s+/g, "") === afterContent.replace(/\s+/g, "");
 
     if (isWhitespaceOnlyDiff) {
-      if (this.config.verbose) {
-        console.log(`Skipping W H I T E S P A C E -only diff in ${filePath}`);
-      }
       fileState.activeClusters = fileState.activeClusters.filter(
         (c) => c !== cluster,
       );
@@ -448,11 +408,6 @@ export class EditAggregator {
     // Skip diffs with too many changed lines
     const changedLineCount = this.countChangedLines(diff);
     if (changedLineCount > this.config.deltaL * 2) {
-      if (this.config.verbose) {
-        console.log(
-          `Skipping diff with ${changedLineCount} changed lines (> ${this.config.deltaL}) in ${filePath}`,
-        );
-      }
       fileState.activeClusters = fileState.activeClusters.filter(
         (c) => c !== cluster,
       );
@@ -463,19 +418,6 @@ export class EditAggregator {
     if (fileState.priorComparisons.length > this.config.contextSize) {
       fileState.priorComparisons.shift();
     }
-
-    console.log("\n========== FINALIZED EDIT CLUSTER ==========");
-    // console.log(`File: ${filePath}`);
-    // console.log(`Number of edits: ${cluster.edits.length}`);
-    // console.log(`First edit at line: ${cluster.edits[0]?.range.start.line}`);
-    // console.log(
-    //   `Last edit at line: ${cluster.edits[cluster.edits.length - 1]?.range.start.line}`,
-    // );
-    // console.log(
-    //   `Duration: ${(cluster.lastTimestamp - cluster.firstTimestamp) / 1000}s`,
-    // );
-    console.log(diff);
-    console.log("===========================================\n");
 
     fileState.activeClusters = fileState.activeClusters.filter(
       (c) => c !== cluster,
