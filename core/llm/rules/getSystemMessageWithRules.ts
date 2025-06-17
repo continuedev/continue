@@ -123,7 +123,7 @@ export const shouldApplyRule = (
   filePaths: string[],
   rulePolicies: RulePolicies = {},
 ): boolean => {
-  const policy = rulePolicies[rule.name];
+  const policy = rulePolicies[rule.name || ""];
 
   // Always apply if policy is "always"
   if (policy === "always") {
