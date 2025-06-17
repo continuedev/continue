@@ -351,10 +351,10 @@ export class VerticalDiffManager {
     }
 
     // if only allowed one insertion, then endLine is set to be the same as startLine.
-    if(onlyOneInsertion) {
-       endLine = startLine
+    if (onlyOneInsertion) {
+      endLine = startLine;
     }
-    
+
     await new Promise((resolve) => {
       setTimeout(resolve, 150);
     });
