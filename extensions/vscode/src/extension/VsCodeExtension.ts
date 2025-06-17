@@ -62,6 +62,7 @@ export class VsCodeExtension {
   private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
+  private _editDebounceTimer: NodeJS.Timeout | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider

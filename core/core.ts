@@ -687,7 +687,7 @@ export class Core {
 
     on("files/smallEdit", async ({ data }) => {
       const EDIT_AGGREGATION_OPTIONS = {
-        deltaT: 1.0,
+        deltaT: 0.75,
         deltaL: 5,
         maxEdits: 250,
         maxDuration: 100.0,

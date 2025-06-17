@@ -86,14 +86,17 @@ export class EditAggregator {
 
     fileState.isProcessing = true;
 
+    // Process chunks of (5) edits instead of one at a time
     while (fileState.processingQueue.length > 0) {
-      const nextTask = fileState.processingQueue.shift();
-      if (nextTask) {
+      const tasks = fileState.processingQueue.splice(0, 5);
+      if (tasks.length > 0) {
         try {
-          await nextTask();
+          await Promise.all(tasks.map((task) => task()));
         } catch (error) {
-          console.error(`Error processing edit in ${filePath}:`, error);
+          console.error(`Error processing edits in ${filePath}:`, error);
         }
+
+        // Yield to the event loop to prevent blocking
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
     }
@@ -108,12 +111,7 @@ export class EditAggregator {
   ): Promise<void> {
     const filePath = edit.filepath;
 
-    // Correctly calculate the edit size
     const editSize = edit.editText.length;
-
-    // Strictly enforce the max edit size limit
-    // TODO: This prevents large edits from being processes, but they still show up in the output diff
-    // since that is a comparison. We need to fix that in the diff generation (downstream)
     if (editSize > this.config.maxEditSize) {
       console.log(
         `Large edit discarded: size ${editSize} characters exceeds max_edit_size ${this.config.maxEditSize}`,
@@ -249,6 +247,16 @@ export class EditAggregator {
 
   async processEdits(edits: RangeInFileWithContentsAndEdit[]): Promise<void> {
     const timestamp = Date.now();
+
+    // Skip processing during rapid typing
+    if (this.getProcessingQueueSize() > 15) {
+      // Only process the last edit
+      if (edits.length > 0) {
+        await this.processEdit(edits[edits.length - 1], timestamp);
+      }
+      return;
+    }
+
     if (this.config.verbose) {
       console.log(`Queueing batch of ${edits.length} edits`);
     }
@@ -284,7 +292,6 @@ export class EditAggregator {
     editLine: number,
     timestamp: number,
   ): ClusterState | null {
-    // First check if we need to finalize any clusters due to line jumps
     const activeClusters = [...fileState.activeClusters];
 
     for (const cluster of activeClusters) {
@@ -342,7 +349,6 @@ export class EditAggregator {
       const timeSinceLastEdit = (timestamp - cluster.lastTimestamp) / 1000;
 
       // Important fix: Only consider the line changed if it's a DIFFERENT line
-      // This way, continuing to edit the same line won't finalize the cluster
       const isOnDifferentLine = cluster.lastLine !== editLine;
 
       // Only finalize if we moved to a different line AND the time gap exceeds deltaT
@@ -383,10 +389,7 @@ export class EditAggregator {
             );
           if (shouldFinalizeByStructuralEdit)
             reasons.push("structural edit on different line");
-          console.log(
-            // `Finalizing cluster in ${cluster.edits[0].filepath} due to: ${reasons.join(", ")}`,
-            `Finalizing cluster due to: ${reasons.join(", ")}`,
-          );
+          console.log(`Finalizing cluster due to: ${reasons.join(", ")}`);
         }
       }
     });
@@ -399,7 +402,6 @@ export class EditAggregator {
     afterContent: string,
     filePath: string,
   ): string {
-    // Ensure both strings end with a newline
     const normalizedBefore = beforeContent.endsWith("\n")
       ? beforeContent
       : beforeContent + "\n";
@@ -407,7 +409,6 @@ export class EditAggregator {
       ? afterContent
       : afterContent + "\n";
 
-    // Create standard unified diff
     const patch = createPatch(
       filePath,
       normalizedBefore,
@@ -428,11 +429,10 @@ export class EditAggregator {
     const beforeContent = cluster.beforeState;
     const afterContent = fileState.currentContent;
 
-    // Check if this diff is whitespace-only by comparing trimmed content
+    // Skip whitespace-only diffs
     const isWhitespaceOnlyDiff =
       beforeContent.replace(/\s+/g, "") === afterContent.replace(/\s+/g, "");
 
-    // Skip whitespace-only diffs
     if (isWhitespaceOnlyDiff) {
       if (this.config.verbose) {
         console.log(`Skipping W H I T E S P A C E -only diff in ${filePath}`);
@@ -443,13 +443,10 @@ export class EditAggregator {
       return;
     }
 
-    // Use standard diff
     const diff = this.createStandardDiff(beforeContent, afterContent, filePath);
 
-    // Count changed lines in the diff
-    const changedLineCount = this.countChangedLines(diff);
-
     // Skip diffs with too many changed lines
+    const changedLineCount = this.countChangedLines(diff);
     if (changedLineCount > this.config.deltaL * 2) {
       if (this.config.verbose) {
         console.log(
@@ -484,7 +481,6 @@ export class EditAggregator {
       (c) => c !== cluster,
     );
 
-    // Call the callback with just the diff
     this.onComparisonFinalized(diff);
   }
 
@@ -505,20 +501,14 @@ export class EditAggregator {
       }
 
       if (line.startsWith("+")) {
-        // Extract line number if possible (depends on diff format)
         addedLines.add(count);
         count++;
       } else if (line.startsWith("-")) {
-        // Extract line number if possible
         removedLines.add(count);
         count++;
       }
     }
 
-    // Count replacements as one line (lines that were both added and removed)
-    const replacementCount = Math.min(addedLines.size, removedLines.size);
-
-    // Total changed lines is the max of added and removed lines
     return Math.max(addedLines.size, removedLines.size);
   }
 
