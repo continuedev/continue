@@ -3,6 +3,7 @@ import {
   ModelRole,
   PromptTemplates,
 } from "@continuedev/config-yaml";
+import { UseCase } from "@continuedev/llm-info/dist/types";
 import Parser from "web-tree-sitter";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
@@ -96,6 +97,7 @@ export interface ILLM
   get underlyingProviderName(): string;
 
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
+  recommendedFor?: UseCase[];
 
   complete(
     prompt: string,
@@ -1064,6 +1066,7 @@ export interface ModelDescription {
   capabilities?: ModelCapability;
   roles?: ModelRole[];
   configurationStatus?: LLMConfigurationStatuses;
+  recommendedFor?: UseCase[];
 }
 
 export interface JSONEmbedOptions {

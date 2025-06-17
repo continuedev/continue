@@ -1,6 +1,7 @@
 import {
   ArrowLeftIcon,
   ChatBubbleOvalLeftIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
@@ -91,6 +92,7 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 
 export function Chat() {
   const dispatch = useAppDispatch();
+  const config = useAppSelector((state) => state.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const showSessionTabs = useAppSelector(
@@ -112,6 +114,8 @@ export function Chat() {
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const [acknowledgedUnrecommendedAgent, setAcknowledgedUnrecommendedAgent] =
+    useState(getLocalStorage("acknowledgedUnrecommendedAgent"));
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const hasDismissedExploreDialog = useAppSelector(
@@ -141,6 +145,9 @@ export function Chat() {
       window.removeEventListener("keydown", listener);
     };
   }, [isStreaming, jetbrains]);
+
+  const isRecommendedForAgentMode =
+    config.selectedModelByRole.chat?.recommendedFor?.includes("chat") ?? false;
 
   const { widget, highlights } = useFindWidget(
     stepsDivRef,
@@ -380,6 +387,35 @@ export function Chat() {
           }
           inputId={MAIN_EDITOR_INPUT_ID}
         />
+
+        {!isRecommendedForAgentMode && !acknowledgedUnrecommendedAgent && (
+          <div className="text-warning mx-2 mt-1 flex items-center justify-between border border-solid border-yellow-300 p-1">
+            <div className="flex flex-col gap-y-1">
+              <span>
+                "{config.selectedModelByRole.chat?.model}" is not recommended
+                for agent mode
+              </span>
+              <a
+                className="cursor-pointer"
+                onClick={() => {
+                  ideMessenger.post(
+                    "openUrl",
+                    "https://docs.continue.dev/agent/model-setup",
+                  );
+                }}
+              >
+                Know More
+              </a>
+            </div>
+            <XMarkIcon
+              className="h-3 w-3 cursor-pointer"
+              onClick={() => {
+                setAcknowledgedUnrecommendedAgent(true);
+                setLocalStorage("acknowledgedUnrecommendedAgent", true);
+              }}
+            />
+          </div>
+        )}
 
         <div
           style={{

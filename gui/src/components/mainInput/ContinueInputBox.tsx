@@ -5,11 +5,11 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
-import { RulesPeek } from "./belowMainInput/RulesPeek";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
+import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
+import { RulesPeek } from "./belowMainInput/RulesPeek";
 
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
