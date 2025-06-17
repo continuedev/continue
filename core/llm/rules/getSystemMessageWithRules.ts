@@ -123,10 +123,7 @@ export const shouldApplyRule = (
   filePaths: string[],
   rulePolicies: RulePolicies = {},
 ): boolean => {
-  console.log("POLICIES", rulePolicies);
-  console.log("RULE ZZZ", rule);
   const policy = rulePolicies[rule.name || ""];
-  console.log("POLICY", policy);
 
   // Always apply if policy is "always"
   if (policy === "always") {
@@ -215,7 +212,6 @@ export const getApplicableRules = (
   contextItems: ContextItemWithId[],
   rulePolicies: RulePolicies = {},
 ): RuleWithSource[] => {
-  console.log("GET APPLICABLE");
   // Get file paths from message and context for rule matching
   const filePathsFromMessage = userMessage
     ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
@@ -251,7 +247,6 @@ export const getSystemMessageWithRules = ({
   contextItems: ContextItemWithId[];
   rulePolicies?: RulePolicies;
 }) => {
-  console.log("HERE ZZZZ");
   const applicableRules = getApplicableRules(
     userMessage,
     rules,
