@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { describe, expect, test } from "vitest";
+
 // @ts-ignore no typings available
 import { changed, diff as myersDiff } from "myers-diff";
 import { streamDiff } from "../diff/streamDiff.js";
@@ -54,12 +56,7 @@ function displayDiff(diff: DiffLine[]) {
 }
 
 async function expectDiff(file: string) {
-  const testFilePath = path.join(
-    __dirname,
-    "diff",
-    "test-examples",
-    file + ".diff",
-  );
+  const testFilePath = path.join(__dirname, "test-examples", file + ".diff");
   const testFileContents = fs.readFileSync(testFilePath, "utf-8");
   const [oldText, newText, expectedDiff] = testFileContents
     .split("\n---\n")
