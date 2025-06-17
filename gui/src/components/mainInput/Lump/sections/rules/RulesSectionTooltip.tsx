@@ -1,4 +1,3 @@
-// gui/src/components/mainInput/Lump/sections/rules/RulesSectionTooltip.tsx
 export const RulesSectionTooltip = () => (
   <div className="max-w-xs">
     <p className="m-0 p-0">
