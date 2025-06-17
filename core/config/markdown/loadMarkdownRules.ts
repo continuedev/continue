@@ -1,7 +1,9 @@
-import { ConfigValidationError } from "@continuedev/config-yaml";
+import {
+  ConfigValidationError,
+  markdownToRule,
+} from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
-import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
 
 /**
  * Loads rules from markdown files in the .continue/rules directory
@@ -27,8 +29,11 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     // Process each markdown file
     for (const file of mdFiles) {
       try {
-        const rule = convertMarkdownRuleToContinueRule(file.path, file.content);
-        rules.push(rule);
+        const rule = markdownToRule(file.content, {
+          uriType: "file",
+          filePath: file.path,
+        });
+        rules.push({ ...rule, source: "rules-block" });
       } catch (e) {
         errors.push({
           fatal: false,
