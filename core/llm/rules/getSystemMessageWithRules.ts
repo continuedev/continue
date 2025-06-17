@@ -123,7 +123,10 @@ export const shouldApplyRule = (
   filePaths: string[],
   rulePolicies: RulePolicies = {},
 ): boolean => {
+  console.log("POLICIES", rulePolicies);
+  console.log("RULE ZZZ", rule);
   const policy = rulePolicies[rule.name || ""];
+  console.log("POLICY", policy);
 
   // Always apply if policy is "always"
   if (policy === "always") {
@@ -140,7 +143,7 @@ export const shouldApplyRule = (
     return true;
   }
 
-  // If there are no file paths to check:
+  // If there are no file paths to check and we've made it here:
   // - We've already handled global rules above
   // - Don't apply other rules since we have no files to match against
   if (filePaths.length === 0) {
@@ -212,10 +215,8 @@ export const getApplicableRules = (
   contextItems: ContextItemWithId[],
   rulePolicies: RulePolicies = {},
 ): RuleWithSource[] => {
-  // First, extract any global rules that should always apply
-  const globalRules = rules.filter((rule) => isGlobalRule(rule));
-
-  // Get file paths from message and context for regular rule matching
+  console.log("GET APPLICABLE");
+  // Get file paths from message and context for rule matching
   const filePathsFromMessage = userMessage
     ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
     : [];
@@ -228,18 +229,13 @@ export const getApplicableRules = (
   // Combine file paths from both sources
   const allFilePaths = [...filePathsFromMessage, ...filePathsFromContextItems];
 
-  // If we have no file paths, just return the global rules
-  if (allFilePaths.length === 0) {
-    return globalRules;
-  }
+  // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
+  // and path matching in a consistent way
+  const applicableRules = rules.filter((rule) =>
+    shouldApplyRule(rule, allFilePaths, rulePolicies),
+  );
 
-  // Get rules that match file paths
-  const matchingRules = rules
-    .filter((rule) => !isGlobalRule(rule)) // Skip global rules as we've already handled them
-    .filter((rule) => shouldApplyRule(rule, allFilePaths, rulePolicies));
-
-  // Combine global rules with matching rules, ensuring no duplicates
-  return [...globalRules, ...matchingRules];
+  return applicableRules;
 };
 
 export const getSystemMessageWithRules = ({
@@ -255,6 +251,7 @@ export const getSystemMessageWithRules = ({
   contextItems: ContextItemWithId[];
   rulePolicies?: RulePolicies;
 }) => {
+  console.log("HERE ZZZZ");
   const applicableRules = getApplicableRules(
     userMessage,
     rules,
