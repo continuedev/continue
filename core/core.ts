@@ -686,32 +686,29 @@ export class Core {
     });
 
     on("files/smallEdit", async ({ data }) => {
-      // console.log(JSON.stringify(data.actions));
-
-      const DEFAULT_EDIT_AGGREGATION_OPTIONS = {
-        delta_t: 1.0,
-        delta_l: 5,
-        max_edits: 50,
-        max_duration: 100.0,
-        context_size: 5,
-        max_edit_size: 1000,
+      const EDIT_AGGREGATION_OPTIONS = {
+        deltaT: 1.0,
+        deltaL: 5,
+        maxEdits: 250,
+        maxDuration: 100.0,
+        contextSize: 5,
+        maxEditSize: 1000,
       };
 
-      // Create global EditAggregator
       if (!global._editAggregator) {
         global._editAggregator = new EditAggregator(
-          DEFAULT_EDIT_AGGREGATION_OPTIONS,
-          (filePath, beforeState, diff, contextDiffs) => {
-            // This callback is called when a diff is finalized
-            // console.log(`\nFinalized diff for ${filePath}:`);
-            // console.log(diff);
-            // console.log("\n");
+          EDIT_AGGREGATION_OPTIONS,
+          (diff: string) => {
+            // callback for when a diff is finalized
+            // TODO: add the diff to devData from here
           },
         );
       }
 
-      // Process the incoming edits
-      global._editAggregator.processEdits(data.actions);
+      // queueMicrotask prevents blocking the UI thread during typing
+      queueMicrotask(() => {
+        void global._editAggregator.processEdits(data.actions);
+      });
     });
 
     // Docs, etc. indexing

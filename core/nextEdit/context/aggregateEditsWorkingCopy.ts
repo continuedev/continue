@@ -1,4 +1,3 @@
-import { createPatch } from "diff";
 import { RangeInFileWithContentsAndEdit } from "../..";
 
 interface ClusterState {
@@ -33,17 +32,27 @@ export interface EditClusterConfig {
 export class EditAggregator {
   private fileStates: Map<string, FileState> = new Map();
   private config: EditClusterConfig;
-  private onComparisonFinalized: (diff: string) => void;
+  private onComparisonFinalized: (
+    filePath: string,
+    beforeState: string[],
+    beforeAfterComparison: string,
+    contextComparisons: string[],
+  ) => void;
 
   constructor(
     config: Partial<EditClusterConfig> = {},
-    onComparisonFinalized: (diff: string) => void = () => {},
+    onComparisonFinalized: (
+      filePath: string,
+      beforeState: string[],
+      diff: string,
+      contextDiffs: string[],
+    ) => void = () => {},
   ) {
     this.config = {
       deltaT: config.deltaT ?? 1.0,
       deltaL: config.deltaL ?? 5,
-      maxEdits: config.maxEdits ?? 500,
-      maxDuration: config.maxDuration ?? 10.0,
+      maxEdits: config.maxEdits ?? 200,
+      maxDuration: config.maxDuration ?? 20.0,
       contextSize: config.contextSize ?? 5,
       maxEditSize: config.maxEditSize ?? 1000,
       contextLines: config.contextLines ?? 3,
@@ -108,17 +117,13 @@ export class EditAggregator {
   ): Promise<void> {
     const filePath = edit.filepath;
 
-    // Correctly calculate the edit size
-    const editSize = edit.editText.length;
-
-    // Strictly enforce the max edit size limit
-    // TODO: This prevents large edits from being processes, but they still show up in the output diff
-    // since that is a comparison. We need to fix that in the diff generation (downstream)
-    if (editSize > this.config.maxEditSize) {
-      console.log(
-        `Large edit discarded: size ${editSize} characters exceeds max_edit_size ${this.config.maxEditSize}`,
-      );
-      return; // Exit early without processing this edit
+    if (edit.editText.length > this.config.maxEditSize) {
+      if (this.config.verbose) {
+        console.log(
+          `Edit discarded: size ${edit.editText.length} exceeds max_edit_size ${this.config.maxEditSize}`,
+        );
+      }
+      return;
     }
 
     const editLine = edit.range.start.line;
@@ -384,8 +389,7 @@ export class EditAggregator {
           if (shouldFinalizeByStructuralEdit)
             reasons.push("structural edit on different line");
           console.log(
-            // `Finalizing cluster in ${cluster.edits[0].filepath} due to: ${reasons.join(", ")}`,
-            `Finalizing cluster due to: ${reasons.join(", ")}`,
+            `Finalizing cluster in ${cluster.edits[0].filepath} due to: ${reasons.join(", ")}`,
           );
         }
       }
@@ -394,30 +398,66 @@ export class EditAggregator {
     return clustersToFinalize;
   }
 
-  private createStandardDiff(
+  private async createConsoleComparison(
     beforeContent: string,
     afterContent: string,
     filePath: string,
-  ): string {
-    // Ensure both strings end with a newline
-    const normalizedBefore = beforeContent.endsWith("\n")
-      ? beforeContent
-      : beforeContent + "\n";
-    const normalizedAfter = afterContent.endsWith("\n")
-      ? afterContent
-      : afterContent + "\n";
+  ): Promise<string> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const beforeLines = beforeContent.split("\n");
+        const afterLines = afterContent.split("\n");
+        const maxLines = Math.max(beforeLines.length, afterLines.length);
+        let firstDiffLine = maxLines;
+        let lastDiffLine = 0;
 
-    // Create standard unified diff
-    const patch = createPatch(
-      filePath,
-      normalizedBefore,
-      normalizedAfter,
-      "before",
-      "after",
-      { context: 3 },
-    );
+        for (let i = 0; i < maxLines; i++) {
+          const beforeLine = i < beforeLines.length ? beforeLines[i] : "";
+          const afterLine = i < afterLines.length ? afterLines[i] : "";
 
-    return patch;
+          if (beforeLine !== afterLine) {
+            firstDiffLine = Math.min(firstDiffLine, i);
+            lastDiffLine = Math.max(lastDiffLine, i);
+          }
+        }
+
+        if (firstDiffLine > lastDiffLine) {
+          firstDiffLine = 0;
+          lastDiffLine = Math.min(5, maxLines - 1);
+        }
+
+        const contextLines = 3;
+        const startLine = Math.max(0, firstDiffLine - contextLines);
+        const endLine = Math.min(maxLines - 1, lastDiffLine + contextLines);
+        const lineNumWidth = String(endLine).length;
+        const contentWidth = 60;
+
+        let result = `\n=== File: ${filePath} ===\n`;
+        result += `=== Diff view of lines ${startLine}-${endLine} ===\n\n`;
+        result += `${"LINE".padEnd(lineNumWidth + 2)} | ${"BEFORE".padEnd(contentWidth)} | ${"AFTER".padEnd(contentWidth)}\n`;
+        result += `${"-".repeat(lineNumWidth + 2)}-|-${"-".repeat(contentWidth)}-|-${"-".repeat(contentWidth)}\n`;
+
+        for (let i = startLine; i <= endLine; i++) {
+          const beforeLine = i < beforeLines.length ? beforeLines[i] : "";
+          const afterLine = i < afterLines.length ? afterLines[i] : "";
+          const truncatedBeforeLine =
+            beforeLine.length > contentWidth - 3
+              ? beforeLine.substring(0, contentWidth - 3) + "..."
+              : beforeLine;
+          const truncatedAfterLine =
+            afterLine.length > contentWidth - 3
+              ? afterLine.substring(0, contentWidth - 3) + "..."
+              : afterLine;
+          const changed = beforeLine === afterLine ? "  " : "* ";
+          const lineNum = String(i).padStart(lineNumWidth);
+
+          result += `${changed}${lineNum} | ${truncatedBeforeLine.padEnd(contentWidth)} | ${truncatedAfterLine.padEnd(contentWidth)}\n`;
+        }
+
+        result += "\n";
+        resolve(result);
+      }, 0);
+    });
   }
 
   private async finalizeCluster(
@@ -427,99 +467,39 @@ export class EditAggregator {
   ): Promise<void> {
     const beforeContent = cluster.beforeState;
     const afterContent = fileState.currentContent;
+    const comparison = await this.createConsoleComparison(
+      beforeContent,
+      afterContent,
+      filePath,
+    );
 
-    // Check if this diff is whitespace-only by comparing trimmed content
-    const isWhitespaceOnlyDiff =
-      beforeContent.replace(/\s+/g, "") === afterContent.replace(/\s+/g, "");
-
-    // Skip whitespace-only diffs
-    if (isWhitespaceOnlyDiff) {
-      if (this.config.verbose) {
-        console.log(`Skipping W H I T E S P A C E -only diff in ${filePath}`);
-      }
-      fileState.activeClusters = fileState.activeClusters.filter(
-        (c) => c !== cluster,
-      );
-      return;
-    }
-
-    // Use standard diff
-    const diff = this.createStandardDiff(beforeContent, afterContent, filePath);
-
-    // Count changed lines in the diff
-    const changedLineCount = this.countChangedLines(diff);
-
-    // Skip diffs with too many changed lines
-    if (changedLineCount > this.config.deltaL * 2) {
-      if (this.config.verbose) {
-        console.log(
-          `Skipping diff with ${changedLineCount} changed lines (> ${this.config.deltaL}) in ${filePath}`,
-        );
-      }
-      fileState.activeClusters = fileState.activeClusters.filter(
-        (c) => c !== cluster,
-      );
-      return;
-    }
-
-    fileState.priorComparisons.push(diff);
+    fileState.priorComparisons.push(comparison);
     if (fileState.priorComparisons.length > this.config.contextSize) {
       fileState.priorComparisons.shift();
     }
 
+    const beforeStateArray = cluster.beforeState.split("\n");
+
     console.log("\n========== FINALIZED EDIT CLUSTER ==========");
-    // console.log(`File: ${filePath}`);
-    // console.log(`Number of edits: ${cluster.edits.length}`);
-    // console.log(`First edit at line: ${cluster.edits[0]?.range.start.line}`);
-    // console.log(
-    //   `Last edit at line: ${cluster.edits[cluster.edits.length - 1]?.range.start.line}`,
-    // );
-    // console.log(
-    //   `Duration: ${(cluster.lastTimestamp - cluster.firstTimestamp) / 1000}s`,
-    // );
-    console.log(diff);
+    console.log(`File: ${filePath}`);
+    console.log(`Number of edits: ${cluster.edits.length}`);
+    console.log(`First edit at line: ${cluster.edits[0]?.range.start.line}`);
+    console.log(
+      `Last edit at line: ${cluster.edits[cluster.edits.length - 1]?.range.start.line}`,
+    );
+    console.log(
+      `Duration: ${(cluster.lastTimestamp - cluster.firstTimestamp) / 1000}s`,
+    );
+    console.log(comparison);
     console.log("===========================================\n");
 
     fileState.activeClusters = fileState.activeClusters.filter(
       (c) => c !== cluster,
     );
 
-    // Call the callback with just the diff
-    this.onComparisonFinalized(diff);
-  }
-
-  private countChangedLines(diff: string): number {
-    let count = 0;
-    let addedLines = new Set<number>();
-    let removedLines = new Set<number>();
-
-    // Parse the diff lines
-    const lines = diff.split("\n");
-    for (const line of lines) {
-      if (
-        line.startsWith("+++ ") ||
-        line.startsWith("--- ") ||
-        line.startsWith("@@")
-      ) {
-        continue; // Skip header lines
-      }
-
-      if (line.startsWith("+")) {
-        // Extract line number if possible (depends on diff format)
-        addedLines.add(count);
-        count++;
-      } else if (line.startsWith("-")) {
-        // Extract line number if possible
-        removedLines.add(count);
-        count++;
-      }
-    }
-
-    // Count replacements as one line (lines that were both added and removed)
-    const replacementCount = Math.min(addedLines.size, removedLines.size);
-
-    // Total changed lines is the max of added and removed lines
-    return Math.max(addedLines.size, removedLines.size);
+    this.onComparisonFinalized(filePath, beforeStateArray, comparison, [
+      ...fileState.priorComparisons,
+    ]);
   }
 
   getActiveClusterCount(): number {

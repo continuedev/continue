@@ -290,19 +290,29 @@ export class VsCodeExtension {
         return;
       }
 
-      let editActions: RangeInFileWithContentsAndEdit[] = changes.map(
-        (change) => ({
-          filepath: event.document.uri.toString(),
-          range: {
-            start: change.range.start,
-            end: change.range.end,
-          },
-          fileContents: event.document.getText(),
-          editText: change.text,
-        }),
-      );
+      // OPTIMIZATION: Debounce rapid keystrokes
+      // This prevents sending too many edit events during fast typing
+      if (this._editDebounceTimer) {
+        clearTimeout(this._editDebounceTimer);
+      }
 
-      this.core.invoke("files/smallEdit", { actions: editActions });
+      this._editDebounceTimer = setTimeout(() => {
+        const editActions: RangeInFileWithContentsAndEdit[] = changes.map(
+          (change) => ({
+            filepath: event.document.uri.toString(),
+            range: {
+              start: change.range.start,
+              end: change.range.end,
+            },
+            // OPTIMIZATION: Only get document text once
+            fileContents: event.document.getText(),
+            editText: change.text,
+          }),
+        );
+
+        // Use invoke without awaiting to prevent blocking
+        this.core.invoke("files/smallEdit", { actions: editActions });
+      }, 10); // Small delay to batch rapid edits
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
