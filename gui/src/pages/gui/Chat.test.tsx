@@ -1,5 +1,9 @@
 import { screen, waitFor } from "@testing-library/dom";
 import { act } from "@testing-library/react";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "../../redux/hooks";
+import { updateConfig } from "../../redux/slices/configSlice";
 import { renderWithProviders } from "../../util/test/render";
 import { Chat } from "./Chat";
 
@@ -104,6 +108,47 @@ describe("Chat page test", () => {
       expect(
         screen.queryByTestId("edit-reject-button"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe.only("unrecommended agent model warning", () => {
+    it("should not show warning if there are no models", async () => {
+      await renderWithProviders(<Chat />);
+      expect(
+        screen.queryByTestId("unrecommended-agent-warning"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show warning for unrecommended model in agent mode", async () => {
+      const Wrapper = () => {
+        const config = useAppSelector((state) => state.config.config);
+        const dispatch = useDispatch();
+        useEffect(() => {
+          // use a setTimeout because there will be a double render before useEffect is run
+          setTimeout(() => {
+            dispatch(
+              updateConfig({
+                ...config,
+                selectedModelByRole: {
+                  ...config.selectedModelByRole,
+                  chat: {
+                    title: "test",
+                    provider: "test-provider",
+                    model: "test-model",
+                    underlyingProviderName: "test",
+                  },
+                },
+              }),
+            );
+          });
+        }, []);
+        return <Chat />;
+      };
+
+      await renderWithProviders(<Wrapper />);
+      expect(
+        await screen.findByTestId("unrecommended-agent-warning"),
+      ).toBeInTheDocument();
     });
   });
 });

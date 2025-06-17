@@ -387,35 +387,39 @@ export function Chat() {
           }
           inputId={MAIN_EDITOR_INPUT_ID}
         />
-
-        {!isRecommendedForAgentMode && !acknowledgedUnrecommendedAgent && (
-          <div className="text-warning mx-2 mt-1 flex items-center justify-between border border-solid border-yellow-300 p-1">
-            <div className="flex flex-col gap-y-1">
-              <span>
-                "{config.selectedModelByRole.chat?.model}" is not recommended
-                for agent mode
-              </span>
-              <a
-                className="cursor-pointer"
+        {!!config.selectedModelByRole.chat &&
+          !isRecommendedForAgentMode &&
+          !acknowledgedUnrecommendedAgent && (
+            <div
+              className="text-warning mx-2 mt-1 flex items-center justify-between border border-solid border-yellow-300 p-1"
+              data-testid="unrecommended-agent-warning"
+            >
+              <div className="flex flex-col gap-y-1">
+                <span>
+                  "{config.selectedModelByRole.chat?.model}" is not recommended
+                  for agent mode
+                </span>
+                <a
+                  className="cursor-pointer"
+                  onClick={() => {
+                    ideMessenger.post(
+                      "openUrl",
+                      "https://docs.continue.dev/agent/model-setup",
+                    );
+                  }}
+                >
+                  Know More
+                </a>
+              </div>
+              <XMarkIcon
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => {
-                  ideMessenger.post(
-                    "openUrl",
-                    "https://docs.continue.dev/agent/model-setup",
-                  );
+                  setAcknowledgedUnrecommendedAgent(true);
+                  setLocalStorage("acknowledgedUnrecommendedAgent", true);
                 }}
-              >
-                Know More
-              </a>
+              />
             </div>
-            <XMarkIcon
-              className="h-3 w-3 cursor-pointer"
-              onClick={() => {
-                setAcknowledgedUnrecommendedAgent(true);
-                setLocalStorage("acknowledgedUnrecommendedAgent", true);
-              }}
-            />
-          </div>
-        )}
+          )}
 
         <div
           style={{
