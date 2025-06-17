@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { RuleWithSource } from "../..";
 import { shouldApplyRule } from "./getSystemMessageWithRules";
+import { RulePolicies } from "./types";
 
 describe("Rule colocation glob matching", () => {
   // This test file demonstrates the expected behavior after our fix
@@ -130,5 +131,137 @@ describe("Rule colocation glob matching", () => {
     expect(shouldApplyRule(testExclusionRule, ["src/models/user.ts"])).toBe(
       false,
     );
+  });
+});
+
+describe("Rule policies", () => {
+  const componentRule: RuleWithSource = {
+    name: "Components Rule",
+    rule: "Use functional components with hooks",
+    source: "rules-block",
+    ruleFile: "src/components/rules.md",
+  };
+
+  const testFiles = ["src/components/Button.tsx"];
+  const nonMatchingFiles = ["src/utils/helpers.ts"];
+
+  it("should always apply rules with 'always' policy regardless of file paths", () => {
+    const rulePolicies: RulePolicies = {
+      "Components Rule": "always",
+    };
+
+    // Should apply even to non-matching files
+    expect(shouldApplyRule(componentRule, nonMatchingFiles, rulePolicies)).toBe(
+      true,
+    );
+
+    // Should apply to empty file list
+    expect(shouldApplyRule(componentRule, [], rulePolicies)).toBe(true);
+  });
+
+  it("should never apply rules with 'never' policy regardless of file paths", () => {
+    const rulePolicies: RulePolicies = {
+      "Components Rule": "never",
+    };
+
+    // Should not apply even to matching files
+    expect(shouldApplyRule(componentRule, testFiles, rulePolicies)).toBe(false);
+
+    // Rule with alwaysApply: true should still be overridden by 'never' policy
+    const alwaysApplyRule: RuleWithSource = {
+      name: "Always Apply Rule",
+      rule: "This rule would normally always apply",
+      alwaysApply: true,
+      source: "rules-block",
+      ruleFile: "src/components/rules.md",
+    };
+
+    const alwaysNeverPolicies: RulePolicies = {
+      "Always Apply Rule": "never",
+    };
+
+    expect(
+      shouldApplyRule(alwaysApplyRule, testFiles, alwaysNeverPolicies),
+    ).toBe(false);
+  });
+
+  it("should apply 'auto' policy rules based on normal matching logic", () => {
+    const rulePolicies: RulePolicies = {
+      "Components Rule": "auto",
+    };
+
+    // Should apply to matching files
+    expect(shouldApplyRule(componentRule, testFiles, rulePolicies)).toBe(true);
+
+    // Should not apply to non-matching files
+    expect(shouldApplyRule(componentRule, nonMatchingFiles, rulePolicies)).toBe(
+      false,
+    );
+  });
+
+  it("should use default behavior when no policy is specified", () => {
+    // Empty policies object should use default behavior
+    const rulePolicies: RulePolicies = {};
+
+    // Should apply to matching files
+    expect(shouldApplyRule(componentRule, testFiles, rulePolicies)).toBe(true);
+
+    // Should not apply to non-matching files
+    expect(shouldApplyRule(componentRule, nonMatchingFiles, rulePolicies)).toBe(
+      false,
+    );
+  });
+
+  it("should handle policy interaction with global rules", () => {
+    // Root level rule which would normally apply globally
+    const rootRule: RuleWithSource = {
+      name: "Root Rule",
+      rule: "Follow project standards",
+      source: "rules-block",
+      ruleFile: ".continue/rules.md",
+    };
+
+    // Never policy should override even global rules
+    const neverPolicies: RulePolicies = {
+      "Root Rule": "never",
+    };
+
+    expect(shouldApplyRule(rootRule, testFiles, neverPolicies)).toBe(false);
+
+    // Auto policy should maintain global rule behavior
+    const autoPolicies: RulePolicies = {
+      "Root Rule": "auto",
+    };
+
+    expect(shouldApplyRule(rootRule, testFiles, autoPolicies)).toBe(true);
+  });
+
+  it("should prioritize policies over alwaysApply and directory restrictions", () => {
+    // Create rule with multiple matching criteria
+    const complexRule: RuleWithSource = {
+      name: "Complex Rule",
+      rule: "This rule has complex matching logic",
+      alwaysApply: true,
+      globs: "**/*.ts",
+      source: "rules-block",
+      ruleFile: "src/utils/rules.md",
+    };
+
+    // Always policy should win over everything
+    const alwaysPolicies: RulePolicies = {
+      "Complex Rule": "always",
+    };
+
+    expect(shouldApplyRule(complexRule, [], alwaysPolicies)).toBe(true);
+
+    // Never policy should also win over everything
+    const neverPolicies: RulePolicies = {
+      "Complex Rule": "never",
+    };
+
+    // Even with matching files and alwaysApply: true, never policy wins
+    expect(
+      shouldApplyRule(complexRule, ["src/utils/test.ts"], neverPolicies),
+    ).toBe(false);
   });
 });
