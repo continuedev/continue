@@ -9,10 +9,6 @@ export default defineConfig({
     globalSetup: "./test/vitest.global-setup.ts",
     setupFiles: "./test/vitest.setup.ts",
     fileParallelism: false,
-    include: [
-      "**/*.vitest.ts",
-      "config/yaml/LocalPlatformClient.test.ts",
-      "autocomplete/**/*.test.ts",
-    ],
+    include: ["**/*.vitest.ts"],
   },
 });

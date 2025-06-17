@@ -29,11 +29,7 @@ export default {
   globalSetup: "<rootDir>/test/jest.global-setup.ts",
   setupFilesAfterEnv: ["<rootDir>/test/jest.setup-after-env.js"],
   maxWorkers: 1, // equivalent to CLI --runInBand
-  // modulePathIgnorePatterns: [
-  //   "<rootDir>/config/yaml/LocalPlatformClient.test.ts",
-  // ],
-  testPathIgnorePatterns: [
+  modulePathIgnorePatterns: [
     "<rootDir>/config/yaml/LocalPlatformClient.test.ts",
-    "<rootDir>/autocomplete/",
   ],
 };
