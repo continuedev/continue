@@ -1,4 +1,12 @@
-import { jest } from "@jest/globals";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  Mock,
+  test,
+  vi,
+} from "vitest";
 import { GeneratorReuseManager } from "./GeneratorReuseManager";
 
 function createMockGenerator(
@@ -14,7 +22,7 @@ function createMockGenerator(
       }
     }
   };
-  const newGenerator = jest
+  const newGenerator = vi
     .fn<() => AsyncGenerator<string>>()
     .mockReturnValue(mockGenerator());
 
@@ -23,15 +31,15 @@ function createMockGenerator(
 
 describe("GeneratorReuseManager", () => {
   let reuseManager: GeneratorReuseManager;
-  let onErrorMock: jest.Mock;
+  let onErrorMock: Mock;
 
   beforeEach(() => {
-    onErrorMock = jest.fn();
+    onErrorMock = vi.fn();
     reuseManager = new GeneratorReuseManager(onErrorMock);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("creates new generator when there is no current generator", async () => {
@@ -169,7 +177,7 @@ describe("GeneratorReuseManager", () => {
     const mockGenerator = async function* () {
       throw error;
     };
-    const newGenerator = jest
+    const newGenerator = vi
       .fn<() => AsyncGenerator<string>>()
       .mockReturnValue(mockGenerator());
 

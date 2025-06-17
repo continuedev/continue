@@ -1,10 +1,10 @@
-import { jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 
 import * as lineStream from "./lineStream";
 
 // eslint-disable-next-line max-lines-per-function
 describe("lineStream", () => {
-  let mockFullStop: jest.Mock;
+  let mockFullStop: Mock;
 
   async function getLineGenerator(lines: any) {
     return (async function* () {
@@ -25,7 +25,7 @@ describe("lineStream", () => {
   }
 
   beforeEach(() => {
-    mockFullStop = jest.fn();
+    mockFullStop = vi.fn();
   });
 
   describe("noTopLevelKeywordsMidline", () => {
