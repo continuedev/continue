@@ -21,6 +21,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
+import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
@@ -682,6 +683,35 @@ export class Core {
           }
         }
       }
+    });
+
+    on("files/smallEdit", async ({ data }) => {
+      // console.log(JSON.stringify(data.actions));
+
+      const DEFAULT_EDIT_AGGREGATION_OPTIONS = {
+        delta_t: 1.0,
+        delta_l: 5,
+        max_edits: 50,
+        max_duration: 100.0,
+        context_size: 5,
+        max_edit_size: 1000,
+      };
+
+      // Create global EditAggregator
+      if (!global._editAggregator) {
+        global._editAggregator = new EditAggregator(
+          DEFAULT_EDIT_AGGREGATION_OPTIONS,
+          (filePath, beforeState, diff, contextDiffs) => {
+            // This callback is called when a diff is finalized
+            // console.log(`\nFinalized diff for ${filePath}:`);
+            // console.log(diff);
+            // console.log("\n");
+          },
+        );
+      }
+
+      // Process the incoming edits
+      global._editAggregator.processEdits(data.actions);
     });
 
     // Docs, etc. indexing

@@ -28,6 +28,8 @@ declare global {
       messageIde: string,
     ) => void;
   }
+
+  var _editAggregator: EditAggregator | undefined;
 }
 
 export interface ChunkWithoutID {
@@ -1295,6 +1297,16 @@ export interface RangeInFileWithContents {
     end: { line: number; character: number };
   };
   contents: string;
+}
+
+export interface RangeInFileWithContentsAndEdit {
+  filepath: string;
+  range: {
+    start: { line: number; character: number };
+    end: { line: number; character: number };
+  };
+  fileContents: string;
+  editText: string;
 }
 
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;

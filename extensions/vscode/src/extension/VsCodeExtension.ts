@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { IContextProvider } from "core";
+import { IContextProvider, RangeInFileWithContentsAndEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
@@ -281,6 +281,28 @@ export class VsCodeExtension {
         return;
       }
       this.configHandler.reloadConfig();
+    });
+
+    vscode.workspace.onDidChangeTextDocument(async (event) => {
+      const changes = event.contentChanges;
+
+      if (event.contentChanges.length === 0) {
+        return;
+      }
+
+      let editActions: RangeInFileWithContentsAndEdit[] = changes.map(
+        (change) => ({
+          filepath: event.document.uri.toString(),
+          range: {
+            start: change.range.start,
+            end: change.range.end,
+          },
+          fileContents: event.document.getText(),
+          editText: change.text,
+        }),
+      );
+
+      this.core.invoke("files/smallEdit", { actions: editActions });
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
