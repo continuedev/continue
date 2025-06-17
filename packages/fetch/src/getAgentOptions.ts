@@ -23,6 +23,19 @@ export async function getAgentOptions(
     keepAliveMsecs: timeout,
   };
 
+  if (process.env.VERBOSE_FETCH) {
+    console.log("=== CERTIFICATE CONFIGURATION ===");
+    console.log(`Number of CA certificates: ${ca.length}`);
+    console.log(
+      `Global agent CA certificates: ${globalAgent.options.ca ? "Present" : "Not present"}`,
+    );
+    console.log(
+      `Custom certificates provided: ${customCerts?.length ? "Yes" : "No"}`,
+    );
+    console.log(`rejectUnauthorized: ${agentOptions.rejectUnauthorized}`);
+    console.log("================================");
+  }
+
   // Handle ClientCertificateOptions
   if (requestOptions?.clientCertificate) {
     const { cert, key, passphrase } = requestOptions.clientCertificate;
