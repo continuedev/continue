@@ -79,11 +79,11 @@ void (async () => {
   // }
 
   // Make sure we have an initial timestamp file
-  writeBuildTimestamp();
+  // writeBuildTimestamp();
 
   // Install node_modules //
-  execCmdSync("npm install");
-  console.log("[info] npm install in extensions/light-ide completed");
+  // execCmdSync("npm install");
+  // console.log("[info] npm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
