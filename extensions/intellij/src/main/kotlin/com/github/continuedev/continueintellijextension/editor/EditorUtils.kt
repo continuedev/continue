@@ -158,18 +158,38 @@ class EditorUtils(val editor: Editor) {
          */
         fun getOrOpenEditor(project: Project, filepath: String?): EditorUtils? {
             if (!filepath.isNullOrEmpty()) {
-                var virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
-                if (virtualFile == null) {
-                    // file not exists and create
-                    val ioFile = File(filepath.replace("file:///", ""))
-                    if (!ioFile.exists()) {
-                        ioFile.parentFile?.mkdirs()
-                        ioFile.createNewFile()
+                val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
+                if (virtualFile != null) {
+                    ApplicationManager.getApplication().invokeAndWait {
+                        FileEditorManager.getInstance(project).openFile(virtualFile, true).first()
                     }
-                    // IntelliJ refresh VirtualFile
-                    virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(ioFile)
                 }
+            }
 
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
+            return EditorUtils(editor)
+        }
+
+        /**
+         * Gets editor for the filepath is existed
+         */
+        fun editorFileExist(filepath: String?): Boolean {
+            return !filepath.isNullOrEmpty() && VirtualFileManager.getInstance().findFileByUrl(filepath) != null
+        }
+
+        /**
+         * Gets editor for the no exist filepath and returns an EditorUtils instance
+         */
+        fun getEditorByCreateFile(project: Project, filepath: String?): EditorUtils? {
+            if (!filepath.isNullOrEmpty()) {
+                // file not exists and create
+                val ioFile = File(filepath.replace("file:///", ""))
+                if (!ioFile.exists()) {
+                    ioFile.parentFile?.mkdirs()
+                    ioFile.createNewFile()
+                }
+                // IntelliJ refresh VirtualFile
+                val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(ioFile)
                 if (virtualFile != null) {
                     ApplicationManager.getApplication().invokeAndWait {
                         runWriteAction {
