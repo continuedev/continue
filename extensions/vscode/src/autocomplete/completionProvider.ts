@@ -15,6 +15,7 @@ import { handleLLMError } from "../util/errorHandling";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
+import { NextEditWindowManager } from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import { RecentlyVisitedRangesService } from "./RecentlyVisitedRangesService";
@@ -329,7 +330,13 @@ export class ContinueCompletionProvider
       );
 
       (completionItem as any).completeBracketPairs = true;
-      return [completionItem];
+      // return [completionItem];
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        NextEditWindowManager.getInstance().showTooltip(editor, completionText);
+      }
+      // return [completionItem];
+      return undefined;
     } finally {
       stopStatusBarLoading();
     }
