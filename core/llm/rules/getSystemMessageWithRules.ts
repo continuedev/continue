@@ -53,6 +53,44 @@ const matchesGlobs = (
 };
 
 /**
+ * Checks if a path matches any of the provided regex patterns
+ */
+const matchesPatterns = (
+  filePath: string,
+  patterns: string | string[] | undefined,
+): boolean => {
+  if (!patterns) return true;
+
+  // Handle single string pattern
+  if (typeof patterns === "string") {
+    try {
+      const regex = new RegExp(patterns);
+      return regex.test(filePath);
+    } catch (e) {
+      console.error(`Invalid regex pattern: ${patterns}`, e);
+      return false;
+    }
+  }
+  // Handle array of patterns
+  if (Array.isArray(patterns)) {
+    if (patterns.length === 0) return true;
+
+    // File must match at least one pattern
+    return patterns.some((pattern) => {
+      try {
+        const regex = new RegExp(pattern);
+        return regex.test(filePath);
+      } catch (e) {
+        console.error(`Invalid regex pattern: ${pattern}`, e);
+        return false;
+      }
+    });
+  }
+
+  return false;
+};
+
+/**
  * Determines if a file path is within a specific directory or its subdirectories
  *
  * @param filePath - The file path to check
