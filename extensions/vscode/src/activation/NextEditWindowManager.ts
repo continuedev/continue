@@ -9,8 +9,10 @@ import { getTheme } from "../util/getTheme";
 // Fallback theme colors
 const FALLBACK_THEME = {
   colors: {
-    "editor.foreground": "#333333",
-    "editor.background": "#FFFFFF",
+    // "editor.foreground": "#FFFFFF",
+    // "editor.background": "#333333",
+    "editor.foreground": "var(--vscode-editor-foreground)",
+    "editor.background": "var(--vscode-editor-background)",
   },
 };
 
@@ -93,8 +95,10 @@ export class NextEditWindowManager {
 
   private constructor() {
     console.log(
-      "Theme initialized:",
-      this.theme ? "Theme exists" : "Theme is undefined",
+      "Next Edit Theme initialized:",
+      this.theme
+        ? `Theme exists: ${JSON.stringify(this.theme)}`
+        : "Theme is undefined",
     );
     this.setupListeners();
   }
@@ -280,7 +284,6 @@ export class NextEditWindowManager {
           '<text style="white-space: pre" ',
         );
       }
-      // console.log(svgContent);
 
       const dataUri = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString("base64")}`;
       return vscode.Uri.parse(dataUri);
