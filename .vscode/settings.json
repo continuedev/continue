@@ -17,6 +17,7 @@
     "source.organizeImports": "explicit"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.stickyScroll.enabled": true,
   "search.exclude": {
     "**/package-lock.json": true,
     "binary/bin/**": true,
