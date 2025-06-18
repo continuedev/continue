@@ -17,7 +17,7 @@ import {
 } from "../..";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
 
-const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
+const DEFAULT_MCP_TIMEOUT = 200_000; // 200 seconds
 
 // Commands that are batch scripts on Windows and need cmd.exe to execute
 const WINDOWS_BATCH_COMMANDS = [

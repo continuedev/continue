@@ -30,7 +30,7 @@ type UIState = {
   ttsActive: boolean;
 };
 
-export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
+export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithoutPermission";
 
 export const uiSlice = createSlice({
   name: "ui",
