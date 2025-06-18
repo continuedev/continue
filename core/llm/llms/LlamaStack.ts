@@ -54,4 +54,4 @@ class LlamaStack extends OpenAI {
   }
 }
 
-export default Deepseek;
+export default LlamaStack;
