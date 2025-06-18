@@ -134,6 +134,7 @@ async function loadConfigYaml(options: {
         rootPath,
       }),
       {
+        renderSecrets: true,
         currentUserSlug: "",
         onPremProxyUrl: null,
         orgScopeId,
@@ -142,9 +143,7 @@ async function loadConfigYaml(options: {
           controlPlaneClient,
           ide,
         ),
-        renderSecrets: true,
         injectBlocks: allLocalBlocks,
-        asConfigResult: true,
       },
     );
     config = unrollResult.config;
