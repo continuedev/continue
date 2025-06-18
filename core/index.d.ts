@@ -1576,12 +1576,12 @@ export interface RuleWithSource {
   slug?: string;
   source: RuleSource;
   globs?: string | string[];
+  patterns?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
 }
-
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;
