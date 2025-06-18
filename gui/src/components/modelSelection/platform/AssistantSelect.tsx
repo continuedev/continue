@@ -32,6 +32,7 @@ import {
 
 import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useNavigate } from "react-router-dom";
+import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { cn } from "../../../util/cn";
 import { ROUTES } from "../../../util/navigation";
 import { useLump } from "../../mainInput/Lump/LumpContext";
@@ -171,6 +172,11 @@ export default function AssistantSelect() {
     });
     close();
   }
+  async function refreshProfilesWithLoading() {
+    setLoading(true);
+    await refreshProfiles();
+    setLoading(false);
+  }
 
   useEffect(() => {
     let lastToggleTime = 0;
@@ -212,6 +218,8 @@ export default function AssistantSelect() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [currentOrg, selectedProfile]);
+
+  useWebviewListener("sessionUpdate", refreshProfilesWithLoading, []);
 
   const cycleOrgs = () => {
     if (!session) {
@@ -294,10 +302,9 @@ export default function AssistantSelect() {
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  setLoading(true);
-                  await refreshProfiles();
-                  setLoading(false);
-                  buttonRef.current?.click();
+                  refreshProfilesWithLoading().then(() =>
+                    buttonRef.current?.click(),
+                  );
                 }}
               >
                 <ArrowPathIcon
