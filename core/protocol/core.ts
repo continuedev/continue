@@ -25,6 +25,7 @@ import {
   ModelDescription,
   PromptLog,
   RangeInFile,
+  RangeInFileWithContentsAndEdit,
   SerializedContinueConfig,
   Session,
   SessionMetadata,
@@ -182,6 +183,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "files/created": [{ uris?: string[] }, void];
   "files/deleted": [{ uris?: string[] }, void];
   "files/closed": [{ uris?: string[] }, void];
+  "files/smallEdit": [{ actions: RangeInFileWithContentsAndEdit[] }, void];
 
   // Docs etc. Indexing. TODO move codebase to this
   "indexing/reindex": [{ type: string; id: string }, void];

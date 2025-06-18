@@ -21,6 +21,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
+import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
@@ -682,6 +683,32 @@ export class Core {
           }
         }
       }
+    });
+
+    on("files/smallEdit", async ({ data }) => {
+      const EDIT_AGGREGATION_OPTIONS = {
+        deltaT: 1.0,
+        deltaL: 5,
+        maxEdits: 250,
+        maxDuration: 100.0,
+        contextSize: 5,
+        maxEditSize: 1000,
+      };
+
+      if (!global._editAggregator) {
+        global._editAggregator = new EditAggregator(
+          EDIT_AGGREGATION_OPTIONS,
+          (diff: string) => {
+            console.log(diff, "\n");
+            // TODO handle devData logging here
+          },
+        );
+      }
+
+      // queueMicrotask prevents blocking the UI thread during typing
+      queueMicrotask(() => {
+        void global._editAggregator.processEdits(data.actions);
+      });
     });
 
     // Docs, etc. indexing

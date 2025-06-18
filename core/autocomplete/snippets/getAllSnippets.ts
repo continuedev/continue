@@ -230,7 +230,7 @@ export const getAllSnippetsWithoutRace = async ({
     ideSnippets,
     diffSnippets,
     clipboardSnippets,
-    recentlyOpenedFileSnippets
+    recentlyOpenedFileSnippets,
   ] = await Promise.all([
     contextRetrievalService.getRootPathSnippets(helper),
     contextRetrievalService.getSnippetsFromImportDefinitions(helper),
@@ -239,7 +239,7 @@ export const getAllSnippetsWithoutRace = async ({
       : [],
     [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     getClipboardSnippets(ide),
-    getSnippetsFromRecentlyOpenedFiles(helper, ide)
+    getSnippetsFromRecentlyOpenedFiles(helper, ide),
   ]);
 
   return {
@@ -250,6 +250,6 @@ export const getAllSnippetsWithoutRace = async ({
     diffSnippets,
     clipboardSnippets,
     recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
-    recentlyOpenedFileSnippets
+    recentlyOpenedFileSnippets,
   };
 };

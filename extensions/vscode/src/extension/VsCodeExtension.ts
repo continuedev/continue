@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { IContextProvider } from "core";
+import { IContextProvider, RangeInFileWithContentsAndEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
@@ -62,6 +62,7 @@ export class VsCodeExtension {
   private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
+  private _editDebounceTimer: NodeJS.Timeout | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -281,6 +282,38 @@ export class VsCodeExtension {
         return;
       }
       this.configHandler.reloadConfig();
+    });
+
+    vscode.workspace.onDidChangeTextDocument(async (event) => {
+      const changes = event.contentChanges;
+
+      if (event.contentChanges.length === 0) {
+        return;
+      }
+
+      // OPTIMIZATION: Debounce rapid keystrokes
+      // This prevents sending too many edit events during fast typing
+      if (this._editDebounceTimer) {
+        clearTimeout(this._editDebounceTimer);
+      }
+
+      this._editDebounceTimer = setTimeout(() => {
+        const editActions: RangeInFileWithContentsAndEdit[] = changes.map(
+          (change) => ({
+            filepath: event.document.uri.toString(),
+            range: {
+              start: change.range.start,
+              end: change.range.end,
+            },
+            // OPTIMIZATION: Only get document text once
+            fileContents: event.document.getText(),
+            editText: change.text,
+          }),
+        );
+
+        // Use invoke without awaiting to prevent blocking
+        this.core.invoke("files/smallEdit", { actions: editActions });
+      }, 10); // Small delay to batch rapid edits
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
