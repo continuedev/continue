@@ -145,29 +145,15 @@ describe("Rule policies", () => {
   const testFiles = ["src/components/Button.tsx"];
   const nonMatchingFiles = ["src/utils/helpers.ts"];
 
-  it("should always apply rules with 'always' policy regardless of file paths", () => {
+  it("should never apply rules with 'off' policy regardless of file paths", () => {
     const rulePolicies: RulePolicies = {
-      "Components Rule": "always",
-    };
-
-    // Should apply even to non-matching files
-    expect(shouldApplyRule(componentRule, nonMatchingFiles, rulePolicies)).toBe(
-      true,
-    );
-
-    // Should apply to empty file list
-    expect(shouldApplyRule(componentRule, [], rulePolicies)).toBe(true);
-  });
-
-  it("should never apply rules with 'never' policy regardless of file paths", () => {
-    const rulePolicies: RulePolicies = {
-      "Components Rule": "never",
+      "Components Rule": "off",
     };
 
     // Should not apply even to matching files
     expect(shouldApplyRule(componentRule, testFiles, rulePolicies)).toBe(false);
 
-    // Rule with alwaysApply: true should still be overridden by 'never' policy
+    // Rule with alwaysApply: true should still be overridden by 'off' policy
     const alwaysApplyRule: RuleWithSource = {
       name: "Always Apply Rule",
       rule: "This rule would normally always apply",
@@ -176,18 +162,18 @@ describe("Rule policies", () => {
       ruleFile: "src/components/rules.md",
     };
 
-    const alwaysNeverPolicies: RulePolicies = {
-      "Always Apply Rule": "never",
+    const offPolicies: RulePolicies = {
+      "Always Apply Rule": "off",
     };
 
-    expect(
-      shouldApplyRule(alwaysApplyRule, testFiles, alwaysNeverPolicies),
-    ).toBe(false);
+    expect(shouldApplyRule(alwaysApplyRule, testFiles, offPolicies)).toBe(
+      false,
+    );
   });
 
-  it("should apply 'auto' policy rules based on normal matching logic", () => {
+  it("should apply 'on' policy rules based on normal matching logic", () => {
     const rulePolicies: RulePolicies = {
-      "Components Rule": "auto",
+      "Components Rule": "on",
     };
 
     // Should apply to matching files
@@ -221,22 +207,22 @@ describe("Rule policies", () => {
       ruleFile: ".continue/rules.md",
     };
 
-    // Never policy should override even global rules
-    const neverPolicies: RulePolicies = {
-      "Root Rule": "never",
+    // Off policy should override even global rules
+    const offPolicies: RulePolicies = {
+      "Root Rule": "off",
     };
 
-    expect(shouldApplyRule(rootRule, testFiles, neverPolicies)).toBe(false);
+    expect(shouldApplyRule(rootRule, testFiles, offPolicies)).toBe(false);
 
-    // Auto policy should maintain global rule behavior
-    const autoPolicies: RulePolicies = {
-      "Root Rule": "auto",
+    // On policy should maintain global rule behavior
+    const onPolicies: RulePolicies = {
+      "Root Rule": "on",
     };
 
-    expect(shouldApplyRule(rootRule, testFiles, autoPolicies)).toBe(true);
+    expect(shouldApplyRule(rootRule, testFiles, onPolicies)).toBe(true);
   });
 
-  it("should prioritize policies over alwaysApply and directory restrictions", () => {
+  it("should prioritize 'off' policy over alwaysApply and directory restrictions", () => {
     // Create rule with multiple matching criteria
     const complexRule: RuleWithSource = {
       name: "Complex Rule",
@@ -247,21 +233,14 @@ describe("Rule policies", () => {
       ruleFile: "src/utils/rules.md",
     };
 
-    // Always policy should win over everything
-    const alwaysPolicies: RulePolicies = {
-      "Complex Rule": "always",
+    // Off policy should win over everything
+    const offPolicies: RulePolicies = {
+      "Complex Rule": "off",
     };
 
-    expect(shouldApplyRule(complexRule, [], alwaysPolicies)).toBe(true);
-
-    // Never policy should also win over everything
-    const neverPolicies: RulePolicies = {
-      "Complex Rule": "never",
-    };
-
-    // Even with matching files and alwaysApply: true, never policy wins
+    // Even with matching files and alwaysApply: true, off policy wins
     expect(
-      shouldApplyRule(complexRule, ["src/utils/test.ts"], neverPolicies),
+      shouldApplyRule(complexRule, ["src/utils/test.ts"], offPolicies),
     ).toBe(false);
   });
 });

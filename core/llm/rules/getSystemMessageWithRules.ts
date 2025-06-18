@@ -125,13 +125,8 @@ export const shouldApplyRule = (
 ): boolean => {
   const policy = rulePolicies[rule.name || ""];
 
-  // Always apply if policy is "always"
-  if (policy === "always") {
-    return true;
-  }
-
-  // Never apply if policy is "never"
-  if (policy === "never") {
+  // Never apply if policy is "off"
+  if (policy === "off") {
     return false;
   }
 

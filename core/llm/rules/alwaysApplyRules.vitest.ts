@@ -138,7 +138,7 @@ describe("Rule application with alwaysApply", () => {
     expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
   });
 
-  it("should respect rulePolicies over alwaysApply when there are no file paths", () => {
+  it("should respect 'off' rulePolicies over alwaysApply when there are no file paths", () => {
     // Rule with alwaysApply: true
     const globalRule: RuleWithSource = {
       name: "Global Rule",
@@ -156,10 +156,10 @@ describe("Rule application with alwaysApply", () => {
 
     // Create a rule policy that blocks the rule
     const rulePolicies: RulePolicies = {
-      "Global Rule": "never",
+      "Global Rule": "off",
     };
 
-    // The rule should NOT be applied due to the "never" policy,
+    // The rule should NOT be applied due to the "off" policy,
     // even though it has alwaysApply: true and there are no file paths
     const applicableRules = getApplicableRules(
       simpleMessage,

@@ -12,7 +12,7 @@ export type ToolPolicy =
   | "allowedWithoutPermission"
   | "disabled";
 
-export type RulePolicy = "always" | "auto" | "never";
+export type RulePolicy = "on" | "off";
 
 export type ToolGroupPolicy = "include" | "exclude";
 
@@ -35,7 +35,7 @@ type UIState = {
 };
 
 export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
-export const DEFAULT_RULE_SETTING: RulePolicy = "auto";
+export const DEFAULT_RULE_SETTING: RulePolicy = "on";
 
 export const uiSlice = createSlice({
   name: "ui",
@@ -140,14 +140,11 @@ export const uiSlice = createSlice({
       const setting = state.ruleSettings[action.payload];
 
       switch (setting) {
-        case "auto":
-          state.ruleSettings[action.payload] = "always";
+        case "on":
+          state.ruleSettings[action.payload] = "off";
           break;
-        case "always":
-          state.ruleSettings[action.payload] = "never";
-          break;
-        case "never":
-          state.ruleSettings[action.payload] = "auto";
+        case "off":
+          state.ruleSettings[action.payload] = "on";
           break;
         default:
           state.ruleSettings[action.payload] = DEFAULT_RULE_SETTING;
