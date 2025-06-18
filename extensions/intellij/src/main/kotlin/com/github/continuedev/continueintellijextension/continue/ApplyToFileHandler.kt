@@ -169,7 +169,11 @@ class ApplyToFileHandler(
             ide: IDE,
             params: ApplyToFileParams
         ) {
-            val editorUtils = EditorUtils.getOrOpenEditor(project, params.filepath)
+            val editorUtils = if (EditorUtils.editorFileExist(params.filepath))
+                EditorUtils.getOrOpenEditor(project, params.filepath)
+            else
+                EditorUtils.getEditorByCreateFile(project, params.filepath)
+
             val diffStreamService = project.getService(DiffStreamService::class.java)
 
             val handler = ApplyToFileHandler(
