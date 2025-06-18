@@ -4,7 +4,7 @@ const { rimrafSync } = require("rimraf");
 const tar = require("tar");
 const { RIPGREP_VERSION, TARGET_TO_RIPGREP_RELEASE } = require("./targets");
 const AdmZip = require("adm-zip");
-const { ProxyAgent } = require('undici');
+const { ProxyAgent } = require("undici");
 
 const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}`;
 
