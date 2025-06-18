@@ -1,5 +1,5 @@
-import { createPatch } from "diff";
 import { RangeInFileWithContentsAndEdit } from "../..";
+import { DiffFormatType, createDiff } from "./diffFormatting";
 
 interface ClusterState {
   beforeState: string;
@@ -360,30 +360,6 @@ export class EditAggregator {
     return clustersToFinalize;
   }
 
-  private createStandardDiff(
-    beforeContent: string,
-    afterContent: string,
-    filePath: string,
-  ): string {
-    const normalizedBefore = beforeContent.endsWith("\n")
-      ? beforeContent
-      : beforeContent + "\n";
-    const normalizedAfter = afterContent.endsWith("\n")
-      ? afterContent
-      : afterContent + "\n";
-
-    const patch = createPatch(
-      filePath,
-      normalizedBefore,
-      normalizedAfter,
-      "before",
-      "after",
-      { context: 3 },
-    );
-
-    return patch;
-  }
-
   private async finalizeCluster(
     filePath: string,
     cluster: ClusterState,
@@ -403,7 +379,12 @@ export class EditAggregator {
       return;
     }
 
-    const diff = this.createStandardDiff(beforeContent, afterContent, filePath);
+    const diff = createDiff(
+      beforeContent,
+      afterContent,
+      filePath,
+      DiffFormatType.Unified,
+    );
 
     // Skip diffs with too many changed lines
     const changedLineCount = this.countChangedLines(diff);
