@@ -12,7 +12,7 @@ export class LlamastackApi extends OpenAIApi {
       ...config,
       provider: "openai",
       apiBase: config.apiBase ?? Llamastack_API_BASE,
-      apiKey: config.apiKey ?? 'dummy',
+      apiKey: config.apiKey ?? "dummy",
     });
   }
 
@@ -51,5 +51,5 @@ export class LlamastackApi extends OpenAIApi {
         model: body.model,
       });
     }
-}
+  }
 }
