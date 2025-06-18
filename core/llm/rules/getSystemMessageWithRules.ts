@@ -156,6 +156,13 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
  * @param filePaths - Array of file paths to check against the rule's globs
  * @returns true if the rule should be applied, false otherwise
  */
+/**
+ * Determines if a rule should be applied based on its alwaysApply property and file path matching
+ *
+ * @param rule - The rule to check
+ * @param filePaths - Array of file paths to check against the rule's globs
+ * @returns true if the rule should be applied, false otherwise
+ */
 export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
@@ -200,31 +207,93 @@ export const shouldApplyRule = (
       return false;
     }
 
-    // If we have globs, check if any files in this directory match them
-    if (rule.globs) {
+    // Check both globs and patterns
+    const hasGlobs = rule.globs !== undefined;
+    const hasPatterns = rule.patterns !== undefined;
+
+    // If we have both globs and patterns, check if any files match both
+    if (hasGlobs && hasPatterns) {
+      return filesInRuleDirectory.some(
+        (filePath) =>
+          matchesGlobs(filePath, rule.globs) &&
+          matchesPatterns(filePath, rule.patterns),
+      );
+    }
+
+    // If we only have globs, check those
+    if (hasGlobs) {
       return filesInRuleDirectory.some((filePath) =>
         matchesGlobs(filePath, rule.globs),
       );
     }
 
-    // No globs but files are in this directory, so apply the rule
+    // If we only have patterns, check those
+    if (hasPatterns) {
+      return filesInRuleDirectory.some((filePath) =>
+        matchesPatterns(filePath, rule.patterns),
+      );
+    }
+
+    // No globs or patterns but files are in this directory, so apply the rule
     return true;
   }
 
   // For root-level rules:
 
-  // If alwaysApply is explicitly false, only apply if there are globs AND they match
+  // If alwaysApply is explicitly false, only apply if there are globs AND/OR patterns AND they match
   if (rule.alwaysApply === false) {
-    if (!rule.globs) {
+    const hasGlobs = rule.globs !== undefined;
+    const hasPatterns = rule.patterns !== undefined;
+
+    if (!hasGlobs && !hasPatterns) {
       return false;
     }
-    return filePaths.some((path) => matchesGlobs(path, rule.globs));
+
+    // If we have both globs and patterns, check if any files match both
+    if (hasGlobs && hasPatterns) {
+      return filePaths.some(
+        (filePath) =>
+          matchesGlobs(filePath, rule.globs) &&
+          matchesPatterns(filePath, rule.patterns),
+      );
+    }
+
+    // If we only have globs, check those
+    if (hasGlobs) {
+      return filePaths.some((filePath) => matchesGlobs(filePath, rule.globs));
+    }
+
+    // If we only have patterns, check those
+    if (hasPatterns) {
+      return filePaths.some((filePath) =>
+        matchesPatterns(filePath, rule.patterns),
+      );
+    }
   }
 
-  // Default behavior for root rules with globs:
-  // - Only apply if they match the globs
-  if (rule.globs) {
-    return filePaths.some((path) => matchesGlobs(path, rule.globs));
+  // Default behavior for root rules with globs and/or patterns:
+  const hasGlobs = rule.globs !== undefined;
+  const hasPatterns = rule.patterns !== undefined;
+
+  // If we have both globs and patterns, check if any files match both
+  if (hasGlobs && hasPatterns) {
+    return filePaths.some(
+      (filePath) =>
+        matchesGlobs(filePath, rule.globs) &&
+        matchesPatterns(filePath, rule.patterns),
+    );
+  }
+
+  // If we only have globs, check those
+  if (hasGlobs) {
+    return filePaths.some((filePath) => matchesGlobs(filePath, rule.globs));
+  }
+
+  // If we only have patterns, check those
+  if (hasPatterns) {
+    return filePaths.some((filePath) =>
+      matchesPatterns(filePath, rule.patterns),
+    );
   }
 
   // This point should not be reached as we've handled all cases above
