@@ -9,10 +9,10 @@ import { getTheme } from "../util/getTheme";
 // Fallback theme colors
 const FALLBACK_THEME = {
   colors: {
-    // "editor.foreground": "#FFFFFF",
-    // "editor.background": "#333333",
-    "editor.foreground": "var(--vscode-editor-foreground)",
-    "editor.background": "var(--vscode-editor-background)",
+    "editor.foreground": "#FFFFFF",
+    "editor.background": "#333333",
+    // "editor.foreground": "var(--vscode-editor-foreground)",
+    // "editor.background": "var(--vscode-editor-background)",
   },
 };
 
