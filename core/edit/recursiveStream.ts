@@ -68,7 +68,6 @@ export async function* recursiveStream(
     });
 
     for await (const chunk of generator) {
-      console.log(chunk);
       yield chunk;
       const rendered = renderChatMessage(chunk);
       buffer += rendered;

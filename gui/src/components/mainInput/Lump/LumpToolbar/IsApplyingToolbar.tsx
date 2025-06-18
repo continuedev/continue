@@ -13,15 +13,16 @@ export const IsApplyingToolbar = () => {
 
   return (
     <Container>
-      <GeneratingIndicator text="Applying" />
+      <GeneratingIndicator text="Applying" testId={"notch-applying-text"} />
       <StopButton
+        data-testid="notch-applying-cancel-button"
         className="text-description"
         onClick={() => {
           // Note that this will NOT stop generation but once apply is cancelled will show the Generating/cancel option
           // Apply is prioritized because it can be more catastrophic
           // Intentional to be more WYSIWYG for now
           // Keyboard shortcut is handled in chat
-          dispatch(cancelStream());
+          void dispatch(cancelStream());
           ideMessenger.post("rejectDiff", {});
         }}
       >
