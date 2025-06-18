@@ -206,7 +206,7 @@ const config = {
     [
       "posthog-docusaurus",
       {
-        apiKey: process.env.POSTHOG_API_KEY || "DEV", // fallback
+        apiKey: process.env.POSTHOG_API_KEY || "DEV",
         appUrl: "https://us.i.posthog.com",
         enableInDevelopment: false,
       },
