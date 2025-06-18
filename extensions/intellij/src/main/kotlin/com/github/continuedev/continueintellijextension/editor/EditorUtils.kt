@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.utils.toUriOrNull
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
@@ -14,6 +15,8 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.JBColor
 import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.vfs.LocalFileSystem
+import java.io.File
 
 /**
  * Utility class for working with Editor instances.
@@ -159,6 +162,39 @@ class EditorUtils(val editor: Editor) {
                 if (virtualFile != null) {
                     ApplicationManager.getApplication().invokeAndWait {
                         FileEditorManager.getInstance(project).openFile(virtualFile, true).first()
+                    }
+                }
+            }
+
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
+            return EditorUtils(editor)
+        }
+
+        /**
+         * Gets editor for the filepath is existed
+         */
+        fun editorFileExist(filepath: String?): Boolean {
+            return !filepath.isNullOrEmpty() && VirtualFileManager.getInstance().findFileByUrl(filepath) != null
+        }
+
+        /**
+         * Gets editor for the no exist filepath and returns an EditorUtils instance
+         */
+        fun getEditorByCreateFile(project: Project, filepath: String?): EditorUtils? {
+            if (!filepath.isNullOrEmpty()) {
+                // file not exists and create
+                val ioFile = File(filepath.replace("file:///", ""))
+                if (!ioFile.exists()) {
+                    ioFile.parentFile?.mkdirs()
+                    ioFile.createNewFile()
+                }
+                // IntelliJ refresh VirtualFile
+                val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(ioFile)
+                if (virtualFile != null) {
+                    ApplicationManager.getApplication().invokeAndWait {
+                        runWriteAction {
+                            FileEditorManager.getInstance(project).openFile(virtualFile, true)
+                        }
                     }
                 }
             }
