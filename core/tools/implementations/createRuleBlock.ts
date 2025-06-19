@@ -7,7 +7,7 @@ export type CreateRuleBlockArgs = Pick<
   Required<RuleWithSource>,
   "rule" | "description" | "alwaysApply" | "name"
 > &
-  Pick<RuleWithSource, "globs">;
+  Pick<RuleWithSource, "globs" | "patterns">;
 
 export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
@@ -16,6 +16,7 @@ export const createRuleBlockImpl: ToolImpl = async (
   const fileContent = createRuleMarkdown(args.name, args.rule, {
     description: args.description,
     globs: args.globs,
+    patterns: args.patterns,
   });
 
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();

@@ -1,6 +1,3 @@
-import { Tool } from "../..";
-import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-
 export const createRuleBlock: Tool = {
   type: "function",
   displayTitle: "Create Rule Block",
@@ -36,6 +33,11 @@ export const createRuleBlock: Tool = {
           type: "string",
           description:
             "Optional file patterns to which this rule applies (e.g. ['**/*.{ts,tsx}'] or ['src/**/*.ts', 'tests/**/*.ts'])",
+        },
+        patterns: {
+          type: "string",
+          description:
+            "Optional regex patterns to match against file content. Rule applies only to files whose content matches the pattern (e.g. 'useEffect' for React hooks or '\\bclass\\b' for class definitions)",
         },
       },
     },
