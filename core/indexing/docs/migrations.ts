@@ -6,8 +6,8 @@ import { editConfigFile, migrate } from "../../util/paths.js";
 import DocsService, { SqliteDocsRow } from "./DocsService.js";
 
 export async function runLanceMigrations(table: Table) {
-  await new Promise((resolve) =>
-    migrate(
+  await new Promise((resolve) => {
+    void migrate(
       "rename_baseurl_column_for_lance_docs",
       async () => {
         try {
@@ -21,8 +21,8 @@ export async function runLanceMigrations(table: Table) {
         }
       },
       () => resolve(undefined),
-    ),
-  );
+    );
+  });
 }
 
 export async function runSqliteMigrations(db: Database) {

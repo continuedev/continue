@@ -49,7 +49,7 @@ import {
 
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
-import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import {
   setupLocalConfig,
   setupProviderConfig,
@@ -145,8 +145,8 @@ export class Core {
       this.messenger,
     );
 
-    MCPManagerSingleton.getInstance().onConnectionsRefreshed = async () => {
-      await this.configHandler.reloadConfig();
+    MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
+      void this.configHandler.reloadConfig();
     };
 
     this.codeBaseIndexer = new CodebaseIndexer(
@@ -156,24 +156,26 @@ export class Core {
       this.globalContext.get("indexingPaused"),
     );
 
-    this.configHandler.onConfigUpdate(async (result) => {
-      const serializedResult = await this.configHandler.getSerializedConfig();
-      this.messenger.send("configUpdate", {
-        result: serializedResult,
-        profileId:
-          this.configHandler.currentProfile?.profileDescription.id || null,
-        organizations: this.configHandler.getSerializedOrgs(),
-        selectedOrgId: this.configHandler.currentOrg.id,
-      });
-
-      // update additional submenu context providers registered via VSCode API
-      const additionalProviders =
-        this.configHandler.getAdditionalSubmenuContextProviders();
-      if (additionalProviders.length > 0) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: additionalProviders,
+    this.configHandler.onConfigUpdate((result) => {
+      void (async () => {
+        const serializedResult = await this.configHandler.getSerializedConfig();
+        this.messenger.send("configUpdate", {
+          result: serializedResult,
+          profileId:
+            this.configHandler.currentProfile?.profileDescription.id || null,
+          organizations: this.configHandler.getSerializedOrgs(),
+          selectedOrgId: this.configHandler.currentOrg.id,
         });
-      }
+
+        // update additional submenu context providers registered via VSCode API
+        const additionalProviders =
+          this.configHandler.getAdditionalSubmenuContextProviders();
+        if (additionalProviders.length > 0) {
+          this.messenger.send("refreshSubmenuItems", {
+            providers: additionalProviders,
+          });
+        }
+      })();
     });
 
     // Dev Data Logger
@@ -606,7 +608,7 @@ export class Core {
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
-          if (isLocalAssistantFile(uri)) {
+          if (isLocalDefinitionFile(uri)) {
             localAssistantCreated = true;
           }
         }

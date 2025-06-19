@@ -1,6 +1,5 @@
 import * as YAML from "yaml";
-import { joinPathsToUri } from "../../util/uri";
-import { RuleFrontmatter } from "./parseMarkdownRule";
+import { RuleFrontmatter } from "./markdownToRule.js";
 
 export const RULE_FILE_EXTENSION = "md";
 
@@ -13,22 +12,6 @@ export function sanitizeRuleName(name: string): string {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/^-+|-+$/g, ""); // Remove leading/trailing dashes
-}
-
-/**
- * Creates the file path for a rule in the workspace .continue/rules directory
- */
-export function createRuleFilePath(
-  workspaceDir: string,
-  ruleName: string,
-): string {
-  const safeRuleName = sanitizeRuleName(ruleName);
-  return joinPathsToUri(
-    workspaceDir,
-    ".continue",
-    "rules",
-    `${safeRuleName}.${RULE_FILE_EXTENSION}`,
-  );
 }
 
 /**
@@ -69,7 +52,5 @@ export function createRuleMarkdown(
     frontmatter.alwaysApply = options.alwaysApply;
   }
 
-  const markdownBody = `# ${name}\n\n${ruleContent}`;
-
-  return createMarkdownWithFrontmatter(frontmatter, markdownBody);
+  return createMarkdownWithFrontmatter(frontmatter, ruleContent);
 }

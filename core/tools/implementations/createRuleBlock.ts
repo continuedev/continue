@@ -1,6 +1,7 @@
+import { createRuleMarkdown } from "@continuedev/config-yaml";
 import { ToolImpl } from ".";
 import { RuleWithSource } from "../..";
-import { createRuleFilePath, createRuleMarkdown } from "../../config/markdown";
+import { createRuleFilePath } from "../../config/markdown/utils";
 
 export type CreateRuleBlockArgs = Pick<
   Required<RuleWithSource>,
