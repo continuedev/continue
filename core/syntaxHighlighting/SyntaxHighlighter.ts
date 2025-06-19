@@ -1,7 +1,7 @@
 import * as fs from "fs/promises";
 import { JSDOM } from "jsdom";
 import path from "path";
-import puppeteer, { Browser, ScreenshotOptions } from "puppeteer";
+// import puppeteer, { Browser, ScreenshotOptions } from "puppeteer";
 import { BundledTheme, codeToHtml } from "shiki";
 import { kebabOfStr } from "../util/text";
 
@@ -18,8 +18,7 @@ interface HTMLOptions {
 
 interface ConversionOptions extends HTMLOptions {
   transparent?: boolean;
-  screenshotOptions?: ScreenshotOptions;
-  imageType: "png" | "svg";
+  imageType: "svg";
 }
 
 interface Dimensions {
@@ -45,7 +44,6 @@ type SvgUri = string;
 export class SyntaxHighlighter {
   private themesDir: string = path.join(__dirname, "themes"); // We may need this in case we start supporting custom colors.
   private currentTheme: string;
-  private browser: Browser | undefined = undefined;
   private static instance: SyntaxHighlighter;
 
   private constructor(options: SyntaxHighlighterOptions = {}) {
@@ -59,18 +57,9 @@ export class SyntaxHighlighter {
     return SyntaxHighlighter.instance;
   }
 
-  async init(): Promise<void> {
-    if (!this.browser) {
-      this.browser = await puppeteer.launch();
-    }
-  }
+  async init(): Promise<void> {}
 
-  async close(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = undefined;
-    }
-  }
+  async close(): Promise<void> {}
 
   themeExists(themeNameKebab: string): themeNameKebab is BundledTheme {
     const themeArray: BundledTheme[] = [
@@ -157,91 +146,99 @@ export class SyntaxHighlighter {
     });
   }
 
-  async convertToPNG(
-    code: string,
-    language: string = "javascript",
-    fontSize: number,
-    options: ConversionOptions,
-  ): Promise<DataAndDimensions> {
-    if (!this.browser) {
-      throw new Error("Browser not initialized. Call init() first.");
-    }
+  // async convertToPNG(
+  //   code: string,
+  //   language: string = "javascript",
+  //   fontSize: number,
+  //   dimensions: Dimensions,
+  //   lineHeight: number,
+  //   options: ConversionOptions,
+  // ): Promise<DataAndDimensions> {
+  //   if (!this.browser) {
+  //     throw new Error("Browser not initialized. Call init() first.");
+  //   }
 
-    const highlightedCodeHtml = await this.highlightCode(code, language);
+  //   const highlightedCodeHtml = await this.highlightCode(code, language);
 
-    const page = await this.browser.newPage();
-    await page.setContent(highlightedCodeHtml);
+  //   const page = await this.browser.newPage();
+  //   await page.setContent(highlightedCodeHtml);
 
-    const dimensions = await page.evaluate(() => {
-      const body = document.body;
-      return {
-        width: body.scrollWidth,
-        height: body.scrollHeight,
-      };
-    });
+  //   const dims = await page.evaluate(() => {
+  //     const body = document.body;
+  //     return {
+  //       width: body.scrollWidth,
+  //       height: body.scrollHeight,
+  //     };
+  //   });
 
-    await page.setViewport({
-      width: 3840,
-      height: 2160,
-      deviceScaleFactor: 1,
-    });
+  //   await page.setViewport({
+  //     width: 3840,
+  //     height: 2160,
+  //     deviceScaleFactor: 1,
+  //   });
 
-    const screenshot = await page.screenshot({
-      type: "png",
-      omitBackground: true,
-      ...options.screenshotOptions,
-    });
+  //   const screenshot = await page.screenshot({
+  //     type: "png",
+  //     omitBackground: true,
+  //     ...options.screenshotOptions,
+  //   });
 
-    await page.close();
+  //   await page.close();
 
-    return { data: screenshot, dimensions: dimensions };
-  }
+  //   return { data: screenshot, dimensions: dims };
+  // }
 
   async convertToSVG(
     code: string,
     language: string = "javascript",
     fontSize: number,
+    dimensions: Dimensions,
+    lineHeight: number,
     options: ConversionOptions,
-  ): Promise<DataAndDimensions> {
-    if (!this.browser) {
-      throw new Error("Browser not initialized. Call init() first.");
-    }
-
+  ): Promise<Buffer> {
     const highlightedCodeHtml = await this.highlightCode(code, language);
 
     console.log(code);
     console.log(highlightedCodeHtml);
 
-    const guts = this.convertShikiHtmlToSvgGut(highlightedCodeHtml, fontSize);
+    const guts = this.convertShikiHtmlToSvgGut(
+      highlightedCodeHtml,
+      fontSize,
+      lineHeight,
+    );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg">
-  ${guts}
-</svg>`;
+    //     const svg = `<svg xmlns="http://www.w3.org/2000/svg">
+    //   ${guts}
+    // </svg>`;
 
-    const tempPage = await this.browser.newPage();
-    await tempPage.setContent(svg);
+    // const tempPage = await this.browser.newPage();
+    // await tempPage.setContent(svg);
 
-    const dimensions = await tempPage.evaluate(() => {
-      const svg = document.querySelector("svg");
-      if (!svg) return { width: 0, height: 0 };
-      const bbox = svg.getBBox();
-      return {
-        width: Math.ceil(bbox.width),
-        height: Math.ceil(bbox.height),
-      };
-    });
+    // const dimensions = await tempPage.evaluate(() => {
+    //   const svg = document.querySelector("svg");
+    //   if (!svg) return { width: 0, height: 0 };
+    //   const bbox = svg.getBBox();
+    //   return {
+    //     width: Math.ceil(bbox.width),
+    //     height: Math.ceil(bbox.height),
+    //   };
+    // });
 
-    await tempPage.close();
+    // await tempPage.close();
 
-    const finalSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
   <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" />${guts}</g>
 </svg>`;
 
-    console.log(finalSvg);
-    return { data: Buffer.from(finalSvg, "utf8"), dimensions: dimensions };
+    console.log(svg);
+    return Buffer.from(svg, "utf8");
   }
 
-  convertShikiHtmlToSvgGut(shikiHtml: string, fontSize: number): string {
+  convertShikiHtmlToSvgGut(
+    shikiHtml: string,
+    fontSize: number,
+    lineHeight: number,
+  ): string {
     const dom = new JSDOM(shikiHtml);
     const document = dom.window.document;
 
@@ -262,7 +259,8 @@ export class SyntaxHighlighter {
         })
         .join("");
 
-      const y = index * 20 + fontSize; // 20px line height
+      const y = (index + 1) * lineHeight;
+      // const y = index * lineHeight;
       return `<text x="0" y="${y}" font-family="monospace" font-size="${fontSize.toString()}" xml:space="preserve">${spans}</text>`;
     });
 
@@ -292,64 +290,32 @@ export class SyntaxHighlighter {
     code: string,
     language: string = "javascript",
     fontSize: number,
+    dimensions: Dimensions,
+    lineHeight: number,
     options: ConversionOptions,
   ): Promise<DataUri> {
     switch (options.imageType) {
-      case "png":
-        const pngBuffer = await this.convertToPNG(
-          code,
-          language,
-          fontSize,
-          options,
-        );
-        return `data:image/png;base64,${pngBuffer.data.toString("base64")}`;
+      // case "png":
+      //   const pngBuffer = await this.convertToPNG(
+      //     code,
+      //     language,
+      //     fontSize,
+      //     dimensions,
+      //     lineHeight,
+      //     options,
+      //   );
+      //   return `data:image/png;base64,${pngBuffer.data.toString("base64")}`;
       case "svg":
         const svgBuffer = await this.convertToSVG(
           code,
           language,
           fontSize,
+          dimensions,
+          lineHeight,
           options,
         );
-        return `data:image/svg+xml;base64,${svgBuffer.data.toString("base64")}`;
+        return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
     }
-  }
-
-  async getDataUriAndDimensions(
-    code: string,
-    language: string = "javascript",
-    fontSize: number,
-    options: ConversionOptions,
-  ): Promise<DataUriAndDimensions> {
-    const converters: {
-      [Key in "png" | "svg"]: (
-        code: string,
-        language: string,
-        fontSize: number,
-        options: ConversionOptions,
-      ) => Promise<DataAndDimensions>;
-    } = {
-      png: this.convertToPNG.bind(this),
-      svg: this.convertToSVG.bind(this),
-    };
-
-    const mimetypes: {
-      [Key in "png" | "svg"]: string;
-    } = {
-      png: "image/png",
-      svg: "image/svg+xml",
-    };
-
-    const { data, dimensions } = await converters[options.imageType](
-      code,
-      language,
-      fontSize,
-      options,
-    );
-
-    return {
-      uri: `data:${mimetypes[options.imageType]};base64,${data.toString("base64")}`,
-      dimensions: dimensions,
-    };
   }
 
   // Utility method to list available themes
