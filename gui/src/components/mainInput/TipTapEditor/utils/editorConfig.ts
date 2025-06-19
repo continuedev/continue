@@ -332,7 +332,8 @@ export function createEditorConfig(options: {
     ],
     editorProps: {
       attributes: {
-        class: "outline-none overflow-hidden",
+        "data-testid": `editor-input-${props.isMainInput ? "main" : props.inputId}`,
+        class: "ProseMirror outline-none overflow-hidden",
         style: `font-size: ${getFontSize()}px;`,
       },
     },
