@@ -1,5 +1,5 @@
 import { FromIdeProtocol } from "..";
-import { GetGhTokenArgs, ToIdeFromWebviewOrCoreProtocol } from "../ide";
+import { ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
 import type {
   ContinueRcJson,
@@ -40,9 +40,11 @@ export class MessageIde implements IDE {
   fileExists(fileUri: string): Promise<boolean> {
     return this.request("fileExists", { filepath: fileUri });
   }
+
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return this.request("gotoDefinition", { location });
   }
+
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     this.on("didChangeActiveTextEditor", (data) => callback(data.filepath));
   }
@@ -50,15 +52,14 @@ export class MessageIde implements IDE {
   getIdeSettings(): Promise<IdeSettings> {
     return this.request("getIdeSettings", undefined);
   }
-  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
-    return this.request("getGitHubAuthToken", args);
-  }
+
   getFileStats(files: string[]): Promise<FileStatsMap> {
     return this.request("getFileStats", { files });
   }
   getGitRootPath(dir: string): Promise<string | undefined> {
     return this.request("getGitRootPath", { dir });
   }
+
   listDir(dir: string): Promise<[string, FileType][]> {
     return this.request("listDir", { dir });
   }
@@ -167,6 +168,7 @@ export class MessageIde implements IDE {
   async saveFile(fileUri: string): Promise<void> {
     await this.request("saveFile", { filepath: fileUri });
   }
+
   async readFile(fileUri: string): Promise<string> {
     return await this.request("readFile", { filepath: fileUri });
   }

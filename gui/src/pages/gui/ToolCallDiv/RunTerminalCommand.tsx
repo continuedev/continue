@@ -1,11 +1,10 @@
-import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { ToolCallState } from "core";
-import { Fragment } from "react";
-import { useDispatch } from "react-redux";
 import styled from "styled-components";
+import { vscForeground } from "../../../components";
+import Ansi from "../../../components/ansiTerminal/Ansi";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
-import { moveTerminalProcessToBackground } from "../../../redux/thunks/moveTerminalProcessToBackground";
 import { useAppDispatch } from "../../../redux/hooks";
+import { moveTerminalProcessToBackground } from "../../../redux/thunks/moveTerminalProcessToBackground";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
@@ -15,33 +14,49 @@ interface RunTerminalCommandToolCallProps {
 
 const CommandStatus = styled.div`
   font-size: 12px;
-  color: #666;
+  color: var(--vscode-descriptionForeground, ${vscForeground}88);
   margin-top: 8px;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-bottom: 8px;
   display: flex;
   align-items: center;
+  padding-left: 8px;
+  padding-right: 8px;
 `;
 
-const StatusIcon = styled.span<{ status: 'running' | 'completed' | 'failed' | 'background' }>`
+const StatusIcon = styled.span<{
+  status: "running" | "completed" | "failed" | "background";
+}>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
   margin-right: 8px;
-  background-color: ${props =>
-    props.status === 'running' ? '#4caf50' :
-    props.status === 'completed' ? '#4caf50' :
-    props.status === 'background' ? '#2196f3' :
-    '#f44336'};
-  ${props => props.status === 'running' ? 'animation: pulse 1.5s infinite;' : ''}
+  background-color: ${(props) =>
+    props.status === "running"
+      ? "var(--vscode-testing-runAction, #4caf50)"
+      : props.status === "completed"
+        ? "var(--vscode-testing-iconPassed, #4caf50)"
+        : props.status === "background"
+          ? "var(--vscode-statusBarItem-prominentBackground, #2196f3)"
+          : "var(--vscode-testing-iconFailed, #f44336)"};
+  ${(props) =>
+    props.status === "running" ? "animation: pulse 1.5s infinite;" : ""}
 `;
 
-// Removed unused styled components
+// Waiting message styled for consistency
+const WaitingMessage = styled.div`
+  padding: 8px;
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-top: 8px;
+`;
+
+// For consistency with the rest of the styled components
+const AnsiWrapper = styled.div`
+  margin-top: 8px;
+`;
 
 const BackgroundLink = styled.a`
   font-size: 12px;
-  color: #0077cc;
+  color: var(--vscode-textLink-foreground, #3794ff);
   margin-left: 12px;
   cursor: pointer;
   text-decoration: none;
@@ -51,12 +66,17 @@ const BackgroundLink = styled.a`
   }
 `;
 
+// Just spacing between terminal components and the next toolcall
+const TerminalContainer = styled.div`
+  margin-bottom: 16px;
+`;
+
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const dispatch = useAppDispatch();
 
   // Find the terminal output from context items if available
   const terminalItem = props.toolCallState.output?.find(
-    item => item.name === "Terminal"
+    (item) => item.name === "Terminal",
   );
 
   const terminalContent = terminalItem?.content || "";
@@ -65,24 +85,35 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const hasOutput = terminalContent.length > 0;
 
   // Determine status type
-  let statusType: 'running' | 'completed' | 'failed' | 'background' = 'completed';
+  let statusType: "running" | "completed" | "failed" | "background" =
+    "completed";
   if (isRunning) {
-    statusType = 'running';
-  } else if (statusMessage?.includes('failed')) {
-    statusType = 'failed';
-  } else if (statusMessage?.includes('background')) {
-    statusType = 'background';
+    statusType = "running";
+  } else if (statusMessage?.includes("failed")) {
+    statusType = "failed";
+  } else if (statusMessage?.includes("background")) {
+    statusType = "background";
   }
 
   return (
-    <Fragment>
+    <TerminalContainer>
+      {/* Command */}
       <StyledMarkdownPreview
         isRenderingInStepContainer
-        source={`\`\`\`bash .sh\n$ ${props.command ?? ""}${(hasOutput || isRunning) ?
-          `\n${terminalContent || "Waiting for output..."}`
-          : ""}\n\`\`\``}
+        source={`\`\`\`bash .sh\n$ ${props.command ?? ""}\n\`\`\``}
       />
 
+      {/* Terminal output with ANSI support */}
+      {isRunning && !hasOutput && (
+        <WaitingMessage>Waiting for output...</WaitingMessage>
+      )}
+      {hasOutput && (
+        <AnsiWrapper>
+          <Ansi>{terminalContent}</Ansi>
+        </AnsiWrapper>
+      )}
+
+      {/* Status information */}
       {(statusMessage || isRunning) && (
         <CommandStatus>
           <StatusIcon status={statusType} />
@@ -91,9 +122,11 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
             <BackgroundLink
               onClick={() => {
                 // Dispatch the action to move the command to the background
-                dispatch(moveTerminalProcessToBackground({
-                  toolCallId: props.toolCallId as string
-                }));
+                dispatch(
+                  moveTerminalProcessToBackground({
+                    toolCallId: props.toolCallId as string,
+                  }),
+                );
               }}
             >
               Move to background
@@ -101,6 +134,6 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
           )}
         </CommandStatus>
       )}
-    </Fragment>
+    </TerminalContainer>
   );
 }

@@ -1,4 +1,5 @@
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   ClipboardIcon,
   Cog6ToothIcon,
@@ -7,6 +8,7 @@ import {
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
+import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
 import ToggleDiv from "../../components/ToggleDiv";
@@ -16,6 +18,7 @@ import { selectSelectedProfile } from "../../redux/";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { streamResponseThunk } from "../../redux/thunks";
 import { isLocalProfile } from "../../util";
 import { providers } from "../AddNewModel/configs/providers";
 import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
@@ -44,6 +47,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
+  const { mainEditor } = useMainEditor();
 
   const parsedError = useMemo<string>(
     () => parseErrorMessage((error as any)?.message || ""),
@@ -59,6 +63,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const copyErrorToClipboard = () => {
     void navigator.clipboard.writeText(parsedError);
   };
+
+  const history = useAppSelector((store) => store.session.history);
 
   // Collect model information to display useful error info
   let modelTitle = "Chat model";
@@ -131,6 +137,48 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   );
 
+  const resubmitButton = (
+    <GhostButton
+      className="flex items-center"
+      onClick={() => {
+        let index = -1;
+        for (let i = history.length - 1; i >= 0; i--) {
+          if (
+            history[i].message.role === "user" ||
+            history[i].message.role === "tool"
+          ) {
+            index = i;
+            break;
+          }
+        }
+
+        if (!mainEditor) {
+          console.error("Main editor not found, cannot resubmit message.");
+          return;
+        }
+
+        const editorState =
+          index === -1 ? mainEditor.getJSON() : history[index].editorState;
+
+        void dispatch(
+          streamResponseThunk({
+            editorState,
+            modifiers: {
+              noContext: true,
+              useCodebase: false,
+            },
+            index: index === -1 ? 0 : index,
+          }),
+        );
+        dispatch(setShowDialog(false));
+        dispatch(setDialogMessage(undefined));
+      }}
+    >
+      <ArrowPathIcon className="mr-1.5 h-3.5 w-3.5" />
+      <span>Resubmit last message</span>
+    </GhostButton>
+  );
+
   if (
     parsedError === "You have exceeded the chat limit for the Models Add-On."
   ) {
@@ -138,7 +186,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   }
 
   let errorContent = (
-    <div className="mb-3 mt-1">
+    <div className="mb-1 mt-3">
       <div className="m-0 p-0">
         <p className="m-0 mb-2 p-0">
           There was an error handling the response from{" "}
@@ -148,6 +196,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           Please try to submit your message again, and if the error persists,
           let us know by reporting the issue using the buttons below.
         </p>
+        <div className="mt-3">{resubmitButton}</div>
       </div>
     </div>
   );
@@ -233,7 +282,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (
     message &&
     (message.toLowerCase().includes("overloaded") ||
-      message.toLowerCase().includes("malformed"))
+      message.toLowerCase().includes("malformed json"))
   ) {
     errorContent = (
       <div className="flex flex-col gap-2">

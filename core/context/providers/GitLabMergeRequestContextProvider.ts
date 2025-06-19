@@ -124,10 +124,10 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     let urlMatches: RegExpExecArray | null;
     if (/https?.*/.test(remoteUrl)) {
       const pathname = new URL(remoteUrl).pathname;
-      urlMatches = /\/(?<projectPath>.*?)(?:(?=\.git)|$)/.exec(pathname)
+      urlMatches = /\/(?<projectPath>.*?)(?:(?=\.git)|$)/.exec(pathname);
     } else {
       // ssh
-      urlMatches = /:(?<projectPath>.*).git/.exec(remoteUrl)
+      urlMatches = /:(?<projectPath>.*).git/.exec(remoteUrl);
     }
 
     const project = urlMatches?.groups?.projectPath ?? null;

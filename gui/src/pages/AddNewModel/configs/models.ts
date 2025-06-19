@@ -423,33 +423,6 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
-  llama3170bTrial: {
-    title: "Codellama 70b (Free Trial)",
-    description:
-      "The best code model from Meta, fine-tuned for code generation and conversation",
-    refUrl: "",
-    params: {
-      title: "CodeLlama-70b",
-      model: "codellama-70b",
-      contextLength: 4096,
-    },
-    icon: "meta.png",
-    providerOptions: ["free-trial"],
-    isOpenSource: false,
-  },
-  llama31405bTrial: {
-    title: "Llama3.1 405b (Free Trial)",
-    description: "The latest Llama model from Meta, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Llama3.1-405b",
-      model: "llama3.1-405b",
-      contextLength: 8192,
-    },
-    icon: "meta.png",
-    providerOptions: ["free-trial"],
-    isOpenSource: false,
-  },
   mixtralTrial: {
     title: "Mixtral (Free Trial)",
     description:
@@ -461,7 +434,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 4096,
     },
     icon: "mistral.png",
-    providerOptions: ["free-trial", "groq"],
+    providerOptions: ["groq"],
     isOpenSource: false,
   },
   llama38bChat: {
@@ -725,13 +698,7 @@ export const models: { [key: string]: ModelPackage } = {
       model: "phind-codellama-34b",
       contextLength: 4096,
     },
-    providerOptions: [
-      "ollama",
-      "lmstudio",
-      "llama.cpp",
-      "replicate",
-      "free-trial",
-    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
     isOpenSource: true,
   },
   codestral: {
@@ -859,7 +826,7 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
-    providerOptions: ["gemini", "free-trial", "askSage"],
+    providerOptions: ["gemini", "askSage"],
     isOpenSource: false,
   },
   gemini15Flash: {
@@ -946,12 +913,68 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
-  commandR: {
-    title: "Command R",
+  c4aiAyaExpanse8B: {
+    title: "C4AI Aya Expanse 8B",
+    description:
+      "Aya Expanse is a massively multilingual large language model excelling in enterprise-scale tasks.",
+    params: {
+      model: "c4ai-aya-expanse-8b",
+      contextLength: 8_000,
+      title: "C4AI Aya Expanse 8B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  c4aiAyaExpanse32B: {
+    title: "C4AI Aya Expanse 32B",
+    description:
+      "Aya Expanse is a massively multilingual large language model excelling in enterprise-scale tasks.",
+    params: {
+      model: "c4ai-aya-expanse-32b",
+      contextLength: 128_000,
+      title: "C4AI Aya Expanse 32B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  c4aiAyaVision8B: {
+    title: "C4AI Aya Vision 8B",
+    description:
+      "Aya Vision is a state-of-the-art multimodal and massively multilingual large language model excelling at critical benchmarks for language, text, and image capabilities.",
+    params: {
+      model: "c4ai-aya-vision-8b",
+      contextLength: 16_000,
+      title: "C4AI Aya Vision 8B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  c4aiAyaVision32B: {
+    title: "C4AI Aya Vision 32B",
+    description:
+      "Aya Vision is a state-of-the-art multimodal and massively multilingual large language model excelling at critical benchmarks for language, text, and image capabilities.",
+    params: {
+      model: "c4ai-aya-vision-32b",
+      contextLength: 16_000,
+      title: "C4AI Aya Vision 32B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR032024: {
+    title: "Command R 03-2024",
     description:
       "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
     params: {
-      model: "command-r",
+      model: "command-r-03-2024",
       contextLength: 128_000,
       title: "Command R",
       apiKey: "",
@@ -960,14 +983,84 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cohere.png",
     isOpenSource: false,
   },
-  commandRPlus: {
-    title: "Command R+",
+  commandRPlus042024: {
+    title: "Command R+ 04-2024",
     description:
-      "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads",
+      "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads.",
     params: {
-      model: "command-r-plus",
+      model: "command-r-plus-04-2024",
       contextLength: 128_000,
       title: "Command R+",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR082024: {
+    title: "Command R 08-2024",
+    description:
+      "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
+    params: {
+      model: "command-r-08-2024",
+      contextLength: 128_000,
+      title: "Command R 08-2024",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandRPlus082024: {
+    title: "Command R+ 08-2024",
+    description:
+      "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads.",
+    params: {
+      model: "command-r-plus-08-2024",
+      contextLength: 128_000,
+      title: "Command R+ 08-2024",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR7B122024: {
+    title: "Command R7B 12-2024",
+    description:
+      "The smallest model in our R series delivers top-tier speed, efficiency, and quality to build powerful AI applications on commodity GPUs and edge devices.",
+    params: {
+      model: "command-r7b-12-2024",
+      contextLength: 128_000,
+      title: "Command R7B 12-2024",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR7BArabic022025: {
+    title: "Command R7B Arabic 02-2025",
+    description:
+      "Our state-of-the-art lightweight multilingual AI model has been optimized for advanced Arabic language capabilities to support enterprises in the MENA region.",
+    params: {
+      model: "command-r7b-arabic-02-2025",
+      contextLength: 128_000,
+      title: "Command R7B Arabic 02-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandA032025: {
+    title: "Command A 03-2025",
+    description:
+      "Command A is Cohere’s most performant model to date, excelling at real world enterprise tasks including tool use, retrieval augmented generation (RAG), agents, and multilingual use cases.",
+    params: {
+      model: "command-a-03-2025",
+      contextLength: 256_000,
+      title: "Command A 03-2025",
       apiKey: "",
     },
     providerOptions: ["cohere"],
@@ -998,7 +1091,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai", "free-trial", "askSage"],
+    providerOptions: ["openai", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1026,7 +1119,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8096,
       title: "GPT-3.5-Turbo",
     },
-    providerOptions: ["openai", "free-trial", "askSage"],
+    providerOptions: ["openai", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1040,7 +1133,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3.5 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial", "askSage"],
+    providerOptions: ["anthropic", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -1068,7 +1161,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial", "askSage"],
+    providerOptions: ["anthropic", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -1082,7 +1175,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3.5 Haiku",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial"],
+    providerOptions: ["anthropic"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -1685,8 +1778,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekR1DistillLlama70B: {
     title: "DeepSeek R1 Distill Llama 70B",
-    description:
-      "A llama 3.1 70 model distilled from deekseek R1",
+    description: "A llama 3.1 70 model distilled from deekseek R1",
     params: {
       title: "DeepSeek R1 Distill Llama 70B",
       model: "DeepSeek-R1-Distill-Llama-70B",
@@ -1698,8 +1790,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekR1: {
     title: "DeepSeek R1",
-    description:
-      "DeekSeek R1 reasoning model from DeepSeek",
+    description: "DeekSeek R1 reasoning model from DeepSeek",
     params: {
       title: "DeepSeek R1",
       model: "DeepSeek-R1",
@@ -1711,8 +1802,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekV3: {
     title: "DeepSeek V3",
-    description:
-      "DeekSeek V3 reasoning model from DeepSeek",
+    description: "DeekSeek V3 reasoning model from DeepSeek",
     params: {
       title: "DeepSeek V3",
       model: "DeepSeek-V3-0324",

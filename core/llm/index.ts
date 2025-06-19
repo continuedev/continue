@@ -25,6 +25,7 @@ import {
   PromptLog,
   PromptTemplate,
   RequestOptions,
+  TabAutocompleteOptions,
   TemplateType,
 } from "../index.js";
 import mergeJson from "../util/merge.js";
@@ -95,6 +96,8 @@ export abstract class BaseLLM implements ILLM {
   get underlyingProviderName(): string {
     return this.providerName;
   }
+
+  autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
   supportsFim(): boolean {
     return false;
@@ -275,6 +278,8 @@ export abstract class BaseLLM implements ILLM {
     this.maxEmbeddingChunkSize =
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
+
+    this.autocompleteOptions = options.autocompleteOptions;
   }
 
   getConfigurationStatus() {
@@ -1063,9 +1068,17 @@ export abstract class BaseLLM implements ILLM {
         documents: chunks.map((chunk) => chunk.content),
       });
 
-      // Put them in the order they were given
-      const sortedResults = results.data.sort((a, b) => a.index - b.index);
-      return sortedResults.map((result) => result.relevance_score);
+      // Standard OpenAI format
+      if (results.data && Array.isArray(results.data)) {
+        return results.data
+          .sort((a, b) => a.index - b.index)
+          .map((result) => result.relevance_score);
+      }
+
+      throw new Error(
+        `Unexpected rerank response format from ${this.providerName}. ` +
+          `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`,
+      );
     }
 
     throw new Error(

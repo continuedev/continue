@@ -292,6 +292,26 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
         },
         description: "Create a new .prompt file",
       });
+    } else if (subMenuTitle === "Mention rules files") {
+      items.push({
+        title: "Add new rule",
+        type: "action",
+        action: () => {
+          void ideMessenger.request("config/addLocalWorkspaceBlock", {
+            blockType: "rules",
+          });
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          if (start !== -1) {
+            props.editor.view.dispatch(
+              tr.delete(start, tr.selection.from).scrollIntoView(),
+            );
+          }
+          props.onClose(); // Escape the mention list after creating a new rule
+        },
+        description: "Creates a rule file",
+      });
     }
     setLoadingSubmenuItem(items.find((item) => item.id === "loading"));
     setAllItems(items.filter((item) => item.id !== "loading"));

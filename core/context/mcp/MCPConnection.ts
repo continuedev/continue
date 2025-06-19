@@ -3,6 +3,7 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 
 import {
@@ -10,6 +11,7 @@ import {
   MCPOptions,
   MCPPrompt,
   MCPResource,
+  MCPResourceTemplate,
   MCPServerStatus,
   MCPTool,
 } from "../..";
@@ -36,6 +38,7 @@ class MCPConnection {
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
+  public resourceTemplates: MCPResourceTemplate[] = [];
   private transport: Transport;
   private connectionPromise: Promise<unknown> | null = null;
   private stdioOutput: { stdout: string; stderr: string } = {
@@ -71,6 +74,7 @@ class MCPConnection {
       errors: this.errors,
       prompts: this.prompts,
       resources: this.resources,
+      resourceTemplates: this.resourceTemplates,
       tools: this.tools,
       status: this.status,
     };
@@ -94,6 +98,7 @@ class MCPConnection {
     this.tools = [];
     this.prompts = [];
     this.resources = [];
+    this.resourceTemplates = [];
     this.errors = [];
     this.stdioOutput = { stdout: "", stderr: "" };
 
@@ -163,6 +168,23 @@ class MCPConnection {
                   this.resources = resources;
                 } catch (e) {
                   let errorMessage = `Error loading resources for MCP Server ${this.options.name}`;
+                  if (e instanceof Error) {
+                    errorMessage += `: ${e.message}`;
+                  }
+                  this.errors.push(errorMessage);
+                }
+
+                // Resource templates
+                try {
+                  const { resourceTemplates } =
+                    await this.client.listResourceTemplates(
+                      {},
+                      { signal: timeoutController.signal },
+                    );
+
+                  this.resourceTemplates = resourceTemplates;
+                } catch (e) {
+                  let errorMessage = `Error loading resource templates for MCP Server ${this.options.name}`;
                   if (e instanceof Error) {
                     errorMessage += `: ${e.message}`;
                   }
@@ -335,6 +357,13 @@ class MCPConnection {
           },
           requestInit: { headers: options.transport.requestOptions?.headers },
         });
+      case "streamable-http":
+        return new StreamableHTTPClientTransport(
+          new URL(options.transport.url),
+          {
+            requestInit: { headers: options.transport.requestOptions?.headers },
+          },
+        );
       default:
         throw new Error(
           `Unsupported transport type: ${(options.transport as any).type}`,

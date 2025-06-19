@@ -29,4 +29,5 @@ export default {
   globalSetup: "<rootDir>/test/jest.global-setup.ts",
   setupFilesAfterEnv: ["<rootDir>/test/jest.setup-after-env.js"],
   maxWorkers: 1, // equivalent to CLI --runInBand
+  testMatch: ["**/*.test.ts"],
 };

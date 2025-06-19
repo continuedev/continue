@@ -5,8 +5,9 @@ import {
   LOCAL_ONBOARDING_FIM_MODEL,
   LOCAL_ONBOARDING_PROVIDER_TITLE,
 } from "core/config/onboarding";
+import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect, useState } from "react";
-import { Button, ButtonSubtext } from "../..";
+import { Button } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
@@ -22,10 +23,13 @@ interface OnboardingLocalTabProps {
   isDialog?: boolean;
 }
 
-function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
+export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { submitOnboarding } = useSubmitOnboarding("Local", isDialog);
+  const { submitOnboarding } = useSubmitOnboarding(
+    OnboardingModes.LOCAL,
+    isDialog,
+  );
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
     string[]
@@ -109,7 +113,7 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
       dispatch(setShowDialog(false));
     }
 
-    dispatch(
+    void dispatch(
       updateSelectedModelByRole({
         selectedProfile,
         role: "chat",
@@ -132,48 +136,53 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
   };
 
   return (
-    <div className="mt-3 flex flex-col gap-1 px-2">
-      <div className="flex flex-col">
-        <p className="mb-0 pb-1 text-base font-bold leading-tight">
-          Install Ollama
-        </p>
-        <OllamaStatus isOllamaConnected={isOllamaConnected} />
-      </div>
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="w-full max-w-md">
+        <div className="mt-3 flex flex-col gap-1 px-2">
+          <div className="flex flex-col">
+            <p className="mb-0 text-base font-bold leading-tight">
+              Install Ollama
+            </p>
+            <OllamaStatus isOllamaConnected={isOllamaConnected} />
+          </div>
 
-      <OllamaModelDownload
-        title="Download Chat model"
-        modelName={LOCAL_ONBOARDING_CHAT_MODEL}
-        hasDownloaded={hasDownloadedChatModel}
-      />
+          <OllamaModelDownload
+            title="Download Chat model"
+            modelName={LOCAL_ONBOARDING_CHAT_MODEL}
+            hasDownloaded={hasDownloadedChatModel}
+          />
 
-      <OllamaModelDownload
-        title="Download Autocomplete model"
-        modelName={LOCAL_ONBOARDING_FIM_MODEL}
-        hasDownloaded={hasDownloadedAutocompleteModel}
-      />
+          <OllamaModelDownload
+            title="Download Autocomplete model"
+            modelName={LOCAL_ONBOARDING_FIM_MODEL}
+            hasDownloaded={hasDownloadedAutocompleteModel}
+          />
 
-      <OllamaModelDownload
-        title="Download Embeddings model"
-        modelName={LOCAL_ONBOARDING_EMBEDDINGS_MODEL}
-        hasDownloaded={hasDownloadedEmbeddingsModel}
-      />
+          <OllamaModelDownload
+            title="Download Embeddings model"
+            modelName={LOCAL_ONBOARDING_EMBEDDINGS_MODEL}
+            hasDownloaded={hasDownloadedEmbeddingsModel}
+          />
 
-      <div className="mt-4 w-full">
-        <Button
-          onClick={onClickSubmitOnboarding}
-          className="w-full"
-          disabled={!allDownloaded}
-        >
-          Connect
-        </Button>
-        <ButtonSubtext>
-          <span className="cursor-pointer underline" onClick={onClickSkip}>
-            Skip and configure manually
-          </span>
-        </ButtonSubtext>
+          <div className="mt-4 w-full">
+            <Button
+              onClick={onClickSubmitOnboarding}
+              className="w-full"
+              disabled={!allDownloaded}
+            >
+              Connect
+            </Button>
+            <div className="w-full text-center">
+              <span
+                className="text-description-muted cursor-pointer underline"
+                onClick={onClickSkip}
+              >
+                Skip and configure manually
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
-export default OnboardingLocalTab;

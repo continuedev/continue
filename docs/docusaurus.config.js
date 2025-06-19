@@ -67,7 +67,7 @@ const config = {
 
   scripts: [
     {
-      src: "/scripts/custom-reo.js",   // it references from static folder
+      src: "/scripts/custom-reo.js", // it references from static folder
     },
   ],
 
@@ -203,6 +203,14 @@ const config = {
       },
     }),
   plugins: [
+    [
+      "posthog-docusaurus",
+      {
+        apiKey: process.env.POSTHOG_API_KEY || "DEV",
+        appUrl: "https://us.i.posthog.com",
+        enableInDevelopment: false,
+      },
+    ],
     [
       "@docusaurus/plugin-client-redirects",
       {

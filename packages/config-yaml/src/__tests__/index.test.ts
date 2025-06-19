@@ -119,7 +119,7 @@ describe("E2E Scenarios", () => {
       },
     );
 
-    expect(unrolledConfig.rules?.[0]).toBeNull();
+    expect(unrolledConfig.config?.rules?.[0]).toBeNull();
   });
 
   it("should correctly unroll assistant", async () => {
@@ -142,19 +142,21 @@ describe("E2E Scenarios", () => {
       },
     );
 
-    // Test that packages were correctly unrolled and params replaced
-    expect(unrolledConfig.models?.length).toBe(4);
+    const config = unrolledConfig.config;
 
-    const openAiModel = unrolledConfig.models?.[0]!;
+    // Test that packages were correctly unrolled and params replaced
+    expect(config?.models?.length).toBe(4);
+
+    const openAiModel = config?.models?.[0]!;
     expect(openAiModel.apiKey).toBe("sk-123");
 
-    const geminiModel = unrolledConfig.models?.[1]!;
+    const geminiModel = config?.models?.[1]!;
     expect(geminiModel.provider).toBe("continue-proxy");
     expect(geminiModel.apiKey).toBeUndefined();
     const geminiSecretLocation = "organization:test-org/GEMINI_API_KEY";
     expect((geminiModel as any).apiKeyLocation).toBe(geminiSecretLocation);
 
-    const anthropicModel = unrolledConfig.models?.[2]!;
+    const anthropicModel = config?.models?.[2]!;
     expect(anthropicModel.provider).toBe("continue-proxy");
     expect(anthropicModel.apiKey).toBeUndefined();
     const anthropicSecretLocation =
@@ -163,15 +165,15 @@ describe("E2E Scenarios", () => {
       anthropicSecretLocation,
     );
 
-    const proxyOllamaModel = unrolledConfig.models?.[3]!;
-    expect(proxyOllamaModel.provider).toBe('ollama')
+    const proxyOllamaModel = config?.models?.[3]!;
+    expect(proxyOllamaModel.provider).toBe("ollama");
     expect(proxyOllamaModel.defaultCompletionOptions?.stream).toBe(false);
 
-    expect(unrolledConfig.rules?.length).toBe(2);
-    expect(unrolledConfig.docs?.[0]?.startUrl).toBe(
+    expect(config?.rules?.length).toBe(2);
+    expect(config?.docs?.[0]?.startUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
-    expect(unrolledConfig.docs?.[0]?.rootUrl).toBe(
+    expect(config?.docs?.[0]?.rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
 
@@ -242,16 +244,18 @@ describe("E2E Scenarios", () => {
       },
     );
 
+    const config = unrolledConfig.config;
+
     // The original rules array should have two items
-    expect(unrolledConfig.rules?.length).toBe(3); // Now 3 with the injected block
+    expect(config?.rules?.length).toBe(3); // Now 3 with the injected block
 
     // Check the original doc is still there
-    expect(unrolledConfig.docs?.[0]?.startUrl).toBe(
+    expect(config?.docs?.[0]?.startUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
 
     // Check the injected doc block was added
-    expect(unrolledConfig.rules?.[2]).toBe("Be kind");
+    expect(config?.rules?.[2]).toBe("Be kind");
   });
 
   it.skip("should prioritize org over user / package secrets", () => {});

@@ -1,7 +1,12 @@
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import Bedrock from "./Bedrock.js";
-import { ChatMessage, Chunk, CompletionOptions, UserChatMessage } from "../../index.js";
+import {
+  ChatMessage,
+  Chunk,
+  CompletionOptions,
+  UserChatMessage,
+} from "../../index.js";
 
 // Mock AWS SDK
 jest.mock("@aws-sdk/client-bedrock-runtime", () => ({
@@ -34,7 +39,7 @@ class TestBedrock extends Bedrock {
   public async *streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
-    options: TestCompletionOptions
+    options: TestCompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (options.mockError) {
       throw new Error(options.mockError);
@@ -44,14 +49,16 @@ class TestBedrock extends Bedrock {
       yield {
         role: "assistant",
         content: "",
-        toolCalls: [{
-          id: "tool-1",
-          type: "function",
-          function: {
-            name: "test_tool",
-            arguments: '{"arg1":"value1"}'
-          }
-        }],
+        toolCalls: [
+          {
+            id: "tool-1",
+            type: "function",
+            function: {
+              name: "test_tool",
+              arguments: '{"arg1":"value1"}',
+            },
+          },
+        ],
       };
       return;
     }
@@ -97,7 +104,9 @@ describe("Bedrock", () => {
 
       expect(bedrock.region).toBe("us-east-1");
       expect(bedrock.profile).toBe("bedrock");
-      expect(bedrock.apiBase).toBe("https://bedrock-runtime.us-east-1.amazonaws.com");
+      expect(bedrock.apiBase).toBe(
+        "https://bedrock-runtime.us-east-1.amazonaws.com",
+      );
     });
 
     it("should use custom options when provided", () => {
@@ -131,14 +140,20 @@ describe("Bedrock", () => {
     });
 
     it("should handle text streaming correctly", async () => {
-      const messages: ChatMessage[] = [{
-        role: "user",
-        content: "Hi"
-      } as UserChatMessage];
+      const messages: ChatMessage[] = [
+        {
+          role: "user",
+          content: "Hi",
+        } as UserChatMessage,
+      ];
 
       const results = [];
 
-      for await (const message of bedrock.streamChat(messages, mockAbortSignal, defaultOptions)) {
+      for await (const message of bedrock.streamChat(
+        messages,
+        mockAbortSignal,
+        defaultOptions,
+      )) {
         results.push(message);
       }
 
@@ -149,18 +164,24 @@ describe("Bedrock", () => {
     });
 
     it("should handle tool use streaming correctly", async () => {
-      const messages: ChatMessage[] = [{
-        role: "user",
-        content: "Use a tool"
-      } as UserChatMessage];
+      const messages: ChatMessage[] = [
+        {
+          role: "user",
+          content: "Use a tool",
+        } as UserChatMessage,
+      ];
 
       const results = [];
       const options: TestCompletionOptions = {
         ...defaultOptions,
-        mockToolUse: true
+        mockToolUse: true,
       };
 
-      for await (const message of bedrock.streamChat(messages, mockAbortSignal, options)) {
+      for await (const message of bedrock.streamChat(
+        messages,
+        mockAbortSignal,
+        options,
+      )) {
         results.push(message);
       }
 
@@ -168,31 +189,39 @@ describe("Bedrock", () => {
         {
           role: "assistant",
           content: "",
-          toolCalls: [{
-            id: "tool-1",
-            type: "function",
-            function: {
-              name: "test_tool",
-              arguments: '{"arg1":"value1"}'
-            }
-          }],
+          toolCalls: [
+            {
+              id: "tool-1",
+              type: "function",
+              function: {
+                name: "test_tool",
+                arguments: '{"arg1":"value1"}',
+              },
+            },
+          ],
         },
       ]);
     });
 
     it("should handle API errors", async () => {
-      const messages: ChatMessage[] = [{
-        role: "user",
-        content: "Hi"
-      } as UserChatMessage];
+      const messages: ChatMessage[] = [
+        {
+          role: "user",
+          content: "Hi",
+        } as UserChatMessage,
+      ];
 
       const options: TestCompletionOptions = {
         ...defaultOptions,
-        mockError: "API Error"
+        mockError: "API Error",
       };
 
       await expect(async () => {
-        for await (const _ of bedrock.streamChat(messages, mockAbortSignal, options)) {
+        for await (const _ of bedrock.streamChat(
+          messages,
+          mockAbortSignal,
+          options,
+        )) {
           // consume generator
         }
       }).rejects.toThrow("API Error");
@@ -239,7 +268,7 @@ describe("Bedrock", () => {
           filepath: "file1",
           index: 0,
           startLine: 1,
-          endLine: 1
+          endLine: 1,
         },
         {
           content: "doc2",
@@ -247,8 +276,8 @@ describe("Bedrock", () => {
           filepath: "file2",
           index: 1,
           startLine: 1,
-          endLine: 1
-        }
+          endLine: 1,
+        },
       ];
 
       const result = await bedrock.rerank("query", chunks);
@@ -262,16 +291,18 @@ describe("Bedrock", () => {
         filepath: "file1",
         index: 0,
         startLine: 1,
-        endLine: 1
+        endLine: 1,
       };
 
-      await expect(
-        bedrock.rerank("error", [chunk])
-      ).rejects.toThrow("Reranking Error");
+      await expect(bedrock.rerank("error", [chunk])).rejects.toThrow(
+        "Reranking Error",
+      );
     });
 
     it("should throw error for empty input", async () => {
-      await expect(bedrock.rerank("", [])).rejects.toThrow("Query and chunks must not be empty");
+      await expect(bedrock.rerank("", [])).rejects.toThrow(
+        "Query and chunks must not be empty",
+      );
     });
   });
 
@@ -289,7 +320,7 @@ describe("Bedrock", () => {
     it("should convert text messages correctly", () => {
       const message: ChatMessage = {
         role: "user",
-        content: "Hello"
+        content: "Hello",
       } as UserChatMessage;
       const converted = bedrock["_convertMessage"](message);
       expect(converted).toEqual({
@@ -307,12 +338,14 @@ describe("Bedrock", () => {
       const converted = bedrock["_convertMessage"](message);
       expect(converted).toEqual({
         role: "user",
-        content: [{
-          toolResult: {
-            toolUseId: "tool-1",
-            content: [{ text: "Tool result" }],
+        content: [
+          {
+            toolResult: {
+              toolUseId: "tool-1",
+              content: [{ text: "Tool result" }],
+            },
           },
-        }],
+        ],
       });
     });
 
@@ -320,25 +353,29 @@ describe("Bedrock", () => {
       const message: ChatMessage = {
         role: "assistant",
         content: "",
-        toolCalls: [{
-          id: "tool-1",
-          type: "function" as const,
-          function: {
-            name: "test_tool",
-            arguments: '{"arg":"value"}',
+        toolCalls: [
+          {
+            id: "tool-1",
+            type: "function" as const,
+            function: {
+              name: "test_tool",
+              arguments: '{"arg":"value"}',
+            },
           },
-        }],
+        ],
       };
       const converted = bedrock["_convertMessage"](message);
       expect(converted).toEqual({
         role: "assistant",
-        content: [{
-          toolUse: {
-            toolUseId: "tool-1",
-            name: "test_tool",
-            input: { arg: "value" },
+        content: [
+          {
+            toolUse: {
+              toolUseId: "tool-1",
+              name: "test_tool",
+              input: { arg: "value" },
+            },
           },
-        }],
+        ],
       });
     });
 

@@ -1,6 +1,6 @@
 import {
-    BedrockRuntimeClient,
-    InvokeModelWithResponseStreamCommand,
+  BedrockRuntimeClient,
+  InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
@@ -51,9 +51,15 @@ class BedrockImport extends BaseLLM {
 
     if (response.body) {
       for await (const item of response.body) {
-        const chunk = JSON.parse(new TextDecoder().decode(item.chunk?.bytes));
-        if (chunk.outputs[0].text) {
-          yield chunk.outputs[0].text;
+        const decoder = new TextDecoder();
+        const decoded = decoder.decode(item.chunk?.bytes);
+        try {
+          const chunk = JSON.parse(decoded);
+          if (chunk.outputs[0].text) {
+            yield chunk.outputs[0].text;
+          }
+        } catch (e) {
+          throw new Error(`Malformed JSON received from Bedrock: ${decoded}`);
         }
       }
     }

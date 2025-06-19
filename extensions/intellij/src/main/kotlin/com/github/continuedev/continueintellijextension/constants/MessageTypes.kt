@@ -36,8 +36,6 @@ class MessageTypes {
             "getFileStats",
             "insertAtCursor",
             "applyToFile",
-            "getGitHubAuthToken",
-            "setGitHubAuthToken",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
             "getTerminalContents",
@@ -123,7 +121,7 @@ class MessageTypes {
             "docs/initStatuses",
             "docs/getDetails",
             //
-            "completeOnboarding",
+            "onboarding/complete",
             "addAutocompleteModel",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",

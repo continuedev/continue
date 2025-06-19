@@ -41,6 +41,7 @@ const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.LSTool]: FolderIcon,
   [BuiltInToolNames.ReadCurrentlyOpenFile]: DocumentTextIcon,
   [BuiltInToolNames.ReadFile]: DocumentIcon,
+  [BuiltInToolNames.FetchUrlContent]: GlobeAltIcon,
   [BuiltInToolNames.SearchWeb]: GlobeAltIcon,
   [BuiltInToolNames.ViewDiff]: CodeBracketIcon,
   [BuiltInToolNames.ViewRepoMap]: MapIcon,
@@ -80,16 +81,14 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
   if (icon) {
     return (
-      <div className="ml-4 mt-2 flex">
-        <SimpleToolCallUI
-          tool={tool}
-          toolCallState={props.toolCallState}
-          icon={
-            props.toolCallState.status === "generated" ? ArrowRightIcon : icon
-          }
-          contextItems={props.output ?? []}
-        />
-      </div>
+      <SimpleToolCallUI
+        tool={tool}
+        toolCallState={props.toolCallState}
+        icon={
+          props.toolCallState.status === "generated" ? ArrowRightIcon : icon
+        }
+        contextItems={props.output ?? []}
+      />
     );
   }
 

@@ -8,7 +8,6 @@ import * as vscode from "vscode";
 import { IMessenger } from "../../../core/protocol/messenger";
 
 import { handleLLMError } from "./util/errorHandling";
-import { showFreeTrialLoginMessage } from "./util/messages";
 
 export class VsCodeWebviewProtocol
   implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
@@ -130,15 +129,11 @@ export class VsCodeWebviewProtocol
               .showInformationMessage(message, "Add API Key", "Use Local Model")
               .then((selection) => {
                 if (selection === "Add API Key") {
-                  this.request("addApiKey", undefined);
+                  this.request("setupApiKey", undefined);
                 } else if (selection === "Use Local Model") {
                   this.request("setupLocalConfig", undefined);
                 }
               });
-          } else if (message.includes("Please sign in with GitHub")) {
-            showFreeTrialLoginMessage(message, this.reloadConfig, () =>
-              this.request("openOnboardingCard", undefined),
-            );
           } else {
             Telemetry.capture(
               "webview_protocol_error",

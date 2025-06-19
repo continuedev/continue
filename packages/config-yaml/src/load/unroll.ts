@@ -1,4 +1,5 @@
 import * as YAML from "yaml";
+import { ZodError } from "zod";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
@@ -8,6 +9,7 @@ import {
   FQSN,
   PackageIdentifier,
 } from "../interfaces/slugs.js";
+import { markdownToRule } from "../markdown/index.js";
 import {
   AssistantUnrolled,
   assistantUnrolledSchema,
@@ -17,6 +19,7 @@ import {
   configYamlSchema,
   Rule,
 } from "../schemas/index.js";
+import { ConfigResult, ConfigValidationError } from "../validation.js";
 import {
   packageIdentifierToShorthandSlug,
   useProxyForUnrenderedSecrets,
@@ -30,16 +33,25 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
     if (result.success) {
       return result.data;
     }
-    throw new Error(
-      result.error.errors
-        .map((e) => `${e.path.join(".")}: ${e.message}`)
-        .join(""),
-    );
+
+    throw new Error(formatZodError(result.error), {
+      cause: "result.success was false",
+    });
   } catch (e) {
-    console.log("Failed to parse rolled assistant:", configYaml);
-    throw new Error(
-      `Failed to parse assistant:\n${e instanceof Error ? e.message : e}`,
-    );
+    console.error("Failed to parse rolled assistant:", configYaml);
+    if (
+      e instanceof Error &&
+      "cause" in e &&
+      e.cause === "result.success was false"
+    ) {
+      throw new Error(`Failed to parse assistant: ${e.message}`);
+    } else if (e instanceof ZodError) {
+      throw new Error(`Failed to parse assistant: ${formatZodError(e)}`);
+    } else {
+      throw new Error(
+        `Failed to parse assistant: ${e instanceof Error ? e.message : e}`,
+      );
+    }
   }
 }
 
@@ -49,9 +61,10 @@ export function parseAssistantUnrolled(configYaml: string): AssistantUnrolled {
     const result = assistantUnrolledSchema.parse(parsed);
     return result;
   } catch (e: any) {
-    throw new Error(
+    console.error(
       `Failed to parse unrolled assistant: ${e.message}\n\n${configYaml}`,
     );
+    throw new Error(`Failed to parse unrolled assistant: ${formatZodError(e)}`);
   }
 }
 
@@ -61,7 +74,7 @@ export function parseBlock(configYaml: string): Block {
     const result = blockSchema.parse(parsed);
     return result;
   } catch (e: any) {
-    throw new Error(`Failed to parse block: ${e.message}`);
+    throw new Error(`Failed to parse block: ${formatZodError(e)}`);
   }
 }
 
@@ -208,10 +221,13 @@ export async function unrollAssistant(
   id: PackageIdentifier,
   registry: Registry,
   options: UnrollAssistantOptions,
-): Promise<AssistantUnrolled> {
+): Promise<ConfigResult<AssistantUnrolled>> {
   // Request the content from the registry
   const rawContent = await registry.getContent(id);
-  return unrollAssistantFromContent(id, rawContent, registry, options);
+
+  const result = unrollAssistantFromContent(id, rawContent, registry, options);
+
+  return result;
 }
 
 function renderTemplateData(
@@ -236,16 +252,16 @@ export async function unrollAssistantFromContent(
   rawYaml: string,
   registry: Registry,
   options: UnrollAssistantOptions,
-): Promise<AssistantUnrolled> {
+): Promise<ConfigResult<AssistantUnrolled>> {
   // Parse string to Zod-validated YAML
-  let parsedYaml = parseConfigYaml(rawYaml);
+  let parsedYaml = parseMarkdownRuleOrConfigYaml(rawYaml, id);
 
   // Unroll blocks and convert their secrets to FQSNs
-  const unrolledAssistant = await unrollBlocks(
-    parsedYaml,
-    registry,
-    options.injectBlocks,
-  );
+  const {
+    config: unrolledAssistant,
+    configLoadInterrupted,
+    errors,
+  } = await unrollBlocks(parsedYaml, registry, options.injectBlocks);
 
   // Back to a string so we can fill in template variables
   const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
@@ -257,7 +273,11 @@ export async function unrollAssistantFromContent(
   });
 
   if (!options.renderSecrets) {
-    return parseAssistantUnrolled(templatedYaml);
+    return {
+      config: parseAssistantUnrolled(templatedYaml),
+      errors: [],
+      configLoadInterrupted: false,
+    };
   }
 
   // Render secret values/locations for client
@@ -277,14 +297,21 @@ export async function unrollAssistantFromContent(
     options.orgScopeId,
     options.onPremProxyUrl,
   );
-  return finalConfig;
+
+  return {
+    config: finalConfig,
+    errors,
+    configLoadInterrupted,
+  };
 }
 
 export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,
   injectBlocks: PackageIdentifier[] | undefined,
-): Promise<AssistantUnrolled> {
+): Promise<ConfigResult<AssistantUnrolled>> {
+  const errors: ConfigValidationError[] = [];
+
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
@@ -316,8 +343,23 @@ export async function unrollBlocks(
               );
             }
           } catch (err) {
+            let msg = "";
+            if (
+              typeof unrolledBlock.uses !== "string" &&
+              "filePath" in unrolledBlock.uses
+            ) {
+              msg = `${(err as Error).message}.\n> ${unrolledBlock.uses.filePath}`;
+            } else {
+              msg = `${(err as Error).message}.\n> ${JSON.stringify(unrolledBlock.uses)}`;
+            }
+
+            errors.push({
+              fatal: false,
+              message: msg,
+            });
+
             console.error(
-              `Failed to unroll block ${unrolledBlock.uses}: ${(err as Error).message}`,
+              `Failed to unroll block ${JSON.stringify(unrolledBlock.uses)}: ${(err as Error).message}`,
             );
             sectionBlocks.push(null);
           }
@@ -349,6 +391,11 @@ export async function unrollBlocks(
             rules.push(block);
           }
         } catch (err) {
+          errors.push({
+            fatal: false,
+            message: `${(err as Error).message}:\n${rule.uses}`,
+          });
+
           console.error(
             `Failed to unroll block ${rule.uses}: ${(err as Error).message}`,
           );
@@ -364,7 +411,10 @@ export async function unrollBlocks(
   for (const injectBlock of injectBlocks ?? []) {
     try {
       const blockConfigYaml = await registry.getContent(injectBlock);
-      const parsedBlock = parseConfigYaml(blockConfigYaml);
+      const parsedBlock = parseMarkdownRuleOrConfigYaml(
+        blockConfigYaml,
+        injectBlock,
+      );
       const blockType = getBlockType(parsedBlock);
       const resolvedBlock = await resolveBlock(
         injectBlock,
@@ -381,13 +431,33 @@ export async function unrollBlocks(
         );
       }
     } catch (err) {
+      let msg = "";
+      if (injectBlock.uriType === "file") {
+        msg = `${(err as Error).message}.\n> ${injectBlock.filePath}`;
+      } else {
+        msg = `${(err as Error).message}.\n> ${injectBlock.fullSlug}`;
+      }
+      errors.push({
+        fatal: false,
+        message: msg,
+      });
+
       console.error(
-        `Failed to unroll block ${injectBlock}: ${(err as Error).message}`,
+        `Failed to unroll block ${JSON.stringify(injectBlock)}: ${(err as Error).message}`,
       );
     }
   }
 
-  return unrolledAssistant;
+  const configResult: ConfigResult<AssistantUnrolled> = {
+    config: undefined,
+    errors: undefined,
+    configLoadInterrupted: false,
+  };
+  configResult.config = unrolledAssistant;
+  if (errors.length > 0) {
+    configResult.errors = errors;
+  }
+  return configResult;
 }
 
 export async function resolveBlock(
@@ -411,7 +481,60 @@ export async function resolveBlock(
     secrets: extractFQSNMap(rawYaml, [id]),
   });
 
-  const parsedYaml = parseBlock(templatedYaml);
+  return parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+}
+
+function parseMarkdownRuleOrAssistantUnrolled(
+  content: string,
+  id: PackageIdentifier,
+): AssistantUnrolled {
+  // Try to parse as YAML first, then as markdown rule if that fails
+  let parsedYaml: AssistantUnrolled;
+  try {
+    parsedYaml = parseBlock(content);
+  } catch (yamlError) {
+    // If YAML parsing fails, try parsing as markdown rule
+    try {
+      const rule = markdownToRule(content, id);
+      // Convert the rule object to the expected format
+      parsedYaml = {
+        name: rule.name,
+        version: "1.0.0",
+        rules: [rule],
+      };
+    } catch (markdownError) {
+      // If both fail, throw the original YAML error
+      throw yamlError;
+    }
+  }
+
+  return parsedYaml;
+}
+
+function parseMarkdownRuleOrConfigYaml(
+  content: string,
+  id: PackageIdentifier,
+): ConfigYaml {
+  // Try to parse as YAML first, then as markdown rule if that fails
+  let parsedYaml: ConfigYaml;
+  try {
+    parsedYaml = parseConfigYaml(content);
+  } catch (yamlError) {
+    // If YAML parsing fails, try parsing as markdown rule
+    try {
+      const rule = markdownToRule(content, id);
+      // Convert the rule object to the expected format
+      parsedYaml = {
+        name: rule.name,
+        version: "1.0.0",
+        rules: [rule],
+      };
+    } catch (markdownError) {
+      // If both fail, throw the original YAML error
+      throw yamlError;
+    }
+  }
+
   return parsedYaml;
 }
 
@@ -438,4 +561,16 @@ export function mergeOverrides<T extends Record<string, any>>(
     }
   }
   return block;
+}
+
+function formatZodError(error: any): string {
+  if (error.errors && Array.isArray(error.errors)) {
+    return error.errors
+      .map((e: any) => {
+        const path = e.path.length > 0 ? `${e.path.join(".")}: ` : "";
+        return `${path}${e.message}`;
+      })
+      .join(", ");
+  }
+  return error.message || "Validation failed";
 }

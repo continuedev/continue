@@ -7,11 +7,12 @@
 
     Note, this was benchmarked at sub-millisecond
 */
-import { headerIsMarkdown } from './headerIsMarkdown';
+import { headerIsMarkdown } from "./headerIsMarkdown";
 
 export const patchNestedMarkdown = (source: string): string => {
   // Early return if no markdown codeblock pattern is found (including GitHub variants)
-  if (!source.match(/```(\w*|.*)(md|markdown|gfm|github-markdown)/)) return source;
+  if (!source.match(/```(\w*|.*)(md|markdown|gfm|github-markdown)/))
+    return source;
 
   let nestCount = 0;
   const lines = source.split("\n");

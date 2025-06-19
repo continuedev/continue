@@ -6,7 +6,6 @@ import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { streamResponse } from "core/llm/stream";
 import { renderChatMessage } from "core/util/messageContent";
-import { usePostHog } from "posthog-js/react";
 import {
   useCallback,
   useContext,
@@ -19,7 +18,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
-import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
@@ -49,10 +47,6 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { streamEditThunk } from "../../redux/thunks/edit";
 import { loadLastSession } from "../../redux/thunks/session";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
-import {
-  FREE_TRIAL_LIMIT_REQUESTS,
-  incrementFreeTrialCount,
-} from "../../util/freeTrial";
 
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
@@ -96,7 +90,6 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 }
 
 export function Chat() {
-  const posthog = usePostHog();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
@@ -191,32 +184,29 @@ export function Chat() {
         return;
       }
 
-      if (model.provider === "free-trial") {
-        const newCount = incrementFreeTrialCount();
+      // TODO - hook up with hub to detect free trial progress
+      // if (model.provider === "free-trial") {
+      //   const newCount = incrementFreeTrialCount();
 
-        if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
-          posthog?.capture("ftc_reached");
-        }
-        if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
-          // Show this message whether using platform or not
-          // So that something happens if in new chat
-          void ideMessenger.ide.showToast(
-            "error",
-            "You've reached the free trial limit. Please configure a model to continue.",
-          );
+      //   if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
+      //     posthog?.capture("ftc_reached");
+      //   }
+      //   if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
+      //     // Show this message whether using platform or not
+      //     // So that something happens if in new chat
+      //     void ideMessenger.ide.showToast(
+      //       "error",
+      //       "You've reached the free trial limit. Please configure a model to continue.",
+      //     );
 
-          // Card in chat will only show if no history
-          // Also, note that platform card ignore the "Best", always opens to main tab
-          onboardingCard.open("Best");
-
-          // If history, show the dialog, which will automatically close if there is not history
-          if (history.length) {
-            dispatch(setDialogMessage(<FreeTrialOverDialog />));
-            dispatch(setShowDialog(true));
-          }
-          return;
-        }
-      }
+      //     // If history, show the dialog, which will automatically close if there is not history
+      //     if (history.length) {
+      //       dispatch(setDialogMessage(<FreeTrialOverDialog />));
+      //       dispatch(setShowDialog(true));
+      //     }
+      //     return;
+      //   }
+      // }
 
       if (isInEdit) {
         void dispatch(
@@ -333,17 +323,16 @@ export function Chat() {
                   "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
-                <div>
+                <div className="">
                   {item.message.toolCalls?.map((toolCall, i) => {
                     return (
-                      <div key={i}>
-                        <ToolCallDiv
-                          toolCallState={item.toolCallState!}
-                          toolCall={toolCall}
-                          output={history[index + 1]?.contextItems}
-                          historyIndex={index}
-                        />
-                      </div>
+                      <ToolCallDiv
+                        key={i}
+                        toolCallState={item.toolCallState!}
+                        toolCall={toolCall}
+                        output={history[index + 1]?.contextItems}
+                        historyIndex={index}
+                      />
                     );
                   })}
                 </div>

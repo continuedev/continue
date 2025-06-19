@@ -111,6 +111,7 @@ describe("MCPConnection", () => {
         errors: [],
         prompts: [],
         resources: [],
+        resourceTemplates: [],
         tools: [],
         status: "not-connected",
       });

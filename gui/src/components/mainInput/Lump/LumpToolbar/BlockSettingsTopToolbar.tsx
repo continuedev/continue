@@ -9,17 +9,22 @@ import {
   Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { ReactNode } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { vscBadgeForeground } from "../../..";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../redux/hooks";
 import { ToolTip } from "../../../gui/Tooltip";
 import AssistantSelect from "../../../modelSelection/platform/AssistantSelect";
+import FreeTrialButton from "../../../modelSelection/platform/FreeTrialButton";
 import { useFontSize } from "../../../ui/font";
 import HoverItem from "../../InputToolbar/HoverItem";
 import { useLump } from "../LumpContext";
 import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
 import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
 import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
+
+import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
+import type { FreeTrialStatus } from "core/control-plane/client";
 
 interface BlockSettingsToolbarIcon {
   title: string;
@@ -99,7 +104,7 @@ function BlockSettingsToolbarIcon(
                 ? "bg-error"
                 : "bg-badge"
               : undefined
-          } relative flex select-none items-center rounded-full px-[3px] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
+          } relative flex select-none items-center rounded-full px-[3px] py-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
         >
           <props.icon
             className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
@@ -141,6 +146,39 @@ export function BlockSettingsTopToolbar() {
   } = useLump();
 
   const configError = useAppSelector((store) => store.config.configError);
+  const config = useAppSelector((state) => state.config.config);
+  const ideMessenger = useContext(IdeMessengerContext);
+
+  const [freeTrialStatus, setFreeTrialStatus] =
+    useState<FreeTrialStatus | null>(null);
+  const isUsingFreeTrial = usesFreeTrialApiKey(config);
+
+  useEffect(() => {
+    const fetchFreeTrialStatus = () => {
+      ideMessenger
+        .request("controlPlane/getFreeTrialStatus", undefined)
+        .then((resp) => {
+          if (resp.status === "success") {
+            setFreeTrialStatus(resp.content);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchFreeTrialStatus();
+
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (isUsingFreeTrial) {
+      intervalId = setInterval(fetchFreeTrialStatus, 15000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [ideMessenger, isUsingFreeTrial]);
 
   const handleEllipsisClick = () => {
     if (isToolbarExpanded) {
@@ -158,7 +196,7 @@ export function BlockSettingsTopToolbar() {
   return (
     <div className="flex flex-1 items-center justify-between gap-2">
       <div className="flex flex-row">
-        <div className="xs:flex text-description hidden items-center justify-center">
+        <div className="xs:flex text-description hidden items-center justify-center gap-0.5">
           <BlockSettingsToolbarIcon
             className="-ml-1.5"
             icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
@@ -195,9 +233,13 @@ export function BlockSettingsTopToolbar() {
           data-tooltip-id="assistant-select-tooltip"
           className="!m-0 !p-0"
         >
-          <AssistantSelect />
+          {isUsingFreeTrial ? (
+            <FreeTrialButton freeTrialStatus={freeTrialStatus} />
+          ) : (
+            <AssistantSelect />
+          )}
           <ToolTip id="assistant-select-tooltip" place="top">
-            Select Assistant
+            {isUsingFreeTrial ? "View free trial usage" : "Select Assistant"}
           </ToolTip>
         </HoverItem>
       </div>
