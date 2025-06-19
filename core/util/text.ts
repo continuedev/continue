@@ -25,3 +25,10 @@ export function replaceEscapedCharacters(str: string): string {
     }
   });
 }
+
+export function kebabOfStr(str: string): string {
+  return str
+    .replace(/([a-z])([A-Z])/g, "$1-$2") // handle camelCase and PascalCase
+    .replace(/[\s_]+/g, "-") // replace spaces and underscores with hyphens
+    .toLowerCase();
+}
