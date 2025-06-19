@@ -279,14 +279,20 @@ export default function AssistantSelect() {
           style={{ fontSize: fontSize(-3) }}
         >
           <div className="flex flex-row items-center gap-1.5">
-            <div className="h-3 w-3 flex-shrink-0 select-none">
-              <AssistantIcon size={3} assistant={selectedProfile} />
-            </div>
-            <span
-              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-            >
-              {selectedProfile.title}
-            </span>
+            {!loading ? (
+              <span className="select-none">loading...</span>
+            ) : (
+              <>
+                <div className="h-3 w-3 flex-shrink-0 select-none">
+                  <AssistantIcon size={3} assistant={selectedProfile} />
+                </div>
+                <span
+                  className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+                >
+                  {selectedProfile.title}
+                </span>
+              </>
+            )}
           </div>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0 select-none"
@@ -302,7 +308,7 @@ export default function AssistantSelect() {
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  refreshProfilesWithLoading().then(() =>
+                  void refreshProfilesWithLoading().then(() =>
                     buttonRef.current?.click(),
                   );
                 }}
@@ -310,7 +316,7 @@ export default function AssistantSelect() {
                 <ArrowPathIcon
                   className={cn(
                     "text-description h-2.5 w-2.5",
-                    loading && "animate-spin-slow",
+                    !loading && "animate-spin-slow",
                   )}
                 />
               </div>
