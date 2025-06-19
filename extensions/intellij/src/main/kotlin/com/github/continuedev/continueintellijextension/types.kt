@@ -239,7 +239,7 @@ data class StreamDiffLinesPayload(
 )
 
 data class AcceptOrRejectDiffPayload(
-    val filepath: String,
+    val filepath: String? = null,
     val streamId: String? = null
 )
 
