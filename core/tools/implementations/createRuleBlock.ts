@@ -13,11 +13,18 @@ export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
   extras,
 ) => {
-  const fileContent = createRuleMarkdown(args.name, args.rule, {
+  // Create options object with the fields that createRuleMarkdown expects
+  const options: any = {
     description: args.description,
     globs: args.globs,
-    patterns: args.patterns,
-  });
+  };
+
+  // Add patterns if provided
+  if (args.patterns) {
+    options.patterns = args.patterns;
+  }
+
+  const fileContent = createRuleMarkdown(args.name, args.rule, options);
 
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
   const ruleFilePath = createRuleFilePath(localContinueDir, args.name);
