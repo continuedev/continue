@@ -146,11 +146,19 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
     return true;
   }
 
-  // Root-level rules with no globs are implicitly global
-  if (isRootLevelRule(rule) && !rule.globs && rule.alwaysApply !== false) {
+  console.log("RULE", rule);
+  // Root-level rules with no globs or patterns are implicitly global
+  if (
+    isRootLevelRule(rule) &&
+    !rule.globs &&
+    !rule.patterns &&
+    rule.alwaysApply !== false
+  ) {
+    console.log("IS ROOT");
     return true;
   }
 
+  console.log("NOT ROOT");
   return false;
 };
 
