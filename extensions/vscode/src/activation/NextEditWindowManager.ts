@@ -250,10 +250,11 @@ export class NextEditWindowManager {
     try {
       const tipWidth = SVG_CONFIG.getTipWidth(text);
       const tipHeight = SVG_CONFIG.getTipHeight(text);
+      const dimensions = { width: tipWidth, height: tipHeight };
 
-      const lines = text.split("\n");
-      const globalIndent =
-        lines.length > 0 ? (lines[0].match(/^[ \t]*/) || [""])[0].length : 0;
+      // const lines = text.split("\n");
+      // const globalIndent =
+      //   lines.length > 0 ? (lines[0].match(/^[ \t]*/) || [""])[0].length : 0;
 
       const syntaxHighlighter = SyntaxHighlighter.getInstance({
         theme: "one-dark-pro",
@@ -261,19 +262,23 @@ export class NextEditWindowManager {
 
       await syntaxHighlighter.init();
 
-      const { uri, dimensions } =
-        await syntaxHighlighter.getDataUriAndDimensions(
-          text,
-          "typescript",
-          SVG_CONFIG.fontSize,
-          {
-            imageType: "svg",
-          },
-        );
+      const uri = await syntaxHighlighter.getDataUri(
+        text,
+        "typescript",
+        SVG_CONFIG.fontSize,
+        dimensions,
+        SVG_CONFIG.lineHeight,
+        {
+          imageType: "svg",
+        },
+      );
 
       console.log(dimensions);
 
-      return { uri: vscode.Uri.parse(uri), dimensions: dimensions };
+      return {
+        uri: vscode.Uri.parse(uri),
+        dimensions,
+      };
     } catch (error) {
       console.error("Error creating SVG tooltip:", error);
       return undefined;
