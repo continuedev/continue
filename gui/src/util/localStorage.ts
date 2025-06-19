@@ -16,6 +16,7 @@ type LocalStorageTypes = {
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;
+  acknowledgedUnrecommendedAgent: boolean;
 };
 
 export enum LocalStorageKey {

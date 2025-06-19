@@ -34,6 +34,7 @@ import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { Telemetry } from "../util/posthog.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { UseCase } from "@continuedev/llm-info/dist/types.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -163,6 +164,7 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
+  recommendedFor?: UseCase[];
 
   deployment?: string;
   apiVersion?: string;
@@ -263,6 +265,7 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
     this.roles = options.roles;
+    this.recommendedFor = llmInfo?.recommendedFor;
 
     this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
