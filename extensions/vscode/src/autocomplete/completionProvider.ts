@@ -333,7 +333,10 @@ export class ContinueCompletionProvider
       // return [completionItem];
       const editor = vscode.window.activeTextEditor;
       if (editor) {
-        NextEditWindowManager.getInstance().showTooltip(editor, completionText);
+        await NextEditWindowManager.getInstance().showTooltip(
+          editor,
+          completionText,
+        );
       }
       // return [completionItem];
       return undefined;
