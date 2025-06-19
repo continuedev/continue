@@ -48,7 +48,7 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
-  private convertMessage(message: ChatMessage, addCaching: boolean): any {
+  protected convertMessage(message: ChatMessage, addCaching: boolean): any {
     if (message.role === "tool") {
       return {
         role: "user",
@@ -57,17 +57,29 @@ class Anthropic extends BaseLLM {
             type: "tool_result",
             tool_use_id: message.toolCallId,
             content: renderChatMessage(message) || undefined,
+            // Add caching support for tool results
+            ...(addCaching 
+              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta 
+                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" } 
+                : { type: "ephemeral" } }
+              : {}),
           },
         ],
       };
     } else if (message.role === "assistant" && message.toolCalls) {
       return {
-        role: "assistant",
-        content: message.toolCalls.map((toolCall) => ({
+                role: "assistant",
+        content: message.toolCalls.map((toolCall, index) => ({
           type: "tool_use",
           id: toolCall.id,
           name: toolCall.function?.name,
           input: safeParseToolCallArgs(toolCall),
+          // Add caching support for assistant tool calls (last tool call only)
+          ...(addCaching && index === message.toolCalls!.length - 1
+            ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+              ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
+              : { type: "ephemeral" } }
+            : {}),
         })),
       };
     } else if (message.role === "thinking" && !message.redactedThinking) {
@@ -100,9 +112,9 @@ class Anthropic extends BaseLLM {
           {
             type: "text",
             text: message.content,
-            ...(addCaching 
-              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta 
-                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" } 
+            ...(addCaching
+              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
                 : { type: "ephemeral" } }
               : {}),
           },
@@ -138,24 +150,60 @@ class Anthropic extends BaseLLM {
     };
   }
 
+  protected shouldCacheMessage(message: ChatMessage, index: number, filteredMessages: ChatMessage[]): boolean {
+    if (!this.cacheBehavior?.cacheConversation) {
+      return false;
+    }
+
+    const {
+      cacheUserMessages = 2,
+      cacheAssistantMessages = 0,
+      cacheToolResults = 0,
+      cacheAssistantToolCalls = 0,
+    } = this.cacheBehavior;
+
+    switch (message.role) {
+      case "user":
+        if (cacheUserMessages > 0) {
+          const userMessages = filteredMessages.filter(m => m.role === "user");
+          const userIndex = userMessages.findIndex(m => m === message);
+          return userIndex >= userMessages.length - cacheUserMessages;
+        }
+        break;
+
+      case "assistant":
+        if (message.toolCalls && cacheAssistantToolCalls > 0) {
+          const assistantToolMessages = filteredMessages.filter(m => m.role === "assistant" && m.toolCalls);
+          const assistantIndex = assistantToolMessages.findIndex(m => m === message);
+          return assistantIndex >= assistantToolMessages.length - cacheAssistantToolCalls;
+        } else if (!message.toolCalls && cacheAssistantMessages > 0) {
+          const assistantMessages = filteredMessages.filter(m => m.role === "assistant" && !m.toolCalls);
+          const assistantIndex = assistantMessages.findIndex(m => m === message);
+          return assistantIndex >= assistantMessages.length - cacheAssistantMessages;
+        }
+        break;
+
+      case "tool":
+        if (cacheToolResults > 0) {
+          const toolMessages = filteredMessages.filter(m => m.role === "tool");
+          const toolIndex = toolMessages.findIndex(m => m === message);
+          return toolIndex >= toolMessages.length - cacheToolResults;
+        }
+        break;
+    }
+
+    return false;
+  }
+
   public convertMessages(msgs: ChatMessage[]): any[] {
     // should be public for use within VertexAI
     const filteredmessages = msgs.filter(
-      (m) => m.role !== "system" && !!m.content,
+      (m) => m.role !== "system" && (!!m.content || (m.role === "assistant" && m.toolCalls)),
     );
-    const lastTwoUserMsgIndices = filteredmessages
-      .map((msg, index) => (msg.role === "user" ? index : -1))
-      .filter((index) => index !== -1)
-      .slice(-2);
 
     const messages = filteredmessages.map((message, filteredMsgIdx) => {
-      // Add cache_control parameter to the last two user messages
-      // The second-to-last because it retrieves potentially already cached contents,
-      // The last one because we want it cached for later retrieval.
-      // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-      const addCaching =
-        this.cacheBehavior?.cacheConversation &&
-        lastTwoUserMsgIndices.includes(filteredMsgIdx);
+      // Enhanced caching logic that supports tool messages
+      const addCaching = this.shouldCacheMessage(message, filteredMsgIdx, filteredmessages);
 
       const chatMessage = this.convertMessage(message, !!addCaching);
       return chatMessage;

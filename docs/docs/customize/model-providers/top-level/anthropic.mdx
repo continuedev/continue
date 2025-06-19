@@ -16,27 +16,10 @@ We recommend configuring **Claude 4 Sonnet** as your chat model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="config.yaml"
-  models:
-    - name: Claude 4 Sonnet
-      provider: anthropic
-      model: claude-sonnet-4-20250514
-      apiKey: <YOUR_ANTHROPIC_API_KEY>
-  ```
+  ---
   </TabItem>
   <TabItem value="json" label="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Claude 4 Sonnet",
-        "provider": "anthropic",
-        "model": "claude-sonnet-4-latest",
-        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-      }
-    ]
-  }
-  ```
+  ---
   </TabItem>
 </Tabs>
 
@@ -61,10 +44,26 @@ Anthropic currently does not offer any reranking models.
 ## Prompt caching
 
 Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
+
 >NOTE: As part of their `Beta` support [Extended caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration)
 
+### Basic Caching Options
+
+* `cacheSystemMessage` - if `true`, caches the system message across requests
+* `cacheConversation` - if `true`, enables conversation caching (required for enhanced caching)
 * `useExtendedCacheTtlBeta` - if `true` will enable Beta feature and allow to set 5m or 1h ttl for caching
 * `cacheTtl` - accepts only `5m` or `1h` as values, and if parameter not set `5m` default cache will be used then.
+
+### Enhanced Caching (Per-Message-Type)
+
+For more granular control, especially useful in **Agent mode** with tool usage, you can specify exactly how many of each message type to cache:
+
+* `cacheUserMessages` - Number of recent user messages to cache (default: 2)
+* `cacheAssistantMessages` - Number of recent assistant messages to cache (default: 0)
+* `cacheToolResults` - Number of recent tool result messages to cache (default: 0)
+* `cacheAssistantToolCalls` - Number of recent assistant tool call messages to cache (default: 0)
+
+### Model Support
 
 Prompt caching is generally available for:
 
@@ -73,50 +72,50 @@ Prompt caching is generally available for:
 - Claude 3.5 Sonnet
 - Claude 3.5 Haiku
 
-To enable caching of the system message and the turn-by-turn conversation, update your model configuration as follows:
+### Basic Configuration
+
+To enable basic caching of the system message and conversation history:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-
-  ```yaml title="config.yaml"
-  models:
-    - name: Anthropic
-      provider: anthropic
-      model: claude-sonnet-4-20250514
-      apiKey: <YOUR_ANTHROPIC_API_KEY>
-      roles:
-        - chat
-      defaultCompletionOptions:
-        promptCaching: true
-      cacheBehavior:
-        cacheSystemMessage: true
-        cacheConversation: true
-        useExtendedCacheTtlBeta: true
-        cacheTtl: "1h"
-  ```
+  ---
   </TabItem>
   <TabItem value="json" label="JSON">
-
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "cacheBehavior": {
-          "cacheSystemMessage": true,
-          "cacheConversation": true,
-          "useExtendedCacheTtlBeta": true,
-          "cacheTtl": "1h"
-        },
-        "title": "Anthropic",
-        "provider": "anthropic",
-        "model": "claude-sonnet-4-latest",
-        "defaultCompletionOptions": {
-          "promptCaching": true
-        },
-        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-      }
-    ]
-  }
-  ```
+  ---
   </TabItem>
 </Tabs>
+
+### Enhanced Configuration for Agent Mode
+
+For heavy Agent mode usage with tool calls, use enhanced per-type caching to maximize efficiency:
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ---
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ---
+  </TabItem>
+</Tabs>
+
+### Caching Strategy Examples
+
+**Conservative (Cost-optimized):**
+---
+
+**Balanced (Recommended for Agent mode):**
+---
+
+**Aggressive (Maximum caching for heavy usage):**
+---
+
+### Benefits
+
+Enhanced caching provides significant benefits for Agent mode usage:
+
+- **Cost Reduction**: 20-30% reduction in input token costs for tool-heavy conversations
+- **Performance**: Faster response times due to cached content
+- **Efficiency**: Maximizes cache hits for repetitive tool operations
+- **Flexibility**: Fine-tune caching per message type based on your usage patterns
+
+The enhanced caching is particularly effective when using Continue's Agent mode with frequent tool calls, as it caches both tool results and assistant tool call messages that would otherwise consume expensive input tokens on every request.
