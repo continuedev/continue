@@ -9,8 +9,8 @@ import {
   ListboxButton,
   ListboxOption,
   ListboxOptions,
-  Transition,
-} from "../../components/ui";
+} from "../../components/ui/Listbox";
+import { Transition } from "../../components/ui/Transition";
 import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
 
 interface ModelSelectionListboxProps {

@@ -23,7 +23,7 @@ import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
 import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { useOnboardingCard } from "../../components/OnboardingCard";
+import { useOnboardingCard } from "../../components/OnboardingCard/hooks/useOnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -42,10 +42,10 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
-import { streamResponseThunk } from "../../redux/thunks";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { streamEditThunk } from "../../redux/thunks/edit";
 import { loadLastSession } from "../../redux/thunks/session";
+import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";

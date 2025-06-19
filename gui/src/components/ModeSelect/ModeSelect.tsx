@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
-import { useMainEditor } from "../mainInput/TipTapEditor";
+import { useMainEditor } from "../mainInput/TipTapEditor/MainEditorProvider";
 import {
   Listbox,
   ListboxButton,

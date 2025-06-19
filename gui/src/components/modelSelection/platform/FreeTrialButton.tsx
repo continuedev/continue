@@ -4,7 +4,8 @@ import { useContext } from "react";
 import { Button, SecondaryButton, vscButtonBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { fontSize } from "../../../util";
-import { Listbox, ListboxButton, ListboxOptions, Transition } from "../../ui";
+import { Listbox, ListboxButton, ListboxOptions } from "../../ui/Listbox";
+import { Transition } from "../../ui/Transition";
 import { useFontSize } from "../../ui/font";
 
 interface ProgressBarProps {

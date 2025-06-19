@@ -16,8 +16,8 @@ import {
   Popover,
   PopoverButton,
   PopoverPanel,
-  Transition,
-} from "../../components/ui";
+} from "../../components/ui/Popover";
+import { Transition } from "../../components/ui/Transition";
 import { fontSize } from "../../util";
 
 export function ConfigItemSelect({

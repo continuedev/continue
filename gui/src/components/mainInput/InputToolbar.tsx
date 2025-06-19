@@ -14,7 +14,7 @@ import { exitEdit } from "../../redux/thunks/edit";
 import { getAltKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
-import { ModeSelect } from "../ModeSelect";
+import { ModeSelect } from "../ModeSelect/ModeSelect";
 import { useFontSize } from "../ui/font";
 import { EnterButton } from "./InputToolbar/EnterButton";
 import HoverItem from "./InputToolbar/HoverItem";

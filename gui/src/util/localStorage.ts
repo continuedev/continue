@@ -1,5 +1,5 @@
 import { JSONContent } from "@tiptap/react";
-import { OnboardingStatus } from "../components/OnboardingCard";
+import { OnboardingStatus } from "../components/OnboardingCard/utils";
 
 type LocalStorageTypes = {
   isExploreDialogOpen: boolean;

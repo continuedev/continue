@@ -10,12 +10,12 @@ import {
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   selectCurrentOrg,
   setSelectedOrgId,
   setSelectedProfile,
-} from "../../../redux";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+} from "../../../redux/slices/profilesSlice";
 import {
   fontSize,
   getMetaKeyLabel,
@@ -27,8 +27,8 @@ import {
   ListboxButton,
   ListboxOption,
   ListboxOptions,
-  Transition,
-} from "../../ui";
+} from "../../ui/Listbox";
+import { Transition } from "../../ui/Transition";
 
 import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useNavigate } from "react-router-dom";

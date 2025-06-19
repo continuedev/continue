@@ -11,10 +11,6 @@ import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { usePostHog } from "posthog-js/react";
 import { useRef } from "react";
-import {
-  getContextProviderDropdownOptions,
-  getSlashCommandDropdownOptions,
-} from ".";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { useSubmenuContextProviders } from "../../../../context/SubmenuContextProviders";
 import { useInputHistory } from "../../../../hooks/useInputHistory";
@@ -25,8 +21,15 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
-import * as ContinueExtensions from "../extensions";
+import { CodeBlock } from "../extensions/CodeBlock/CodeBlock";
+import { Mention } from "../extensions/Mention";
+import { PromptBlock } from "../extensions/Prompt/PromptBlock";
+import { SlashCommand } from "../extensions/SlashCommand";
 import { TipTapEditorProps } from "../TipTapEditor";
+import {
+  getContextProviderDropdownOptions,
+  getSlashCommandDropdownOptions,
+} from "./getSuggestion";
 import { handleImageFile } from "./imageUtils";
 
 export function getPlaceholderText(
@@ -52,9 +55,7 @@ export function getPlaceholderText(
 export function hasValidEditorContent(json: JSONContent): boolean {
   // Check for prompt or code blocks
   const hasPromptOrCodeBlock = json.content?.some(
-    (c) =>
-      c.type === ContinueExtensions.PromptBlock.name ||
-      c.type === ContinueExtensions.CodeBlock.name,
+    (c) => c.type === PromptBlock.name || c.type === CodeBlock.name,
   );
 
   // Check for text content
@@ -306,7 +307,7 @@ export function createEditorConfig(options: {
         },
       }),
       Text,
-      ContinueExtensions.Mention.configure({
+      Mention.configure({
         suggestion: getContextProviderDropdownOptions(
           availableContextProvidersRef,
           getSubmenuContextItemsRef,
@@ -317,7 +318,7 @@ export function createEditorConfig(options: {
           ideMessenger,
         ),
       }),
-      ContinueExtensions.SlashCommand.configure({
+      SlashCommand.configure({
         suggestion: getSlashCommandDropdownOptions(
           availableSlashCommandsRef,
           onClose,
@@ -327,8 +328,8 @@ export function createEditorConfig(options: {
           props.inputId,
         ),
       }),
-      ContinueExtensions.PromptBlock,
-      ContinueExtensions.CodeBlock,
+      PromptBlock,
+      CodeBlock,
     ],
     editorProps: {
       attributes: {

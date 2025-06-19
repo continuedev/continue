@@ -11,7 +11,7 @@ import { AppDispatch } from "../../../../redux/store";
 import AtMentionDropdown from "../../AtMentionDropdown";
 import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../../types";
 import { TIPPY_DIV_ID } from "../TipTapEditor";
-import { SlashCommand } from "../extensions";
+import { SlashCommand } from "../extensions/SlashCommand";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,

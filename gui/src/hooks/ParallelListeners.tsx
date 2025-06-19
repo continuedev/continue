@@ -3,13 +3,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
-import { useMainEditor } from "../components/mainInput/TipTapEditor";
-import {
-  initializeProfilePreferences,
-  setOrganizations,
-  setSelectedOrgId,
-  setSelectedProfile,
-} from "../redux";
+import { useMainEditor } from "../components/mainInput/TipTapEditor/MainEditorProvider";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
 import { setConfigResult } from "../redux/slices/configSlice";
@@ -19,12 +13,20 @@ import {
 } from "../redux/slices/editState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
+  initializeProfilePreferences,
+  setOrganizations,
+  setSelectedOrgId,
+  setSelectedProfile,
+} from "../redux/slices/profilesSlice";
+import {
   acceptToolCall,
   addContextItemsAtIndex,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import { exitEdit, streamResponseAfterToolCall } from "../redux/thunks";
+import { exitEdit } from "../redux/thunks/edit";
+import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
+
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";

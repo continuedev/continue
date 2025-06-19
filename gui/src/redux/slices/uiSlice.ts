@@ -1,10 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Tool } from "core";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
-import {
-  defaultOnboardingCardState,
-  OnboardingCardState,
-} from "../../components/OnboardingCard";
+import { OnboardingCardState } from "../../components/OnboardingCard/OnboardingCard";
+import { defaultOnboardingCardState } from "../../components/OnboardingCard/utils";
 import { getLocalStorage, LocalStorageKey } from "../../util/localStorage";
 
 export type ToolPolicy =

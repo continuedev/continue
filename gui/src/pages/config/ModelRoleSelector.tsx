@@ -15,8 +15,8 @@ import {
   ListboxButton,
   ListboxOption,
   ListboxOptions,
-  Transition,
-} from "../../components/ui";
+} from "../../components/ui/Listbox";
+import { Transition } from "../../components/ui/Transition";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { fontSize } from "../../util";
 

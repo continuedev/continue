@@ -8,7 +8,8 @@ import { clearCodeToEdit } from "../../../redux/slices/editState";
 import { setNewestToolbarPreviewForInput } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
-import { CodeBlock, PromptBlock } from "./extensions";
+import { CodeBlock } from "./extensions/CodeBlock/CodeBlock";
+import { PromptBlock } from "./extensions/Prompt/PromptBlock";
 import { insertCurrentFileContextMention } from "./utils/insertCurrentFileContextMention";
 
 /**
