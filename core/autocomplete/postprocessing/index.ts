@@ -139,7 +139,7 @@ export function postprocessCompletion({
     // "<|file_separator|>" is 18 characters long
     completion = completion.slice(0, -18);
   }
-  
+
   // If prefix ends with space and so does completion, then remove the space from completion
 
   if (prefix.endsWith(" ") && completion.startsWith(" ")) {
