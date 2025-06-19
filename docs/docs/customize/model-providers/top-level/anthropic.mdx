@@ -16,10 +16,27 @@ We recommend configuring **Claude 4 Sonnet** as your chat model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ---
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 4 Sonnet
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-  ---
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 4 Sonnet",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-latest",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
   </TabItem>
 </Tabs>
 
@@ -45,7 +62,7 @@ Anthropic currently does not offer any reranking models.
 
 Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
 
->NOTE: As part of their `Beta` support [Extended caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration)
+> **NOTE:** As part of their `Beta` support [Extended caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration)
 
 ### Basic Caching Options
 
@@ -72,16 +89,51 @@ Prompt caching is generally available for:
 - Claude 3.5 Sonnet
 - Claude 3.5 Haiku
 
-### Basic Configuration
 
-To enable basic caching of the system message and conversation history:
+To enable caching of the system message and the turn-by-turn conversation, update your model configuration as follows:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ---
+  ```yaml
+  # config.yaml
+  models:
+    - name: Anthropic
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - chat
+      defaultCompletionOptions:
+        promptCaching: true
+      cacheBehavior:
+        cacheSystemMessage: true
+        cacheConversation: true
+        useExtendedCacheTtlBeta: true
+        cacheTtl: "1h"
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-  ---
+  ```json
+  {
+    "models": [
+      {
+        "cacheBehavior": {
+          "cacheSystemMessage": true,
+          "cacheConversation": true,
+          "useExtendedCacheTtlBeta": true,
+          "cacheTtl": "1h"
+        },
+        "title": "Anthropic",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-latest",
+        "defaultCompletionOptions": {
+          "promptCaching": true
+        },
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
   </TabItem>
 </Tabs>
 
@@ -91,29 +143,65 @@ For heavy Agent mode usage with tool calls, use enhanced per-type caching to max
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ---
-  </TabItem>
-  <TabItem value="json" label="JSON">
-  ---
+  ```yaml
+  # config.yaml
+  models:
+    - name: Claude Agent
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - chat
+        - agent
+      defaultCompletionOptions:
+        promptCaching: true
+      cacheBehavior:
+        cacheSystemMessage: true
+        cacheConversation: true
+        cacheUserMessages: 2
+        cacheToolResults: 5
+        cacheAssistantToolCalls: 3
+        useExtendedCacheTtlBeta: true
+        cacheTtl: "1h"
+  ```
   </TabItem>
 </Tabs>
 
-### Caching Strategy Examples
-
-**Conservative (Cost-optimized):**
----
-
-**Balanced (Recommended for Agent mode):**
----
-
-**Aggressive (Maximum caching for heavy usage):**
----
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="JSON">
+  ```json
+  {
+    "models": [
+      {
+        "title": "Claude Agent",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-latest",
+        "roles": ["chat", "agent"],
+        "defaultCompletionOptions": {
+          "promptCaching": true
+        },
+        "cacheBehavior": {
+          "cacheSystemMessage": true,
+          "cacheConversation": true,
+          "cacheUserMessages": 2,
+          "cacheToolResults": 5,
+          "cacheAssistantToolCalls": 3,
+          "useExtendedCacheTtlBeta": true,
+          "cacheTtl": "1h"
+        },
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### Benefits
 
 Enhanced caching provides significant benefits for Agent mode usage:
 
-- **Cost Reduction**: 20-30% reduction in input token costs for tool-heavy conversations
+- **Cost Reduction**: Reduces input token costs for tool-heavy conversations
 - **Performance**: Faster response times due to cached content
 - **Efficiency**: Maximizes cache hits for repetitive tool operations
 - **Flexibility**: Fine-tune caching per message type based on your usage patterns
