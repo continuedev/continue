@@ -31,7 +31,7 @@ We recommend configuring **Claude 4 Sonnet** as your chat model.
       {
         "title": "Claude 4 Sonnet",
         "provider": "anthropic",
-        "model": "claude-sonnet-4-20250514",
+        "model": "claude-sonnet-4-latest",
         "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
@@ -68,9 +68,6 @@ Prompt caching is generally available for:
 - Claude 3.7 Sonnet
 - Claude 3.5 Sonnet
 - Claude 3.5 Haiku
-- Claude 3 Opus
-- Claude 3 Sonnet
-- Claude 3 Haiku
 
 To enable caching of the system message and the turn-by-turn conversation, update your model configuration as follows:
 
@@ -84,9 +81,8 @@ To enable caching of the system message and the turn-by-turn conversation, updat
       apiKey: <YOUR_ANTHROPIC_API_KEY>
       roles:
         - chat
-      cacheBehavior:
-        cacheSystemMessage: true
-        cacheConversation: true
+      defaultCompletionOptions:
+        promptCaching: true
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -100,7 +96,10 @@ To enable caching of the system message and the turn-by-turn conversation, updat
         },
         "title": "Anthropic",
         "provider": "anthropic",
-        "model": "claude-sonnet-4-20250514",
+        "model": "claude-sonnet-4-latest",
+        "defaultCompletionOptions": {
+          "promptCaching": true
+        },
         "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
