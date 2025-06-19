@@ -930,10 +930,10 @@ export interface CacheBehavior {
   useExtendedCacheTtlBeta?: boolean;
   cacheTtl?: string;
   // Enhanced per-type caching options
-  cacheUserMessages?: number;        // Number of recent user messages to cache (default: 2)
-  cacheAssistantMessages?: number;   // Number of recent assistant messages to cache (default: 0)
-  cacheToolResults?: number;         // Number of recent tool result messages to cache (default: 0)
-  cacheAssistantToolCalls?: number;  // Number of recent assistant tool call messages to cache (default: 0)
+  cacheUserMessages?: number; // Number of recent user messages to cache (default: 2)
+  cacheAssistantMessages?: number; // Number of recent assistant messages to cache (default: 0)
+  cacheToolResults?: number; // Number of recent tool result messages to cache (default: 0)
+  cacheAssistantToolCalls?: number; // Number of recent assistant tool call messages to cache (default: 0)
 }
 
 export interface ClientCertificateOptions {

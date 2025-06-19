@@ -58,17 +58,22 @@ class Anthropic extends BaseLLM {
             tool_use_id: message.toolCallId,
             content: renderChatMessage(message) || undefined,
             // Add caching support for tool results
-            ...(addCaching 
-              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta 
-                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" } 
-                : { type: "ephemeral" } }
+            ...(addCaching
+              ? {
+                  cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                    ? {
+                        type: "ephemeral",
+                        ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                      }
+                    : { type: "ephemeral" },
+                }
               : {}),
           },
         ],
       };
     } else if (message.role === "assistant" && message.toolCalls) {
       return {
-                role: "assistant",
+        role: "assistant",
         content: message.toolCalls.map((toolCall, index) => ({
           type: "tool_use",
           id: toolCall.id,
@@ -76,9 +81,14 @@ class Anthropic extends BaseLLM {
           input: safeParseToolCallArgs(toolCall),
           // Add caching support for assistant tool calls (last tool call only)
           ...(addCaching && index === message.toolCalls!.length - 1
-            ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
-              ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
-              : { type: "ephemeral" } }
+            ? {
+                cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                  ? {
+                      type: "ephemeral",
+                      ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                    }
+                  : { type: "ephemeral" },
+              }
             : {}),
         })),
       };
@@ -113,9 +123,14 @@ class Anthropic extends BaseLLM {
             type: "text",
             text: message.content,
             ...(addCaching
-              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
-                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
-                : { type: "ephemeral" } }
+              ? {
+                  cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                    ? {
+                        type: "ephemeral",
+                        ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                      }
+                    : { type: "ephemeral" },
+                }
               : {}),
           },
         ],
@@ -131,9 +146,14 @@ class Anthropic extends BaseLLM {
             ...part,
             // If multiple text parts, only add cache_control to the last one
             ...(addCaching && contentIdx === message.content.length - 1
-              ? { cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
-                ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
-                : { type: "ephemeral" } }
+              ? {
+                  cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                    ? {
+                        type: "ephemeral",
+                        ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                      }
+                    : { type: "ephemeral" },
+                }
               : {}),
           };
           return newpart;
@@ -150,7 +170,11 @@ class Anthropic extends BaseLLM {
     };
   }
 
-  protected shouldCacheMessage(message: ChatMessage, index: number, filteredMessages: ChatMessage[]): boolean {
+  protected shouldCacheMessage(
+    message: ChatMessage,
+    index: number,
+    filteredMessages: ChatMessage[],
+  ): boolean {
     if (!this.cacheBehavior?.cacheConversation) {
       return false;
     }
@@ -165,28 +189,45 @@ class Anthropic extends BaseLLM {
     switch (message.role) {
       case "user":
         if (cacheUserMessages > 0) {
-          const userMessages = filteredMessages.filter(m => m.role === "user");
-          const userIndex = userMessages.findIndex(m => m === message);
+          const userMessages = filteredMessages.filter(
+            (m) => m.role === "user",
+          );
+          const userIndex = userMessages.findIndex((m) => m === message);
           return userIndex >= userMessages.length - cacheUserMessages;
         }
         break;
 
       case "assistant":
         if (message.toolCalls && cacheAssistantToolCalls > 0) {
-          const assistantToolMessages = filteredMessages.filter(m => m.role === "assistant" && m.toolCalls);
-          const assistantIndex = assistantToolMessages.findIndex(m => m === message);
-          return assistantIndex >= assistantToolMessages.length - cacheAssistantToolCalls;
+          const assistantToolMessages = filteredMessages.filter(
+            (m) => m.role === "assistant" && m.toolCalls,
+          );
+          const assistantIndex = assistantToolMessages.findIndex(
+            (m) => m === message,
+          );
+          return (
+            assistantIndex >=
+            assistantToolMessages.length - cacheAssistantToolCalls
+          );
         } else if (!message.toolCalls && cacheAssistantMessages > 0) {
-          const assistantMessages = filteredMessages.filter(m => m.role === "assistant" && !m.toolCalls);
-          const assistantIndex = assistantMessages.findIndex(m => m === message);
-          return assistantIndex >= assistantMessages.length - cacheAssistantMessages;
+          const assistantMessages = filteredMessages.filter(
+            (m) => m.role === "assistant" && !m.toolCalls,
+          );
+          const assistantIndex = assistantMessages.findIndex(
+            (m) => m === message,
+          );
+          return (
+            assistantIndex >= assistantMessages.length - cacheAssistantMessages
+          );
         }
         break;
 
       case "tool":
         if (cacheToolResults > 0) {
-          const toolMessages = filteredMessages.filter(m => m.role === "tool");
-          const toolIndex = toolMessages.findIndex(m => m === message);
+          const toolMessages = filteredMessages.filter(
+            (m) => m.role === "tool",
+          );
+          const toolIndex = toolMessages.findIndex((m) => m === message);
           return toolIndex >= toolMessages.length - cacheToolResults;
         }
         break;
@@ -198,12 +239,18 @@ class Anthropic extends BaseLLM {
   public convertMessages(msgs: ChatMessage[]): any[] {
     // should be public for use within VertexAI
     const filteredmessages = msgs.filter(
-      (m) => m.role !== "system" && (!!m.content || (m.role === "assistant" && m.toolCalls)),
+      (m) =>
+        m.role !== "system" &&
+        (!!m.content || (m.role === "assistant" && m.toolCalls)),
     );
 
     const messages = filteredmessages.map((message, filteredMsgIdx) => {
       // Enhanced caching logic that supports tool messages
-      const addCaching = this.shouldCacheMessage(message, filteredMsgIdx, filteredmessages);
+      const addCaching = this.shouldCacheMessage(
+        message,
+        filteredMsgIdx,
+        filteredmessages,
+      );
 
       const chatMessage = this.convertMessage(message, !!addCaching);
       return chatMessage;
@@ -250,10 +297,9 @@ class Anthropic extends BaseLLM {
         "x-api-key": this.apiKey as string,
         ...(this.cacheBehavior?.useExtendedCacheTtlBeta
           ? { "anthropic-beta": "extended-cache-ttl-2025-04-11" }
-          : (shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+          : shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
             ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-            : {})
-          ),
+            : {}),
       },
       body: JSON.stringify({
         ...this.convertArgs(options),
@@ -264,7 +310,10 @@ class Anthropic extends BaseLLM {
                 type: "text",
                 text: systemMessage,
                 cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
-                  ? { type: "ephemeral", ttl: this.cacheBehavior?.cacheTtl ?? "5m" }
+                  ? {
+                      type: "ephemeral",
+                      ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                    }
                   : { type: "ephemeral" },
               },
             ]
