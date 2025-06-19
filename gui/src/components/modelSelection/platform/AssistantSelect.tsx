@@ -7,7 +7,7 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import {
@@ -32,7 +32,6 @@ import {
 
 import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useNavigate } from "react-router-dom";
-import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { cn } from "../../../util/cn";
 import { ROUTES } from "../../../util/navigation";
 import { useLump } from "../../mainInput/Lump/LumpContext";
@@ -156,7 +155,7 @@ export default function AssistantSelect() {
   const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
-  const [loading, setLoading] = useState(false);
+  const configLoading = useAppSelector((store) => store.config.loading);
   const { profiles, session, login, selectedProfile, refreshProfiles } =
     useAuth();
 
@@ -171,11 +170,6 @@ export default function AssistantSelect() {
       orgSlug: currentOrg?.slug,
     });
     close();
-  }
-  async function refreshProfilesWithLoading() {
-    setLoading(true);
-    await refreshProfiles();
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -218,8 +212,6 @@ export default function AssistantSelect() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [currentOrg, selectedProfile]);
-
-  useWebviewListener("sessionUpdate", refreshProfilesWithLoading, []);
 
   const cycleOrgs = () => {
     if (!session) {
@@ -279,7 +271,7 @@ export default function AssistantSelect() {
           style={{ fontSize: fontSize(-3) }}
         >
           <div className="flex flex-row items-center gap-1.5">
-            {!loading ? (
+            {configLoading ? (
               <span className="select-none">loading...</span>
             ) : (
               <>
@@ -306,17 +298,15 @@ export default function AssistantSelect() {
               <span className="font-semibold">Assistants</span>
               <div
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation();
-                  void refreshProfilesWithLoading().then(() =>
-                    buttonRef.current?.click(),
-                  );
+                  void refreshProfiles().then(() => buttonRef.current?.click());
                 }}
               >
                 <ArrowPathIcon
                   className={cn(
                     "text-description h-2.5 w-2.5",
-                    !loading && "animate-spin-slow",
+                    configLoading && "animate-spin-slow",
                   )}
                 />
               </div>
