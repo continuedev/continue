@@ -7,7 +7,7 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import {
@@ -155,7 +155,7 @@ export default function AssistantSelect() {
   const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
-  const [loading, setLoading] = useState(false);
+  const configLoading = useAppSelector((store) => store.config.loading);
   const { profiles, session, login, selectedProfile, refreshProfiles } =
     useAuth();
 
@@ -271,14 +271,20 @@ export default function AssistantSelect() {
           style={{ fontSize: fontSize(-3) }}
         >
           <div className="flex flex-row items-center gap-1.5">
-            <div className="h-3 w-3 flex-shrink-0 select-none">
-              <AssistantIcon size={3} assistant={selectedProfile} />
-            </div>
-            <span
-              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-            >
-              {selectedProfile.title}
-            </span>
+            {configLoading ? (
+              <span className="select-none">loading...</span>
+            ) : (
+              <>
+                <div className="h-3 w-3 flex-shrink-0 select-none">
+                  <AssistantIcon size={3} assistant={selectedProfile} />
+                </div>
+                <span
+                  className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+                >
+                  {selectedProfile.title}
+                </span>
+              </>
+            )}
           </div>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0 select-none"
@@ -292,18 +298,15 @@ export default function AssistantSelect() {
               <span className="font-semibold">Assistants</span>
               <div
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation();
-                  setLoading(true);
-                  await refreshProfiles();
-                  setLoading(false);
-                  buttonRef.current?.click();
+                  void refreshProfiles().then(() => buttonRef.current?.click());
                 }}
               >
                 <ArrowPathIcon
                   className={cn(
                     "text-description h-2.5 w-2.5",
-                    loading && "animate-spin-slow",
+                    configLoading && "animate-spin-slow",
                   )}
                 />
               </div>

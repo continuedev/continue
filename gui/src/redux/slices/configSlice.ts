@@ -6,6 +6,7 @@ import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
 export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
   config: BrowserSerializedContinueConfig;
+  loading: boolean;
 };
 
 export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
@@ -47,6 +48,7 @@ export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
 const initialState: ConfigState = {
   configError: undefined,
   config: EMPTY_CONFIG,
+  loading: false,
 };
 
 export const configSlice = createSlice({
@@ -82,6 +84,9 @@ export const configSlice = createSlice({
     ) => {
       state.config = config;
     },
+    setConfigLoading: (state, { payload: loading }: PayloadAction<boolean>) => {
+      state.loading = loading;
+    },
   },
   selectors: {
     selectSelectedChatModelContextLength: (state): number => {
@@ -99,7 +104,8 @@ export const configSlice = createSlice({
   },
 });
 
-export const { updateConfig, setConfigResult } = configSlice.actions;
+export const { updateConfig, setConfigResult, setConfigLoading } =
+  configSlice.actions;
 
 export const {
   selectSelectedChatModelContextLength,

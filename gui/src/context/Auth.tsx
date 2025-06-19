@@ -19,6 +19,7 @@ import {
   setSelectedOrgId,
 } from "../redux/";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setConfigLoading } from "../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
 
@@ -53,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
     return new Promise((resolve) => {
-      ideMessenger
+      void ideMessenger
         .request("getControlPlaneSessionInfo", {
           silent: false,
           useOnboarding,
@@ -113,17 +114,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     "sessionUpdate",
     async (data) => {
       setSession(data.sessionInfo);
+      void refreshProfiles();
     },
     [],
   );
 
   const refreshProfiles = useCallback(async () => {
     try {
+      dispatch(setConfigLoading(true));
       await ideMessenger.request("config/refreshProfiles", undefined);
       ideMessenger.post("showToast", ["info", "Config refreshed"]);
     } catch (e) {
       console.error("Failed to refresh profiles", e);
       ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
+    } finally {
+      dispatch(setConfigLoading(false));
     }
   }, [ideMessenger]);
 
