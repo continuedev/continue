@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { EXTENSION_NAME } from "core/control-plane/env";
 // @ts-ignore
-import svgBuilder from "svg-builder";
 import * as vscode from "vscode";
 
+import { SyntaxHighlighter } from "core/syntaxHighlighting/SyntaxHighlighter";
 import { getTheme } from "../util/getTheme";
 
 // Fallback theme colors
@@ -29,8 +29,7 @@ const SVG_CONFIG = {
 
   get fontSize() {
     return Math.ceil(
-      (vscode.workspace.getConfiguration("editor").get<number>("fontSize") ??
-        14) * 0.8,
+      vscode.workspace.getConfiguration("editor").get<number>("fontSize") ?? 14,
     );
   },
   get fontFamily() {
@@ -122,7 +121,7 @@ export class NextEditWindowManager {
    * @param editor The active text editor
    * @param text Text to display in the tooltip
    */
-  public showTooltip(editor: vscode.TextEditor, text: string) {
+  public async showTooltip(editor: vscode.TextEditor, text: string) {
     if (!text || !this.shouldRenderTip(editor.document.uri)) {
       return;
     }
@@ -135,7 +134,7 @@ export class NextEditWindowManager {
     const position = editor.selection.active;
 
     // Create and apply decoration with the text
-    this.renderTooltip(editor, position, text);
+    await this.renderTooltip(editor, position, text);
   }
 
   /**
@@ -235,7 +234,12 @@ export class NextEditWindowManager {
   /**
    * Create an SVG with the given text, supporting multiple lines
    */
-  private createSvgTooltip(text: string): vscode.Uri | undefined {
+  private async createSvgTooltip(
+    text: string,
+  ): Promise<
+    | { uri: vscode.Uri; dimensions: { width: number; height: number } }
+    | undefined
+  > {
     console.log("createSvgTooltip");
     const baseTextConfig = {
       "font-family": SVG_CONFIG.fontFamily,
@@ -251,42 +255,25 @@ export class NextEditWindowManager {
       const globalIndent =
         lines.length > 0 ? (lines[0].match(/^[ \t]*/) || [""])[0].length : 0;
 
-      // Create a fresh SVG builder instance each time.
-      // This ensures we don't have state accumulation between calls.
-      const svg = svgBuilder.newInstance().width(tipWidth).height(tipHeight);
-
-      // Add each line as a separate text element.
-      lines.forEach((line, index) => {
-        const y =
-          SVG_CONFIG.paddingY +
-          SVG_CONFIG.fontSize +
-          index * SVG_CONFIG.lineHeight;
-
-        svg.text(
-          {
-            ...baseTextConfig,
-            x: SVG_CONFIG.paddingX,
-            y: y,
-          },
-          line.slice(globalIndent),
-        );
+      const syntaxHighlighter = SyntaxHighlighter.getInstance({
+        theme: "one-dark-pro",
       });
 
-      // Render the SVG.
-      let svgContent = svg.render();
+      await syntaxHighlighter.init();
 
-      // Manually add whitespace styling.
-      // svg-builder does not support styles. To be exact,
-      // there is a style function but it's broken and there are no docs.
-      if (!svgContent.includes('style="white-space: pre"')) {
-        svgContent = svgContent.replaceAll(
-          "<text ",
-          '<text style="white-space: pre" ',
+      const { uri, dimensions } =
+        await syntaxHighlighter.getDataUriAndDimensions(
+          text,
+          "typescript",
+          SVG_CONFIG.fontSize,
+          {
+            imageType: "svg",
+          },
         );
-      }
 
-      const dataUri = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString("base64")}`;
-      return vscode.Uri.parse(dataUri);
+      console.log(dimensions);
+
+      return { uri: vscode.Uri.parse(uri), dimensions: dimensions };
     } catch (error) {
       console.error("Error creating SVG tooltip:", error);
       return undefined;
@@ -296,36 +283,50 @@ export class NextEditWindowManager {
   /**
    * Create a decoration type with SVG content
    */
-  private createSvgDecoration(
+  private async createSvgDecoration(
     text: string,
-  ): vscode.TextEditorDecorationType | undefined {
+  ): Promise<vscode.TextEditorDecorationType | undefined> {
     console.log("createSvgDecoration");
-    const svgUri = this.createSvgTooltip(text);
-    if (!svgUri) {
+    const uriAndDimensions = await this.createSvgTooltip(text);
+    if (!uriAndDimensions) {
       return undefined;
     }
 
+    const { uri, dimensions } = uriAndDimensions;
+
     // Use theme or fallback
     const backgroundColour = this.theme.colors["editor.background"];
-    const tipWidth = SVG_CONFIG.getTipWidth(text);
-    const tipHeight = SVG_CONFIG.getTipHeight(text);
+    // const tipWidth = SVG_CONFIG.getTipWidth(text);
+    // const tipHeight = SVG_CONFIG.getTipHeight(text);
+    const tipWidth = dimensions.width;
+    const tipHeight = dimensions.height;
 
     return vscode.window.createTextEditorDecorationType({
       after: {
-        contentIconPath: svgUri,
+        contentIconPath: uri,
         // border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px ${backgroundColour};
         //           border-radius: ${SVG_CONFIG.radius}px;
         //           filter: ${SVG_CONFIG.filter}`,
         // width: `${tipWidth}px`,
         // height: `${tipHeight}px`,
+        // border: `transparent; position: absolute; z-index: 1000;
+        //        box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke},
+        //                   inset 0 0 0 ${tipHeight}px ${backgroundColour};
+        //        border-radius: ${SVG_CONFIG.radius}px;
+        //        filter: ${SVG_CONFIG.filter};
+        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
         border: `transparent; position: absolute; z-index: 1000;
-               box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, 
-                          inset 0 0 0 ${tipHeight}px ${backgroundColour};
-               border-radius: ${SVG_CONFIG.radius}px;
-               filter: ${SVG_CONFIG.filter};
                margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
+        // border: `solid 1px white; position: absolute; z-index: 1000;
+        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
+        //        margin-top: 0em;`,
+        // border: `solid 1px white; position: absolute; z-index: 1000;
+        //        margin: 0em; padding: 0em;
+        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
+        //        margin-top: 0em;`,
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
+        // textDecoration: `none; transform: translateY(-100%);`,
       },
       // Set a negative margin to make the decoration float if it starts to displace text.
       // Also use absolute positioning.
@@ -358,14 +359,14 @@ export class NextEditWindowManager {
   /**
    * Render a tooltip with the given text at the specified position
    */
-  private renderTooltip(
+  private async renderTooltip(
     editor: vscode.TextEditor,
     position: vscode.Position,
     text: string,
   ) {
     console.log("renderTooltip");
     // Create a new decoration with the text
-    const decoration = this.createSvgDecoration(text);
+    const decoration = await this.createSvgDecoration(text);
     if (!decoration) {
       console.error("Failed to create decoration for text:", text);
       return;
