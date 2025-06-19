@@ -109,16 +109,34 @@ export class MockIdeMessenger implements IIdeMessenger {
     );
   }
 
-  async *llmStreamChat(
-    msg: ToCoreProtocol["llm/streamChat"][0],
-    cancelToken: AbortSignal,
-  ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
-    yield [
+  // Ability to customize the response for llmStreamChat
+  chatResponse: ChatMessage[][] = [
+    [
       {
         role: "assistant",
         content: "This is a test",
       },
-    ];
+    ],
+  ];
+  chatStreamDelay: number = 0;
+
+  async *llmStreamChat(
+    msg: ToCoreProtocol["llm/streamChat"][0],
+    cancelToken: AbortSignal,
+  ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
+    for (const response of this.chatResponse) {
+      if (cancelToken.aborted) {
+        console.log("MockIdeMessenger: Stream aborted");
+        return undefined;
+      }
+      console.log("MockIdeMessenger: Yielding chunk", response);
+      yield response;
+      if (this.chatStreamDelay > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, this.chatStreamDelay),
+        );
+      }
+    }
     return undefined;
   }
 

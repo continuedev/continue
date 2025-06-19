@@ -19,7 +19,7 @@ export interface ProfilesState {
   preferencesByProfileId: Record<string, PreferencesState>;
 }
 
-const initialState: ProfilesState = {
+export const defaultProfilesState: ProfilesState = {
   preferencesByProfileId: {},
   selectedProfileId: null,
   selectedOrganizationId: null,
@@ -51,7 +51,7 @@ const initialState: ProfilesState = {
 
 export const profilesSlice = createSlice({
   name: "profiles",
-  initialState,
+  initialState: defaultProfilesState,
   reducers: {
     setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedProfileId = payload;
