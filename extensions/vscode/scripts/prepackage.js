@@ -27,6 +27,8 @@ if (!fs.existsSync(guiDist)) {
   fs.mkdirSync(guiDist, { recursive: true });
 }
 
+const skipInstalls = process.env.SKIP_INSTALLS === "true";
+
 // Get the target to package for
 let target = undefined;
 const args = process.argv;
@@ -70,7 +72,9 @@ void (async () => {
   // Make sure we have an initial timestamp file
   writeBuildTimestamp();
 
-  await Promise.all([generateAndCopyConfigYamlSchema(), npmInstall()]);
+  if (!skipInstalls) {
+    await Promise.all([generateAndCopyConfigYamlSchema(), npmInstall()]);
+  }
 
   process.chdir(path.join(continueDir, "gui"));
 
@@ -264,28 +268,30 @@ void (async () => {
     );
   });
 
-  // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-  // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
-  if (isArmTarget) {
-    // lancedb binary
-    const packageToInstall = {
-      "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-      "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-      "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
-    }[target];
-    console.log(
-      "[info] Downloading pre-built lancedb binary: " + packageToInstall,
-    );
+  if (!skipInstalls) {
+    // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
+    // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
+    if (isArmTarget) {
+      // lancedb binary
+      const packageToInstall = {
+        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+        "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
+      }[target];
+      console.log(
+        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
+      );
 
-    await Promise.all([
-      copyEsbuild(target),
-      copySqlite(target),
-      installAndCopyNodeModules(packageToInstall, "@lancedb"),
-    ]);
-  } else {
-    // Download esbuild from npm in tmp and copy over
-    console.log("[info] npm installing esbuild binary");
-    await installAndCopyNodeModules("esbuild@0.17.19", "@esbuild");
+      await Promise.all([
+        copyEsbuild(target),
+        copySqlite(target),
+        installAndCopyNodeModules(packageToInstall, "@lancedb"),
+      ]);
+    } else {
+      // Download esbuild from npm in tmp and copy over
+      console.log("[info] npm installing esbuild binary");
+      await installAndCopyNodeModules("esbuild@0.17.19", "@esbuild");
+    }
   }
 
   console.log("[info] Copying sqlite node binding from core");
