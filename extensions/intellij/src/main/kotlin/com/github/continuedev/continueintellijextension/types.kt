@@ -159,7 +159,7 @@ interface IDE {
 
     suspend fun getSearchResults(query: String): String
 
-    suspend fun getFileResults(pattern: String): List<String>
+    suspend fun getFileResults(pattern: String, maxResults: Int?): List<String>
 
     // Note: This should be a `Pair<String, String>` but we use `List<Any>` because the keys of `Pair`
     // will serialize to `first and `second` rather than `0` and `1` like in JavaScript

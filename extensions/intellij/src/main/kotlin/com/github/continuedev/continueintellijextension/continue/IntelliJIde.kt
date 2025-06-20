@@ -315,11 +315,11 @@ class IntelliJIDE(
         return getOpenFiles()
     }
 
-    override suspend fun getFileResults(pattern: String): List<String> {
+    override suspend fun getFileResults(pattern: String, maxResults: Int?): List<String> {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                val command = GeneralCommandLine(
+                var commandArgs = mutableListOf<String>(
                     ripgrep,
                     "--files",
                     "--iglob",
@@ -327,8 +327,14 @@ class IntelliJIDE(
                     "--ignore-file",
                     ".continueignore",
                     "--ignore-file",
-                    ".gitignore",
+                    ".gitignore"
                 )
+                if (maxResults != null) {
+                    commandArgs.add("--max-count")
+                    commandArgs.add(maxResults.toString())
+                }
+
+                val command = GeneralCommandLine(commandArgs)
     
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout

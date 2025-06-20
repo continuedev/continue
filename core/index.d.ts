@@ -783,7 +783,7 @@ export interface IDE {
 
   getSearchResults(query: string): Promise<string>;
 
-  getFileResults(pattern: string): Promise<string[]>;
+  getFileResults(pattern: string, maxResults?: number): Promise<string[]>;
 
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
