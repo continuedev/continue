@@ -64,13 +64,10 @@ const contentMatchesPatterns = (
   fileContent: string,
   patterns: string | string[],
 ): boolean => {
-  console.log("HERE XXXXX");
-
   // Handle single string pattern
   if (typeof patterns === "string") {
     try {
       const regex = new RegExp(patterns);
-      console.log("REGEX", regex);
       return regex.test(fileContent);
     } catch (e) {
       console.error(`Invalid regex pattern: ${patterns}`, e);
@@ -148,7 +145,6 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
     return true;
   }
 
-  console.log("RULE", rule);
   // Root-level rules with no globs or patterns are implicitly global
   if (
     isRootLevelRule(rule) &&
@@ -156,11 +152,9 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
     !rule.patterns &&
     rule.alwaysApply !== false
   ) {
-    console.log("IS ROOT");
     return true;
   }
 
-  console.log("NOT ROOT");
   return false;
 };
 
@@ -173,7 +167,6 @@ const checkGlobsAndPatterns = ({
   filePaths: string[];
   fileContents: Record<string, string>;
 }) => {
-  console.log("HERE ZZZZ");
   const matchingFiles = rule.globs
     ? filePaths.filter((filePath) => matchesGlobs(filePath, rule.globs))
     : filePaths;
@@ -185,11 +178,9 @@ const checkGlobsAndPatterns = ({
 
   // Now check for pattern matches in file contents if patterns are specified
   if (rule.patterns) {
-    console.log("HAS PATTERNS", rule.patterns);
     // Check if any of the matching files also match the content patterns
     return matchingFiles.some((filePath) => {
       const content = fileContents[filePath];
-      console.log("TESTING FILE MATCH", content);
       // If we don't have the content, we can't check patterns
       if (!content) return false;
       return contentMatchesPatterns(content, rule.patterns!);
@@ -216,7 +207,6 @@ export const shouldApplyRule = (
   fileContents: Record<string, string> = {},
   rulePolicies: RulePolicies = {},
 ): boolean => {
-  console.log("CHECKING SHOULD APPLY RULE", rule);
   const policy = rulePolicies[rule.name || ""];
 
   // Never apply if policy is "off"
@@ -324,8 +314,6 @@ export const getApplicableRules = (
       }
     });
   }
-
-  console.log("FILE CONTENTS", fileContents);
 
   // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
   // and path matching in a consistent way
