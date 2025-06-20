@@ -297,6 +297,16 @@ export class VsCodeExtension {
       if (!editor) return;
       if (event.contentChanges.length === 0) return;
 
+      // Ensure that loggin will only happen in the open-source continue repo
+      const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+        event.document.uri,
+      );
+      if (!workspaceFolder) return;
+
+      const workspaceDirUri = workspaceFolder.uri.toString();
+      const repoName = await this.ide.getRepoName(workspaceDirUri);
+      if (repoName !== "continuedev/continue") return;
+
       const activeCursorPos = editor.selection.active;
       const editActions: RangeInFileWithNextEditInfo[] = changes.map(
         (change) => ({
