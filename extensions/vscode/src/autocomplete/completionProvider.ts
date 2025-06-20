@@ -83,7 +83,15 @@ export class ContinueCompletionProvider
     // NOTE: Only turn it on locally when testing (for review purposes).
     // TODO: revert back
     if (IS_NEXT_EDIT_ACTIVE || true) {
-      this.nextEditProvider = new NextEditProvider(
+      // this.nextEditProvider = new NextEditProvider(
+      //   this.configHandler,
+      //   this.ide,
+      //   getAutocompleteModel,
+      //   this.onError.bind(this),
+      //   getDefinitionsFromLsp,
+      //   "fineTuned",
+      // );
+      this.nextEditProvider = NextEditProvider.initialize(
         this.configHandler,
         this.ide,
         getAutocompleteModel,
