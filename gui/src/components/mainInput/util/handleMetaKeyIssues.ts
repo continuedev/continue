@@ -1,7 +1,7 @@
 import { Editor } from "@tiptap/react";
 import { KeyboardEvent } from "react";
 import { getPlatform, isWebEnvironment } from "../../../util";
-import { CodeBlock } from "../TipTapEditor/extensions/CodeBlock/CodeBlock";
+import { CodeBlock } from "../TipTapEditor";
 
 const isWebEnv = isWebEnvironment();
 

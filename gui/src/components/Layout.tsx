@@ -19,10 +19,12 @@ import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
-import { useMainEditor } from "./mainInput/TipTapEditor/MainEditorProvider";
-import { useOnboardingCard } from "./OnboardingCard/hooks/useOnboardingCard";
-import { OnboardingCard } from "./OnboardingCard/OnboardingCard";
-import { isNewUserOnboarding } from "./OnboardingCard/utils";
+import { useMainEditor } from "./mainInput/TipTapEditor";
+import {
+  isNewUserOnboarding,
+  OnboardingCard,
+  useOnboardingCard,
+} from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 

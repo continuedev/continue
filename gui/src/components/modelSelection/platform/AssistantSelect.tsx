@@ -7,7 +7,9 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
+import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -22,20 +24,17 @@ import {
   isLocalProfile,
   isMetaEquivalentKeyPressed,
 } from "../../../util";
+import { cn } from "../../../util/cn";
+import { ROUTES } from "../../../util/navigation";
+import { useLump } from "../../mainInput/Lump/LumpContext";
 import {
   Listbox,
   ListboxButton,
   ListboxOption,
   ListboxOptions,
-} from "../../ui/Listbox";
-import { Transition } from "../../ui/Transition";
-
-import type { ProfileDescription } from "core/config/ConfigHandler";
-import { useNavigate } from "react-router-dom";
-import { cn } from "../../../util/cn";
-import { ROUTES } from "../../../util/navigation";
-import { useLump } from "../../mainInput/Lump/LumpContext";
-import { useFontSize } from "../../ui/font";
+  Transition,
+  useFontSize,
+} from "../../ui";
 import AssistantIcon from "./AssistantIcon";
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;

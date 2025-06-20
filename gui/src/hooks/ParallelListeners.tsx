@@ -3,7 +3,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
-import { useMainEditor } from "../components/mainInput/TipTapEditor/MainEditorProvider";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
 import { setConfigResult } from "../redux/slices/configSlice";
@@ -53,8 +52,6 @@ function ParallelListeners() {
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
   );
-
-  const { mainEditor } = useMainEditor();
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {

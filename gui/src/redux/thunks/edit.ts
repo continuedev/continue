@@ -6,7 +6,7 @@ import {
   SetCodeToEditPayload,
 } from "core";
 import { stripImages } from "core/util/messageContent";
-import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import {
   clearCodeToEdit,
   INITIAL_EDIT_APPLY_STATE,

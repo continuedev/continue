@@ -3,7 +3,7 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import AcceptRejectDiffButtons from "../../../AcceptRejectDiffButtons";
-import { useMainEditor } from "../../TipTapEditor/MainEditorProvider";
+import { useMainEditor } from "../../TipTapEditor";
 
 export function EditOutcomeToolbar() {
   const dispatch = useAppDispatch();

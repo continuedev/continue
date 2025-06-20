@@ -11,7 +11,7 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useBookmarkedSlashCommands } from "../../../../hooks/useBookmarkedSlashCommands";
 import { useAppSelector } from "../../../../redux/hooks";
 import { fontSize } from "../../../../util";
-import { useMainEditor } from "../../TipTapEditor/MainEditorProvider";
+import { useMainEditor } from "../../TipTapEditor";
 import { useLump } from "../LumpContext";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 

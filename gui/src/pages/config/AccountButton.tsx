@@ -1,12 +1,12 @@
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
-import { Button } from "../../components/ui/Button";
 import {
+  Button,
   Popover,
   PopoverButton,
   PopoverPanel,
-} from "../../components/ui/Popover";
-import { Transition } from "../../components/ui/Transition";
+  Transition,
+} from "../../components/ui";
 import { useAuth } from "../../context/Auth";
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentOrg } from "../../redux/slices/profilesSlice";

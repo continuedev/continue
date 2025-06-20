@@ -2,7 +2,7 @@ import { SlashCommandDescription } from "core";
 import { useState } from "react";
 import { useBookmarkedSlashCommands } from "../../hooks/useBookmarkedSlashCommands";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { useMainEditor } from "../mainInput/TipTapEditor/MainEditorProvider";
+import { useMainEditor } from "../mainInput/TipTapEditor";
 import { ConversationStarterCard } from "./ConversationStarterCard";
 
 const NUM_CARDS_TO_RENDER = 5;

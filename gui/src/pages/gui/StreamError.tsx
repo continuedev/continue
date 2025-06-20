@@ -8,7 +8,7 @@ import {
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
-import { useMainEditor } from "../../components/mainInput/TipTapEditor/MainEditorProvider";
+import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
 import ToggleDiv from "../../components/ToggleDiv";

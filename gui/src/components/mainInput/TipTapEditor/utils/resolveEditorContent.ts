@@ -18,9 +18,7 @@ import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
-import { CodeBlock } from "../extensions/CodeBlock/CodeBlock";
-import { Mention } from "../extensions/Mention";
-import { PromptBlock } from "../extensions/Prompt/PromptBlock";
+import { CodeBlock, Mention, PromptBlock } from "../extensions";
 
 interface MentionAttrs {
   label: string;

@@ -9,7 +9,7 @@ import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
 import { RulesPeek } from "./belowMainInput/RulesPeek";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
-import { TipTapEditor } from "./TipTapEditor/TipTapEditor";
+import { TipTapEditor } from "./TipTapEditor";
 
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;

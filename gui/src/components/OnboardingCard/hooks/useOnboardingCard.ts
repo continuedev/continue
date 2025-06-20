@@ -1,5 +1,6 @@
 import { OnboardingModes } from "core/protocol/core";
 import { useNavigate } from "react-router-dom";
+import { OnboardingCardState } from "..";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   setDialogMessage,
@@ -7,7 +8,6 @@ import {
   setShowDialog,
 } from "../../../redux/slices/uiSlice";
 import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
-import { OnboardingCardState } from "../OnboardingCard";
 
 export interface UseOnboardingCard {
   show: OnboardingCardState["show"];

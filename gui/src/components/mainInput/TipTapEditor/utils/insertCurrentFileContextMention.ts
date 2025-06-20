@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/core";
 import { ContextProviderDescription } from "core";
-import { Mention } from "../extensions/Mention";
+import { Mention } from "../extensions";
 
 /**
  * inserts the current file context as a removable mention in the editor area

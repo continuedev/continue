@@ -21,10 +21,7 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
-import { CodeBlock } from "../extensions/CodeBlock/CodeBlock";
-import { Mention } from "../extensions/Mention";
-import { PromptBlock } from "../extensions/Prompt/PromptBlock";
-import { SlashCommand } from "../extensions/SlashCommand";
+import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
   getContextProviderDropdownOptions,
