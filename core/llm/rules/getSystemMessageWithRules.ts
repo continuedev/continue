@@ -162,6 +162,45 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
   return false;
 };
 
+const checkGlobsAndPatterns = ({
+  hasGlobs,
+  hasPatterns,
+  rule,
+  filePaths,
+  fileContents,
+}: {
+  hasGlobs: boolean;
+  hasPatterns: boolean;
+  rule: RuleWithSource;
+  filePaths: string[];
+  fileContents: Record<string, string>;
+}) => {
+  const matchingFiles = hasGlobs
+    ? filePaths.filter((filePath) => matchesGlobs(filePath, rule.globs))
+    : filePaths;
+
+  // If no files match the globs, don't apply the rule
+  if (matchingFiles.length === 0) {
+    return false;
+  }
+
+  // Now check for pattern matches in file contents if patterns are specified
+  if (hasPatterns) {
+    console.log("HAS PATTERNS", rule.patterns);
+    // Check if any of the matching files also match the content patterns
+    return matchingFiles.some((filePath) => {
+      const content = fileContents[filePath];
+      // If we don't have the content, we can't check patterns
+      if (!content) return false;
+      return contentMatchesPatterns(content, rule.patterns);
+    });
+  }
+
+  // If we have no patterns or if we couldn't check patterns (no content),
+  // just go with the glob matches
+  return matchingFiles.length > 0;
+};
+
 /**
  * Determines if a rule should be applied based on its properties and file matching
  *
@@ -177,6 +216,7 @@ export const shouldApplyRule = (
   fileContents: Record<string, string> = {},
   rulePolicies: RulePolicies = {},
 ): boolean => {
+  console.log("CHECKING SHOULD APPLY RULE", rule);
   const policy = rulePolicies[rule.name || ""];
 
   // Never apply if policy is "off"
@@ -198,6 +238,8 @@ export const shouldApplyRule = (
 
   // Check if this is a root-level rule (in .continue directory or no file path)
   const isRootRule = isRootLevelRule(rule);
+  const hasGlobs = rule.globs !== undefined;
+  const hasPatterns = rule.patterns !== undefined;
 
   // For non-root rules, we need to check if any files are in the rule's directory
   if (!isRootRule && rule.ruleFile) {
@@ -211,107 +253,27 @@ export const shouldApplyRule = (
       isFileInDirectory(filePath, ruleDirPath),
     );
 
-    // If no files are in this directory, don't apply the rule
-    if (filesInRuleDirectory.length === 0) {
-      return false;
-    }
-
-    // First check if the files match the globs
-    const hasGlobs = rule.globs !== undefined;
-
-    // Filter to files that match the globs (or all files if no globs)
-    const matchingFiles = hasGlobs
-      ? filesInRuleDirectory.filter((filePath) =>
-          matchesGlobs(filePath, rule.globs),
-        )
-      : filesInRuleDirectory;
-
-    // If no files match the globs, don't apply the rule
-    if (matchingFiles.length === 0) {
-      return false;
-    }
-
-    // Now check for pattern matches in file contents if patterns are specified
-    if (rule.patterns) {
-      // Check if any of the matching files also match the content patterns
-      return matchingFiles.some((filePath) => {
-        const content = fileContents[filePath];
-        // If we don't have the content, we can't check patterns
-        if (!content) return false;
-        return contentMatchesPatterns(content, rule.patterns);
-      });
-    }
-
-    // If we have no patterns or if we couldn't check patterns (no content),
-    // just go with the glob matches
-    return matchingFiles.length > 0;
-  }
-
-  // For root-level rules:
-
-  // If alwaysApply is explicitly false, we need to check globs and/or patterns
-  if (rule.alwaysApply === false) {
-    const hasGlobs = rule.globs !== undefined;
-    const hasPatterns = rule.patterns !== undefined;
-
-    if (!hasGlobs && !hasPatterns) {
-      return false;
-    }
-
-    // Filter to files that match the globs (or all files if no globs)
-    const matchingFiles = hasGlobs
-      ? filePaths.filter((filePath) => matchesGlobs(filePath, rule.globs))
-      : filePaths;
-
-    // If no files match the globs, don't apply the rule
-    if (matchingFiles.length === 0) {
-      return false;
-    }
-
-    // Now check for pattern matches in file contents if patterns are specified
-    if (hasPatterns) {
-      // Check if any of the matching files also match the content patterns
-      return matchingFiles.some((filePath) => {
-        const content = fileContents[filePath];
-        // If we don't have the content, we can't check patterns
-        if (!content) return false;
-        return contentMatchesPatterns(content, rule.patterns);
-      });
-    }
-
-    // If we have no patterns or if we couldn't check patterns (no content),
-    // just go with the glob matches
-    return matchingFiles.length > 0;
-  }
-
-  // Default behavior for root rules with globs:
-  const hasGlobs = rule.globs !== undefined;
-  const hasPatterns = rule.patterns !== undefined;
-
-  // Filter to files that match the globs (or all files if no globs)
-  const matchingFiles = hasGlobs
-    ? filePaths.filter((filePath) => matchesGlobs(filePath, rule.globs))
-    : filePaths;
-
-  // If no files match the globs, don't apply the rule
-  if (matchingFiles.length === 0) {
-    return false;
-  }
-
-  // Now check for pattern matches in file contents if patterns are specified
-  if (hasPatterns) {
-    // Check if any of the matching files also match the content patterns
-    return matchingFiles.some((filePath) => {
-      const content = fileContents[filePath];
-      // If we don't have the content, we can't check patterns
-      if (!content) return false;
-      return contentMatchesPatterns(content, rule.patterns);
+    return checkGlobsAndPatterns({
+      filePaths: filesInRuleDirectory,
+      fileContents,
+      rule,
+      hasGlobs,
+      hasPatterns,
     });
   }
 
-  // If we have no patterns or if we couldn't check patterns (no content),
-  // just go with the glob matches
-  return matchingFiles.length > 0;
+  // If alwaysApply is explicitly false, we need to check globs and/or patterns
+  if (rule.alwaysApply === false && !hasGlobs && !hasPatterns) {
+    return false;
+  }
+
+  return checkGlobsAndPatterns({
+    filePaths,
+    fileContents,
+    rule,
+    hasGlobs,
+    hasPatterns,
+  });
 };
 
 /**
