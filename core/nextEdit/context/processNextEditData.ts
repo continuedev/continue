@@ -34,7 +34,7 @@ export const processNextEditData = async (
 
   const modelName = "Codestral";
 
-  const maxPromptTokens = randomNumberBetween(1024, 8192);
+  const maxPromptTokens = randomNumberBetween(500, 14000);
 
   const autocompleteContext = await getAutocompleteContext(
     filePath,
