@@ -1,21 +1,14 @@
 import { FimCreateParamsStreaming } from "@continuedev/openai-adapters/dist/apis/base";
 import {
-  Chat,
   ChatCompletion,
   ChatCompletionAssistantMessageParam,
   ChatCompletionChunk,
   ChatCompletionCreateParams,
   ChatCompletionMessageParam,
-  ChatCompletionUserMessageParam,
   CompletionCreateParams,
 } from "openai/resources/index";
 
-import {
-  ChatMessage,
-  CompletionOptions,
-  MessageContent,
-  TextMessagePart,
-} from "..";
+import { ChatMessage, CompletionOptions, TextMessagePart } from "..";
 
 export function toChatMessage(
   message: ChatMessage,
@@ -51,7 +44,7 @@ export function toChatMessage(
         type: toolCall.type!,
         function: {
           name: toolCall.function?.name!,
-          arguments: toolCall.function?.arguments! || "{}",
+          arguments: toolCall.function?.arguments || "{}",
         },
       }));
     }
@@ -189,12 +182,12 @@ export function fromChatCompletionChunk(
     return {
       role: "assistant",
       content: "",
-      toolCalls: delta?.tool_calls.map((tool_call: any) => ({
+      toolCalls: delta?.tool_calls.map((tool_call) => ({
         id: tool_call.id,
         type: tool_call.type,
         function: {
-          name: tool_call.function.name,
-          arguments: tool_call.function.arguments,
+          name: tool_call.function?.name,
+          arguments: tool_call.function?.arguments,
         },
       })),
     };

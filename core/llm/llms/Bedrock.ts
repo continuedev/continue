@@ -15,6 +15,7 @@ import {
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
+import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
@@ -408,7 +409,7 @@ class Bedrock extends BaseLLM {
           toolUse: {
             toolUseId: toolCall.id,
             name: toolCall.function?.name,
-            input: JSON.parse(toolCall.function?.arguments || "{}"),
+            input: safeParseToolCallArgs(toolCall),
           },
         })),
       };
@@ -564,10 +565,14 @@ class Bedrock extends BaseLLM {
           const command = new InvokeModelCommand(input);
           const response = await client.send(command);
           if (response.body) {
-            const responseBody = JSON.parse(
-              new TextDecoder().decode(response.body),
-            );
-            return this._extractEmbeddings(responseBody);
+            const decoder = new TextDecoder();
+            const decoded = decoder.decode(response.body);
+            try {
+              const responseBody = JSON.parse(decoded);
+              return this._extractEmbeddings(responseBody);
+            } catch (e) {
+              console.error(`Error parsing response body from:\n${decoded}`, e);
+            }
           }
           return [];
         }),
@@ -662,12 +667,19 @@ class Bedrock extends BaseLLM {
         throw new Error("Empty response received from Bedrock");
       }
 
-      const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-
-      // Sort results by index to maintain original order
-      return responseBody.results
-        .sort((a: any, b: any) => a.index - b.index)
-        .map((result: any) => result.relevance_score);
+      const decoder = new TextDecoder();
+      const decoded = decoder.decode(response.body);
+      try {
+        const responseBody = JSON.parse(decoded);
+        // Sort results by index to maintain original order
+        return responseBody.results
+          .sort((a: any, b: any) => a.index - b.index)
+          .map((result: any) => result.relevance_score);
+      } catch (e) {
+        throw new Error(
+          `Error parsing JSON from Bedrock response body:\n${decoded}, ${JSON.stringify(e)}`,
+        );
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         if ("code" in error) {

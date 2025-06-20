@@ -1,114 +1,121 @@
-import { parseMarkdownRule } from "../../config/markdown/parseMarkdownRule";
+import { parseMarkdownRule } from "@continuedev/config-yaml";
+import { jest } from "@jest/globals";
 import { createRuleBlockImpl } from "./createRuleBlock";
 
-// Mock the extras parameter with necessary functions
 const mockIde = {
-  getWorkspaceDirs: jest.fn().mockResolvedValue(["/"]),
-  writeFile: jest.fn().mockResolvedValue(undefined),
-  openFile: jest.fn().mockResolvedValue(undefined),
+  getWorkspaceDirs: jest.fn<() => Promise<string[]>>().mockResolvedValue(["/"]),
+  writeFile: jest
+    .fn<(path: string, content: string) => Promise<void>>()
+    .mockResolvedValue(undefined),
+  openFile: jest
+    .fn<(path: string) => Promise<void>>()
+    .mockResolvedValue(undefined),
 };
 
 const mockExtras = {
   ide: mockIde,
 };
 
-describe("createRuleBlockImpl", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+test("createRuleBlockImpl should create a rule with glob pattern", async () => {
+  const args = {
+    name: "TypeScript Rule",
+    rule: "Use interfaces for object shapes",
+    description: "Always use interfaces",
+    alwaysApply: true,
+    globs: "**/*.{ts,tsx}",
+  };
+
+  await createRuleBlockImpl(args, mockExtras as any);
+
+  const fileContent = mockIde.writeFile.mock.calls[0][1] as string;
+
+  const { frontmatter, markdown } = parseMarkdownRule(fileContent);
+
+  expect(frontmatter).toEqual({
+    description: "Always use interfaces",
+    globs: "**/*.{ts,tsx}",
   });
 
-  it("should create a rule with glob pattern", async () => {
-    const args = {
-      name: "TypeScript Rule",
-      rule: "Use interfaces for object shapes",
-      globs: "**/*.{ts,tsx}",
-    };
+  expect(markdown).toContain("Use interfaces for object shapes");
+});
 
-    await createRuleBlockImpl(args, mockExtras as any);
+test("createRuleBlockImpl should create a filename based on sanitized rule name using shared path function", async () => {
+  const args = {
+    name: "Special Ch@racters & Spaces",
+    rule: "Handle special characters",
+    description: "Test rule",
+    alwaysApply: false,
+  };
 
-    const fileContent = mockIde.writeFile.mock.calls[0][1];
+  await createRuleBlockImpl(args, mockExtras as any);
 
-    const { frontmatter, markdown } = parseMarkdownRule(fileContent);
+  const fileUri = mockIde.writeFile.mock.calls[0][0];
+  expect(fileUri).toBe("/.continue/rules/special-chracters-spaces.md");
+});
 
-    expect(frontmatter).toEqual({
-      globs: "**/*.{ts,tsx}",
-    });
+test("createRuleBlockImpl should create a rule with description pattern", async () => {
+  const args = {
+    name: "Description Test",
+    rule: "This is the rule content",
+    description: "This is a detailed explanation of the rule",
+    alwaysApply: true,
+  };
 
-    expect(markdown).toContain("# TypeScript Rule");
-    expect(markdown).toContain("Use interfaces for object shapes");
+  await createRuleBlockImpl(args, mockExtras as any);
+
+  const fileContent = mockIde.writeFile.mock.calls[0][1] as string;
+
+  const { frontmatter, markdown } = parseMarkdownRule(fileContent);
+
+  expect(frontmatter).toEqual({
+    description: "This is a detailed explanation of the rule",
   });
 
-  it("should create a filename based on sanitized rule name", async () => {
-    const args = {
-      name: "Special Ch@racters & Spaces",
-      rule: "Handle special characters",
-    };
+  expect(markdown).toContain("This is the rule content");
+});
 
-    await createRuleBlockImpl(args, mockExtras as any);
+test("createRuleBlockImpl should include both globs and description in frontmatter", async () => {
+  const args = {
+    name: "Complete Rule",
+    rule: "Follow this standard",
+    description: "This rule enforces our team standards",
+    alwaysApply: false,
+    globs: "**/*.js",
+  };
 
-    const fileUri = mockIde.writeFile.mock.calls[0][0];
-    expect(fileUri).toContain("special-chracters-spaces.md");
+  await createRuleBlockImpl(args, mockExtras as any);
+
+  const fileContent = mockIde.writeFile.mock.calls[0][1] as string;
+
+  const { frontmatter, markdown } = parseMarkdownRule(fileContent);
+
+  expect(frontmatter).toEqual({
+    description: "This rule enforces our team standards",
+    globs: "**/*.js",
   });
 
-  it("should create a rule with description pattern", async () => {
-    const args = {
-      name: "Description Test",
-      rule: "This is the rule content",
-      description: "This is a detailed explanation of the rule",
-    };
+  expect(markdown).toContain("Follow this standard");
+});
 
-    await createRuleBlockImpl(args, mockExtras as any);
+test("createRuleBlockImpl should create a rule with alwaysApply set to false", async () => {
+  const args = {
+    name: "Conditional Rule",
+    rule: "This rule should not always be applied",
+    description: "Optional rule",
+    alwaysApply: false,
+  };
 
-    const fileContent = mockIde.writeFile.mock.calls[0][1];
+  await createRuleBlockImpl(args, mockExtras as any);
 
-    const { frontmatter, markdown } = parseMarkdownRule(fileContent);
+  const fileContent = mockIde.writeFile.mock.calls[0][1] as string;
 
-    expect(frontmatter).toEqual({
-      description: "This is a detailed explanation of the rule",
-    });
+  const { frontmatter } = parseMarkdownRule(fileContent);
 
-    expect(markdown).toContain("# Description Test");
-    expect(markdown).toContain("This is the rule content");
-  });
-
-  it("should include both globs and description in frontmatter", async () => {
-    const args = {
-      name: "Complete Rule",
-      rule: "Follow this standard",
-      description: "This rule enforces our team standards",
-      globs: "**/*.js",
-    };
-
-    await createRuleBlockImpl(args, mockExtras as any);
-
-    const fileContent = mockIde.writeFile.mock.calls[0][1];
-
-    const { frontmatter, markdown } = parseMarkdownRule(fileContent);
-
-    expect(frontmatter).toEqual({
-      description: "This rule enforces our team standards",
-      globs: "**/*.js",
-    });
-
-    expect(markdown).toContain("# Complete Rule");
-    expect(markdown).toContain("Follow this standard");
-  });
-
-  it("should create a rule with alwaysApply set to false", async () => {
-    const args = {
-      name: "Conditional Rule",
-      rule: "This rule should not always be applied",
-      alwaysApply: false,
-    };
-
-    await createRuleBlockImpl(args, mockExtras as any);
-
-    const fileContent = mockIde.writeFile.mock.calls[0][1];
-
-    const { frontmatter } = parseMarkdownRule(fileContent);
-
-    expect(frontmatter).toEqual({
-      alwaysApply: false,
-    });
+  expect(frontmatter).toEqual({
+    description: "Optional rule",
   });
 });

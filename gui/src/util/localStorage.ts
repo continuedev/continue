@@ -8,6 +8,7 @@ type LocalStorageTypes = {
   hasDismissedOnboardingCard: boolean;
   mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
+  vsCodeUriScheme: string;
   ftc: number;
   fontSize: number;
   [key: `inputHistory_${string}`]: JSONContent[];

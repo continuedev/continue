@@ -120,7 +120,7 @@ If you're seeing a `fetch failed` error and your network requires custom certifi
 
 You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
 
-***Windows VS Code Users***: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension should also correct this issue.
+**_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension should also correct this issue.
 
 #### VS Code Proxy Settings
 
@@ -161,6 +161,12 @@ We use LanceDB as our vector database for codebase search features. On x64 Linux
 Most Continue features will work normally, including autocomplete and chat. However, commands that rely on codebase indexing, such as `@codebase`, `@files`, and `@folder`, will be disabled.
 
 For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
+
+### How do I reset the state of the extension?
+
+Continue stores it's data in the `~/.continue` directory (%USERPROFILE%\.continue` on Windows).
+
+If you'd like to perform a clean reset of the extension, including removing all configuration files, indices, etc, you can remove this directory, uninstall, and then reinstall. 
 
 ## Still having trouble?
 

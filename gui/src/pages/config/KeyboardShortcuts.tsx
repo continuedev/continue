@@ -76,6 +76,10 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
     description: "Toggle Autocomplete Enabled",
   },
   {
+    shortcut: "cmd alt space",
+    description: "Force an Autocomplete Trigger",
+  },
+  {
     shortcut: "cmd K cmd M",
     description: "Toggle Full Screen",
   },

@@ -3,12 +3,15 @@ import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
+import {
+  openedFilesLruCache,
+  prevFilepaths,
+} from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
-import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
@@ -34,6 +37,7 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
+  CompleteOnboardingPayload,
   ContextItemWithId,
   IdeSettings,
   ModelDescription,
@@ -45,24 +49,37 @@ import {
 
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
+import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import { generateCommitMessage } from "./commands/slash/commit";
-import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import {
-  setupBestConfig,
   setupLocalConfig,
+  setupProviderConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
+import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
+import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { StreamAbortManager } from "./util/abortManager";
+import { getUriPathBasename } from "./util/uri";
+
+const hasRulesFiles = (uris: string[]): boolean => {
+  for (const uri of uris) {
+    const filename = getUriPathBasename(uri);
+    if (filename === RULES_MARKDOWN_FILENAME) {
+      return true;
+    }
+  }
+  return false;
+};
 
 export class Core {
   configHandler: ConfigHandler;
@@ -129,8 +146,8 @@ export class Core {
       this.messenger,
     );
 
-    MCPManagerSingleton.getInstance().onConnectionsRefreshed = async () => {
-      await this.configHandler.reloadConfig();
+    MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
+      void this.configHandler.reloadConfig();
     };
 
     this.codeBaseIndexer = new CodebaseIndexer(
@@ -140,24 +157,26 @@ export class Core {
       this.globalContext.get("indexingPaused"),
     );
 
-    this.configHandler.onConfigUpdate(async (result) => {
-      const serializedResult = await this.configHandler.getSerializedConfig();
-      this.messenger.send("configUpdate", {
-        result: serializedResult,
-        profileId:
-          this.configHandler.currentProfile?.profileDescription.id || null,
-        organizations: this.configHandler.getSerializedOrgs(),
-        selectedOrgId: this.configHandler.currentOrg.id,
-      });
-
-      // update additional submenu context providers registered via VSCode API
-      const additionalProviders =
-        this.configHandler.getAdditionalSubmenuContextProviders();
-      if (additionalProviders.length > 0) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: additionalProviders,
+    this.configHandler.onConfigUpdate((result) => {
+      void (async () => {
+        const serializedResult = await this.configHandler.getSerializedConfig();
+        this.messenger.send("configUpdate", {
+          result: serializedResult,
+          profileId:
+            this.configHandler.currentProfile?.profileDescription.id || null,
+          organizations: this.configHandler.getSerializedOrgs(),
+          selectedOrgId: this.configHandler.currentOrg.id,
         });
-      }
+
+        // update additional submenu context providers registered via VSCode API
+        const additionalProviders =
+          this.configHandler.getAdditionalSubmenuContextProviders();
+        if (additionalProviders.length > 0) {
+          this.messenger.send("refreshSubmenuItems", {
+            providers: additionalProviders,
+          });
+        }
+      })();
     });
 
     // Dev Data Logger
@@ -341,6 +360,12 @@ export class Core {
       return this.configHandler.controlPlaneClient.getFreeTrialStatus();
     });
 
+    on("controlPlane/getModelsAddOnUpgradeUrl", async (msg) => {
+      return this.configHandler.controlPlaneClient.getModelsAddOnCheckoutUrl(
+        msg.data.vsCodeUriScheme,
+      );
+    });
+
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });
@@ -488,6 +513,11 @@ export class Core {
         throw new Error("No model selected");
       }
 
+      const abortManager = ApplyAbortManager.getInstance();
+      const abortController = abortManager.get(
+        data.fileUri ?? "current-file-stream",
+      ); // not super important since currently cancelling apply will cancel all streams it's one file at a time
+
       return streamDiffLines({
         highlighted: data.highlighted,
         prefix: data.prefix,
@@ -501,16 +531,16 @@ export class Core {
         language: data.language,
         onlyOneInsertion: false,
         overridePrompt: undefined,
-        abortControllerId: data.fileUri ?? "current-file-stream", // not super important since currently cancelling apply will cancel all streams it's one file at a time
+        abortController,
       });
     });
 
     on("cancelApply", async (msg) => {
-      const abortManager = StreamAbortManager.getInstance();
-      abortManager.clear();
+      const abortManager = ApplyAbortManager.getInstance();
+      abortManager.clear(); // for now abort all streams
     });
 
-    on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
+    on("onboarding/complete", this.handleCompleteOnboarding.bind(this));
 
     on("addAutocompleteModel", this.handleAddAutocompleteModel.bind(this));
 
@@ -577,10 +607,14 @@ export class Core {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
 
+        if (hasRulesFiles(data.uris)) {
+          await this.configHandler.reloadConfig();
+        }
+
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
-          if (isLocalAssistantFile(uri)) {
+          if (isLocalDefinitionFile(uri)) {
             localAssistantCreated = true;
           }
         }
@@ -594,10 +628,40 @@ export class Core {
       if (data?.uris?.length) {
         walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
+
+        if (hasRulesFiles(data.uris)) {
+          await this.configHandler.reloadConfig();
+        }
       }
     });
 
     on("files/closed", async ({ data }) => {
+      try {
+        const fileUris = await this.ide.getOpenFiles();
+        if (fileUris) {
+          const filepaths = fileUris.map((uri) => uri.toString());
+
+          if (!prevFilepaths.filepaths.length) {
+            prevFilepaths.filepaths = filepaths;
+          }
+
+          // If there is a removal, including if the number of tabs is the same (which can happen with temp tabs)
+          if (filepaths.length <= prevFilepaths.filepaths.length) {
+            // Remove files from cache that are no longer open (i.e. in the cache but not in the list of opened tabs)
+            for (const [key, _] of openedFilesLruCache.entriesDescending()) {
+              if (!filepaths.includes(key)) {
+                openedFilesLruCache.delete(key);
+              }
+            }
+          }
+          prevFilepaths.filepaths = filepaths;
+        }
+      } catch (e) {
+        console.error(
+          `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
+        );
+      }
+
       if (data.uris) {
         this.messenger.send("didCloseFiles", {
           uris: data.uris,
@@ -605,7 +669,26 @@ export class Core {
       }
     });
 
-    on("files/opened", async () => {});
+    on("files/opened", async ({ data: { uris } }) => {
+      if (uris) {
+        for (const filepath of uris) {
+          try {
+            const ignore = await shouldIgnore(filepath, this.ide);
+            if (!ignore) {
+              // Set the active file as most recently used (need to force recency update by deleting and re-adding)
+              if (openedFilesLruCache.has(filepath)) {
+                openedFilesLruCache.delete(filepath);
+              }
+              openedFilesLruCache.set(filepath, filepath);
+            }
+          } catch (e) {
+            console.error(
+              `files/opened: failed to update openedFiles cache for ${filepath}`,
+            );
+          }
+        }
+      }
+    });
 
     // Docs, etc. indexing
     on("indexing/reindex", async (msg) => {
@@ -661,19 +744,6 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      try {
-        const ignore = await shouldIgnore(filepath, this.ide);
-        if (!ignore) {
-          recentlyEditedFilesCache.set(filepath, filepath);
-        }
-      } catch (e) {
-        console.error(
-          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
-        );
-      }
-    });
-
     on("tools/call", async ({ data: { toolCall } }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
@@ -700,7 +770,7 @@ export class Core {
         this.messenger.send("toolCallPartialOutput", params);
       };
 
-      return await callTool(tool, toolCall.function.arguments, {
+      return await callTool(tool, toolCall, {
         config,
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
@@ -709,6 +779,7 @@ export class Core {
         tool,
         toolCallId: toolCall.id,
         onPartialOutput,
+        codeBaseIndexer: this.codeBaseIndexer,
       });
     });
 
@@ -835,7 +906,7 @@ export class Core {
     data,
   }: Message<{
     uris?: string[];
-  }>) {
+  }>): Promise<void> {
     if (data?.uris?.length) {
       const diffCache = GitDiffCache.getInstance(getDiffFn(this.ide));
       diffCache.invalidate();
@@ -866,7 +937,8 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml"))
+          (uri.includes(".continue") && uri.endsWith(".yaml")) ||
+          uri.endsWith(RULES_MARKDOWN_FILENAME)
         ) {
           await this.configHandler.reloadConfig();
         } else if (
@@ -922,26 +994,25 @@ export class Core {
     }
   }
 
-  private async handleCompleteOnboarding(msg: Message<{ mode: string }>) {
-    const mode = msg.data.mode;
-
-    if (mode === "Custom") {
-      return;
-    }
+  private async handleCompleteOnboarding(
+    msg: Message<CompleteOnboardingPayload>,
+  ) {
+    const { mode, provider, apiKey } = msg.data;
 
     let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
     switch (mode) {
-      case "Local":
+      case OnboardingModes.LOCAL:
         editConfigYamlCallback = setupLocalConfig;
         break;
 
-      case "Quickstart":
-        editConfigYamlCallback = setupQuickstartConfig;
-        break;
-
-      case "Best":
-        editConfigYamlCallback = setupBestConfig;
+      case OnboardingModes.API_KEY:
+        if (provider && apiKey) {
+          editConfigYamlCallback = (config: ConfigYaml) =>
+            setupProviderConfig(config, provider, apiKey);
+        } else {
+          editConfigYamlCallback = setupQuickstartConfig;
+        }
         break;
 
       default:

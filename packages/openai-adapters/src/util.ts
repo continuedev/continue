@@ -1,6 +1,5 @@
 import { RequestOptions } from "@continuedev/config-types";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
-import fetch from "node-fetch";
 import {
   ChatCompletionChunk,
   CompletionUsage,
@@ -137,13 +136,7 @@ export function model(options: { id: string; owned_by?: string }): Model {
   };
 }
 
-export function maybeCustomFetch(requestOptions: RequestOptions | undefined) {
-  return requestOptions
-    ? (url: any, init: any) =>
-        fetchwithRequestOptions(url, init, requestOptions)
-    : undefined;
-}
-
 export function customFetch(requestOptions: RequestOptions | undefined) {
-  return maybeCustomFetch(requestOptions) ?? fetch;
+  return (url: any, init: any) =>
+    fetchwithRequestOptions(url, init, requestOptions);
 }
