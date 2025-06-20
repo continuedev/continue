@@ -61,15 +61,15 @@ const matchesGlobs = (
  */
 const contentMatchesPatterns = (
   fileContent: string,
-  patterns: string | string[] | undefined,
+  patterns: string | string[],
 ): boolean => {
-  console.log("");
-  if (!patterns) return true;
+  console.log("HERE XXXXX");
 
   // Handle single string pattern
   if (typeof patterns === "string") {
     try {
       const regex = new RegExp(patterns);
+      console.log("REGEX", regex);
       return regex.test(fileContent);
     } catch (e) {
       console.error(`Invalid regex pattern: ${patterns}`, e);
@@ -188,9 +188,10 @@ const checkGlobsAndPatterns = ({
     // Check if any of the matching files also match the content patterns
     return matchingFiles.some((filePath) => {
       const content = fileContents[filePath];
+      console.log("TESTING FILE MATCH", content);
       // If we don't have the content, we can't check patterns
       if (!content) return false;
-      return contentMatchesPatterns(content, rule.patterns);
+      return contentMatchesPatterns(content, rule.patterns!);
     });
   }
 
@@ -304,10 +305,12 @@ export const getApplicableRules = (
 
   // Extract contents from context items with file URIs
   contextItems.forEach((item) => {
+    console.log("ITEM", item);
     if (item.uri?.type === "file" && item.uri?.value) {
       fileContents[item.uri.value] = item.content;
     }
   });
+  console.log("FILE CONTENTS", fileContents);
 
   // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
   // and path matching in a consistent way
