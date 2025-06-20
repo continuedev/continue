@@ -6,6 +6,12 @@ import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
 import { createDiff, DiffFormatType } from "./diffFormatting";
 
+const randomNumberBetween = (min: number, max: number) => {
+  min = Math.ceil(min); // Ensure min is an integer
+  max = Math.floor(max); // Ensure max is an integer
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
 export const processNextEditData = async (
   filePath: string,
   beforeContent: string,
@@ -20,15 +26,15 @@ export const processNextEditData = async (
   modelNameOrInstance?: string | undefined,
   // eslint-disable-next-line max-params
 ) => {
-  const maxPromptTokens = 1024;
-
-  // Get the actual configured autocomplete model - same as CompletionProvider
-  const { config } = await configHandler.loadConfig();
-  const autocompleteModel =
-    (modelNameOrInstance || config?.selectedModelByRole.autocomplete) ??
-    undefined;
+  // To switch to the user's autocomplete model, uncomment the following lines
+  // const { config } = await configHandler.loadConfig();
+  // const autocompleteModel =
+  //   (modelNameOrInstance || config?.selectedModelByRole.autocomplete) ??
+  //   undefined;
 
   const modelName = "Codestral";
+
+  const maxPromptTokens = randomNumberBetween(1024, 8192);
 
   const autocompleteContext = await getAutocompleteContext(
     filePath,
@@ -46,7 +52,4 @@ export const processNextEditData = async (
   console.log(
     createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
   );
-
-  // console.log("ACCESSED PREFIX:\n", autocompleteContext);
-  console.log("\n");
 };
