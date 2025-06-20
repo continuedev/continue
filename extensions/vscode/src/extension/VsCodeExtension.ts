@@ -291,13 +291,11 @@ export class VsCodeExtension {
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       const changes = event.contentChanges;
       const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        return;
-      }
+      const { config } = await this.configHandler.loadConfig();
 
-      if (event.contentChanges.length === 0) {
-        return;
-      }
+      if (!config?.experimental?.logEditingData) return;
+      if (!editor) return;
+      if (event.contentChanges.length === 0) return;
 
       const activeCursorPos = editor.selection.active;
       const editActions: RangeInFileWithNextEditInfo[] = changes.map(
