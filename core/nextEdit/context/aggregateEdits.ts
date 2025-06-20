@@ -41,6 +41,7 @@ export class EditAggregator {
   private fileStates: Map<string, FileState> = new Map();
   private config: EditClusterConfig;
   private previousEditFinalCursorPosition: Position;
+  private lastProcessedFilePath: string | null = null;
   private onComparisonFinalized: (
     diff: BeforeAfterDiff,
     beforeCursorPos: Position,
@@ -74,6 +75,14 @@ export class EditAggregator {
     timestamp: number = Date.now(),
   ): Promise<void> {
     const filePath = edit.filepath;
+
+    // If we're switching to a different file, finalize all clusters from the previous file
+    if (this.lastProcessedFilePath && this.lastProcessedFilePath !== filePath) {
+      await this.finalizeClustersForFile(this.lastProcessedFilePath);
+    }
+
+    // Update the last processed file path
+    this.lastProcessedFilePath = filePath;
 
     if (!this.fileStates.has(filePath)) {
       this.fileStates.set(filePath, {
@@ -273,17 +282,26 @@ export class EditAggregator {
     }
   }
 
+  /**
+   * Finalizes all clusters for a specific file
+   */
+  private async finalizeClustersForFile(filePath: string): Promise<void> {
+    const fileState = this.fileStates.get(filePath);
+    if (!fileState) return;
+
+    // Create a copy of the clusters to finalize to avoid modifying array during iteration
+    const clustersToFinalize = [...fileState.activeClusters];
+
+    for (const cluster of clustersToFinalize) {
+      await this.finalizeCluster(filePath, cluster, fileState);
+    }
+  }
+
   async finalizeAllClusters(): Promise<void> {
     const filePromises: Promise<void>[] = [];
 
     this.fileStates.forEach((fileState, filePath) => {
-      const filePromise = (async () => {
-        const clustersToFinalize = [...fileState.activeClusters];
-        for (const cluster of clustersToFinalize) {
-          await this.finalizeCluster(filePath, cluster, fileState);
-        }
-      })();
-
+      const filePromise = this.finalizeClustersForFile(filePath);
       filePromises.push(filePromise);
     });
 
@@ -488,5 +506,6 @@ export class EditAggregator {
 
   resetState(): void {
     this.fileStates.clear();
+    this.lastProcessedFilePath = null;
   }
 }

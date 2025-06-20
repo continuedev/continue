@@ -40,7 +40,7 @@ export const getAutocompleteContext = async (
   recentlyVisitedRanges: AutocompleteCodeSnippet[],
   maxPromptTokens: number,
   manuallyPassFileContents: string,
-  autocompleteModel?: ILLM,
+  autocompleteModel?: ILLM | string,
   // eslint-disable-next-line max-params
 ): Promise<string> => {
   if (!recentlyEditedRanges) recentlyEditedRanges = [];
@@ -65,7 +65,20 @@ export const getAutocompleteContext = async (
   // Use provided autocomplete model or fall back to configured autocomplete model
   let finalModel: ILLM;
   if (autocompleteModel) {
-    finalModel = autocompleteModel;
+    if (typeof autocompleteModel === "string") {
+      // If model name is provided as string, find it in the config
+      const foundModel = config.modelsByRole.autocomplete.find(
+        (m) => m.title === autocompleteModel,
+      );
+      if (!foundModel) {
+        throw new Error(
+          `Autocomplete model with title "${autocompleteModel}" not found`,
+        );
+      }
+      finalModel = foundModel;
+    } else {
+      finalModel = autocompleteModel;
+    }
   } else {
     const configuredModel = config.selectedModelByRole.autocomplete;
     if (!configuredModel) {

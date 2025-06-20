@@ -4,6 +4,7 @@ import { GetLspDefinitionsFunction } from "../../autocomplete/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
+import { createDiff, DiffFormatType } from "./diffFormatting";
 
 export const processNextEditData = async (
   filePath: string,
@@ -16,6 +17,7 @@ export const processNextEditData = async (
   getDefinitionsFromLsp: GetLspDefinitionsFunction,
   recentlyEditedRanges: RecentlyEditedRange[],
   recentlyVisitedRanges: AutocompleteCodeSnippet[],
+  modelNameOrInstance?: string | undefined,
   // eslint-disable-next-line max-params
 ) => {
   const maxPromptTokens = 1024;
@@ -23,8 +25,10 @@ export const processNextEditData = async (
   // Get the actual configured autocomplete model - same as CompletionProvider
   const { config } = await configHandler.loadConfig();
   const autocompleteModel =
-    config?.selectedModelByRole.autocomplete ?? undefined;
-  console.log(autocompleteModel);
+    (modelNameOrInstance || config?.selectedModelByRole.autocomplete) ??
+    undefined;
+
+  const modelName = "Codestral";
 
   const autocompleteContext = await getAutocompleteContext(
     filePath,
@@ -36,9 +40,13 @@ export const processNextEditData = async (
     recentlyVisitedRanges,
     maxPromptTokens,
     beforeContent,
-    autocompleteModel,
+    modelName,
   );
 
-  console.log("ACCESSED PREFIX:", autocompleteContext);
+  console.log(
+    createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
+  );
+
+  // console.log("ACCESSED PREFIX:\n", autocompleteContext);
   console.log("\n");
 };
