@@ -204,8 +204,8 @@ const checkGlobsAndPatterns = ({
 export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
-  fileContents: Record<string, string> = {},
   rulePolicies: RulePolicies = {},
+  fileContents: Record<string, string> = {},
 ): boolean => {
   const policy = rulePolicies[rule.name || ""];
 
@@ -318,7 +318,7 @@ export const getApplicableRules = (
   // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
   // and path matching in a consistent way
   const applicableRules = rules.filter((rule) =>
-    shouldApplyRule(rule, allFilePaths, fileContents, rulePolicies),
+    shouldApplyRule(rule, allFilePaths, rulePolicies, fileContents),
   );
 
   return applicableRules;
