@@ -524,7 +524,7 @@ class VsCodeIde implements IDE {
     }
   }
 
-  async getSearchResults(query: string): Promise<string> {
+  async getSearchResults(query: string, maxResults?: number): Promise<string> {
     if (vscode.env.remoteName) {
       throw new Error("Ripgrep not supported, this workspace is remote");
     }
@@ -539,6 +539,7 @@ class VsCodeIde implements IDE {
         "-C",
         "2", // Show 2 lines of context
         "--heading", // Only show filepath once per result
+        ...(maxResults ? ["-m", maxResults.toString()] : []),
         "-e",
         query, // Pattern to search for
         ".", // Directory to search in

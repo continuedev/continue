@@ -159,7 +159,7 @@ export class ReverseMessageIde {
     });
 
     this.on("getSearchResults", (data) => {
-      return this.ide.getSearchResults(data.query);
+      return this.ide.getSearchResults(data.query, data.maxResults);
     });
 
     this.on("getFileResults", (data) => {
