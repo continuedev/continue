@@ -7,6 +7,7 @@ import {
 } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { getCleanUriPath } from "../../util/uri";
+import { extractContentFromCodeBlock } from "../utils/extractContentFromCodeBlocks";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
 import { RulePolicies } from "./types";
 
@@ -305,11 +306,25 @@ export const getApplicableRules = (
 
   // Extract contents from context items with file URIs
   contextItems.forEach((item) => {
-    console.log("ITEM", item);
     if (item.uri?.type === "file" && item.uri?.value) {
       fileContents[item.uri.value] = item.content;
     }
   });
+
+  // Extract contents from code blocks in the message for paths that don't have content yet
+  if (userMessage) {
+    const messageContent = renderChatMessage(userMessage);
+    filePathsFromMessage.forEach((path) => {
+      // Only extract content if we don't already have it from context items
+      if (!fileContents[path]) {
+        const blockContent = extractContentFromCodeBlock(messageContent, path);
+        if (blockContent) {
+          fileContents[path] = blockContent;
+        }
+      }
+    });
+  }
+
   console.log("FILE CONTENTS", fileContents);
 
   // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
