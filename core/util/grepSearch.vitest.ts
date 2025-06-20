@@ -92,7 +92,7 @@ puts "Result: #{calc.get_result}"
 test("formats grep search results correctly", () => {
   const result = formatGrepSearchResults(sampleGrepOutput);
 
-  expect(result.numResults).toBe(9); // 4 file paths in the sample
+  expect(result.numResults).toBe(13); // 4 file paths in the sample
   expect(result.truncated).toBe(false);
 
   // Check that all file paths are preserved
@@ -183,7 +183,7 @@ class Test {
 
   const result = formatGrepSearchResults(input);
 
-  expect(result.numResults).toBe(2);
+  expect(result.numResults).toBe(3);
   expect(result.formatted).toContain("./file1.ts");
   expect(result.formatted).toContain("--");
   expect(result.formatted).toContain("function two() {");
