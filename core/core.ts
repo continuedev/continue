@@ -147,6 +147,18 @@ export class Core {
 
     MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
       void this.configHandler.reloadConfig();
+      
+      // Refresh @mention dropdown submenu items for MCP providers
+      const mcpManager = MCPManagerSingleton.getInstance();
+      const mcpProviderNames = Array.from(mcpManager.connections.keys()).map(
+        (mcpId) => `mcp-${mcpId}`
+      );
+      
+      if (mcpProviderNames.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: mcpProviderNames,
+        });
+      }
     };
 
     this.codeBaseIndexer = new CodebaseIndexer(
