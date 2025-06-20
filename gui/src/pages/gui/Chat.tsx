@@ -132,7 +132,7 @@ export function Chat() {
         !e.shiftKey
       ) {
         dispatch(cancelStream());
-        ideMessenger.post("cancelApply", undefined); // just always cancel, if not in applying won't matter
+        ideMessenger.post("rejectDiff", {}); // just always cancel, if not in applying won't matter
       }
     };
     window.addEventListener("keydown", listener);

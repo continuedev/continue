@@ -85,6 +85,7 @@ export async function* llmStreamChat(
           config.requestOptions,
         ),
       completionOptions,
+      abortController,
     });
     let next = await gen.next();
     while (!next.done) {
