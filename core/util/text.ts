@@ -26,6 +26,15 @@ export function replaceEscapedCharacters(str: string): string {
   });
 }
 
+export function escapeForSVG(text: string): string {
+  return text
+    .replace(/&/g, "&amp;") // must be first
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 export function kebabOfStr(str: string): string {
   return str
     .replace(/([a-z])([A-Z])/g, "$1-$2") // handle camelCase and PascalCase
