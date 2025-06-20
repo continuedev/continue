@@ -6,24 +6,28 @@
  */
 export function extractContentFromCodeBlock(
   content: string,
-  path: string
+  path: string,
 ): string | undefined {
   // Escape special characters in the path for regex
   const escapedPath = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  
+
   // Match the code block with this path
   // This regex looks for:
   // 1. Code block start with the path (```[language] path)
   // 2. The content until the closing ```
+  // The path can be:
+  //   - With language: ```typescript src/main.ts
+  //   - Without language: ```src/main.ts
+  //   - With line ranges: ```js src/main.ts (1-10)
   const regex = new RegExp(
-    `\`\`\`[^\\n]*${escapedPath}[^\\n]*\\n([\\s\\S]*?)\\n\`\`\``,
-    "m"
+    `\`\`\`[^\\n]*\\b${escapedPath}(?:\\s+\\([\\d-]+\\))?[^\\n]*\\n([\\s\\S]*?)\\n\`\`\``,
+    "m",
   );
-  
+
   const match = content.match(regex);
   if (match && match[1]) {
     return match[1];
   }
-  
+
   return undefined;
 }
