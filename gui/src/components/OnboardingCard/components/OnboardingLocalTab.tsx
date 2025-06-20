@@ -12,8 +12,8 @@ import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
-import { updateSelectedModelByRole } from "../../../redux/thunks";
-import { useSubmitOnboarding } from "../hooks";
+import { updateSelectedModelByRole } from "../../../redux/thunks/updateSelectedModelByRole";
+import { useSubmitOnboarding } from "../hooks/useSubmitOnboarding";
 import OllamaModelDownload from "./OllamaModelDownload";
 import { OllamaStatus } from "./OllamaStatus";
 

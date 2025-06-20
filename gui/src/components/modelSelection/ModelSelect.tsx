@@ -9,17 +9,22 @@ import {
 import { useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { AddModelForm } from "../../forms";
+import { AddModelForm } from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { EMPTY_CONFIG } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { updateSelectedModelByRole } from "../../redux/thunks";
+import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 import {
   fontSize,
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../ui/Listbox";
 
 interface ModelOptionProps {
   option: Option;
