@@ -4,7 +4,7 @@ import path from "path";
 import satori from "satori";
 // import puppeteer, { Browser, ScreenshotOptions } from "puppeteer";
 import { BundledTheme, codeToHtml } from "shiki";
-import { kebabOfStr } from "../util/text";
+import { escapeForSVG, kebabOfStr } from "../util/text";
 
 interface SyntaxHighlighterOptions {
   themesDir?: string;
@@ -259,7 +259,7 @@ export class SyntaxHighlighter {
     // await tempPage.close();
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
-  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="${"#ff0000"}" />${guts}</g>
+  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" />${guts}</g>
 </svg>`;
 
     console.log(svg);
@@ -323,7 +323,7 @@ export class SyntaxHighlighter {
       const spans = Array.from(line.childNodes)
         .map((node) => {
           if (node.nodeType === 3) {
-            return `<tspan xml:space="preserve">${node.textContent}</tspan>`;
+            return `<tspan xml:space="preserve">${escapeForSVG(node.textContent ?? "")}</tspan>`;
           }
 
           const el = node as HTMLElement;
@@ -331,7 +331,7 @@ export class SyntaxHighlighter {
           const colorMatch = style.match(/color:\s*(#[0-9a-fA-F]{6})/);
           const fill = colorMatch ? ` fill="${colorMatch[1]}"` : "";
           const content = el.textContent || "";
-          return `<tspan xml:space="preserve"${fill}>${content}</tspan>`;
+          return `<tspan xml:space="preserve"${fill}>${escapeForSVG(content)}</tspan>`;
         })
         .join("");
 

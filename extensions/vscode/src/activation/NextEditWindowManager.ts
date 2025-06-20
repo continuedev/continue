@@ -474,27 +474,15 @@ export class NextEditWindowManager {
 
     // Get the position with offset
     const offsetPosition = this.getOffsetPosition(editor, position);
-    const line = editor.document.lineAt(offsetPosition.line);
-    const endPos = line.range.end;
-    const zeroPos = new vscode.Position(0, 0);
-    const onePos = new vscode.Position(0, 1);
-    console.log("Line info:", {
-      lineNumber: offsetPosition.line,
-      lineLength: line.text.length,
-      offsetChar: offsetPosition.character,
-      endPos: endPos.character,
-    });
     const range = new vscode.Range(offsetPosition, offsetPosition);
 
     // Validate the range before applying
     if (!this.isValidRange(editor, range)) {
       console.error("Invalid range detected, skipping decoration");
-      // return;
+      return;
     }
 
-    console.log("Applying decoration at range:", range.start, "to", range.end);
     // Apply the decoration at the offset position
-    // editor.setDecorations(decoration, []);
     editor.setDecorations(this.currentDecoration, [
       {
         range: new vscode.Range(offsetPosition, offsetPosition),
