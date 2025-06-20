@@ -892,7 +892,9 @@ export class Core {
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith(RULES_MARKDOWN_FILENAME)
+          uri.endsWith(RULES_MARKDOWN_FILENAME) ||
+          uri.includes(".continue/rules") ||
+          uri.includes(".continue\\rules")
         ) {
           await this.configHandler.reloadConfig();
         } else if (
