@@ -69,6 +69,7 @@ const SVG_CONFIG = {
 
 // Command ID - can be used in package.json
 export const HIDE_TOOLTIP_COMMAND = "nextEditWindow.hideTooltips";
+export const ACCEPT_NEXT_EDIT_COMMAND = "nextEditWindow.acceptNextEdit";
 
 export class NextEditWindowManager {
   private static instance: NextEditWindowManager;
@@ -82,6 +83,8 @@ export class NextEditWindowManager {
   private currentDecoration: vscode.TextEditorDecorationType | null = null;
   // Track which editor has the active decoration
   private activeEditor: vscode.TextEditor | null = null;
+  // Store the current tooltip text for accepting
+  private currentTooltipText: string | null = null;
 
   // Disposables
   private disposables: vscode.Disposable[] = [];
@@ -116,10 +119,18 @@ export class NextEditWindowManager {
     );
     context.subscriptions.push(hideTooltipsCommand);
 
+    // Register the command to accept next edit
+    const acceptNextEditCommand = vscode.commands.registerCommand(
+      ACCEPT_NEXT_EDIT_COMMAND,
+      () => {
+        this.acceptNextEdit();
+      },
+    );
+    context.subscriptions.push(acceptNextEditCommand);
+
     // Add this class to context disposables
     context.subscriptions.push(this);
   }
-
   /**
    * Show a tooltip with the given text at the current cursor position
    * @param editor The active text editor
@@ -133,6 +144,9 @@ export class NextEditWindowManager {
     // Clear any existing decorations first (very important to prevent overlapping)
     this.hideAllTooltips();
     // this.dispose();
+
+    // Store the current tooltip text for accepting later
+    this.currentTooltipText = text;
 
     // Get cursor position
     const position = editor.selection.active;
@@ -164,8 +178,36 @@ export class NextEditWindowManager {
 
       this.disposables.forEach((d) => d.dispose());
       this.disposables = [];
+
+      // Clear the current tooltip text
+      this.currentTooltipText = null;
     }
     // this.dispose();
+  }
+
+  /**
+   * Accept the current next edit suggestion by inserting it at cursor position
+   */
+  private acceptNextEdit() {
+    if (!this.activeEditor || !this.currentTooltipText) {
+      return;
+    }
+
+    const editor = this.activeEditor;
+    const text = this.currentTooltipText;
+    const position = editor.selection.active;
+
+    // Insert the text at the current cursor position
+    editor
+      .edit((editBuilder) => {
+        editBuilder.insert(position, text);
+      })
+      .then((success) => {
+        if (success) {
+          // Hide the tooltip after inserting
+          this.hideAllTooltips();
+        }
+      });
   }
 
   public dispose() {
@@ -258,8 +300,8 @@ export class NextEditWindowManager {
       const tipWidth = SVG_CONFIG.getTipWidth(text);
       const tipHeight = SVG_CONFIG.getTipHeight(text);
       const dimensions = {
-        width: Math.floor(tipWidth),
-        height: Math.floor(tipHeight),
+        width: tipWidth,
+        height: tipHeight,
       };
 
       // const lines = text.split("\n");
@@ -302,6 +344,7 @@ export class NextEditWindowManager {
     text: string,
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     console.log("createSvgDecoration");
+    console.log(text);
     const uriAndDimensions = await this.createSvgTooltip(text);
     if (!uriAndDimensions) {
       return undefined;
@@ -334,7 +377,10 @@ export class NextEditWindowManager {
         //        border-radius: ${SVG_CONFIG.radius}px;
         //        filter: ${SVG_CONFIG.filter};
         //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
-        border: `solid 1px white; position: absolute; z-index: 1000;
+        border: `transparent; position: absolute; z-index: 1000;
+               box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px ${backgroundColour};
+               filter: ${SVG_CONFIG.filter};
+               border-radius: ${SVG_CONFIG.radius}px;
                margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
         // border: `solid 1px white; position: absolute; z-index: 1000;
         //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
@@ -343,8 +389,8 @@ export class NextEditWindowManager {
         //        margin: 0em; padding: 0em;
         //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
         //        margin-top: 0em;`,
-        width: `${Math.floor(tipWidth)}px`,
-        height: `${Math.floor(tipHeight)}px`,
+        width: `${tipWidth}px`,
+        height: `${tipHeight}px`,
         // textDecoration: `none; transform: translateY(-100%);`,
       },
       // Set a negative margin to make the decoration float if it starts to displace text.
@@ -355,7 +401,7 @@ export class NextEditWindowManager {
 
   private buildHideTooltipHoverMsg() {
     const hoverMarkdown = new vscode.MarkdownString(
-      `[Dismiss](command:${HIDE_TOOLTIP_COMMAND})`,
+      `[Dismiss](command:${HIDE_TOOLTIP_COMMAND}) | [Accept (Ctrl+Space, Tab)](command:${ACCEPT_NEXT_EDIT_COMMAND})`,
     );
 
     hoverMarkdown.isTrusted = true;
