@@ -548,7 +548,12 @@ class VsCodeIde implements IDE {
       results.push(dirResults);
     }
 
-    return results.join("\n");
+    if (maxResults) {
+      // With multiple workspaces, we will pull max results from EACH workspace and then truncate to max results just in case
+      return results.join("\n").split("\n./").slice(0, maxResults).join("\n./");
+    } else {
+      return results.join("\n");
+    }
   }
 
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
