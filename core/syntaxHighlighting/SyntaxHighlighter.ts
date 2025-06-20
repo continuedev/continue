@@ -1,6 +1,7 @@
 import * as fs from "fs/promises";
 import { JSDOM } from "jsdom";
 import path from "path";
+import satori from "satori";
 // import puppeteer, { Browser, ScreenshotOptions } from "puppeteer";
 import { BundledTheme, codeToHtml } from "shiki";
 import { kebabOfStr } from "../util/text";
@@ -188,6 +189,37 @@ export class SyntaxHighlighter {
   //   return { data: screenshot, dimensions: dims };
   // }
 
+  async convertToBlankSVG(
+    dimensions: Dimensions,
+    options: ConversionOptions,
+  ): Promise<Buffer> {
+    //     const svg = `<svg xmlns="http://www.w3.org/2000/svg">
+    //   ${guts}
+    // </svg>`;
+
+    // const tempPage = await this.browser.newPage();
+    // await tempPage.setContent(svg);
+
+    // const dimensions = await tempPage.evaluate(() => {
+    //   const svg = document.querySelector("svg");
+    //   if (!svg) return { width: 0, height: 0 };
+    //   const bbox = svg.getBBox();
+    //   return {
+    //     width: Math.ceil(bbox.width),
+    //     height: Math.ceil(bbox.height),
+    //   };
+    // });
+
+    // await tempPage.close();
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
+  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="#ff0000" /><text fill="#ffffff" x="0" y="20" font-family="monospace" font-size="14" xml:space="preserve">TEST TEXT THIS IS</text></g>
+</svg>`;
+
+    console.log(svg);
+    return Buffer.from(svg, "utf8");
+  }
+
   async convertToSVG(
     code: string,
     language: string = "javascript",
@@ -198,8 +230,8 @@ export class SyntaxHighlighter {
   ): Promise<Buffer> {
     const highlightedCodeHtml = await this.highlightCode(code, language);
 
-    console.log(code);
-    console.log(highlightedCodeHtml);
+    // console.log(code);
+    // console.log(highlightedCodeHtml);
 
     const guts = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
@@ -227,11 +259,55 @@ export class SyntaxHighlighter {
     // await tempPage.close();
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
-  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" />${guts}</g>
+  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="${"#ff0000"}" />${guts}</g>
 </svg>`;
 
     console.log(svg);
     return Buffer.from(svg, "utf8");
+  }
+
+  async convertToSVGWithSatori(
+    code: string,
+    language: string = "javascript",
+    fontSize: number,
+    dimensions: Dimensions,
+    lineHeight: number,
+    options: ConversionOptions,
+  ): Promise<Buffer> {
+    const highlightedCodeHtml = await this.highlightCode(code, language);
+
+    console.log(code);
+    console.log(highlightedCodeHtml);
+
+    // Convert to SVG using Satori
+    const fontData = await this.loadFont();
+    const svg = await satori(highlightedCodeHtml, {
+      width: dimensions.width, // You'll need to determine appropriate width
+      height: dimensions.height, // Dynamic height based on content
+      fonts: [
+        {
+          name: "YourMonospaceFontName",
+          data: fontData,
+          style: "normal",
+        },
+      ],
+    });
+
+    console.log(svg);
+    return Buffer.from(svg, "utf8");
+  }
+
+  // Function to load your font
+  async loadFont(): Promise<Buffer> {
+    // Option 1: If running in Node.js, you can load from the filesystem
+    console.log(process.cwd());
+    return Buffer.from(
+      await fs.readFile(
+        "/home/jacob/continue/continue/fonts/Cascadia_Mono/static/CascadiaMono-Regular.ttf",
+        "binary",
+      ),
+      "binary",
+    );
   }
 
   convertShikiHtmlToSvgGut(
@@ -314,6 +390,27 @@ export class SyntaxHighlighter {
           lineHeight,
           options,
         );
+        return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
+    }
+  }
+
+  async getBlankDataUri(
+    dimensions: Dimensions,
+    options: ConversionOptions,
+  ): Promise<DataUri> {
+    switch (options.imageType) {
+      // case "png":
+      //   const pngBuffer = await this.convertToPNG(
+      //     code,
+      //     language,
+      //     fontSize,
+      //     dimensions,
+      //     lineHeight,
+      //     options,
+      //   );
+      //   return `data:image/png;base64,${pngBuffer.data.toString("base64")}`;
+      case "svg":
+        const svgBuffer = await this.convertToBlankSVG(dimensions, options);
         return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
     }
   }
