@@ -1,14 +1,28 @@
 import { DiffLine } from "../..";
 
 export function getRenderableDiff(diffLines: DiffLine[]) {
-  let diffLineNumberStart = -1;
   const diff = diffLines.reduce((acc, curr, i) => {
     if (curr.type === "new") {
       acc += `${curr.line}\n`;
+      // } else if (curr.type === "old") {
+      //   acc += `${curr.line}\n`;
+      // } else if (curr.type == "same") {
+      //   acc += `${curr.line}\n`;
+    }
+    return acc;
+  }, "");
 
-      if (diffLineNumberStart === -1) {
-        diffLineNumberStart = i;
-      }
+  return diff;
+}
+
+export function getRenderableDiffWithGutterAnnotations(diffLines: DiffLine[]) {
+  const diff = diffLines.reduce((acc, curr, i) => {
+    if (curr.type === "new") {
+      acc += `+ ${curr.line}\n`;
+      // } else if (curr.type === "old") {
+      //   acc += `- ${curr.line}\n`;
+      // } else if (curr.type == "same") {
+      //   acc += `  ${curr.line}\n`;
     }
     return acc;
   }, "");
