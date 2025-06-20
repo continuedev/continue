@@ -14,7 +14,6 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
     results,
     DEFAULT_GREP_SEARCH_CHAR_LIMIT,
   );
-  console.log(results);
   const truncationReasons: string[] = [];
   if (numResults === DEFAULT_GREP_SEARCH_RESULTS_LIMIT) {
     truncationReasons.push(
