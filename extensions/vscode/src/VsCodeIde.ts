@@ -548,11 +548,19 @@ class VsCodeIde implements IDE {
       results.push(dirResults);
     }
 
+    const allResults = results.join("\n");
     if (maxResults) {
-      // With multiple workspaces, we will pull max results from EACH workspace and then truncate to max results just in case
-      return results.join("\n").split("\n./").slice(0, maxResults).join("\n./");
+      // In case of multiple workspaces, do max results per workspace and then truncate to maxResults
+      // Will prioritize first workspace results, fine for now
+      // Results are separated by either ./ or --
+      const matches = Array.from(allResults.matchAll(/(\n--|\n\.\/)/g));
+      if (matches.length > maxResults) {
+        return allResults.substring(0, matches[maxResults].index);
+      } else {
+        return allResults;
+      }
     } else {
-      return results.join("\n");
+      return allResults;
     }
   }
 
