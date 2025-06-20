@@ -58,11 +58,9 @@ export function formatGrepSearchResults(
   let resultLines: string[] = [];
   for (const line of results.split("\n").filter((l) => !!l)) {
     if (line.startsWith("./") || line === "--") {
-      if (line.startsWith("./")) {
-        numResults++;
-      }
       processResult(resultLines); // process previous result
       resultLines = [line];
+      numResults++;
       continue;
     }
 
