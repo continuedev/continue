@@ -65,6 +65,7 @@ import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
 import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
+import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -701,6 +702,7 @@ export class Core {
           (diff: string) => {
             console.log(diff, "\n");
             // TODO handle devData logging here
+            NextEditProvider.getInstance().addDiffToContext(diff);
           },
         );
       }
