@@ -16,10 +16,13 @@ export class AzureApi extends OpenAIApi {
       provider: "openai",
     });
 
+    const { baseURL, defaultQuery } = this._getAzureBaseURL(azureConfig);
+
     this.openai = new OpenAI({
       apiKey: azureConfig.apiKey,
-      baseURL: this._getAzureBaseURL(azureConfig),
+      baseURL,
       fetch: customFetch(azureConfig.requestOptions),
+      defaultQuery,
     });
   }
 
@@ -32,8 +35,20 @@ export class AzureApi extends OpenAIApi {
     return apiType === "azure-openai" || apiType === "azure";
   }
 
-  private _getAzureBaseURL(config: z.infer<typeof AzureConfigSchema>): string {
-    const baseURL = new URL(this.apiBase).toString().replace(/\/$/, "");
+  private _getAzureBaseURL(config: z.infer<typeof AzureConfigSchema>): {
+    baseURL: string;
+    defaultQuery: Record<string, string>;
+  } {
+    const url = new URL(this.apiBase);
+
+    // Copy search params to separate object for OpenAI
+    const queryParams: Record<string, string> = {};
+    for (const [key, value] of url.searchParams.entries()) {
+      queryParams[key] = value;
+    }
+
+    url.pathname = url.pathname.replace(/\/$/, ""); // Remove trailing slash if present
+    url.search = ""; // Clear original search params
 
     // Default is `azure-openai` in docs, but previously was `azure`
     if (this._isAzureOpenAI(config.env?.apiType)) {
@@ -48,11 +63,15 @@ export class AzureApi extends OpenAIApi {
           "`env.apiVersion` is a required configuration property for Azure OpenAI",
         );
       }
+      url.pathname = `${url.pathname}/openai/deployments/${config.env.deployment}`;
 
-      return `${baseURL}/openai/deployments/${config.env.deployment}?api-version=${config.env.apiVersion}`;
+      queryParams["api-version"] = config.env.apiVersion;
     }
 
-    return baseURL;
+    return {
+      baseURL: url.toString(),
+      defaultQuery: queryParams,
+    };
   }
 
   /**
