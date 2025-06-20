@@ -1,5 +1,5 @@
-import { ChatMessage } from "../../index.js";
-import Anthropic from "./Anthropic";
+import { ChatMessage } from "../../../index.js";
+import Anthropic from "../Anthropic";
 
 // Create a test class that exposes the methods we need to test
 class TestAnthropic extends Anthropic {
@@ -233,6 +233,7 @@ describe("Anthropic Enhanced Caching", () => {
     // The actual fallback TTL value should match the implementation's default
     expect(typeof toolMsg.content[0].cache_control.ttl).toBe("string");
   });
+
   test("shouldCacheMessage logic works correctly", () => {
     const messages: ChatMessage[] = [
       { role: "user", content: "First user message" },
