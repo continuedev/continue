@@ -1299,14 +1299,13 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export interface RangeInFileWithContentsAndEdit {
+export interface RangeInFileWithNextEditInfo {
   filepath: string;
-  range: {
-    start: { line: number; character: number };
-    end: { line: number; character: number };
-  };
+  range: Range;
   fileContents: string;
   editText: string;
+  afterCursorPos: Position;
+  beforeCursorPos: Position;
 }
 
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;

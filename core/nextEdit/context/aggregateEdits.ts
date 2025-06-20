@@ -1,14 +1,21 @@
-import { RangeInFileWithContentsAndEdit } from "../..";
-import { DiffFormatType, createDiff } from "./diffFormatting";
+import { Position, RangeInFileWithNextEditInfo } from "../..";
+import {
+  BeforeAfterDiff,
+  DiffFormatType,
+  createBeforeAfterDiff,
+  createDiff,
+} from "./diffFormatting";
 
 interface ClusterState {
   beforeState: string;
   startRange: { minLine: number; maxLine: number };
   currentRange: { minLine: number; maxLine: number };
-  edits: RangeInFileWithContentsAndEdit[];
+  edits: RangeInFileWithNextEditInfo[];
   firstTimestamp: number;
   lastTimestamp: number;
   lastLine: number;
+  firstEditBeforeCursor: { line: number; character: number };
+  lastEditAfterCursor: { line: number; character: number };
 }
 
 interface FileState {
@@ -33,27 +40,37 @@ export interface EditClusterConfig {
 export class EditAggregator {
   private fileStates: Map<string, FileState> = new Map();
   private config: EditClusterConfig;
-  private onComparisonFinalized: (diff: string) => void;
+  private previousEditFinalCursorPosition: Position;
+  private onComparisonFinalized: (
+    diff: BeforeAfterDiff,
+    beforeCursorPos: Position,
+    afterPrevEditCursorPos: Position,
+  ) => void;
 
   constructor(
     config: Partial<EditClusterConfig> = {},
-    onComparisonFinalized: (diff: string) => void = () => {},
+    onComparisonFinalized: (
+      diff: BeforeAfterDiff,
+      beforeCursorPos: Position,
+      afterPrevEditCursorPos: Position,
+    ) => void = () => {},
   ) {
     this.config = {
       deltaT: config.deltaT ?? 1.0,
       deltaL: config.deltaL ?? 5,
       maxEdits: config.maxEdits ?? 500,
-      maxDuration: config.maxDuration ?? 10.0,
+      maxDuration: config.maxDuration ?? 100.0,
       contextSize: config.contextSize ?? 5,
       maxEditSize: config.maxEditSize ?? 1000,
       contextLines: config.contextLines ?? 3,
       verbose: config.verbose ?? false,
     };
     this.onComparisonFinalized = onComparisonFinalized;
+    this.previousEditFinalCursorPosition = { line: 0, character: 0 };
   }
 
   async processEdit(
-    edit: RangeInFileWithContentsAndEdit,
+    edit: RangeInFileWithNextEditInfo,
     timestamp: number = Date.now(),
   ): Promise<void> {
     const filePath = edit.filepath;
@@ -105,7 +122,7 @@ export class EditAggregator {
   }
 
   private async _processEditInternal(
-    edit: RangeInFileWithContentsAndEdit,
+    edit: RangeInFileWithNextEditInfo,
     timestamp: number,
     fileState: FileState,
   ): Promise<void> {
@@ -136,6 +153,7 @@ export class EditAggregator {
       timestamp,
     );
 
+    // initialize a cluster
     if (!suitableCluster) {
       suitableCluster = {
         beforeState: fileState.currentContent,
@@ -157,6 +175,8 @@ export class EditAggregator {
         firstTimestamp: timestamp,
         lastTimestamp: timestamp,
         lastLine: editLine,
+        firstEditBeforeCursor: edit.beforeCursorPos,
+        lastEditAfterCursor: edit.afterCursorPos,
       };
       fileState.activeClusters.push(suitableCluster);
     }
@@ -164,6 +184,7 @@ export class EditAggregator {
     suitableCluster.edits.push(edit);
     suitableCluster.lastTimestamp = timestamp;
     suitableCluster.lastLine = editLine;
+    suitableCluster.lastEditAfterCursor = edit.afterCursorPos;
 
     const isWhitespaceOnly = this.isWhitespaceOnlyEdit(
       edit,
@@ -203,7 +224,7 @@ export class EditAggregator {
   }
 
   private isWhitespaceOnlyEdit(
-    edit: RangeInFileWithContentsAndEdit,
+    edit: RangeInFileWithNextEditInfo,
     currentContent: string,
   ): boolean {
     const lines = currentContent.split("\n");
@@ -236,11 +257,11 @@ export class EditAggregator {
     );
   }
 
-  async processEdits(edits: RangeInFileWithContentsAndEdit[]): Promise<void> {
+  async processEdits(edits: RangeInFileWithNextEditInfo[]): Promise<void> {
     const timestamp = Date.now();
 
     // Only process the last edit during rapid typing
-    if (this.getProcessingQueueSize() > 15) {
+    if (this.getProcessingQueueSize() > 50) {
       if (edits.length > 0) {
         await this.processEdit(edits[edits.length - 1], timestamp);
       }
@@ -384,7 +405,7 @@ export class EditAggregator {
       afterContent,
       filePath,
       DiffFormatType.Unified,
-    );
+    ); // Used for checks, not for final output
 
     // Skip diffs with too many changed lines
     const changedLineCount = this.countChangedLines(diff);
@@ -404,7 +425,21 @@ export class EditAggregator {
       (c) => c !== cluster,
     );
 
-    this.onComparisonFinalized(diff);
+    // Give format-agnostic diff to the callback
+    const fullFileVersionsDiff = createBeforeAfterDiff(
+      beforeContent,
+      afterContent,
+      filePath,
+    );
+
+    // Store this cluster's final cursor position for future reference
+    this.previousEditFinalCursorPosition = cluster.lastEditAfterCursor;
+
+    this.onComparisonFinalized(
+      fullFileVersionsDiff,
+      cluster.firstEditBeforeCursor,
+      this.previousEditFinalCursorPosition,
+    );
   }
 
   private countChangedLines(diff: string): number {

@@ -55,8 +55,8 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private nextEditProvider: NextEditProvider;
-  private recentlyVisitedRanges: RecentlyVisitedRangesService;
-  private recentlyEditedTracker: RecentlyEditedTracker;
+  public recentlyVisitedRanges: RecentlyVisitedRangesService;
+  public recentlyEditedTracker: RecentlyEditedTracker;
 
   constructor(
     private readonly configHandler: ConfigHandler,

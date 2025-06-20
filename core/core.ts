@@ -42,6 +42,7 @@ import {
   ContextItemWithId,
   IdeSettings,
   ModelDescription,
+  Position,
   RangeInFile,
   type ContextItem,
   type ContextItemId,
@@ -65,6 +66,8 @@ import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
 import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
+import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
+import { processNextEditData } from "./nextEdit/context/processNextEditData.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -698,12 +701,43 @@ export class Core {
       if (!global._editAggregator) {
         global._editAggregator = new EditAggregator(
           EDIT_AGGREGATION_OPTIONS,
-          (diff: string) => {
-            console.log(diff, "\n");
-            // TODO handle devData logging here
+          (
+            beforeAfterdiff: BeforeAfterDiff,
+            cursorPosBeforeEdit: Position,
+            cursorPosAfterPrevEdit: Position,
+          ) => {
+            // Get the current context data from the most recent message
+            const currentData = (global._editAggregator as any)
+              .latestContextData || {
+              configHandler: data.configHandler,
+              getDefsFromLspFunction: data.getDefsFromLspFunction,
+              recentlyEditedRanges: [],
+              recentlyVisitedRanges: [],
+            };
+
+            void processNextEditData(
+              beforeAfterdiff.filePath,
+              beforeAfterdiff.beforeContent,
+              beforeAfterdiff.afterContent,
+              cursorPosBeforeEdit,
+              cursorPosAfterPrevEdit,
+              this.ide,
+              currentData.configHandler,
+              currentData.getDefsFromLspFunction,
+              currentData.recentlyEditedRanges,
+              currentData.recentlyVisitedRanges,
+            );
           },
         );
       }
+
+      // Store the latest context data on the aggregator
+      (global._editAggregator as any).latestContextData = {
+        configHandler: data.configHandler,
+        getDefsFromLspFunction: data.getDefsFromLspFunction,
+        recentlyEditedRanges: data.recentlyEditedRanges,
+        recentlyVisitedRanges: data.recentlyVisitedRanges,
+      };
 
       // queueMicrotask prevents blocking the UI thread during typing
       queueMicrotask(() => {
