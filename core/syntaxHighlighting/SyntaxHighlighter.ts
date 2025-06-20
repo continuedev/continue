@@ -193,30 +193,10 @@ export class SyntaxHighlighter {
     dimensions: Dimensions,
     options: ConversionOptions,
   ): Promise<Buffer> {
-    //     const svg = `<svg xmlns="http://www.w3.org/2000/svg">
-    //   ${guts}
-    // </svg>`;
-
-    // const tempPage = await this.browser.newPage();
-    // await tempPage.setContent(svg);
-
-    // const dimensions = await tempPage.evaluate(() => {
-    //   const svg = document.querySelector("svg");
-    //   if (!svg) return { width: 0, height: 0 };
-    //   const bbox = svg.getBBox();
-    //   return {
-    //     width: Math.ceil(bbox.width),
-    //     height: Math.ceil(bbox.height),
-    //   };
-    // });
-
-    // await tempPage.close();
-
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
   <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="#ff0000" /><text fill="#ffffff" x="0" y="20" font-family="monospace" font-size="14" xml:space="preserve">TEST TEXT THIS IS</text></g>
 </svg>`;
 
-    console.log(svg);
     return Buffer.from(svg, "utf8");
   }
 
@@ -230,39 +210,20 @@ export class SyntaxHighlighter {
   ): Promise<Buffer> {
     const highlightedCodeHtml = await this.highlightCode(code, language);
 
-    // console.log(code);
-    // console.log(highlightedCodeHtml);
-
     const guts = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
       fontSize,
       lineHeight,
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
-    //     const svg = `<svg xmlns="http://www.w3.org/2000/svg">
-    //   ${guts}
-    // </svg>`;
-
-    // const tempPage = await this.browser.newPage();
-    // await tempPage.setContent(svg);
-
-    // const dimensions = await tempPage.evaluate(() => {
-    //   const svg = document.querySelector("svg");
-    //   if (!svg) return { width: 0, height: 0 };
-    //   const bbox = svg.getBBox();
-    //   return {
-    //     width: Math.ceil(bbox.width),
-    //     height: Math.ceil(bbox.height),
-    //   };
-    // });
-
-    // await tempPage.close();
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
-  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" />${guts}</g>
+  <g>
+    <rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" />
+    ${guts}
+  </g>
 </svg>`;
 
-    console.log(svg);
     return Buffer.from(svg, "utf8");
   }
 
@@ -303,6 +264,7 @@ export class SyntaxHighlighter {
     console.log(process.cwd());
     return Buffer.from(
       await fs.readFile(
+        // TODO: fix this to actually resolve to path
         "/home/jacob/continue/continue/fonts/Cascadia_Mono/static/CascadiaMono-Regular.ttf",
         "binary",
       ),
@@ -336,7 +298,6 @@ export class SyntaxHighlighter {
         .join("");
 
       const y = (index + 1) * lineHeight;
-      // const y = index * lineHeight;
       return `<text x="0" y="${y}" font-family="monospace" font-size="${fontSize.toString()}" xml:space="preserve">${spans}</text>`;
     });
 
