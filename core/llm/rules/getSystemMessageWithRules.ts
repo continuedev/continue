@@ -63,6 +63,7 @@ const contentMatchesPatterns = (
   fileContent: string,
   patterns: string | string[] | undefined,
 ): boolean => {
+  console.log("");
   if (!patterns) return true;
 
   // Handle single string pattern
@@ -163,19 +164,16 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
 };
 
 const checkGlobsAndPatterns = ({
-  hasGlobs,
-  hasPatterns,
   rule,
   filePaths,
   fileContents,
 }: {
-  hasGlobs: boolean;
-  hasPatterns: boolean;
   rule: RuleWithSource;
   filePaths: string[];
   fileContents: Record<string, string>;
 }) => {
-  const matchingFiles = hasGlobs
+  console.log("HERE ZZZZ");
+  const matchingFiles = rule.globs
     ? filePaths.filter((filePath) => matchesGlobs(filePath, rule.globs))
     : filePaths;
 
@@ -185,7 +183,7 @@ const checkGlobsAndPatterns = ({
   }
 
   // Now check for pattern matches in file contents if patterns are specified
-  if (hasPatterns) {
+  if (rule.patterns) {
     console.log("HAS PATTERNS", rule.patterns);
     // Check if any of the matching files also match the content patterns
     return matchingFiles.some((filePath) => {
@@ -238,8 +236,6 @@ export const shouldApplyRule = (
 
   // Check if this is a root-level rule (in .continue directory or no file path)
   const isRootRule = isRootLevelRule(rule);
-  const hasGlobs = rule.globs !== undefined;
-  const hasPatterns = rule.patterns !== undefined;
 
   // For non-root rules, we need to check if any files are in the rule's directory
   if (!isRootRule && rule.ruleFile) {
@@ -257,13 +253,15 @@ export const shouldApplyRule = (
       filePaths: filesInRuleDirectory,
       fileContents,
       rule,
-      hasGlobs,
-      hasPatterns,
     });
   }
 
   // If alwaysApply is explicitly false, we need to check globs and/or patterns
-  if (rule.alwaysApply === false && !hasGlobs && !hasPatterns) {
+  if (
+    rule.alwaysApply === false &&
+    rule.globs === undefined &&
+    rule.patterns === undefined
+  ) {
     return false;
   }
 
@@ -271,8 +269,6 @@ export const shouldApplyRule = (
     filePaths,
     fileContents,
     rule,
-    hasGlobs,
-    hasPatterns,
   });
 };
 
