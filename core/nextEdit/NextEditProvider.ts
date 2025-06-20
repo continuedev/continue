@@ -40,6 +40,8 @@ const ERRORS_TO_IGNORE = [
 ];
 
 export class NextEditProvider {
+  private static instance: NextEditProvider | null = null;
+
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
@@ -48,8 +50,9 @@ export class NextEditProvider {
   private loggingService = new AutocompleteLoggingService();
   private contextRetrievalService: ContextRetrievalService;
   private endpointType: "default" | "fineTuned";
+  private diffContext: string = "";
 
-  constructor(
+  private constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly _injectedGetLlm: () => Promise<ILLM | undefined>,
@@ -60,6 +63,40 @@ export class NextEditProvider {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
     this.endpointType = endpointType;
+  }
+
+  public static initialize(
+    configHandler: ConfigHandler,
+    ide: IDE,
+    injectedGetLlm: () => Promise<ILLM | undefined>,
+    onError: (e: any) => void,
+    getDefinitionsFromLsp: GetLspDefinitionsFunction,
+    endpointType: "default" | "fineTuned",
+  ): NextEditProvider {
+    if (!NextEditProvider.instance) {
+      NextEditProvider.instance = new NextEditProvider(
+        configHandler,
+        ide,
+        injectedGetLlm,
+        onError,
+        getDefinitionsFromLsp,
+        endpointType,
+      );
+    }
+    return NextEditProvider.instance;
+  }
+
+  public static getInstance(): NextEditProvider {
+    if (!NextEditProvider.instance) {
+      throw new Error(
+        "NextEditProvider has not been initialized. Call initialize() first.",
+      );
+    }
+    return NextEditProvider.instance;
+  }
+
+  public addDiffToContext(diff: string): void {
+    this.diffContext = diff;
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -206,6 +243,7 @@ export class NextEditProvider {
             snippetPayload,
             this.ide,
             helper,
+            this.diffContext,
           ),
         );
       }
