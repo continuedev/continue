@@ -162,6 +162,7 @@ export async function renderFineTunedBasicUserPrompt(
   ide: IDE,
   // cursorPos: Position,
   helper: HelperVars,
+  diffContext: string,
 ): Promise<UserPrompt> {
   const ideInfo = await ide.getIdeInfo();
   switch (ideInfo.ideType) {
@@ -181,7 +182,7 @@ export async function renderFineTunedBasicUserPrompt(
 
       return {
         role: "user",
-        content: `### User Edits:\n\n${JSON.stringify(snippets)}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n\<|editable_region_start|\>\n${JSON.stringify(editedCodeWithPins)}\n\<|editable_region_end|\>\n\`\`\``,
+        content: `### User Edits:\n\n${diffContext}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n\<|editable_region_start|\>\n${JSON.stringify(editedCodeWithPins)}\n\<|editable_region_end|\>\n\`\`\``,
       };
 
     case "jetbrains":
