@@ -76,6 +76,7 @@ export class NextEditWindowManager {
   private readonly excludedURIPrefixes = ["output:", "vscode://inline-chat"];
   private readonly hideCommand = "continue.hideNextEditWindow";
   private theme = getTheme() || FALLBACK_THEME;
+  private syntaxHighlighter: SyntaxHighlighter;
 
   // Current active decoration
   private currentDecoration: vscode.TextEditorDecorationType | null = null;
@@ -100,6 +101,9 @@ export class NextEditWindowManager {
         : "Theme is undefined",
     );
     this.setupListeners();
+    this.syntaxHighlighter = SyntaxHighlighter.getInstance({
+      theme: "one-dark-pro",
+    });
   }
 
   public setupNextEditWindowManager(context: vscode.ExtensionContext) {
@@ -157,8 +161,11 @@ export class NextEditWindowManager {
       // Dispose the decoration
       this.currentDecoration.dispose();
       this.currentDecoration = null;
+
+      this.disposables.forEach((d) => d.dispose());
+      this.disposables = [];
     }
-    this.dispose();
+    // this.dispose();
   }
 
   public dispose() {
@@ -250,19 +257,22 @@ export class NextEditWindowManager {
     try {
       const tipWidth = SVG_CONFIG.getTipWidth(text);
       const tipHeight = SVG_CONFIG.getTipHeight(text);
-      const dimensions = { width: tipWidth, height: tipHeight };
+      const dimensions = {
+        width: Math.floor(tipWidth),
+        height: Math.floor(tipHeight),
+      };
 
       // const lines = text.split("\n");
       // const globalIndent =
       //   lines.length > 0 ? (lines[0].match(/^[ \t]*/) || [""])[0].length : 0;
 
-      const syntaxHighlighter = SyntaxHighlighter.getInstance({
-        theme: "one-dark-pro",
-      });
+      // const syntaxHighlighter = SyntaxHighlighter.getInstance({
+      //   theme: "one-dark-pro",
+      // });
 
-      await syntaxHighlighter.init();
+      // await syntaxHighlighter.init();
 
-      const uri = await syntaxHighlighter.getDataUri(
+      const uri = await this.syntaxHighlighter.getDataUri(
         text,
         "typescript",
         SVG_CONFIG.fontSize,
@@ -273,7 +283,7 @@ export class NextEditWindowManager {
         },
       );
 
-      console.log(dimensions);
+      // console.log(dimensions);
 
       return {
         uri: vscode.Uri.parse(uri),
@@ -299,6 +309,10 @@ export class NextEditWindowManager {
 
     const { uri, dimensions } = uriAndDimensions;
 
+    const blankUri = await this.syntaxHighlighter.getBlankDataUri(dimensions, {
+      imageType: "svg",
+    });
+
     // Use theme or fallback
     const backgroundColour = this.theme.colors["editor.background"];
     // const tipWidth = SVG_CONFIG.getTipWidth(text);
@@ -320,7 +334,7 @@ export class NextEditWindowManager {
         //        border-radius: ${SVG_CONFIG.radius}px;
         //        filter: ${SVG_CONFIG.filter};
         //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
-        border: `transparent; position: absolute; z-index: 1000;
+        border: `solid 1px white; position: absolute; z-index: 1000;
                margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
         // border: `solid 1px white; position: absolute; z-index: 1000;
         //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
@@ -329,8 +343,8 @@ export class NextEditWindowManager {
         //        margin: 0em; padding: 0em;
         //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
         //        margin-top: 0em;`,
-        width: `${tipWidth}px`,
-        height: `${tipHeight}px`,
+        width: `${Math.floor(tipWidth)}px`,
+        height: `${Math.floor(tipHeight)}px`,
         // textDecoration: `none; transform: translateY(-100%);`,
       },
       // Set a negative margin to make the decoration float if it starts to displace text.
@@ -349,6 +363,63 @@ export class NextEditWindowManager {
     return hoverMarkdown;
   }
 
+  private isValidRange(
+    editor: vscode.TextEditor,
+    range: vscode.Range,
+  ): boolean {
+    const doc = editor.document;
+
+    // Check if line numbers are valid
+    if (range.start.line < 0 || range.start.line >= doc.lineCount) {
+      console.log(
+        "Invalid start line:",
+        range.start.line,
+        "doc lines:",
+        doc.lineCount,
+      );
+      return false;
+    }
+
+    if (range.end.line < 0 || range.end.line >= doc.lineCount) {
+      console.log(
+        "Invalid end line:",
+        range.end.line,
+        "doc lines:",
+        doc.lineCount,
+      );
+      return false;
+    }
+
+    // Check if character positions are valid
+    const startLine = doc.lineAt(range.start.line);
+    const endLine = doc.lineAt(range.end.line);
+
+    if (
+      range.start.character < 0 ||
+      range.start.character > startLine.text.length
+    ) {
+      console.log(
+        "Invalid start character:",
+        range.start.character,
+        "line length:",
+        startLine.text.length,
+      );
+      return false;
+    }
+
+    if (range.end.character < 0 || range.end.character > endLine.text.length) {
+      console.log(
+        "Invalid end character:",
+        range.end.character,
+        "line length:",
+        endLine.text.length,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * Calculate a position to the right of the cursor with the specified offset
    */
@@ -357,7 +428,14 @@ export class NextEditWindowManager {
     position: vscode.Position,
   ): vscode.Position {
     // Create a position that's offset spaces to the right of the cursor
-    const offsetChar = position.character + SVG_CONFIG.cursorOffset;
+    // const offsetChar = position.character + SVG_CONFIG.cursorOffset;
+    // return new vscode.Position(position.line, offsetChar);
+
+    const line = editor.document.lineAt(position.line);
+    const offsetChar = Math.min(
+      position.character + SVG_CONFIG.cursorOffset,
+      line.text.length,
+    );
     return new vscode.Position(position.line, offsetChar);
   }
 
@@ -370,6 +448,9 @@ export class NextEditWindowManager {
     text: string,
   ) {
     console.log("renderTooltip");
+    // Capture document version to detect changes
+    const docVersion = editor.document.version;
+
     // Create a new decoration with the text
     const decoration = await this.createSvgDecoration(text);
     if (!decoration) {
@@ -377,16 +458,44 @@ export class NextEditWindowManager {
       return;
     }
 
+    // Check if document changed during async operation
+    if (editor.document.version !== docVersion) {
+      console.log("Document changed during decoration creation, aborting");
+      // decoration.dispose();
+      // return;
+    }
+
     // Store the decoration and editor
+    this.hideAllTooltips();
     this.currentDecoration = decoration;
     this.activeEditor = editor;
 
+    // console.log(decoration);
+
     // Get the position with offset
     const offsetPosition = this.getOffsetPosition(editor, position);
+    const line = editor.document.lineAt(offsetPosition.line);
+    const endPos = line.range.end;
+    const zeroPos = new vscode.Position(0, 0);
+    const onePos = new vscode.Position(0, 1);
+    console.log("Line info:", {
+      lineNumber: offsetPosition.line,
+      lineLength: line.text.length,
+      offsetChar: offsetPosition.character,
+      endPos: endPos.character,
+    });
+    const range = new vscode.Range(offsetPosition, offsetPosition);
 
+    // Validate the range before applying
+    if (!this.isValidRange(editor, range)) {
+      console.error("Invalid range detected, skipping decoration");
+      // return;
+    }
+
+    console.log("Applying decoration at range:", range.start, "to", range.end);
     // Apply the decoration at the offset position
-    editor.setDecorations(decoration, []);
-    editor.setDecorations(decoration, [
+    // editor.setDecorations(decoration, []);
+    editor.setDecorations(this.currentDecoration, [
       {
         range: new vscode.Range(offsetPosition, offsetPosition),
         hoverMessage: [this.buildHideTooltipHoverMsg()],
