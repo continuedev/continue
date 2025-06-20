@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Tool } from "core";
+import { RuleWithSource, Tool } from "core";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import { OnboardingCardState } from "../../components/OnboardingCard/OnboardingCard";
 import { defaultOnboardingCardState } from "../../components/OnboardingCard/utils";
@@ -10,9 +10,12 @@ export type ToolPolicy =
   | "allowedWithoutPermission"
   | "disabled";
 
+export type RulePolicy = "on" | "off";
+
 export type ToolGroupPolicy = "include" | "exclude";
 
 export type ToolPolicies = { [toolName: string]: ToolPolicy };
+export type RulePolicies = { [ruleName: string]: RulePolicy };
 export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
 
 type UIState = {
@@ -25,10 +28,12 @@ type UIState = {
   shouldAddFileForEditing: boolean;
   toolSettings: ToolPolicies;
   toolGroupSettings: ToolGroupPolicies;
+  ruleSettings: RulePolicies;
   ttsActive: boolean;
 };
 
 export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
+export const DEFAULT_RULE_SETTING: RulePolicy = "on";
 
 export const uiSlice = createSlice({
   name: "ui",
@@ -60,6 +65,7 @@ export const uiSlice = createSlice({
     toolGroupSettings: {
       [BUILT_IN_GROUP_NAME]: "include",
     },
+    ruleSettings: {},
   } as UIState,
   reducers: {
     setOnboardingCard: (
@@ -124,6 +130,25 @@ export const uiSlice = createSlice({
         state.toolGroupSettings[action.payload] = "include";
       }
     },
+    // Rules
+    addRule: (state, action: PayloadAction<RuleWithSource>) => {
+      state.ruleSettings[action.payload.name!] = DEFAULT_RULE_SETTING;
+    },
+    toggleRuleSetting: (state, action: PayloadAction<string>) => {
+      const setting = state.ruleSettings[action.payload];
+
+      switch (setting) {
+        case "on":
+          state.ruleSettings[action.payload] = "off";
+          break;
+        case "off":
+          state.ruleSettings[action.payload] = "on";
+          break;
+        default:
+          state.ruleSettings[action.payload] = DEFAULT_RULE_SETTING;
+          break;
+      }
+    },
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
@@ -140,6 +165,8 @@ export const {
   toggleToolSetting,
   toggleToolGroupSetting,
   addTool,
+  addRule,
+  toggleRuleSetting,
   setTTSActive,
 } = uiSlice.actions;
 

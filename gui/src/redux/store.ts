@@ -58,7 +58,7 @@ const saveSubsetFilters = [
     "codeToEdit",
   ]),
   createFilter("config", ["defaultModelTitle"]),
-  createFilter("ui", ["toolSettings", "toolGroupSettings"]),
+  createFilter("ui", ["toolSettings", "toolGroupSettings", "ruleSettings"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
   createFilter("profiles", [
