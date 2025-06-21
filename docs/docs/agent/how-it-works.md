@@ -31,7 +31,7 @@ Continue includes several built-in tools which provide the model access to IDE f
 - **Read file** (`builtin_read_file`): read the contents of a file within the project
 - **Read currently open file** (`builtin_read_currently_open_file`): read the contents of the currently open file
 - **Create new file** (`builtin_create_new_file`): Create a new file within the project, with path and contents specified by the model
-- **Exact search** (`builtin_exact_search`): perform a `ripgrep` search within the project
+- **Grep search** (`builtin_grep_search`): perform a `ripgrep` search within the project. Results are limited to 100 results and 5000 characters (model is warned if this is exceeded)
 - **Run terminal command** (`builtin_run_terminal_command`): run a terminal command from the workspace root
 - **Search web** (`builtin_search_web`): Perform a web search to get top results
 - **View diff** (`builtin_view_diff`): View the current working git diff

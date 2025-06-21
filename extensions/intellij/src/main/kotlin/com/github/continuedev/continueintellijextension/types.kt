@@ -157,7 +157,7 @@ interface IDE {
 
     suspend fun getPinnedFiles(): List<String>
 
-    suspend fun getSearchResults(query: String): String
+    suspend fun getSearchResults(query: String, maxResults: Int?): String
 
     suspend fun getFileResults(pattern: String): List<String>
 
