@@ -254,7 +254,7 @@ export async function unrollAssistantFromContent(
   options: UnrollAssistantOptions,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   // Parse string to Zod-validated YAML
-  let parsedYaml = parseConfigYaml(rawYaml);
+  let parsedYaml = parseMarkdownRuleOrConfigYaml(rawYaml, id);
 
   // Unroll blocks and convert their secrets to FQSNs
   const {

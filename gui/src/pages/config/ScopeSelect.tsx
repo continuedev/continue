@@ -16,7 +16,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   selectCurrentOrg,
   setSelectedOrgId,
-} from "../../redux/slices/profiles/slice";
+} from "../../redux/slices/profilesSlice";
 
 interface ScopeSelectProps {
   onSelect?: () => void;

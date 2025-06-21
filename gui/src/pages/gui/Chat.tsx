@@ -42,10 +42,10 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
-import { streamResponseThunk } from "../../redux/thunks";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { streamEditThunk } from "../../redux/thunks/edit";
 import { loadLastSession } from "../../redux/thunks/session";
+import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
@@ -132,7 +132,7 @@ export function Chat() {
         !e.shiftKey
       ) {
         dispatch(cancelStream());
-        ideMessenger.post("cancelApply", undefined); // just always cancel, if not in applying won't matter
+        ideMessenger.post("rejectDiff", {}); // just always cancel, if not in applying won't matter
       }
     };
     window.addEventListener("keydown", listener);

@@ -1,6 +1,6 @@
-import { jest } from "@jest/globals";
 import fs from "fs";
 import path from "path";
+import { expect, vi } from "vitest";
 
 import Parser from "web-tree-sitter";
 import { Position } from "../../../..";
@@ -36,7 +36,7 @@ export async function testRootPathContext(
   const importDefinitionsService = new ImportDefinitionsService(ide);
   const service = new RootPathContextService(importDefinitionsService, ide);
 
-  const getSnippetsMock = jest
+  const getSnippetsMock = vi
     // @ts-ignore
     .spyOn(service, "getSnippets")
     // @ts-ignore
@@ -46,7 +46,7 @@ export async function testRootPathContext(
 
   // Copy the folder to the test directory
   const folderPath = path.join(
-    __dirname,
+    process.cwd(),
     "autocomplete",
     "context",
     "root-path-context",
