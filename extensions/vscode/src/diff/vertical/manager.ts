@@ -10,6 +10,7 @@ import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { handleLLMError } from "../../util/errorHandling";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
+import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -437,6 +438,9 @@ export class VerticalDiffManager {
 
     this.editDecorationManager.clear();
 
+    const abortManager = ApplyAbortManager.getInstance();
+    const abortController = abortManager.get(fileUri);
+
     try {
       const streamedLines: string[] = [];
 
@@ -451,7 +455,7 @@ export class VerticalDiffManager {
           language: getMarkdownLanguageTagForFile(fileUri),
           onlyOneInsertion: !!onlyOneInsertion,
           overridePrompt,
-          abortControllerId: fileUri,
+          abortController,
         });
 
         for await (const line of stream) {
@@ -466,6 +470,10 @@ export class VerticalDiffManager {
 
       // enable a listener for user edits to file while diff is open
       this.enableDocumentChangeListener();
+
+      if (abortController.signal.aborted) {
+        vscode.commands.executeCommand("continue.rejectDiff");
+      }
 
       return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {

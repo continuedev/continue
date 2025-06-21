@@ -534,7 +534,7 @@ class VsCodeIde implements IDE {
     }
   }
 
-  async getSearchResults(query: string): Promise<string> {
+  async getSearchResults(query: string, maxResults?: number): Promise<string> {
     if (vscode.env.remoteName) {
       throw new Error("Ripgrep not supported, this workspace is remote");
     }
@@ -549,6 +549,7 @@ class VsCodeIde implements IDE {
         "-C",
         "2", // Show 2 lines of context
         "--heading", // Only show filepath once per result
+        ...(maxResults ? ["-m", maxResults.toString()] : []),
         "-e",
         query, // Pattern to search for
         ".", // Directory to search in
@@ -557,7 +558,20 @@ class VsCodeIde implements IDE {
       results.push(dirResults);
     }
 
-    return results.join("\n");
+    const allResults = results.join("\n");
+    if (maxResults) {
+      // In case of multiple workspaces, do max results per workspace and then truncate to maxResults
+      // Will prioritize first workspace results, fine for now
+      // Results are separated by either ./ or --
+      const matches = Array.from(allResults.matchAll(/(\n--|\n\.\/)/g));
+      if (matches.length > maxResults) {
+        return allResults.substring(0, matches[maxResults].index);
+      } else {
+        return allResults;
+      }
+    } else {
+      return allResults;
+    }
   }
 
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
