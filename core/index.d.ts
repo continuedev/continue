@@ -836,13 +836,36 @@ export interface ContinueSDK {
   abortController: AbortController;
 }
 
-export interface SlashCommand {
+/* Be careful changing SlashCommand or SlashCommandDescription, config.ts can break */
+export interface SlashCommandDescription {
   name: string;
   description: string;
   prompt?: string;
   params?: { [key: string]: any };
-  promptFile?: string;
+}
+
+export interface SlashCommand extends SlashCommandDescription {
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
+}
+
+export type SlashCommandSource =
+  | "built-in-legacy"
+  | "built-in"
+  | "json-custom-command"
+  | "config-ts-slash-command"
+  | "yaml-prompt-block"
+  | "mcp-prompt"
+  | ".prompt-file"
+  | "invokable-rule";
+
+export interface SlashCommandDescWithSource extends SlashCommandDescription {
+  source: SlashCommandSource;
+  promptFile?: string;
+}
+
+export interface SlashCommandWithSource extends SlashCommand {
+  source: SlashCommandSource;
+  promptFile?: string;
 }
 
 // Config
@@ -944,8 +967,6 @@ export interface ContextProviderWithParams {
   name: ContextProviderName;
   params: { [key: string]: any };
 }
-
-export type SlashCommandDescription = Omit<SlashCommand, "run">;
 
 export interface CustomCommand {
   name: string;
@@ -1442,7 +1463,7 @@ export interface Config {
   /** Request options that will be applied to all models and context providers */
   requestOptions?: RequestOptions;
   /** The list of slash commands that will be available in the sidebar */
-  slashCommands?: SlashCommand[];
+  slashCommands?: (SlashCommand | SlashCommandWithSource)[];
   /** Each entry in this array will originally be a ContextProviderWithParams, the same object from your config.json, but you may add CustomContextProviders.
    * A CustomContextProvider requires you only to define a title and getContextItems function. When you type '@title <query>', Continue will call `getContextItems(query)`.
    */
@@ -1479,7 +1500,7 @@ export interface ContinueConfig {
   // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
-  slashCommands: SlashCommand[];
+  slashCommands: SlashCommandWithSource[];
   contextProviders: IContextProvider[];
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
@@ -1502,7 +1523,7 @@ export interface BrowserSerializedContinueConfig {
   // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
-  slashCommands: SlashCommandDescription[];
+  slashCommands: SlashCommandDescWithSource[];
   contextProviders: ContextProviderDescription[];
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;

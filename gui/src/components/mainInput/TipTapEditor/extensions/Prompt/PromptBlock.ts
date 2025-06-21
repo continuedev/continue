@@ -1,7 +1,7 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { ContextItemWithId, SlashCommandDescription } from "core";
+import { ContextItemWithId, SlashCommandDescWithSource } from "core";
 import { MAIN_EDITOR_INPUT_ID } from "../../../../../pages/gui/Chat";
 import { PromptBlockPreview } from "./PromptBlockPreview";
 
@@ -20,7 +20,7 @@ declare module "@tiptap/core" {
       /**
        * Insert a prompt block into the editor
        */
-      insertPrompt: (item: SlashCommandDescription) => ReturnType;
+      insertPrompt: (item: SlashCommandDescWithSource) => ReturnType;
 
       /**
        * Clear all prompt blocks from the editor
@@ -76,7 +76,7 @@ export const PromptBlock = Node.create<PromptBlockOptions>({
   addCommands() {
     return {
       insertPrompt:
-        (prompt: SlashCommandDescription) =>
+        (prompt: SlashCommandDescWithSource) =>
         ({ chain }) => {
           const item: ContextItemWithId = {
             content: prompt.prompt ?? "",

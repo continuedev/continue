@@ -17,7 +17,7 @@ export const gatherContext = createAsyncThunk<
     selectedContextItems: ContextItemWithId[];
     selectedCode: RangeInFile[];
     content: MessageContent;
-    slashCommandWithInput:
+    legacyCommandWithInput:
       | {
           command: SlashCommandDescription;
           input: string;
@@ -50,7 +50,7 @@ export const gatherContext = createAsyncThunk<
     }
 
     // Resolve context providers and construct new history
-    let [selectedContextItems, selectedCode, content, slashCommandWithInput] =
+    let [selectedContextItems, selectedCode, content, legacyCommandWithInput] =
       await resolveEditorContent({
         editorState,
         modifiers,
@@ -118,7 +118,7 @@ export const gatherContext = createAsyncThunk<
       selectedContextItems,
       selectedCode,
       content,
-      slashCommandWithInput,
+      legacyCommandWithInput,
     };
   },
 );

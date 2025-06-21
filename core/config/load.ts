@@ -32,10 +32,9 @@ import {
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands/index";
+import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/built-in-legacy";
+import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
+import { slashCommandFromPromptFileV1 } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
@@ -48,7 +47,6 @@ import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
-import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
@@ -176,13 +174,13 @@ async function serializedToIntermediateConfig(
   // DEPRECATED - load custom slash commands
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
-    const newCommand = slashCommandFromDescription(command);
+    const newCommand = getLegacyBuiltInSlashCommandFromDescription(command);
     if (newCommand) {
       slashCommands.push(newCommand);
     }
   }
   for (const command of initial.customCommands || []) {
-    slashCommands.push(slashFromCustomCommand(command));
+    slashCommands.push(convertCustomCommandToSlashCommand(command));
   }
 
   // DEPRECATED - load slash commands from v1 prompt files
@@ -529,7 +527,7 @@ async function intermediateToFinalConfig({
     contextProviders,
     tools: [...baseToolDefinitions],
     mcpServerStatuses: [],
-    slashCommands: config.slashCommands ?? [],
+    slashCommands: [],
     modelsByRole: {
       chat: models,
       edit: models,
@@ -550,6 +548,17 @@ async function intermediateToFinalConfig({
     },
     rules: [],
   };
+
+  for (const cmd of config.slashCommands ?? []) {
+    if ("source" in cmd) {
+      continueConfig.slashCommands.push(cmd);
+    } else {
+      continueConfig.slashCommands.push({
+        ...cmd,
+        source: "config-ts-slash-command",
+      });
+    }
+  }
 
   if (config.systemMessage) {
     continueConfig.rules.unshift({
@@ -651,9 +660,7 @@ async function finalToBrowserConfig(
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map(
-      ({ run, ...slashCommandDescription }) => slashCommandDescription,
-    ),
+    slashCommands: final.slashCommands?.map(({ run, ...rest }) => rest),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,

@@ -60,7 +60,7 @@ export const streamResponseThunk = createAsyncThunk<
           selectedContextItems,
           selectedCode,
           content,
-          slashCommandWithInput,
+          legacyCommandWithInput,
         } = unwrapResult(result);
 
         // symbols for both context items AND selected codeblocks
@@ -133,9 +133,9 @@ export const streamResponseThunk = createAsyncThunk<
         });
         posthog.capture("userInput", {});
 
-        if (slashCommandWithInput) {
+        if (legacyCommandWithInput) {
           posthog.capture("step run", {
-            step_name: slashCommandWithInput.command.name,
+            step_name: legacyCommandWithInput.command.name,
             params: {},
           });
         }
@@ -144,12 +144,12 @@ export const streamResponseThunk = createAsyncThunk<
           await dispatch(
             streamNormalInput({
               messages,
-              legacySlashCommandData: slashCommandWithInput
+              legacySlashCommandData: legacyCommandWithInput
                 ? {
-                    command: slashCommandWithInput.command,
+                    command: legacyCommandWithInput.command,
                     contextItems: selectedContextItems,
                     historyIndex: inputIndex,
-                    input: slashCommandWithInput.input,
+                    input: legacyCommandWithInput.input,
                     selectedCode,
                   }
                 : undefined,

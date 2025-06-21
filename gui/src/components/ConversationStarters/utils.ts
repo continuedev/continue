@@ -1,4 +1,4 @@
-import { SlashCommandDescription } from "core";
+import { SlashCommandDescWithSource } from "core";
 import {} from "core/config/default";
 
 /**
@@ -8,9 +8,9 @@ import {} from "core/config/default";
  * @returns A new sorted array with bookmarked commands first
  */
 export function sortCommandsByBookmarkStatus(
-  commands: SlashCommandDescription[],
+  commands: SlashCommandDescWithSource[],
   bookmarkedCommands: string[],
-): SlashCommandDescription[] {
+): SlashCommandDescWithSource[] {
   return [...commands].sort((a, b) => {
     const aIsBookmarked = bookmarkedCommands.includes(a.name);
     const bIsBookmarked = bookmarkedCommands.includes(b.name);

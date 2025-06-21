@@ -1,6 +1,6 @@
 import { streamResponse } from "@continuedev/fetch";
-import { SlashCommand } from "../../index.js";
-import { removeQuotesAndEscapes } from "../../util/index.js";
+import { SlashCommand } from "../../../index.js";
+import { removeQuotesAndEscapes } from "../../../util/index.js";
 
 const HttpSlashCommand: SlashCommand = {
   name: "http",

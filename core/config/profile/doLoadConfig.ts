@@ -18,7 +18,7 @@ import {
   SerializedContinueConfig,
   Tool,
 } from "../../";
-import { constructMcpSlashCommand } from "../../commands/slash/mcp";
+import { constructMcpSlashCommand } from "../../commands/slash/mcpSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import RulesContextProvider from "../../context/providers/RulesContextProvider";

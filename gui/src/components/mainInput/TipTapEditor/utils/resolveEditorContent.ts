@@ -10,7 +10,7 @@ import {
   MessageContent,
   MessagePart,
   RangeInFile,
-  SlashCommandDescription,
+  SlashCommandDescWithSource,
   TextMessagePart,
 } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
@@ -32,7 +32,7 @@ interface ResolveEditorContentInput {
   modifiers: InputModifiers;
   ideMessenger: IIdeMessenger;
   defaultContextProviders: DefaultContextProvider[];
-  availableSlashCommands: SlashCommandDescription[];
+  availableSlashCommands: SlashCommandDescWithSource[];
   dispatch: Dispatch;
 }
 
@@ -42,7 +42,7 @@ type ResolveEditorContentOutput = [
   MessageContent,
   (
     | {
-        command: SlashCommandDescription;
+        command: SlashCommandDescWithSource;
         input: string;
       }
     | undefined
@@ -184,9 +184,9 @@ function processEditorContent(editorState: JSONContent) {
  */
 function processSlashCommand(
   slashCommandName: string | undefined,
-  availableSlashCommands: SlashCommandDescription[],
+  availableSlashCommands: SlashCommandDescWithSource[],
   parts: MessagePart[],
-): { command: SlashCommandDescription; input: string } | undefined {
+): { command: SlashCommandDescWithSource; input: string } | undefined {
   if (!slashCommandName) return;
 
   const command = availableSlashCommands.find(

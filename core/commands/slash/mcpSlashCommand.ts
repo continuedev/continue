@@ -1,17 +1,18 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { PromptMessage } from "@modelcontextprotocol/sdk/types.js";
-import { ChatMessage, SlashCommand } from "../../index.js";
+import { ChatMessage, SlashCommandWithSource } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 export function constructMcpSlashCommand(
   client: Client,
   name: string,
   description?: string,
   args?: string[],
-): SlashCommand {
+): SlashCommandWithSource {
   return {
     name,
     description: description ?? "MCP Prompt",
+    source: "mcp-prompt",
     params: {},
     run: async function* (context) {
       const argsObject: { [key: string]: string } = {};

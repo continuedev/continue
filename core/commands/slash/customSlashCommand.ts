@@ -1,14 +1,12 @@
-import { CustomCommand, SlashCommand, SlashCommandDescription } from "../";
-import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
-import { replaceSlashCommandWithPromptInChatHistory } from "../promptFiles/v1/updateChatHistory";
-import { renderPromptFileV2 } from "../promptFiles/v2/renderPromptFile";
-import { renderChatMessage } from "../util/messageContent";
+import { CustomCommand, SlashCommandWithSource } from "../..";
+import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
+import { replaceSlashCommandWithPromptInChatHistory } from "../../promptFiles/v1/updateChatHistory";
+import { renderPromptFileV2 } from "../../promptFiles/v2/renderPromptFile";
+import { renderChatMessage } from "../../util/messageContent";
 
-import SlashCommands from "./slash";
-
-export function slashFromCustomCommand(
+export function convertCustomCommandToSlashCommand(
   customCommand: CustomCommand,
-): SlashCommand {
+): SlashCommandWithSource {
   const commandName = customCommand.name.startsWith("/")
     ? customCommand.name.substring(1)
     : customCommand.name;
@@ -16,6 +14,7 @@ export function slashFromCustomCommand(
     name: commandName,
     description: customCommand.description ?? "",
     prompt: customCommand.prompt,
+    source: "json-custom-command",
     run: async function* ({
       input,
       llm,
@@ -45,8 +44,8 @@ export function slashFromCustomCommand(
             selectedCode,
             fetch,
             fullInput: input,
-            embeddingsProvider: config.modelsByRole.embed[0],
-            reranker: config.modelsByRole.rerank[0],
+            embeddingsProvider: config.selectedModelByRole.embed,
+            reranker: config.selectedModelByRole.rerank,
           },
         );
 
@@ -70,19 +69,5 @@ export function slashFromCustomCommand(
         yield renderChatMessage(chunk);
       }
     },
-  };
-}
-
-export function slashCommandFromDescription(
-  desc: SlashCommandDescription,
-): SlashCommand | undefined {
-  const cmd = SlashCommands.find((cmd) => cmd.name === desc.name);
-  if (!cmd) {
-    return undefined;
-  }
-  return {
-    ...cmd,
-    params: desc.params,
-    description: desc.description ?? cmd.description,
   };
 }

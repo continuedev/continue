@@ -1,13 +1,13 @@
-import { ContinueSDK, SlashCommand } from "../..";
+import { ContinueSDK, SlashCommandWithSource } from "../..";
 import { getDiffsFromCache } from "../../autocomplete/snippets/gitDiffCache";
+import { parsePromptFileV1V2 } from "../../promptFiles/v2/parsePromptFileV1V2";
+import { renderPromptFileV2 } from "../../promptFiles/v2/renderPromptFile";
 import { renderChatMessage } from "../../util/messageContent";
 import { getLastNPathParts } from "../../util/uri";
-import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
-import { renderPromptFileV2 } from "../v2/renderPromptFile";
 
-import { getContextProviderHelpers } from "./getContextProviderHelpers";
-import { renderTemplatedString } from "./renderTemplatedString";
-import { replaceSlashCommandWithPromptInChatHistory } from "./updateChatHistory";
+import { getContextProviderHelpers } from "../../promptFiles/v1/getContextProviderHelpers";
+import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
+import { replaceSlashCommandWithPromptInChatHistory } from "../../promptFiles/v1/updateChatHistory";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
@@ -47,7 +47,7 @@ async function renderPromptV1(
 export function slashCommandFromPromptFileV1(
   path: string,
   content: string,
-): SlashCommand | null {
+): SlashCommandWithSource | null {
   const { name, description, systemMessage, prompt } = parsePromptFileV1V2(
     path,
     content,
@@ -57,6 +57,7 @@ export function slashCommandFromPromptFileV1(
     name,
     description,
     prompt,
+    source: ".prompt-file",
     promptFile: path,
     run: async function* (context) {
       const [_, renderedPrompt] = await renderPromptFileV2(prompt, {

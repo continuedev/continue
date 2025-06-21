@@ -4,7 +4,7 @@ import {
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
-import { SlashCommandDescription } from "core";
+import { SlashCommandDescWithSource } from "core";
 import { useContext, useMemo } from "react";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
@@ -15,7 +15,7 @@ import { useMainEditor } from "../../TipTapEditor";
 import { useLump } from "../LumpContext";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
-type PromptWithSlug = SlashCommandDescription & { slug?: string };
+type PromptWithSlug = SlashCommandDescWithSource & { slug?: string };
 
 interface PromptRowProps {
   prompt: PromptWithSlug;

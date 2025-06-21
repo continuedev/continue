@@ -29,7 +29,7 @@ import {
   Session,
   SessionMetadata,
   SiteIndexingConfig,
-  SlashCommandDescription,
+  SlashCommandDescWithSource,
   StreamDiffLinesPayload,
   ToolCall,
 } from "../";
@@ -141,7 +141,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
       legacySlashCommandData?: {
-        command: SlashCommandDescription;
+        command: SlashCommandDescWithSource;
         input: string;
         contextItems: ContextItemWithId[];
         historyIndex: number;
