@@ -238,7 +238,10 @@ class FileSystemIde implements IDE {
     return "";
   }
 
-  async getFileResults(pattern: string): Promise<string[]> {
+  async getFileResults(
+    pattern: string,
+    maxResults?: number,
+  ): Promise<string[]> {
     return [];
   }
 

@@ -365,7 +365,7 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             GetFileResultsParams::class.java
                         )
-                        val results = ide.getFileResults(params.pattern)
+                        val results = ide.getFileResults(params.pattern, params.maxResults)
                         respond(results)
                     }
 

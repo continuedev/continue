@@ -163,7 +163,7 @@ export class ReverseMessageIde {
     });
 
     this.on("getFileResults", (data) => {
-      return this.ide.getFileResults(data.pattern);
+      return this.ide.getFileResults(data.pattern, data.maxResults);
     });
 
     this.on("getProblems", (data) => {
