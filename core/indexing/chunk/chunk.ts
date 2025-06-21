@@ -63,13 +63,12 @@ export async function* chunkDocument({
           resolve({
             ...chunkWithoutId,
             digest,
-            index,
+            index: index++,
             filepath,
           });
         })();
       }),
     );
-    index++;
   }
   for await (const chunk of chunkPromises) {
     if (!chunk) {
