@@ -180,9 +180,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     deepseek: (model) => {
       if (
-        model == "deepseek-reasoner" ||
-        model == "deepseek-chat" ||
-        model == "deepseek-coder"
+        model === "deepseek-reasoner" ||
+        model === "deepseek-chat" ||
+        model === "deepseek-coder"
       ) {
         return true;
       }
