@@ -33,6 +33,7 @@ import Inception from "./Inception";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
+import LlamaStack from "./LlamaStack";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
 import MockLLM from "./Mock";
@@ -62,7 +63,6 @@ import Vllm from "./Vllm";
 import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
-
 export const LLMClasses = [
   Anthropic,
   Cohere,
@@ -116,6 +116,7 @@ export const LLMClasses = [
   Relace,
   Inception,
   Voyage,
+  LlamaStack,
 ];
 
 export async function llmFromDescription(
