@@ -81,6 +81,8 @@ const hasRulesFiles = (uris: string[]): boolean => {
   return false;
 };
 
+console.log("hello world");
+
 export class Core {
   configHandler: ConfigHandler;
   codeBaseIndexer: CodebaseIndexer;
