@@ -5,7 +5,7 @@ import {
   vscInputBackground,
 } from "../..";
 import { useLump } from "./LumpContext";
-import { LumpToolbar } from "./LumpToolbar";
+import { LumpToolbar } from "./LumpToolbar/LumpToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
 
 const LumpDiv = styled.div`

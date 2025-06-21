@@ -24,7 +24,7 @@ Body:\n\n`;
 const DraftIssueCommand: SlashCommand = {
   name: "issue",
   description: "Draft a GitHub issue",
-  run: async function* ({ input, llm, history, params }) {
+  run: async function* ({ input, llm, history, params, abortController }) {
     if (params?.repositoryUrl === undefined) {
       yield "This command requires a repository URL to be set in the config file.";
       return;
@@ -46,7 +46,7 @@ const DraftIssueCommand: SlashCommand = {
 
     for await (const chunk of llm.streamChat(
       messages,
-      new AbortController().signal,
+      abortController.signal,
     )) {
       body += chunk.content;
       yield renderChatMessage(chunk);

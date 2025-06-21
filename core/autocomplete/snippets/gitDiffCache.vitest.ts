@@ -1,3 +1,4 @@
+import { beforeEach, expect, test, vi } from "vitest";
 import { GitDiffCache } from "./gitDiffCache";
 
 beforeEach(() => {
@@ -7,7 +8,7 @@ beforeEach(() => {
 
 test("GitDiffCache returns cached results within cache time", async () => {
   const mockDiff = ["file1.ts", "file2.ts"];
-  const getDiffFn = jest.fn().mockResolvedValue(mockDiff);
+  const getDiffFn = vi.fn().mockResolvedValue(mockDiff);
   const cache = GitDiffCache.getInstance(getDiffFn, 1); // 1 second cache
 
   const result1 = await cache.get();
@@ -20,7 +21,7 @@ test("GitDiffCache returns cached results within cache time", async () => {
 
 test("GitDiffCache refreshes cache after expiration", async () => {
   const mockDiff = ["file1.ts"];
-  const getDiffFn = jest.fn().mockResolvedValue(mockDiff);
+  const getDiffFn = vi.fn().mockResolvedValue(mockDiff);
   const cache = GitDiffCache.getInstance(getDiffFn, 0.1); // 100ms cache
 
   const result1 = await cache.get();
@@ -31,7 +32,7 @@ test("GitDiffCache refreshes cache after expiration", async () => {
 });
 
 test("GitDiffCache returns empty array on error", async () => {
-  const getDiffFn = jest.fn().mockRejectedValue(new Error("Git error"));
+  const getDiffFn = vi.fn().mockRejectedValue(new Error("Git error"));
   const cache = GitDiffCache.getInstance(getDiffFn);
 
   const result = await cache.get();
@@ -41,7 +42,7 @@ test("GitDiffCache returns empty array on error", async () => {
 test("GitDiffCache reuses pending request", async () => {
   const mockDiff = ["file1.ts"];
   let resolvePromise: (value: string[]) => void;
-  const getDiffFn = jest.fn().mockImplementation(() => {
+  const getDiffFn = vi.fn().mockImplementation(() => {
     return new Promise((resolve) => {
       resolvePromise = resolve;
     });
@@ -63,7 +64,7 @@ test("GitDiffCache reuses pending request", async () => {
 
 test("GitDiffCache invalidate clears cache", async () => {
   const mockDiff = ["file1.ts"];
-  const getDiffFn = jest.fn().mockResolvedValue(mockDiff);
+  const getDiffFn = vi.fn().mockResolvedValue(mockDiff);
   const cache = GitDiffCache.getInstance(getDiffFn);
 
   await cache.get();
@@ -74,8 +75,8 @@ test("GitDiffCache invalidate clears cache", async () => {
 });
 
 test("GitDiffCache maintains singleton instance", () => {
-  const getDiffFn1 = jest.fn();
-  const getDiffFn2 = jest.fn();
+  const getDiffFn1 = vi.fn();
+  const getDiffFn2 = vi.fn();
 
   const instance1 = GitDiffCache.getInstance(getDiffFn1);
   const instance2 = GitDiffCache.getInstance(getDiffFn2);

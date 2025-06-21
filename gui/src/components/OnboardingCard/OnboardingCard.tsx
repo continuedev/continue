@@ -3,14 +3,12 @@ import { useAppSelector } from "../../redux/hooks";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import Alert from "../gui/Alert";
 import { ReusableCard } from "../ReusableCard";
-import {
-  OnboardingCardLanding,
-  OnboardingCardTabs,
-  OnboardingLocalTab,
-  OnboardingModelsAddOnTab,
-  OnboardingProvidersTab,
-} from "./components";
-import { useOnboardingCard } from "./hooks";
+import { OnboardingCardLanding } from "./components/OnboardingCardLanding";
+import { OnboardingCardTabs } from "./components/OnboardingCardTabs";
+import { OnboardingLocalTab } from "./components/OnboardingLocalTab";
+import { OnboardingModelsAddOnTab } from "./components/OnboardingModelsAddOnTab";
+import { OnboardingProvidersTab } from "./components/OnboardingProvidersTab";
+import { useOnboardingCard } from "./hooks/useOnboardingCard";
 
 export interface OnboardingCardState {
   show?: boolean;

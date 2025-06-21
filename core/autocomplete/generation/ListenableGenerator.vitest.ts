@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vitest";
 
 import { ListenableGenerator } from "./ListenableGenerator";
 
@@ -16,7 +16,7 @@ describe("ListenableGenerator", () => {
   it("should yield values from the source generator via tee()", async () => {
     const values = [1, 2, 3];
     const source = asyncGenerator(values);
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     const lg = new ListenableGenerator<number>(
       source,
@@ -36,7 +36,7 @@ describe("ListenableGenerator", () => {
   it("should allow listeners to receive values", async () => {
     const values = [1, 2, 3];
     const source = asyncGenerator(values, 10); // Introduce delay to simulate async behavior
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     const lg = new ListenableGenerator<number>(
       source,
@@ -44,7 +44,7 @@ describe("ListenableGenerator", () => {
       new AbortController(),
     );
 
-    const listener = jest.fn();
+    const listener = vi.fn();
 
     // Add listener after some delay to simulate late subscription
     setTimeout(() => {
@@ -64,7 +64,7 @@ describe("ListenableGenerator", () => {
   it("should buffer values for listeners added after some values have been yielded", async () => {
     const values = [1, 2, 3];
     const source = asyncGenerator(values, 10);
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     const lg = new ListenableGenerator<number>(
       source,
@@ -72,7 +72,7 @@ describe("ListenableGenerator", () => {
       new AbortController(),
     );
 
-    const initialListener = jest.fn();
+    const initialListener = vi.fn();
 
     lg.listen(initialListener);
 
@@ -80,7 +80,7 @@ describe("ListenableGenerator", () => {
     await new Promise((resolve) => setTimeout(resolve, 15));
 
     // Add a second listener
-    const newListener = jest.fn();
+    const newListener = vi.fn();
     lg.listen(newListener);
 
     // Wait for generator to finish
@@ -98,7 +98,7 @@ describe("ListenableGenerator", () => {
   it("should handle cancellation", async () => {
     const values = [1, 2, 3, 4, 5];
     const source = asyncGenerator(values, 10);
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     const lg = new ListenableGenerator<number>(
       source,
@@ -131,7 +131,7 @@ describe("ListenableGenerator", () => {
     }
 
     const source = errorGenerator();
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     const lg = new ListenableGenerator<number>(
       source,
@@ -152,7 +152,7 @@ describe("ListenableGenerator", () => {
   it("should notify listeners when the generator ends", async () => {
     const values = [1, 2, 3];
     const source = asyncGenerator(values);
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     const lg = new ListenableGenerator<number>(
       source,
@@ -160,7 +160,7 @@ describe("ListenableGenerator", () => {
       new AbortController(),
     );
 
-    const listener = jest.fn();
+    const listener = vi.fn();
     lg.listen(listener);
 
     // Wait for the generator to finish
