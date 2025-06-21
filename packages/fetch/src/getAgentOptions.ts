@@ -1,56 +1,19 @@
-import { globalAgent } from "https";
-import * as fs from "node:fs";
-import tls from "node:tls";
-
 import { RequestOptions } from "@continuedev/config-types";
-
-/**
- * Extracts content from either a file path or data URI
- */
-function getCertificateContent(input: string): string {
-  if (input.startsWith("data:")) {
-    // Parse data URI: data:[<mediatype>][;base64],<data>
-    const [header, data] = input.split(",");
-    if (header.includes("base64")) {
-      return Buffer.from(data, "base64").toString("utf8");
-    } else {
-      return decodeURIComponent(data);
-    }
-  } else {
-    // Assume it's a file path
-    return fs.readFileSync(input, "utf8");
-  }
-}
+import { CertsCache, getCertificateContent } from "./certs.js";
 
 /**
  * Prepares agent options based on request options and certificates
  */
-export function getAgentOptions(requestOptions?: RequestOptions): {
+export async function getAgentOptions(
+  requestOptions?: RequestOptions,
+): Promise<{
   [key: string]: any;
-} {
+}> {
   const TIMEOUT = 7200; // 7200 seconds = 2 hours
   const timeout = (requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
 
-  // Get root certificates
-  let globalCerts: string[] = [];
-  if (process.env.IS_BINARY) {
-    if (Array.isArray(globalAgent.options.ca)) {
-      globalCerts = [...globalAgent.options.ca.map((cert) => cert.toString())];
-    } else if (typeof globalAgent.options.ca !== "undefined") {
-      globalCerts.push(globalAgent.options.ca.toString());
-    }
-  }
-
-  const ca = Array.from(new Set([...tls.rootCertificates, ...globalCerts]));
-  const customCerts =
-    typeof requestOptions?.caBundlePath === "string"
-      ? [requestOptions?.caBundlePath]
-      : requestOptions?.caBundlePath;
-  if (customCerts) {
-    ca.push(
-      ...customCerts.map((customCert) => getCertificateContent(customCert)),
-    );
-  }
+  const certsCache = CertsCache.getInstance();
+  const ca = await certsCache.getCa(requestOptions?.caBundlePath);
 
   const agentOptions: { [key: string]: any } = {
     ca,
@@ -71,6 +34,22 @@ export function getAgentOptions(requestOptions?: RequestOptions): {
     if (requestOptions.clientCertificate.passphrase) {
       agentOptions.passphrase = passphrase;
     }
+  }
+
+  if (process.env.VERBOSE_FETCH) {
+    console.log(`Fetch agent options:`);
+    console.log(
+      `\tTimeout (sessionTimeout/keepAliveMsecs): ${agentOptions.timeout}`,
+    );
+    console.log(`\tTotal CA certs: ${ca.length}`);
+    console.log(`\tGlobal/Root CA certs: ${certsCache.fixedCa.length}`);
+    console.log(`\tCustom CA certs: ${ca.length - certsCache.fixedCa.length}`);
+    console.log(
+      `\tClient certificate: ${requestOptions?.clientCertificate ? "Yes" : "No"}`,
+    );
+    console.log(
+      `\trejectUnauthorized/verifySsl: ${agentOptions.rejectUnauthorized ?? "not set (defaults to true)"}`,
+    );
   }
 
   return agentOptions;
