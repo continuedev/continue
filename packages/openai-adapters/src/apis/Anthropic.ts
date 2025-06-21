@@ -8,10 +8,16 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
+  CompletionUsage,
 } from "openai/resources/index";
 import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
 import { AnthropicConfig } from "../types.js";
-import { chatChunk, chatChunkFromDelta, customFetch } from "../util.js";
+import {
+  chatChunk,
+  chatChunkFromDelta,
+  customFetch,
+  usageChatChunk,
+} from "../util.js";
 import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import { safeParseArgs } from "../util/parseArgs.js";
 import {
@@ -214,6 +220,12 @@ export class AnthropicApi implements BaseLlmApi {
 
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
+
+    const usage: CompletionUsage = {
+      completion_tokens: 0,
+      prompt_tokens: 0,
+      total_tokens: 0,
+    };
     for await (const value of streamSse(response as any)) {
       // https://docs.anthropic.com/en/api/messages-streaming#event-types
       switch (value.type) {
@@ -222,6 +234,15 @@ export class AnthropicApi implements BaseLlmApi {
             lastToolUseId = value.content_block.id;
             lastToolUseName = value.content_block.name;
           }
+          break;
+        case "message_start":
+          usage.prompt_tokens = value.message.usage.input_tokens;
+          usage.prompt_tokens_details = {
+            cached_tokens: value.message.usage.cache_read_input_tokens,
+          };
+          break;
+        case "message_delta":
+          usage.completion_tokens = value.usage.output_tokens;
           break;
         case "content_block_delta":
           // https://docs.anthropic.com/en/api/messages-streaming#delta-types
@@ -263,6 +284,14 @@ export class AnthropicApi implements BaseLlmApi {
           break;
       }
     }
+
+    yield usageChatChunk({
+      model: body.model,
+      usage: {
+        ...usage,
+        total_tokens: usage.completion_tokens + usage.prompt_tokens,
+      },
+    });
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,

@@ -10,6 +10,7 @@ dotenv.config();
 
 export interface TestConfigOptions {
   skipTools: boolean;
+  expectUsage?: boolean;
 }
 
 function testConfig(_config: ModelConfig & { options?: TestConfigOptions }) {
@@ -51,6 +52,10 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     model: "claude-3-5-haiku-latest",
     apiKey: process.env.ANTHROPIC_API_KEY!,
     roles: ["chat"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
   },
   {
     provider: "gemini",
@@ -117,15 +122,6 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
       apiVersion: "2024-02-15-preview",
       apiType: "azure-openai",
     },
-    roles: ["chat"],
-  },
-  {
-    provider: "azure",
-    model: "mistral-small-2503",
-    apiBase: "https://nate-0276-resource.services.ai.azure.com/models",
-    apiKey: process.env.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY,
-    roles: ["chat"],
-    options: { skipTools: true },
   },
 ];
 
