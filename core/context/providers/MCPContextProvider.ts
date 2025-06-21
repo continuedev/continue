@@ -56,7 +56,9 @@ class MCPContextProvider extends BaseContextProvider {
   private insertInputToUriTemplate(uri: string, query: string): string {
     const TEMPLATE_VAR = "query";
     if (uri.includes(`{${TEMPLATE_VAR}}`)) {
-      return uri.replace(`{${TEMPLATE_VAR}}`, encodeURIComponent(query));
+      // Sending an empty string will result in an error, so we instead send "null"
+      const queryOrNull = query.trim() === "" ? "null" : query;
+      return uri.replace(`{${TEMPLATE_VAR}}`, encodeURIComponent(queryOrNull));
     }
     return uri;
   }
