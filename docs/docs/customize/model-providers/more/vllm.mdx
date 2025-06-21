@@ -100,6 +100,8 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
 
 ## Reranking model
 
+Continue automatically handles vLLM's response format (which uses `results` instead of `data`).
+
 [Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
 
 The continue implementation uses [OpenAI](../top-level/openai.mdx) under the hood. [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)

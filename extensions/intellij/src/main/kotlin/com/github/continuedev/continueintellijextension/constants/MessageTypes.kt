@@ -121,7 +121,7 @@ class MessageTypes {
             "docs/initStatuses",
             "docs/getDetails",
             //
-            "completeOnboarding",
+            "onboarding/complete",
             "addAutocompleteModel",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",

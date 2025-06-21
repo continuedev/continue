@@ -10,6 +10,7 @@
     "@typescript-eslint/naming-convention": "off",
     "@typescript-eslint/no-floating-promises": "warn",
     "@typescript-eslint/semi": "warn",
+    "@typescript-eslint/no-misused-promises": "error",
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",

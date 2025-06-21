@@ -1,3 +1,4 @@
+import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -8,7 +9,7 @@ import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
-import { setShowDialog } from "../redux/slices/uiSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
@@ -19,7 +20,11 @@ import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
-import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
+import {
+  isNewUserOnboarding,
+  OnboardingCard,
+  useOnboardingCard,
+} from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
@@ -129,17 +134,33 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "openOnboardingCard",
+    "setupLocalConfig",
     async () => {
-      onboardingCard.open("Best");
+      onboardingCard.open(OnboardingModes.LOCAL);
     },
     [],
   );
 
   useWebviewListener(
-    "setupLocalConfig",
+    "freeTrialExceeded",
     async () => {
-      onboardingCard.open("Local");
+      dispatch(setShowDialog(true));
+      onboardingCard.setActiveTab(OnboardingModes.MODELS_ADD_ON);
+      dispatch(
+        setDialogMessage(
+          <div className="flex-1">
+            <OnboardingCard isDialog showFreeTrialExceededAlert />
+          </div>,
+        ),
+      );
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "setupApiKey",
+    async () => {
+      onboardingCard.open(OnboardingModes.API_KEY);
     },
     [],
   );
@@ -179,7 +200,6 @@ const Layout = () => {
       if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
-          // Copy to clipboard
           setTimeout(() => {
             void navigator.clipboard.writeText(selection);
           }, 100);
@@ -199,7 +219,7 @@ const Layout = () => {
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      onboardingCard.open("Quickstart");
+      onboardingCard.open();
     }
   }, [location]);
 

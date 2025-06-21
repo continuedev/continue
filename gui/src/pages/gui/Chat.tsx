@@ -6,7 +6,6 @@ import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { streamResponse } from "core/llm/stream";
 import { renderChatMessage } from "core/util/messageContent";
-import { usePostHog } from "posthog-js/react";
 import {
   useCallback,
   useContext,
@@ -43,10 +42,10 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
-import { streamResponseThunk } from "../../redux/thunks";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { streamEditThunk } from "../../redux/thunks/edit";
 import { loadLastSession } from "../../redux/thunks/session";
+import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
@@ -91,7 +90,6 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 }
 
 export function Chat() {
-  const posthog = usePostHog();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
@@ -134,7 +132,7 @@ export function Chat() {
         !e.shiftKey
       ) {
         dispatch(cancelStream());
-        ideMessenger.post("cancelApply", undefined); // just always cancel, if not in applying won't matter
+        ideMessenger.post("rejectDiff", {}); // just always cancel, if not in applying won't matter
       }
     };
     window.addEventListener("keydown", listener);
@@ -200,10 +198,6 @@ export function Chat() {
       //       "error",
       //       "You've reached the free trial limit. Please configure a model to continue.",
       //     );
-
-      //     // Card in chat will only show if no history
-      //     // Also, note that platform card ignore the "Best", always opens to main tab
-      //     onboardingCard.open("Best");
 
       //     // If history, show the dialog, which will automatically close if there is not history
       //     if (history.length) {

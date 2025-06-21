@@ -8,7 +8,7 @@ import {
   SlashCommandDescription,
 } from "core";
 import * as URI from "uri-js";
-import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import { ThunkApiType } from "../store";
 
