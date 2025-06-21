@@ -47,7 +47,7 @@ import {
   type IDE,
 } from ".";
 
-import { ConfigYaml } from "@continuedev/config-yaml";
+import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import {
@@ -893,8 +893,11 @@ export class Core {
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") && uri.endsWith(".yaml")) ||
           uri.endsWith(RULES_MARKDOWN_FILENAME) ||
-          uri.includes(".continue/rules") ||
-          uri.includes(".continue\\rules")
+          BLOCK_TYPES.some(
+            (blockType) =>
+              uri.includes(`.continue/${blockType}`) ||
+              uri.includes(`.continue\\${blockType}`),
+          )
         ) {
           await this.configHandler.reloadConfig();
         } else if (
