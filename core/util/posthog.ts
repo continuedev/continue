@@ -4,6 +4,7 @@ import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
 import { IdeInfo } from "../index.js";
 
 import type { PostHog as PostHogType } from "posthog-node";
+import { extractMinimalStackTraceInfo } from "./extractMinimalStackTraceInfo.js";
 
 export enum PosthogFeatureFlag {
   AutocompleteTimeout = "autocomplete-timeout",
@@ -36,6 +37,24 @@ export class Telemetry {
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
   static ideInfo: IdeInfo | undefined = undefined;
+
+  /**
+   * Convenience method for capturing errors in a single event
+   */
+  static async captureError(errorName: string, error: unknown) {
+    if (!(error instanceof Error)) {
+      return;
+    }
+    await Telemetry.capture(
+      "extension_error_caught",
+      {
+        errorName,
+        message: error.message,
+        stack: extractMinimalStackTraceInfo(error.stack),
+      },
+      false,
+    );
+  }
 
   static async capture(
     event: string,
