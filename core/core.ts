@@ -69,6 +69,7 @@ import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { messageAbortManager } from "./util/messageAbortManager";
 import { getUriPathBasename } from "./util/uri";
 
 const hasRulesFiles = (uris: string[]): boolean => {
@@ -88,50 +89,6 @@ export class Core {
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
-
-  private messageAbortControllers = new Map<string, AbortController>();
-  private addMessageAbortController(id: string): AbortController {
-    const controller = new AbortController();
-    this.messageAbortControllers.set(id, controller);
-    controller.signal.addEventListener("abort", () => {
-      this.messageAbortControllers.delete(id);
-    });
-    return controller;
-  }
-  private abortById(messageId: string) {
-    this.messageAbortControllers.get(messageId)?.abort();
-  }
-
-  /**
-   * Wraps async task execution with automatic AbortController cleanup.
-   */
-  private runWithAbortController<T extends Promise<any> | AsyncGenerator<any>>(
-    id: string,
-    task: (controller: AbortController) => T,
-  ): T {
-    const controller = this.addMessageAbortController(id);
-    const cleanup = () => this.abortById(id);
-
-    try {
-      const result = task(controller);
-
-      if (result instanceof Promise) {
-        return result.finally(cleanup) as T;
-      }
-
-      // AsyncGenerator handling (intentionally skipping return/throw as caller only consumes via next())
-      return (async function* () {
-        try {
-          yield* result as AsyncGenerator<any>;
-        } finally {
-          cleanup();
-        }
-      })() as T;
-    } catch (error) {
-      cleanup();
-      throw error;
-    }
-  }
 
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
@@ -294,7 +251,7 @@ export class Core {
     });
 
     on("abort", (msg) => {
-      this.abortById(msg.data ?? msg.messageId);
+      messageAbortManager.abortById(msg.data ?? msg.messageId);
     });
 
     on("ping", (msg) => {
@@ -474,14 +431,16 @@ export class Core {
     });
 
     on("llm/streamChat", (msg) => {
-      return this.runWithAbortController(msg.messageId, (abortController) =>
-        llmStreamChat(
-          this.configHandler,
-          abortController,
-          msg,
-          this.ide,
-          this.messenger,
-        ),
+      return messageAbortManager.runWithAbortController(
+        msg.messageId,
+        (abortController) =>
+          llmStreamChat(
+            this.configHandler,
+            abortController,
+            msg,
+            this.ide,
+            this.messenger,
+          ),
       );
     });
 
@@ -492,7 +451,7 @@ export class Core {
         throw new Error("No chat model selected");
       }
 
-      const completion = await this.runWithAbortController(
+      return await messageAbortManager.runWithAbortController(
         msg.messageId,
         (abortController) =>
           model.complete(
@@ -501,7 +460,6 @@ export class Core {
             msg.data.completionOptions,
           ),
       );
-      return completion;
     });
     on("llm/listModels", this.handleListModels.bind(this));
 
