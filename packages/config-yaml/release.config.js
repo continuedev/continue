@@ -7,10 +7,10 @@ export default {
       {
         releaseRules: [
           // Only release if commits affect this package
-          { scope: "config-yaml", release: "patch" },
-          { scope: "config-yaml", type: "feat", release: "minor" },
-          { scope: "config-yaml", type: "fix", release: "patch" },
-          { scope: "config-yaml", breaking: true, release: "major" },
+          { scope: "packages/config-yaml", release: "patch" },
+          { scope: "packages/config-yaml", type: "feat", release: "minor" },
+          { scope: "packages/config-yaml", type: "fix", release: "patch" },
+          { scope: "packages/config-yaml", breaking: true, release: "major" },
         ],
       },
     ],

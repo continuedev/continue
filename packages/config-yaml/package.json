@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "@continuedev/config-yaml": "./dist/cli.js"
+    "config-yaml": "./dist/cli.js"
   },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
