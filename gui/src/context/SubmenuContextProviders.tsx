@@ -360,7 +360,7 @@ export const SubmenuContextProvidersProvider = ({
     "indexProgress",
     async (data) => {
       if (data.status === "done") {
-        loadSubmenuItems("dependsOnIndexing")
+        loadSubmenuItems("dependsOnIndexing");
       }
     },
     [loadSubmenuItems],
