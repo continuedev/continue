@@ -1,5 +1,5 @@
 export default {
-  branches: ["main", "nate/semantic-release"],
+  branches: ["main"],
   tagFormat: "@continuedev/config-yaml@${version}",
   plugins: [
     [
