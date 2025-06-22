@@ -21,6 +21,19 @@ import {
 interface ScopeSelectProps {
   onSelect?: () => void;
 }
+
+function getOrgIcon(org: { name: string; iconUrl?: string | null }) {
+  if (org.iconUrl) {
+    return (
+      <img src={org.iconUrl} alt="" className="h-3.5 w-3.5 rounded-full" />
+    );
+  }
+
+  const IconComponent =
+    org.name === "Personal" ? UserCircleIcon : BuildingOfficeIcon;
+  return <IconComponent className="h-3.5 w-3.5" />;
+}
+
 export function ScopeSelect({ onSelect }: ScopeSelectProps) {
   const { organizations } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -39,10 +52,6 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
     onSelect?.();
   };
 
-  const CurScopeEntityFallBackIcon = selectedOrgId
-    ? BuildingOfficeIcon
-    : UserCircleIcon;
-
   const selectedDisplay = currentOrg ?? {
     name: "Personal",
     iconUrl: null,
@@ -53,15 +62,7 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
       <div className="relative">
         <ListboxButton className="hover:bg-list-active hover:text-list-active-foreground w-full min-w-[140px] justify-between px-4 py-2 sm:min-w-[200px]">
           <div className="flex items-center gap-2">
-            {selectedDisplay?.iconUrl ? (
-              <img
-                src={selectedDisplay.iconUrl}
-                alt=""
-                className="h-3.5 w-3.5 rounded-full"
-              />
-            ) : (
-              <CurScopeEntityFallBackIcon className="h-3.5 w-3.5" />
-            )}
+            {getOrgIcon(selectedDisplay)}
             <span className="truncate">
               {selectedDisplay?.name || "Select Organization"}
             </span>
@@ -73,15 +74,7 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
           {organizations.map((org) => (
             <ListboxOption key={org.id} value={org.id} className="py-2">
               <div className="flex items-center gap-2">
-                {org.iconUrl ? (
-                  <img
-                    src={org.iconUrl}
-                    alt=""
-                    className="h-3.5 w-3.5 rounded-full"
-                  />
-                ) : (
-                  <BuildingOfficeIcon className="h-3.5 w-3.5" />
-                )}
+                {getOrgIcon(org)}
                 <span>{org.name}</span>
               </div>
             </ListboxOption>
