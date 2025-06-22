@@ -8,7 +8,7 @@ export default {
         releaseRules: [
           // Only release if commits affect this package
           { scope: "packages/config-yaml", release: "patch" },
-          { scope: "packages/config-yaml", type: "feat", release: "minor" },
+          // { scope: "packages/config-yaml", type: "feat", release: "minor" },
           { scope: "packages/config-yaml", type: "fix", release: "patch" },
           { scope: "packages/config-yaml", breaking: true, release: "major" },
         ],
