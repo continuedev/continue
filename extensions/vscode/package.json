@@ -338,6 +338,10 @@
       {
         "command": "nextEditWindow.hideTooltips",
         "title": "Hide Tooltip Window"
+      },
+      {
+        "command": "nextEditWindow.acceptNextEdit",
+        "title": "Accept Next Edit Suggestion"
       }
     ],
     "keybindings": [
@@ -434,6 +438,11 @@
       {
         "command": "nextEditWindow.hideTooltips",
         "key": "ctrl+space escape",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "nextEditWindow.acceptNextEdit",
+        "key": "ctrl+space tab",
         "when": "editorTextFocus"
       }
     ],
