@@ -46,6 +46,28 @@ export function parseMarkdownRule(content: string): {
   return { frontmatter: {}, markdown: normalizedContent };
 }
 
+export function getRuleName(
+  frontmatter: RuleFrontmatter,
+  id: PackageIdentifier,
+): string {
+  if (frontmatter.name) {
+    return frontmatter.name;
+  }
+
+  const displayName = packageIdentifierToDisplayName(id);
+
+  // If it's a file identifier, extract the last two parts of the file path
+  if (id.uriType === "file") {
+    // Handle both forward slashes and backslashes, get the last two segments
+    const segments = displayName.split(/[/\\]/);
+    const lastTwoParts = segments.slice(-2);
+    return lastTwoParts.join("/");
+  }
+
+  // Otherwise return the display name as-is (for slug identifiers)
+  return displayName;
+}
+
 export function markdownToRule(
   rule: string,
   id: PackageIdentifier,
@@ -53,7 +75,7 @@ export function markdownToRule(
   const { frontmatter, markdown } = parseMarkdownRule(rule);
 
   return {
-    name: frontmatter.name ?? packageIdentifierToDisplayName(id),
+    name: getRuleName(frontmatter, id),
     rule: markdown,
     globs: frontmatter.globs,
     description: frontmatter.description,
