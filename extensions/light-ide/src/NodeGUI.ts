@@ -113,8 +113,45 @@ export class NodeGUI {
         ? _req.query.prompt
         : "";
 
-    // turn it into a JS literal we can embed safely
-    const initialPromptJS = JSON.stringify(initialPrompt);
+      // turn it into a JS literal we can embed safely
+      const initialPromptJS = JSON.stringify(initialPrompt);
+
+
+      const isNewSession = _req.query.newsession === "true";
+      let triggerNewSessionScript = "";
+      if (isNewSession) {
+        triggerNewSessionScript = `
+        if (window.location.search.includes("newsession=true")) {
+            // Remove the param immediately to prevent double-trigger on rerender
+            const url = new URL(window.location.href);
+            url.searchParams.delete('newsession');
+            window.history.replaceState({}, document.title, url.toString());
+
+            // Poll for the plus button and click it once found
+            let tries = 0;
+            const maxTries = 20; // Try for 3 seconds (20 * 150ms)
+            const interval = setInterval(() => {
+              
+              const btnSpan = document.querySelector('[data-testid="block-settings-toolbar-icon-new-session"]');
+              if (btnSpan) {
+                // Find the inner button (role=button)
+                const button = btnSpan.querySelector('[role="button"]');
+                if (button) {
+                  button.click();
+                  clearInterval(interval);
+                  console.log("Auto-clicked New Session button because of ?newsession=true");
+                  return;
+                }
+              }
+              tries++;
+              if (tries > maxTries) {
+                clearInterval(interval);
+                console.warn("Could not find New Session button to auto-click");
+              }
+            }, 150);
+          }
+`;
+      }
 
       const html = `
       <!DOCTYPE html>
@@ -202,6 +239,7 @@ export class NodeGUI {
               }, 150);
             }
 
+            ${triggerNewSessionScript}
           </script>
         </body>
       </html>`;
@@ -257,8 +295,8 @@ export class NodeGUI {
             status: "success",
             content: result1,
           });
-          
-        } 
+
+        }
         // else if (this.messageHandler) {
         //   handler = async ({ data }) =>
         //     await this.messageHandler!(messageType, data, messageId);
@@ -300,7 +338,7 @@ export class NodeGUI {
           status: "error",
           error: err.message ?? "Unknown error",
         });
-   
+
       }
     });
 

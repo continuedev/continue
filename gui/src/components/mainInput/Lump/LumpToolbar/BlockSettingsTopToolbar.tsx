@@ -8,11 +8,12 @@ import {
   PencilIcon,
   Squares2X2Icon,
   WrenchScrewdriverIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { ReactNode, useContext, useEffect, useState } from "react";
 import { vscBadgeForeground } from "../../..";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { useAppSelector } from "../../../../redux/hooks";
+import { useAppSelector, useAppDispatch } from "../../../../redux/hooks";
 import { ToolTip } from "../../../gui/Tooltip";
 import AssistantSelect from "../../../modelSelection/platform/AssistantSelect";
 import FreeTrialButton from "../../../modelSelection/platform/FreeTrialButton";
@@ -22,6 +23,7 @@ import { useLump } from "../LumpContext";
 import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
 import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
 import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
+import { newSession } from "../../../../redux/slices/sessionSlice";
 
 import type { FreeTrialStatus } from "core/control-plane/client";
 import { usesFreeTrialApiKey } from "../../../../util/freeTrialHelpers";
@@ -145,6 +147,8 @@ export function BlockSettingsTopToolbar() {
     setSelectedSection,
   } = useLump();
 
+  const dispatch = useAppDispatch();
+
   const configError = useAppSelector((store) => store.config.configError);
   const config = useAppSelector((state) => state.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
@@ -193,21 +197,55 @@ export function BlockSettingsTopToolbar() {
             className={`${isToolbarExpanded ? "w-min" : "w-0"} flex overflow-hidden transition-all duration-200`}
           >
             <div className="flex">
-              {visibleSections.map((section) => (
-                <BlockSettingsToolbarIcon
-                  key={section.id}
-                  sectionId={section.id}
-                  icon={section.icon}
-                  tooltip={section.tooltip}
-                  title={section.title}
-                  isSelected={selectedSection === section.id}
-                  onClick={() =>
-                    setSelectedSection(
-                      selectedSection === section.id ? null : section.id,
-                    )
-                  }
-                />
-              ))}
+              {visibleSections.flatMap((section, idx, arr) => {
+                const isMcp = section.id === "mcp";
+                const elements = [
+                  <BlockSettingsToolbarIcon
+                    key={section.id}
+                    sectionId={section.id}
+                    icon={section.icon}
+                    tooltip={section.tooltip}
+                    title={section.title}
+                    isSelected={selectedSection === section.id}
+                    onClick={() =>
+                      setSelectedSection(
+                        selectedSection === section.id ? null : section.id,
+                      )
+                    }
+                  />
+                ];
+                // Insert the plus button immediately after the MCP section
+                if (isMcp) {
+                  elements.push(
+                    <HoverItem
+                      key="new-session-plus"
+                      px={0}
+                      onClick={() => dispatch(newSession())}
+                      data-testid="block-settings-toolbar-icon-new-session"
+                      data-tooltip-id="block-settings-toolbar-icon-new-session"
+                      style={{ paddingTop: "3px" }}
+                    >
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            dispatch(newSession());
+                          }
+                        }}
+                        className="relative flex select-none items-center rounded-full px-[3px] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1"
+                      >
+                        <PlusIcon className="h-[13px] w-[13px] flex-shrink-0 hover:brightness-125" aria-hidden="true" />
+                      </div>
+                      <ToolTip delayShow={700} id="block-settings-toolbar-icon-new-session">
+                        New Session
+                      </ToolTip>
+                    </HoverItem>
+                  );
+                }
+                return elements;
+              })}
             </div>
           </div>
         </div>
