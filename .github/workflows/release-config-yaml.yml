@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - nate/semantic-release
     paths:
       - "packages/config-yaml/**"
 
