@@ -1,18 +1,18 @@
-name: Release @continuedev/config-yaml
+name: Release @continuedev/llm-info
 
 on:
   push:
     branches:
       - main
     paths:
-      - "packages/config-yaml/**"
+      - "packages/llm-info/**"
 
 jobs:
   release:
     uses: ./.github/workflows/reusable-release.yml
     with:
-      package-name: "config-yaml"
-      package-path: "packages/config-yaml"
+      package-name: "llm-info"
+      package-path: "packages/llm-info"
     secrets:
       SEMANTIC_RELEASE_GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}
       SEMANTIC_RELEASE_NPM_TOKEN: ${{ secrets.SEMANTIC_RELEASE_NPM_TOKEN }}
