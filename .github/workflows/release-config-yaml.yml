@@ -11,6 +11,9 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/config-yaml
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,24 +26,18 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Install dependencies
-        run: |
-          cd packages/config-yaml
-          npm ci
+        run: npm ci
 
       - name: Build
-        run: |
-          cd packages/config-yaml
-          npm run build
+        run: npm run build
 
       - name: Run tests
-        run: |
-          cd packages/config-yaml
-          npm test
+        run: npm test
 
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd packages/config-yaml
-          npx semantic-release
+          # Requires read/write for issues and contents
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.SEMANTIC_RELEASE_NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_NPM_TOKEN }}
+        run: npx semantic-release
