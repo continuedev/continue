@@ -1,5 +1,6 @@
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
+import { ScopeSelect } from "../../components/AssistantAndOrgListbox/ScopeSelect";
 import {
   Button,
   Popover,
@@ -10,7 +11,6 @@ import {
 import { useAuth } from "../../context/Auth";
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
-import { ScopeSelect } from "./ScopeSelect";
 
 export function AccountButton() {
   const { session, logout, login, organizations } = useAuth();
