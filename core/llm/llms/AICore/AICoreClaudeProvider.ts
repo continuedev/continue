@@ -321,120 +321,174 @@ export class AICoreClaudeProvider extends BaseLLM {
         }
 
 
+        // Buffer for accumulating stream data
+        let buffer = '';
+        
         try {
             for await (const chunk_str of stream) {
-
-                const lines = chunk_str.toString().split("\n").filter(Boolean)
-
-                for (const line of lines) {
-                    if (line.startsWith("data: ")) {
-                        const jsonData = line.slice(6)
-
-                        const chunk = JSON.parse(toStrictJson(jsonData))
-                        if (chunk.metadata?.usage) {
-                            console.log(`${JSON.stringify(chunk.metadata.usage)}`);
-                        }
-
-                        if (chunk.contentBlockDelta?.delta) {
-                            const delta: any = chunk.contentBlockDelta.delta;
-
-                            // Handle text content
-                            if (chunk.contentBlockDelta.delta.text) {
-                                yield {
-                                    role: "assistant",
-                                    content: chunk.contentBlockDelta.delta.text,
-                                };
-                                continue;
-                            }
-
-                            // Handle text content
-                            if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
-                                yield {
-                                    role: "thinking",
-                                    content: (chunk.contentBlockDelta.delta as any).reasoningContent
-                                        .text,
-                                };
-                                continue;
-                            }
-
-                            // Handle signature for thinking
-                            if (delta.reasoningContent?.signature) {
-                                yield {
-                                    role: "thinking",
-                                    content: "",
-                                    signature: delta.reasoningContent.signature,
-                                };
-                                continue;
-                            }
-
-                            // Handle redacted thinking
-                            if (delta.redactedReasoning?.data) {
-                                yield {
-                                    role: "thinking",
-                                    content: "",
-                                    redactedThinking: delta.redactedReasoning.data,
-                                };
-                                continue;
-                            }
-
-                            if (
-                                chunk.contentBlockDelta.delta.toolUse?.input &&
-                                this._currentToolResponse
-                            ) {
-                                // Append the new input to the existing string
-                                // eslint-disable-next-line max-depth
-                                if (this._currentToolResponse.input === undefined) {
-                                    this._currentToolResponse.input = "";
+                buffer += chunk_str.toString();
+                
+                // Process complete JSON objects from the buffer
+                let startIdx = 0;
+                while (true) {
+                    // Find the next "data: " marker
+                    const dataPrefix = "data: ";
+                    const dataIdx = buffer.indexOf(dataPrefix, startIdx);
+                    if (dataIdx === -1) break;
+                    
+                    // Find the end of this JSON object (next data marker or end of buffer)
+                    const nextDataIdx = buffer.indexOf(dataPrefix, dataIdx + dataPrefix.length);
+                    
+                    // If we found a complete object or end of stream marker
+                    if (nextDataIdx !== -1 || buffer.endsWith("\n\n")) {
+                        const endIdx = nextDataIdx !== -1 ? nextDataIdx : buffer.length;
+                        const jsonData = buffer.substring(dataIdx + dataPrefix.length, endIdx).trim();
+                        
+                        try {
+                            // Try to parse as regular JSON first
+                            let chunk;
+                            try {
+                                chunk = JSON.parse(jsonData);
+                            } catch (e) {
+                                // If that fails, try with the toStrictJson function
+                                try {
+                                    chunk = JSON.parse(toStrictJson(jsonData));
+                                } catch (e2) {
+                                    console.warn("Failed to parse JSON:", jsonData);
+                                    startIdx = endIdx;
+                                    continue;
                                 }
-                                this._currentToolResponse.input +=
-                                    chunk.contentBlockDelta.delta.toolUse.input;
+                            }
+                            
+                            // Process the chunk as before
+                            if (chunk.metadata?.usage) {
+                                console.log(`${JSON.stringify(chunk.metadata.usage)}`);
+                            }
+
+                            if (chunk.contentBlockDelta?.delta) {
+                                const delta: any = chunk.contentBlockDelta.delta;
+
+                                // Handle text content
+                                if (chunk.contentBlockDelta.delta.text) {
+                                    yield {
+                                        role: "assistant",
+                                        content: chunk.contentBlockDelta.delta.text,
+                                    };
+                                    startIdx = endIdx;
+                                    continue;
+                                }
+
+                                // Handle text content
+                                if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
+                                    yield {
+                                        role: "thinking",
+                                        content: (chunk.contentBlockDelta.delta as any).reasoningContent
+                                            .text,
+                                    };
+                                    startIdx = endIdx;
+                                    continue;
+                                }
+
+                                // Handle signature for thinking
+                                if (delta.reasoningContent?.signature) {
+                                    yield {
+                                        role: "thinking",
+                                        content: "",
+                                        signature: delta.reasoningContent.signature,
+                                    };
+                                    startIdx = endIdx;
+                                    continue;
+                                }
+
+                                // Handle redacted thinking
+                                if (delta.redactedReasoning?.data) {
+                                    yield {
+                                        role: "thinking",
+                                        content: "",
+                                        redactedThinking: delta.redactedReasoning.data,
+                                    };
+                                    startIdx = endIdx;
+                                    continue;
+                                }
+
+                                if (
+                                    chunk.contentBlockDelta.delta.toolUse?.input &&
+                                    this._currentToolResponse
+                                ) {
+                                    // Append the new input to the existing string
+                                    // eslint-disable-next-line max-depth
+                                    if (this._currentToolResponse.input === undefined) {
+                                        this._currentToolResponse.input = "";
+                                    }
+                                    this._currentToolResponse.input +=
+                                        chunk.contentBlockDelta.delta.toolUse.input;
+                                    startIdx = endIdx;
+                                    continue;
+                                }
+                            }
+
+                            if (chunk.contentBlockStart?.start) {
+                                const start: any = chunk.contentBlockStart.start;
+                                if (start.redactedReasoning) {
+                                    yield {
+                                        role: "thinking",
+                                        content: "",
+                                        redactedThinking: start.redactedReasoning.data,
+                                    };
+                                    startIdx = endIdx;
+                                    continue;
+                                }
+
+                                const toolUse = chunk.contentBlockStart.start.toolUse;
+                                if (toolUse?.toolUseId && toolUse?.name) {
+                                    this._currentToolResponse = {
+                                        toolUseId: toolUse.toolUseId,
+                                        name: toolUse.name,
+                                        input: "",
+                                    };
+                                }
+                                startIdx = endIdx;
                                 continue;
                             }
-                        }
 
-                        if (chunk.contentBlockStart?.start) {
-                            const start: any = chunk.contentBlockStart.start;
-                            if (start.redactedReasoning) {
-                                yield {
-                                    role: "thinking",
-                                    content: "",
-                                    redactedThinking: start.redactedReasoning.data,
-                                };
-                                continue;
-                            }
-
-                            const toolUse = chunk.contentBlockStart.start.toolUse;
-                            if (toolUse?.toolUseId && toolUse?.name) {
-                                this._currentToolResponse = {
-                                    toolUseId: toolUse.toolUseId,
-                                    name: toolUse.name,
-                                    input: "",
-                                };
-                            }
-                            continue;
-                        }
-
-                        if (chunk.contentBlockStop) {
-                            if (this._currentToolResponse) {
-                                yield {
-                                    role: "assistant",
-                                    content: "",
-                                    toolCalls: [
-                                        {
-                                            id: this._currentToolResponse.toolUseId,
-                                            type: "function",
-                                            function: {
-                                                name: this._currentToolResponse.name,
-                                                arguments: this._currentToolResponse.input,
+                            if (chunk.contentBlockStop) {
+                                if (this._currentToolResponse) {
+                                    yield {
+                                        role: "assistant",
+                                        content: "",
+                                        toolCalls: [
+                                            {
+                                                id: this._currentToolResponse.toolUseId,
+                                                type: "function",
+                                                function: {
+                                                    name: this._currentToolResponse.name,
+                                                    arguments: this._currentToolResponse.input,
+                                                },
                                             },
-                                        },
-                                    ],
-                                };
-                                this._currentToolResponse = null;
+                                        ],
+                                    };
+                                    this._currentToolResponse = null;
+                                }
+                                startIdx = endIdx;
+                                continue;
                             }
-                            continue;
+                            
+                            // If we get here, update startIdx to process the next chunk
+                            startIdx = endIdx;
+                            
+                        } catch (error: unknown) {
+                            console.warn(`Error processing chunk: ${error instanceof Error ? error.message : String(error)}`);
+                            startIdx = endIdx;
                         }
+                    } else {
+                        // We have an incomplete object, wait for more data
+                        break;
                     }
+                }
+                
+                // Keep only the unprocessed part of the buffer
+                if (startIdx > 0) {
+                    buffer = buffer.substring(startIdx);
                 }
             }
         } catch (error: unknown) {
