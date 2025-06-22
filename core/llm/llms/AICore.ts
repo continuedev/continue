@@ -8,9 +8,12 @@ const CAP_MESSAGE = `
       - After you createing the application run it!
       - Before you createing the application, using tools, mcp etc you need to give the user summry.
       - Summarize just the first time the user want to create an application.
-      - User the summery as information to build a prompt to the CAP MCP Server tools.
-      - If CAP MCP Server tools passed successfully tell the user that the application ready and ask him if he want other help.
-      - Assume cds installed as global package
+      - Assume cds installed as global package.
+      - Use the summery as information to build a prompt to the CAP MCP Server tools.
+      - When CAP MCP Server tools passed successfully:
+        1) setup the application directory as the git work directory.
+        2) run git init.
+        3) return answer to the user that we created application successfully and if he need more help.
   
     - DO NOT:
       - Dont summarize evry step.
