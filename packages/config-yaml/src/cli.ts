@@ -27,6 +27,7 @@ async function main() {
       validationErrors.forEach((error) => {
         console.error(`- ${error.message}`);
       });
+
       process.exit(1);
     }
   } catch (error: any) {
