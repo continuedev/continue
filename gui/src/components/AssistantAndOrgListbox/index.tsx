@@ -113,7 +113,7 @@ export function AssistantAndOrgListbox() {
       <div className="relative" ref={listboxRef}>
         <SelectedAssistantButton selectedProfile={selectedProfile} />
         <Transition>
-          <ListboxOptions className="pb-0">
+          <ListboxOptions className="-translate-x-1.5 pb-0">
             <OrganizationInfo />
             <AssistantOptions
               selectedProfileId={selectedProfile.id}
