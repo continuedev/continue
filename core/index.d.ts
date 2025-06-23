@@ -783,7 +783,7 @@ export interface IDE {
 
   getSearchResults(query: string, maxResults?: number): Promise<string>;
 
-  getFileResults(pattern: string): Promise<string[]>;
+  getFileResults(pattern: string, maxResults?: number): Promise<string[]>;
 
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
@@ -1604,12 +1604,12 @@ export interface RuleWithSource {
   slug?: string;
   source: RuleSource;
   globs?: string | string[];
+  regex?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
 }
-
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;

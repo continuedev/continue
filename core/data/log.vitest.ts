@@ -1,13 +1,22 @@
 import { DevDataLogEvent } from "@continuedev/config-yaml";
 import fs from "fs";
 import path from "path";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { IdeInfo, IdeSettings } from "..";
 import { Core } from "../core";
 import { getDevDataFilePath } from "../util/paths";
 import { DataLogger } from "./log";
 
 // Only mock fetch, not fs
-jest.mock("@continuedev/fetch");
+vi.mock("@continuedev/fetch");
 
 const TEST_EVENT: DevDataLogEvent = {
   name: "tokensGenerated",
@@ -54,7 +63,7 @@ describe("DataLogger", () => {
 
   beforeEach(() => {
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Remove test file if it exists
     if (fs.existsSync(testFilePath)) {
@@ -67,7 +76,7 @@ describe("DataLogger", () => {
     // Mock core and required promises
     dataLogger.core = {
       configHandler: {
-        loadConfig: jest.fn().mockResolvedValue({
+        loadConfig: vi.fn().mockResolvedValue({
           config: {
             data: [],
           },
@@ -78,7 +87,7 @@ describe("DataLogger", () => {
           },
         },
         controlPlaneClient: {
-          getAccessToken: jest.fn().mockResolvedValue("test-access-token"),
+          getAccessToken: vi.fn().mockResolvedValue("test-access-token"),
         },
       },
     } as unknown as Core;
@@ -184,7 +193,6 @@ describe("DataLogger", () => {
 
       // Read file contents and verify
       const fileContent = fs.readFileSync(filepath, "utf8");
-      console.log("debug1 filecontent", fileContent);
       expect(fileContent).toContain('"eventName":"chatInteraction"');
       expect(fileContent).toContain('"prompt":"Hello, world!"');
       expect(fileContent).toContain('"completion":"Hello, world!"');
@@ -195,10 +203,10 @@ describe("DataLogger", () => {
   describe("logDevData", () => {
     it("should log data locally and to configured destinations", async () => {
       // Spy on logLocalData and logToOneDestination
-      const logLocalDataSpy = jest
+      const logLocalDataSpy = vi
         .spyOn(dataLogger, "logLocalData")
         .mockResolvedValue();
-      const logToOneDestinationSpy = jest
+      const logToOneDestinationSpy = vi
         .spyOn(dataLogger, "logToOneDestination")
         .mockResolvedValue();
 
@@ -212,7 +220,7 @@ describe("DataLogger", () => {
         },
       };
 
-      dataLogger.core!.configHandler.loadConfig = jest
+      dataLogger.core!.configHandler.loadConfig = vi
         .fn()
         .mockResolvedValue(mockConfig);
 

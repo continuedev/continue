@@ -10,8 +10,8 @@ import {
   defaultBorderRadius,
   lightGray,
   vscCommandCenterInactiveBorder,
-} from "../..";
-import { ToolTip } from "../../gui/Tooltip";
+} from "..";
+import { ToolTip } from "../gui/Tooltip";
 
 export const OptionDiv = styled.div<{
   isDisabled?: boolean;

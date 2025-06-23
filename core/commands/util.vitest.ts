@@ -1,5 +1,6 @@
-import { ctxItemToRifWithContents } from "./util";
+import { describe, expect, it } from "vitest";
 import { ContextItemWithId, RangeInFileWithContents } from "../index";
+import { ctxItemToRifWithContents } from "./util";
 
 describe("ctxItemToRifWithContents", () => {
   it("should parse start and end lines from the item name when format is valid", () => {
