@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
+import posthog from "posthog-js";
 import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -44,6 +45,9 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
     let output: ContextItem[] | undefined = undefined;
     let errorMessage: string | undefined = undefined;
     let streamResponse: boolean;
+
+    // Check if telemetry is enabled
+    const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
 
     // IMPORTANT:
     // Errors that occur while calling tool call implementations
@@ -108,6 +112,17 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
           contextItems: output,
         }),
       );
+    }
+
+    // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
+    // directly rather than using `CustomPostHogProvider`
+    if (allowAnonymousTelemetry) {
+      // Capture telemetry for tool calls
+      posthog.capture("gui_tool_call_outcome", {
+        succeeded: errorMessage === undefined,
+        toolName: toolCallState.toolCall.function.name,
+        errorMessage: errorMessage,
+      });
     }
 
     if (streamResponse) {
