@@ -20,6 +20,7 @@ import {
 import {
   acceptToolCall,
   addContextItemsAtIndex,
+  setHasReasoningEnabled,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
@@ -85,6 +86,13 @@ function ParallelListeners() {
       if (configResult.config?.ui?.fontSize) {
         setLocalStorage("fontSize", configResult.config.ui.fontSize);
         document.body.style.fontSize = `${configResult.config.ui.fontSize}px`;
+      }
+
+      if (
+        configResult.config?.selectedModelByRole.chat?.completionOptions
+          ?.reasoning
+      ) {
+        dispatch(setHasReasoningEnabled(true));
       }
     },
     [dispatch, hasDoneInitialConfigLoad],
@@ -241,7 +249,7 @@ function ParallelListeners() {
         dispatch(updateEditStateApplyState(state));
 
         if (state.status === "closed") {
-          dispatch(exitEdit({}));
+          void dispatch(exitEdit({}));
         }
       } else {
         // chat or agent
