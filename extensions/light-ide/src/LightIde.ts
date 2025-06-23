@@ -110,6 +110,16 @@ export class LightIde implements IDE {
 
   private revertFilePath(filePath: string) {
     filePath = filePath.replace(/^file:\/\//, '');
+    const projectsPath = path.join(os.homedir(), "projects");
+    
+    // Remove duplicate project path occurrences, keeping only the last one
+    const pathParts = filePath.split(projectsPath);
+    if (pathParts.length > 2) {
+        // If projectsPath appears more than once, reconstruct with only the last occurrence
+        const lastPart = pathParts[pathParts.length - 1];
+        filePath = projectsPath + lastPart;
+    }
+
     return filePath;
   }
 
