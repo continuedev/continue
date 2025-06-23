@@ -92,6 +92,7 @@ export const streamResponseThunk = createAsyncThunk<
         // Determine which rules apply to this message
         const userMsg = updatedHistory[inputIndex].message;
         const rules = getState().config.config.rules;
+        const rulePolicies = getState().ui.ruleSettings;
 
         // Calculate applicable rules once
         // We need to check the message type to match what getApplicableRules expects
@@ -101,6 +102,7 @@ export const streamResponseThunk = createAsyncThunk<
             : undefined,
           rules,
           selectedContextItems,
+          rulePolicies,
         );
 
         // Store in history for UI display
@@ -122,6 +124,7 @@ export const streamResponseThunk = createAsyncThunk<
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
           applicableRules,
+          rulePolicies,
         );
 
         posthog.capture("step run", {

@@ -1,7 +1,11 @@
 import * as z from "zod";
 import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
-import { modelSchema, partialModelSchema } from "./models.js";
+import {
+  modelSchema,
+  partialModelSchema,
+  requestOptionsSchema,
+} from "./models.js";
 
 export const contextSchema = z.object({
   name: z.string().optional(),
@@ -19,6 +23,7 @@ const mcpServerSchema = z.object({
   args: z.array(z.string()).optional(),
   env: z.record(z.string()).optional(),
   connectionTimeout: z.number().gt(0).optional(),
+  requestOptions: requestOptionsSchema.optional(),
 });
 
 export type MCPServer = z.infer<typeof mcpServerSchema>;
@@ -39,6 +44,7 @@ const docSchema = z.object({
 });
 
 export type DocsConfig = z.infer<typeof docSchema>;
+
 const ruleObjectSchema = z.object({
   name: z.string(),
   rule: z.string(),
@@ -48,8 +54,23 @@ const ruleObjectSchema = z.object({
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
+/**
+ * A schema for rules.json files
+ */
+export const rulesJsonSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  author: z.string().optional(),
+  license: z.string().optional(),
+  rules: z.record(z.string(), z.string()).optional(),
+});
+
 export type Rule = z.infer<typeof ruleSchema>;
 export type RuleObject = z.infer<typeof ruleObjectSchema>;
+/**
+ * A schema for rules.json files
+ */
+export type RulesJson = z.infer<typeof rulesJsonSchema>;
 
 const defaultUsesSchema = z.string();
 

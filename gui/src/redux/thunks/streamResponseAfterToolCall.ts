@@ -35,7 +35,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const toolCallState = findToolCall(state.session.history, toolCallId);
 
         if (!toolCallState) {
-          throw new Error("Tool call not found");
+          return; // in cases where edit tool is cancelled mid apply, this will be triggered
         }
 
         const toolOutput = toolCallState.output ?? [];

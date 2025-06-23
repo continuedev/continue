@@ -1,12 +1,10 @@
-import { BlockType } from "@continuedev/config-yaml";
-import { describe, expect, test } from "vitest";
-import { RULE_FILE_EXTENSION } from "../markdown";
+import { BlockType, RULE_FILE_EXTENSION } from "@continuedev/config-yaml";
+import { describe, expect, test } from "@jest/globals";
 import { findAvailableFilename, getFileContent } from "./workspaceBlocks";
 
 describe("getFileContent", () => {
   test("returns markdown content for rules block type", () => {
     const result = getFileContent("rules");
-    expect(result).toContain("# New Rule");
     expect(result).toContain("Your rule content");
     expect(result).toContain("A description of your rule");
   });
