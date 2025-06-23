@@ -1,15 +1,13 @@
 import {
   ChatHistoryItem,
   ChatMessage,
-  ContextItemWithId,
+  ModelDescription,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
   UserChatMessage,
 } from "../";
-import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
-import { isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 import { RulePolicies } from "./rules/types";
 
@@ -79,38 +77,17 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 ${EDIT_MESSAGE}
 </important_rules>`;
 
-/**
- * Helper function to get the context items for a user message
- */
-function getUserContextItems(
-  userMsg: UserChatMessage | ToolResultChatMessage | undefined,
-  history: ChatHistoryItem[],
-): ContextItemWithId[] {
-  if (!userMsg) return [];
-
-  // Find the history item that contains the userMsg
-  const historyItem = history.find((item) => {
-    // Check if the message ID matches
-    if ("id" in userMsg && "id" in item.message) {
-      return (item.message as any).id === (userMsg as any).id;
-    }
-    // Fallback to content comparison
-    return (
-      item.message.content === userMsg.content &&
-      item.message.role === userMsg.role
-    );
-  });
-
-  return historyItem?.contextItems || [];
-}
-
 export function constructMessages(
   messageMode: string,
   history: ChatHistoryItem[],
-  baseChatOrAgentSystemMessage: string | undefined,
-  rules: RuleWithSource[],
-  rulePolicies?: RulePolicies,
-): ChatMessage[] {
+  model: ModelDescription,
+  availableRules: RuleWithSource[],
+  rulePolicies: RulePolicies,
+): {
+  messages: ChatMessage[];
+  appliedRules: RuleWithSource[];
+  lastMessageIndex: number;
+} {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
@@ -151,21 +128,32 @@ export function constructMessages(
     }
   }
 
-  const lastUserMsg = findLast(msgs, isUserOrToolMsg) as
+  let baseChatOrAgentSystemMessage: string | undefined;
+  if (messageMode === "agent") {
+    baseChatOrAgentSystemMessage =
+      model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
+  } else {
+    baseChatOrAgentSystemMessage =
+      model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
+  }
+
+  // Determine which rules apply to this message
+  const lastUserOrToolItemIdx = history.findLastIndex(
+    (item) => item.message.role === "user" || item.message.role === "tool",
+  );
+  const lastUserOrToolHistoryItem = history[lastUserOrToolItemIdx];
+  // const lastUserOrToolItem = lastUserOrToolItemIdx === -1 ? undefined
+  const lastUserOrToolMessage = lastUserOrToolHistoryItem?.message as
     | UserChatMessage
     | ToolResultChatMessage
     | undefined;
 
   // Get context items for the last user message
-  const lastUserContextItems = getUserContextItems(
-    lastUserMsg,
-    filteredHistory,
-  );
-  const systemMessage = getSystemMessageWithRules({
+  const { systemMessage, appliedRules } = getSystemMessageWithRules({
     baseSystemMessage: baseChatOrAgentSystemMessage,
-    rules,
-    userMessage: lastUserMsg,
-    contextItems: lastUserContextItems,
+    availableRules,
+    userMessage: lastUserOrToolMessage,
+    contextItems: lastUserOrToolHistoryItem?.contextItems ?? [],
     rulePolicies,
   });
 
@@ -177,8 +165,13 @@ export function constructMessages(
   }
 
   // Remove the "id" from all of the messages
-  return msgs.map((msg) => {
+  const messages = msgs.map((msg) => {
     const { id, ...rest } = msg as any;
     return rest;
   });
+  return {
+    messages,
+    appliedRules,
+    lastMessageIndex: lastUserOrToolItemIdx,
+  };
 }
