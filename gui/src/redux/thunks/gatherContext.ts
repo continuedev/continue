@@ -27,15 +27,11 @@ export const gatherContext = createAsyncThunk<
   {
     editorState: JSONContent;
     modifiers: InputModifiers;
-    promptPreamble?: string;
   },
   ThunkApiType
 >(
   "chat/gatherContext",
-  async (
-    { modifiers, editorState, promptPreamble },
-    { dispatch, extra, getState },
-  ) => {
+  async ({ modifiers, editorState }, { dispatch, extra, getState }) => {
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
@@ -50,7 +46,7 @@ export const gatherContext = createAsyncThunk<
     }
 
     // Resolve context providers and construct new history
-    let {
+    const {
       selectedContextItems,
       selectedCode,
       content,
@@ -107,14 +103,6 @@ export const gatherContext = createAsyncThunk<
             selectedContextItems.unshift(currentFile);
           }
         }
-      }
-    }
-
-    if (promptPreamble) {
-      if (typeof content === "string") {
-        content = promptPreamble + content;
-      } else if (content[0].type === "text") {
-        content[0].text = promptPreamble + content[0].text;
       }
     }
 

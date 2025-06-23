@@ -25,15 +25,11 @@ export const streamResponseThunk = createAsyncThunk<
     editorState: JSONContent;
     modifiers: InputModifiers;
     index?: number;
-    promptPreamble?: string;
   },
   ThunkApiType
 >(
   "chat/streamResponse",
-  async (
-    { editorState, modifiers, index, promptPreamble },
-    { dispatch, extra, getState },
-  ) => {
+  async ({ editorState, modifiers, index }, { dispatch, extra, getState }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
@@ -53,7 +49,6 @@ export const streamResponseThunk = createAsyncThunk<
           gatherContext({
             editorState,
             modifiers,
-            promptPreamble,
           }),
         );
         const {
