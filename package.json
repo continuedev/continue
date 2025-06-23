@@ -10,7 +10,8 @@
     "ci": "npm run install-core && npm run install-gui && npm run install-vscode",
     "install-gui": "cd gui && npm install && npm run build && cd -",
     "install-core": "cd core && npm install && npm link && cd -",
-    "install-vscode": "cd extensions/vscode && npm install && npm link @continuedev/core && npm run package && cd -"
+    "install-vscode": "cd extensions/vscode && npm install && npm link @continuedev/core && npm run package && cd -",
+    "install-vsix-for-linux": "npm run install-core && cd extensions/vscode && npm install && npm link @continuedev/core && npm run package-to-linux-x64-platform"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^7.8.0",
