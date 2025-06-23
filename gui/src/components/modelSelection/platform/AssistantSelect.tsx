@@ -7,35 +7,34 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
+import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   selectCurrentOrg,
   setSelectedOrgId,
   setSelectedProfile,
-} from "../../../redux";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+} from "../../../redux/slices/profilesSlice";
 import {
   fontSize,
   getMetaKeyLabel,
   isLocalProfile,
   isMetaEquivalentKeyPressed,
 } from "../../../util";
+import { cn } from "../../../util/cn";
+import { ROUTES } from "../../../util/navigation";
+import { useLump } from "../../mainInput/Lump/LumpContext";
 import {
   Listbox,
   ListboxButton,
   ListboxOption,
   ListboxOptions,
   Transition,
+  useFontSize,
 } from "../../ui";
-
-import type { ProfileDescription } from "core/config/ConfigHandler";
-import { useNavigate } from "react-router-dom";
-import { cn } from "../../../util/cn";
-import { ROUTES } from "../../../util/navigation";
-import { useLump } from "../../mainInput/Lump/LumpContext";
-import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;

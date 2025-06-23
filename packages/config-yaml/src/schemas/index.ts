@@ -1,7 +1,11 @@
 import * as z from "zod";
 import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
-import { modelSchema, partialModelSchema } from "./models.js";
+import {
+  modelSchema,
+  partialModelSchema,
+  requestOptionsSchema,
+} from "./models.js";
 
 export const contextSchema = z.object({
   name: z.string().optional(),
@@ -19,6 +23,7 @@ const mcpServerSchema = z.object({
   args: z.array(z.string()).optional(),
   env: z.record(z.string()).optional(),
   connectionTimeout: z.number().gt(0).optional(),
+  requestOptions: requestOptionsSchema.optional(),
 });
 
 export type MCPServer = z.infer<typeof mcpServerSchema>;

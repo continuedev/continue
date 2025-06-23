@@ -315,11 +315,11 @@ class IntelliJIDE(
         return getOpenFiles()
     }
 
-    override suspend fun getFileResults(pattern: String): List<String> {
+    override suspend fun getFileResults(pattern: String, maxResults: Int?): List<String> {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                val command = GeneralCommandLine(
+                var commandArgs = mutableListOf<String>(
                     ripgrep,
                     "--files",
                     "--iglob",
@@ -327,8 +327,14 @@ class IntelliJIDE(
                     "--ignore-file",
                     ".continueignore",
                     "--ignore-file",
-                    ".gitignore",
+                    ".gitignore"
                 )
+                if (maxResults != null) {
+                    commandArgs.add("--max-count")
+                    commandArgs.add(maxResults.toString())
+                }
+
+                val command = GeneralCommandLine(commandArgs)
     
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
@@ -344,11 +350,11 @@ class IntelliJIDE(
             throw NotImplementedError("Ripgrep not supported, this workspace is remote")
         }
     }
-    override suspend fun getSearchResults(query: String): String {
+    override suspend fun getSearchResults(query: String, maxResults: Int?): String {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                val command = GeneralCommandLine(
+                 val commandArgs = mutableListOf(
                     ripgrep,
                     "-i",
                     "--ignore-file",
@@ -357,11 +363,21 @@ class IntelliJIDE(
                     ".gitignore",
                     "-C",
                     "2",
-                    "--heading",
-                    "-e",
-                    query,
-                    "."
+                    "--heading"
                 )
+                
+                // Conditionally add maxResults flag
+                if (maxResults != null) {
+                    commandArgs.add("-m")
+                    commandArgs.add(maxResults.toString())
+                }
+                
+                // Add the search query and path
+                commandArgs.add("-e")
+                commandArgs.add(query)
+                commandArgs.add(".")
+
+                val command = GeneralCommandLine(commandArgs)
     
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
