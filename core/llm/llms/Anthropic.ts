@@ -8,7 +8,6 @@ class Anthropic extends BaseLLM {
   static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-3-5-sonnet-latest",
-    contextLength: 200_000,
     completionOptions: {
       model: "claude-3-5-sonnet-latest",
       maxTokens: 8192,
