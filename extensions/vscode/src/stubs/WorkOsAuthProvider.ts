@@ -183,7 +183,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
   async refreshSessions() {
     try {
-      debugger;
       await this._refreshSessions();
     } catch (e) {
       console.error(`Error refreshing sessions: ${e}`);
