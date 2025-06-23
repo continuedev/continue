@@ -1,4 +1,5 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -18,7 +19,7 @@ import {
 } from "../ui";
 import { AccountOption } from "./AccountOption";
 import { AssistantOptions } from "./AssistantOptions";
-import { OrganizationInfo } from "./OrganizationInfo";
+import { ScopeSelect } from "./ScopeSelect";
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
 
 export function AssistantAndOrgListbox() {
@@ -27,9 +28,12 @@ export function AssistantAndOrgListbox() {
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
-  const { profiles, selectedProfile, session, login } = useAuth();
+  const { profiles, selectedProfile, session, login, organizations } =
+    useAuth();
   const smallFont = useFontSize(-3);
   const tinyFont = useFontSize(-4);
+  const shouldRenderOrgInfo =
+    session && organizations.length > 1 && !isOnPremSession(session);
 
   function close() {
     // Close the listbox by clicking outside or programmatically
@@ -114,7 +118,19 @@ export function AssistantAndOrgListbox() {
         <SelectedAssistantButton selectedProfile={selectedProfile} />
         <Transition>
           <ListboxOptions className="-translate-x-1.5 pb-0">
-            <OrganizationInfo />
+            {shouldRenderOrgInfo && (
+              <div className="border-border border-x-0 border-t-0 border-solid px-2 py-3">
+                <div className="flex flex-col gap-2 pb-1 pl-1">
+                  <span className="text-description-muted flex items-center pb-1">
+                    {session.account.id}
+                  </span>
+                  <label className="text-vsc-foreground font-semibold">
+                    Organization
+                  </label>
+                  <ScopeSelect />
+                </div>
+              </div>
+            )}
             <AssistantOptions
               selectedProfileId={selectedProfile.id}
               onClose={close}
@@ -125,15 +141,15 @@ export function AssistantAndOrgListbox() {
               <ListboxOption
                 value="new-assistant"
                 fontSizeModifier={-2}
-                className="border-border border-b px-3 py-1.5"
+                className="border-border border-b px-2 py-1.5"
                 onClick={session ? onNewAssistant : () => login(false)}
               >
-                <div
+                <span
                   className="text-description flex flex-row items-center"
                   style={{ fontSize: tinyFont }}
                 >
-                  New Assistant
-                </div>
+                  <PlusIcon className="mr-1 h-3 w-3" /> New Assistant
+                </span>
               </ListboxOption>
 
               <AccountOption onClose={close} />

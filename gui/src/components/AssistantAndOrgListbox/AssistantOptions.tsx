@@ -19,7 +19,7 @@ export function AssistantOptions({
   return (
     <>
       {/* Assistants Section Header */}
-      <div className="border-border flex gap-1.5 border-x-0 border-b-0 border-t border-solid px-4 py-2">
+      <div className="flex gap-1.5 px-3 pb-1 pt-2">
         <label className="text-vsc-foreground font-semibold">Assistants</label>
         <div
           className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
