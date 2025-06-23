@@ -321,10 +321,10 @@ export class VsCodeMessenger {
       await ide.runCommand(msg.data.command);
     });
     this.onWebviewOrCore("getSearchResults", async (msg) => {
-      return ide.getSearchResults(msg.data.query);
+      return ide.getSearchResults(msg.data.query, msg.data.maxResults);
     });
     this.onWebviewOrCore("getFileResults", async (msg) => {
-      return ide.getFileResults(msg.data.pattern);
+      return ide.getFileResults(msg.data.pattern, msg.data.maxResults);
     });
     this.onWebviewOrCore("subprocess", async (msg) => {
       return ide.subprocess(msg.data.command, msg.data.cwd);

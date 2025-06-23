@@ -288,6 +288,8 @@ Reference the results of codebase search, just like the results you would get fr
   ```yaml title="config.yaml"
   context:
     - provider: search
+      params: 
+         maxResults: 100 # optional, defaults to 200
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -295,7 +297,10 @@ Reference the results of codebase search, just like the results you would get fr
   {
     "contextProviders": [
       {
-        "name": "search"
+        "name": "search",
+        "params": {
+          "maxResults": 100 // optional, defaults to 200
+        }
       }
     ]
   }

@@ -6,6 +6,7 @@ import {
   UserChatMessage,
 } from "../..";
 import { getApplicableRules } from "./getSystemMessageWithRules";
+import { RulePolicies } from "./types";
 
 describe("Rule application with alwaysApply", () => {
   // Create an always-apply rule
@@ -135,5 +136,39 @@ describe("Rule application with alwaysApply", () => {
     applicableRules = getApplicableRules(simpleMessage, [alwaysApplyRule], []);
     expect(applicableRules).toHaveLength(1);
     expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
+  });
+
+  it("should respect 'off' rulePolicies over alwaysApply when there are no file paths", () => {
+    // Rule with alwaysApply: true
+    const globalRule: RuleWithSource = {
+      name: "Global Rule",
+      rule: "This rule has alwaysApply: true but is blocked by rulePolicies",
+      alwaysApply: true,
+      source: "rules-block",
+      ruleFile: "src/some/path.md",
+    };
+
+    // Message with no code blocks or file references
+    const simpleMessage: UserChatMessage = {
+      role: "user",
+      content: "Can you help me with something?",
+    };
+
+    // Create a rule policy that blocks the rule
+    const rulePolicies: RulePolicies = {
+      "Global Rule": "off",
+    };
+
+    // The rule should NOT be applied due to the "off" policy,
+    // even though it has alwaysApply: true and there are no file paths
+    const applicableRules = getApplicableRules(
+      simpleMessage,
+      [globalRule],
+      [],
+      rulePolicies,
+    );
+
+    expect(applicableRules).toHaveLength(0);
+    expect(applicableRules.map((r) => r.name)).not.toContain("Global Rule");
   });
 });

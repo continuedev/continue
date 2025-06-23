@@ -13,9 +13,8 @@ import { ReactNode, useContext, useEffect, useState } from "react";
 import { vscBadgeForeground } from "../../..";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../redux/hooks";
+import FreeTrialButton from "../../../FreeTrialButton";
 import { ToolTip } from "../../../gui/Tooltip";
-import AssistantSelect from "../../../modelSelection/platform/AssistantSelect";
-import FreeTrialButton from "../../../modelSelection/platform/FreeTrialButton";
 import { useFontSize } from "../../../ui/font";
 import HoverItem from "../../InputToolbar/HoverItem";
 import { useLump } from "../LumpContext";
@@ -25,6 +24,7 @@ import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSecti
 
 import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
+import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
 
 interface BlockSettingsToolbarIcon {
   title: string;
@@ -236,7 +236,7 @@ export function BlockSettingsTopToolbar() {
           {isUsingFreeTrial ? (
             <FreeTrialButton freeTrialStatus={freeTrialStatus} />
           ) : (
-            <AssistantSelect />
+            <AssistantAndOrgListbox />
           )}
           <ToolTip id="assistant-select-tooltip" place="top">
             {isUsingFreeTrial ? "View free trial usage" : "Select Assistant"}

@@ -211,6 +211,6 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
       new GlobalContext().updateSharedConfig(shareConfigUpdates);
     }
   } catch (e) {
-    throw new Error(`Migration: Failed to parse config.json: ${e}`);
+    console.error(`Migration: Failed to parse config.json: ${e}`);
   }
 }
