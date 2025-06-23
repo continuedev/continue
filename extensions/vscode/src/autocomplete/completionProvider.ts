@@ -81,7 +81,7 @@ export class ContinueCompletionProvider
     );
     // NOTE: Only turn it on locally when testing (for review purposes).
     // TODO: revert back
-    if (IS_NEXT_EDIT_ACTIVE || true) {
+    if (IS_NEXT_EDIT_ACTIVE) {
       this.nextEditProvider = new NextEditProvider(
         this.configHandler,
         this.ide,
