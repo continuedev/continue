@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { walkDirCache } from "../indexing/walkDir";
 import { testIde } from "../test/fixtures";
 import { addToTestDir, setUpTestDir, tearDownTestDir } from "../test/testDir";
