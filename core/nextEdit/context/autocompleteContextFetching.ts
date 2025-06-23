@@ -56,7 +56,6 @@ export const getAutocompleteContext = async (
     manuallyPassFileContents,
   };
 
-  // Load config to get autocomplete options
   const { config } = await configHandler.loadConfig();
   if (!config) {
     throw new Error("No config available");
@@ -64,20 +63,31 @@ export const getAutocompleteContext = async (
 
   // Use provided autocomplete model or fall back to configured autocomplete model
   let finalModel: ILLM;
+  let modelNameForTemplating: string;
+
   if (autocompleteModel) {
     if (typeof autocompleteModel === "string") {
-      // If model name is provided as string, find it in the config
+      // Try to find the model in config first
       const foundModel = config.modelsByRole.autocomplete.find(
         (m) => m.title === autocompleteModel,
       );
-      if (!foundModel) {
-        throw new Error(
-          `Autocomplete model with title "${autocompleteModel}" not found`,
-        );
+      if (foundModel) {
+        finalModel = foundModel;
+        modelNameForTemplating = foundModel.model;
+      } else {
+        // Model not found in config, but we can still use it for template selection
+        const configuredModel = config.selectedModelByRole.autocomplete;
+        if (!configuredModel) {
+          throw new Error(
+            "No autocomplete model configured and provided model not found in config",
+          );
+        }
+        finalModel = configuredModel;
+        modelNameForTemplating = autocompleteModel; // Use the provided string for template selection
       }
-      finalModel = foundModel;
     } else {
       finalModel = autocompleteModel;
+      modelNameForTemplating = autocompleteModel.model;
     }
   } else {
     const configuredModel = config.selectedModelByRole.autocomplete;
@@ -85,27 +95,29 @@ export const getAutocompleteContext = async (
       throw new Error("No autocomplete model configured and no model provided");
     }
     finalModel = configuredModel;
+    modelNameForTemplating = configuredModel.model;
   }
 
-  // Build options exactly like CompletionProvider does
   const options = {
     ...DEFAULT_AUTOCOMPLETE_OPTS,
     ...config.tabAutocompleteOptions,
     ...finalModel.autocompleteOptions,
-    // Allow maxPromptTokens override if provided
     ...(maxPromptTokens && { maxPromptTokens }),
   };
 
-  // Handle template from model like CompletionProvider does
   if (finalModel.promptTemplates?.autocomplete) {
     options.template = finalModel.promptTemplates.autocomplete as string;
   }
 
-  const helper = await HelperVars.create(input, options, finalModel.model, ide);
+  const helper = await HelperVars.create(
+    input,
+    options,
+    modelNameForTemplating,
+    ide,
+  );
+
   const contextRetrievalService = new ContextRetrievalService(ide);
 
-  // CRITICAL: Initialize the import definitions cache for this file
-  // This is normally done when the active text editor changes, but we need to do it manually
   await contextRetrievalService.initializeForFile(filepath);
 
   const [snippetPayload, workspaceDirs] = await Promise.all([

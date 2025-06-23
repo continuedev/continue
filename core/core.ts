@@ -726,10 +726,14 @@ export class Core {
               currentData.getDefsFromLspFunction,
               currentData.recentlyEditedRanges,
               currentData.recentlyVisitedRanges,
+              currentData.workspaceDir,
             );
           },
         );
       }
+
+      const workspaceDir =
+        data.actions.length > 0 ? data.actions[0].workspaceDir : undefined;
 
       // Store the latest context data on the aggregator
       (global._editAggregator as any).latestContextData = {
@@ -737,6 +741,7 @@ export class Core {
         getDefsFromLspFunction: data.getDefsFromLspFunction,
         recentlyEditedRanges: data.recentlyEditedRanges,
         recentlyVisitedRanges: data.recentlyVisitedRanges,
+        workspaceDir: workspaceDir,
       };
 
       // queueMicrotask prevents blocking the UI thread during typing

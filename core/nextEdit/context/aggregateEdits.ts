@@ -147,7 +147,7 @@ export class EditAggregator {
 
     const clustersToFinalize = this.identifyClustersToFinalize(
       fileState,
-      editLine,
+      edit,
       timestamp,
       false,
     );
@@ -360,29 +360,39 @@ export class EditAggregator {
 
   private identifyClustersToFinalize(
     fileState: FileState,
-    editLine: number,
+    edit: RangeInFileWithNextEditInfo,
     timestamp: number,
     isStructuralEdit: boolean,
   ): ClusterState[] {
     const clustersToFinalize: ClusterState[] = [];
+    const editLine = edit.range.start.line;
 
     fileState.activeClusters.forEach((cluster) => {
       const timeSinceLastEdit = (timestamp - cluster.lastTimestamp) / 1000;
 
-      // Only consider the line changed if it's a DIFFERENT line
-      const isOnDifferentLine = cluster.lastLine !== editLine;
+      const isOnDifferentLineByNumber = cluster.lastLine !== editLine;
 
-      // Finalize if we moved to a different line AND the time gap exceeds deltaT
+      const isOnDifferentLineByNewline = edit.editText.includes("\n");
+
+      // Use different time thresholds for different types of line change detection
+      const shouldFinalizeByLineNumber =
+        isOnDifferentLineByNumber && timeSinceLastEdit > this.config.deltaT;
+
+      const shouldFinalizeByNewline =
+        isOnDifferentLineByNewline &&
+        timeSinceLastEdit > this.config.deltaT * 1.5;
+
+      // Finalize if we moved to a different line AND the time gap exceeds the respective threshold
       const shouldFinalizeByTime =
-        isOnDifferentLine && timeSinceLastEdit > this.config.deltaT;
-
+        shouldFinalizeByLineNumber || shouldFinalizeByNewline;
       const shouldFinalizeByCount =
         cluster.edits.length >= this.config.maxEdits;
-
       const shouldFinalizeByDuration =
         (timestamp - cluster.firstTimestamp) / 1000 > this.config.maxDuration;
 
-      // Structural edits should only finalize other clusters, not their own
+      // For structural edits, use the combined line detection
+      const isOnDifferentLine =
+        isOnDifferentLineByNumber || isOnDifferentLineByNewline;
       const shouldFinalizeByStructuralEdit =
         isStructuralEdit && isOnDifferentLine;
 

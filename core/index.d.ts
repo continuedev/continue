@@ -1307,6 +1307,7 @@ export interface RangeInFileWithNextEditInfo {
   editText: string;
   afterCursorPos: Position;
   beforeCursorPos: Position;
+  workspaceDir: string;
 }
 
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;

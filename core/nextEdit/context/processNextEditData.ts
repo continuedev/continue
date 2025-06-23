@@ -2,9 +2,9 @@ import { IDE, Position } from "../..";
 import { AutocompleteCodeSnippet } from "../../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../../autocomplete/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
+import { DataLogger } from "../../data/log";
 import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
-import { createDiff, DiffFormatType } from "./diffFormatting";
 
 const randomNumberBetween = (min: number, max: number) => {
   min = Math.ceil(min); // Ensure min is an integer
@@ -23,6 +23,7 @@ export const processNextEditData = async (
   getDefinitionsFromLsp: GetLspDefinitionsFunction,
   recentlyEditedRanges: RecentlyEditedRange[],
   recentlyVisitedRanges: AutocompleteCodeSnippet[],
+  workspaceDir: string,
   modelNameOrInstance?: string | undefined,
   // eslint-disable-next-line max-params
 ) => {
@@ -34,7 +35,7 @@ export const processNextEditData = async (
 
   const modelName = "Codestral";
 
-  const maxPromptTokens = randomNumberBetween(500, 14000);
+  const maxPromptTokens = randomNumberBetween(500, 12000);
 
   const autocompleteContext = await getAutocompleteContext(
     filePath,
@@ -49,7 +50,20 @@ export const processNextEditData = async (
     modelName,
   );
 
-  console.log(
-    createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
-  );
+  // console.log(
+  //   createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
+  // );
+
+  void DataLogger.getInstance().logDevData({
+    name: "nextEdit",
+    data: {
+      fileURI: filePath,
+      workspaceDirURI: workspaceDir,
+      beforeContent,
+      afterContent,
+      beforeCursorPos: cursorPosBeforeEdit,
+      afterCursorPos: cursorPosAfterPrevEdit,
+      context: autocompleteContext,
+    },
+  });
 };

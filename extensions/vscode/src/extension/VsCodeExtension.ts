@@ -301,7 +301,9 @@ export class VsCodeExtension {
       const workspaceFolder = vscode.workspace.getWorkspaceFolder(
         event.document.uri,
       );
-      if (!workspaceFolder) return;
+      if (!workspaceFolder) {
+        return;
+      }
 
       const workspaceDirUri = workspaceFolder.uri.toString();
       const repoName = await this.ide.getRepoName(workspaceDirUri);
@@ -325,6 +327,7 @@ export class VsCodeExtension {
             : change.range.start) as Position,
 
           afterCursorPos: activeCursorPos as Position,
+          workspaceDir: workspaceDirUri,
         }),
       );
 
