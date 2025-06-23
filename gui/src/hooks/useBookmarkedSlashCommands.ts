@@ -1,11 +1,12 @@
 import { SlashCommandDescription } from "core";
 import { usePostHog } from "posthog-js/react";
+
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   bookmarkSlashCommand,
   selectBookmarkedSlashCommands,
   unbookmarkSlashCommand,
-} from "../redux";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
+} from "../redux/slices/profilesSlice";
 
 export function useBookmarkedSlashCommands() {
   const dispatch = useAppDispatch();

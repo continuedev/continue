@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { Button } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { getLocalStorage } from "../../../util/localStorage";
-import { useOnboardingCard } from "../hooks";
+import { useOnboardingCard } from "../hooks/useOnboardingCard";
 
 /**
  * Models Add-On tab component displaying pricing and tier information

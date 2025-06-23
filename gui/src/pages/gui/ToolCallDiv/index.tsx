@@ -2,7 +2,6 @@ import {
   ArrowRightIcon,
   CheckIcon,
   CodeBracketIcon,
-  CommandLineIcon,
   DocumentIcon,
   DocumentTextIcon,
   FolderIcon,
@@ -37,7 +36,7 @@ interface ToolCallDivProps {
 
 const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.FileGlobSearch]: MagnifyingGlassIcon,
-  [BuiltInToolNames.GrepSearch]: CommandLineIcon,
+  [BuiltInToolNames.GrepSearch]: MagnifyingGlassIcon,
   [BuiltInToolNames.LSTool]: FolderIcon,
   [BuiltInToolNames.ReadCurrentlyOpenFile]: DocumentTextIcon,
   [BuiltInToolNames.ReadFile]: DocumentIcon,

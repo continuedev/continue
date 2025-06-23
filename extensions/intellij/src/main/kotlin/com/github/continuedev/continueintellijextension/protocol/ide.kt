@@ -21,9 +21,9 @@ typealias OpenUrlParam = String
 
 typealias getTagsParams = String
 
-data class GetSearchResultsParams(val query: String)
+data class GetSearchResultsParams(val query: String, val maxResults: Int?)
 
-data class GetFileResultsParams(val pattern: String)
+data class GetFileResultsParams(val pattern: String, val maxResults: Int?)
 
 data class SaveFileParams(val filepath: String)
 
