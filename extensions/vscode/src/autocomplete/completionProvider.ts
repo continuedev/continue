@@ -5,8 +5,8 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
-import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+// import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
+// import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -54,7 +54,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
-  private nextEditProvider: NextEditProvider;
+  // private nextEditProvider: NextEditProvider;
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -81,16 +81,16 @@ export class ContinueCompletionProvider
     );
     // NOTE: Only turn it on locally when testing (for review purposes).
     // TODO: revert back
-    if (IS_NEXT_EDIT_ACTIVE) {
-      this.nextEditProvider = new NextEditProvider(
-        this.configHandler,
-        this.ide,
-        getAutocompleteModel,
-        this.onError.bind(this),
-        getDefinitionsFromLsp,
-        "fineTuned",
-      );
-    }
+    // if (IS_NEXT_EDIT_ACTIVE) {
+    //   this.nextEditProvider = new NextEditProvider(
+    //     this.configHandler,
+    //     this.ide,
+    //     getAutocompleteModel,
+    //     this.onError.bind(this),
+    //     getDefinitionsFromLsp,
+    //     "fineTuned",
+    //   );
+    // }
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
