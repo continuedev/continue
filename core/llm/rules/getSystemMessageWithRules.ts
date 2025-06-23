@@ -60,7 +60,7 @@ const matchesGlobs = (
  * @param regex - A single regex pattern string or array of regex pattern strings
  * @returns true if the content matches any pattern (or if no regex is provided), false otherwise
  */
-const contentMatchesPatterns = (
+const contentMatchesRegex = (
   fileContent: string,
   regex: string | string[],
 ): boolean => {
@@ -158,7 +158,7 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
   return false;
 };
 
-const checkGlobsAndPatterns = ({
+const checkGlobsAndRegex = ({
   rule,
   filePaths,
   fileContents,
@@ -183,7 +183,7 @@ const checkGlobsAndPatterns = ({
       const content = fileContents[filePath];
       // If we don't have the content, we can't check regex
       if (!content) return false;
-      return contentMatchesPatterns(content, rule.regex!);
+      return contentMatchesRegex(content, rule.regex!);
     });
   }
 
@@ -241,7 +241,7 @@ export const shouldApplyRule = (
       isFileInDirectory(filePath, ruleDirPath),
     );
 
-    return checkGlobsAndPatterns({
+    return checkGlobsAndRegex({
       filePaths: filesInRuleDirectory,
       fileContents,
       rule,
@@ -257,7 +257,7 @@ export const shouldApplyRule = (
     return false;
   }
 
-  return checkGlobsAndPatterns({
+  return checkGlobsAndRegex({
     filePaths,
     fileContents,
     rule,
