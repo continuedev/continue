@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { RuleWithSource } from "../..";
 import { shouldApplyRule } from "./getSystemMessageWithRules";
+import { RulePolicies } from "./types";
 
 describe("Rule colocation glob matching", () => {
   // This test file demonstrates the expected behavior after our fix
@@ -130,5 +131,116 @@ describe("Rule colocation glob matching", () => {
     expect(shouldApplyRule(testExclusionRule, ["src/models/user.ts"])).toBe(
       false,
     );
+  });
+});
+
+describe("Rule policies", () => {
+  const componentRule: RuleWithSource = {
+    name: "Components Rule",
+    rule: "Use functional components with hooks",
+    source: "rules-block",
+    ruleFile: "src/components/rules.md",
+  };
+
+  const testFiles = ["src/components/Button.tsx"];
+  const nonMatchingFiles = ["src/utils/helpers.ts"];
+
+  it("should never apply rules with 'off' policy regardless of file paths", () => {
+    const rulePolicies: RulePolicies = {
+      "Components Rule": "off",
+    };
+
+    // Should not apply even to matching files
+    expect(shouldApplyRule(componentRule, testFiles, rulePolicies)).toBe(false);
+
+    // Rule with alwaysApply: true should still be overridden by 'off' policy
+    const alwaysApplyRule: RuleWithSource = {
+      name: "Always Apply Rule",
+      rule: "This rule would normally always apply",
+      alwaysApply: true,
+      source: "rules-block",
+      ruleFile: "src/components/rules.md",
+    };
+
+    const offPolicies: RulePolicies = {
+      "Always Apply Rule": "off",
+    };
+
+    expect(shouldApplyRule(alwaysApplyRule, testFiles, offPolicies)).toBe(
+      false,
+    );
+  });
+
+  it("should apply 'on' policy rules based on normal matching logic", () => {
+    const rulePolicies: RulePolicies = {
+      "Components Rule": "on",
+    };
+
+    // Should apply to matching files
+    expect(shouldApplyRule(componentRule, testFiles, rulePolicies)).toBe(true);
+
+    // Should not apply to non-matching files
+    expect(shouldApplyRule(componentRule, nonMatchingFiles, rulePolicies)).toBe(
+      false,
+    );
+  });
+
+  it("should use default behavior when no policy is specified", () => {
+    // Empty policies object should use default behavior
+    const rulePolicies: RulePolicies = {};
+
+    // Should apply to matching files
+    expect(shouldApplyRule(componentRule, testFiles, rulePolicies)).toBe(true);
+
+    // Should not apply to non-matching files
+    expect(shouldApplyRule(componentRule, nonMatchingFiles, rulePolicies)).toBe(
+      false,
+    );
+  });
+
+  it("should handle policy interaction with global rules", () => {
+    // Root level rule which would normally apply globally
+    const rootRule: RuleWithSource = {
+      name: "Root Rule",
+      rule: "Follow project standards",
+      source: "rules-block",
+      ruleFile: ".continue/rules.md",
+    };
+
+    // Off policy should override even global rules
+    const offPolicies: RulePolicies = {
+      "Root Rule": "off",
+    };
+
+    expect(shouldApplyRule(rootRule, testFiles, offPolicies)).toBe(false);
+
+    // On policy should maintain global rule behavior
+    const onPolicies: RulePolicies = {
+      "Root Rule": "on",
+    };
+
+    expect(shouldApplyRule(rootRule, testFiles, onPolicies)).toBe(true);
+  });
+
+  it("should prioritize 'off' policy over alwaysApply and directory restrictions", () => {
+    // Create rule with multiple matching criteria
+    const complexRule: RuleWithSource = {
+      name: "Complex Rule",
+      rule: "This rule has complex matching logic",
+      alwaysApply: true,
+      globs: "**/*.ts",
+      source: "rules-block",
+      ruleFile: "src/utils/rules.md",
+    };
+
+    // Off policy should win over everything
+    const offPolicies: RulePolicies = {
+      "Complex Rule": "off",
+    };
+
+    // Even with matching files and alwaysApply: true, off policy wins
+    expect(
+      shouldApplyRule(complexRule, ["src/utils/test.ts"], offPolicies),
+    ).toBe(false);
   });
 });

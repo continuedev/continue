@@ -234,11 +234,14 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  async getSearchResults(query: string): Promise<string> {
+  async getSearchResults(query: string, maxResults?: number): Promise<string> {
     return "";
   }
 
-  async getFileResults(pattern: string): Promise<string[]> {
+  async getFileResults(
+    pattern: string,
+    maxResults?: number,
+  ): Promise<string[]> {
     return [];
   }
 

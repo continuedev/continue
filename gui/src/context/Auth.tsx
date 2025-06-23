@@ -12,13 +12,13 @@ import React, {
 } from "react";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   selectCurrentOrg,
   selectSelectedProfile,
   setOrganizations,
   setSelectedOrgId,
-} from "../redux/";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
+} from "../redux/slices/profilesSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
 

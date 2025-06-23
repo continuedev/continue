@@ -182,4 +182,38 @@ export class ControlPlaneClient {
       return null;
     }
   }
+
+  /**
+   * JetBrains does not support deep links, so we only check for `vsCodeUriScheme`
+   * @param vsCodeUriScheme
+   * @returns
+   */
+  public async getModelsAddOnCheckoutUrl(
+    vsCodeUriScheme?: string,
+  ): Promise<{ url: string } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        // LocalProfileLoader ID
+        profile_id: "local",
+      });
+
+      if (vsCodeUriScheme) {
+        params.set("vscode_uri_scheme", vsCodeUriScheme);
+      }
+
+      const resp = await this.request(
+        `ide/get-models-add-on-checkout-url?${params.toString()}`,
+        {
+          method: "GET",
+        },
+      );
+      return (await resp.json()) as { url: string };
+    } catch (e) {
+      return null;
+    }
+  }
 }

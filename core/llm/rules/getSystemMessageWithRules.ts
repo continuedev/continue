@@ -8,6 +8,7 @@ import {
 import { renderChatMessage } from "../../util/messageContent";
 import { getCleanUriPath } from "../../util/uri";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
+import { RulePolicies } from "./types";
 
 /**
  * Checks if a path matches any of the provided globs
@@ -120,13 +121,21 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
 export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
+  rulePolicies: RulePolicies = {},
 ): boolean => {
+  const policy = rulePolicies[rule.name || ""];
+
+  // Never apply if policy is "off"
+  if (policy === "off") {
+    return false;
+  }
+
   // If it's a global rule, always apply it regardless of file paths
   if (isGlobalRule(rule)) {
     return true;
   }
 
-  // If there are no file paths to check:
+  // If there are no file paths to check and we've made it here:
   // - We've already handled global rules above
   // - Don't apply other rules since we have no files to match against
   if (filePaths.length === 0) {
@@ -196,11 +205,9 @@ export const getApplicableRules = (
   userMessage: UserChatMessage | ToolResultChatMessage | undefined,
   rules: RuleWithSource[],
   contextItems: ContextItemWithId[],
+  rulePolicies: RulePolicies = {},
 ): RuleWithSource[] => {
-  // First, extract any global rules that should always apply
-  const globalRules = rules.filter((rule) => isGlobalRule(rule));
-
-  // Get file paths from message and context for regular rule matching
+  // Get file paths from message and context for rule matching
   const filePathsFromMessage = userMessage
     ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
     : [];
@@ -213,41 +220,34 @@ export const getApplicableRules = (
   // Combine file paths from both sources
   const allFilePaths = [...filePathsFromMessage, ...filePathsFromContextItems];
 
-  // If we have no file paths, just return the global rules
-  if (allFilePaths.length === 0) {
-    return globalRules;
-  }
+  // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
+  // and path matching in a consistent way
+  const applicableRules = rules.filter((rule) =>
+    shouldApplyRule(rule, allFilePaths, rulePolicies),
+  );
 
-  // Get rules that match file paths
-  const matchingRules = rules
-    .filter((rule) => !isGlobalRule(rule)) // Skip global rules as we've already handled them
-    .filter((rule) => shouldApplyRule(rule, allFilePaths));
-
-  // Combine global rules with matching rules, ensuring no duplicates
-  return [...globalRules, ...matchingRules];
+  return applicableRules;
 };
 
-/**
- * Creates a system message string with applicable rules appended
- *
- * @param baseSystemMessage - The base system message to start with
- * @param userMessage - The user message to check for file paths
- * @param rules - The list of rules to filter
- * @param contextItems - Context items to check for file paths
- * @returns System message with applicable rules appended
- */
 export const getSystemMessageWithRules = ({
   baseSystemMessage,
   userMessage,
   rules,
   contextItems,
+  rulePolicies = {},
 }: {
   baseSystemMessage?: string;
   userMessage: UserChatMessage | ToolResultChatMessage | undefined;
   rules: RuleWithSource[];
   contextItems: ContextItemWithId[];
+  rulePolicies?: RulePolicies;
 }) => {
-  const applicableRules = getApplicableRules(userMessage, rules, contextItems);
+  const applicableRules = getApplicableRules(
+    userMessage,
+    rules,
+    contextItems,
+    rulePolicies,
+  );
   let systemMessage = baseSystemMessage ?? "";
 
   for (const rule of applicableRules) {

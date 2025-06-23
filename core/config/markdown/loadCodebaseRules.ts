@@ -1,9 +1,11 @@
-import { ConfigValidationError } from "@continuedev/config-yaml";
+import {
+  ConfigValidationError,
+  markdownToRule,
+} from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
 import { walkDirs } from "../../indexing/walkDir";
 import { RULES_MARKDOWN_FILENAME } from "../../llm/rules/constants";
 import { getUriPathBasename } from "../../util/uri";
-import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
 
 /**
  * Loads rules from rules.md files colocated in the codebase
@@ -29,9 +31,9 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
     for (const filePath of rulesMdFiles) {
       try {
         const content = await ide.readFile(filePath);
-        const rule = convertMarkdownRuleToContinueRule(filePath, content);
+        const rule = markdownToRule(content, { uriType: "file", filePath });
 
-        rules.push(rule);
+        rules.push({ ...rule, source: "rules-block" });
       } catch (e) {
         errors.push({
           fatal: false,
