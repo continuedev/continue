@@ -7,6 +7,7 @@ import { RuleObject } from "../schemas/index.js";
 
 export interface RuleFrontmatter {
   globs?: RuleObject["globs"];
+  regex?: RuleObject["regex"];
   name?: RuleObject["name"];
   description?: RuleObject["description"];
   alwaysApply?: RuleObject["alwaysApply"];
@@ -78,6 +79,7 @@ export function markdownToRule(
     name: getRuleName(frontmatter, id),
     rule: markdown,
     globs: frontmatter.globs,
+    regex: frontmatter.regex,
     description: frontmatter.description,
     alwaysApply: frontmatter.alwaysApply,
   };
