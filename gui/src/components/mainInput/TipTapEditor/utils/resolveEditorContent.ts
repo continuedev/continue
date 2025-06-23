@@ -14,6 +14,8 @@ import {
   TextMessagePart,
 } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { renderTemplatedString } from "core/promptFiles/v1/renderTemplatedString";
+import { parsePromptFileV1V2 } from "core/promptFiles/v2/parsePromptFileV1V2";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
@@ -36,18 +38,17 @@ interface ResolveEditorContentInput {
   dispatch: Dispatch;
 }
 
-type ResolveEditorContentOutput = [
-  ContextItemWithId[],
-  RangeInFile[],
-  MessageContent,
-  (
+interface ResolveEditorContentOutput {
+  selectedContextItems: ContextItemWithId[];
+  selectedCode: RangeInFile[];
+  content: MessageContent;
+  legacyCommandWithInput:
     | {
         command: SlashCommandDescWithSource;
         input: string;
       }
-    | undefined
-  ),
-];
+    | undefined;
+}
 
 /**
  * This function converts the input from the editor to a string, resolving any context items
@@ -61,26 +62,38 @@ export async function resolveEditorContent({
   availableSlashCommands,
   dispatch,
 }: ResolveEditorContentInput): Promise<ResolveEditorContentOutput> {
-  const { parts, contextItemAttrs, selectedCode, slashCommandName } =
-    processEditorContent(editorState);
+  const {
+    parts,
+    contextItemAttrs: editorContextAttrs,
+    selectedCode,
+    slashCommandName,
+  } = processEditorContent(editorState);
 
-  const slashCommandWithInput = processSlashCommand(
+  const {
+    parts: slashParts,
+    legacyCommandWithInput,
+    contextAttrs: slashContextAttrs = [],
+  } = (await renderSlashCommandPrompt(
+    ideMessenger,
     slashCommandName,
     availableSlashCommands,
     parts,
-  );
+  )) ?? {};
 
-  const shouldGatherContext = modifiers.useCodebase || slashCommandWithInput;
+  const contextItemAttrs = [...editorContextAttrs, ...slashContextAttrs];
+
+  const shouldGatherContext =
+    modifiers.useCodebase || contextItemAttrs.length > 0;
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(true));
   }
 
-  const contextItems = await gatherContextItems({
+  const selectedContextItems = await gatherContextItems({
     contextItemAttrs,
     modifiers,
     ideMessenger,
     defaultContextProviders,
-    parts,
+    parts: slashParts ?? parts,
     selectedCode,
   });
 
@@ -88,7 +101,12 @@ export async function resolveEditorContent({
     dispatch(setIsGatheringContext(false));
   }
 
-  return [contextItems, selectedCode, parts, slashCommandWithInput];
+  return {
+    selectedContextItems,
+    selectedCode,
+    content: slashParts ?? parts,
+    legacyCommandWithInput,
+  };
 }
 
 /**
@@ -178,15 +196,25 @@ function processEditorContent(editorState: JSONContent) {
 
   return { parts, contextItemAttrs, selectedCode, slashCommandName };
 }
-
 /**
  * Processes slash commands and prepares the command with input
  */
-function processSlashCommand(
+async function renderSlashCommandPrompt(
+  ideMessenger: IIdeMessenger,
   slashCommandName: string | undefined,
   availableSlashCommands: SlashCommandDescWithSource[],
   parts: MessagePart[],
-): { command: SlashCommandDescWithSource; input: string } | undefined {
+): Promise<
+  | {
+      slashedParts: MessagePart[];
+      legacyCommandWithInput?: {
+        command: SlashCommandDescWithSource;
+        input: string;
+      };
+      contextAttrs: MentionAttrs[];
+    }
+  | undefined
+> {
   if (!slashCommandName) return;
 
   const command = availableSlashCommands.find(
@@ -195,33 +223,130 @@ function processSlashCommand(
 
   if (!command) return;
 
-  const lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
-  const lastTextPart = parts[lastTextIndex] as TextMessagePart;
+  const nonTextParts = parts.filter((part) => part.type !== "text");
+  const slashedParts: MessagePart[] = [...nonTextParts];
+  const textParts = parts.filter((part) => part.type === "text");
 
-  const originalPrompt = command.prompt ? " " + command.prompt : "";
+  const userInput = textParts.length
+    ? renderChatMessage({
+        role: "user",
+        content: textParts,
+      }).trimStart()
+    : "";
 
-  let input: string;
+  const legacyCommandWithInput = command.isLegacy
+    ? {
+        command,
+        input: userInput,
+      }
+    : undefined;
 
-  /**
-   * Although we no longer render slash command <span /> tags from the editor,
-   * we are inserting a slash command style text back into the text here.
-   * This is a a hack, but there's a number of assumptions in `core` that there
-   * is slash command text at the beginning of the text in order to process slash commands.
-   */
-  if (lastTextPart) {
-    input = renderChatMessage({
-      role: "user",
-      content: lastTextPart.text,
-    }).trimStart();
-    lastTextPart.text = `/${command.name}${originalPrompt} ${lastTextPart.text}`;
-  } else {
-    input = "";
-    parts.push({ type: "text", text: `/${command.name}${originalPrompt}` });
+  const contextItemAttrs: MentionAttrs[] = [];
+
+  switch (command.source) {
+    case "built-in-legacy":
+    case "config-ts-slash-command":
+      /**
+       * For legacy slash commands, we simply insert the text "/{name}" in front of the message
+       * And then parsing for this is done in core
+       */
+      slashedParts.push({
+        type: "text",
+        text: `/${command.name}${command.prompt ? " " + command.prompt : ""}${userInput ? " " + userInput : ""}`,
+      });
+      break;
+    case "mcp-prompt":
+      // TODO add support for mcp prompt args using command.mcpArgs
+      const args: { [key: string]: string } = {};
+      if (command.mcpArgs) {
+        command.mcpArgs.forEach((arg, i) => {
+          args[arg.name] = "";
+        });
+      }
+      const response = await ideMessenger.request("mcp/getPrompt", {
+        serverName: command.mcpServerName!,
+        promptName: command.name,
+        args: args,
+      });
+      if (response.status === "success") {
+        slashedParts.push({
+          type: "text",
+          text: `${response.content.prompt}${userInput ? "\n\n" + userInput : ""}`,
+        });
+      } else {
+        throw new Error(
+          `Failed to get MCP prompt for slash command ${slashCommandName}`,
+        );
+      }
+      break;
+    case ".prompt-file":
+      if (!command.promptFile || !command.prompt) {
+        throw new Error(
+          `Invalid/empty prompt from slash command ${command.name}`,
+        );
+      }
+      const { name, description, systemMessage, prompt } = parsePromptFileV1V2(
+        command.promptFile,
+        command.prompt,
+      );
+    case "yaml-prompt-block":
+      const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
+        config: context.config,
+        fullInput: context.input,
+        embeddingsProvider: context.config.modelsByRole.embed[0],
+        reranker: context.config.modelsByRole.rerank[0],
+        llm: context.llm,
+        ide: context.ide,
+        selectedCode: context.selectedCode,
+        fetch: context.fetch,
+      });
+
+      // Render prompt template
+      let renderedPrompt: string;
+      if (customCommand.prompt.includes("{{{ input }}}")) {
+        renderedPrompt = await renderTemplatedString(
+          customCommand.prompt,
+          ide.readFile.bind(ide),
+          { input },
+        );
+      } else {
+        const renderedPromptFile = await renderPromptFileV2(
+          customCommand.prompt,
+          {
+            config,
+            llm,
+            ide,
+            selectedCode,
+            fetch,
+            fullInput: input,
+            embeddingsProvider: config.selectedModelByRole.embed,
+            reranker: config.selectedModelByRole.rerank,
+          },
+        );
+
+        renderedPrompt = renderedPromptFile[1];
+      }
+
+      const renderedPrompt = renderPromptFile();
+      slashedParts.push({
+        type: "text",
+        text: renderedPrompt, // Includes user input
+      });
+    case "built-in":
+    case "invokable-rule":
+    case "json-custom-command":
+      if (!command.prompt) {
+        throw new Error(`Slash command ${slashCommandName} is missing prompt`);
+      }
+      slashedParts.push({
+        type: "text",
+        text: `${command.prompt}${userInput ? "\n\n" + userInput : ""}`,
+      });
   }
-
   return {
-    command,
-    input,
+    slashedParts,
+    legacyCommandWithInput,
+    contextAttrs: [],
   };
 }
 

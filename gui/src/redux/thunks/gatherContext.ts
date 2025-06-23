@@ -5,7 +5,7 @@ import {
   InputModifiers,
   MessageContent,
   RangeInFile,
-  SlashCommandDescription,
+  SlashCommandDescWithSource,
 } from "core";
 import * as URI from "uri-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor";
@@ -19,7 +19,7 @@ export const gatherContext = createAsyncThunk<
     content: MessageContent;
     legacyCommandWithInput:
       | {
-          command: SlashCommandDescription;
+          command: SlashCommandDescWithSource;
           input: string;
         }
       | undefined;
@@ -50,15 +50,19 @@ export const gatherContext = createAsyncThunk<
     }
 
     // Resolve context providers and construct new history
-    let [selectedContextItems, selectedCode, content, legacyCommandWithInput] =
-      await resolveEditorContent({
-        editorState,
-        modifiers,
-        ideMessenger: extra.ideMessenger,
-        defaultContextProviders,
-        availableSlashCommands: state.config.config.slashCommands,
-        dispatch,
-      });
+    let {
+      selectedContextItems,
+      selectedCode,
+      content,
+      legacyCommandWithInput,
+    } = await resolveEditorContent({
+      editorState,
+      modifiers,
+      ideMessenger: extra.ideMessenger,
+      defaultContextProviders,
+      availableSlashCommands: state.config.config.slashCommands,
+      dispatch,
+    });
 
     // Automatically use currently open file
     if (!modifiers.noContext) {

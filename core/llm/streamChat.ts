@@ -59,6 +59,9 @@ export async function* llmStreamChat(
       },
       true,
     );
+    if (!slashCommand.run) {
+      throw new Error(`Slash command ${command.name} is not a legacy command`);
+    }
 
     const gen = slashCommand.run({
       input,

@@ -30,7 +30,7 @@ import {
   ModelDescription,
   RerankerDescription,
   SerializedContinueConfig,
-  SlashCommand,
+  SlashCommandWithSource,
 } from "..";
 import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/built-in-legacy";
 import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
@@ -172,7 +172,7 @@ async function serializedToIntermediateConfig(
   ide: IDE,
 ): Promise<Config> {
   // DEPRECATED - load custom slash commands
-  const slashCommands: SlashCommand[] = [];
+  const slashCommands: SlashCommandWithSource[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = getLegacyBuiltInSlashCommandFromDescription(command);
     if (newCommand) {
@@ -660,7 +660,10 @@ async function finalToBrowserConfig(
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map(({ run, ...rest }) => rest),
+    slashCommands: final.slashCommands?.map(({ run, ...rest }) => ({
+      ...rest,
+      isLegacy: !!run,
+    })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,

@@ -1,13 +1,10 @@
 import { ContinueSDK, SlashCommandWithSource } from "../..";
 import { getDiffsFromCache } from "../../autocomplete/snippets/gitDiffCache";
 import { parsePromptFileV1V2 } from "../../promptFiles/v2/parsePromptFileV1V2";
-import { renderPromptFileV2 } from "../../promptFiles/v2/renderPromptFile";
-import { renderChatMessage } from "../../util/messageContent";
 import { getLastNPathParts } from "../../util/uri";
 
 import { getContextProviderHelpers } from "../../promptFiles/v1/getContextProviderHelpers";
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
-import { replaceSlashCommandWithPromptInChatHistory } from "../../promptFiles/v1/updateChatHistory";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
@@ -59,32 +56,5 @@ export function slashCommandFromPromptFileV1(
     prompt,
     source: ".prompt-file",
     promptFile: path,
-    run: async function* (context) {
-      const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
-        config: context.config,
-        fullInput: context.input,
-        embeddingsProvider: context.config.modelsByRole.embed[0],
-        reranker: context.config.modelsByRole.rerank[0],
-        llm: context.llm,
-        ide: context.ide,
-        selectedCode: context.selectedCode,
-        fetch: context.fetch,
-      });
-
-      const messages = replaceSlashCommandWithPromptInChatHistory(
-        context.history,
-        name,
-        renderedPrompt,
-        systemMessage,
-      );
-
-      for await (const chunk of context.llm.streamChat(
-        messages,
-        context.abortController.signal,
-        context.completionOptions,
-      )) {
-        yield renderChatMessage(chunk);
-      }
-    },
   };
 }

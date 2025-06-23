@@ -37,7 +37,7 @@ import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
-import { convertCustomCommandToSlashCommand } from "../../commands/slash/customSlashCommand";
+import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { baseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
@@ -286,7 +286,7 @@ async function configYamlToContinueConfig(options: {
 
   config.prompts?.forEach((prompt) => {
     try {
-      const slashCommand = convertCustomCommandToSlashCommand(prompt);
+      const slashCommand = convertPromptBlockToSlashCommand(prompt);
       continueConfig.slashCommands?.push(slashCommand);
     } catch (e) {
       localErrors.push({

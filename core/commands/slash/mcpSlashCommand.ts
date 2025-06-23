@@ -1,8 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
-import { PromptMessage } from "@modelcontextprotocol/sdk/types.js";
-import { ChatMessage, SlashCommandWithSource } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { SlashCommandWithSource } from "../../index.js";
+
 export function constructMcpSlashCommand(
   client: Client,
   name: string,
@@ -14,58 +13,22 @@ export function constructMcpSlashCommand(
     description: description ?? "MCP Prompt",
     source: "mcp-prompt",
     params: {},
-    run: async function* (context) {
-      const argsObject: { [key: string]: string } = {};
-      const userInput = context.input.split(" ").slice(1).join(" ");
-      if (args) {
-        args.forEach((arg, i) => {
-          argsObject[arg] = ""; // userInput
-        });
-      }
-
-      const result = await client.getPrompt({ name, arguments: argsObject });
-      const mcpMessages: PromptMessage[] = result.messages;
-      const messages: ChatMessage[] = mcpMessages.map((msg) => {
-        if (msg.content.type !== "text") {
-          throw new Error(
-            "Continue currently only supports text prompts through MCP",
-          );
-        }
-        return {
-          content: msg.content.text,
-          role: msg.role,
-        };
-      });
-
-      if (messages.length === 0) {
-        yield "The MCP prompt returned no messages";
-        return;
-      }
-
-      if (userInput) {
-        const lastMessage = messages.at(-1);
-        if (!lastMessage || lastMessage.role !== "user") {
-          messages.push({
-            role: "user",
-            content: userInput,
-          });
-        } else {
-          let newContent = renderChatMessage(lastMessage);
-          if (newContent) {
-            newContent += "\n\n";
-          }
-          newContent += userInput;
-          lastMessage.content = newContent;
-        }
-      }
-
-      for await (const chunk of context.llm.streamChat(
-        messages,
-        context.abortController.signal,
-        context.completionOptions,
-      )) {
-        yield renderChatMessage(chunk);
-      }
-    },
   };
+}
+
+export function stringifyMcpPrompt(
+  prompt: Awaited<ReturnType<typeof Client.prototype.getPrompt>>,
+): string {
+  const { messages } = prompt;
+  let stringified = "";
+  for (const message of messages) {
+    if (message.content.type === "text") {
+      stringified += `<${message.content.role}/>\n${message.content.text}\n<${message.content.role}/>`;
+    } else {
+      console.warn(
+        `MCP Prompt conversion warning: ${message.content.type} content is not yet supported, message skipped`,
+      );
+    }
+  }
+  return stringified;
 }

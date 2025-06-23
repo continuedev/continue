@@ -1,8 +1,4 @@
 import { CustomCommand, SlashCommandWithSource } from "../..";
-import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
-import { replaceSlashCommandWithPromptInChatHistory } from "../../promptFiles/v1/updateChatHistory";
-import { renderPromptFileV2 } from "../../promptFiles/v2/renderPromptFile";
-import { renderChatMessage } from "../../util/messageContent";
 
 export function convertCustomCommandToSlashCommand(
   customCommand: CustomCommand,
@@ -15,59 +11,5 @@ export function convertCustomCommandToSlashCommand(
     description: customCommand.description ?? "",
     prompt: customCommand.prompt,
     source: "json-custom-command",
-    run: async function* ({
-      input,
-      llm,
-      history,
-      ide,
-      completionOptions,
-      config,
-      selectedCode,
-      fetch,
-      abortController,
-    }) {
-      // Render prompt template
-      let renderedPrompt: string;
-      if (customCommand.prompt.includes("{{{ input }}}")) {
-        renderedPrompt = await renderTemplatedString(
-          customCommand.prompt,
-          ide.readFile.bind(ide),
-          { input },
-        );
-      } else {
-        const renderedPromptFile = await renderPromptFileV2(
-          customCommand.prompt,
-          {
-            config,
-            llm,
-            ide,
-            selectedCode,
-            fetch,
-            fullInput: input,
-            embeddingsProvider: config.selectedModelByRole.embed,
-            reranker: config.selectedModelByRole.rerank,
-          },
-        );
-
-        renderedPrompt = renderedPromptFile[1];
-      }
-
-      // Replaces slash command messages with the rendered prompt
-      // which INCLUDES the input
-      const messages = replaceSlashCommandWithPromptInChatHistory(
-        history,
-        commandName,
-        renderedPrompt,
-        undefined,
-      );
-
-      for await (const chunk of llm.streamChat(
-        messages,
-        abortController.signal,
-        completionOptions,
-      )) {
-        yield renderChatMessage(chunk);
-      }
-    },
   };
 }

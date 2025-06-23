@@ -118,6 +118,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcp/getPrompt": [
+    {
+      serverName: string;
+      promptName: string;
+      args?: Record<string, string>;
+    },
+    {
+      prompt: string;
+      description: string | undefined;
+    },
+  ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];

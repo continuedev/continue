@@ -848,6 +848,12 @@ export interface SlashCommand extends SlashCommandDescription {
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
+export interface SlashCommandWithSource extends SlashCommandDescription {
+  run?: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>; // Optional - only needed for legacy
+  source: SlashCommandSource;
+  promptFile?: string;
+}
+
 export type SlashCommandSource =
   | "built-in-legacy"
   | "built-in"
@@ -859,13 +865,11 @@ export type SlashCommandSource =
   | "invokable-rule";
 
 export interface SlashCommandDescWithSource extends SlashCommandDescription {
+  isLegacy: boolean; // Maps to if slashcommand.run exists
   source: SlashCommandSource;
   promptFile?: string;
-}
-
-export interface SlashCommandWithSource extends SlashCommand {
-  source: SlashCommandSource;
-  promptFile?: string;
+  mcpServerName?: string;
+  mcpArgs?: MCPPromptArgs;
 }
 
 // Config
@@ -1191,14 +1195,16 @@ export type MCPConnectionStatus =
   | "error"
   | "not-connected";
 
+export type MCPPromptArgs = {
+  name: string;
+  description?: string;
+  required?: boolean;
+}[];
+
 export interface MCPPrompt {
   name: string;
   description?: string;
-  arguments?: {
-    name: string;
-    description?: string;
-    required?: boolean;
-  }[];
+  arguments?: MCPPromptArgs;
 }
 
 // Leaving here to ideate on
