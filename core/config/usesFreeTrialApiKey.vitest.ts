@@ -1,11 +1,11 @@
-import { jest } from "@jest/globals";
+import { beforeEach, test, vi } from "vitest";
 import { BrowserSerializedContinueConfig } from "..";
 
 // Create the mock before importing anything else
 const mockDecodeSecretLocation = jest.fn();
 
 // Mock the module
-jest.unstable_mockModule("@continuedev/config-yaml", () => ({
+vi.mock("@continuedev/config-yaml", () => ({
   SecretType: {
     User: "user",
     Organization: "organization",
