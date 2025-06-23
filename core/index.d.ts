@@ -1576,7 +1576,7 @@ export interface RuleWithSource {
   slug?: string;
   source: RuleSource;
   globs?: string | string[];
-  patterns?: string | string[];
+  regex?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;

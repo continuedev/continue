@@ -54,33 +54,33 @@ const matchesGlobs = (
 };
 
 /**
- * Checks if file content matches any of the provided regex patterns
+ * Checks if file content matches any of the provided regex regex
  *
  * @param fileContent - The content of the file to check
- * @param patterns - A single regex pattern string or array of regex pattern strings
- * @returns true if the content matches any pattern (or if no patterns are provided), false otherwise
+ * @param regex - A single regex pattern string or array of regex pattern strings
+ * @returns true if the content matches any pattern (or if no regex is provided), false otherwise
  */
 const contentMatchesPatterns = (
   fileContent: string,
-  patterns: string | string[],
+  regex: string | string[],
 ): boolean => {
   // Handle single string pattern
-  if (typeof patterns === "string") {
+  if (typeof regex === "string") {
     try {
-      const regex = new RegExp(patterns);
-      return regex.test(fileContent);
+      const expression = new RegExp(regex);
+      return expression.test(fileContent);
     } catch (e) {
-      console.error(`Invalid regex pattern: ${patterns}`, e);
+      console.error(`Invalid regex pattern: ${regex}`, e);
       return false;
     }
   }
 
-  // Handle array of patterns
-  if (Array.isArray(patterns)) {
-    if (patterns.length === 0) return true;
+  // Handle array of regex
+  if (Array.isArray(regex)) {
+    if (regex.length === 0) return true;
 
     // Content must match at least one pattern
-    return patterns.some((pattern) => {
+    return regex.some((pattern) => {
       try {
         const regex = new RegExp(pattern);
         return regex.test(fileContent);
@@ -145,11 +145,11 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
     return true;
   }
 
-  // Root-level rules with no globs or patterns are implicitly global
+  // Root-level rules with no globs or regex are implicitly global
   if (
     isRootLevelRule(rule) &&
     !rule.globs &&
-    !rule.patterns &&
+    !rule.regex &&
     rule.alwaysApply !== false
   ) {
     return true;
@@ -176,18 +176,18 @@ const checkGlobsAndPatterns = ({
     return false;
   }
 
-  // Now check for pattern matches in file contents if patterns are specified
-  if (rule.patterns) {
-    // Check if any of the matching files also match the content patterns
+  // Now check for pattern matches in file contents if regex are specified
+  if (rule.regex) {
+    // Check if any of the matching files also match the content regex
     return matchingFiles.some((filePath) => {
       const content = fileContents[filePath];
-      // If we don't have the content, we can't check patterns
+      // If we don't have the content, we can't check regex
       if (!content) return false;
-      return contentMatchesPatterns(content, rule.patterns!);
+      return contentMatchesPatterns(content, rule.regex!);
     });
   }
 
-  // If we have no patterns or if we couldn't check patterns (no content),
+  // If we have no regex or if we couldn't check regex (no content),
   // just go with the glob matches
   return matchingFiles.length > 0;
 };
@@ -248,11 +248,11 @@ export const shouldApplyRule = (
     });
   }
 
-  // If alwaysApply is explicitly false, we need to check globs and/or patterns
+  // If alwaysApply is explicitly false, we need to check globs and/or regex
   if (
     rule.alwaysApply === false &&
     rule.globs === undefined &&
-    rule.patterns === undefined
+    rule.regex === undefined
   ) {
     return false;
   }

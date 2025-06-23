@@ -7,7 +7,7 @@ export type CreateRuleBlockArgs = Pick<
   Required<RuleWithSource>,
   "rule" | "description" | "alwaysApply" | "name"
 > &
-  Pick<RuleWithSource, "globs" | "patterns">;
+  Pick<RuleWithSource, "globs" | "regex">;
 
 export const createRuleBlockImpl: ToolImpl = async (
   args: CreateRuleBlockArgs,
@@ -19,9 +19,9 @@ export const createRuleBlockImpl: ToolImpl = async (
     globs: args.globs,
   };
 
-  // Add patterns if provided
-  if (args.patterns) {
-    options.patterns = args.patterns;
+  // Add regex if provided
+  if (args.regex) {
+    options.regex = args.regex;
   }
 
   const fileContent = createRuleMarkdown(args.name, args.rule, options);

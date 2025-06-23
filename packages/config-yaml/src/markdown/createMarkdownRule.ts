@@ -34,7 +34,7 @@ export function createRuleMarkdown(
   options: {
     description?: string;
     globs?: string | string[];
-    patterns?: string | string[];
+    regex?: string | string[];
     alwaysApply?: boolean;
   } = {},
 ): string {
@@ -45,11 +45,9 @@ export function createRuleMarkdown(
       typeof options.globs === "string" ? options.globs.trim() : options.globs;
   }
 
-  if (options.patterns) {
-    frontmatter.patterns =
-      typeof options.patterns === "string"
-        ? options.patterns.trim()
-        : options.patterns;
+  if (options.regex) {
+    frontmatter.regex =
+      typeof options.regex === "string" ? options.regex.trim() : options.regex;
   }
 
   if (options.description) {

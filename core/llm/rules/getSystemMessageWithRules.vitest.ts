@@ -259,7 +259,7 @@ describe("Content pattern matching", () => {
     const reactComponentRule: RuleWithSource = {
       name: "React Component Rule",
       rule: "Follow React component standards",
-      patterns: "export (function|const) \\w+.*\\(",
+      regex: "export (function|const) \\w+.*\\(",
       source: "rules-block",
       ruleFile: "src/components/rules.md",
     };
@@ -286,12 +286,12 @@ describe("Content pattern matching", () => {
     ).toBe(false);
   });
 
-  it("should support multiple regex patterns as an array", () => {
-    // Rule with multiple patterns
+  it("should support multiple regex regex as an array", () => {
+    // Rule with multiple regex
     const multiPatternRule: RuleWithSource = {
       name: "Multi-Pattern Rule",
       rule: "Apply to functions or classes",
-      patterns: ["function\\s+\\w+", "class\\s+\\w+"],
+      regex: ["function\\s+\\w+", "class\\s+\\w+"],
       source: "rules-block",
       ruleFile: "src/utils/rules.md",
     };
@@ -324,13 +324,13 @@ describe("Content pattern matching", () => {
     ).toBe(false);
   });
 
-  it("should apply rules based on both globs and patterns when both are specified", () => {
+  it("should apply rules based on both globs and regex when both are specified", () => {
     // Rule with both glob and pattern restrictions
     const typescriptClassRule: RuleWithSource = {
       name: "TypeScript Class Rule",
       rule: "Follow class standards in TypeScript",
       globs: "**/*.ts",
-      patterns: "class\\s+\\w+",
+      regex: "class\\s+\\w+",
       source: "rules-block",
       ruleFile: "src/models/rules.md",
     };
@@ -369,7 +369,7 @@ describe("Content pattern matching", () => {
     const arrowFunctionRule: RuleWithSource = {
       name: "Arrow Function Rule",
       rule: "Use arrow functions for better this binding",
-      patterns: "const\\s+\\w+\\s*=\\s*\\(",
+      regex: "const\\s+\\w+\\s*=\\s*\\(",
       source: "rules-block",
       ruleFile: "src/utils/rules.md",
     };
@@ -426,12 +426,12 @@ describe("Content pattern matching", () => {
     expect(nonApplicableRules).toHaveLength(0);
   });
 
-  it("should handle invalid regex patterns gracefully", () => {
+  it("should handle invalid regex regex gracefully", () => {
     // Rule with invalid regex pattern
     const invalidRegexRule: RuleWithSource = {
       name: "Invalid Regex Rule",
       rule: "This rule has an invalid regex pattern",
-      patterns: "([unclosed parenthesis",
+      regex: "([unclosed parenthesis",
       source: "rules-block",
       ruleFile: "src/utils/rules.md",
     };
@@ -452,7 +452,7 @@ describe("Content pattern matching", () => {
     const nestedPatternRule: RuleWithSource = {
       name: "Nested Pattern Rule",
       rule: "Apply only to model files with interfaces",
-      patterns: "interface\\s+\\w+",
+      regex: "interface\\s+\\w+",
       source: "rules-block",
       ruleFile: "src/models/rules.md",
     };

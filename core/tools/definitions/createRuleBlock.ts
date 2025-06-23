@@ -37,7 +37,7 @@ export const createRuleBlock: Tool = {
           description:
             "Optional file patterns to which this rule applies (e.g. ['**/*.{ts,tsx}'] or ['src/**/*.ts', 'tests/**/*.ts'])",
         },
-        patterns: {
+        regex: {
           type: "string",
           description:
             "Optional regex patterns to match against file content. Rule applies only to files whose content matches the pattern (e.g. 'useEffect' for React hooks or '\\bclass\\b' for class definitions)",
