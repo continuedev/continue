@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/core";
 import { ContextProviderDescription } from "core";
-import * as ContinueExtensions from "../extensions";
+import { Mention } from "../extensions";
 
 /**
  * inserts the current file context as a removable mention in the editor area
@@ -16,7 +16,7 @@ export function insertCurrentFileContextMention(
   );
 
   if (foundCurrentFileProvider) {
-    const node = editor.schema.nodes[ContinueExtensions.Mention.name].create({
+    const node = editor.schema.nodes[Mention.name].create({
       name: foundCurrentFileProvider.displayTitle,
       description: foundCurrentFileProvider.description,
       id: foundCurrentFileProvider.title,

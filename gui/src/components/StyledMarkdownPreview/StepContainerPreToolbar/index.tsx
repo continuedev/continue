@@ -8,7 +8,7 @@ import {
   vscEditorBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useIdeMessengerRequest } from "../../../hooks";
+import { useIdeMessengerRequest } from "../../../hooks/useIdeMessengerRequest";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../../../redux/selectors/selectCurrentToolCall";

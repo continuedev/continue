@@ -10,16 +10,14 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   selectCurrentOrg,
   selectSelectedProfile,
   setOrganizations,
   setSelectedOrgId,
-} from "../redux/";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+} from "../redux/slices/profilesSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
@@ -52,8 +50,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const selectedProfile = useAppSelector(selectSelectedProfile);
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
-    return new Promise((resolve) => {
-      ideMessenger
+    return new Promise(async (resolve) => {
+      await ideMessenger
         .request("getControlPlaneSessionInfo", {
           silent: false,
           useOnboarding,
@@ -73,27 +71,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
-    dispatch(setShowDialog(true));
-    dispatch(
-      setDialogMessage(
-        <ConfirmationDialog
-          confirmText="Yes, log out"
-          text="Are you sure you want to log out of Continue?"
-          onConfirm={() => {
-            ideMessenger.post("logoutOfControlPlane", undefined);
-            dispatch(
-              setOrganizations(orgs.filter((org) => org.id === "personal")),
-            );
-            dispatch(setSelectedOrgId("personal"));
-            setSession(undefined);
-          }}
-          onCancel={() => {
-            dispatch(setDialogMessage(undefined));
-            dispatch(setShowDialog(false));
-          }}
-        />,
-      ),
-    );
+    ideMessenger.post("logoutOfControlPlane", undefined);
+    dispatch(setOrganizations(orgs.filter((org) => org.id === "personal")));
+    dispatch(setSelectedOrgId("personal"));
+    setSession(undefined);
   };
 
   useEffect(() => {

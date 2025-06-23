@@ -783,9 +783,9 @@ export interface IDE {
 
   getPinnedFiles(): Promise<string[]>;
 
-  getSearchResults(query: string): Promise<string>;
+  getSearchResults(query: string, maxResults?: number): Promise<string>;
 
-  getFileResults(pattern: string): Promise<string[]>;
+  getFileResults(pattern: string, maxResults?: number): Promise<string[]>;
 
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
@@ -835,6 +835,7 @@ export interface ContinueSDK {
   config: ContinueConfig;
   fetch: FetchFunction;
   completionOptions?: LLMFullCompletionOptions;
+  abortController: AbortController;
 }
 
 export interface SlashCommand {
@@ -1283,7 +1284,7 @@ export interface HighlightedCodePayload {
 }
 
 export interface AcceptOrRejectDiffPayload {
-  filepath: string;
+  filepath?: string;
   streamId?: string;
 }
 
@@ -1594,12 +1595,12 @@ export interface RuleWithSource {
   slug?: string;
   source: RuleSource;
   globs?: string | string[];
+  regex?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
 }
-
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;

@@ -1,10 +1,17 @@
 {
   "name": "@continuedev/config-yaml",
-  "version": "1.0.88",
+  "version": "1.0.94",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./dist/browser.js",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "bin": {
     "@continuedev/config-yaml": "./dist/cli.js"
   },
