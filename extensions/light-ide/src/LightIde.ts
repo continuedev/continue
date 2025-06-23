@@ -114,7 +114,7 @@ export class LightIde implements IDE {
     
     // Remove duplicate project path occurrences, keeping only the last one
     const pathParts = filePath.split(projectsPath);
-    if (pathParts.length > 2) {
+    if (pathParts.length >= 2) {
         // If projectsPath appears more than once, reconstruct with only the last occurrence
         const lastPart = pathParts[pathParts.length - 1];
         filePath = projectsPath + lastPart;
