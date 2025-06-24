@@ -1,11 +1,11 @@
 import { SlashCommandWithSource } from "../..";
 import { parsePromptFile } from "../../promptFiles/parsePromptFile";
 
-export function slashCommandFromPromptFileV1(
+export function slashCommandFromPromptFile(
   path: string,
   content: string,
 ): SlashCommandWithSource | null {
-  const { name, description, systemMessage, prompt } = parsePromptFile(
+  const { name, description, systemMessage, prompt, version } = parsePromptFile(
     path,
     content,
   );
@@ -14,7 +14,8 @@ export function slashCommandFromPromptFileV1(
     name,
     description,
     prompt,
-    source: "prompt-file-v1",
+    source: version === 1 ? "prompt-file-v1" : "prompt-file-v2",
     promptFile: path,
+    overrideSystemMessage: systemMessage,
   };
 }

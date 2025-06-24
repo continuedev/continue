@@ -852,6 +852,7 @@ export interface SlashCommandWithSource extends SlashCommandDescription {
   run?: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>; // Optional - only needed for legacy
   source: SlashCommandSource;
   promptFile?: string;
+  overrideSystemMessage?: string;
 }
 
 export type SlashCommandSource =

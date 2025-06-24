@@ -22,7 +22,8 @@
     "./**/*.ts",
     "./**/*.js",
     "./**/*.d.ts",
-    "../gui/src/components/mainInput/TipTapEditor/utils/renderPromptv2.ts"
+    "../gui/src/components/mainInput/TipTapEditor/utils/renderPromptv2.ts",
+    "../gui/src/components/mainInput/TipTapEditor/utils/renderPromptFileV2.vitest.ts"
   ],
   "exclude": ["dist"]
 }

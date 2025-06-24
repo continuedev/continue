@@ -2,9 +2,11 @@ import {
   prepareTemplatedFilepaths,
   registerHelpers,
   resolveHelperPromises,
+  type HandlebarsType,
 } from "./handlebarUtils";
 
 export async function renderTemplatedString(
+  handlebars: HandlebarsType,
   template: string,
   inputData: Record<string, string>,
   availableHelpers: Array<[string, Handlebars.HelperDelegate]>,
@@ -12,12 +14,13 @@ export async function renderTemplatedString(
   getUriFromPath: (path: string) => Promise<string | undefined>,
 ): Promise<string> {
   const helperPromises = availableHelpers
-    ? registerHelpers(availableHelpers)
+    ? registerHelpers(handlebars, availableHelpers)
     : {};
 
   const ctxProviderNames = availableHelpers?.map((h) => h[0]) ?? [];
 
   const { withLetterKeys, templateData } = await prepareTemplatedFilepaths(
+    handlebars,
     template,
     inputData,
     ctxProviderNames,
@@ -25,7 +28,7 @@ export async function renderTemplatedString(
     getUriFromPath,
   );
 
-  const templateFn = Handlebars.compile(withLetterKeys);
+  const templateFn = handlebars.compile(withLetterKeys);
   const renderedString = templateFn(templateData);
 
   return resolveHelperPromises(renderedString, helperPromises);

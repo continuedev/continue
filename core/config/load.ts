@@ -34,7 +34,7 @@ import {
 } from "..";
 import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/built-in-legacy";
 import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
-import { slashCommandFromPromptFileV1 } from "../commands/slash/promptFileSlashCommand";
+import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
@@ -193,7 +193,7 @@ async function serializedToIntermediateConfig(
   );
 
   for (const file of promptFiles) {
-    const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
+    const slashCommand = slashCommandFromPromptFile(file.path, file.content);
     if (slashCommand) {
       slashCommands.push(slashCommand);
     }

@@ -20,8 +20,15 @@ import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
 import { CodeBlock, Mention, PromptBlock } from "../extensions";
 import { getRenderedV1Prompt } from "./renderPromptv1";
-import { getPromptV2ContextAttrs } from "./renderPromptv2";
-import { MentionAttrs } from "./types";
+import { getPromptV2ContextRequests } from "./renderPromptv2";
+import { GetContextRequest } from "./types";
+
+interface MentionAttrs {
+  label: string;
+  id: string;
+  itemType?: string;
+  query?: string;
+}
 
 interface ResolveEditorContentInput {
   editorState: JSONContent;
@@ -58,14 +65,14 @@ export async function resolveEditorContent({
 }: ResolveEditorContentInput): Promise<ResolveEditorContentOutput> {
   const {
     parts,
-    contextItemAttrs: editorContextAttrs,
+    contextRequests: editorContextRequests,
     selectedCode,
     slashCommandName,
   } = processEditorContent(editorState);
 
   const {
     slashedParts,
-    contextAttrs: slashContextAttrs,
+    contextRequests: slashContextRequests,
     legacyCommandWithInput,
   } = await renderSlashCommandPrompt(
     ideMessenger,
@@ -75,20 +82,20 @@ export async function resolveEditorContent({
     selectedCode,
   );
 
-  const contextItemAttrs = [...editorContextAttrs, ...slashContextAttrs];
+  const contextRequests = [...editorContextRequests, ...slashContextRequests];
 
   const shouldGatherContext =
     defaultContextProviders.length > 0 ||
     modifiers.useCodebase ||
     !modifiers.noContext ||
-    contextItemAttrs.length > 0;
+    contextRequests.length > 0;
 
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(true));
   }
 
   const selectedContextItems = await gatherContextItems({
-    contextItemAttrs,
+    contextRequests,
     modifiers,
     ideMessenger,
     defaultContextProviders,
@@ -112,7 +119,7 @@ export async function resolveEditorContent({
  * Processes editor content and extracts parts, context items, code, and slash commands
  */
 function processEditorContent(editorState: JSONContent) {
-  const contextItemAttrs: MentionAttrs[] = [];
+  const contextRequests: GetContextRequest[] = [];
   const selectedCode: RangeInFile[] = [];
   let slashCommandName: string | undefined;
 
@@ -126,7 +133,7 @@ function processEditorContent(editorState: JSONContent) {
         case Paragraph.name: {
           const [text, ctxItems] = resolveParagraph(p);
 
-          contextItemAttrs.push(...ctxItems);
+          contextRequests.push(...ctxItems);
 
           if (!text) return parts;
 
@@ -193,7 +200,7 @@ function processEditorContent(editorState: JSONContent) {
     [],
   );
 
-  return { parts, contextItemAttrs, selectedCode, slashCommandName };
+  return { parts, contextRequests, selectedCode, slashCommandName };
 }
 
 /**
@@ -211,12 +218,12 @@ async function renderSlashCommandPrompt(
     command: SlashCommandDescWithSource;
     input: string;
   };
-  contextAttrs: MentionAttrs[];
+  contextRequests: GetContextRequest[];
 }> {
   const NO_COMMAND = {
     slashedParts: parts,
     legacyCommandWithInput: undefined,
-    contextAttrs: [],
+    contextRequests: [],
   };
   if (!commandName) {
     return NO_COMMAND;
@@ -239,7 +246,7 @@ async function renderSlashCommandPrompt(
       }
     : undefined;
 
-  const contextAttrs: MentionAttrs[] = [];
+  const contextRequests: GetContextRequest[] = [];
 
   switch (command.source) {
     case "built-in-legacy":
@@ -279,16 +286,10 @@ async function renderSlashCommandPrompt(
       break;
     case "prompt-file-v1":
     case "prompt-file-v2":
-      if (!command.promptFile) {
-        throw new Error(
-          `Invalid prompt file from slash command ${command.name}`,
-        );
-      }
     case "yaml-prompt-block":
       if (!command.prompt) {
-        throw new Error(
-          `Invalid/empty prompt from slash command ${command.name}`,
-        );
+        console.warn(`Invalid/empty prompt from slash command ${command.name}`);
+        break;
       }
       let renderedPrompt: string;
       if (
@@ -302,34 +303,37 @@ async function renderSlashCommandPrompt(
           selectedCode,
         );
       } else {
-        const promptFileContextAttrs = await getPromptV2ContextAttrs(
+        const promptFileCtxRequests = await getPromptV2ContextRequests(
           ideMessenger,
           command,
         );
-        contextAttrs.push(...promptFileContextAttrs);
+        contextRequests.push(...promptFileCtxRequests);
         renderedPrompt = [command.prompt, userInput].join("\n\n");
       }
 
-      // const renderedPrompt = renderPromptFile();
       slashedParts.push({
         type: "text",
         text: renderedPrompt.trim(), // Includes user input
       });
+      break;
     case "built-in":
     case "invokable-rule":
     case "json-custom-command":
       if (!command.prompt) {
-        throw new Error(`Slash command ${command.name} is missing prompt`);
+        console.warn(`Slash command ${command.name} is missing prompt`);
+        break;
       }
       slashedParts.push({
         type: "text",
         text: `${command.prompt}${userInput ? "\n\n" + userInput : ""}`,
       });
+    default:
+      break;
   }
   return {
     slashedParts,
     legacyCommandWithInput,
-    contextAttrs,
+    contextRequests,
   };
 }
 
@@ -337,26 +341,41 @@ async function renderSlashCommandPrompt(
  * Gathers context items from various sources
  */
 async function gatherContextItems({
-  contextItemAttrs,
+  contextRequests,
   modifiers,
   ideMessenger,
   defaultContextProviders,
   parts,
   selectedCode,
 }: {
-  contextItemAttrs: MentionAttrs[];
+  contextRequests: GetContextRequest[];
   modifiers: InputModifiers;
   ideMessenger: IIdeMessenger;
   defaultContextProviders: DefaultContextProvider[];
   parts: MessagePart[];
   selectedCode: RangeInFile[];
 }): Promise<ContextItemWithId[]> {
+  const defaultRequests: GetContextRequest[] = defaultContextProviders.map(
+    (def) => ({
+      provider: def.name,
+      query: def.query,
+    }),
+  );
+  const withDefaults = [...contextRequests, ...defaultRequests];
+  const deduplicated = withDefaults.reduce<GetContextRequest[]>((acc, item) => {
+    if (
+      !acc.some((i) => i.provider === item.provider && i.query === item.query)
+    ) {
+      acc.push(item);
+    }
+    return acc;
+  }, []);
   let contextItems: ContextItemWithId[] = [];
 
   // Process context item attributes
-  for (const item of contextItemAttrs) {
+  for (const item of deduplicated) {
     const result = await ideMessenger.request("context/getContextItems", {
-      name: item.itemType === "contextProvider" ? item.id : item.itemType!,
+      name: item.provider,
       query: item.query ?? "",
       fullInput: stripImages(parts),
       selectedCode,
@@ -369,7 +388,7 @@ async function gatherContextItems({
   // cmd+enter to use codebase
   if (
     modifiers.useCodebase &&
-    !contextItemAttrs.some((item) => item.id === "codebase")
+    !deduplicated.some((item) => item.provider === "codebase")
   ) {
     const result = await ideMessenger.request("context/getContextItems", {
       name: "codebase",
@@ -386,7 +405,7 @@ async function gatherContextItems({
   // noContext modifier adds currently open file if it's not already present
   if (
     !modifiers.noContext &&
-    !contextItemAttrs.some((item) => item.id === "currentFile")
+    !deduplicated.some((item) => item.provider === "currentFile")
   ) {
     const currentFileResponse = await ideMessenger.request(
       "context/getContextItems",
@@ -409,24 +428,6 @@ async function gatherContextItems({
     }
   }
 
-  // Include default context providers
-  const defaultContextItems = await Promise.all(
-    defaultContextProviders.map(async (provider) => {
-      const result = await ideMessenger.request("context/getContextItems", {
-        name: provider.name,
-        query: provider.query ?? "",
-        fullInput: stripImages(parts),
-        selectedCode,
-      });
-      if (result.status === "success") {
-        return result.content;
-      } else {
-        return [];
-      }
-    }),
-  );
-  contextItems.push(...defaultContextItems.flat());
-
   return contextItems;
 }
 
@@ -434,8 +435,8 @@ function resvolePromptBlock(p: JSONContent): string | undefined {
   return p.attrs?.item.name;
 }
 
-function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
-  const contextItems: MentionAttrs[] = [];
+function resolveParagraph(p: JSONContent): [string, GetContextRequest[]] {
+  const contextRequests: GetContextRequest[] = [];
 
   const text = (p.content || [])
     .map((child) => {
@@ -443,7 +444,11 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
         case Text.name:
           return child.text;
         case Mention.name:
-          contextItems.push(child.attrs as MentionAttrs);
+          const attrs = child.attrs as MentionAttrs;
+          contextRequests.push({
+            provider:
+              attrs.itemType === "contextProvider" ? attrs.id : attrs.itemType!,
+          });
           return child.attrs?.renderInlineAs ?? child.attrs?.label;
 
         default:
@@ -454,5 +459,5 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
     .join("")
     .trimStart();
 
-  return [text, contextItems];
+  return [text, contextRequests];
 }

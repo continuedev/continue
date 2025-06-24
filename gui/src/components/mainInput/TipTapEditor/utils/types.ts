@@ -1,6 +1,4 @@
-export interface MentionAttrs {
-  label: string;
-  id: string;
-  itemType?: string;
+export interface GetContextRequest {
+  provider: string;
   query?: string;
 }

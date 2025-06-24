@@ -2,12 +2,12 @@ import { SlashCommandDescWithSource } from "core";
 import { SUPPORTED_PROMPT_CONTEXT_PROVIDERS } from "core/promptFiles";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
-import { MentionAttrs } from "./types";
+import { GetContextRequest } from "./types";
 
-export async function getPromptV2ContextAttrs(
+export async function getPromptV2ContextRequests(
   ideMessenger: IIdeMessenger,
   command: SlashCommandDescWithSource,
-): Promise<MentionAttrs[]> {
+): Promise<GetContextRequest[]> {
   if (!command.prompt) {
     return [];
   }
@@ -17,12 +17,12 @@ export async function getPromptV2ContextAttrs(
     visitedFiles.add(command.promptFile);
   }
 
-  const contextItemAttrs: MentionAttrs[] = [];
-  const addItem = (item: MentionAttrs) => {
+  const contextItemAttrs: GetContextRequest[] = [];
+  const addItem = (item: GetContextRequest) => {
     contextItemAttrs.push(item);
   };
 
-  async function addContextAttrsRecursive(promptBody: string) {
+  async function addContextRequestsRecursive(promptBody: string) {
     // Files
     for (const match of promptBody.matchAll(/@([^\s]+)/g)) {
       const name = match[0];
@@ -38,34 +38,27 @@ export async function getPromptV2ContextAttrs(
             return [];
           }
           visitedFiles.add(resolvedFileUri);
-          await addContextAttrsRecursive(contents);
+          await addContextRequestsRecursive(contents);
         }
         return addItem({
-          label: name,
-          id: "file",
-          itemType: "contextProvider",
+          provider: name,
           query: resolvedFileUri,
         });
       }
       // URLs
       if (name.startsWith("http")) {
         return addItem({
-          label: name,
-          id: "url",
-          itemType: "contextProvider",
+          provider: "url",
           query: name,
         });
       }
       if (SUPPORTED_PROMPT_CONTEXT_PROVIDERS.includes(name)) {
         return addItem({
-          label: name,
-          id: name,
-          itemType: "contextProvider",
-          query: "",
+          provider: name,
         });
       }
     }
   }
-  await addContextAttrsRecursive(command.prompt);
+  await addContextRequestsRecursive(command.prompt);
   return contextItemAttrs;
 }

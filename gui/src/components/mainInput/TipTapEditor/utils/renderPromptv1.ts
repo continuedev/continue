@@ -39,7 +39,9 @@ export async function getRenderedV1Prompt(
   const getUriFromPath = (path: string) => {
     return resolveRelativePathInDir(path, ideMessenger.ide, workspaceDirs);
   };
+  const handlebars = await import("handlebars");
   return await renderTemplatedString(
+    handlebars,
     command.prompt,
     { input: userInput },
     handleBarHelpers,

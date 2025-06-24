@@ -1,5 +1,6 @@
-import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
+
+export type HandlebarsType = typeof import("handlebars");
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -12,6 +13,7 @@ function convertToLetter(num: number): string {
 }
 
 export function registerHelpers(
+  handlebars: HandlebarsType,
   helpers: Array<[string, Handlebars.HelperDelegate]>,
 ): {
   [key: string]: Promise<string>;
@@ -19,7 +21,7 @@ export function registerHelpers(
   const promises: { [key: string]: Promise<string> } = {};
 
   for (const [name, helper] of helpers) {
-    Handlebars.registerHelper(name, (...args) => {
+    handlebars.registerHelper(name, (...args) => {
       const id = uuidv4();
       promises[id] = helper(...args);
       return `__${id}__`;
@@ -30,6 +32,7 @@ export function registerHelpers(
 }
 
 export async function prepareTemplatedFilepaths(
+  handlebars: HandlebarsType,
   template: string,
   inputData: Record<string, string>,
   ctxProviderNames: string[],
@@ -37,7 +40,7 @@ export async function prepareTemplatedFilepaths(
   getUriFromPath: (path: string) => Promise<string | undefined>,
 ) {
   // First, replace filepaths with letters to avoid escaping issues
-  const ast = Handlebars.parse(template);
+  const ast = handlebars.parse(template);
 
   const filepathLetters: Map<string, string> = new Map();
   const requiredContextProviders: Set<string> = new Set();
