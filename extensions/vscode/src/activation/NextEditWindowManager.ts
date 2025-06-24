@@ -3,8 +3,18 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 // @ts-ignore
 import * as vscode from "vscode";
 
+import { myersDiff } from "core/diff/myers";
+import { getRenderableDiff } from "core/nextEdit/diff/diff";
 import { SyntaxHighlighter } from "core/syntaxHighlighting/SyntaxHighlighter";
 import { getTheme } from "../util/getTheme";
+
+export interface TextApplier {
+  applyText(
+    editor: vscode.TextEditor,
+    text: string,
+    position: vscode.Position,
+  ): Promise<boolean>;
+}
 
 // Fallback theme colors
 const FALLBACK_THEME = {
@@ -89,6 +99,8 @@ export class NextEditWindowManager {
   // Disposables
   private disposables: vscode.Disposable[] = [];
 
+  private textApplier: TextApplier | null = null;
+
   public static getInstance(): NextEditWindowManager {
     if (!NextEditWindowManager.instance) {
       NextEditWindowManager.instance = new NextEditWindowManager();
@@ -109,7 +121,10 @@ export class NextEditWindowManager {
     });
   }
 
-  public setupNextEditWindowManager(context: vscode.ExtensionContext) {
+  public setupNextEditWindowManager(
+    context: vscode.ExtensionContext,
+    textApplier?: TextApplier,
+  ) {
     // Register the command to hide tooltips
     const hideTooltipsCommand = vscode.commands.registerCommand(
       HIDE_TOOLTIP_COMMAND,
@@ -130,7 +145,12 @@ export class NextEditWindowManager {
 
     // Add this class to context disposables
     context.subscriptions.push(this);
+
+    if (textApplier) {
+      this.textApplier = textApplier;
+    }
   }
+
   /**
    * Show a tooltip with the given text at the current cursor position
    * @param editor The active text editor
@@ -148,11 +168,15 @@ export class NextEditWindowManager {
     // Store the current tooltip text for accepting later
     this.currentTooltipText = text;
 
+    // TODO: we may use a unified diff here if the file is too huge
+    const diffLines = myersDiff(editor.document.getText(), text);
+    const diff = getRenderableDiff(diffLines);
+
     // Get cursor position
     const position = editor.selection.active;
 
     // Create and apply decoration with the text
-    await this.renderTooltip(editor, position, text);
+    await this.renderTooltip(editor, position, diff);
   }
 
   /**
@@ -188,7 +212,7 @@ export class NextEditWindowManager {
   /**
    * Accept the current next edit suggestion by inserting it at cursor position
    */
-  private acceptNextEdit() {
+  private async acceptNextEdit() {
     if (!this.activeEditor || !this.currentTooltipText) {
       return;
     }
@@ -197,17 +221,37 @@ export class NextEditWindowManager {
     const text = this.currentTooltipText;
     const position = editor.selection.active;
 
-    // Insert the text at the current cursor position
-    editor
-      .edit((editBuilder) => {
-        editBuilder.insert(position, text);
-      })
-      .then((success) => {
-        if (success) {
-          // Hide the tooltip after inserting
-          this.hideAllTooltips();
-        }
+    let success = false;
+    const USE_TEXT_APPLIER = false;
+    // For now we skip using textApplier, because we don't need an apply logic yet.
+    // In the future we may use this.
+    if (this.textApplier && USE_TEXT_APPLIER) {
+      success = await this.textApplier.applyText(editor, text, position);
+    } else {
+      // applyText already has this,
+      // but we could technically have an instance of
+      // NextEditWindowManager without the textApplier
+
+      const editableRegionStartLine = Math.max(0, position.line - 5);
+      const editableRegionEndLine = Math.min(
+        editor.document.lineCount - 1,
+        position.line + 5,
+      );
+      const startPos = new vscode.Position(editableRegionStartLine, 0);
+      const endPosChar = editor.document.lineAt(editableRegionEndLine).text
+        .length;
+
+      const endPos = new vscode.Position(editableRegionEndLine, endPosChar);
+      const editRange = new vscode.Range(startPos, endPos);
+
+      success = await editor.edit((editBuilder) => {
+        editBuilder.replace(editRange, text);
       });
+    }
+
+    if (success) {
+      this.hideAllTooltips();
+    }
   }
 
   public dispose() {
@@ -540,6 +584,10 @@ export class NextEditWindowManager {
 
 export default function setupNextEditWindowManager(
   context: vscode.ExtensionContext,
+  textApplier?: TextApplier,
 ) {
-  NextEditWindowManager.getInstance().setupNextEditWindowManager(context);
+  NextEditWindowManager.getInstance().setupNextEditWindowManager(
+    context,
+    textApplier,
+  );
 }
