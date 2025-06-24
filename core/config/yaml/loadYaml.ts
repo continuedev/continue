@@ -39,7 +39,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { baseToolDefinitions } from "../../tools";
+import { baseToolDefinitions, remoteToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -187,7 +187,11 @@ async function configYamlToContinueConfig(options: {
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    tools: [...baseToolDefinitions],
+    tools: [
+      ...(ide.isWorkspaceRemote()
+        ? remoteToolDefinitions
+        : baseToolDefinitions),
+    ],
     mcpServerStatuses: [],
     contextProviders: [],
     modelsByRole: {

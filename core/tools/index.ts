@@ -13,12 +13,11 @@ import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
 
-export const baseToolDefinitions = [
+export const remoteToolDefinitions = [
   readFileTool,
   editFileTool,
   createNewFileTool,
   runTerminalCommandTool,
-  grepSearchTool,
   globSearchTool,
   searchWebTool,
   viewDiffTool,
@@ -30,6 +29,8 @@ export const baseToolDefinitions = [
   // viewSubdirectoryTool,
   // viewRepoMapTool,
 ];
+
+export const baseToolDefinitions = [...remoteToolDefinitions, grepSearchTool];
 
 export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
