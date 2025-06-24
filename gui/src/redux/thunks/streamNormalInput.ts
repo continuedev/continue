@@ -45,6 +45,14 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
+    if (state.session.hasReasoningEnabled) {
+      completionOptions = {
+        ...completionOptions,
+        reasoning: true,
+        reasoningBudgetTokens: completionOptions.reasoningBudgetTokens ?? 2048,
+      };
+    }
+
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(
       {

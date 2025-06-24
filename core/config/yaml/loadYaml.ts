@@ -95,6 +95,7 @@ async function loadConfigYaml(options: {
       packageIdentifier,
       getRegistryClient(),
       {
+        renderSecrets: true,
         currentUserSlug: "",
         onPremProxyUrl: null,
         orgScopeId,
@@ -103,9 +104,7 @@ async function loadConfigYaml(options: {
           controlPlaneClient,
           ide,
         ),
-        renderSecrets: true,
         injectBlocks: localPackages,
-        asConfigResult: true,
       },
     );
     config = unrollResult.config;
@@ -114,13 +113,8 @@ async function loadConfigYaml(options: {
     }
   }
 
-  if (config) {
-    isAssistantUnrolledNonNullable(config)
-      ? errors.push(...validateConfigYaml(config))
-      : errors.push({
-          fatal: true,
-          message: "Assistant includes blocks that don't exist",
-        });
+  if (config && isAssistantUnrolledNonNullable(config)) {
+    errors.push(...validateConfigYaml(config));
   }
 
   if (errors?.some((error) => error.fatal)) {
@@ -184,7 +178,8 @@ async function configYamlToContinueConfig(options: {
       config: continueConfig,
       errors: [
         {
-          message: "Found missing blocks in config.yaml",
+          message:
+            "Failed to load config due to missing blocks, see which blocks are missing below",
           fatal: true,
         },
       ],

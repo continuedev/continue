@@ -25,6 +25,15 @@ interface FileIdentifier extends BasePackageIdentifier {
 
 export type PackageIdentifier = FullSlugIdentifier | FileIdentifier;
 
+export function packageIdentifierToDisplayName(id: PackageIdentifier): string {
+  switch (id.uriType) {
+    case "file":
+      return id.filePath;
+    case "slug":
+      return id.fullSlug.packageSlug;
+  }
+}
+
 export function encodePackageIdentifier(identifier: PackageIdentifier): string {
   switch (identifier.uriType) {
     case "slug":

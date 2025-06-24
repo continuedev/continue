@@ -11,6 +11,7 @@ import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
 import { isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
+import { RulePolicies } from "./rules/types";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
   "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
@@ -108,6 +109,7 @@ export function constructMessages(
   history: ChatHistoryItem[],
   baseChatOrAgentSystemMessage: string | undefined,
   rules: RuleWithSource[],
+  rulePolicies?: RulePolicies,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
@@ -164,6 +166,7 @@ export function constructMessages(
     rules,
     userMessage: lastUserMsg,
     contextItems: lastUserContextItems,
+    rulePolicies,
   });
 
   if (systemMessage.trim()) {

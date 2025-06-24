@@ -1,16 +1,16 @@
+import { markdownToRule } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IDE } from "../..";
 import { walkDirs } from "../../indexing/walkDir";
 import { loadCodebaseRules } from "./loadCodebaseRules";
-import { convertMarkdownRuleToContinueRule } from "./parseMarkdownRule";
 
 // Mock dependencies
 vi.mock("../../indexing/walkDir", () => ({
   walkDirs: vi.fn(),
 }));
 
-vi.mock("./parseMarkdownRule", () => ({
-  convertMarkdownRuleToContinueRule: vi.fn(),
+vi.mock("@continuedev/config-yaml", () => ({
+  markdownToRule: vi.fn(),
 }));
 
 describe("loadCodebaseRules", () => {
@@ -82,10 +82,10 @@ describe("loadCodebaseRules", () => {
       return Promise.resolve(mockRuleContent[path] || "");
     });
 
-    // Mock convertMarkdownRuleToContinueRule to return converted rules
-    (convertMarkdownRuleToContinueRule as any).mockImplementation(
-      (path: string, content: string) => {
-        return mockConvertedRules[path];
+    // Mock markdownToRule to return converted rules
+    (markdownToRule as any).mockImplementation(
+      (content: string, options: any) => {
+        return mockConvertedRules[options.filePath];
       },
     );
   });
@@ -107,7 +107,7 @@ describe("loadCodebaseRules", () => {
     expect(mockIde.readFile).toHaveBeenCalledWith(".continue/rules.md");
 
     // Should convert all rules
-    expect(convertMarkdownRuleToContinueRule).toHaveBeenCalledTimes(4);
+    expect(markdownToRule).toHaveBeenCalledTimes(4);
 
     // Should return all rules
     expect(rules).toHaveLength(4);

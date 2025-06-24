@@ -2,13 +2,13 @@ import { useContext } from "react";
 import { Button, SecondaryButton } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { selectCurrentOrg } from "../../../redux";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { selectFirstHubProfile } from "../../../redux/thunks";
+import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
+import { selectFirstHubProfile } from "../../../redux/thunks/selectFirstHubProfile";
 import { hasPassedFTL } from "../../../util/freeTrial";
 import { ToolTip } from "../../gui/Tooltip";
 import ContinueLogo from "../../svg/ContinueLogo";
-import { useOnboardingCard } from "../hooks";
+import { useOnboardingCard } from "../hooks/useOnboardingCard";
 
 export function OnboardingCardLanding({
   onSelectConfigure,
