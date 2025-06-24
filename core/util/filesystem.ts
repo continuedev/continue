@@ -48,8 +48,8 @@ class FileSystemIde implements IDE {
     return;
   }
 
-  isWorkspaceRemote(): boolean {
-    return false;
+  isWorkspaceRemote(): Promise<boolean> {
+    return Promise.resolve(false);
   }
 
   async getIdeSettings(): Promise<IdeSettings> {

@@ -200,8 +200,8 @@ class VsCodeIde implements IDE {
     return globalEnabled && continueEnabled;
   }
 
-  isWorkspaceRemote(): boolean {
-    return vscode.env.remoteName !== undefined;
+  isWorkspaceRemote(): Promise<boolean> {
+    return Promise.resolve(vscode.env.remoteName !== undefined);
   }
 
   getUniqueId(): Promise<string> {

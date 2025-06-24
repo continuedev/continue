@@ -188,7 +188,7 @@ async function configYamlToContinueConfig(options: {
   const continueConfig: ContinueConfig = {
     slashCommands: [],
     tools: [
-      ...(ide.isWorkspaceRemote()
+      ...((await ide.isWorkspaceRemote())
         ? remoteToolDefinitions
         : baseToolDefinitions),
     ],
