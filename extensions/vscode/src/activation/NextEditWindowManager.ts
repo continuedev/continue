@@ -141,8 +141,8 @@ export class NextEditWindowManager {
     // Register the command to hide tooltips
     const hideTooltipsCommand = vscode.commands.registerCommand(
       HIDE_TOOLTIP_COMMAND,
-      () => {
-        this.hideAllTooltips();
+      async () => {
+        await this.hideAllTooltips();
       },
     );
     context.subscriptions.push(hideTooltipsCommand);
@@ -175,7 +175,7 @@ export class NextEditWindowManager {
     }
 
     // Clear any existing decorations first (very important to prevent overlapping)
-    this.hideAllTooltips();
+    await this.hideAllTooltips();
     // this.dispose();
 
     // Store the current tooltip text for accepting later
@@ -208,12 +208,17 @@ export class NextEditWindowManager {
 
     // Create and apply decoration with the text
     await this.renderTooltip(editor, position, diff.renderableDiff);
+    await vscode.commands.executeCommand(
+      "setContext",
+      "nextEditWindowActive",
+      true,
+    );
   }
 
   /**
    * Hide all tooltips in all editors
    */
-  public hideAllTooltips() {
+  public async hideAllTooltips() {
     console.log("hideAllTooltips");
     if (this.currentDecoration) {
       // Remove decoration from all editors to be extra safe
@@ -237,6 +242,13 @@ export class NextEditWindowManager {
       // Clear the current tooltip text
       this.currentTooltipText = null;
     }
+
+    await vscode.commands.executeCommand(
+      "setContext",
+      "nextEditWindowActive",
+      false,
+    );
+
     // this.dispose();
   }
 
@@ -285,7 +297,7 @@ export class NextEditWindowManager {
           this.finalCursorPos,
         );
       }
-      this.hideAllTooltips();
+      await this.hideAllTooltips();
     }
   }
 
@@ -321,13 +333,13 @@ export class NextEditWindowManager {
 
     // Listen for editor changes to clean up decorations when editor closes
     const editorCloseListener = vscode.window.onDidChangeVisibleTextEditors(
-      () => {
+      async () => {
         // If our active editor is no longer visible, clear decorations
         if (
           this.activeEditor &&
           !vscode.window.visibleTextEditors.includes(this.activeEditor)
         ) {
-          this.hideAllTooltips();
+          await this.hideAllTooltips();
         }
       },
     );
@@ -335,10 +347,10 @@ export class NextEditWindowManager {
 
     // Listen for selection changes to hide tooltip when cursor moves
     const selectionListener = vscode.window.onDidChangeTextEditorSelection(
-      (e) => {
+      async (e) => {
         // If the selection changed in our active editor, hide the tooltip
         if (this.activeEditor && e.textEditor === this.activeEditor) {
-          this.hideAllTooltips();
+          await this.hideAllTooltips();
         }
       },
     );
@@ -591,7 +603,7 @@ export class NextEditWindowManager {
     }
 
     // Store the decoration and editor
-    this.hideAllTooltips();
+    await this.hideAllTooltips();
     this.currentDecoration = decoration;
     this.activeEditor = editor;
 

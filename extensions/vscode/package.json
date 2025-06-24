@@ -437,13 +437,13 @@
       },
       {
         "command": "nextEditWindow.hideTooltips",
-        "key": "ctrl+space escape",
-        "when": "editorTextFocus"
+        "key": "escape",
+        "when": "editorTextFocus && nextEditWindowActive"
       },
       {
         "command": "nextEditWindow.acceptNextEdit",
-        "key": "ctrl+space tab",
-        "when": "editorTextFocus"
+        "key": "tab",
+        "when": "editorTextFocus && nextEditWindowActive"
       }
     ],
     "submenus": [
