@@ -21,7 +21,9 @@ declare module "@tiptap/core" {
       /**
        * Insert a prompt block into the editor
        */
-      insertPrompt: (item: ComboBoxItem) => ReturnType;
+      insertPrompt: (
+        item: Pick<ComboBoxItem, "title" | "content" | "description">,
+      ) => ReturnType;
 
       /**
        * Clear all prompt blocks from the editor
@@ -77,7 +79,7 @@ export const PromptBlock = Node.create<PromptBlockOptions>({
   addCommands() {
     return {
       insertPrompt:
-        (item: ComboBoxItem) =>
+        (item) =>
         ({ chain }) => {
           const contextItem: ContextItemWithId = {
             content: item.content ?? "",
@@ -85,7 +87,7 @@ export const PromptBlock = Node.create<PromptBlockOptions>({
             description: item.description,
             id: {
               providerTitle: "prompt",
-              itemId: prompt.name,
+              itemId: item.title,
             },
           };
 

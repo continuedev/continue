@@ -24,7 +24,11 @@ export function ConversationStarterCards() {
   );
 
   function onClick(command: SlashCommandDescWithSource) {
-    mainEditor?.commands.insertPrompt(command);
+    mainEditor?.commands.insertPrompt({
+      description: command.description,
+      title: command.name,
+      content: command.prompt,
+    });
   }
 
   if (bookmarkedSlashCommands.length === 0) {
