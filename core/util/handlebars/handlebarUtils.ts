@@ -53,6 +53,9 @@ export async function prepareTemplatedFilepaths(
 
     if (node.type === "MustacheStatement") {
       const originalNodeVal = node.path.original;
+      if (originalNodeVal.toLowerCase() === "input") {
+        continue;
+      }
       const isFilepath = !ctxProviderNames.includes(originalNodeVal);
 
       if (isFilepath) {

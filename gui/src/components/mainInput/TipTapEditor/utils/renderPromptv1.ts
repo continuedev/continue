@@ -28,7 +28,7 @@ export async function getRenderedV1Prompt(
           selectedCode,
         });
         if (response.status === "success") {
-          return response.content.join("\n\n");
+          return response.content.map((item) => item.content).join("\n\n");
         } else {
           throw new Error(`Failed to get context items from provider: ${name}`);
         }
