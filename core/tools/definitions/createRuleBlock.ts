@@ -16,7 +16,7 @@ export const createRuleBlock: Tool = {
       'Creates a "rule" that can be referenced in future conversations. This should be used whenever you want to establish code standards / preferences that should be applied consistently, or when you want to avoid making a mistake again. To modify existing rules, use the edit tool instead.',
     parameters: {
       type: "object",
-      required: ["name", "rule", "alwaysApply", "description"],
+      required: ["name", "rule", "description"],
       properties: {
         name: {
           type: "string",
