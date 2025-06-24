@@ -170,8 +170,6 @@ export async function renderFineTunedBasicUserPrompt(
       const lines = helper.fileContents.split("\n");
       const editedCodeWithPins = insertPins(lines, helper.pos);
 
-      // console.log(snippets);
-
       return {
         role: "user",
         content: `### User Edits:\n\n${diffContext}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
@@ -228,9 +226,9 @@ function insertEditableRegionPinsWithStaticRange(
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),
     "<|editable_region_start|>",
-    ...lines.slice(editableRegionStart, editableRegionEnd),
+    ...lines.slice(editableRegionStart, editableRegionEnd + 1),
     "<|editable_region_end|>",
-    ...lines.slice(editableRegionEnd),
+    ...lines.slice(editableRegionEnd + 1),
   ];
 
   return instrumentedLines;
