@@ -33,6 +33,7 @@ import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { VsCodeExtension } from "./VsCodeExtension";
 
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
@@ -86,6 +87,7 @@ export class VsCodeMessenger {
     private readonly workOsAuthProvider: WorkOsAuthProvider,
     private readonly editDecorationManager: EditDecorationManager,
     private readonly context: vscode.ExtensionContext,
+    private readonly vsCodeExtension: VsCodeExtension,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -278,8 +280,11 @@ export class VsCodeMessenger {
             });
           },
         });
+
+        this.vsCodeExtension.activateNextEdit();
       } else {
         NextEditWindowManager.clearInstance();
+        this.vsCodeExtension.deactivateNextEdit();
       }
     });
 

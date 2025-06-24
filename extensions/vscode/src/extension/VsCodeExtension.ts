@@ -129,6 +129,7 @@ export class VsCodeExtension {
       this.workOsAuthProvider,
       this.editDecorationManager,
       context,
+      this,
     );
 
     this.core = new Core(inProcessMessenger, this.ide);
@@ -477,5 +478,13 @@ export class VsCodeExtension {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.configHandler.registerCustomContextProvider(contextProvider);
+  }
+
+  public activateNextEdit() {
+    this.completionProvider.activateNextEdit();
+  }
+
+  public deactivateNextEdit() {
+    this.completionProvider.deactivateNextEdit();
   }
 }
