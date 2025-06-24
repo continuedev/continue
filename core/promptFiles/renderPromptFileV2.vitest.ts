@@ -1,16 +1,12 @@
-import { ContextProviderExtras, ILLM, RangeInFile } from "../..";
-import { testConfigHandler, testIde } from "../../test/fixtures";
-import {
-  addToTestDir,
-  setUpTestDir,
-  tearDownTestDir,
-} from "../../test/testDir";
-import { renderPromptFileV2 } from "./renderPromptFile";
+import { ContextProviderExtras, ILLM, RangeInFile } from "..";
+import { testConfigHandler, testIde } from "../test/fixtures";
+import { addToTestDir, setUpTestDir, tearDownTestDir } from "../test/testDir";
+import { renderPromptFileV2 } from "./renderV2";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock(
-  import("../../context/providers/URLContextProvider"),
+  import("../context/providers/URLContextProvider"),
   async (importOriginal) => {
     const actual = await importOriginal();
     return {

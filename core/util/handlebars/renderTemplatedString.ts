@@ -1,15 +1,15 @@
 import {
-  compileAndRenderTemplate,
-  prepareTemplateAndData,
+  prepareTemplatedFilepaths,
   registerHelpers,
   resolveHelperPromises,
 } from "./handlebarUtils";
 
 export async function renderTemplatedString(
   template: string,
-  readFile: (filepath: string) => Promise<string>,
   inputData: Record<string, string>,
-  availableHelpers?: Array<[string, Handlebars.HelperDelegate]>,
+  availableHelpers: Array<[string, Handlebars.HelperDelegate]>,
+  readFile: (filepath: string) => Promise<string>,
+  getUriFromPath: (path: string) => Promise<string | undefined>,
 ): Promise<string> {
   const helperPromises = availableHelpers
     ? registerHelpers(availableHelpers)
@@ -17,14 +17,16 @@ export async function renderTemplatedString(
 
   const ctxProviderNames = availableHelpers?.map((h) => h[0]) ?? [];
 
-  const [newTemplate, data] = await prepareTemplateAndData(
+  const { withLetterKeys, templateData } = await prepareTemplatedFilepaths(
     template,
-    readFile,
     inputData,
     ctxProviderNames,
+    readFile,
+    getUriFromPath,
   );
 
-  let renderedString = compileAndRenderTemplate(newTemplate, data);
+  const templateFn = Handlebars.compile(withLetterKeys);
+  const renderedString = templateFn(templateData);
 
   return resolveHelperPromises(renderedString, helperPromises);
 }

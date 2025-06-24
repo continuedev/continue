@@ -1,10 +1,9 @@
-import { IDE } from "../..";
-import { walkDir } from "../../indexing/walkDir";
-import { readAllGlobalPromptFiles } from "../../util/paths";
-import { joinPathsToUri } from "../../util/uri";
-import { DEFAULT_PROMPTS_FOLDER_V1 } from "../v1";
+import { DEFAULT_PROMPTS_FOLDER_V1, DEFAULT_PROMPTS_FOLDER_V2 } from ".";
+import { IDE } from "..";
+import { walkDir } from "../indexing/walkDir";
+import { readAllGlobalPromptFiles } from "../util/paths";
+import { joinPathsToUri } from "../util/uri";
 
-export const DEFAULT_PROMPTS_FOLDER_V2 = ".continue/prompts";
 export async function getPromptFilesFromDir(
   ide: IDE,
   dir: string,

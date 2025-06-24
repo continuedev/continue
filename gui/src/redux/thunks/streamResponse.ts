@@ -5,6 +5,7 @@ import { constructMessages } from "core/llm/constructMessages";
 import { getApplicableRules } from "core/llm/rules/getSystemMessageWithRules";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { getBaseSystemMessage } from "../../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -13,7 +14,6 @@ import {
   updateHistoryItemAtIndex,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { gatherContext } from "./gatherContext";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
@@ -45,18 +45,30 @@ export const streamResponseThunk = createAsyncThunk<
         );
         resetStateForNewMessage();
 
-        const result = await dispatch(
-          gatherContext({
-            editorState,
-            modifiers,
-          }),
-        );
+        const defaultContextProviders =
+          state.config.config.experimental?.defaultContext ?? [];
+
+        if (!selectedChatModel) {
+          console.error(
+            "gatherContext thunk: Cannot gather context, no model selected",
+          );
+          throw new Error("No chat model selected");
+        }
+
+        // Resolve context providers and construct new history
         const {
           selectedContextItems,
           selectedCode,
           content,
           legacyCommandWithInput,
-        } = unwrapResult(result);
+        } = await resolveEditorContent({
+          editorState,
+          modifiers,
+          ideMessenger: extra.ideMessenger,
+          defaultContextProviders,
+          availableSlashCommands: state.config.config.slashCommands,
+          dispatch,
+        });
 
         // symbols for both context items AND selected codeblocks
         const filesForSymbols = [

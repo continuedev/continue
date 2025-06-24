@@ -18,6 +18,11 @@
     "noEmitOnError": false,
     "types": ["jest", "node"]
   },
-  "include": ["./**/*.ts", "./**/*.js", "./**/*.d.ts"],
+  "include": [
+    "./**/*.ts",
+    "./**/*.js",
+    "./**/*.d.ts",
+    "../gui/src/components/mainInput/TipTapEditor/utils/renderPromptv2.ts"
+  ],
   "exclude": ["dist"]
 }

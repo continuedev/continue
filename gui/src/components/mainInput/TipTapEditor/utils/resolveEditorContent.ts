@@ -14,20 +14,14 @@ import {
   TextMessagePart,
 } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { renderTemplatedString } from "core/promptFiles/v1/renderTemplatedString";
-import { parsePromptFileV1V2 } from "core/promptFiles/v2/parsePromptFileV1V2";
-import { renderChatMessage, stripImages } from "core/util/messageContent";
+import { stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
 import { CodeBlock, Mention, PromptBlock } from "../extensions";
-
-interface MentionAttrs {
-  label: string;
-  id: string;
-  itemType?: string;
-  query?: string;
-}
+import { getRenderedV1Prompt } from "./renderPromptv1";
+import { getPromptV2ContextAttrs } from "./renderPromptv2";
+import { MentionAttrs } from "./types";
 
 interface ResolveEditorContentInput {
   editorState: JSONContent;
@@ -70,20 +64,25 @@ export async function resolveEditorContent({
   } = processEditorContent(editorState);
 
   const {
-    parts: slashParts,
+    slashedParts,
+    contextAttrs: slashContextAttrs,
     legacyCommandWithInput,
-    contextAttrs: slashContextAttrs = [],
-  } = (await renderSlashCommandPrompt(
+  } = await renderSlashCommandPrompt(
     ideMessenger,
     slashCommandName,
-    availableSlashCommands,
     parts,
-  )) ?? {};
+    availableSlashCommands,
+    selectedCode,
+  );
 
   const contextItemAttrs = [...editorContextAttrs, ...slashContextAttrs];
 
   const shouldGatherContext =
-    modifiers.useCodebase || contextItemAttrs.length > 0;
+    defaultContextProviders.length > 0 ||
+    modifiers.useCodebase ||
+    !modifiers.noContext ||
+    contextItemAttrs.length > 0;
+
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(true));
   }
@@ -93,7 +92,7 @@ export async function resolveEditorContent({
     modifiers,
     ideMessenger,
     defaultContextProviders,
-    parts: slashParts ?? parts,
+    parts: slashedParts,
     selectedCode,
   });
 
@@ -104,7 +103,7 @@ export async function resolveEditorContent({
   return {
     selectedContextItems,
     selectedCode,
-    content: slashParts ?? parts,
+    content: slashedParts,
     legacyCommandWithInput,
   };
 }
@@ -196,43 +195,42 @@ function processEditorContent(editorState: JSONContent) {
 
   return { parts, contextItemAttrs, selectedCode, slashCommandName };
 }
+
 /**
  * Processes slash commands and prepares the command with input
  */
 async function renderSlashCommandPrompt(
   ideMessenger: IIdeMessenger,
-  slashCommandName: string | undefined,
-  availableSlashCommands: SlashCommandDescWithSource[],
+  commandName: string | undefined,
   parts: MessagePart[],
-): Promise<
-  | {
-      slashedParts: MessagePart[];
-      legacyCommandWithInput?: {
-        command: SlashCommandDescWithSource;
-        input: string;
-      };
-      contextAttrs: MentionAttrs[];
-    }
-  | undefined
-> {
-  if (!slashCommandName) return;
-
-  const command = availableSlashCommands.find(
-    (c) => c.name === slashCommandName,
-  );
-
-  if (!command) return;
+  availableSlashCommands: SlashCommandDescWithSource[],
+  selectedCode: RangeInFile[],
+): Promise<{
+  slashedParts: MessagePart[];
+  legacyCommandWithInput?: {
+    command: SlashCommandDescWithSource;
+    input: string;
+  };
+  contextAttrs: MentionAttrs[];
+}> {
+  const NO_COMMAND = {
+    slashedParts: parts,
+    legacyCommandWithInput: undefined,
+    contextAttrs: [],
+  };
+  if (!commandName) {
+    return NO_COMMAND;
+  }
+  const command = availableSlashCommands.find((c) => c.name === commandName);
+  if (!command) {
+    return NO_COMMAND;
+  }
 
   const nonTextParts = parts.filter((part) => part.type !== "text");
   const slashedParts: MessagePart[] = [...nonTextParts];
   const textParts = parts.filter((part) => part.type === "text");
 
-  const userInput = textParts.length
-    ? renderChatMessage({
-        role: "user",
-        content: textParts,
-      }).trimStart()
-    : "";
+  const userInput = stripImages(textParts).trimStart();
 
   const legacyCommandWithInput = command.isLegacy
     ? {
@@ -241,7 +239,7 @@ async function renderSlashCommandPrompt(
       }
     : undefined;
 
-  const contextItemAttrs: MentionAttrs[] = [];
+  const contextAttrs: MentionAttrs[] = [];
 
   switch (command.source) {
     case "built-in-legacy":
@@ -275,68 +273,53 @@ async function renderSlashCommandPrompt(
         });
       } else {
         throw new Error(
-          `Failed to get MCP prompt for slash command ${slashCommandName}`,
+          `Failed to get MCP prompt for slash command ${command.name}`,
         );
       }
       break;
-    case ".prompt-file":
-      if (!command.promptFile || !command.prompt) {
+    case "prompt-file-v1":
+    case "prompt-file-v2":
+      if (!command.promptFile) {
+        throw new Error(
+          `Invalid prompt file from slash command ${command.name}`,
+        );
+      }
+    case "yaml-prompt-block":
+      if (!command.prompt) {
         throw new Error(
           `Invalid/empty prompt from slash command ${command.name}`,
         );
       }
-      const { name, description, systemMessage, prompt } = parsePromptFileV1V2(
-        command.promptFile,
-        command.prompt,
-      );
-    case "yaml-prompt-block":
-      const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
-        config: context.config,
-        fullInput: context.input,
-        embeddingsProvider: context.config.modelsByRole.embed[0],
-        reranker: context.config.modelsByRole.rerank[0],
-        llm: context.llm,
-        ide: context.ide,
-        selectedCode: context.selectedCode,
-        fetch: context.fetch,
-      });
-
-      // Render prompt template
       let renderedPrompt: string;
-      if (customCommand.prompt.includes("{{{ input }}}")) {
-        renderedPrompt = await renderTemplatedString(
-          customCommand.prompt,
-          ide.readFile.bind(ide),
-          { input },
+      if (
+        command.source === "prompt-file-v1" ||
+        command.prompt.includes("{{{ input }}}")
+      ) {
+        renderedPrompt = await getRenderedV1Prompt(
+          ideMessenger,
+          command,
+          userInput,
+          selectedCode,
         );
       } else {
-        const renderedPromptFile = await renderPromptFileV2(
-          customCommand.prompt,
-          {
-            config,
-            llm,
-            ide,
-            selectedCode,
-            fetch,
-            fullInput: input,
-            embeddingsProvider: config.selectedModelByRole.embed,
-            reranker: config.selectedModelByRole.rerank,
-          },
+        const promptFileContextAttrs = await getPromptV2ContextAttrs(
+          ideMessenger,
+          command,
         );
-
-        renderedPrompt = renderedPromptFile[1];
+        contextAttrs.push(...promptFileContextAttrs);
+        renderedPrompt = [command.prompt, userInput].join("\n\n");
       }
 
-      const renderedPrompt = renderPromptFile();
+      // const renderedPrompt = renderPromptFile();
       slashedParts.push({
         type: "text",
-        text: renderedPrompt, // Includes user input
+        text: renderedPrompt.trim(), // Includes user input
       });
     case "built-in":
     case "invokable-rule":
     case "json-custom-command":
       if (!command.prompt) {
-        throw new Error(`Slash command ${slashCommandName} is missing prompt`);
+        throw new Error(`Slash command ${command.name} is missing prompt`);
       }
       slashedParts.push({
         type: "text",
@@ -346,7 +329,7 @@ async function renderSlashCommandPrompt(
   return {
     slashedParts,
     legacyCommandWithInput,
-    contextAttrs: [],
+    contextAttrs,
   };
 }
 
@@ -384,7 +367,10 @@ async function gatherContextItems({
   }
 
   // cmd+enter to use codebase
-  if (modifiers.useCodebase) {
+  if (
+    modifiers.useCodebase &&
+    !contextItemAttrs.some((item) => item.id === "codebase")
+  ) {
     const result = await ideMessenger.request("context/getContextItems", {
       name: "codebase",
       query: "",
@@ -394,6 +380,32 @@ async function gatherContextItems({
 
     if (result.status === "success") {
       contextItems.push(...result.content);
+    }
+  }
+
+  // noContext modifier adds currently open file if it's not already present
+  if (
+    !modifiers.noContext &&
+    !contextItemAttrs.some((item) => item.id === "currentFile")
+  ) {
+    const currentFileResponse = await ideMessenger.request(
+      "context/getContextItems",
+      {
+        name: "currentFile",
+        query: "non-mention-usage",
+        fullInput: "",
+        selectedCode: [],
+      },
+    );
+    if (currentFileResponse.status === "success") {
+      const currentFile = currentFileResponse.content[0];
+      if (currentFile.uri?.value) {
+        currentFile.id = {
+          providerTitle: "file",
+          itemId: currentFile.uri.value,
+        };
+        contextItems.unshift(currentFile);
+      }
     }
   }
 
@@ -416,18 +428,6 @@ async function gatherContextItems({
   contextItems.push(...defaultContextItems.flat());
 
   return contextItems;
-}
-
-function findLastIndex<T>(
-  array: T[],
-  predicate: (value: T, index: number, obj: T[]) => boolean,
-): number {
-  for (let i = array.length - 1; i >= 0; i--) {
-    if (predicate(array[i], i, array)) {
-      return i;
-    }
-  }
-  return -1; // if no element satisfies the predicate
 }
 
 function resvolePromptBlock(p: JSONContent): string | undefined {

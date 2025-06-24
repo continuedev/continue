@@ -861,7 +861,8 @@ export type SlashCommandSource =
   | "config-ts-slash-command"
   | "yaml-prompt-block"
   | "mcp-prompt"
-  | ".prompt-file"
+  | "prompt-file-v1"
+  | "prompt-file-v2"
   | "invokable-rule";
 
 export interface SlashCommandDescWithSource extends SlashCommandDescription {

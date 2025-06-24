@@ -47,7 +47,7 @@ import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
-import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
+import { getAllPromptFiles } from "../promptFiles/getPromptFiles";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
@@ -64,6 +64,7 @@ import {
 import { localPathToUri } from "../util/pathToUri";
 
 import { baseToolDefinitions } from "../tools";
+import { resolveRelativePathInDir } from "../util/ideUtils";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
@@ -252,7 +253,10 @@ async function intermediateToFinalConfig({
   loadPromptFiles?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
-
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  const getUriFromPath = (path: string) => {
+    return resolveRelativePathInDir(path, ide, workspaceDirs);
+  };
   // Auto-detect models
   let models: BaseLLM[] = [];
   await Promise.all(
@@ -261,6 +265,7 @@ async function intermediateToFinalConfig({
         const llm = await llmFromDescription(
           desc,
           ide.readFile.bind(ide),
+          getUriFromPath,
           uniqueId,
           ideSettings,
           llmLogger,
@@ -282,6 +287,7 @@ async function intermediateToFinalConfig({
                     title: modelName,
                   },
                   ide.readFile.bind(ide),
+                  getUriFromPath,
                   uniqueId,
                   ideSettings,
                   llmLogger,
@@ -358,6 +364,7 @@ async function intermediateToFinalConfig({
           const llm = await llmFromDescription(
             desc,
             ide.readFile.bind(ide),
+            getUriFromPath,
             uniqueId,
             ideSettings,
             llmLogger,
@@ -985,7 +992,6 @@ async function loadContinueConfigFromJson(
 
 export {
   finalToBrowserConfig,
-  intermediateToFinalConfig,
   loadContinueConfigFromJson,
   type BrowserSerializedContinueConfig,
 };
