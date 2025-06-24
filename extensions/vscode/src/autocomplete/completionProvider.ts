@@ -342,7 +342,7 @@ export class ContinueCompletionProvider
       (completionItem as any).completeBracketPairs = true;
       // return [completionItem];
       const editor = vscode.window.activeTextEditor;
-      if (editor) {
+      if (editor && NextEditWindowManager.isInstantiated()) {
         await NextEditWindowManager.getInstance().showTooltip(
           editor,
           completionText,
