@@ -190,6 +190,11 @@ export class NextEditWindowManager {
       diff.offset.character,
     );
 
+    // Stops the manager from rendering blank windows when there is nothing to render.
+    if (diff.renderableDiff === "") {
+      return;
+    }
+
     // Create and apply decoration with the text
     await this.renderTooltip(editor, position, diff.renderableDiff);
   }
