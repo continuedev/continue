@@ -17,6 +17,9 @@ import {
 import { stripImages } from "core/util/messageContent";
 import * as vscode from "vscode";
 
+import setupNextEditWindowManager, {
+  NextEditWindowManager,
+} from "../activation/NextEditWindowManager";
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { addCurrentSelectionToEdit } from "../quickEdit/AddCurrentSelection";
@@ -82,6 +85,7 @@ export class VsCodeMessenger {
     private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly workOsAuthProvider: WorkOsAuthProvider,
     private readonly editDecorationManager: EditDecorationManager,
+    private readonly context: vscode.ExtensionContext,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -247,6 +251,36 @@ export class VsCodeMessenger {
 
     this.onWebview("edit/clearDecorations", async (msg) => {
       editDecorationManager.clear();
+    });
+
+    this.onWebview("optInContinueFeature", async (msg) => {
+      if (msg.data.optIn) {
+        // Set up next edit window manager only for Continue team members
+        setupNextEditWindowManager(context, {
+          applyText: async (editor, diff, position) => {
+            const editableRegionStartLine = Math.max(0, position.line - 5);
+            const editableRegionEndLine = Math.min(
+              editor.document.lineCount - 1,
+              position.line + 5,
+            );
+            const startPos = new vscode.Position(editableRegionStartLine, 0);
+            const endPosChar = editor.document.lineAt(editableRegionEndLine)
+              .text.length;
+
+            const endPos = new vscode.Position(
+              editableRegionEndLine,
+              endPosChar,
+            );
+            const editRange = new vscode.Range(startPos, endPos);
+
+            return await editor.edit((editBuilder) => {
+              editBuilder.replace(editRange, diff);
+            });
+          },
+        });
+      } else {
+        NextEditWindowManager.clearInstance();
+      }
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
