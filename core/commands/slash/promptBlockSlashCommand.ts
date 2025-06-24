@@ -1,12 +1,13 @@
-import { CustomCommand, SlashCommandWithSource } from "../..";
+import { Prompt } from "@continuedev/config-yaml";
+import { SlashCommandWithSource } from "../..";
 
 export function convertPromptBlockToSlashCommand(
-  customCommand: CustomCommand,
+  prompt: Prompt,
 ): SlashCommandWithSource {
   return {
-    name: customCommand.name,
-    description: customCommand.description ?? "",
-    prompt: customCommand.prompt,
+    name: prompt.name,
+    description: prompt.description ?? "",
+    prompt: prompt.prompt,
     source: "yaml-prompt-block",
   };
 }

@@ -17,15 +17,31 @@ export async function getPromptV2ContextRequests(
     visitedFiles.add(command.promptFile);
   }
 
-  const contextItemAttrs: GetContextRequest[] = [];
-  const addItem = (item: GetContextRequest) => {
-    contextItemAttrs.push(item);
-  };
+  const contextRequests: GetContextRequest[] = [];
 
   async function addContextRequestsRecursive(promptBody: string) {
     // Files
-    for (const match of promptBody.matchAll(/@([^\s]+)/g)) {
-      const name = match[0];
+    const templateMatches = promptBody.matchAll(/@([^\s]+)/g);
+    for (const match of templateMatches) {
+      const name = match[1];
+
+      if (SUPPORTED_PROMPT_CONTEXT_PROVIDERS.includes(name)) {
+        contextRequests.push({
+          provider: name,
+        });
+        continue;
+      }
+
+      // URLs
+      if (name.startsWith("http")) {
+        contextRequests.push({
+          provider: "url",
+          query: name,
+        });
+        continue;
+      }
+
+      // Files
       const resolvedFileUri = await resolveRelativePathInDir(
         match[0],
         ideMessenger.ide,
@@ -40,25 +56,13 @@ export async function getPromptV2ContextRequests(
           visitedFiles.add(resolvedFileUri);
           await addContextRequestsRecursive(contents);
         }
-        return addItem({
+        contextRequests.push({
           provider: name,
           query: resolvedFileUri,
-        });
-      }
-      // URLs
-      if (name.startsWith("http")) {
-        return addItem({
-          provider: "url",
-          query: name,
-        });
-      }
-      if (SUPPORTED_PROMPT_CONTEXT_PROVIDERS.includes(name)) {
-        return addItem({
-          provider: name,
         });
       }
     }
   }
   await addContextRequestsRecursive(command.prompt);
-  return contextItemAttrs;
+  return contextRequests;
 }

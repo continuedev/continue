@@ -234,8 +234,8 @@ async function renderSlashCommandPrompt(
   }
 
   const nonTextParts = parts.filter((part) => part.type !== "text");
-  const slashedParts: MessagePart[] = [...nonTextParts];
   const textParts = parts.filter((part) => part.type === "text");
+  const slashedParts: MessagePart[] = [...nonTextParts];
 
   const userInput = stripImages(textParts).trimStart();
 
@@ -311,10 +311,17 @@ async function renderSlashCommandPrompt(
         renderedPrompt = [command.prompt, userInput].join("\n\n");
       }
 
-      slashedParts.push({
-        type: "text",
-        text: renderedPrompt.trim(), // Includes user input
-      });
+      if (renderedPrompt) {
+        slashedParts.push({
+          type: "text",
+          text: renderedPrompt.trim(), // Includes user input
+        });
+      } else {
+        console.warn(
+          `Invalid/empty prompt + input from slash command ${command.name}`,
+        );
+      }
+
       break;
     case "built-in":
     case "invokable-rule":
@@ -323,10 +330,18 @@ async function renderSlashCommandPrompt(
         console.warn(`Slash command ${command.name} is missing prompt`);
         break;
       }
-      slashedParts.push({
-        type: "text",
-        text: `${command.prompt}${userInput ? "\n\n" + userInput : ""}`,
-      });
+      const rendered =
+        `${command.prompt}${userInput ? "\n\n" + userInput : ""}`.trim();
+      if (rendered) {
+        slashedParts.push({
+          type: "text",
+          text: rendered,
+        });
+      } else {
+        console.warn(
+          `Invalid/empty prompt + input from slash command ${command.name}`,
+        );
+      }
     default:
       break;
   }
@@ -362,18 +377,21 @@ async function gatherContextItems({
     }),
   );
   const withDefaults = [...contextRequests, ...defaultRequests];
-  const deduplicated = withDefaults.reduce<GetContextRequest[]>((acc, item) => {
-    if (
-      !acc.some((i) => i.provider === item.provider && i.query === item.query)
-    ) {
-      acc.push(item);
-    }
-    return acc;
-  }, []);
+  const deduplicatedInputs = withDefaults.reduce<GetContextRequest[]>(
+    (acc, item) => {
+      if (
+        !acc.some((i) => i.provider === item.provider && i.query === item.query)
+      ) {
+        acc.push(item);
+      }
+      return acc;
+    },
+    [],
+  );
   let contextItems: ContextItemWithId[] = [];
 
   // Process context item attributes
-  for (const item of deduplicated) {
+  for (const item of deduplicatedInputs) {
     const result = await ideMessenger.request("context/getContextItems", {
       name: item.provider,
       query: item.query ?? "",
@@ -388,7 +406,7 @@ async function gatherContextItems({
   // cmd+enter to use codebase
   if (
     modifiers.useCodebase &&
-    !deduplicated.some((item) => item.provider === "codebase")
+    !deduplicatedInputs.some((item) => item.provider === "codebase")
   ) {
     const result = await ideMessenger.request("context/getContextItems", {
       name: "codebase",
@@ -405,7 +423,7 @@ async function gatherContextItems({
   // noContext modifier adds currently open file if it's not already present
   if (
     !modifiers.noContext &&
-    !deduplicated.some((item) => item.provider === "currentFile")
+    !deduplicatedInputs.some((item) => item.provider === "currentFile")
   ) {
     const currentFileResponse = await ideMessenger.request(
       "context/getContextItems",
@@ -428,7 +446,27 @@ async function gatherContextItems({
     }
   }
 
-  return contextItems;
+  // Deduplicates based on either providerTitle + itemId or uri type + value
+  const deduplicatedOutputs = contextItems.reduce<ContextItemWithId[]>(
+    (acc, item) => {
+      if (
+        !acc.some(
+          (i) =>
+            (i.id.providerTitle === item.id.providerTitle &&
+              i.id.itemId === item.id.itemId) ||
+            (i.uri &&
+              item.uri &&
+              i.uri.type === item.uri.type &&
+              i.uri.value === item.uri.value),
+        )
+      ) {
+        acc.push(item);
+      }
+      return acc;
+    },
+    [],
+  );
+  return deduplicatedOutputs;
 }
 
 function resvolePromptBlock(p: JSONContent): string | undefined {
