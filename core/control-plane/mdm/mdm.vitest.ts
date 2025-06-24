@@ -1,4 +1,5 @@
 import * as crypto from "crypto";
+import { expect, test } from "vitest";
 import { LicenseKeyData, validateLicenseKey } from "./mdm";
 
 // We'll create a real key pair once for all tests

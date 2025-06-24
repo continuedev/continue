@@ -13,7 +13,7 @@ import {
   providers,
 } from "../pages/AddNewModel/configs/providers";
 import { useAppDispatch } from "../redux/hooks";
-import { updateSelectedModelByRole } from "../redux/thunks";
+import { updateSelectedModelByRole } from "../redux/thunks/updateSelectedModelByRole";
 
 interface AddModelFormProps {
   onDone: () => void;

@@ -1,11 +1,11 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { FreeTrialStatus } from "core/control-plane/client";
 import { useContext } from "react";
-import { Button, SecondaryButton, vscButtonBackground } from "../..";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { fontSize } from "../../../util";
-import { Listbox, ListboxButton, ListboxOptions, Transition } from "../../ui";
-import { useFontSize } from "../../ui/font";
+import { Button, SecondaryButton, vscButtonBackground } from ".";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { fontSize } from "../util";
+import { setLocalStorage } from "../util/localStorage";
+import { Listbox, ListboxButton, ListboxOptions, Transition } from "./ui";
 
 interface ProgressBarProps {
   label: string;
@@ -78,9 +78,16 @@ interface FreeTrialButtonProps {
 export default function FreeTrialButton({
   freeTrialStatus,
 }: FreeTrialButtonProps) {
-  const smallFont = useFontSize(-3);
-  const tinyFont = useFontSize(-4);
   const ideMessenger = useContext(IdeMessengerContext);
+
+  const onExitFreeTrial = async () => {
+    setLocalStorage("hasExitedFreeTrial", true);
+
+    await ideMessenger.request("controlPlane/openUrl", {
+      path: "setup-models",
+      orgSlug: undefined,
+    });
+  };
 
   return (
     <Listbox>
@@ -137,15 +144,7 @@ export default function FreeTrialButton({
               )}
 
               <div className="mt-4 flex gap-2">
-                <SecondaryButton
-                  className="flex-1"
-                  onClick={async () => {
-                    await ideMessenger.request("controlPlane/openUrl", {
-                      path: "setup-models",
-                      orgSlug: undefined,
-                    });
-                  }}
-                >
+                <SecondaryButton className="flex-1" onClick={onExitFreeTrial}>
                   Exit trial
                 </SecondaryButton>
                 <Button

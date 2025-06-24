@@ -42,12 +42,13 @@ import {
   IdeSettings,
   ModelDescription,
   RangeInFile,
+  ToolCall,
   type ContextItem,
   type ContextItemId,
   type IDE,
 } from ".";
 
-import { ConfigYaml } from "@continuedev/config-yaml";
+import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import {
@@ -58,6 +59,7 @@ import {
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
+import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
@@ -67,7 +69,6 @@ import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { StreamAbortManager } from "./util/abortManager";
 import { getUriPathBasename } from "./util/uri";
 
 const hasRulesFiles = (uris: string[]): boolean => {
@@ -147,6 +148,18 @@ export class Core {
 
     MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
       void this.configHandler.reloadConfig();
+
+      // Refresh @mention dropdown submenu items for MCP providers
+      const mcpManager = MCPManagerSingleton.getInstance();
+      const mcpProviderNames = Array.from(mcpManager.connections.keys()).map(
+        (mcpId) => `mcp-${mcpId}`,
+      );
+
+      if (mcpProviderNames.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: mcpProviderNames,
+        });
+      }
     };
 
     this.codeBaseIndexer = new CodebaseIndexer(
@@ -512,6 +525,11 @@ export class Core {
         throw new Error("No model selected");
       }
 
+      const abortManager = ApplyAbortManager.getInstance();
+      const abortController = abortManager.get(
+        data.fileUri ?? "current-file-stream",
+      ); // not super important since currently cancelling apply will cancel all streams it's one file at a time
+
       return streamDiffLines({
         highlighted: data.highlighted,
         prefix: data.prefix,
@@ -525,13 +543,13 @@ export class Core {
         language: data.language,
         onlyOneInsertion: false,
         overridePrompt: undefined,
-        abortControllerId: data.fileUri ?? "current-file-stream", // not super important since currently cancelling apply will cancel all streams it's one file at a time
+        abortController,
       });
     });
 
     on("cancelApply", async (msg) => {
-      const abortManager = StreamAbortManager.getInstance();
-      abortManager.clear();
+      const abortManager = ApplyAbortManager.getInstance();
+      abortManager.clear(); // for now abort all streams
     });
 
     on("onboarding/complete", this.handleCompleteOnboarding.bind(this));
@@ -738,44 +756,9 @@ export class Core {
       return { url };
     });
 
-    on("tools/call", async ({ data: { toolCall } }) => {
-      const { config } = await this.configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      const tool = config.tools.find(
-        (t) => t.function.name === toolCall.function.name,
-      );
-
-      if (!tool) {
-        throw new Error(`Tool ${toolCall.function.name} not found`);
-      }
-
-      if (!config.selectedModelByRole.chat) {
-        throw new Error("No chat model selected");
-      }
-
-      // Define a callback for streaming output updates
-      const onPartialOutput = (params: {
-        toolCallId: string;
-        contextItems: ContextItem[];
-      }) => {
-        this.messenger.send("toolCallPartialOutput", params);
-      };
-
-      return await callTool(tool, toolCall, {
-        config,
-        ide: this.ide,
-        llm: config.selectedModelByRole.chat,
-        fetch: (url, init) =>
-          fetchwithRequestOptions(url, init, config.requestOptions),
-        tool,
-        toolCallId: toolCall.id,
-        onPartialOutput,
-        codeBaseIndexer: this.codeBaseIndexer,
-      });
-    });
+    on("tools/call", async ({ data: { toolCall } }) =>
+      this.handleToolCall(toolCall),
+    );
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
@@ -797,6 +780,45 @@ export class Core {
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
       const isValid = setMdmLicenseKey(licenseKey);
       return isValid;
+    });
+  }
+
+  private async handleToolCall(toolCall: ToolCall) {
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
+
+    const tool = config.tools.find(
+      (t) => t.function.name === toolCall.function.name,
+    );
+
+    if (!tool) {
+      throw new Error(`Tool ${toolCall.function.name} not found`);
+    }
+
+    if (!config.selectedModelByRole.chat) {
+      throw new Error("No chat model selected");
+    }
+
+    // Define a callback for streaming output updates
+    const onPartialOutput = (params: {
+      toolCallId: string;
+      contextItems: ContextItem[];
+    }) => {
+      this.messenger.send("toolCallPartialOutput", params);
+    };
+
+    return await callTool(tool, toolCall, {
+      config,
+      ide: this.ide,
+      llm: config.selectedModelByRole.chat,
+      fetch: (url, init) =>
+        fetchwithRequestOptions(url, init, config.requestOptions),
+      tool,
+      toolCallId: toolCall.id,
+      onPartialOutput,
+      codeBaseIndexer: this.codeBaseIndexer,
     });
   }
 
@@ -887,7 +909,12 @@ export class Core {
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith(RULES_MARKDOWN_FILENAME)
+          uri.endsWith(RULES_MARKDOWN_FILENAME) ||
+          BLOCK_TYPES.some(
+            (blockType) =>
+              uri.includes(`.continue/${blockType}`) ||
+              uri.includes(`.continue\\${blockType}`),
+          )
         ) {
           await this.configHandler.reloadConfig();
         } else if (

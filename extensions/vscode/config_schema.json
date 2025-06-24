@@ -2148,6 +2148,29 @@
           "if": {
             "properties": {
               "name": {
+                "enum": ["search"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "maxResults": {
+                    "title": "Max Results",
+                    "description": "The maximum number of results to return",
+                    "default": 200,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
                 "enum": ["open"]
               }
             }

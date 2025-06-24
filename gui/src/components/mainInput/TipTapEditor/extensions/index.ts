@@ -1,4 +1,4 @@
-export * from "./CodeBlock";
-export * from "./Mention";
-export * from "./Prompt";
-export * from "./SlashCommand";
+export { CodeBlock } from "./CodeBlock/CodeBlock";
+export { Mention } from "./Mention";
+export { PromptBlock } from "./Prompt/PromptBlock";
+export { SlashCommand } from "./SlashCommand";
