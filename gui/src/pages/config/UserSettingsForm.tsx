@@ -8,6 +8,7 @@ import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
 } from "core/config/sharedConfig";
+import { HubSessionInfo } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useState } from "react";
 import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
@@ -15,10 +16,12 @@ import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
 import { ToolTip } from "../../components/gui/Tooltip";
 import { useFontSize } from "../../components/ui/font";
+import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
 import { setLocalStorage } from "../../util/localStorage";
+import { ContinueFeaturesMenu } from "./ContinueFeaturesMenu";
 
 export function UserSettingsForm() {
   /////// User settings section //////
@@ -26,6 +29,7 @@ export function UserSettingsForm() {
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
   const [showExperimental, setShowExperimental] = useState(false);
+  const { session } = useAuth();
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -79,6 +83,8 @@ export function UserSettingsForm() {
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
     config.experimental?.useCurrentFileAsContext ?? false;
+  const optInContinueFeature =
+    config.experimental?.optInContinueFeature ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -111,6 +117,10 @@ export function UserSettingsForm() {
       setHubEnabled(continueTestEnvironment === "production");
     });
   }, [ideMessenger]);
+
+  const hasContinueEmail = (session as HubSessionInfo)?.account?.id.includes(
+    "@continue.dev",
+  );
 
   return (
     <div className="flex flex-col">
@@ -353,7 +363,9 @@ export function UserSettingsForm() {
             </div>
             <div
               className={`duration-400 overflow-hidden transition-all ease-in-out ${
-                showExperimental ? "max-h-40" : "max-h-0"
+                showExperimental
+                  ? "max-h-96" /* Increased from max-h-40 to max-h-96 to accommodate ContinueFeaturesMenu */
+                  : "max-h-0"
               }`}
             >
               <div className="flex flex-col gap-x-1 gap-y-4 pl-6">
@@ -408,6 +420,13 @@ export function UserSettingsForm() {
                     </>
                   }
                 />
+
+                {hasContinueEmail && (
+                  <ContinueFeaturesMenu
+                    optInContinueFeature={optInContinueFeature}
+                    handleUpdate={handleUpdate}
+                  />
+                )}
               </div>
             </div>
           </div>
