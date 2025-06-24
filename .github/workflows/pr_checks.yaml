@@ -9,7 +9,6 @@ on:
   push:
     branches:
       - main
-      - pe/pr-checks-updates
 
 jobs:
   install-root:
