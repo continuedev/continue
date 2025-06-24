@@ -700,7 +700,7 @@ export class Core {
         global._editAggregator = new EditAggregator(
           EDIT_AGGREGATION_OPTIONS,
           (diff: string) => {
-            console.log(diff, "\n");
+            // console.log(diff, "\n");
             // TODO handle devData logging here
             NextEditProvider.getInstance().addDiffToContext(diff);
           },
