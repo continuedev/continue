@@ -101,6 +101,8 @@ export class NextEditWindowManager {
 
   private textApplier: TextApplier | null = null;
 
+  private finalCursorPos: vscode.Position | null = null;
+
   public static getInstance(): NextEditWindowManager {
     if (!NextEditWindowManager.instance) {
       NextEditWindowManager.instance = new NextEditWindowManager();
@@ -168,15 +170,28 @@ export class NextEditWindowManager {
     // Store the current tooltip text for accepting later
     this.currentTooltipText = text;
 
-    // TODO: we may use a unified diff here if the file is too huge
-    const diffLines = myersDiff(editor.document.getText(), text);
-    const diff = getRenderableDiff(diffLines);
-
     // Get cursor position
     const position = editor.selection.active;
+    const startPos = Math.max(position.line - 5, 0);
+    const endPos = Math.min(position.line + 5, editor.document.lineCount - 1);
+    const originalSlice = editor.document
+      .getText()
+      .split("\n")
+      .slice(startPos, endPos + 1)
+      .join("\n");
+
+    // TODO: we may use a unified diff here if the file is too huge
+    // TODO: compare text with the editable region slice.
+    const diffLines = myersDiff(originalSlice, text);
+    const diff = getRenderableDiff(diffLines);
+
+    this.finalCursorPos = new vscode.Position(
+      startPos + diff.offset.line,
+      diff.offset.character,
+    );
 
     // Create and apply decoration with the text
-    await this.renderTooltip(editor, position, diff);
+    await this.renderTooltip(editor, position, diff.renderableDiff);
   }
 
   /**
@@ -250,6 +265,13 @@ export class NextEditWindowManager {
     }
 
     if (success) {
+      // Move cursor to the final position if available.
+      if (this.finalCursorPos) {
+        editor.selection = new vscode.Selection(
+          this.finalCursorPos,
+          this.finalCursorPos,
+        );
+      }
       this.hideAllTooltips();
     }
   }
