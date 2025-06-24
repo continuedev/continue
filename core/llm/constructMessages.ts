@@ -7,6 +7,7 @@ import {
   ToolResultChatMessage,
   UserChatMessage,
 } from "../";
+import { findLastIndex } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 import { RulePolicies } from "./rules/types";
@@ -138,7 +139,8 @@ export function constructMessages(
   }
 
   // Determine which rules apply to this message
-  const lastUserOrToolItemIdx = history.findLastIndex(
+  const lastUserOrToolItemIdx = findLastIndex(
+    history,
     (item) => item.message.role === "user" || item.message.role === "tool",
   );
   const lastUserOrToolHistoryItem = history[lastUserOrToolItemIdx];
