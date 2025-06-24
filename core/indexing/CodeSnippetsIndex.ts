@@ -23,10 +23,12 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../";
+import { formatCodeblock } from "../util/formatCodeblock";
 import {
   findUriInDirs,
   getLastNPathParts,
   getLastNUriRelativePathParts,
+  getUriFileExtension,
   getUriPathBasename,
 } from "../util/uri";
 import { tagToString } from "./utils";
@@ -356,11 +358,20 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const row = await db.get("SELECT * FROM code_snippets WHERE id = ?", [id]);
 
     const last2Parts = getLastNUriRelativePathParts(workspaceDirs, row.path, 2);
-    const { relativePathOrBasename } = findUriInDirs(row.path, workspaceDirs);
+    const { relativePathOrBasename, uri } = findUriInDirs(
+      row.path,
+      workspaceDirs,
+    );
+    const extension = getUriFileExtension(uri);
+    const codeblock = formatCodeblock(
+      relativePathOrBasename,
+      row.content,
+      extension,
+    );
     return {
       name: row.title,
       description: last2Parts,
-      content: `\`\`\`${relativePathOrBasename}\n${row.content}\n\`\`\``,
+      content: codeblock,
       uri: {
         type: "file",
         value: row.path,

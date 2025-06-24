@@ -1,4 +1,4 @@
-import { getMarkdownLanguageTagForFile } from "core/util";
+import { formatCodeblock } from "core/util/formatCodeblock";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 
 interface CreateFileToolCallProps {
@@ -12,7 +12,10 @@ export function CreateFile(props: CreateFileToolCallProps) {
     return null;
   }
 
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilepath ?? "output.txt")} ${props.relativeFilepath}\n${props.fileContents ?? ""}\n\`\`\``;
+  const src = formatCodeblock(
+    props.relativeFilepath ?? "newFile.txt",
+    props.fileContents,
+  );
 
   return props.relativeFilepath ? (
     <StyledMarkdownPreview

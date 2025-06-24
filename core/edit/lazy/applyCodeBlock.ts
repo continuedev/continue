@@ -6,26 +6,26 @@ import { deterministicApplyLazyEdit } from "./deterministic";
 import { streamLazyApply } from "./streamLazyApply";
 import { applyUnifiedDiff, isUnifiedDiffFormat } from "./unifiedDiffApply";
 
-function canUseInstantApply(filename: string) {
-  const fileExtension = getUriFileExtension(filename);
-  return supportedLanguages[fileExtension] !== undefined;
+function canUseInstantApply(fileUri: string) {
+  const fileExt = getUriFileExtension(fileUri);
+  return supportedLanguages[fileExt] !== undefined;
 }
 
 export async function applyCodeBlock(
   oldFile: string,
   newLazyFile: string,
-  filename: string,
+  fileUri: string,
   llm: ILLM,
   abortController: AbortController,
 ): Promise<{
   isInstantApply: boolean;
   diffLinesGenerator: AsyncGenerator<DiffLine>;
 }> {
-  if (canUseInstantApply(filename)) {
+  if (canUseInstantApply(fileUri)) {
     const diffLines = await deterministicApplyLazyEdit({
       oldFile,
       newLazyFile,
-      filename,
+      fileUri,
       onlyFullFileRewrite: true,
     });
 
@@ -54,7 +54,7 @@ export async function applyCodeBlock(
     isInstantApply: false,
     diffLinesGenerator: streamLazyApply(
       oldFile,
-      filename,
+      fileUri,
       newLazyFile,
       llm,
       abortController,

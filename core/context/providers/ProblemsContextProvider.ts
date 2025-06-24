@@ -3,6 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
+import { formatCodeblock } from "../../util/formatCodeblock.js";
 import { getUriDescription } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
@@ -22,24 +23,44 @@ class ProblemsContextProvider extends BaseContextProvider {
     const problems = await ide.getProblems();
     const workspaceDirs = await ide.getWorkspaceDirs();
 
+    type FileCache = {
+      lines: string[];
+      desc: ReturnType<typeof getUriDescription>;
+    };
+    const files: Map<string, FileCache> = new Map();
+
     const items = await Promise.all(
       problems.map(async (problem) => {
-        const { relativePathOrBasename, baseName } = getUriDescription(
-          problem.filepath,
-          workspaceDirs,
-        );
-        const content = await ide.readFile(problem.filepath);
-        const lines = content.split("\n");
-        const rangeContent = lines
+        let cachedFile: FileCache;
+        if (files.has(problem.filepath)) {
+          cachedFile = files.get(problem.filepath)!;
+        } else {
+          const content = await ide.readFile(problem.filepath);
+          const desc = getUriDescription(problem.filepath, workspaceDirs);
+          const lines = content.split("\n");
+          cachedFile = { lines, desc };
+          files.set(problem.filepath, cachedFile);
+        }
+
+        const { relativePathOrBasename, baseName, extension } = cachedFile.desc;
+
+        const rangeContent = cachedFile.lines
           .slice(
             Math.max(0, problem.range.start.line - 2),
             problem.range.end.line + 2,
           )
           .join("\n");
 
+        const codeblock = formatCodeblock(
+          relativePathOrBasename,
+          rangeContent,
+          extension,
+          problem.range,
+        );
+
         return {
           description: "Problems in current file",
-          content: `\`\`\`${relativePathOrBasename}\n${rangeContent}\n\`\`\`\n${problem.message}\n\n`,
+          content: `${codeblock}\n${problem.message}\n\n`,
           name: `Warning in ${baseName}`,
         };
       }),

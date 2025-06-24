@@ -1,4 +1,4 @@
-import { getMarkdownLanguageTagForFile } from "core/util";
+import { formatCodeblock } from "core/util/formatCodeblock";
 import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
@@ -38,7 +38,7 @@ export function EditFile(props: EditToolCallProps) {
     return null;
   }
 
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes}\n\`\`\``;
+  const src = formatCodeblock(props.relativeFilePath ?? "", props.changes);
 
   return (
     <StyledMarkdownPreview

@@ -13,7 +13,7 @@ import { BUFFER_LINES_BELOW, getReplacementWithLlm } from "./replace.js";
 
 export async function* streamLazyApply(
   oldCode: string,
-  filename: string,
+  fileUri: string,
   newCode: string,
   llm: ILLM,
   abortController: AbortController,
@@ -23,7 +23,7 @@ export async function* streamLazyApply(
     throw new Error(`Lazy apply not supported for model ${llm.model}`);
   }
 
-  const promptMessages = promptFactory(oldCode, filename, newCode);
+  const promptMessages = promptFactory(oldCode, fileUri, newCode);
   const lazyCompletion = llm.streamChat(promptMessages, abortController.signal);
 
   // Do find and replace over the lazy edit response

@@ -4,6 +4,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../";
+import { formatCodeblock } from "../../util/formatCodeblock";
 import { getUriDescription } from "../../util/uri";
 
 class CurrentFileContextProvider extends BaseContextProvider {
@@ -24,10 +25,9 @@ class CurrentFileContextProvider extends BaseContextProvider {
       return [];
     }
 
-    const { relativePathOrBasename, last2Parts, baseName } = getUriDescription(
-      currentFile.path,
-      await extras.ide.getWorkspaceDirs(),
-    );
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
+    const { relativePathOrBasename, last2Parts, baseName, extension } =
+      getUriDescription(currentFile.path, workspaceDirs);
 
     let prefix = "This is the currently open file:";
     let name = baseName;
@@ -39,10 +39,15 @@ class CurrentFileContextProvider extends BaseContextProvider {
       name = "Active file: " + baseName;
     }
 
+    const codeblock = formatCodeblock(
+      relativePathOrBasename,
+      currentFile.contents,
+      extension,
+    );
     return [
       {
         description: last2Parts,
-        content: `${prefix}\n\n\`\`\`${relativePathOrBasename}\n${currentFile.contents}\n\`\`\``,
+        content: `${prefix}\n\n${codeblock}`,
         name,
         uri: {
           type: "file",

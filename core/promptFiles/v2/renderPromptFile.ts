@@ -1,8 +1,9 @@
 import { ContextItem, ContextProviderExtras } from "../..";
 import { contextProviderClassFromName } from "../../context/providers";
 import { getUrlContextItems } from "../../context/providers/URLContextProvider";
+import { formatCodeblock } from "../../util/formatCodeblock";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
-import { getUriPathBasename } from "../../util/uri";
+import { getUriDescription, getUriPathBasename } from "../../util/uri";
 
 import { getPreambleAndBody } from "./parse";
 
@@ -29,22 +30,30 @@ async function resolveAttachment(
   // Files
   const resolvedFileUri = await resolveRelativePathInDir(name, extras.ide);
   if (resolvedFileUri) {
+    const content = await extras.ide.readFile(resolvedFileUri);
     let subItems: ContextItem[] = [];
     if (name.endsWith(".prompt")) {
       // Recurse
-      const [items, _] = await renderPromptFileV2(
-        await extras.ide.readFile(resolvedFileUri),
-        extras,
-      );
+      const [items, _] = await renderPromptFileV2(content, extras);
       subItems.push(...items);
     }
 
-    const content = `\`\`\`${name}\n${await extras.ide.readFile(resolvedFileUri)}\n\`\`\``;
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
+    const { relativePathOrBasename, extension } = getUriDescription(
+      resolvedFileUri,
+      workspaceDirs,
+    );
+    const codeblock = formatCodeblock(
+      relativePathOrBasename,
+      content,
+      extension,
+    );
+
     return [
       ...subItems,
       {
         name: getUriPathBasename(resolvedFileUri),
-        content,
+        content: codeblock,
         description: resolvedFileUri,
       },
     ];
