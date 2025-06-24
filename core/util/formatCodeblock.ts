@@ -1,14 +1,15 @@
 import { extToLangMap } from ".";
 import { Range } from "..";
-import { getFileExtensionFromBasename } from "./uri";
+import { getFileExtensionFromBasename, getUriPathBasename } from "./uri";
 export function formatCodeblock(
   relativePathOrBasename: string,
   contents: string,
   extension?: string,
   range?: Range | string,
 ) {
-  const ext = extension || getFileExtensionFromBasename(relativePathOrBasename);
-  const languageTag = extToLangMap[ext] ?? ext;
+  const basename = getUriPathBasename(relativePathOrBasename);
+  const ext = extension || getFileExtensionFromBasename(basename);
+  const languageTag = extToLangMap[ext] || ext || basename;
 
   const path = relativePathOrBasename.startsWith("/")
     ? relativePathOrBasename
