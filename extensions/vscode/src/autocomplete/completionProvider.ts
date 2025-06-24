@@ -15,7 +15,6 @@ import { handleLLMError } from "../util/errorHandling";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
-import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditWindowManager } from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "./lsp";
@@ -61,6 +60,16 @@ export class ContinueCompletionProvider
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
 
+  private isNextEditActive: boolean = false;
+
+  public activateNextEdit() {
+    this.isNextEditActive = true;
+  }
+
+  public deactivateNextEdit() {
+    this.isNextEditActive = false;
+  }
+
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: VsCodeIde,
@@ -84,24 +93,15 @@ export class ContinueCompletionProvider
     );
     // NOTE: Only turn it on locally when testing (for review purposes).
     // TODO: revert back
-    if (IS_NEXT_EDIT_ACTIVE || true) {
-      // this.nextEditProvider = new NextEditProvider(
-      //   this.configHandler,
-      //   this.ide,
-      //   getAutocompleteModel,
-      //   this.onError.bind(this),
-      //   getDefinitionsFromLsp,
-      //   "fineTuned",
-      // );
-      this.nextEditProvider = NextEditProvider.initialize(
-        this.configHandler,
-        this.ide,
-        getAutocompleteModel,
-        this.onError.bind(this),
-        getDefinitionsFromLsp,
-        "fineTuned",
-      );
-    }
+    this.nextEditProvider = NextEditProvider.initialize(
+      this.configHandler,
+      this.ide,
+      getAutocompleteModel,
+      this.onError.bind(this),
+      getDefinitionsFromLsp,
+      "fineTuned",
+    );
+
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
@@ -225,36 +225,21 @@ export class ContinueCompletionProvider
       };
 
       setupStatusBar(undefined, true);
-      // TODO: revert back
-      // const outcome =
-      //   await this.completionProvider.provideInlineCompletionItems(
-      //     input,
-      //     signal,
-      //     wasManuallyTriggered,
-      //   );
-      const outcome = await this.nextEditProvider.provideInlineCompletionItems(
-        input,
-        signal,
-      );
+
+      const outcome = this.isNextEditActive
+        ? await this.nextEditProvider.provideInlineCompletionItems(
+            input,
+            signal,
+          )
+        : await this.completionProvider.provideInlineCompletionItems(
+            input,
+            signal,
+            wasManuallyTriggered,
+          );
 
       if (!outcome || !outcome.completion) {
         return null;
       }
-
-      // NOTE: This is a very rudimentary check to see if we can call the next edit service.
-      // In the future we will have to figure out how to call this more gracefully.
-      // TODO: revert back
-      // if (this.nextEditProvider) {
-      //   const nextEditOutcome =
-      //     await this.nextEditProvider?.provideInlineCompletionItems(
-      //       input,
-      //       signal,
-      //     );
-
-      //   if (nextEditOutcome && nextEditOutcome.completion) {
-      //     outcome.completion = nextEditOutcome.completion;
-      //   }
-      // }
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
       // We should first always make sure we have a valid completion, but if it goes wrong we
@@ -340,16 +325,20 @@ export class ContinueCompletionProvider
       );
 
       (completionItem as any).completeBracketPairs = true;
-      // return [completionItem];
-      const editor = vscode.window.activeTextEditor;
-      if (editor && NextEditWindowManager.isInstantiated()) {
-        await NextEditWindowManager.getInstance().showTooltip(
-          editor,
-          completionText,
-        );
+
+      if (this.isNextEditActive) {
+        const editor = vscode.window.activeTextEditor;
+        if (editor && NextEditWindowManager.isInstantiated()) {
+          await NextEditWindowManager.getInstance().showTooltip(
+            editor,
+            completionText,
+          );
+        }
+
+        return undefined;
+      } else {
+        return [completionItem];
       }
-      // return [completionItem];
-      return undefined;
     } finally {
       stopStatusBarLoading();
     }
