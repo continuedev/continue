@@ -25,6 +25,7 @@ import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSecti
 
 import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
+import { getLocalStorage } from "../../../../util/localStorage";
 
 interface BlockSettingsToolbarIcon {
   title: string;
@@ -151,7 +152,8 @@ export function BlockSettingsTopToolbar() {
 
   const [freeTrialStatus, setFreeTrialStatus] =
     useState<FreeTrialStatus | null>(null);
-  const isUsingFreeTrial = usesFreeTrialApiKey(config);
+  const hasExitedFreeTrial = getLocalStorage("hasExitedFreeTrial");
+  const isUsingFreeTrial = usesFreeTrialApiKey(config) && !hasExitedFreeTrial;
 
   useEffect(() => {
     const fetchFreeTrialStatus = () => {
