@@ -298,9 +298,10 @@ export class NextEditProvider {
         // const testToken = testController.signal;
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
+          // TODO: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
           const nextCompletion = replaceEscapedCharacters(
             msg.content.split("<|editable_region_start|>\n")[1],
-          );
+          ).replace(/\n$/, "");
 
           // const diffLines = myersDiff(helper.fileContents, nextCompletion);
 
