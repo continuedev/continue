@@ -9,7 +9,7 @@ on:
   push:
     branches:
       - main
-      - pe/watsonx-fix
+      - pe/pr-checks-updates
 
 jobs:
   install-root:
