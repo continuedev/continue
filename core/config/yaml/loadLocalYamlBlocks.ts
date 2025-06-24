@@ -67,7 +67,6 @@ export async function unrollLocalYamlBlocks(
         ),
         renderSecrets: true,
         injectBlocks: packageIdentifiers,
-        asConfigResult: true,
       },
     );
     const config =
