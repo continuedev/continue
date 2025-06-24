@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - main
+      - pe/watsonx-fix
 
 jobs:
   install-root:
@@ -130,6 +131,7 @@ jobs:
           # Tests are currently failing, commenting out for now
           # npm test 
           npm run build
+
   install-core:
     needs: install-root
     runs-on: ubuntu-latest
@@ -290,6 +292,12 @@ jobs:
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
       - uses: actions/cache@v4
+        id: openai-adapters-cache
+        with:
+          path: packages/openai-adapters/node_modules
+          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
+
+      - uses: actions/cache@v4
         id: config-yaml-cache
         with:
           path: packages/config-yaml/node_modules
@@ -298,6 +306,11 @@ jobs:
       - name: Build config-yaml
         run: |
           cd packages/config-yaml
+          npm run build
+
+      - name: Build openai-adapters
+        run: |
+          cd packages/openai-adapters
           npm run build
 
       - name: Type check and lint
@@ -447,6 +460,11 @@ jobs:
       - name: Build config-yaml
         run: |
           cd packages/config-yaml
+          npm run build
+
+      - name: Build openai-adapters
+        run: |
+          cd packages/openai-adapters
           npm run build
 
       - name: Type check and lint
