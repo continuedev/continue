@@ -5,8 +5,8 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
-import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+// import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
+// import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -55,9 +55,9 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
-  private nextEditProvider: NextEditProvider;
-  private recentlyVisitedRanges: RecentlyVisitedRangesService;
-  private recentlyEditedTracker: RecentlyEditedTracker;
+  // private nextEditProvider: NextEditProvider;
+  public recentlyVisitedRanges: RecentlyVisitedRangesService;
+  public recentlyEditedTracker: RecentlyEditedTracker;
 
   constructor(
     private readonly configHandler: ConfigHandler,

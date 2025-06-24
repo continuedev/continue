@@ -783,9 +783,9 @@ export interface IDE {
 
   getPinnedFiles(): Promise<string[]>;
 
-  getSearchResults(query: string): Promise<string>;
+  getSearchResults(query: string, maxResults?: number): Promise<string>;
 
-  getFileResults(pattern: string): Promise<string[]>;
+  getFileResults(pattern: string, maxResults?: number): Promise<string[]>;
 
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
@@ -835,6 +835,7 @@ export interface ContinueSDK {
   config: ContinueConfig;
   fetch: FetchFunction;
   completionOptions?: LLMFullCompletionOptions;
+  abortController: AbortController;
 }
 
 export interface SlashCommand {
@@ -1227,6 +1228,7 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
   showSessionTabs?: boolean;
   autoAcceptEditToolDiffs?: boolean;
+  logEditingData?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1282,7 +1284,7 @@ export interface HighlightedCodePayload {
 }
 
 export interface AcceptOrRejectDiffPayload {
-  filepath: string;
+  filepath?: string;
   streamId?: string;
 }
 
@@ -1299,14 +1301,14 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export interface RangeInFileWithContentsAndEdit {
+export interface RangeInFileWithNextEditInfo {
   filepath: string;
-  range: {
-    start: { line: number; character: number };
-    end: { line: number; character: number };
-  };
+  range: Range;
   fileContents: string;
   editText: string;
+  afterCursorPos: Position;
+  beforeCursorPos: Position;
+  workspaceDir: string;
 }
 
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
@@ -1369,6 +1371,11 @@ export interface ExperimentalConfig {
    * If enabled, will add the current file as context.
    */
   useCurrentFileAsContext?: boolean;
+
+  /**
+   * If enabled, will save data on the user's editing processes
+   */
+  logEditingData?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1588,12 +1595,12 @@ export interface RuleWithSource {
   slug?: string;
   source: RuleSource;
   globs?: string | string[];
+  regex?: string | string[];
   rule: string;
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
 }
-
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;

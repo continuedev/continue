@@ -74,6 +74,7 @@ export function UserSettingsForm() {
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const autoAcceptEditToolDiffs = config.ui?.autoAcceptEditToolDiffs ?? false;
+  const logEditingData = config.experimental?.logEditingData ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
@@ -385,6 +386,27 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Add Current File by Default"
+                />
+
+                <ToggleSwitch
+                  isToggled={logEditingData}
+                  onToggle={() =>
+                    handleUpdate({
+                      logEditingData: !logEditingData,
+                    })
+                  }
+                  text="Log Editing Data"
+                  showIfToggled={
+                    <>
+                      <ExclamationTriangleIcon
+                        data-tooltip-id={`auto-accept-diffs-warning-tooltip`}
+                        className="h-3 w-3 text-yellow-500"
+                      />
+                      <ToolTip id={`auto-accept-diffs-warning-tooltip`}>
+                        {`Only turn this on if you want to log your editing processes in addition to the normal dev data. Note that this will store a lot of data.`}
+                      </ToolTip>
+                    </>
+                  }
                 />
               </div>
             </div>

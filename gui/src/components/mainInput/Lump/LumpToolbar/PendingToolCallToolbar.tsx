@@ -1,9 +1,7 @@
 import styled from "styled-components";
 import { useAppDispatch } from "../../../../redux/hooks";
-import {
-  callCurrentTool,
-  cancelCurrentToolCall,
-} from "../../../../redux/thunks";
+import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
+import { cancelCurrentToolCall } from "../../../../redux/thunks/cancelCurrentToolCall";
 import {
   getAltKeyLabel,
   getFontSize,

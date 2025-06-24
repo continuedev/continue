@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { IContextProvider, RangeInFileWithContentsAndEdit } from "core";
+import { IContextProvider, Position, RangeInFileWithNextEditInfo } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
@@ -41,9 +41,12 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { AutocompleteCodeSnippet } from "core/autocomplete/snippets/types";
+import { RecentlyEditedRange } from "core/autocomplete/util/types";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import { llmFromProviderAndOptions } from "core/llm/llms";
 import setupNextEditWindowManager from "../activation/NextEditWindowManager";
+import { getDefinitionsFromLsp } from "../autocomplete/lsp";
 import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -65,7 +68,7 @@ export class VsCodeExtension {
   private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
-  private _editDebounceTimer: NodeJS.Timeout | null = null;
+  private completionProvider: ContinueCompletionProvider;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -182,14 +185,15 @@ export class VsCodeExtension {
     setupStatusBar(
       enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
     );
+    this.completionProvider = new ContinueCompletionProvider(
+      this.configHandler,
+      this.ide,
+      this.sidebar.webviewProtocol,
+    );
     context.subscriptions.push(
       vscode.languages.registerInlineCompletionItemProvider(
         [{ pattern: "**" }],
-        new ContinueCompletionProvider(
-          this.configHandler,
-          this.ide,
-          this.sidebar.webviewProtocol,
-        ),
+        this.completionProvider,
       ),
     );
 
@@ -289,34 +293,64 @@ export class VsCodeExtension {
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       const changes = event.contentChanges;
+      const editor = vscode.window.activeTextEditor;
+      const { config } = await this.configHandler.loadConfig();
 
-      if (event.contentChanges.length === 0) {
+      if (!config?.experimental?.logEditingData) return;
+      if (!editor) return;
+      if (event.contentChanges.length === 0) return;
+
+      // Ensure that loggin will only happen in the open-source continue repo
+      const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+        event.document.uri,
+      );
+      if (!workspaceFolder) {
         return;
       }
 
-      // OPTIMIZATION: Debounce rapid keystrokes
-      // This prevents sending too many edit events during fast typing
-      if (this._editDebounceTimer) {
-        clearTimeout(this._editDebounceTimer);
+      const workspaceDirUri = workspaceFolder.uri.toString();
+      const repoName = await this.ide.getRepoName(workspaceDirUri);
+      if (repoName !== "continuedev/continue") return;
+
+      const activeCursorPos = editor.selection.active;
+      const editActions: RangeInFileWithNextEditInfo[] = changes.map(
+        (change) => ({
+          filepath: event.document.uri.toString(),
+          range: {
+            start: change.range.start as Position,
+            end: change.range.end as Position,
+          },
+          fileContents: event.document.getText(),
+          editText: change.text,
+
+          // whichever side of the range isn't the active cursor pos is the previous one
+          beforeCursorPos: (change.range.start.line === activeCursorPos.line &&
+          change.range.start.character === activeCursorPos.character
+            ? change.range.end
+            : change.range.start) as Position,
+
+          afterCursorPos: activeCursorPos as Position,
+          workspaceDir: workspaceDirUri,
+        }),
+      );
+
+      let recentlyEditedRanges: RecentlyEditedRange[] = [];
+      let recentlyVisitedRanges: AutocompleteCodeSnippet[] = [];
+
+      if (this.completionProvider) {
+        recentlyEditedRanges =
+          await this.completionProvider.recentlyEditedTracker.getRecentlyEditedRanges();
+        recentlyVisitedRanges =
+          this.completionProvider.recentlyVisitedRanges.getSnippets();
       }
 
-      this._editDebounceTimer = setTimeout(() => {
-        const editActions: RangeInFileWithContentsAndEdit[] = changes.map(
-          (change) => ({
-            filepath: event.document.uri.toString(),
-            range: {
-              start: change.range.start,
-              end: change.range.end,
-            },
-            // OPTIMIZATION: Only get document text once
-            fileContents: event.document.getText(),
-            editText: change.text,
-          }),
-        );
-
-        // Use invoke without awaiting to prevent blocking
-        this.core.invoke("files/smallEdit", { actions: editActions });
-      }, 10); // Small delay to batch rapid edits
+      this.core.invoke("files/smallEdit", {
+        actions: editActions,
+        configHandler: this.configHandler,
+        getDefsFromLspFunction: getDefinitionsFromLsp,
+        recentlyEditedRanges: recentlyEditedRanges,
+        recentlyVisitedRanges: recentlyVisitedRanges,
+      });
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {

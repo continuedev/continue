@@ -3,7 +3,7 @@ import { ModelDescription } from "core";
 import { useAuth } from "../../../../context/Auth";
 import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { updateSelectedModelByRole } from "../../../../redux/thunks";
+import { updateSelectedModelByRole } from "../../../../redux/thunks/updateSelectedModelByRole";
 import { isJetBrains } from "../../../../util";
 
 export function ModelsSection() {

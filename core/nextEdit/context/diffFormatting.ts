@@ -2,9 +2,15 @@ import { createPatch } from "diff";
 
 export enum DiffFormatType {
   Unified = "unified",
-  Minimal = "minimal",
+  RawBeforeAfter = "beforeAfter",
   TokenLineDiff = "linediff",
 }
+
+export type BeforeAfterDiff = {
+  filePath: string;
+  beforeContent: string;
+  afterContent: string;
+};
 
 export const createDiff = (
   beforeContent: string,
@@ -15,11 +21,10 @@ export const createDiff = (
   switch (diffType) {
     case DiffFormatType.Unified:
       return createUnifiedDiff(beforeContent, afterContent, filePath);
-    case DiffFormatType.Minimal:
-      return createMinimalDiff(beforeContent, afterContent, filePath);
     case DiffFormatType.TokenLineDiff:
       return createTokenLineDiff(beforeContent, afterContent, filePath);
   }
+  return "";
 };
 
 const createUnifiedDiff = (
@@ -46,13 +51,25 @@ const createUnifiedDiff = (
   return patch;
 };
 
-const createMinimalDiff = (
+export const createBeforeAfterDiff = (
   beforeContent: string,
   afterContent: string,
   filePath: string,
 ) => {
-  // TODO: Implement minimal diff
-  return "";
+  const normalizedBefore = beforeContent.endsWith("\n")
+    ? beforeContent
+    : beforeContent + "\n";
+  const normalizedAfter = afterContent.endsWith("\n")
+    ? afterContent
+    : afterContent + "\n";
+
+  const result: BeforeAfterDiff = {
+    filePath: filePath,
+    beforeContent: normalizedBefore,
+    afterContent: normalizedAfter,
+  };
+
+  return result;
 };
 
 const createTokenLineDiff = (
