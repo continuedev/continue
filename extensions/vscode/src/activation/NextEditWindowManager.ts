@@ -82,7 +82,7 @@ export const HIDE_TOOLTIP_COMMAND = "nextEditWindow.hideTooltips";
 export const ACCEPT_NEXT_EDIT_COMMAND = "nextEditWindow.acceptNextEdit";
 
 export class NextEditWindowManager {
-  private static instance: NextEditWindowManager;
+  private static instance: NextEditWindowManager | undefined;
 
   private readonly excludedURIPrefixes = ["output:", "vscode://inline-chat"];
   private readonly hideCommand = "continue.hideNextEditWindow";
@@ -108,6 +108,17 @@ export class NextEditWindowManager {
       NextEditWindowManager.instance = new NextEditWindowManager();
     }
     return NextEditWindowManager.instance;
+  }
+
+  public static isInstantiated(): boolean {
+    return !!NextEditWindowManager.instance;
+  }
+
+  public static clearInstance(): void {
+    if (NextEditWindowManager.instance) {
+      NextEditWindowManager.instance.dispose();
+      NextEditWindowManager.instance = undefined;
+    }
   }
 
   private constructor() {
