@@ -20,7 +20,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Register commands and providers
   registerQuickFixProvider();
   setupInlineTips(context);
-  setupNextEditWindowManager(context);
+  // setupNextEditWindowManager(context);
 
   const vscodeExtension = new VsCodeExtension(context);
 
