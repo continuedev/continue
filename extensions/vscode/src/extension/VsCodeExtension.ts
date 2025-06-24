@@ -41,6 +41,9 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
+import { llmFromProviderAndOptions } from "core/llm/llms";
+import setupNextEditWindowManager from "../activation/NextEditWindowManager";
 import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -432,6 +435,77 @@ export class VsCodeExtension {
         const settings = await this.ide.getIdeSettings();
         void this.core.invoke("config/ideSettingsUpdate", settings);
       }
+    });
+
+    // const ACCEPT_NEXT_EDIT_COMMAND = "nextEditWindow.acceptNextEdit";
+    // const acceptNextEditCommand = vscode.commands.registerCommand(
+    //   ACCEPT_NEXT_EDIT_COMMAND,
+    //   () => {
+    //     this.core.invoke("applyToFile", )
+    //     NextEditWindowManager.getInstance().hideAllTooltips();
+    //   },
+    // );
+    // context.subscriptions.push(acceptNextEditCommand);
+
+    setupNextEditWindowManager(context, {
+      applyText: async (editor, unifiedDiffText, position) => {
+        const config = await this.configHandler.getSerializedConfig();
+        const applyModelDesc = config?.config?.selectedModelByRole.apply;
+        if (applyModelDesc) {
+          try {
+            // We could create an apply message protocol
+            // this.core.invoke("applyNextEdit", {
+            //   filepath: editor.document.uri.toString(),
+            //   position: position,
+            //   text: text
+            // });
+            const llmOptions = {
+              ...applyModelDesc,
+              completionOptions: {
+                ...applyModelDesc.completionOptions,
+                model: applyModelDesc.model,
+              },
+              uniqueId: "apply-model-for-next-edit",
+            };
+            const applyModelInstance = llmFromProviderAndOptions(
+              applyModelDesc.provider,
+              llmOptions,
+            );
+            const { isInstantApply, diffLinesGenerator } = await applyCodeBlock(
+              editor.document.getText(),
+              unifiedDiffText,
+              editor.document.uri.toString(),
+              applyModelInstance,
+            );
+            const lines = [];
+            for await (const line of diffLinesGenerator) {
+              lines.push(line);
+            }
+            // TODO: do some stream rendering logic here.
+            return true;
+          } catch (err) {
+            console.error(`Failed to apply edit: ${err}`);
+            return false;
+          }
+        } else {
+          // Fallback to verbatim paste if apply model does not exist.
+          const editableRegionStartLine = Math.max(0, position.line - 5);
+          const editableRegionEndLine = Math.min(
+            editor.document.lineCount - 1,
+            position.line + 5,
+          );
+          const startPos = new vscode.Position(editableRegionStartLine, 0);
+          const endPosChar = editor.document.lineAt(editableRegionEndLine).text
+            .length;
+
+          const endPos = new vscode.Position(editableRegionEndLine, endPosChar);
+          const editRange = new vscode.Range(startPos, endPos);
+
+          return await editor.edit((editBuilder) => {
+            editBuilder.replace(editRange, unifiedDiffText);
+          });
+        }
+      },
     });
   }
 
