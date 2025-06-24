@@ -1,4 +1,4 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../context/Auth";
@@ -9,6 +9,7 @@ import {
   setSelectedProfile,
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { cn } from "../../util/cn";
 import { useLump } from "../mainInput/Lump/LumpContext";
 import {
   Listbox,
@@ -28,8 +29,15 @@ export function AssistantAndOrgListbox() {
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
-  const { profiles, selectedProfile, session, login, organizations } =
-    useAuth();
+  const {
+    profiles,
+    selectedProfile,
+    session,
+    login,
+    organizations,
+    refreshProfiles,
+  } = useAuth();
+  const configLoading = useAppSelector((store) => store.config.loading);
   const smallFont = useFontSize(-3);
   const tinyFont = useFontSize(-4);
   const shouldRenderOrgInfo =
@@ -149,6 +157,30 @@ export function AssistantAndOrgListbox() {
                   style={{ fontSize: tinyFont }}
                 >
                   <PlusIcon className="mr-1 h-3 w-3" /> New Assistant
+                </span>
+              </ListboxOption>
+
+              <ListboxOption
+                value="new-assistant"
+                fontSizeModifier={-2}
+                className="border-border border-b px-2 py-1.5"
+                onClick={session ? onNewAssistant : () => login(false)}
+              >
+                <span
+                  className="text-description flex flex-row items-center"
+                  style={{ fontSize: tinyFont }}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await refreshProfiles();
+                  }}
+                >
+                  <ArrowPathIcon
+                    className={cn(
+                      "mr-1 h-3 w-3",
+                      configLoading && "animate-spin-slow",
+                    )}
+                  />
+                  Reload config
                 </span>
               </ListboxOption>
 

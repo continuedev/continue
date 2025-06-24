@@ -5,7 +5,7 @@ import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
-import { setConfigResult } from "../redux/slices/configSlice";
+import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
   updateEditStateApplyState,
@@ -100,6 +100,7 @@ function ParallelListeners() {
 
   const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
+      dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
@@ -107,6 +108,7 @@ function ParallelListeners() {
       if (result.status === "success") {
         await handleConfigUpdate(initial, result.content);
       }
+      dispatch(setConfigLoading(false));
     },
     [ideMessenger, handleConfigUpdate],
   );
