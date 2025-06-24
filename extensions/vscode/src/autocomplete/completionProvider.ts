@@ -15,6 +15,8 @@ import { handleLLMError } from "../util/errorHandling";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
+import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditWindowManager } from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
@@ -55,7 +57,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
-  // private nextEditProvider: NextEditProvider;
+  private nextEditProvider: NextEditProvider;
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
 

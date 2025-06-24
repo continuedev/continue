@@ -242,10 +242,7 @@ export class NextEditWindowManager {
     const position = editor.selection.active;
 
     let success = false;
-    const USE_TEXT_APPLIER = false;
-    // For now we skip using textApplier, because we don't need an apply logic yet.
-    // In the future we may use this.
-    if (this.textApplier && USE_TEXT_APPLIER) {
+    if (this.textApplier) {
       success = await this.textApplier.applyText(editor, text, position);
     } else {
       // applyText already has this,
