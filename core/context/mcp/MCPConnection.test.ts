@@ -25,6 +25,25 @@ describe("MCPConnection", () => {
       expect(conn.status).toBe("not-connected");
     });
 
+    it("should create instance with stdio transport including cwd", () => {
+      const options = {
+        name: "test-mcp",
+        id: "test-id",
+        transport: {
+          type: "stdio" as const,
+          command: "test-cmd",
+          args: ["--test"],
+          env: { TEST: "true" },
+          cwd: "/path/to/working/directory",
+        },
+      };
+
+      const conn = new MCPConnection(options);
+      expect(conn).toBeInstanceOf(MCPConnection);
+      expect(conn.status).toBe("not-connected");
+      expect(conn.options.transport.cwd).toBe("/path/to/working/directory");
+    });
+
     it("should create instance with websocket transport", () => {
       const options = {
         name: "test-mcp",
