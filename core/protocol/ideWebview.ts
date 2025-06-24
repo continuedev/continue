@@ -55,6 +55,13 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   ];
   "edit/addCurrentSelection": [undefined, void];
   "edit/clearDecorations": [undefined, void];
+  optInContinueFeature: [
+    {
+      email: string;
+      optIn: boolean;
+    },
+    void,
+  ];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

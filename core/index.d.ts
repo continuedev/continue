@@ -1376,6 +1376,11 @@ export interface ExperimentalConfig {
    * If enabled, will save data on the user's editing processes
    */
   logEditingData?: boolean;
+
+  /**
+   * If enabled, will enable internal features under testing
+   */
+  optInContinueFeature?: boolean;
 }
 
 export interface AnalyticsConfig {

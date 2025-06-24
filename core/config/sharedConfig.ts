@@ -20,6 +20,7 @@ export const sharedConfigSchema = z
     promptPath: z.string(),
     useCurrentFileAsContext: z.boolean(),
     logEditingData: z.boolean(),
+    optInContinueFeature: z.boolean(), // special features reserved for internal testing only
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -174,6 +175,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.logEditingData !== undefined) {
     configCopy.experimental.logEditingData = sharedConfig.logEditingData;
+  }
+  if (sharedConfig.optInContinueFeature !== undefined) {
+    configCopy.experimental.optInContinueFeature =
+      sharedConfig.optInContinueFeature;
   }
 
   return configCopy;
