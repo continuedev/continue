@@ -1378,9 +1378,9 @@ export interface ExperimentalConfig {
   logEditingData?: boolean;
 
   /**
-   * If enabled, will enable internal features under testing
+   * If enabled, will enable next edit in place of autocomplete
    */
-  optInContinueFeature?: boolean;
+  optInNextEditFeature?: boolean;
 }
 
 export interface AnalyticsConfig {

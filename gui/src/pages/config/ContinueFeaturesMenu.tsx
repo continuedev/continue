@@ -6,12 +6,12 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 interface ContinueFeaturesMenuProps {
-  optInContinueFeature: boolean;
+  optInNextEditFeature: boolean;
   handleUpdate: (sharedConfig: SharedConfigSchema) => void;
 }
 
 export function ContinueFeaturesMenu({
-  optInContinueFeature,
+  optInNextEditFeature,
   handleUpdate,
 }: ContinueFeaturesMenuProps) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -19,12 +19,12 @@ export function ContinueFeaturesMenu({
 
   const handleOptInToggle = (value: boolean) => {
     handleUpdate({
-      optInContinueFeature: value,
+      optInNextEditFeature: value,
     });
     // Send message to VSCode extension with the email
     const continueEmail = (session as HubSessionInfo)?.account?.id ?? null;
     if (continueEmail) {
-      ideMessenger.post("optInContinueFeature", {
+      ideMessenger.post("optInNextEditFeature", {
         email: continueEmail,
         optIn: value,
       });
@@ -34,12 +34,12 @@ export function ContinueFeaturesMenu({
   return (
     <div className="flex w-full flex-col gap-y-4">
       <div className="my-2 text-center text-xs font-medium text-slate-400">
-        🚧 CHECKPOINT CHARLIE 🚧
+        🚧 INTERNAL SETTINGS 🚧
       </div>
       <div className="w-full">
         <ToggleSwitch
-          isToggled={optInContinueFeature}
-          onToggle={() => handleOptInToggle(!optInContinueFeature)}
+          isToggled={optInNextEditFeature}
+          onToggle={() => handleOptInToggle(!optInNextEditFeature)}
           text="Opt In to Special Feature"
         />
       </div>

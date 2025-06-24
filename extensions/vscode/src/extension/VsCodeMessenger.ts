@@ -255,7 +255,7 @@ export class VsCodeMessenger {
       editDecorationManager.clear();
     });
 
-    this.onWebview("optInContinueFeature", async (msg) => {
+    this.onWebview("optInNextEditFeature", async (msg) => {
       if (msg.data.optIn) {
         // Set up next edit window manager only for Continue team members
         setupNextEditWindowManager(context, {

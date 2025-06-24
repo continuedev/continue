@@ -83,8 +83,8 @@ export function UserSettingsForm() {
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
     config.experimental?.useCurrentFileAsContext ?? false;
-  const optInContinueFeature =
-    config.experimental?.optInContinueFeature ?? false;
+  const optInNextEditFeature =
+    config.experimental?.optInNextEditFeature ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -423,7 +423,7 @@ export function UserSettingsForm() {
 
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
-                    optInContinueFeature={optInContinueFeature}
+                    optInNextEditFeature={optInNextEditFeature}
                     handleUpdate={handleUpdate}
                   />
                 )}
