@@ -32,7 +32,6 @@ export interface EditClusterConfig {
   maxEdits: number;
   maxDuration: number;
   contextSize: number;
-  maxEditSize: number;
   contextLines: number;
   verbose: boolean;
 }
@@ -62,7 +61,6 @@ export class EditAggregator {
       maxEdits: config.maxEdits ?? 500,
       maxDuration: config.maxDuration ?? 100.0,
       contextSize: config.contextSize ?? 5,
-      maxEditSize: config.maxEditSize ?? 1000,
       contextLines: config.contextLines ?? 3,
       verbose: config.verbose ?? false,
     };
@@ -137,11 +135,6 @@ export class EditAggregator {
   ): Promise<void> {
     const filePath = edit.filepath;
 
-    const editSize = edit.editText.length;
-    if (editSize > this.config.maxEditSize) {
-      return;
-    }
-
     const editLine = edit.range.start.line;
     const currentFileLines = fileState.currentContent.split("\n");
 
@@ -161,6 +154,28 @@ export class EditAggregator {
       editLine,
       timestamp,
     );
+
+    // Check if adding this edit would exceed deltaL lines for the cluster
+    if (suitableCluster) {
+      const potentialMinLine = Math.min(
+        suitableCluster.currentRange.minLine,
+        Math.max(0, editLine - this.config.contextLines),
+      );
+      const potentialMaxLine = Math.max(
+        suitableCluster.currentRange.maxLine,
+        Math.min(
+          currentFileLines.length - 1,
+          editLine + this.config.contextLines,
+        ),
+      );
+      const potentialLineSpan = potentialMaxLine - potentialMinLine + 1;
+
+      if (potentialLineSpan > this.config.deltaL * 2) {
+        // Auto-finalize the current cluster before creating a new one
+        await this.finalizeCluster(filePath, suitableCluster, fileState);
+        suitableCluster = null;
+      }
+    }
 
     // initialize a cluster
     if (!suitableCluster) {

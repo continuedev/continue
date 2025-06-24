@@ -713,7 +713,6 @@ export class Core {
         maxEdits: 250,
         maxDuration: 100.0,
         contextSize: 5,
-        maxEditSize: 1000,
       };
 
       if (!global._editAggregator) {
