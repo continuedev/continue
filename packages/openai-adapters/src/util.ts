@@ -146,9 +146,7 @@ export function customFetch(
     return fetch;
   }
   return (req: URL | RequestInfo, init?: RequestInit) => {
-    if (typeof req === "string") {
-      return fetchwithRequestOptions(req, init, requestOptions);
-    } else if (req instanceof URL) {
+    if (typeof req === "string" || req instanceof URL) {
       return fetchwithRequestOptions(req, init, requestOptions);
     } else {
       return fetchwithRequestOptions(req.url, req, requestOptions);
