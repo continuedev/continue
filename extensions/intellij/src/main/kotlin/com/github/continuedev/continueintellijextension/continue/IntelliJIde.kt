@@ -126,6 +126,10 @@ class IntelliJIDE(
         return true
     }
 
+    override suspend fun isWorkspaceRemote(): Boolean {
+        return this.getIdeInfo().remoteName != "local"
+    }
+
     override suspend fun getUniqueId(): String {
         return getMachineUniqueID()
     }
