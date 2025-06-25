@@ -903,7 +903,7 @@ export type TemplateType =
   | "chatml"
   | "none"
   | "openchat"
-  | "deepseek"
+  // | "deepseek" ---- remove this because add tool call support for deepseek models
   | "xwin-coder"
   | "neural-chat"
   | "codellama-70b"

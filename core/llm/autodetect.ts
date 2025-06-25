@@ -186,7 +186,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("gemini") ||
     lower.includes("grok") ||
     lower.includes("moonshot") ||
-    lower.includes("mercury")
+    lower.includes("mercury") ||
+    lower.includes("deepseek")
   ) {
     return undefined;
   }
@@ -247,10 +248,6 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "llama2";
   }
 
-  if (lower.includes("deepseek")) {
-    return "deepseek";
-  }
-
   if (lower.includes("ninja") || lower.includes("openchat")) {
     return "openchat";
   }
@@ -293,7 +290,6 @@ function autodetectTemplateFunction(
       anthropic: anthropicTemplateMessages,
       chatml: chatmlTemplateMessages,
       // deepseek: deepseekTemplateMessages,
-      deepseek: null,
       openchat: openchatTemplateMessages,
       "xwin-coder": xWinCoderTemplateMessages,
       "neural-chat": neuralChatTemplateMessages,
@@ -316,7 +312,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "alpaca",
   "chatml",
   // "codellama-70b", Doesn't respond well to this prompt
-  "deepseek",
+  // "deepseek",
   "gemma",
   "llama2",
   "llava",
@@ -356,8 +352,6 @@ function autodetectPromptTemplates(
     }
   } else if (templateType === "alpaca") {
     editTemplate = alpacaEditPrompt;
-  } else if (templateType === "deepseek") {
-    editTemplate = deepseekEditPrompt;
   } else if (templateType === "openchat") {
     editTemplate = openchatEditPrompt;
   } else if (templateType === "xwin-coder") {
