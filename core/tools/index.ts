@@ -1,4 +1,4 @@
-import { ConfigDependentToolParams, Tool } from "..";
+import { ConfigDependentToolParams, IDE, Tool } from "..";
 import { createNewFileTool } from "./definitions/createNewFile";
 import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
@@ -13,7 +13,9 @@ import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
 
-export const remoteToolDefinitions = [
+export const localOnlyToolDefinitions = [grepSearchTool];
+
+export const baseToolDefinitions = [
   readFileTool,
   editFileTool,
   createNewFileTool,
@@ -30,8 +32,11 @@ export const remoteToolDefinitions = [
   // viewRepoMapTool,
 ];
 
-export const baseToolDefinitions = [...remoteToolDefinitions, grepSearchTool];
-
 export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => [requestRuleTool(params)];
+
+export const getToolsForIde = async (ide: IDE) =>
+  (await ide.isWorkspaceRemote())
+    ? baseToolDefinitions
+    : [...baseToolDefinitions, ...localOnlyToolDefinitions];
