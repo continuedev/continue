@@ -54,7 +54,7 @@ export function ContinueFeaturesMenu({
         <ToggleSwitch
           isToggled={optInNextEditFeature}
           onToggle={() => handleOptInToggle(!optInNextEditFeature)}
-          text="Opt In to Special Feature"
+          text="Enable Next Edit Over Autocomplete"
         />
       </div>
     </div>
