@@ -1,13 +1,8 @@
 import { RequestOptions } from "@continuedev/config-types";
-import * as followRedirects from "follow-redirects";
-import { HttpProxyAgent } from "http-proxy-agent";
-import { HttpsProxyAgent } from "https-proxy-agent";
 import { BodyInit, RequestInit, Response } from "node-fetch";
-import { getAgentOptions } from "./getAgentOptions.js";
+import { AgentPool } from "./agentPool.js";
 import fetch from "./node-fetch-patch.js";
 import { getProxy, shouldBypassProxy } from "./util.js";
-
-const { http, https } = (followRedirects as any).default;
 
 function logRequest(
   method: string,
@@ -89,22 +84,16 @@ export async function fetchwithRequestOptions(
     url.host = "127.0.0.1";
   }
 
-  const agentOptions = await getAgentOptions(requestOptions);
-
   // Get proxy from options or environment variables
-  const proxy = getProxy(url.protocol, requestOptions);
-
-  // Check if should bypass proxy based on requestOptions or NO_PROXY env var
+  // Checks if should bypass proxy based on requestOptions or NO_PROXY env var
   const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);
 
-  // Create agent
-  const protocol = url.protocol === "https:" ? https : http;
-  const agent =
-    proxy && !shouldBypass
-      ? protocol === https
-        ? new HttpsProxyAgent(proxy, agentOptions)
-        : new HttpProxyAgent(proxy, agentOptions)
-      : new protocol.Agent(agentOptions);
+  const proxy = shouldBypass
+    ? undefined
+    : getProxy(url.protocol, requestOptions);
+
+  const agentPool = AgentPool.getInstance();
+  const agent = await agentPool.getOrCreateAgent(url, proxy, requestOptions);
 
   let headers: { [key: string]: string } = {};
   for (const [key, value] of Object.entries(init?.headers || {})) {

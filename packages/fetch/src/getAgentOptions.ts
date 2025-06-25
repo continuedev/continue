@@ -54,3 +54,16 @@ export async function getAgentOptions(
 
   return agentOptions;
 }
+
+export function getUniqueAgentRequestOptionsKey(
+  requestOptions?: RequestOptions,
+): string {
+  return JSON.stringify({
+    timeout: requestOptions?.timeout,
+    caBundlePath: requestOptions?.caBundlePath,
+    verifySsl: requestOptions?.verifySsl,
+    clientCertCert: requestOptions?.clientCertificate?.cert,
+    clientCertKey: requestOptions?.clientCertificate?.key,
+    clientCertPassphrase: requestOptions?.clientCertificate?.passphrase,
+  });
+}
