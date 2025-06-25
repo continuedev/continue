@@ -1,11 +1,7 @@
 import { RequestOptions } from "@continuedev/config-types";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import fetch from "node-fetch";
-import {
-  type RequestInfo,
-  type RequestInit,
-  type Response,
-} from "openai/_shims/index";
+import { type RequestInfo, type RequestInit } from "openai/_shims/index";
 import {
   ChatCompletionChunk,
   CompletionUsage,
@@ -145,7 +141,7 @@ export function model(options: { id: string; owned_by?: string }): Model {
 
 export function customFetch(
   requestOptions: RequestOptions | undefined,
-): (req: URL | RequestInfo, init?: RequestInit) => Promise<Response> {
+): typeof fetch {
   if (process.env.FEATURE_FLAG_DISABLE_CUSTOM_FETCH) {
     return fetch;
   }
