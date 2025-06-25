@@ -1,6 +1,7 @@
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
+import { ToIdeFromWebviewProtocol } from "core/protocol/ideWebview";
 import { InProcessMessenger, Message } from "core/protocol/messenger";
 
 import { CORE_TO_WEBVIEW_PASS_THROUGH, WEBVIEW_TO_CORE_PASS_THROUGH } from "core/protocol/passThrough";
@@ -8,8 +9,7 @@ import { LightIde } from "./LightIde";
 import { NodeGUI } from "./NodeGUI";
 
 // Combine protocols that target the IDE from either Core or Webview
-export type ToIdeProtocol = ToIdeFromCoreProtocol & ToIdeFromWebviewOrCoreProtocol;
-
+export type ToIdeProtocol = ToIdeFromCoreProtocol & ToIdeFromWebviewOrCoreProtocol & ToIdeFromWebviewProtocol;
 export class NodeMessenger {
   constructor(
     private readonly messenger: InProcessMessenger<ToCoreProtocol, FromCoreProtocol>,
@@ -17,48 +17,54 @@ export class NodeMessenger {
     private readonly ide: LightIde,
     private lastSentMessages = new Map<string, string>()
   ) {
-    // Allow GUI to send messages to Core (via InProcessMessenger)
-    this.nodeGui.setMessageHandler(async (type: any, data: any, messageId: any) => {
-      return this.messenger.externalRequest(type as any, data, messageId);
-    });
+    // Helper to register a handler for both core and GUI/webview
+    const registerHandler = <T extends keyof ToIdeProtocol>(
+      messageType: T,
+      handler: (
+        msg: Message<ToIdeProtocol[T][0]>
+      ) => Promise<ToIdeProtocol[T][1]> | ToIdeProtocol[T][1]
+    ) => {
+      this.on(messageType, handler);
+      this.nodeGui.on(messageType, handler);
+    };
 
-    // Wire up message handlers from Core (or GUI) to IDE logic
-    this.on("getIdeSettings", async () => this.ide.getIdeSettings());
-    this.on("getDiff", async (msg) => this.ide.getDiff(msg.data.includeUnstaged));
-    this.on("getTerminalContents", async () => this.ide.getTerminalContents());
-    this.on("getDebugLocals", async () => this.ide.getDebugLocals());
-    this.on("getAvailableThreads", async () => this.ide.getAvailableThreads());
-    this.on("getTopLevelCallStackSources", async () => this.ide.getTopLevelCallStackSources());
-    this.on("getWorkspaceDirs", async () => this.ide.getWorkspaceDirs());
-    this.on("writeFile", async (msg) => this.ide.writeFile(msg.data.path, msg.data.contents));
-    this.on("showVirtualFile", async (msg) => this.ide.showVirtualFile(msg.data.name, msg.data.content));
-    this.on("openFile", async (msg) => this.ide.openFile(msg.data.path));
-    this.on("runCommand", async (msg) => this.ide.runCommand(msg.data.command));
-    this.on("getSearchResults", async (msg) => this.ide.getSearchResults(msg.data.query));
-    this.on("getFileResults", async (msg) => this.ide.getFileResults(msg.data.pattern));
-    this.on("subprocess", async (msg) => this.ide.subprocess(msg.data.command, msg.data.cwd));
-    this.on("getProblems", async (msg) => this.ide.getProblems(msg.data.filepath));
-    this.on("getBranch", async (msg) => this.ide.getBranch(msg.data.dir));
-    this.on("getOpenFiles", async () => this.ide.getOpenFiles());
-    this.on("getCurrentFile", async () => this.ide.getCurrentFile());
-    this.on("getPinnedFiles", async () => this.ide.getPinnedFiles());
-    this.on("showLines", async (msg) => this.ide.showLines(msg.data.filepath, msg.data.startLine, msg.data.endLine));
-    this.on("showToast", async (msg) => this.ide.showToast("info", "Idan", ...msg.data));
-    this.on("getControlPlaneSessionInfo", async () => undefined);
-    this.on("saveFile", async (msg) => this.ide.saveFile(msg.data.filepath));
-    this.on("readFile", async (msg) => this.ide.readFile(msg.data.filepath));
-    this.on("openUrl", async (msg) => this.ide.openUrl(msg.data));
-    this.on("fileExists", async (msg) => this.ide.fileExists(msg.data.filepath));
-    this.on("gotoDefinition", async (msg) => this.ide.gotoDefinition(msg.data.location));
-    this.on("getFileStats", async (msg) => this.ide.getFileStats(msg.data.files));
-    this.on("getGitRootPath", async (msg) => this.ide.getGitRootPath(msg.data.dir));
-    this.on("listDir", async (msg) => this.ide.listDir(msg.data.dir));
-    this.on("getRepoName", async (msg) => this.ide.getRepoName(msg.data.dir));
-    this.on("getTags", async (msg) => this.ide.getTags(msg.data));
-    this.on("getIdeInfo", async () => this.ide.getIdeInfo());
-    this.on("isTelemetryEnabled", async () => this.ide.isTelemetryEnabled());
-    this.on("getWorkspaceConfigs", async () => this.ide.getWorkspaceConfigs());
-    this.on("getUniqueId", async () => this.ide.getUniqueId());
+    registerHandler("getIdeSettings", async () => this.ide.getIdeSettings());
+    registerHandler("getDiff", async (msg) => this.ide.getDiff(msg.data.includeUnstaged));
+    registerHandler("getTerminalContents", async () => this.ide.getTerminalContents());
+    registerHandler("getDebugLocals", async () => this.ide.getDebugLocals());
+    registerHandler("getAvailableThreads", async () => this.ide.getAvailableThreads());
+    registerHandler("getTopLevelCallStackSources", async () => this.ide.getTopLevelCallStackSources());
+    registerHandler("getWorkspaceDirs", async () => this.ide.getWorkspaceDirs());
+    registerHandler("writeFile", async (msg) => this.ide.writeFile(msg.data.path, msg.data.contents));
+    registerHandler("showVirtualFile", async (msg) => this.ide.showVirtualFile(msg.data.name, msg.data.content));
+    registerHandler("openFile", async (msg) => this.ide.openFile(msg.data.path));
+    registerHandler("runCommand", async (msg) => this.ide.runCommand(msg.data.command));
+    registerHandler("getSearchResults", async (msg) => this.ide.getSearchResults(msg.data.query));
+    registerHandler("getFileResults", async (msg) => this.ide.getFileResults(msg.data.pattern));
+    registerHandler("subprocess", async (msg) => this.ide.subprocess(msg.data.command, msg.data.cwd));
+    registerHandler("getProblems", async (msg) => this.ide.getProblems(msg.data.filepath));
+    registerHandler("getBranch", async (msg) => this.ide.getBranch(msg.data.dir));
+    registerHandler("getOpenFiles", async () => this.ide.getOpenFiles());
+    registerHandler("getCurrentFile", async (msg) => this.ide.getCurrentFile());
+    registerHandler("getPinnedFiles", async () => this.ide.getPinnedFiles());
+    registerHandler("showLines", async (msg) => this.ide.showLines(msg.data.filepath, msg.data.startLine, msg.data.endLine));
+    registerHandler("showToast", async (msg) => this.ide.showToast("info", "Idan", ...msg.data));
+    registerHandler("getControlPlaneSessionInfo", async () => undefined);
+    registerHandler("saveFile", async (msg) => this.ide.saveFile(msg.data.filepath));
+    registerHandler("readFile", async (msg) => this.ide.readFile(msg.data.filepath));
+    registerHandler("openUrl", async (msg) => this.ide.openUrl(msg.data));
+    registerHandler("fileExists", async (msg) => this.ide.fileExists(msg.data.filepath));
+    registerHandler("gotoDefinition", async (msg) => this.ide.gotoDefinition(msg.data.location));
+    registerHandler("getFileStats", async (msg) => this.ide.getFileStats(msg.data.files));
+    registerHandler("getGitRootPath", async (msg) => this.ide.getGitRootPath(msg.data.dir));
+    registerHandler("listDir", async (msg) => this.ide.listDir(msg.data.dir));
+    registerHandler("getRepoName", async (msg) => this.ide.getRepoName(msg.data.dir));
+    registerHandler("getTags", async (msg) => this.ide.getTags(msg.data));
+    registerHandler("getIdeInfo", async () => this.ide.getIdeInfo());
+    registerHandler("isTelemetryEnabled", async () => this.ide.isTelemetryEnabled());
+    registerHandler("getWorkspaceConfigs", async () => this.ide.getWorkspaceConfigs());
+    registerHandler("getUniqueId", async () => this.ide.getUniqueId());
+    registerHandler("applyToFile", async (msg: any) => this.ide.writeFile(msg.data.filepath, msg.data.text));
 
     // Extend with more handlers as needed...
     // --- PASS-THROUGH: Core → GUI ---
@@ -99,7 +105,7 @@ export class NodeMessenger {
       message: Message<ToIdeProtocol[T][0]>
     ) => Promise<ToIdeProtocol[T][1]> | ToIdeProtocol[T][1],
   ) {
-    this.messenger.externalOn(messageType, handler);
+    this.messenger.externalOn(messageType as any, handler);
   }
 
   // FIXME - 

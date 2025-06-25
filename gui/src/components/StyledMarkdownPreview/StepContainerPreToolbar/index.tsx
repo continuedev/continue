@@ -10,9 +10,10 @@ import {
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useIdeMessengerRequest } from "../../../hooks";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import { useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../../../redux/selectors/selectCurrentToolCall";
 import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
+import { callCurrentTool } from "../../../redux/thunks";
 import { getFontSize } from "../../../util";
 import Spinner from "../../gui/Spinner";
 import { isTerminalCodeBlock } from "../utils";
@@ -73,9 +74,13 @@ export function StepContainerPreToolbar({
   expanded,
   disableManualApply,
 }: StepContainerPreToolbarProps) {
+  const getIdeInfoArgs = useMemo(() => ({} as any), []);
+  const { result: ideInfo } = useIdeMessengerRequest("getIdeInfo", getIdeInfoArgs);
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((state) => state.session.history);
   const [isExpanded, setIsExpanded] = useState(expanded ?? true);
+  const hasEditor = ideInfo?.name === 'LightIde' ? false : true;
+  const dispatch = useAppDispatch();
 
   const [relativeFilepathUri, setRelativeFilepathUri] = useState<string | null>(
     null,
@@ -171,6 +176,10 @@ export function StepContainerPreToolbar({
   }
 
   async function onClickApply() {
+    if (!hasEditor) {
+      dispatch(callCurrentTool());
+      return;
+    }
     const fileUri = await getFileUriToApplyTo();
     if (!fileUri) {
       ideMessenger.ide.showToast(
@@ -260,7 +269,7 @@ export function StepContainerPreToolbar({
     }
 
     if (isTerminalCodeBlock(language, codeBlockContent)) {
-      return <RunInTerminalButton command={codeBlockContent} />;
+      return <RunInTerminalButton command={codeBlockContent} ideHasEditor={hasEditor} />;
     }
 
     if (isLoadingFileExists) {
@@ -270,7 +279,7 @@ export function StepContainerPreToolbar({
     if (fileExists || !relativeFilepath) {
       return (
         <ApplyActions
-          disableManualApply={disableManualApply}
+          disableManualApply={!hasEditor}
           applyState={applyState}
           onClickApply={onClickApply}
           onClickAccept={() => handleDiffAction("accept")}
@@ -312,7 +321,7 @@ export function StepContainerPreToolbar({
         </div>
 
         <div className="flex items-center gap-2.5">
-          {!isGeneratingCodeBlock && (
+          {!isGeneratingCodeBlock && hasEditor && (
             <div className="xs:flex hidden items-center gap-2.5">
               <InsertButton onInsert={onClickInsertAtCursor} />
               <CopyButton text={codeBlockContent} />

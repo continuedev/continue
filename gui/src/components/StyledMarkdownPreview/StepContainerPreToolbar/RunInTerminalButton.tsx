@@ -2,15 +2,18 @@ import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { lightGray, vscForeground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppDispatch } from "../../../redux/hooks";
+import { callCurrentTool } from "../../../redux/thunks";
 import { isJetBrains } from "../../../util";
 import { extractCommand } from "../utils/commandExtractor";
-
 interface RunInTerminalButtonProps {
   command: string;
+  ideHasEditor?: boolean;
 }
 
-export function RunInTerminalButton({ command }: RunInTerminalButtonProps) {
+export function RunInTerminalButton({ command, ideHasEditor }: RunInTerminalButtonProps) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const dispatch = useAppDispatch();
 
   if (isJetBrains()) {
     // JetBrains plugin doesn't currently have a way to run the command in the terminal for the user
@@ -18,6 +21,10 @@ export function RunInTerminalButton({ command }: RunInTerminalButtonProps) {
   }
 
   function runInTerminal() {
+    if (!ideHasEditor) {
+      dispatch(callCurrentTool());
+      return;
+    }
     // Extract just the command line
     const extractedCommand = extractCommand(command);
     void ideMessenger.post("runCommand", { command: extractedCommand });

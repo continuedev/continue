@@ -25,6 +25,13 @@ export const editToolImpl: ClientToolImpl = async (
   if (apply.status === "error") {
     throw new Error(apply.error);
   }
+  const ideInfo = await extras.ideMessenger.ide.getIdeInfo();
+  if (ideInfo.name === "LightIde") {
+    return {
+      respondImmediately: true,
+      output: undefined, // No immediate output.
+    };
+  }
   const state = extras.getState();
   const autoAccept = !!state.config.config.ui?.autoAcceptEditToolDiffs;
   if (autoAccept) {
