@@ -1,6 +1,6 @@
 import { SharedConfigSchema } from "core/config/sharedConfig";
 import { HubSessionInfo } from "core/control-plane/AuthTypes";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import ToggleSwitch from "../../components/gui/Switch";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -16,6 +16,20 @@ export function ContinueFeaturesMenu({
 }: ContinueFeaturesMenuProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { session } = useAuth();
+  useEffect(() => {
+    // Only run this effect when both optInNextEditFeature is true and session is available.
+    // This still sets up the next edit window manager when the user leaves the setting on
+    // before exiting vscode.
+    if (optInNextEditFeature && session) {
+      const continueEmail = (session as HubSessionInfo)?.account?.id ?? null;
+      if (continueEmail) {
+        ideMessenger.post("optInNextEditFeature", {
+          email: continueEmail,
+          optIn: true,
+        });
+      }
+    }
+  }, []);
 
   const handleOptInToggle = (value: boolean) => {
     handleUpdate({
