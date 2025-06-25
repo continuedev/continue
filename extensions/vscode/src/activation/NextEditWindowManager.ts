@@ -6,7 +6,7 @@ import * as vscode from "vscode";
 import { myersDiff } from "core/diff/myers";
 import { getRenderableDiff } from "core/nextEdit/diff/diff";
 import { SyntaxHighlighter } from "core/syntaxHighlighting/SyntaxHighlighter";
-import { getTheme } from "../util/getTheme";
+import { getThemeString } from "../util/getTheme";
 
 export interface TextApplier {
   applyText(
@@ -15,16 +15,6 @@ export interface TextApplier {
     position: vscode.Position,
   ): Promise<boolean>;
 }
-
-// Fallback theme colors
-const FALLBACK_THEME = {
-  colors: {
-    "editor.foreground": "#FFFFFF",
-    "editor.background": "#333333",
-    // "editor.foreground": "var(--vscode-editor-foreground)",
-    // "editor.background": "var(--vscode-editor-background)",
-  },
-};
 
 const SVG_CONFIG = {
   stroke: "#999998",
@@ -86,7 +76,9 @@ export class NextEditWindowManager {
 
   private readonly excludedURIPrefixes = ["output:", "vscode://inline-chat"];
   private readonly hideCommand = "continue.hideNextEditWindow";
-  private theme = getTheme() || FALLBACK_THEME;
+  private theme: string;
+  private fontSize: number;
+  private fontFamily: string;
   private syntaxHighlighter: SyntaxHighlighter;
 
   // Current active decoration
@@ -122,6 +114,8 @@ export class NextEditWindowManager {
   }
 
   private constructor() {
+    this.theme = getThemeString();
+
     console.log(
       "Next Edit Theme initialized:",
       this.theme
@@ -129,32 +123,47 @@ export class NextEditWindowManager {
         : "Theme is undefined",
     );
     this.setupListeners();
-    this.syntaxHighlighter = SyntaxHighlighter.getInstance({
-      theme: "one-dark-pro",
-    });
+    this.syntaxHighlighter = SyntaxHighlighter.getInstance();
+    this.syntaxHighlighter.setTheme(this.theme);
+
+    const editorConfig = vscode.workspace.getConfiguration("editor");
+    this.fontSize = editorConfig.get<number>("fontSize") ?? 14;
+    this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
   }
 
-  public setupNextEditWindowManager(
+  public async setupNextEditWindowManager(
     context: vscode.ExtensionContext,
     textApplier?: TextApplier,
   ) {
-    // Register the command to hide tooltips
-    const hideTooltipsCommand = vscode.commands.registerCommand(
-      HIDE_TOOLTIP_COMMAND,
-      async () => {
-        await this.hideAllTooltips();
-      },
+    await vscode.commands.executeCommand(
+      "setContext",
+      "nextEditWindowActive",
+      false,
     );
-    context.subscriptions.push(hideTooltipsCommand);
 
-    // Register the command to accept next edit
-    const acceptNextEditCommand = vscode.commands.registerCommand(
-      ACCEPT_NEXT_EDIT_COMMAND,
-      () => {
-        this.acceptNextEdit();
-      },
-    );
-    context.subscriptions.push(acceptNextEditCommand);
+    const existingCommands = await vscode.commands.getCommands();
+
+    if (!existingCommands.includes(HIDE_TOOLTIP_COMMAND)) {
+      // Register the command to hide tooltips
+      const hideTooltipsCommand = vscode.commands.registerCommand(
+        HIDE_TOOLTIP_COMMAND,
+        async () => {
+          await this.hideAllTooltips();
+        },
+      );
+      context.subscriptions.push(hideTooltipsCommand);
+    }
+
+    if (!existingCommands.includes(ACCEPT_NEXT_EDIT_COMMAND)) {
+      // Register the command to accept next edit
+      const acceptNextEditCommand = vscode.commands.registerCommand(
+        ACCEPT_NEXT_EDIT_COMMAND,
+        () => {
+          this.acceptNextEdit();
+        },
+      );
+      context.subscriptions.push(acceptNextEditCommand);
+    }
 
     // Add this class to context disposables
     context.subscriptions.push(this);
@@ -315,46 +324,62 @@ export class NextEditWindowManager {
 
   private setupListeners() {
     // Theme change listener
-    const themeListener = vscode.workspace.onDidChangeConfiguration((e) => {
+    vscode.workspace.onDidChangeConfiguration((e) => {
       if (
         e.affectsConfiguration("workbench.colorTheme") ||
         e.affectsConfiguration("editor.fontSize") ||
-        e.affectsConfiguration("editor.fontFamily")
+        e.affectsConfiguration("editor.fontFamily") ||
+        e.affectsConfiguration("window.autoDetectColorScheme") ||
+        e.affectsConfiguration("window.autoDetectHighContrast") ||
+        e.affectsConfiguration("workbench.preferredDarkColorTheme") ||
+        e.affectsConfiguration("workbench.preferredLightColorTheme") ||
+        e.affectsConfiguration("workbench.preferredHighContrastColorTheme") ||
+        e.affectsConfiguration("workbench.preferredHighContrastLightColorTheme")
       ) {
-        const newTheme = getTheme();
-        this.theme = newTheme || FALLBACK_THEME;
+        this.theme = getThemeString();
+        this.syntaxHighlighter.setTheme(this.theme);
         console.log(
           "Theme updated:",
           this.theme ? "Theme exists" : "Theme is undefined",
         );
+        const editorConfig = vscode.workspace.getConfiguration("editor");
+        this.fontSize = editorConfig.get<number>("fontSize") ?? 14;
+        this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
       }
     });
-    this.disposables.push(themeListener);
+    // this.disposables.push(themeListener);
+
+    // Listen for active color theme changes
+    vscode.window.onDidChangeActiveColorTheme(() => {
+      this.theme = getThemeString();
+      this.syntaxHighlighter.setTheme(this.theme);
+      console.log(
+        "Active theme changed:",
+        this.theme ? "Theme exists" : "Theme is undefined",
+      );
+    });
+    // this.disposables.push(activeThemeListener);
 
     // Listen for editor changes to clean up decorations when editor closes
-    const editorCloseListener = vscode.window.onDidChangeVisibleTextEditors(
-      async () => {
-        // If our active editor is no longer visible, clear decorations
-        if (
-          this.activeEditor &&
-          !vscode.window.visibleTextEditors.includes(this.activeEditor)
-        ) {
-          await this.hideAllTooltips();
-        }
-      },
-    );
-    this.disposables.push(editorCloseListener);
+    vscode.window.onDidChangeVisibleTextEditors(async () => {
+      // If our active editor is no longer visible, clear decorations
+      if (
+        this.activeEditor &&
+        !vscode.window.visibleTextEditors.includes(this.activeEditor)
+      ) {
+        await this.hideAllTooltips();
+      }
+    });
+    // this.disposables.push(editorCloseListener);
 
     // Listen for selection changes to hide tooltip when cursor moves
-    const selectionListener = vscode.window.onDidChangeTextEditorSelection(
-      async (e) => {
-        // If the selection changed in our active editor, hide the tooltip
-        if (this.activeEditor && e.textEditor === this.activeEditor) {
-          await this.hideAllTooltips();
-        }
-      },
-    );
-    this.disposables.push(selectionListener);
+    vscode.window.onDidChangeTextEditorSelection(async (e) => {
+      // If the selection changed in our active editor, hide the tooltip
+      if (this.activeEditor && e.textEditor === this.activeEditor) {
+        await this.hideAllTooltips();
+      }
+    });
+    // this.disposables.push(selectionListener);
   }
 
   private shouldRenderTip(uri: vscode.Uri): boolean {
@@ -381,11 +406,11 @@ export class NextEditWindowManager {
     | undefined
   > {
     console.log("createSvgTooltip");
-    const baseTextConfig = {
-      "font-family": SVG_CONFIG.fontFamily,
-      "font-size": SVG_CONFIG.fontSize,
-      fill: this.theme.colors["editor.foreground"],
-    };
+    // const baseTextConfig = {
+    //   "font-family": SVG_CONFIG.fontFamily,
+    //   "font-size": SVG_CONFIG.fontSize,
+    //   fill: this.theme.colors["editor.foreground"],
+    // };
 
     try {
       const tipWidth = SVG_CONFIG.getTipWidth(text);
@@ -408,7 +433,8 @@ export class NextEditWindowManager {
       const uri = await this.syntaxHighlighter.getDataUri(
         text,
         "typescript",
-        SVG_CONFIG.fontSize,
+        this.fontSize,
+        this.fontFamily,
         dimensions,
         SVG_CONFIG.lineHeight,
         {
@@ -443,12 +469,8 @@ export class NextEditWindowManager {
 
     const { uri, dimensions } = uriAndDimensions;
 
-    const blankUri = await this.syntaxHighlighter.getBlankDataUri(dimensions, {
-      imageType: "svg",
-    });
-
     // Use theme or fallback
-    const backgroundColour = this.theme.colors["editor.background"];
+    // const backgroundColour = this.theme.colors["editor.background"];
     // const tipWidth = SVG_CONFIG.getTipWidth(text);
     // const tipHeight = SVG_CONFIG.getTipHeight(text);
     const tipWidth = dimensions.width;
@@ -469,7 +491,7 @@ export class NextEditWindowManager {
         //        filter: ${SVG_CONFIG.filter};
         //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
         border: `transparent; position: absolute; z-index: 1000;
-               box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px ${backgroundColour};
+               box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px;
                filter: ${SVG_CONFIG.filter};
                border-radius: ${SVG_CONFIG.radius}px;
                margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
@@ -629,11 +651,11 @@ export class NextEditWindowManager {
   }
 }
 
-export default function setupNextEditWindowManager(
+export default async function setupNextEditWindowManager(
   context: vscode.ExtensionContext,
   textApplier?: TextApplier,
 ) {
-  NextEditWindowManager.getInstance().setupNextEditWindowManager(
+  await NextEditWindowManager.getInstance().setupNextEditWindowManager(
     context,
     textApplier,
   );

@@ -1,9 +1,8 @@
 import * as fs from "fs/promises";
 import { JSDOM } from "jsdom";
-import path from "path";
 import satori from "satori";
 // import puppeteer, { Browser, ScreenshotOptions } from "puppeteer";
-import { BundledTheme, codeToHtml } from "shiki";
+import { BundledTheme, codeToHtml, getSingletonHighlighter } from "shiki";
 import { escapeForSVG, kebabOfStr } from "../util/text";
 
 interface SyntaxHighlighterOptions {
@@ -43,19 +42,40 @@ type PngUri = string;
 type SvgUri = string;
 
 export class SyntaxHighlighter {
-  private themesDir: string = path.join(__dirname, "themes"); // We may need this in case we start supporting custom colors.
-  private currentTheme: string;
   private static instance: SyntaxHighlighter;
+  private currentTheme: string = "dark-plus";
+  private editorBackground: string = "#000000";
+  private editorForeground: string = "#FFFFFF";
 
-  private constructor(options: SyntaxHighlighterOptions = {}) {
-    this.currentTheme = options.theme || "dark-plus";
-  }
+  private constructor(options: SyntaxHighlighterOptions = {}) {}
 
   static getInstance(options?: SyntaxHighlighterOptions): SyntaxHighlighter {
     if (!SyntaxHighlighter.instance) {
       SyntaxHighlighter.instance = new SyntaxHighlighter(options);
     }
     return SyntaxHighlighter.instance;
+  }
+
+  public async setTheme(themeName: string): Promise<void> {
+    if (
+      this.themeExists(kebabOfStr(themeName)) ||
+      themeName === "Default Dark Modern"
+    ) {
+      this.currentTheme =
+        themeName === "Default Dark Modern"
+          ? "dark-plus"
+          : kebabOfStr(themeName);
+
+      const highlighter = await getSingletonHighlighter({
+        themes: [this.currentTheme],
+      });
+
+      const th = highlighter.getTheme(this.currentTheme);
+      this.editorBackground = th.bg;
+      this.editorForeground = th.fg;
+    } else {
+      this.currentTheme = "dark-plus";
+    }
   }
 
   async init(): Promise<void> {}
@@ -129,14 +149,6 @@ export class SyntaxHighlighter {
     return themeArray.includes(themeNameKebab as BundledTheme);
   }
 
-  async setTheme(themeName: string): Promise<void> {
-    if (this.themeExists(kebabOfStr(themeName))) {
-      this.currentTheme = themeName;
-    } else {
-      this.currentTheme = "dark-plus";
-    }
-  }
-
   async highlightCode(
     code: string,
     language: string = "javascript",
@@ -204,6 +216,7 @@ export class SyntaxHighlighter {
     code: string,
     language: string = "javascript",
     fontSize: number,
+    fontFamily: string,
     dimensions: Dimensions,
     lineHeight: number,
     options: ConversionOptions,
@@ -213,13 +226,14 @@ export class SyntaxHighlighter {
     const guts = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
       fontSize,
+      fontFamily,
       lineHeight,
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
   <g>
-    <rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" />
+    <rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" stroke="${this.editorForeground}" stroke-width="1" />
     ${guts}
   </g>
 </svg>`;
@@ -275,6 +289,7 @@ export class SyntaxHighlighter {
   convertShikiHtmlToSvgGut(
     shikiHtml: string,
     fontSize: number,
+    fontFamily: string,
     lineHeight: number,
   ): string {
     const dom = new JSDOM(shikiHtml);
@@ -298,7 +313,7 @@ export class SyntaxHighlighter {
         .join("");
 
       const y = (index + 1) * lineHeight;
-      return `<text x="0" y="${y}" font-family="monospace" font-size="${fontSize.toString()}" xml:space="preserve">${spans}</text>`;
+      return `<text x="0" y="${y}" font-family="${fontFamily}" font-size="${fontSize.toString()}" xml:space="preserve">${spans}</text>`;
     });
 
     return `
@@ -327,6 +342,7 @@ export class SyntaxHighlighter {
     code: string,
     language: string = "javascript",
     fontSize: number,
+    fontFamily: string,
     dimensions: Dimensions,
     lineHeight: number,
     options: ConversionOptions,
@@ -347,6 +363,7 @@ export class SyntaxHighlighter {
           code,
           language,
           fontSize,
+          fontFamily,
           dimensions,
           lineHeight,
           options,
@@ -373,18 +390,6 @@ export class SyntaxHighlighter {
       case "svg":
         const svgBuffer = await this.convertToBlankSVG(dimensions, options);
         return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
-    }
-  }
-
-  // Utility method to list available themes
-  async getAvailableThemes(): Promise<string[]> {
-    try {
-      const files = await fs.readdir(this.themesDir);
-      return files
-        .filter((file) => file.endsWith(".css"))
-        .map((file) => file.replace(".css", ""));
-    } catch (error) {
-      return [];
     }
   }
 }
