@@ -102,6 +102,8 @@ interface IDE {
 
     suspend fun isTelemetryEnabled(): Boolean
 
+    suspend fun isWorkspaceRemote(): Boolean
+
     suspend fun getUniqueId(): String
 
     suspend fun getTerminalContents(): String
