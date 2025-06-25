@@ -1,4 +1,4 @@
-import { IDE, PromptLog } from "core";
+import { ChatMessage, IDE, PromptLog } from "core";
 import { AuthType } from "core/control-plane/AuthTypes";
 import {
   FromIdeProtocol,
@@ -13,7 +13,6 @@ import {
   GeneratorYieldType,
   WebviewSingleProtocolMessage,
 } from "core/protocol/util";
-import { ChatMessage } from "../redux/store";
 import { IIdeMessenger } from "./IdeMessenger";
 
 async function defaultMockHandleMessage<T extends keyof FromWebviewProtocol>(
