@@ -10,7 +10,6 @@ import { getExtensionVersion } from "../util/util";
 
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
-import setupNextEditWindowManager from "./NextEditWindowManager";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
@@ -20,7 +19,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Register commands and providers
   registerQuickFixProvider();
   setupInlineTips(context);
-  // setupNextEditWindowManager(context);
 
   const vscodeExtension = new VsCodeExtension(context);
 
