@@ -250,7 +250,6 @@ export class NextEditProvider {
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
           const nextCompletion = JSON.parse(msg.content).newCode;
-
           const outcomeNext: AutocompleteOutcome = {
             time: Date.now() - startTime,
             completion: nextCompletion,
@@ -306,7 +305,6 @@ export class NextEditProvider {
           // const diffLines = myersDiff(helper.fileContents, nextCompletion);
 
           // const diff = getRenderableDiff(diffLines);
-
           const outcomeNext: AutocompleteOutcome = {
             time: Date.now() - startTime,
             completion: nextCompletion,

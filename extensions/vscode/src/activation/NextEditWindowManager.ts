@@ -13,6 +13,7 @@ export interface TextApplier {
     editor: vscode.TextEditor,
     text: string,
     position: vscode.Position,
+    finalCursorPos: vscode.Position | null,
   ): Promise<boolean>;
 }
 
@@ -187,7 +188,6 @@ export class NextEditWindowManager {
 
     // Clear any existing decorations first (very important to prevent overlapping)
     await this.hideAllTooltips();
-    // this.dispose();
 
     // Store the current tooltip text for accepting later
     this.currentTooltipText = text;
@@ -202,23 +202,30 @@ export class NextEditWindowManager {
       .slice(startPos, endPos + 1)
       .join("\n");
 
-    // TODO: we may use a unified diff here if the file is too huge
-    // TODO: compare text with the editable region slice.
     const diffLines = myersDiff(originalSlice, text);
-    const diff = getRenderableDiff(diffLines);
+    const lineContentAtCursorPos = text.split("\n")[position.line];
+    const lineOffsetAtCursorPos = position.line - startPos;
 
+    const diff = getRenderableDiff(
+      diffLines,
+      lineContentAtCursorPos,
+      lineOffsetAtCursorPos,
+    );
+
+    // Calculate the actual line number in the editor by adding the startPos offset
+    // to the line number from the diff calculation
     this.finalCursorPos = new vscode.Position(
       startPos + diff.offset.line,
       diff.offset.character,
     );
 
     // Stops the manager from rendering blank windows when there is nothing to render.
-    if (diff.renderableDiff === "") {
+    if (text === "") {
       return;
     }
 
     // Create and apply decoration with the text
-    await this.renderTooltip(editor, position, diff.renderableDiff);
+    await this.renderTooltip(editor, position, text);
     await vscode.commands.executeCommand(
       "setContext",
       "nextEditWindowActive",
@@ -283,13 +290,15 @@ export class NextEditWindowManager {
     const position = editor.selection.active;
 
     let success = false;
-    if (this.textApplier) {
-      success = await this.textApplier.applyText(editor, text, position);
+    if (this.textApplier && false) {
+      success = await this.textApplier!.applyText(
+        editor,
+        text,
+        position,
+        this.finalCursorPos,
+      );
     } else {
-      // applyText already has this,
-      // but we could technically have an instance of
-      // NextEditWindowManager without the textApplier
-
+      // Define the editable region
       const editableRegionStartLine = Math.max(0, position.line - 5);
       const editableRegionEndLine = Math.min(
         editor.document.lineCount - 1,
@@ -299,22 +308,68 @@ export class NextEditWindowManager {
       const endPosChar = editor.document.lineAt(editableRegionEndLine).text
         .length;
 
+      // const endPos = new vscode.Position(editableRegionEndLine + 1, 0);
       const endPos = new vscode.Position(editableRegionEndLine, endPosChar);
       const editRange = new vscode.Range(startPos, endPos);
 
       success = await editor.edit((editBuilder) => {
         editBuilder.replace(editRange, text);
+        if (this.finalCursorPos) {
+          editor.selection = new vscode.Selection(
+            this.finalCursorPos,
+            this.finalCursorPos,
+          );
+        }
       });
+
+      // TODO: there is an issue where vscode will invoke ContinueCompletionProvider
+      // before the cursor jumps to its final destination.
+      // This causes the <|user_cursor_here|> pin to sometimes be at its original position.
+      // To solve this, we may wish to add a non-character after the cursor jumps
+      // so that we invoke vscode's inline completion provider with the most up to date cursor pos.
+      // Fix race condition: Wait for the editor operation to complete before moving the cursor
+      if (success && this.finalCursorPos) {
+        // Use setTimeout with a promise to ensure the edit operation is fully applied
+        // before moving the cursor
+        await new Promise<void>((resolve) => {
+          setTimeout(async () => {
+            editor.selection = new vscode.Selection(
+              this.finalCursorPos!,
+              this.finalCursorPos!,
+            );
+
+            // Force VSCode to reevaluate the cursor position by making a small empty edit
+            // then immediately undoing it, ensuring the cursor position is respected
+            await editor.edit(
+              (editBuilder) => {
+                // Create a zero-width edit at cursor position to trigger cursor update
+                editBuilder.insert(this.finalCursorPos!, "");
+              },
+              { undoStopBefore: false, undoStopAfter: false },
+            );
+
+            resolve();
+          }, 10); // Small delay to let VSCode process the previous edit
+        });
+      }
     }
 
     if (success) {
       // Move cursor to the final position if available.
-      if (this.finalCursorPos) {
-        editor.selection = new vscode.Selection(
-          this.finalCursorPos,
-          this.finalCursorPos,
-        );
-      }
+      // if (this.finalCursorPos) {
+      //   editor.selection = new vscode.Selection(
+      //     this.finalCursorPos,
+      //     this.finalCursorPos,
+      //   );
+
+      //   await editor.edit((editBuilder) => {
+      //     editBuilder.replace(
+      //       new vscode.Range(this.finalCursorPos!, this.finalCursorPos!),
+      //       "",
+      //     );
+      //   });
+      // }
+      console.log("ane", editor.selection.start, editor.selection.end);
       await this.hideAllTooltips();
     }
   }
@@ -470,7 +525,7 @@ export class NextEditWindowManager {
     text: string,
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     console.log("createSvgDecoration");
-    console.log(text);
+    // console.log(text);
     const uriAndDimensions = await this.createSvgTooltip(text);
     if (!uriAndDimensions) {
       return undefined;
