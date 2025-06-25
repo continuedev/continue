@@ -1007,6 +1007,7 @@ interface ToolChoice {
 
 export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
+  enableExperimentalTools: boolean;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;
@@ -1334,6 +1335,7 @@ export interface ExperimentalConfig {
   modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
+  enableExperimentalTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
