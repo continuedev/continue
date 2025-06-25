@@ -258,7 +258,7 @@ export class VsCodeMessenger {
     this.onWebview("optInNextEditFeature", async (msg) => {
       if (msg.data.optIn) {
         // Set up next edit window manager only for Continue team members
-        setupNextEditWindowManager(context, {
+        await setupNextEditWindowManager(context, {
           applyText: async (editor, diff, position) => {
             const editableRegionStartLine = Math.max(0, position.line - 5);
             const editableRegionEndLine = Math.min(
@@ -282,9 +282,19 @@ export class VsCodeMessenger {
         });
 
         this.vsCodeExtension.activateNextEdit();
+        await vscode.commands.executeCommand(
+          "setContext",
+          "nextEditWindowActive",
+          false,
+        );
       } else {
         NextEditWindowManager.clearInstance();
         this.vsCodeExtension.deactivateNextEdit();
+        await vscode.commands.executeCommand(
+          "setContext",
+          "nextEditWindowActive",
+          false,
+        );
       }
     });
 
