@@ -13,6 +13,7 @@ import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
 
+// missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
 export const localOnlyToolDefinitions = [grepSearchTool];
 
 export const baseToolDefinitions = [
