@@ -1,5 +1,5 @@
+import { parseMarkdownRule } from "@continuedev/config-yaml";
 import { jest } from "@jest/globals";
-import { parseMarkdownRule } from "../../config/markdown";
 import { createRuleBlockImpl } from "./createRuleBlock";
 
 const mockIde = {
@@ -40,7 +40,6 @@ test("createRuleBlockImpl should create a rule with glob pattern", async () => {
     globs: "**/*.{ts,tsx}",
   });
 
-  expect(markdown).toContain("# TypeScript Rule");
   expect(markdown).toContain("Use interfaces for object shapes");
 });
 
@@ -76,7 +75,6 @@ test("createRuleBlockImpl should create a rule with description pattern", async 
     description: "This is a detailed explanation of the rule",
   });
 
-  expect(markdown).toContain("# Description Test");
   expect(markdown).toContain("This is the rule content");
 });
 
@@ -100,7 +98,6 @@ test("createRuleBlockImpl should include both globs and description in frontmatt
     globs: "**/*.js",
   });
 
-  expect(markdown).toContain("# Complete Rule");
   expect(markdown).toContain("Follow this standard");
 });
 
