@@ -102,14 +102,14 @@ export async function renderFineTunedUserPrompt(
       //   helper.filepath,
       // );
 
-      const editedCodeWithPins = insertCursorPin(
-        helper.fileContents,
+      const editedCodeWithPins = insertPins(
+        helper.fileContents.split("\n"),
         helper.pos,
       );
 
       return {
         role: "user",
-        content: `### User Edits:\n\n${snippets.diffSnippets}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n\<|editable_region_start|\>\n${JSON.stringify(editedCodeWithPins)}\n\<|editable_region_end|\>\n\`\`\``,
+        content: `### User Edits:\n\n${snippets.diffSnippets}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
       };
 
     case "jetbrains":
@@ -137,14 +137,14 @@ export async function renderDefaultBasicUserPrompt(
       //   helper.filepath,
       // );
 
-      const editedCodeWithPins = insertCursorPin(
-        helper.fileContents,
+      const editedCodeWithPins = insertPins(
+        helper.fileContents.split("\n"),
         helper.pos,
       );
 
       return {
         role: "user",
-        content: `### User Edits:\n\n${JSON.stringify(snippets)}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n\<|editable_region_start|\>\n${JSON.stringify(editedCodeWithPins)}\n\<|editable_region_end|\>\n\`\`\``,
+        content: `### User Edits:\n\n${JSON.stringify(snippets)}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
       };
 
     case "jetbrains":
@@ -162,26 +162,17 @@ export async function renderFineTunedBasicUserPrompt(
   ide: IDE,
   // cursorPos: Position,
   helper: HelperVars,
+  diffContext: string,
 ): Promise<UserPrompt> {
   const ideInfo = await ide.getIdeInfo();
   switch (ideInfo.ideType) {
     case "vscode":
-      // const diffs = await compareAndReturnDiff(
-      //   originalCode,
-      //   editedCode,
-      //   helper.filepath,
-      // );
-
-      const editedCodeWithPins = insertCursorPin(
-        helper.fileContents,
-        helper.pos,
-      );
-
-      console.log(snippets);
+      const lines = helper.fileContents.split("\n");
+      const editedCodeWithPins = insertPins(lines, helper.pos);
 
       return {
         role: "user",
-        content: `### User Edits:\n\n${JSON.stringify(snippets)}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n\<|editable_region_start|\>\n${JSON.stringify(editedCodeWithPins)}\n\<|editable_region_end|\>\n\`\`\``,
+        content: `### User Edits:\n\n${diffContext}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
       };
 
     case "jetbrains":
@@ -192,11 +183,15 @@ export async function renderFineTunedBasicUserPrompt(
   }
 }
 
-function insertCursorPin(fileContents: string, cursorPos: Position) {
-  const lines = fileContents.split("\n");
+function insertPins(lines: string[], cursorPos: Position) {
+  const a = insertCursorPin(lines, cursorPos);
+  const b = insertEditableRegionPinsWithStaticRange(a, cursorPos, 5, 5);
+  return b.join("\n");
+}
 
+function insertCursorPin(lines: string[], cursorPos: Position) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
-    return fileContents;
+    return lines;
   }
 
   // Ensure character position is within bounds or at the end of the line.
@@ -208,5 +203,50 @@ function insertCursorPin(fileContents: string, cursorPos: Position) {
     "<|user_cursor_is_here|>" +
     lines[cursorPos.line].slice(charPos);
 
-  return lines.join("\n");
+  return lines;
+}
+
+function insertEditableRegionPinsWithStaticRange(
+  lines: string[],
+  cursorPos: Position,
+  marginTop: number,
+  marginBottom: number,
+) {
+  if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
+    return lines;
+  }
+
+  // Ensure editable regions are within bounds.
+  const editableRegionStart = Math.max(cursorPos.line - marginTop, 0);
+  const editableRegionEnd = Math.min(
+    cursorPos.line + marginBottom,
+    lines.length - 1,
+  );
+
+  const instrumentedLines = [
+    ...lines.slice(0, editableRegionStart),
+    "<|editable_region_start|>",
+    ...lines.slice(editableRegionStart, editableRegionEnd + 1),
+    "<|editable_region_end|>",
+    ...lines.slice(editableRegionEnd + 1),
+  ];
+
+  return instrumentedLines;
+}
+
+function insertEditableRegionPinsWithAst(lines: string[], cursorPos: Position) {
+  if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
+    return lines;
+  }
+
+  // Ensure character position is within bounds or at the end of the line.
+  const lineLength = lines[cursorPos.line].length;
+  const charPos = Math.min(Math.max(0, cursorPos.character), lineLength);
+
+  lines[cursorPos.line] =
+    lines[cursorPos.line].slice(0, charPos) +
+    "<|user_cursor_is_here|>" +
+    lines[cursorPos.line].slice(charPos);
+
+  return lines;
 }

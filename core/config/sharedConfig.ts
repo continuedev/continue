@@ -20,6 +20,8 @@ export const sharedConfigSchema = z
     promptPath: z.string(),
     useCurrentFileAsContext: z.boolean(),
     logEditingData: z.boolean(),
+    // add internal features below
+    optInNextEditFeature: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -174,6 +176,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.logEditingData !== undefined) {
     configCopy.experimental.logEditingData = sharedConfig.logEditingData;
+  }
+  if (sharedConfig.optInNextEditFeature !== undefined) {
+    configCopy.experimental.optInNextEditFeature =
+      sharedConfig.optInNextEditFeature;
   }
 
   return configCopy;

@@ -1376,6 +1376,11 @@ export interface ExperimentalConfig {
    * If enabled, will save data on the user's editing processes
    */
   logEditingData?: boolean;
+
+  /**
+   * If enabled, will enable next edit in place of autocomplete
+   */
+  optInNextEditFeature?: boolean;
 }
 
 export interface AnalyticsConfig {

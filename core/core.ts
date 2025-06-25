@@ -68,8 +68,13 @@ import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
 import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
-import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
+import {
+  BeforeAfterDiff,
+  createDiff,
+  DiffFormatType,
+} from "./nextEdit/context/diffFormatting";
 import { processNextEditData } from "./nextEdit/context/processNextEditData.js";
+import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -723,6 +728,15 @@ export class Core {
             cursorPosBeforeEdit: Position,
             cursorPosAfterPrevEdit: Position,
           ) => {
+            NextEditProvider.getInstance().addDiffToContext(
+              createDiff(
+                beforeAfterdiff.beforeContent,
+                beforeAfterdiff.afterContent,
+                beforeAfterdiff.filePath,
+                DiffFormatType.Unified,
+              ),
+            );
+
             // Get the current context data from the most recent message
             const currentData = (global._editAggregator as any)
               .latestContextData || {
