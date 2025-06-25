@@ -141,31 +141,33 @@ export class NextEditWindowManager {
       false,
     );
 
-    const existingCommands = await vscode.commands.getCommands();
+    // Helper function to register commands safely.
+    const registerCommandSafely = (
+      commandId: string,
+      callback: () => Promise<void>,
+    ) => {
+      try {
+        const command = vscode.commands.registerCommand(commandId, callback);
+        context.subscriptions.push(command);
+      } catch (error) {
+        console.log(
+          `Command ${commandId} already has an associated callback, skipping registration`,
+        );
+      }
+    };
 
-    if (!existingCommands.includes(HIDE_TOOLTIP_COMMAND)) {
-      // Register the command to hide tooltips
-      const hideTooltipsCommand = vscode.commands.registerCommand(
-        HIDE_TOOLTIP_COMMAND,
-        async () => {
-          await this.hideAllTooltips();
-        },
-      );
-      context.subscriptions.push(hideTooltipsCommand);
-    }
+    // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND
+    // with their corresponding callbacks.
+    registerCommandSafely(
+      HIDE_TOOLTIP_COMMAND,
+      async () => await this.hideAllTooltips(),
+    );
+    registerCommandSafely(
+      ACCEPT_NEXT_EDIT_COMMAND,
+      async () => await this.acceptNextEdit(),
+    );
 
-    if (!existingCommands.includes(ACCEPT_NEXT_EDIT_COMMAND)) {
-      // Register the command to accept next edit
-      const acceptNextEditCommand = vscode.commands.registerCommand(
-        ACCEPT_NEXT_EDIT_COMMAND,
-        () => {
-          this.acceptNextEdit();
-        },
-      );
-      context.subscriptions.push(acceptNextEditCommand);
-    }
-
-    // Add this class to context disposables
+    // Add this class to context disposables.
     context.subscriptions.push(this);
 
     if (textApplier) {
@@ -221,6 +223,13 @@ export class NextEditWindowManager {
       "setContext",
       "nextEditWindowActive",
       true,
+    );
+
+    console.log(
+      await vscode.commands.executeCommand(
+        "getContext",
+        "nextEditWindowActive",
+      ),
     );
   }
 

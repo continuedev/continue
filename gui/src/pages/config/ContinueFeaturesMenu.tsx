@@ -18,8 +18,9 @@ export function ContinueFeaturesMenu({
   const { session } = useAuth();
   useEffect(() => {
     // Only run this effect when both optInNextEditFeature is true and session is available.
-    // This still sets up the next edit window manager when the user leaves the setting on
-    // before exiting vscode.
+    // This effectively handles cases where there user
+    // leaves the setting on before exiting vscode,
+    // which leaves the toggle to be on.
     if (optInNextEditFeature && session) {
       const continueEmail = (session as HubSessionInfo)?.account?.id ?? null;
       if (continueEmail) {
@@ -35,7 +36,7 @@ export function ContinueFeaturesMenu({
     handleUpdate({
       optInNextEditFeature: value,
     });
-    // Send message to VSCode extension with the email
+    // Send message to VSCode extension with the email.
     const continueEmail = (session as HubSessionInfo)?.account?.id ?? null;
     if (continueEmail) {
       ideMessenger.post("optInNextEditFeature", {
