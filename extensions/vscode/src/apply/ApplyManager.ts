@@ -4,6 +4,8 @@ import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
+import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
+import { generateSearchReplaceDiffLines } from "core/edit/searchAndReplace/generateSearchReplaceDiffLines";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -13,6 +15,9 @@ export interface ApplyToFileOptions {
   filepath?: string;
   text: string;
   toolCallId?: string;
+  // NEW: Search/replace specific fields
+  searchContent?: string;
+  isSearchReplace?: boolean;
 }
 
 /**
@@ -31,6 +36,8 @@ export class ApplyManager {
     filepath,
     text,
     toolCallId,
+    searchContent,
+    isSearchReplace,
   }: ApplyToFileOptions) {
     await this.webviewProtocol.request("updateApplyState", {
       streamId,
@@ -49,6 +56,19 @@ export class ApplyManager {
       return;
     }
 
+    // NEW: Handle search/replace mode
+    if (isSearchReplace && searchContent !== undefined) {
+      await this.handleSearchReplace(
+        activeTextEditor,
+        searchContent,
+        text, // This is the replace content
+        streamId,
+        toolCallId,
+      );
+      return;
+    }
+
+    // Existing logic for regular apply
     const hasExistingDocument = !!activeTextEditor.document.getText().trim();
 
     if (hasExistingDocument) {
@@ -146,6 +166,40 @@ export class ApplyManager {
         toolCallId,
       );
     }
+  }
+
+  /**
+   * NEW: Handle search and replace operations
+   */
+  private async handleSearchReplace(
+    editor: vscode.TextEditor,
+    searchContent: string,
+    replaceContent: string,
+    streamId: string,
+    toolCallId?: string,
+  ) {
+    const fileContent = editor.document.getText();
+
+    // Find the search content in the file
+    const match = findSearchMatch(fileContent, searchContent);
+    if (!match) {
+      throw new Error(`Search content not found in file:\n${searchContent}`);
+    }
+
+    // Generate diff lines using our search/replace diff generator
+    const diffLinesGenerator = generateSearchReplaceDiffLines(
+      fileContent,
+      match,
+      replaceContent,
+    );
+
+    // Stream through existing VerticalDiffManager infrastructure
+    await this.verticalDiffManager.streamDiffLines(
+      diffLinesGenerator,
+      true, // isInstantApply = true (deterministic, no LLM involved)
+      streamId,
+      toolCallId,
+    );
   }
 
   /**

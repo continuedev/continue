@@ -1,3 +1,4 @@
+// Search and replace block markers using flexible regex patterns
 const SEARCH_BLOCK_START_REGEX = /^[-]{3,} SEARCH$/;
 const SEARCH_BLOCK_END_REGEX = /^[=]{3,}$/;
 const REPLACE_BLOCK_END_REGEX = /^[+]{3,} REPLACE$/;
@@ -30,6 +31,7 @@ export function parseSearchReplaceBlock(
   content: string,
 ): SearchReplaceBlockResult {
   const lines = content.split("\n");
+
   let currentSearchContent = "";
   let currentReplaceContent = "";
   let inSearch = false;
@@ -87,4 +89,54 @@ export function parseSearchReplaceBlock(
     searchContent: currentSearchContent.trim(),
     replaceContent: currentReplaceContent.trim(),
   };
+}
+
+/**
+ * Parses all complete search and replace blocks from content.
+ *
+ * @param content - The content containing multiple search/replace blocks
+ * @returns Array of complete search/replace blocks found
+ */
+export function parseAllSearchReplaceBlocks(
+  content: string,
+): SearchReplaceBlockResult[] {
+  const blocks: SearchReplaceBlockResult[] = [];
+  const lines = content.split("\n");
+
+  let currentBlockLines: string[] = [];
+  let inBlock = false;
+
+  for (const line of lines) {
+    if (SEARCH_BLOCK_START_REGEX.test(line)) {
+      // Start of new block
+      if (inBlock && currentBlockLines.length > 0) {
+        // Process previous incomplete block if any
+        const blockContent = currentBlockLines.join("\n");
+        const result = parseSearchReplaceBlock(blockContent);
+        if (result.isComplete) {
+          blocks.push(result);
+        }
+      }
+      currentBlockLines = [line];
+      inBlock = true;
+    } else if (inBlock) {
+      currentBlockLines.push(line);
+
+      // Check if this line completes the current block
+      if (REPLACE_BLOCK_END_REGEX.test(line)) {
+        const blockContent = currentBlockLines.join("\n");
+        const result = parseSearchReplaceBlock(blockContent);
+        if (result.isComplete) {
+          blocks.push(result);
+        } else if (result.error) {
+          // If there's an error, throw it immediately
+          throw new Error(result.error);
+        }
+        currentBlockLines = [];
+        inBlock = false;
+      }
+    }
+  }
+
+  return blocks;
 }

@@ -1,6 +1,5 @@
-import { ContextItem } from "core";
 import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
-import { parseSearchReplaceBlock } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
+import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { ClientToolImpl } from "./callClientTool";
 
@@ -11,6 +10,11 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
 ) => {
   const { filepath, diff } = args;
 
+  // Check if we have a streamId from a pre-existing apply state
+  if (!extras.streamId) {
+    throw new Error("Invalid apply state - no streamId available");
+  }
+
   // Resolve the file path
   const resolvedFilepath = await resolveRelativePathInDir(
     filepath,
@@ -20,66 +24,53 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     throw new Error(`File ${filepath} does not exist`);
   }
 
-  // Parse the search/replace block from the diff content
-  const parseResult = parseSearchReplaceBlock(diff);
+  // Parse all search/replace blocks from the diff content
+  const blocks = parseAllSearchReplaceBlocks(diff);
 
-  if (parseResult.error) {
-    throw new Error(`Parse error: ${parseResult.error}`);
+  if (blocks.length === 0) {
+    throw new Error("No complete search/replace blocks found");
   }
-
-  if (!parseResult.isComplete) {
-    throw new Error("Incomplete search/replace block");
-  }
-
-  const { searchContent, replaceContent } = parseResult;
 
   try {
     // Read the current file content
-    const fileContent =
+    const originalContent =
       await extras.ideMessenger.ide.readFile(resolvedFilepath);
+    let currentContent = originalContent;
 
-    // Find the search match
-    const match = findSearchMatch(fileContent, searchContent || "");
+    // Apply all replacements sequentially to build the final content
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const { searchContent, replaceContent } = block;
 
-    if (!match) {
-      throw new Error(`Search content not found in file:\n${searchContent}`);
+      // Find the search content in the current state of the file
+      const match = findSearchMatch(currentContent, searchContent || "");
+      if (!match) {
+        throw new Error(
+          `Search content not found in block ${i + 1}:\n${searchContent}`,
+        );
+      }
+
+      // Apply the replacement
+      currentContent =
+        currentContent.substring(0, match.startIndex) +
+        (replaceContent || "") +
+        currentContent.substring(match.endIndex);
     }
 
-    // Apply the replacement
-    const newContent =
-      fileContent.substring(0, match.startIndex) +
-      (replaceContent || "") +
-      fileContent.substring(match.endIndex);
-
-    // Write the updated file
-    await extras.ideMessenger.request("writeFile", {
-      path: resolvedFilepath,
-      contents: newContent,
+    // Single applyToFile call with all accumulated changes
+    // Use regular apply mode (not search/replace mode) to leverage existing diff logic
+    await extras.ideMessenger.request("applyToFile", {
+      text: currentContent,
+      streamId: extras.streamId,
+      filepath: resolvedFilepath,
+      toolCallId,
+      // Don't use search/replace mode since we're providing the complete final content
     });
 
-    // Create context item showing the change
-    const contextItem: ContextItem = {
-      name: `Modified ${filepath}`,
-      description: `Applied search and replace to ${filepath}`,
-      content: `Search and replace operation completed successfully.
-
-Search content:
-\`\`\`
-${searchContent}
-\`\`\`
-
-Replace content:
-\`\`\`
-${replaceContent}
-\`\`\`
-
-File: ${filepath}`,
-      editing: true,
-    };
-
+    // Return success - applyToFile will handle the completion state
     return {
-      respondImmediately: true,
-      output: [contextItem],
+      respondImmediately: false, // Let apply state handle completion
+      output: undefined,
     };
   } catch (error) {
     throw new Error(

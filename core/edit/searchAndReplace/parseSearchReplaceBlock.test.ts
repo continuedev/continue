@@ -1,4 +1,8 @@
-import { parseSearchReplaceBlock } from "./parseSearchReplaceBlock";
+import {
+  parseAllSearchReplaceBlocks,
+  parseSearchReplaceBlock,
+} from "./parseSearchReplaceBlock";
+
 describe("parseSearchReplaceBlock", () => {
   describe("Complete blocks", () => {
     it("should parse a complete basic search/replace block", () => {
@@ -58,16 +62,28 @@ new content
       expect(result.replaceContent).toBe("new content");
     });
 
-    it("should handle empty replace content", () => {
+    it("should handle empty replace content (deletion)", () => {
       const content = `------- SEARCH
-old content
+old content to delete
 =======
 +++++++ REPLACE`;
 
       const result = parseSearchReplaceBlock(content);
 
       expect(result.isComplete).toBe(true);
-      expect(result.searchContent).toBe("old content");
+      expect(result.searchContent).toBe("old content to delete");
+      expect(result.replaceContent).toBe("");
+    });
+
+    it("should handle both empty search and replace content", () => {
+      const content = `------- SEARCH
+=======
++++++++ REPLACE`;
+
+      const result = parseSearchReplaceBlock(content);
+
+      expect(result.isComplete).toBe(true);
+      expect(result.searchContent).toBe("");
       expect(result.replaceContent).toBe("");
     });
   });
@@ -136,6 +152,7 @@ content
 =======
 replacement
 +++++++ REPLACE`;
+
         const result = parseSearchReplaceBlock(content);
         expect(result.isComplete).toBe(true);
       });
@@ -193,5 +210,181 @@ content`;
         expect(result.searchContent).toBe(""); // Should not enter search mode
       });
     });
+  });
+});
+
+describe("parseAllSearchReplaceBlocks", () => {
+  it("should parse multiple complete blocks", () => {
+    const content = `------- SEARCH
+old code 1
+=======
+new code 1
++++++++ REPLACE
+
+------- SEARCH
+old code 2
+=======
+new code 2
++++++++ REPLACE`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].searchContent).toBe("old code 1");
+    expect(blocks[0].replaceContent).toBe("new code 1");
+    expect(blocks[1].searchContent).toBe("old code 2");
+    expect(blocks[1].replaceContent).toBe("new code 2");
+  });
+
+  it("should handle blocks with different content", () => {
+    const content = `------- SEARCH
+function old() {
+  return 1;
+}
+=======
+function new() {
+  return 2;
+}
++++++++ REPLACE
+
+------- SEARCH
+const x = 'old';
+=======
+const x = 'new';
++++++++ REPLACE`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].searchContent).toBe(`function old() {
+  return 1;
+}`);
+    expect(blocks[0].replaceContent).toBe(`function new() {
+  return 2;
+}`);
+    expect(blocks[1].searchContent).toBe(`const x = 'old';`);
+    expect(blocks[1].replaceContent).toBe(`const x = 'new';`);
+  });
+
+  it("should handle deletion blocks (empty replace content)", () => {
+    const content = `------- SEARCH
+code to keep
+=======
+modified code
++++++++ REPLACE
+
+------- SEARCH
+code to delete
+=======
++++++++ REPLACE`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].searchContent).toBe("code to keep");
+    expect(blocks[0].replaceContent).toBe("modified code");
+    expect(blocks[1].searchContent).toBe("code to delete");
+    expect(blocks[1].replaceContent).toBe(""); // Deletion
+  });
+
+  it("should handle insertion blocks (empty search content)", () => {
+    const content = `------- SEARCH
+existing code
+=======
+modified existing code
++++++++ REPLACE
+
+------- SEARCH
+=======
+new code to insert
++++++++ REPLACE`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].searchContent).toBe("existing code");
+    expect(blocks[0].replaceContent).toBe("modified existing code");
+    expect(blocks[1].searchContent).toBe(""); // Insertion
+    expect(blocks[1].replaceContent).toBe("new code to insert");
+  });
+
+  it("should skip incomplete blocks", () => {
+    const content = `------- SEARCH
+incomplete block
+
+------- SEARCH
+complete block
+=======
+replacement
++++++++ REPLACE`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].searchContent).toBe("complete block");
+    expect(blocks[0].replaceContent).toBe("replacement");
+  });
+
+  it("should handle single block", () => {
+    const content = `------- SEARCH
+single block
+=======
+replacement
++++++++ REPLACE`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].searchContent).toBe("single block");
+    expect(blocks[0].replaceContent).toBe("replacement");
+  });
+
+  it("should return empty array when no complete blocks found", () => {
+    const content = `------- SEARCH
+incomplete
+=======
+missing replace marker`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(0);
+  });
+
+  it("should handle blocks with extra content between them", () => {
+    const content = `Some other content here
+
+------- SEARCH
+block 1
+=======
+replacement 1
++++++++ REPLACE
+
+More content in between
+
+------- SEARCH
+block 2
+=======
+replacement 2
++++++++ REPLACE
+
+Trailing content`;
+
+    const blocks = parseAllSearchReplaceBlocks(content);
+
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].searchContent).toBe("block 1");
+    expect(blocks[0].replaceContent).toBe("replacement 1");
+    expect(blocks[1].searchContent).toBe("block 2");
+    expect(blocks[1].replaceContent).toBe("replacement 2");
+  });
+
+  it("should throw error for malformed blocks", () => {
+    const content = `------- SEARCH
+content
++++++++ REPLACE`; // Missing =======
+
+    expect(() => parseAllSearchReplaceBlocks(content)).toThrow(
+      "Found replace block end marker without matching replace start marker",
+    );
   });
 });
