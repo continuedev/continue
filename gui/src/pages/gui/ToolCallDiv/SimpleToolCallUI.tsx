@@ -1,26 +1,27 @@
-import { ChevronRightIcon } from "@heroicons/react/24/outline";
-import { ContextItemWithId, Tool, ToolCallState } from "core";
+import { ArrowPathIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { Tool, ToolCallState } from "core";
 import { ComponentType, useMemo, useState } from "react";
 import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
+import { ToolbarButtonWithTooltip } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ToolbarButtonWithTooltip";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
+import { toolCallStateToContextItems } from "./toolCallStateToContextItem";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 
 interface SimpleToolCallUIProps {
   toolCallState: ToolCallState;
   tool: Tool | undefined;
-  contextItems: ContextItemWithId[];
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 export function SimpleToolCallUI({
-  contextItems,
   icon: Icon,
   toolCallState,
   tool,
 }: SimpleToolCallUIProps) {
-  const ctxItems = useMemo(() => {
-    return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
-  }, [contextItems]);
+  const shownContextItems = useMemo(() => {
+    const contextItems = toolCallStateToContextItems(toolCallState);
+    return contextItems.filter((item) => !item.hidden);
+  }, [toolCallState]);
 
   const [open, setOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -54,13 +55,23 @@ export function SimpleToolCallUI({
           </div>
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
-        {args.length > 0 ? (
-          <ArgsToggleIcon
-            isShowing={showingArgs}
-            setIsShowing={setShowingArgs}
-            toolCallId={toolCallState.toolCallId}
-          />
-        ) : null}
+        <div>
+          <ToolbarButtonWithTooltip
+            tooltipContent="Resubmit"
+            onClick={() => {
+              console.log("Resubmit clicked");
+            }}
+          >
+            <ArrowPathIcon className="h-4 w-4" />
+          </ToolbarButtonWithTooltip>
+          {args.length > 0 ? (
+            <ArgsToggleIcon
+              isShowing={showingArgs}
+              setIsShowing={setShowingArgs}
+              toolCallId={toolCallState.toolCallId}
+            />
+          ) : null}
+        </div>
       </div>
       <ArgsItems args={args} isShowing={showingArgs} />
       <div
@@ -68,8 +79,8 @@ export function SimpleToolCallUI({
           open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        {ctxItems.length ? (
-          ctxItems.map((contextItem, idx) => (
+        {shownContextItems.length ? (
+          shownContextItems.map((contextItem, idx) => (
             <ContextItemsPeekItem key={idx} contextItem={contextItem} />
           ))
         ) : (
