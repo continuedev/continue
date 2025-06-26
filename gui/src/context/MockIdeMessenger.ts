@@ -76,10 +76,6 @@ const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [
 ];
 export class MockIdeMessenger implements IIdeMessenger {
   ide: IDE;
-  // private messageHandlers: Map<
-  //   keyof FromIdeProtocol,
-  //   Array<(data: any) => void>
-  // > = new Map();
 
   constructor() {
     this.ide = new MessageIde(
