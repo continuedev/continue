@@ -7,33 +7,32 @@ import {
 } from "./diffFormatting";
 
 interface ClusterState {
-  beforeState: string;
+  beforeState: string; // stores content of cluster before edit
   startRange: { minLine: number; maxLine: number };
   currentRange: { minLine: number; maxLine: number };
-  edits: RangeInFileWithNextEditInfo[];
+  edits: RangeInFileWithNextEditInfo[]; // store small edits that form the cluster
   firstTimestamp: number;
   lastTimestamp: number;
   lastLine: number;
-  firstEditBeforeCursor: { line: number; character: number };
-  lastEditAfterCursor: { line: number; character: number };
+  firstEditBeforeCursor: { line: number; character: number }; // cursor position before the first edit in the cluster
+  lastEditAfterCursor: { line: number; character: number }; // cursor position after the last edit in the previous cluster
 }
 
 interface FileState {
-  activeClusters: ClusterState[];
-  currentContent: string;
-  priorComparisons: string[];
-  processingQueue: Array<() => Promise<void>>;
+  activeClusters: ClusterState[]; // Stores active clusters for the file
+  currentContent: string; // Stores the current content of the file
+  priorComparisons: string[]; // Stores prior comparisons for the file (not currently used, but kept for future use)
+  processingQueue: Array<() => Promise<void>>; // Stores a queue of small edits to be processed into clusters
   isProcessing: boolean;
 }
 
 export interface EditClusterConfig {
-  deltaT: number;
-  deltaL: number;
-  maxEdits: number;
-  maxDuration: number;
-  contextSize: number;
-  contextLines: number;
-  verbose: boolean;
+  deltaT: number; // Time threshold in seconds; if exceeded, a new cluster is created
+  deltaL: number; // Line threshold; if the user jumps more than this many lines, a new cluster is created
+  maxEdits: number; // Maximum number of edits in a cluster
+  maxDuration: number; // Maximum total duration of an edit in seconds
+  contextSize: number; // Number of previous edits to store; not currently used but kept for future use
+  contextLines: number; // Used for computations involving deltaL
 }
 
 export class EditAggregator {
@@ -62,7 +61,6 @@ export class EditAggregator {
       maxDuration: config.maxDuration ?? 100.0,
       contextSize: config.contextSize ?? 5,
       contextLines: config.contextLines ?? 3,
-      verbose: config.verbose ?? false,
     };
     this.onComparisonFinalized = onComparisonFinalized;
     this.previousEditFinalCursorPosition = { line: 0, character: 0 };

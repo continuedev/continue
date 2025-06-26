@@ -5,6 +5,7 @@ import { ConfigHandler } from "../../config/ConfigHandler";
 import { DataLogger } from "../../data/log";
 import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
+import { createDiff, DiffFormatType } from "./diffFormatting";
 
 const randomNumberBetween = (min: number, max: number) => {
   min = Math.ceil(min); // Ensure min is an integer
@@ -12,21 +13,35 @@ const randomNumberBetween = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-export const processNextEditData = async (
-  filePath: string,
-  beforeContent: string,
-  afterContent: string,
-  cursorPosBeforeEdit: Position,
-  cursorPosAfterPrevEdit: Position,
-  ide: IDE,
-  configHandler: ConfigHandler,
-  getDefinitionsFromLsp: GetLspDefinitionsFunction,
-  recentlyEditedRanges: RecentlyEditedRange[],
-  recentlyVisitedRanges: AutocompleteCodeSnippet[],
-  workspaceDir: string,
-  modelNameOrInstance?: string | undefined,
-  // eslint-disable-next-line max-params
-) => {
+interface ProcessNextEditDataParams {
+  filePath: string;
+  beforeContent: string;
+  afterContent: string;
+  cursorPosBeforeEdit: Position;
+  cursorPosAfterPrevEdit: Position;
+  ide: IDE;
+  configHandler: ConfigHandler;
+  getDefinitionsFromLsp: GetLspDefinitionsFunction;
+  recentlyEditedRanges: RecentlyEditedRange[];
+  recentlyVisitedRanges: AutocompleteCodeSnippet[];
+  workspaceDir: string;
+  modelNameOrInstance?: string | undefined;
+}
+
+export const processNextEditData = async ({
+  filePath,
+  beforeContent,
+  afterContent,
+  cursorPosBeforeEdit,
+  cursorPosAfterPrevEdit,
+  ide,
+  configHandler,
+  getDefinitionsFromLsp,
+  recentlyEditedRanges,
+  recentlyVisitedRanges,
+  workspaceDir,
+  modelNameOrInstance,
+}: ProcessNextEditDataParams) => {
   // To switch to the user's autocomplete model, uncomment the following lines
   // const { config } = await configHandler.loadConfig();
   // const autocompleteModel =
@@ -50,9 +65,9 @@ export const processNextEditData = async (
     modelName,
   );
 
-  // console.log(
-  //   createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
-  // );
+  console.log(
+    createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
+  );
 
   void DataLogger.getInstance().logDevData({
     name: "nextEdit",
