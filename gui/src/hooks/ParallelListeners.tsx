@@ -20,7 +20,6 @@ import {
 import {
   acceptToolCall,
   addContextItemsAtIndex,
-  cancelToolCall,
   selectCurrentToolCall,
   setHasReasoningEnabled,
   updateApplyState,
@@ -269,17 +268,11 @@ function ParallelListeners() {
           currentToolCallApplyState.streamId === state.streamId
         ) {
           if (state.status === "done" && autoAcceptEditToolDiffs) {
-            const out = await ideMessenger.request("acceptDiff", {
+            console.log("AUTO ACCEPTED");
+            ideMessenger.post("acceptDiff", {
               streamId: state.streamId,
               filepath: state.filepath,
             });
-            if (out.status === "error") {
-              dispatch(
-                cancelToolCall({
-                  toolCallId: currentToolCallApplyState.toolCallId!,
-                }),
-              );
-            }
           }
           if (state.status === "closed") {
             if (currentToolCall?.status !== "canceled") {

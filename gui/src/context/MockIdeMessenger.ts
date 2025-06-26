@@ -65,6 +65,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   },
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,
+  acceptDiff: undefined,
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [
