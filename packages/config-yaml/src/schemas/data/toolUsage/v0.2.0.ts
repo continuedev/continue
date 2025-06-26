@@ -13,6 +13,7 @@ export const toolUsageEventSchema_0_2_0 = toolUsageEventAllSchema.pick({
   toolCallId: true,
   functionName: true,
   functionArgs: true,
+  toolCallArgs: true,
   parsedArgs: true,
   succeeded: true,
   output: true,

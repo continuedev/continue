@@ -809,7 +809,7 @@ export class Core {
       this.messenger.send("toolCallPartialOutput", params);
     };
 
-    return await callTool(tool, toolCall, {
+    const result = await callTool(tool, toolCall, {
       config,
       ide: this.ide,
       llm: config.selectedModelByRole.chat,
@@ -820,6 +820,14 @@ export class Core {
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
     });
+
+    this.messenger.send("toolCallCompleted", {
+      toolCallId: toolCall.id,
+      contextItems: result.contextItems,
+      succeeded: !result.errorMessage,
+    });
+
+    return result;
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
