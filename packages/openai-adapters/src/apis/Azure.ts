@@ -63,7 +63,11 @@ export class AzureApi extends OpenAIApi {
           "`env.apiVersion` is a required configuration property for Azure OpenAI",
         );
       }
-      url.pathname = `${url.pathname}/openai/deployments/${config.env.deployment}`;
+
+      const basePathname = `openai/deployments/${config.env.deployment}`;
+
+      url.pathname =
+        url.pathname === "/" ? basePathname : `${url.pathname}/${basePathname}`;
 
       queryParams["api-version"] = config.env.apiVersion;
     }
