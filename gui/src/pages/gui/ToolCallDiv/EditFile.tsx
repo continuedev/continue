@@ -42,11 +42,11 @@ export function EditFile(props: EditToolCallProps) {
 
   return (
     <StyledMarkdownPreview
+      expandCodeblocks // TODO: Conditional based on edit tool or search & replace
       isRenderingInStepContainer
       disableManualApply
       source={src}
       forceStreamId={applyState?.streamId}
-      expandCodeblocks={false}
       itemIndex={props.historyIndex}
     />
   );

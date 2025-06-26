@@ -13,6 +13,8 @@ import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchAndReplaceInFileTool } from "./definitions/searchAndReplaceInFile";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
+import { viewRepoMapTool } from "./definitions/viewRepoMap";
+import { viewSubdirectoryTool } from "./definitions/viewSubdirectory";
 
 export const baseToolDefinitions = [
   readFileTool,
@@ -26,9 +28,6 @@ export const baseToolDefinitions = [
   lsTool,
   createRuleBlock,
   fetchUrlContentTool,
-  // replacing with ls tool for now
-  // viewSubdirectoryTool,
-  // viewRepoMapTool,
 ];
 
 export const getConfigDependentToolDefinitions = (
@@ -36,6 +35,6 @@ export const getConfigDependentToolDefinitions = (
 ): Tool[] => [
   requestRuleTool(params),
   ...(params.enableExperimentalTools
-    ? [searchAndReplaceInFileTool]
+    ? [searchAndReplaceInFileTool, viewRepoMapTool, viewSubdirectoryTool]
     : [editFileTool]),
 ];
