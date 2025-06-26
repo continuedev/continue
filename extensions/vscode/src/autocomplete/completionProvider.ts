@@ -91,8 +91,7 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
-    // NOTE: Only turn it on locally when testing (for review purposes).
-    // TODO: revert back
+
     this.nextEditProvider = NextEditProvider.initialize(
       this.configHandler,
       this.ide,
@@ -329,7 +328,7 @@ export class ContinueCompletionProvider
       if (this.isNextEditActive) {
         const editor = vscode.window.activeTextEditor;
         if (editor && NextEditWindowManager.isInstantiated()) {
-          await NextEditWindowManager.getInstance().showTooltip(
+          await NextEditWindowManager.getInstance().showNextEditWindow(
             editor,
             completionText,
           );

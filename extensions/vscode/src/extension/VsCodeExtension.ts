@@ -169,19 +169,11 @@ export class VsCodeExtension {
           await setupNextEditWindowManager(context);
 
           this.activateNextEdit();
-          await vscode.commands.executeCommand(
-            "setContext",
-            "nextEditWindowActive",
-            false,
-          );
+          await NextEditWindowManager.freeTabAndEsc();
         } else {
           NextEditWindowManager.clearInstance();
           this.deactivateNextEdit();
-          await vscode.commands.executeCommand(
-            "setContext",
-            "nextEditWindowActive",
-            false,
-          );
+          await NextEditWindowManager.freeTabAndEsc();
         }
 
         if (configLoadInterrupted) {

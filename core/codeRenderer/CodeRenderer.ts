@@ -1,8 +1,18 @@
+/**
+ * CodeRenderer is a class that, when given a code string,
+ * highlights the code string using shiki and
+ * returns a svg representation of it.
+ * We could technically just call shiki's methods to do a
+ * one-liner syntax highlighting code, but
+ * a separate class for this is useful because
+ * we rarely ever need syntax highlighting outside of
+ * creating a render of it.
+ */
 import { JSDOM } from "jsdom";
 import { BundledTheme, codeToHtml, getSingletonHighlighter } from "shiki";
 import { escapeForSVG, kebabOfStr } from "../util/text";
 
-interface SyntaxHighlighterOptions {
+interface CodeRendererOptions {
   themesDir?: string;
   theme?: string;
 }
@@ -24,23 +34,22 @@ interface Dimensions {
 }
 
 type DataUri = PngUri | SvgUri;
-
 type PngUri = string;
 type SvgUri = string;
 
-export class SyntaxHighlighter {
-  private static instance: SyntaxHighlighter;
+export class CodeRenderer {
+  private static instance: CodeRenderer;
   private currentTheme: string = "dark-plus";
   private editorBackground: string = "#000000";
   private editorForeground: string = "#FFFFFF";
 
-  private constructor(options: SyntaxHighlighterOptions = {}) {}
+  private constructor() {}
 
-  static getInstance(options?: SyntaxHighlighterOptions): SyntaxHighlighter {
-    if (!SyntaxHighlighter.instance) {
-      SyntaxHighlighter.instance = new SyntaxHighlighter(options);
+  static getInstance(): CodeRenderer {
+    if (!CodeRenderer.instance) {
+      CodeRenderer.instance = new CodeRenderer();
     }
-    return SyntaxHighlighter.instance;
+    return CodeRenderer.instance;
   }
 
   public async setTheme(themeName: string): Promise<void> {
@@ -144,17 +153,6 @@ export class SyntaxHighlighter {
       lang: language,
       theme: this.currentTheme,
     });
-  }
-
-  async convertToBlankSVG(
-    dimensions: Dimensions,
-    options: ConversionOptions,
-  ): Promise<Buffer> {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
-  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="#ff0000" /><text fill="#ffffff" x="0" y="20" font-family="monospace" font-size="14" xml:space="preserve">TEST TEXT THIS IS</text></g>
-</svg>`;
-
-    return Buffer.from(svg, "utf8");
   }
 
   async convertToSVG(
@@ -268,27 +266,6 @@ export class SyntaxHighlighter {
           lineHeight,
           options,
         );
-        return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
-    }
-  }
-
-  async getBlankDataUri(
-    dimensions: Dimensions,
-    options: ConversionOptions,
-  ): Promise<DataUri> {
-    switch (options.imageType) {
-      // case "png":
-      //   const pngBuffer = await this.convertToPNG(
-      //     code,
-      //     language,
-      //     fontSize,
-      //     dimensions,
-      //     lineHeight,
-      //     options,
-      //   );
-      //   return `data:image/png;base64,${pngBuffer.data.toString("base64")}`;
-      case "svg":
-        const svgBuffer = await this.convertToBlankSVG(dimensions, options);
         return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
     }
   }

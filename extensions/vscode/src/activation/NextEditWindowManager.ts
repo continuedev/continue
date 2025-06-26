@@ -3,13 +3,13 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 // @ts-ignore
 import * as vscode from "vscode";
 
+import { CodeRenderer } from "core/codeRenderer/CodeRenderer";
 import { myersDiff } from "core/diff/myers";
 import {
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "core/nextEdit/constants";
-import { getRenderableDiff } from "core/nextEdit/diff/diff";
-import { SyntaxHighlighter } from "core/syntaxHighlighting/SyntaxHighlighter";
+import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
 import { getThemeString } from "../util/getTheme";
 
 export interface TextApplier {
@@ -73,18 +73,17 @@ const SVG_CONFIG = {
 } as const;
 
 // Command ID - can be used in package.json
-export const HIDE_TOOLTIP_COMMAND = "nextEditWindow.hideTooltips";
+export const HIDE_NEXT_EDIT_WINDOW_COMMAND = "nextEditWindow.hideTooltips";
 export const ACCEPT_NEXT_EDIT_COMMAND = "nextEditWindow.acceptNextEdit";
 
 export class NextEditWindowManager {
   private static instance: NextEditWindowManager | undefined;
 
   private readonly excludedURIPrefixes = ["output:", "vscode://inline-chat"];
-  private readonly hideCommand = "continue.hideNextEditWindow";
   private theme: string;
   private fontSize: number;
   private fontFamily: string;
-  private syntaxHighlighter: SyntaxHighlighter;
+  private codeRenderer: CodeRenderer;
 
   // Current active decoration
   private currentDecoration: vscode.TextEditorDecorationType | null = null;
@@ -99,6 +98,8 @@ export class NextEditWindowManager {
   private textApplier: TextApplier | null = null;
 
   private finalCursorPos: vscode.Position | null = null;
+
+  private context: vscode.ExtensionContext | null = null;
 
   public static getInstance(): NextEditWindowManager {
     if (!NextEditWindowManager.instance) {
@@ -128,46 +129,53 @@ export class NextEditWindowManager {
         : "Theme is undefined",
     );
     this.setupListeners();
-    this.syntaxHighlighter = SyntaxHighlighter.getInstance();
-    this.syntaxHighlighter.setTheme(this.theme);
+    this.codeRenderer = CodeRenderer.getInstance();
 
     const editorConfig = vscode.workspace.getConfiguration("editor");
     this.fontSize = editorConfig.get<number>("fontSize") ?? 14;
     this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
   }
 
-  public async setupNextEditWindowManager(
-    context: vscode.ExtensionContext,
-    textApplier?: TextApplier,
-  ) {
+  public static async reserveTabAndEsc() {
+    await vscode.commands.executeCommand(
+      "setContext",
+      "nextEditWindowActive",
+      true,
+    );
+  }
+
+  public static async freeTabAndEsc() {
     await vscode.commands.executeCommand(
       "setContext",
       "nextEditWindowActive",
       false,
     );
+  }
 
-    // Helper function to register commands safely.
-    const registerCommandSafely = (
-      commandId: string,
-      callback: () => Promise<void>,
-    ) => {
-      try {
-        const command = vscode.commands.registerCommand(commandId, callback);
-        context.subscriptions.push(command);
-      } catch (error) {
-        console.log(
-          `Command ${commandId} already has an associated callback, skipping registration`,
-        );
-      }
-    };
+  /**
+   * An async setup function to help us initialize the NextEditWindowManager.
+   * This is necessary because we need some setup to be done asynchronously,
+   * and constructors in TypeScript cannot be async.
+   * Plus, it's generally not recommended to pass arguments to getInstance() of a singleton.
+   * @param context The extension context.
+   * @param textApplier Callback that lets us use external deps such as llms if needed.
+   */
+  public async setupNextEditWindowManager(
+    context: vscode.ExtensionContext,
+    textApplier?: TextApplier,
+  ) {
+    this.context = context;
 
-    // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND
-    // with their corresponding callbacks.
-    registerCommandSafely(
-      HIDE_TOOLTIP_COMMAND,
-      async () => await this.hideAllTooltips(),
+    // Set nextEditWindowActive to false to free esc and tab,
+    // letting them return to their original behaviors.
+    await NextEditWindowManager.freeTabAndEsc();
+
+    // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
+    this.registerCommandSafely(
+      HIDE_NEXT_EDIT_WINDOW_COMMAND,
+      async () => await this.hideAllNextEditWindows(),
     );
-    registerCommandSafely(
+    this.registerCommandSafely(
       ACCEPT_NEXT_EDIT_COMMAND,
       async () => await this.acceptNextEdit(),
     );
@@ -178,14 +186,40 @@ export class NextEditWindowManager {
     if (textApplier) {
       this.textApplier = textApplier;
     }
+
+    await this.codeRenderer.setTheme(this.theme);
   }
 
   /**
-   * Show a tooltip with the given text at the current cursor position
-   * @param editor The active text editor
-   * @param text Text to display in the tooltip
+   * Registers our two custom commands to the extension context.
+   * @param commandId Custom commands to help set up next edit.
+   * @param callback Function to run on command execution.
    */
-  public async showTooltip(
+  private registerCommandSafely(
+    commandId: "nextEditWindow.hideTooltips" | "nextEditWindow.acceptNextEdit",
+    callback: () => Promise<void>,
+  ) {
+    if (!this.context) {
+      console.log("Extension context is not yet set.");
+      return;
+    }
+
+    try {
+      const command = vscode.commands.registerCommand(commandId, callback);
+      this.context.subscriptions.push(command);
+    } catch (error) {
+      console.log(
+        `Command ${commandId} already has an associated callback, skipping registration`,
+      );
+    }
+  }
+
+  /**
+   * Show a tooltip with the given text at the current cursor position.
+   * @param editor The active text editor.
+   * @param text Text to display in the tooltip.
+   */
+  public async showNextEditWindow(
     editor: vscode.TextEditor,
     newEditRangeSlice: string,
   ) {
@@ -194,107 +228,94 @@ export class NextEditWindowManager {
     }
 
     // Clear any existing decorations first (very important to prevent overlapping).
-    await this.hideAllTooltips();
+    await this.hideAllNextEditWindows();
 
     // Store the current tooltip text for accepting later.
     this.currentTooltipText = newEditRangeSlice;
 
-    // Get current cursor position.
-    const position = editor.selection.active;
-    const startPos = Math.max(
-      position.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+    // Get the contents of the old (current) editable region.
+    const currCursorPos = editor.selection.active;
+    const editableRegionStartLine = Math.max(
+      currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
       0,
     );
-    const endPos = Math.min(
-      position.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+    const editableRegionEndLine = Math.min(
+      currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
       editor.document.lineCount - 1,
     );
     const oldEditRangeSlice = editor.document
       .getText()
       .split("\n")
-      .slice(startPos, endPos + 1)
+      .slice(editableRegionStartLine, editableRegionEndLine + 1)
       .join("\n");
 
-    if (oldEditRangeSlice === newEditRangeSlice) return;
+    // We don't need to show the next edit window under these conditions:
+    // - There are no predicted edits.
+    // - The predicted edits are identical to the previous version.
+    if (newEditRangeSlice === "" || oldEditRangeSlice === newEditRangeSlice)
+      return;
 
     const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
-    const lineOffsetAtCursorPos = position.line - startPos;
+
+    // How far away is the current line from the start of the editable region?
+    const lineOffsetAtCursorPos = currCursorPos.line - editableRegionStartLine;
+
+    // How long is the line at the current cursor position?
     const lineContentAtCursorPos =
       newEditRangeSlice.split("\n")[lineOffsetAtCursorPos];
 
-    const diff = getRenderableDiff(
+    const offset = getOffsetPositionAtLastNewLine(
       diffLines,
       lineContentAtCursorPos,
       lineOffsetAtCursorPos,
     );
 
     // Calculate the actual line number in the editor by adding the startPos offset
-    // to the line number from the diff calculation
+    // to the line number from the diff calculation.
     this.finalCursorPos = new vscode.Position(
-      startPos + diff.offset.line,
-      diff.offset.character,
+      editableRegionStartLine + offset.line,
+      offset.character,
     );
 
-    // Stops the manager from rendering blank windows when there is nothing to render.
-    if (newEditRangeSlice === "") {
-      return;
-    }
+    // Create and apply decoration with the text.
+    await this.renderTooltip(editor, currCursorPos, newEditRangeSlice);
 
-    // Create and apply decoration with the text
-    await this.renderTooltip(editor, position, newEditRangeSlice);
-    await vscode.commands.executeCommand(
-      "setContext",
-      "nextEditWindowActive",
-      true,
-    );
-
-    console.log(
-      await vscode.commands.executeCommand(
-        "getContext",
-        "nextEditWindowActive",
-      ),
-    );
+    // Reserve tab and esc to either accept or reject the displayed next edit contents.
+    await NextEditWindowManager.reserveTabAndEsc();
   }
 
   /**
-   * Hide all tooltips in all editors
+   * Hide all tooltips in all editors.
    */
-  public async hideAllTooltips() {
-    console.log("hideAllTooltips");
+  public async hideAllNextEditWindows() {
     if (this.currentDecoration) {
-      // Remove decoration from all editors to be extra safe
       vscode.window.visibleTextEditors.forEach((editor) => {
         editor.setDecorations(this.currentDecoration!, []);
       });
 
-      // If we know which editor had the decoration, clear it specifically
+      // If we know which editor had the decoration, clear it specifically.
+      // This is a bit redundant but ensures we don't leave any decorations behind.
       if (this.activeEditor) {
         this.activeEditor.setDecorations(this.currentDecoration, []);
         this.activeEditor = null;
       }
 
-      // Dispose the decoration
+      // This prevents memory leaks.
       this.currentDecoration.dispose();
       this.currentDecoration = null;
 
       this.disposables.forEach((d) => d.dispose());
       this.disposables = [];
 
-      // Clear the current tooltip text
+      // Clear the current tooltip text.
       this.currentTooltipText = null;
     }
 
-    await vscode.commands.executeCommand(
-      "setContext",
-      "nextEditWindowActive",
-      false,
-    );
-
-    // this.dispose();
+    await NextEditWindowManager.freeTabAndEsc();
   }
 
   /**
-   * Accept the current next edit suggestion by inserting it at cursor position
+   * Accept the current next edit suggestion by inserting it at cursor position.
    */
   private async acceptNextEdit() {
     if (!this.activeEditor || !this.currentTooltipText) {
@@ -327,17 +348,16 @@ export class NextEditWindowManager {
       const endPosChar = editor.document.lineAt(editableRegionEndLine).text
         .length;
 
-      // const endPos = new vscode.Position(editableRegionEndLine + 1, 0);
       const endPos = new vscode.Position(editableRegionEndLine, endPosChar);
       const editRange = new vscode.Range(startPos, endPos);
 
       success = await editor.edit((editBuilder) => {
         editBuilder.replace(editRange, text);
       });
+
       // Disable inline suggestions temporarily.
       // This prevents the race condition between vscode's inline completion provider
       // and the next edit window manager's cursor repositioning logic.
-      // await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
       await vscode.workspace
         .getConfiguration()
         .update("editor.inlineSuggest.enabled", false, true);
@@ -356,31 +376,31 @@ export class NextEditWindowManager {
           .getConfiguration()
           .update("editor.inlineSuggest.enabled", true, true);
 
-        // This prevents the race condition between vscode's inline completion provider
-        // and the next edit window manager's cursor repositioning logic.
-        // await vscode.commands.executeCommand(
-        //   "editor.action.inlineSuggest.hide",
-        // );
-
-        await this.hideAllTooltips();
+        await this.hideAllNextEditWindows();
       }
     }
   }
 
+  /**
+   * Dispose of the NextEditWindowManager.
+   */
   public dispose() {
-    // Dispose current decoration
+    // Dispose current decoration.
     if (this.currentDecoration) {
       this.currentDecoration.dispose();
       this.currentDecoration = null;
     }
 
-    // Dispose all other disposables
+    // Dispose all other disposables.
     this.disposables.forEach((d) => d.dispose());
     this.disposables = [];
   }
 
+  /**
+   * Setup listeners for theme, font, and cursor position changes.
+   */
   private setupListeners() {
-    // Theme change listener
+    // Theme change listener.
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (
         e.affectsConfiguration("workbench.colorTheme") ||
@@ -394,7 +414,7 @@ export class NextEditWindowManager {
         e.affectsConfiguration("workbench.preferredHighContrastLightColorTheme")
       ) {
         this.theme = getThemeString();
-        this.syntaxHighlighter.setTheme(this.theme);
+        this.codeRenderer.setTheme(this.theme);
         console.log(
           "Theme updated:",
           this.theme ? "Theme exists" : "Theme is undefined",
@@ -404,39 +424,35 @@ export class NextEditWindowManager {
         this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
       }
     });
-    // this.disposables.push(themeListener);
 
-    // Listen for active color theme changes
+    // Listen for active color theme changes.
     vscode.window.onDidChangeActiveColorTheme(() => {
       this.theme = getThemeString();
-      this.syntaxHighlighter.setTheme(this.theme);
+      this.codeRenderer.setTheme(this.theme);
       console.log(
         "Active theme changed:",
         this.theme ? "Theme exists" : "Theme is undefined",
       );
     });
-    // this.disposables.push(activeThemeListener);
 
-    // Listen for editor changes to clean up decorations when editor closes
+    // Listen for editor changes to clean up decorations when editor closes.
     vscode.window.onDidChangeVisibleTextEditors(async () => {
-      // If our active editor is no longer visible, clear decorations
+      // If our active editor is no longer visible, clear decorations.
       if (
         this.activeEditor &&
         !vscode.window.visibleTextEditors.includes(this.activeEditor)
       ) {
-        await this.hideAllTooltips();
+        await this.hideAllNextEditWindows();
       }
     });
-    // this.disposables.push(editorCloseListener);
 
-    // Listen for selection changes to hide tooltip when cursor moves
+    // Listen for selection changes to hide tooltip when cursor moves.
     vscode.window.onDidChangeTextEditorSelection(async (e) => {
-      // If the selection changed in our active editor, hide the tooltip
+      // If the selection changed in our active editor, hide the tooltip.
       if (this.activeEditor && e.textEditor === this.activeEditor) {
-        await this.hideAllTooltips();
+        await this.hideAllNextEditWindows();
       }
     });
-    // this.disposables.push(selectionListener);
   }
 
   private shouldRenderTip(uri: vscode.Uri): boolean {
@@ -454,16 +470,14 @@ export class NextEditWindowManager {
   }
 
   /**
-   * Create an SVG with the given text, supporting multiple lines
+   * Create a render of the given code, supporting multiple lines.
    */
-  private async createSvgTooltip(
+  private async createCodeRender(
     text: string,
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
   > {
-    console.log("createSvgTooltip");
-
     try {
       const tipWidth = SVG_CONFIG.getTipWidth(text);
       const tipHeight = SVG_CONFIG.getTipHeight(text);
@@ -472,7 +486,7 @@ export class NextEditWindowManager {
         height: tipHeight,
       };
 
-      const uri = await this.syntaxHighlighter.getDataUri(
+      const uri = await this.codeRenderer.getDataUri(
         text,
         "typescript",
         this.fontSize,
@@ -495,14 +509,14 @@ export class NextEditWindowManager {
   }
 
   /**
-   * Create a decoration type with SVG content
+   * Create a decoration type with the code render.
+   * @param code: The code to render.
+   * @returns The decoration.
    */
-  private async createSvgDecoration(
-    text: string,
+  private async createCodeRenderDecoration(
+    code: string,
   ): Promise<vscode.TextEditorDecorationType | undefined> {
-    console.log("createSvgDecoration");
-    // console.log(text);
-    const uriAndDimensions = await this.createSvgTooltip(text);
+    const uriAndDimensions = await this.createCodeRender(code);
     if (!uriAndDimensions) {
       return undefined;
     }
@@ -549,7 +563,7 @@ export class NextEditWindowManager {
 
   private buildHideTooltipHoverMsg() {
     const hoverMarkdown = new vscode.MarkdownString(
-      `[Dismiss](command:${HIDE_TOOLTIP_COMMAND}) | [Accept (Ctrl+Space, Tab)](command:${ACCEPT_NEXT_EDIT_COMMAND})`,
+      `[Reject (Esc)](command:${HIDE_NEXT_EDIT_WINDOW_COMMAND}) | [Accept (Tab)](command:${ACCEPT_NEXT_EDIT_COMMAND})`,
     );
 
     hoverMarkdown.isTrusted = true;
@@ -563,7 +577,7 @@ export class NextEditWindowManager {
   ): boolean {
     const doc = editor.document;
 
-    // Check if line numbers are valid
+    // Check if line numbers are valid.
     if (range.start.line < 0 || range.start.line >= doc.lineCount) {
       console.log(
         "Invalid start line:",
@@ -584,7 +598,7 @@ export class NextEditWindowManager {
       return false;
     }
 
-    // Check if character positions are valid
+    // Check if character positions are valid.
     const startLine = doc.lineAt(range.start.line);
     const endLine = doc.lineAt(range.end.line);
 
@@ -615,9 +629,9 @@ export class NextEditWindowManager {
   }
 
   /**
-   * Calculate a position to the right of the cursor with the specified offset
+   * Calculate a position to the right of the cursor with the specified offset.
    */
-  private getOffsetPosition(
+  private getDecorationOffsetPosition(
     editor: vscode.TextEditor,
     position: vscode.Position,
   ): vscode.Position {
@@ -632,7 +646,7 @@ export class NextEditWindowManager {
   }
 
   /**
-   * Render a tooltip with the given text at the specified position
+   * Render a tooltip with the given text at the specified position.
    */
   private async renderTooltip(
     editor: vscode.TextEditor,
@@ -640,42 +654,51 @@ export class NextEditWindowManager {
     text: string,
   ) {
     console.log("renderTooltip");
-    // Capture document version to detect changes
+    // Capture document version to detect changes.
     const docVersion = editor.document.version;
 
-    // Create a new decoration with the text
-    const decoration = await this.createSvgDecoration(text);
+    // Create a new decoration with the text.
+    const decoration = await this.createCodeRenderDecoration(text);
     if (!decoration) {
       console.error("Failed to create decoration for text:", text);
       return;
     }
 
-    // Check if document changed during async operation
+    // Check if document changed during async operation.
     if (editor.document.version !== docVersion) {
       console.log("Document changed during decoration creation, aborting");
-      // decoration.dispose();
-      // return;
+      decoration.dispose();
+      return;
     }
 
-    // Store the decoration and editor
-    await this.hideAllTooltips();
+    // Store the decoration and editor.
+    await this.hideAllNextEditWindows();
     this.currentDecoration = decoration;
     this.activeEditor = editor;
 
-    // Get the position with offset
-    const offsetPosition = this.getOffsetPosition(editor, position);
-    const range = new vscode.Range(offsetPosition, offsetPosition);
+    // Calculate how far off to the right of the cursor the decoration should be.
+    const decorationOffsetPosition = this.getDecorationOffsetPosition(
+      editor,
+      position,
+    );
+    const range = new vscode.Range(
+      decorationOffsetPosition,
+      decorationOffsetPosition,
+    );
 
-    // Validate the range before applying
+    // Validate the range before applying.
     if (!this.isValidRange(editor, range)) {
       console.error("Invalid range detected, skipping decoration");
       return;
     }
 
-    // Apply the decoration at the offset position
+    // Apply the decoration at the calculated position.
     editor.setDecorations(this.currentDecoration, [
       {
-        range: new vscode.Range(offsetPosition, offsetPosition),
+        range: new vscode.Range(
+          decorationOffsetPosition,
+          decorationOffsetPosition,
+        ),
         hoverMessage: [this.buildHideTooltipHoverMsg()],
       },
     ]);
