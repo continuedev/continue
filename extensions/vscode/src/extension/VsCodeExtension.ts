@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { IContextProvider, Position, RangeInFileWithNextEditInfo } from "core";
+import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
@@ -41,12 +41,11 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
-import { AutocompleteCodeSnippet } from "core/autocomplete/snippets/types";
-import { RecentlyEditedRange } from "core/autocomplete/util/types";
 import setupNextEditWindowManager, {
   NextEditWindowManager,
 } from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
+import { handleTextDocumentChange } from "../util/editLoggingUtils";
 import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -306,65 +305,15 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {
-      const changes = event.contentChanges;
-      const editor = vscode.window.activeTextEditor;
-      const { config } = await this.configHandler.loadConfig();
-
-      if (!config?.experimental?.logEditingData) return;
-      if (!editor) return;
-      if (event.contentChanges.length === 0) return;
-
-      // Ensure that loggin will only happen in the open-source continue repo
-      const workspaceFolder = vscode.workspace.getWorkspaceFolder(
-        event.document.uri,
-      );
-      if (!workspaceFolder) {
-        return;
-      }
-
-      const workspaceDirUri = workspaceFolder.uri.toString();
-      const repoName = await this.ide.getRepoName(workspaceDirUri);
-      if (repoName !== "continuedev/continue") return;
-
-      const activeCursorPos = editor.selection.active;
-      const editActions: RangeInFileWithNextEditInfo[] = changes.map(
-        (change) => ({
-          filepath: event.document.uri.toString(),
-          range: {
-            start: change.range.start as Position,
-            end: change.range.end as Position,
-          },
-          fileContents: event.document.getText(),
-          editText: change.text,
-
-          // whichever side of the range isn't the active cursor pos is the previous one
-          beforeCursorPos: (change.range.start.line === activeCursorPos.line &&
-          change.range.start.character === activeCursorPos.character
-            ? change.range.end
-            : change.range.start) as Position,
-
-          afterCursorPos: activeCursorPos as Position,
-          workspaceDir: workspaceDirUri,
-        }),
+      const editInfo = await handleTextDocumentChange(
+        event,
+        this.configHandler,
+        this.ide,
+        this.completionProvider,
+        getDefinitionsFromLsp,
       );
 
-      let recentlyEditedRanges: RecentlyEditedRange[] = [];
-      let recentlyVisitedRanges: AutocompleteCodeSnippet[] = [];
-
-      if (this.completionProvider) {
-        recentlyEditedRanges =
-          await this.completionProvider.recentlyEditedTracker.getRecentlyEditedRanges();
-        recentlyVisitedRanges =
-          this.completionProvider.recentlyVisitedRanges.getSnippets();
-      }
-
-      this.core.invoke("files/smallEdit", {
-        actions: editActions,
-        configHandler: this.configHandler,
-        getDefsFromLspFunction: getDefinitionsFromLsp,
-        recentlyEditedRanges: recentlyEditedRanges,
-        recentlyVisitedRanges: recentlyVisitedRanges,
-      });
+      if (editInfo) this.core.invoke("files/smallEdit", editInfo);
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {

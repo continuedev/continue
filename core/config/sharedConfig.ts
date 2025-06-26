@@ -20,7 +20,6 @@ export const sharedConfigSchema = z
     promptPath: z.string(),
     useCurrentFileAsContext: z.boolean(),
     logEditingData: z.boolean(),
-    // add internal features below
     optInNextEditFeature: z.boolean(),
 
     // `ui` in `ContinueConfig`
