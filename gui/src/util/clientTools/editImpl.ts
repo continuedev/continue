@@ -1,15 +1,11 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
+import { v4 as uuid } from "uuid";
 import { ClientToolImpl } from "./callClientTool";
-
 export const editToolImpl: ClientToolImpl = async (
   args,
   toolCallId,
   extras,
 ) => {
-  console.log("EDIT TOOL IMPL", args, toolCallId, extras);
-  if (!extras.streamId) {
-    throw new Error("Invalid apply state");
-  }
   const firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
     extras.ideMessenger.ide,
@@ -17,8 +13,9 @@ export const editToolImpl: ClientToolImpl = async (
   if (!firstUriMatch) {
     throw new Error(`${args.filepath} does not exist`);
   }
+  const streamId = uuid();
   extras.ideMessenger.post("applyToFile", {
-    streamId: extras.streamId,
+    streamId,
     text: args.changes,
     toolCallId,
     filepath: firstUriMatch,

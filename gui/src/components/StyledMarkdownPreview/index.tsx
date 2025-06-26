@@ -15,7 +15,6 @@ import {
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-import { selectApplyStateByToolCallId } from "../../redux/slices/sessionSlice";
 import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 import { getFontSize } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
@@ -197,15 +196,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const itemIndexRef = useUpdatingRef(props.itemIndex);
 
   const codeblockStreamIds = useRef<string[]>([]);
-  const toolCallApplyState = useAppSelector((state) =>
-    selectApplyStateByToolCallId(state, props.toolCallId),
-  );
-  const toolCallApplyStateRef = useUpdatingRef(toolCallApplyState);
-  // useEffect(() => {
-  //   if (toolCallApplyState) {
-  //     codeblockStreamIds.current = Array(1toolCallApplyState.streamId.repeat();
-  //   }
-  // }, [toolCallApplyState, codeblockStreamIds]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -299,10 +289,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const isLastCodeblock = preChildProps["data-islastcodeblock"];
 
-          if (toolCallApplyStateRef.current) {
-            codeblockStreamIds.current[codeBlockIndex] =
-              toolCallApplyStateRef.current.streamId;
-          } else {
+          if (codeblockStreamIds.current[codeBlockIndex] === undefined) {
             codeblockStreamIds.current[codeBlockIndex] = uuidv4();
           }
 
@@ -315,7 +302,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               relativeFilepath={relativeFilePath}
               isLastCodeblock={isLastCodeblock}
               range={range}
-              codeBlockStreamId={codeblockStreamIds.current[codeBlockIndex]}
+              codeBlockStreamId={codeblockStreamIds.current[codeBlockIndex]} // ignored if toolCallId stream state is found
+              forceToolCallId={props.toolCallId}
               expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
             >
