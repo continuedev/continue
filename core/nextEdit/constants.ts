@@ -1,1 +1,3 @@
 export const IS_NEXT_EDIT_ACTIVE = false;
+export const NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN = 5;
+export const NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN = 5;

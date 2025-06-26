@@ -4,6 +4,10 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
 
 import { myersDiff } from "core/diff/myers";
+import {
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "core/nextEdit/constants";
 import { getRenderableDiff } from "core/nextEdit/diff/diff";
 import { SyntaxHighlighter } from "core/syntaxHighlighting/SyntaxHighlighter";
 import { getThemeString } from "../util/getTheme";
@@ -197,8 +201,14 @@ export class NextEditWindowManager {
 
     // Get current cursor position.
     const position = editor.selection.active;
-    const startPos = Math.max(position.line - 5, 0);
-    const endPos = Math.min(position.line + 5, editor.document.lineCount - 1);
+    const startPos = Math.max(
+      position.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+      0,
+    );
+    const endPos = Math.min(
+      position.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+      editor.document.lineCount - 1,
+    );
     const oldEditRangeSlice = editor.document
       .getText()
       .split("\n")
@@ -305,10 +315,13 @@ export class NextEditWindowManager {
       );
     } else {
       // Define the editable region.
-      const editableRegionStartLine = Math.max(0, position.line - 5);
+      const editableRegionStartLine = Math.max(
+        0,
+        position.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+      );
       const editableRegionEndLine = Math.min(
         editor.document.lineCount - 1,
-        position.line + 5,
+        position.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
       );
       const startPos = new vscode.Position(editableRegionStartLine, 0);
       const endPosChar = editor.document.lineAt(editableRegionEndLine).text

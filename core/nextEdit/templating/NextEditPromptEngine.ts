@@ -1,6 +1,10 @@
 import { IDE, Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
+import {
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "../constants";
 
 export type Prompt = SystemPrompt | UserPrompt;
 
@@ -185,7 +189,7 @@ export async function renderFineTunedBasicUserPrompt(
 
 function insertPins(lines: string[], cursorPos: Position) {
   const a = insertCursorPin(lines, cursorPos);
-  const b = insertEditableRegionPinsWithStaticRange(a, cursorPos, 5, 5);
+  const b = insertEditableRegionPinsWithStaticRange(a, cursorPos);
   return b.join("\n");
 }
 
@@ -209,18 +213,19 @@ function insertCursorPin(lines: string[], cursorPos: Position) {
 function insertEditableRegionPinsWithStaticRange(
   lines: string[],
   cursorPos: Position,
-  marginTop: number,
-  marginBottom: number,
 ) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
 
   // Ensure editable regions are within bounds.
-  const editableRegionStart = Math.max(cursorPos.line - marginTop, 0);
+  const editableRegionStart = Math.max(
+    cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+    0,
+  );
   const editableRegionEnd = Math.min(
-    cursorPos.line + marginBottom,
-    lines.length - 1,
+    cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+    lines.length - 1, // Line numbers should be zero-indexed.
   );
 
   const instrumentedLines = [
