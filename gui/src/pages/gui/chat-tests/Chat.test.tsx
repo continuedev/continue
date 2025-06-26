@@ -1,12 +1,12 @@
 import { act } from "@testing-library/react";
 import { addAndSelectMockLlm } from "../../../util/test/config";
 import { renderWithProviders } from "../../../util/test/render";
-import { Chat } from "../Chat";
 import {
   getElementByTestId,
   getElementByText,
   sendInputWithMockedResponse,
-} from "./utils";
+} from "../../../util/test/utils";
+import { Chat } from "../Chat";
 
 test("should render input box", async () => {
   await renderWithProviders(<Chat />);

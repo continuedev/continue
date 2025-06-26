@@ -1,11 +1,11 @@
 import { act } from "@testing-library/react";
 import { renderWithProviders } from "../../../util/test/render";
-import { Chat } from "../Chat";
 import {
   getElementByTestId,
   verifyNotPresentByTestId,
   verifyNotPresentByText,
-} from "./utils";
+} from "../../../util/test/utils";
+import { Chat } from "../Chat";
 
 test("Chat apply scenarios: handle apply updates and display the accept / reject all buttons", async () => {
   const { ideMessenger } = await renderWithProviders(<Chat />);

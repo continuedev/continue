@@ -14,7 +14,7 @@ import {
   getElementByText,
   sendInputWithMockedResponse,
   verifyNotPresentByTestId,
-} from "./utils";
+} from "../../../util/test/utils";
 
 const EDIT_WORKSPACE_DIR = "file:///workspace";
 const EDIT_FILEPATH = "test.txt";

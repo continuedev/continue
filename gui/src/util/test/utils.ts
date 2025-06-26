@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/dom";
 import { act } from "@testing-library/react";
 import { Editor } from "@tiptap/core";
 import { ChatMessage } from "core";
-import { MockIdeMessenger } from "../../../context/MockIdeMessenger";
+import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 
 function logDomText() {
   const bodyText = document.body.innerHTML;

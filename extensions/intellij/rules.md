@@ -1,7 +1,3 @@
----
-globs: "**/intellij**"
----
-
 # Continue JetBrains Extension
 
 ## Project Purpose

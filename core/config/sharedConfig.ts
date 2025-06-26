@@ -167,10 +167,10 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.readResponseTTS !== undefined) {
     configCopy.experimental.readResponseTTS = sharedConfig.readResponseTTS;
   }
-
   if (sharedConfig.useCurrentFileAsContext !== undefined) {
     configCopy.experimental.useCurrentFileAsContext =
       sharedConfig.useCurrentFileAsContext;
   }
+
   return configCopy;
 }
