@@ -203,8 +203,8 @@ export class NextEditWindowManager {
       .join("\n");
 
     const diffLines = myersDiff(originalSlice, text);
-    const lineContentAtCursorPos = text.split("\n")[position.line];
     const lineOffsetAtCursorPos = position.line - startPos;
+    const lineContentAtCursorPos = text.split("\n")[lineOffsetAtCursorPos];
 
     const diff = getRenderableDiff(
       diffLines,
@@ -298,7 +298,7 @@ export class NextEditWindowManager {
         this.finalCursorPos,
       );
     } else {
-      // Define the editable region
+      // Define the editable region.
       const editableRegionStartLine = Math.max(0, position.line - 5);
       const editableRegionEndLine = Math.min(
         editor.document.lineCount - 1,
@@ -314,63 +314,37 @@ export class NextEditWindowManager {
 
       success = await editor.edit((editBuilder) => {
         editBuilder.replace(editRange, text);
-        if (this.finalCursorPos) {
-          editor.selection = new vscode.Selection(
-            this.finalCursorPos,
-            this.finalCursorPos,
-          );
-        }
       });
-
-      // TODO: there is an issue where vscode will invoke ContinueCompletionProvider
-      // before the cursor jumps to its final destination.
-      // This causes the <|user_cursor_here|> pin to sometimes be at its original position.
-      // To solve this, we may wish to add a non-character after the cursor jumps
-      // so that we invoke vscode's inline completion provider with the most up to date cursor pos.
-      // Fix race condition: Wait for the editor operation to complete before moving the cursor
-      if (success && this.finalCursorPos) {
-        // Use setTimeout with a promise to ensure the edit operation is fully applied
-        // before moving the cursor
-        await new Promise<void>((resolve) => {
-          setTimeout(async () => {
-            editor.selection = new vscode.Selection(
-              this.finalCursorPos!,
-              this.finalCursorPos!,
-            );
-
-            // Force VSCode to reevaluate the cursor position by making a small empty edit
-            // then immediately undoing it, ensuring the cursor position is respected
-            await editor.edit(
-              (editBuilder) => {
-                // Create a zero-width edit at cursor position to trigger cursor update
-                editBuilder.insert(this.finalCursorPos!, "");
-              },
-              { undoStopBefore: false, undoStopAfter: false },
-            );
-
-            resolve();
-          }, 10); // Small delay to let VSCode process the previous edit
-        });
-      }
+      // Disable inline suggestions temporarily.
+      // This prevents the race condition between vscode's inline completion provider
+      // and the next edit window manager's cursor repositioning logic.
+      // await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
+      await vscode.workspace
+        .getConfiguration()
+        .update("editor.inlineSuggest.enabled", false, true);
     }
 
     if (success) {
       // Move cursor to the final position if available.
-      // if (this.finalCursorPos) {
-      //   editor.selection = new vscode.Selection(
-      //     this.finalCursorPos,
-      //     this.finalCursorPos,
-      //   );
+      if (this.finalCursorPos) {
+        editor.selection = new vscode.Selection(
+          this.finalCursorPos,
+          this.finalCursorPos,
+        );
 
-      //   await editor.edit((editBuilder) => {
-      //     editBuilder.replace(
-      //       new vscode.Range(this.finalCursorPos!, this.finalCursorPos!),
-      //       "",
-      //     );
-      //   });
-      // }
-      console.log("ane", editor.selection.start, editor.selection.end);
-      await this.hideAllTooltips();
+        // Reenable inline suggestions after we move the cursor.
+        await vscode.workspace
+          .getConfiguration()
+          .update("editor.inlineSuggest.enabled", true, true);
+
+        // This prevents the race condition between vscode's inline completion provider
+        // and the next edit window manager's cursor repositioning logic.
+        // await vscode.commands.executeCommand(
+        //   "editor.action.inlineSuggest.hide",
+        // );
+
+        await this.hideAllTooltips();
+      }
     }
   }
 
@@ -470,11 +444,6 @@ export class NextEditWindowManager {
     | undefined
   > {
     console.log("createSvgTooltip");
-    // const baseTextConfig = {
-    //   "font-family": SVG_CONFIG.fontFamily,
-    //   "font-size": SVG_CONFIG.fontSize,
-    //   fill: this.theme.colors["editor.foreground"],
-    // };
 
     try {
       const tipWidth = SVG_CONFIG.getTipWidth(text);
@@ -483,16 +452,6 @@ export class NextEditWindowManager {
         width: tipWidth,
         height: tipHeight,
       };
-
-      // const lines = text.split("\n");
-      // const globalIndent =
-      //   lines.length > 0 ? (lines[0].match(/^[ \t]*/) || [""])[0].length : 0;
-
-      // const syntaxHighlighter = SyntaxHighlighter.getInstance({
-      //   theme: "one-dark-pro",
-      // });
-
-      // await syntaxHighlighter.init();
 
       const uri = await this.syntaxHighlighter.getDataUri(
         text,
@@ -505,8 +464,6 @@ export class NextEditWindowManager {
           imageType: "svg",
         },
       );
-
-      // console.log(dimensions);
 
       return {
         uri: vscode.Uri.parse(uri),
@@ -532,11 +489,6 @@ export class NextEditWindowManager {
     }
 
     const { uri, dimensions } = uriAndDimensions;
-
-    // Use theme or fallback
-    // const backgroundColour = this.theme.colors["editor.background"];
-    // const tipWidth = SVG_CONFIG.getTipWidth(text);
-    // const tipHeight = SVG_CONFIG.getTipHeight(text);
     const tipWidth = dimensions.width;
     const tipHeight = dimensions.height;
 
@@ -650,9 +602,7 @@ export class NextEditWindowManager {
     editor: vscode.TextEditor,
     position: vscode.Position,
   ): vscode.Position {
-    // Create a position that's offset spaces to the right of the cursor
-    // const offsetChar = position.character + SVG_CONFIG.cursorOffset;
-    // return new vscode.Position(position.line, offsetChar);
+    // Create a position that's offset spaces to the right of the cursor.
 
     const line = editor.document.lineAt(position.line);
     const offsetChar = Math.min(
@@ -692,8 +642,6 @@ export class NextEditWindowManager {
     await this.hideAllTooltips();
     this.currentDecoration = decoration;
     this.activeEditor = editor;
-
-    // console.log(decoration);
 
     // Get the position with offset
     const offsetPosition = this.getOffsetPosition(editor, position);
