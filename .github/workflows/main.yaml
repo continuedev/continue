@@ -104,6 +104,14 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
+      - name: Build packages (Windows)
+        run: build.ps1
+        if: matrix.os == 'windows-latest'
+
+      - name: Build packages (Unix)
+        run: ./build.sh
+        if: matrix.os != 'windows-latest'
+
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
