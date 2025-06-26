@@ -67,6 +67,10 @@ export function UserSettingsForm() {
     });
   };
 
+  const handleOptInNextEditToggle = (value: boolean) => {
+    handleUpdate({ optInNextEditFeature: value });
+  };
+
   useEffect(() => {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
@@ -424,7 +428,7 @@ export function UserSettingsForm() {
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
                     optInNextEditFeature={optInNextEditFeature}
-                    handleUpdate={handleUpdate}
+                    handleOptInNextEditToggle={handleOptInNextEditToggle}
                   />
                 )}
               </div>

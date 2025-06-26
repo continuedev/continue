@@ -43,6 +43,9 @@ import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import { AutocompleteCodeSnippet } from "core/autocomplete/snippets/types";
 import { RecentlyEditedRange } from "core/autocomplete/util/types";
+import setupNextEditWindowManager, {
+  NextEditWindowManager,
+} from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
 import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -161,6 +164,26 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
+        if (newConfig?.experimental?.optInNextEditFeature) {
+          // Set up next edit window manager only for Continue team members
+          await setupNextEditWindowManager(context);
+
+          this.activateNextEdit();
+          await vscode.commands.executeCommand(
+            "setContext",
+            "nextEditWindowActive",
+            false,
+          );
+        } else {
+          NextEditWindowManager.clearInstance();
+          this.deactivateNextEdit();
+          await vscode.commands.executeCommand(
+            "setContext",
+            "nextEditWindowActive",
+            false,
+          );
+        }
+
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);
