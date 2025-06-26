@@ -24,6 +24,8 @@ export async function retrieveContextItemsFromEmbeddings(
   // }
   const includeEmbeddings = !!extras.config.selectedModelByRole.embed;
 
+  console.log("debug1 running retrieval");
+
   // Get tags to retrieve for
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
 
@@ -70,25 +72,22 @@ export async function retrieveContextItemsFromEmbeddings(
   };
 
   const pipeline = new pipelineType(pipelineOptions);
-  const results = await pipeline.run({
-    tags,
-    filterDirectory,
-    query: extras.fullInput,
-    includeEmbeddings,
-  });
+  const results = [] as any[];
 
   if (results.length === 0) {
     if (extras.config.disableIndexing) {
-      void extras.ide.showToast("warning", "No results found.");
-      return [];
-    } else {
       void extras.ide.showToast(
         "warning",
-        "No results found. If you think this is an error, re-index your codebase.",
+        "No results found (Indexing disabled).",
       );
-      // TODO - add "re-index" option to warning message which clears and reindexes codebase
+      return [];
     }
-    return [];
+    return [
+      {
+        ...INSTRUCTIONS_BASE_ITEM,
+        content: "No results were found. Try using other tools.",
+      },
+    ];
   }
 
   return [
