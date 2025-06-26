@@ -120,7 +120,7 @@ export {
   type Completion,
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
-  type CompletionCreateParamsStreaming
+  type CompletionCreateParamsStreaming,
 } from "openai/resources/index";
 
 // export
