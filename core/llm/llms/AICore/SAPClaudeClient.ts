@@ -26,7 +26,8 @@ class SAPClaudeClient {
     private options: SAPClaudeClientOptions;
     private token: Token | null;
     private deployments?: Deployment[];
-    constructor(options: SAPClaudeClientOptions) {
+    model: string;
+    constructor(options: SAPClaudeClientOptions, model: string) {
         this.options = {
             clientid: options.clientid,
             clientsecret: options.clientsecret,
@@ -34,6 +35,7 @@ class SAPClaudeClient {
             resourcegroup: options.resourcegroup || 'default',
             serviceurls: options.serviceurls
         };
+        this.model = model;
         this.token = null;
     }
 
@@ -146,7 +148,7 @@ class SAPClaudeClient {
     async sendMessage(params: any): Promise<any> {
         try {
             const token = await this.getToken();
-            const deploymentId = await this.getDeploymentForModel(CLAUDE_3_7_MODEL_ID)
+            const deploymentId = await this.getDeploymentForModel(this.model)
 
 
             const requestData = {
