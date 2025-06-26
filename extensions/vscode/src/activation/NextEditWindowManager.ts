@@ -181,30 +181,36 @@ export class NextEditWindowManager {
    * @param editor The active text editor
    * @param text Text to display in the tooltip
    */
-  public async showTooltip(editor: vscode.TextEditor, text: string) {
-    if (!text || !this.shouldRenderTip(editor.document.uri)) {
+  public async showTooltip(
+    editor: vscode.TextEditor,
+    newEditRangeSlice: string,
+  ) {
+    if (!newEditRangeSlice || !this.shouldRenderTip(editor.document.uri)) {
       return;
     }
 
-    // Clear any existing decorations first (very important to prevent overlapping)
+    // Clear any existing decorations first (very important to prevent overlapping).
     await this.hideAllTooltips();
 
-    // Store the current tooltip text for accepting later
-    this.currentTooltipText = text;
+    // Store the current tooltip text for accepting later.
+    this.currentTooltipText = newEditRangeSlice;
 
-    // Get cursor position
+    // Get current cursor position.
     const position = editor.selection.active;
     const startPos = Math.max(position.line - 5, 0);
     const endPos = Math.min(position.line + 5, editor.document.lineCount - 1);
-    const originalSlice = editor.document
+    const oldEditRangeSlice = editor.document
       .getText()
       .split("\n")
       .slice(startPos, endPos + 1)
       .join("\n");
 
-    const diffLines = myersDiff(originalSlice, text);
+    if (oldEditRangeSlice === newEditRangeSlice) return;
+
+    const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
     const lineOffsetAtCursorPos = position.line - startPos;
-    const lineContentAtCursorPos = text.split("\n")[lineOffsetAtCursorPos];
+    const lineContentAtCursorPos =
+      newEditRangeSlice.split("\n")[lineOffsetAtCursorPos];
 
     const diff = getRenderableDiff(
       diffLines,
@@ -220,12 +226,12 @@ export class NextEditWindowManager {
     );
 
     // Stops the manager from rendering blank windows when there is nothing to render.
-    if (text === "") {
+    if (newEditRangeSlice === "") {
       return;
     }
 
     // Create and apply decoration with the text
-    await this.renderTooltip(editor, position, text);
+    await this.renderTooltip(editor, position, newEditRangeSlice);
     await vscode.commands.executeCommand(
       "setContext",
       "nextEditWindowActive",
