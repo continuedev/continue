@@ -78,7 +78,6 @@ export function UserSettingsForm() {
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
     config.experimental?.useCurrentFileAsContext ?? false;
-  const useNextEdit = config.experimental?.useNextEdit ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -383,15 +382,6 @@ export function UserSettingsForm() {
                   onToggle={() =>
                     handleUpdate({
                       useCurrentFileAsContext: !useCurrentFileAsContext,
-                    })
-                  }
-                  text="Add Current File by Default"
-                />
-                <ToggleSwitch
-                  isToggled={useNextEdit}
-                  onToggle={() =>
-                    handleUpdate({
-                      useNextEdit: !useNextEdit,
                     })
                   }
                   text="Add Current File by Default"

@@ -28,7 +28,6 @@ export const sharedConfigSchema = z
     displayRawMarkdown: z.boolean(),
     showChatScrollbar: z.boolean(),
     autoAcceptEditToolDiffs: z.boolean(),
-    useNextEdit: z.boolean(),
 
     // `tabAutocompleteOptions` in `ContinueConfig`
     useAutocompleteCache: z.boolean(),
@@ -172,9 +171,6 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.useCurrentFileAsContext !== undefined) {
     configCopy.experimental.useCurrentFileAsContext =
       sharedConfig.useCurrentFileAsContext;
-  }
-  if (sharedConfig.useNextEdit !== undefined) {
-    configCopy.experimental.useNextEdit = sharedConfig.useNextEdit;
   }
   return configCopy;
 }
