@@ -1060,6 +1060,22 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
+
+  claude4Sonnet: {
+    title: "SAP AI Core Claude 4 sonnet",
+    description:
+      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
+    params: {
+      model: "anthropic--claude-4-sonnet",
+      contextLength: 200_000,
+      title: "Claude 4 Sonnet",
+      maxTokens: 8192,
+      apiKey: "", 
+    },
+    providerOptions: ["aiCore"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
   claude35Sonnet: {
     title: "Claude 3.5 Sonnet",
     description:

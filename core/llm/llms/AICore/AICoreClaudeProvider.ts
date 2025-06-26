@@ -25,7 +25,7 @@ export class AICoreClaudeProvider extends BaseLLM {
         contextLength: 128_000,
         completionOptions: {
             model: "anthropic--claude-3.7-sonnet",
-            maxTokens: 4096,
+            maxTokens: 8192,
         },
     };
     private _currentToolResponse: Partial<ToolUseState> | null = null;
@@ -94,7 +94,7 @@ export class AICoreClaudeProvider extends BaseLLM {
                     : undefined,
                 messages: convertedMessages,
                 inferenceConfig: {
-                    maxTokens: 4096,
+                    maxTokens: this.completionOptions.maxTokens || 8192,
                     temperature: 0,
 
                 },
@@ -307,7 +307,7 @@ export class AICoreClaudeProvider extends BaseLLM {
         if(!this.creds){
             this.creds = this.setupAiCore()
         }
-        const client = new SAPClaudeClient(this.creds);
+        const client = new SAPClaudeClient(this.creds, this.model);
         const input = this._generateConverseInput(messages, {
             ...options,
             stream: true,
