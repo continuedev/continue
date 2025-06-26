@@ -39,7 +39,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { baseToolDefinitions } from "../../tools";
+import { getToolsForIde } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -97,7 +97,7 @@ async function loadConfigYaml(options: {
   for (const blockType of BLOCK_TYPES) {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
-      { includeGlobal: true, includeWorkspace: true },
+      { includeGlobal: true, includeWorkspace: true, fileExtType: "yaml" },
       blockType,
     );
     allLocalBlocks.push(
@@ -134,6 +134,7 @@ async function loadConfigYaml(options: {
         rootPath,
       }),
       {
+        renderSecrets: true,
         currentUserSlug: "",
         onPremProxyUrl: null,
         orgScopeId,
@@ -142,9 +143,7 @@ async function loadConfigYaml(options: {
           controlPlaneClient,
           ide,
         ),
-        renderSecrets: true,
         injectBlocks: allLocalBlocks,
-        asConfigResult: true,
       },
     );
     config = unrollResult.config;
@@ -153,13 +152,8 @@ async function loadConfigYaml(options: {
     }
   }
 
-  if (config) {
-    isAssistantUnrolledNonNullable(config)
-      ? errors.push(...validateConfigYaml(config))
-      : errors.push({
-          fatal: true,
-          message: "Assistant includes blocks that don't exist",
-        });
+  if (config && isAssistantUnrolledNonNullable(config)) {
+    errors.push(...validateConfigYaml(config));
   }
 
   if (errors?.some((error) => error.fatal)) {
@@ -193,7 +187,7 @@ async function configYamlToContinueConfig(options: {
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    tools: [...baseToolDefinitions],
+    tools: await getToolsForIde(ide),
     mcpServerStatuses: [],
     contextProviders: [],
     modelsByRole: {
@@ -223,7 +217,8 @@ async function configYamlToContinueConfig(options: {
       config: continueConfig,
       errors: [
         {
-          message: "Found missing blocks in config.yaml",
+          message:
+            "Failed to load config due to missing blocks, see which blocks are missing below",
           fatal: true,
         },
       ],

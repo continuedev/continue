@@ -40,6 +40,7 @@ import { FreeTrialStatus } from "../control-plane/client";
 export enum OnboardingModes {
   API_KEY = "API Key",
   LOCAL = "Local",
+  MODELS_ADD_ON = "Models Add-On",
 }
 
 export interface ListHistoryOptions {
@@ -199,6 +200,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
+  "controlPlane/getModelsAddOnUpgradeUrl": [
+    { vsCodeUriScheme?: string },
+    { url: string } | null,
+  ];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },

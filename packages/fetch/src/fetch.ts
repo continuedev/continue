@@ -5,7 +5,7 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { BodyInit, RequestInit, Response } from "node-fetch";
 import { getAgentOptions } from "./getAgentOptions.js";
 import fetch from "./node-fetch-patch.js";
-import { getProxyFromEnv, shouldBypassProxy } from "./util.js";
+import { getProxy, shouldBypassProxy } from "./util.js";
 
 const { http, https } = (followRedirects as any).default;
 
@@ -89,18 +89,13 @@ export async function fetchwithRequestOptions(
     url.host = "127.0.0.1";
   }
 
-  const agentOptions = getAgentOptions(requestOptions);
+  const agentOptions = await getAgentOptions(requestOptions);
 
   // Get proxy from options or environment variables
-  let proxy = requestOptions?.proxy;
-  if (!proxy) {
-    proxy = getProxyFromEnv(url.protocol);
-  }
+  const proxy = getProxy(url.protocol, requestOptions);
 
   // Check if should bypass proxy based on requestOptions or NO_PROXY env var
-  const shouldBypass =
-    requestOptions?.noProxy?.includes(url.hostname) ||
-    shouldBypassProxy(url.hostname);
+  const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);
 
   // Create agent
   const protocol = url.protocol === "https:" ? https : http;

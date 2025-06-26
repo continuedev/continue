@@ -85,7 +85,7 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
   },
   // {
   //   provider: "cohere",
-  //   model: "embed-english-v3.0",
+  //   model: "embed-v4.0",
   //   apiKey: process.env.COHERE_API_KEY!,
   //   roles: ["embed"],
   // },
@@ -103,7 +103,7 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
   },
   // {
   //   provider: "cohere",
-  //   model: "rerank-english-v3.0",
+  //   model: "rerank-v3.5",
   //   apiKey: process.env.COHERE_API_KEY!,
   //   roles: ["rerank"],
   // },
@@ -172,5 +172,81 @@ describe("Configuration", () => {
     expect((inception2 as OpenAIApi).openai.baseURL).toBe(
       "https://api.example.com",
     );
+  });
+
+  it("should configure Azure OpenAI client with root URL and trailing slash", () => {
+    const azure = constructLlmApi({
+      provider: "azure",
+      apiKey: "sk-xxx",
+      apiBase: "https://test-azure-openai.azure.com/",
+      env: {
+        deployment: "gpt-4.1",
+        apiType: "azure-openai",
+        apiVersion: "2023-05-15",
+      },
+    });
+
+    // The Azure client modifies the baseURL to include the deployment
+    expect((azure as OpenAIApi).openai.baseURL).toBe(
+      "https://test-azure-openai.azure.com/openai/deployments/gpt-4.1",
+    );
+    expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
+  });
+
+  it("should configure Azure OpenAI client with path and trailing slash", () => {
+    const azure = constructLlmApi({
+      provider: "azure",
+      apiKey: "sk-xxx",
+      apiBase: "https://test-azure-openai.azure.com/v1/",
+      env: {
+        deployment: "gpt-4.1",
+        apiType: "azure-openai",
+        apiVersion: "2023-05-15",
+      },
+    });
+
+    // The Azure client modifies the baseURL to include the deployment
+    expect((azure as OpenAIApi).openai.baseURL).toBe(
+      "https://test-azure-openai.azure.com/v1/openai/deployments/gpt-4.1",
+    );
+    expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
+  });
+
+  it("should configure Azure OpenAI client with root URL and no trailing slash", () => {
+    const azure = constructLlmApi({
+      provider: "azure",
+      apiKey: "sk-xxx",
+      apiBase: "https://test-azure-openai.azure.com",
+      env: {
+        deployment: "gpt-4.1",
+        apiType: "azure-openai",
+        apiVersion: "2023-05-15",
+      },
+    });
+
+    // The Azure client modifies the baseURL to include the deployment
+    expect((azure as OpenAIApi).openai.baseURL).toBe(
+      "https://test-azure-openai.azure.com/openai/deployments/gpt-4.1",
+    );
+    expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
+  });
+
+  it("should configure Azure OpenAI client with path and no trailing slash", () => {
+    const azure = constructLlmApi({
+      provider: "azure",
+      apiKey: "sk-xxx",
+      apiBase: "https://test-azure-openai.azure.com/v1",
+      env: {
+        deployment: "gpt-4.1",
+        apiType: "azure-openai",
+        apiVersion: "2023-05-15",
+      },
+    });
+
+    // The Azure client modifies the baseURL to include the deployment
+    expect((azure as OpenAIApi).openai.baseURL).toBe(
+      "https://test-azure-openai.azure.com/v1/openai/deployments/gpt-4.1",
+    );
+    expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
   });
 });
