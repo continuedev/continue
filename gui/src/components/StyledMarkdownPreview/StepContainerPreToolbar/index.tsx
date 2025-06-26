@@ -106,12 +106,7 @@ export function StepContainerPreToolbar({
   const toolCallApplyState = useAppSelector((state) =>
     selectApplyStateByToolCallId(state, forceToolCallId),
   );
-  console.log(
-    "applyState",
-    applyState,
-    "toolCallApplyState",
-    toolCallApplyState,
-  );
+
   /**
    * In the case where `relativeFilepath` is defined, this will just be `relativeFilepathUri`.
    * However, if no `relativeFilepath` is defined, then this will

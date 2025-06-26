@@ -264,12 +264,6 @@ function ParallelListeners() {
         dispatch(updateApplyState(state));
 
         // Handle apply status updates that are associated with current tool call
-        console.log(
-          "WALLAH",
-          currentToolCall,
-          currentToolCallApplyState,
-          state,
-        );
         if (
           currentToolCallApplyState &&
           currentToolCallApplyState.streamId === state.streamId
