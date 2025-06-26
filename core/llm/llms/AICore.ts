@@ -22,7 +22,8 @@ const CAP_MESSAGE = `
 
         3. Once the user approves the summary, proceed with the following steps:
             a. Inform the user that you'll be create a CAP application. Use the 'Example data models' information from the application summary to build a prompt for the CAP MCP Server tools.
-            b. After the CAP MCP Server tools have been used successfully. inform the user that the application created successfully and do any more actions without user asking. 
+            b. After the CAP MCP Server tools have been used successfully. inform the user that the application created successfully and do any more actions without user asking.
+            c. Do not dobule check the application if its created successfully trus the CAP MCP Server tool.
         
         Your final response should only include the application summary.
     </CREATE_CAP_APPLICATION_SYSTEM_PROMPT>
