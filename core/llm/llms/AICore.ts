@@ -114,7 +114,7 @@ export class AICore extends BaseLLM {
             const content = messages[0].content;
             messages[0].content = `<BASIC_INSTRUCTIONS> ${content} </BASIC_INSTRUCTIONS> ${CAP_MESSAGE}`;
         }
-        if (!options.model || options.model.includes("claude-3.7")) {
+        if (!options.model || options.model.includes("claude-3.7") || options.model.includes("claude-4")) {
             if (!this.aICoreClaudeProvider) {
                 this.aICoreClaudeProvider = new AICoreClaudeProvider(this.llmOptions)
             }
