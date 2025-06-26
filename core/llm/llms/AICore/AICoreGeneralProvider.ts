@@ -4,6 +4,7 @@ import os from "os";
 import path from "path";
 import { ChatMessage, CompletionOptions, LLMOptions, MessageContent, Tool, ToolCallDelta } from "../../../index.js";
 import { BaseLLM } from "../../index.js";
+import { sanitizeToolName } from "./AICoreUtils.js";
 
 const AI_CORE_CREDS_FILENAME = "ai-core-creds.json"
 
@@ -31,7 +32,7 @@ export class AICoreGeneralProvider extends BaseLLM {
             return {
                 type: "function",
                 function: {
-                    "name": tool.function.name,
+                    "name": sanitizeToolName(tool.function.name),
                     "description": tool.function.description,
                     "parameters": tool.function.parameters,
                     "strict": tool.function.strict,

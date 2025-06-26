@@ -7,6 +7,7 @@ import { stripImages } from "../../../util/messageContent.js";
 import { ContentBlock, Message, ToolConfiguration } from "@aws-sdk/client-bedrock-runtime";
 import { getSecureID } from "../../utils/getSecureID.js";
 import SAPClaudeClient, { SAPClaudeClientOptions } from "./SAPClaudeClient.js";
+import { sanitizeToolName } from "./AICoreUtils.js";
 
 const AI_CORE_CREDS_FILENAME = "ai-core-creds.json"
 
@@ -69,7 +70,7 @@ export class AICoreClaudeProvider extends BaseLLM {
                 ? ({
                     tools: options.tools.map((tool) => ({
                         toolSpec: {
-                            name: tool.function.name,
+                            name: sanitizeToolName(tool.function.name),
                             description: tool.function.description,
                             inputSchema: {
                                 json: tool.function.parameters,
