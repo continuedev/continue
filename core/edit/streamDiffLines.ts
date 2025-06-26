@@ -112,7 +112,7 @@ export async function* streamDiffLines({
   // If any rules are present this will result in using chat instead of legacy completion
   const systemMessage = rulesToInclude
     ? getSystemMessageWithRules({
-        rules: rulesToInclude,
+        availableRules: rulesToInclude,
         userMessage:
           typeof prompt === "string"
             ? ({
@@ -125,7 +125,7 @@ export async function* streamDiffLines({
               ) as UserChatMessage | ToolResultChatMessage | undefined),
         baseSystemMessage: undefined,
         contextItems: [],
-      })
+      }).systemMessage
     : undefined;
 
   if (systemMessage) {

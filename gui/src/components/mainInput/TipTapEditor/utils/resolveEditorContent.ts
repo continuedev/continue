@@ -14,6 +14,7 @@ import {
   TextMessagePart,
 } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { findLastIndex } from "core/util/findLast";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
@@ -291,18 +292,6 @@ async function gatherContextItems({
   contextItems.push(...defaultContextItems.flat());
 
   return contextItems;
-}
-
-function findLastIndex<T>(
-  array: T[],
-  predicate: (value: T, index: number, obj: T[]) => boolean,
-): number {
-  for (let i = array.length - 1; i >= 0; i--) {
-    if (predicate(array[i], i, array)) {
-      return i;
-    }
-  }
-  return -1; // if no element satisfies the predicate
 }
 
 function resvolePromptBlock(p: JSONContent): string | undefined {

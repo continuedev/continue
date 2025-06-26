@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions } from "core";
+import { LLMFullCompletionOptions } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
+import { constructMessages } from "core/llm/constructMessages";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
@@ -8,6 +9,7 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  setAppliedRulesAtIndex,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
@@ -17,24 +19,36 @@ import { callCurrentTool } from "./callCurrentTool";
 export const streamNormalInput = createAsyncThunk<
   void,
   {
-    messages: ChatMessage[];
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async (
-    { messages, legacySlashCommandData },
-    { dispatch, extra, getState },
-  ) => {
-    // Gather state
+  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
+    // Get updated history after the update
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
-    const streamAborter = state.session.streamAborter;
     if (!selectedChatModel) {
-      throw new Error("Default model not defined");
+      throw new Error("No chat model selected");
     }
+
+    const { messages, appliedRules, lastMessageIndex } = constructMessages(
+      state.session.mode,
+      [...state.session.history],
+      selectedChatModel,
+      state.config.config.rules,
+      state.ui.ruleSettings,
+    );
+
+    dispatch(
+      setAppliedRulesAtIndex({
+        index: lastMessageIndex,
+        appliedRules,
+      }),
+    );
+
+    const streamAborter = state.session.streamAborter;
 
     let completionOptions: LLMFullCompletionOptions = {};
     const activeTools = selectActiveTools(state);
