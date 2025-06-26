@@ -155,6 +155,12 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
+        if (config?.experimental?.useNextEdit) {
+          // activate next edit
+        } else {
+          // nexteditwindowmanager.deactivates
+        }
+
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);

@@ -1359,6 +1359,7 @@ export interface ExperimentalConfig {
   /**
    * If enabled, will add the current file as context.
    */
+  useNextEdit?: boolean;
   useCurrentFileAsContext?: boolean;
 }
 
