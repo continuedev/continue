@@ -258,28 +258,7 @@ export class VsCodeMessenger {
     this.onWebview("optInNextEditFeature", async (msg) => {
       if (msg.data.optIn) {
         // Set up next edit window manager only for Continue team members
-        await setupNextEditWindowManager(context, {
-          applyText: async (editor, diff, position) => {
-            const editableRegionStartLine = Math.max(0, position.line - 5);
-            const editableRegionEndLine = Math.min(
-              editor.document.lineCount - 1,
-              position.line + 5,
-            );
-            const startPos = new vscode.Position(editableRegionStartLine, 0);
-            const endPosChar = editor.document.lineAt(editableRegionEndLine)
-              .text.length;
-
-            const endPos = new vscode.Position(
-              editableRegionEndLine,
-              endPosChar,
-            );
-            const editRange = new vscode.Range(startPos, endPos);
-
-            return await editor.edit((editBuilder) => {
-              editBuilder.replace(editRange, diff);
-            });
-          },
-        });
+        await setupNextEditWindowManager(context);
 
         this.vsCodeExtension.activateNextEdit();
         await vscode.commands.executeCommand(
