@@ -6,5 +6,6 @@ export const toolUsageEventAllSchema = baseDevDataAllSchema.extend({
   functionName: z.string(),
   functionArgs: z.string(),
   parsedArgs: z.any(),
+  succeeded: z.boolean(),
   output: z.array(z.any()).optional(),
 });

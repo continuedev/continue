@@ -18,7 +18,9 @@ import {
   RuleWithSource,
   Session,
   SessionMetadata,
+  ToolCallState,
 } from "core";
+import { safeParseToolCallArgs } from "core/tools/parseArgs";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
@@ -27,6 +29,25 @@ import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
+
+const getIdeMessenger = () => (window as any).ideMessenger;
+
+const logToolUsage = (toolCallState: ToolCallState, success: boolean) => {
+  const ideMessenger = getIdeMessenger();
+  if (ideMessenger) {
+    ideMessenger.post("devdata/log", {
+      name: "toolUsage",
+      data: {
+        toolCallId: toolCallState.toolCallId,
+        functionName: toolCallState.toolCall.function.name,
+        functionArgs: toolCallState.toolCall.function.arguments,
+        parsedArgs: safeParseToolCallArgs(toolCallState.toolCall),
+        succeeded: success,
+        output: toolCallState.output || [],
+      },
+    });
+  }
+};
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -559,6 +580,7 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "errored";
+        logToolUsage(toolCallState, false);
       }
     },
     acceptToolCall: (
@@ -573,6 +595,7 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "done";
+        logToolUsage(toolCallState, true);
       }
     },
     setToolCallCalling: (

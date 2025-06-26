@@ -14,10 +14,11 @@ export const toolUsageEventSchema_0_2_0 = toolUsageEventAllSchema.pick({
   functionName: true,
   functionArgs: true,
   parsedArgs: true,
+  succeeded: true,
   output: true,
 });
 
-export const autocompleteEventSchema_0_2_0_noCode =
+export const toolUsageEventSchema_0_2_0_noCode =
   toolUsageEventSchema_0_2_0.omit({
     functionArgs: true,
     parsedArgs: true,
