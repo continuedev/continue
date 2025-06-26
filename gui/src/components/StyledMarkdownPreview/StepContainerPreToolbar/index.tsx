@@ -293,6 +293,7 @@ export function StepContainerPreToolbar({
       <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
         <div className="max-w-[50% flex flex-row items-center">
           <ChevronDownIcon
+            data-testid="toggle-codeblock"
             onClick={() => setIsExpanded(!isExpanded)}
             className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"

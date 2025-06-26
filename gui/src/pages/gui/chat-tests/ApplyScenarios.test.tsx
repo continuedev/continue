@@ -1,17 +1,18 @@
-import { screen, waitFor } from "@testing-library/dom";
+import { act } from "@testing-library/react";
 import { renderWithProviders } from "../../../util/test/render";
 import { Chat } from "../Chat";
+import {
+  getElementByTestId,
+  verifyNotPresentByTestId,
+  verifyNotPresentByText,
+} from "./utils";
 
 test("Chat apply scenarios: handle apply updates and display the accept / reject all buttons", async () => {
   const { ideMessenger } = await renderWithProviders(<Chat />);
 
   // Use queryByText which returns null when element isn't found
-  const acceptAllButton = screen.queryByText("Accept All");
-  const rejectAllButton = screen.queryByText("Reject All");
-
-  // Assert that the buttons don't exist
-  expect(acceptAllButton).not.toBeInTheDocument();
-  expect(rejectAllButton).not.toBeInTheDocument();
+  await verifyNotPresentByText("Accept All");
+  await verifyNotPresentByText("Reject All");
 
   for (let i = 0; i < 5; i++) {
     ideMessenger.mockMessageToWebview("updateApplyState", {
@@ -26,9 +27,7 @@ test("Chat apply scenarios: handle apply updates and display the accept / reject
   });
 
   // Wait for the buttons to appear
-  await waitFor(() => {
-    expect(screen.getByTestId("accept-reject-all-buttons")).toBeInTheDocument();
-  });
+  await getElementByTestId("accept-reject-all-buttons");
 
   // IDE sends back message that it is done
   ideMessenger.mockMessageToWebview("updateApplyState", {
@@ -37,10 +36,8 @@ test("Chat apply scenarios: handle apply updates and display the accept / reject
   });
 
   // Wait for the buttons to disappear
-  await waitFor(() => {
-    expect(screen.queryByTestId("edit-accept-button")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("edit-reject-button")).not.toBeInTheDocument();
-  });
+  await verifyNotPresentByTestId("edit-accept-button");
+  await verifyNotPresentByTestId("edit-reject-button");
 });
 
 test("Chat apply scenarios: show apply cancellation", async () => {
@@ -57,18 +54,14 @@ test("Chat apply scenarios: show apply cancellation", async () => {
   }
 
   // Wait for applying toolbar to appear
-  await waitFor(() => {
-    const cancelApplyButton = screen.getByTestId(
+  await getElementByTestId("notch-applying-text");
+
+  await act(async () => {
+    const cancelApplyButton = await getElementByTestId(
       "notch-applying-cancel-button",
     );
-    const applyingText = screen.getByTestId("notch-applying-text");
-
-    expect(cancelApplyButton).toBeInTheDocument();
-    expect(applyingText).toBeInTheDocument();
+    cancelApplyButton.click();
   });
-
-  const cancelApplyButton = screen.getByTestId("notch-applying-cancel-button");
-  cancelApplyButton.click();
 
   // Verify that rejectDiff message has been posted to ideMessenger
   expect(messengerPostSpy).toHaveBeenCalledWith("rejectDiff", {});
@@ -79,15 +72,8 @@ test("Chat apply scenarios: show apply cancellation", async () => {
     streamId: "12345",
   });
 
-  await waitFor(() => {
-    const cancelApplyButton = screen.queryByTestId(
-      "notch-applying-cancel-button",
-    );
-    const applyingText = screen.queryByTestId("notch-applying-text");
-
-    expect(cancelApplyButton).not.toBeInTheDocument();
-    expect(applyingText).not.toBeInTheDocument();
-  });
+  await verifyNotPresentByTestId("notch-applying-text");
+  await verifyNotPresentByTestId("notch-applying-cancel-button");
 
   // Cleanup spy
   messengerPostSpy.mockRestore();

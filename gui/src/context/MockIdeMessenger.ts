@@ -1,7 +1,6 @@
 import { ChatMessage, IDE, PromptLog } from "core";
 import { AuthType } from "core/control-plane/AuthTypes";
 import {
-  FromIdeProtocol,
   FromWebviewProtocol,
   ToCoreProtocol,
   ToWebviewProtocol,
@@ -15,70 +14,84 @@ import {
 } from "core/protocol/util";
 import { IIdeMessenger } from "./IdeMessenger";
 
-async function defaultMockHandleMessage<T extends keyof FromWebviewProtocol>(
-  messageType: T,
-  data: FromWebviewProtocol[T][0],
-): Promise<FromWebviewProtocol[T][1]> {
-  function returnFor<K extends keyof FromWebviewProtocol>(
-    _: K,
-    value: FromWebviewProtocol[K][1],
-  ): FromWebviewProtocol[T][1] {
-    return value as unknown as FromWebviewProtocol[T][1];
-  }
+type MockResponses = Partial<{
+  [K in keyof FromWebviewProtocol]: FromWebviewProtocol[K][1];
+}>;
 
-  switch (messageType) {
-    case "history/list":
-      return returnFor("history/list", [
-        {
-          title: "Session 1",
-          sessionId: "session-1",
-          dateCreated: new Date().toString(),
-          workspaceDirectory: "/tmp",
-        },
-      ]);
-    case "getControlPlaneSessionInfo":
-      return returnFor("getControlPlaneSessionInfo", {
-        AUTH_TYPE: AuthType.WorkOsStaging,
-        accessToken: "",
-        account: {
-          label: "",
-          id: "",
-        },
-      });
-    case "config/getSerializedProfileInfo":
-      return returnFor("config/getSerializedProfileInfo", {
-        organizations: [],
-        profileId: "test-profile",
-        result: {
-          config: undefined,
-          errors: [],
-          configLoadInterrupted: false,
-        },
-        selectedOrgId: "local",
-      });
-    default:
-      throw new Error(`Unknown message type ${messageType}`);
-  }
-}
+const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
+  fileExists: true,
+  getCurrentFile: {
+    isUntitled: false,
+    contents: "Current file contents",
+    path: "file:///Users/user/workspace1/current_file.py",
+  },
+  "controlPlane/getFreeTrialStatus": {
+    autocompleteLimit: 1000,
+    optedInToFreeTrial: false,
+    chatLimit: 1000,
+    autocompleteCount: 0,
+    chatCount: 0,
+  },
+  getWorkspaceDirs: [
+    "file:///Users/user/workspace1",
+    "file:///Users/user/workspace2",
+  ],
+  "history/list": [
+    {
+      title: "Session 1",
+      sessionId: "session-1",
+      dateCreated: new Date().toString(),
+      workspaceDirectory: "/tmp",
+    },
+  ],
+  "history/save": undefined,
+  getControlPlaneSessionInfo: {
+    AUTH_TYPE: AuthType.WorkOsStaging,
+    accessToken: "",
+    account: {
+      label: "",
+      id: "",
+    },
+  },
+  "config/getSerializedProfileInfo": {
+    organizations: [],
+    profileId: "test-profile",
+    result: {
+      config: undefined,
+      errors: [],
+      configLoadInterrupted: false,
+    },
+    selectedOrgId: "local",
+  },
+  "chatDescriber/describe": "Session summary",
+  applyToFile: undefined,
+};
 
+const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [
+  {
+    role: "assistant",
+    content: "This is a test",
+  },
+];
 export class MockIdeMessenger implements IIdeMessenger {
   ide: IDE;
-  private messageHandlers: Map<
-    keyof FromIdeProtocol,
-    Array<(data: any) => void>
-  > = new Map();
+  // private messageHandlers: Map<
+  //   keyof FromIdeProtocol,
+  //   Array<(data: any) => void>
+  // > = new Map();
 
   constructor() {
     this.ide = new MessageIde(
-      (messageType, data) => {
-        throw new Error("Not implemented");
+      async (messageType, data) => {
+        const response = await this.request.bind(this)(messageType, data);
+        if (response.status === "error") {
+          throw new Error(response.error);
+        } else {
+          return response.content;
+        }
       },
       (messageType, callback) => {
-        // Store the callback in our handlers map
-        if (!this.messageHandlers.has(messageType)) {
-          this.messageHandlers.set(messageType, []);
-        }
-        this.messageHandlers.get(messageType)?.push(callback);
+        return;
       },
     );
   }
@@ -108,16 +121,17 @@ export class MockIdeMessenger implements IIdeMessenger {
     );
   }
 
-  // Ability to customize the response for llmStreamChat
-  chatResponse: ChatMessage[][] = [
-    [
+  responses: MockResponses = { ...DEFAULT_MOCK_CORE_RESPONSES };
+  chatResponse: ChatMessage[] = DEFAULT_CHAT_RESPONSE;
+  chatStreamDelay: number = 0;
+  setChatResponseText(text: string): void {
+    this.chatResponse = [
       {
         role: "assistant",
-        content: "This is a test",
+        content: text,
       },
-    ],
-  ];
-  chatStreamDelay: number = 0;
+    ];
+  }
 
   async *llmStreamChat(
     msg: ToCoreProtocol["llm/streamChat"][0],
@@ -128,8 +142,11 @@ export class MockIdeMessenger implements IIdeMessenger {
         console.log("MockIdeMessenger: Stream aborted");
         return undefined;
       }
-      console.log("MockIdeMessenger: Yielding chunk", response);
-      yield response;
+      console.log(
+        "MockIdeMessenger: Yielding chunk",
+        JSON.stringify(response, null, 2),
+      );
+      yield [response];
       if (this.chatStreamDelay > 0) {
         await new Promise((resolve) =>
           setTimeout(resolve, this.chatStreamDelay),
@@ -150,12 +167,16 @@ export class MockIdeMessenger implements IIdeMessenger {
     messageType: T,
     data: FromWebviewProtocol[T][0],
   ): Promise<WebviewSingleProtocolMessage<T>> {
-    const content = await defaultMockHandleMessage(messageType, data);
-    return {
-      status: "success",
-      content,
-      done: true,
-    };
+    if (messageType in this.responses) {
+      const content = this.responses[messageType];
+      return {
+        status: "success",
+        content,
+        done: true,
+      };
+    }
+    console.error(messageType);
+    throw new Error("MockIdeMessenger: No response defined for " + messageType);
   }
 
   respond<T extends keyof ToWebviewProtocol>(
@@ -173,5 +194,11 @@ export class MockIdeMessenger implements IIdeMessenger {
     GeneratorReturnType<FromWebviewProtocol[T][1]> | undefined
   > {
     return undefined;
+  }
+
+  resetMocks(): void {
+    this.responses = { ...DEFAULT_MOCK_CORE_RESPONSES };
+    this.chatResponse = DEFAULT_CHAT_RESPONSE;
+    this.chatStreamDelay = 0;
   }
 }

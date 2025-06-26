@@ -6,6 +6,7 @@ export const editToolImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
+  console.log("EDIT TOOL IMPL", args, toolCallId, extras);
   if (!extras.streamId) {
     throw new Error("Invalid apply state");
   }
@@ -16,26 +17,13 @@ export const editToolImpl: ClientToolImpl = async (
   if (!firstUriMatch) {
     throw new Error(`${args.filepath} does not exist`);
   }
-  const apply = await extras.ideMessenger.request("applyToFile", {
+  extras.ideMessenger.post("applyToFile", {
     streamId: extras.streamId,
     text: args.changes,
     toolCallId,
     filepath: firstUriMatch,
   });
-  if (apply.status === "error") {
-    throw new Error(apply.error);
-  }
-  const state = extras.getState();
-  const autoAccept = !!state.config.config.ui?.autoAcceptEditToolDiffs;
-  if (autoAccept) {
-    const out = await extras.ideMessenger.request("acceptDiff", {
-      streamId: extras.streamId,
-      filepath: firstUriMatch,
-    });
-    if (out.status === "error") {
-      throw new Error(out.error);
-    }
-  }
+
   return {
     respondImmediately: false,
     output: undefined, // No immediate output.

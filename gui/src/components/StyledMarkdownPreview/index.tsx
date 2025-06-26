@@ -15,6 +15,7 @@ import {
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
+import { selectApplyStateByToolCallId } from "../../redux/slices/sessionSlice";
 import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 import { getFontSize } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
@@ -126,7 +127,7 @@ interface StyledMarkdownPreviewProps {
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
   disableManualApply?: boolean;
-  forceStreamId?: string;
+  toolCallId?: string;
   expandCodeblocks?: boolean;
 }
 
@@ -196,11 +197,15 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const itemIndexRef = useUpdatingRef(props.itemIndex);
 
   const codeblockStreamIds = useRef<string[]>([]);
-  useEffect(() => {
-    if (props.forceStreamId) {
-      codeblockStreamIds.current = [props.forceStreamId];
-    }
-  }, [props.forceStreamId, codeblockStreamIds]);
+  const toolCallApplyState = useAppSelector((state) =>
+    selectApplyStateByToolCallId(state, props.toolCallId),
+  );
+  const toolCallApplyStateRef = useUpdatingRef(toolCallApplyState);
+  // useEffect(() => {
+  //   if (toolCallApplyState) {
+  //     codeblockStreamIds.current = Array(1toolCallApplyState.streamId.repeat();
+  //   }
+  // }, [toolCallApplyState, codeblockStreamIds]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -294,9 +299,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const isLastCodeblock = preChildProps["data-islastcodeblock"];
 
-          if (codeblockStreamIds.current[codeBlockIndex] === undefined) {
+          if (toolCallApplyStateRef.current) {
             codeblockStreamIds.current[codeBlockIndex] =
-              props.forceStreamId ?? uuidv4();
+              toolCallApplyStateRef.current.streamId;
+          } else {
+            codeblockStreamIds.current[codeBlockIndex] = uuidv4();
           }
 
           return (

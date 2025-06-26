@@ -1,37 +1,37 @@
 import { EnhancedStore } from "@reduxjs/toolkit";
 import { BrowserSerializedContinueConfig, ModelDescription } from "core";
 import { SerializedOrgWithProfiles } from "core/config/ProfileLifecycleManager";
+import { copyOf } from "core/util";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
-import { RootState } from "../../redux/store";
 
 interface TestConfigUpdateParams {
   store: EnhancedStore;
-  messenger: MockIdeMessenger;
+  ideMessenger: MockIdeMessenger;
   newProfileId?: string;
   newOrgId?: string;
   newOrgs?: SerializedOrgWithProfiles[];
-
-  configUpdates?: Partial<BrowserSerializedContinueConfig>;
+  editConfig?: (
+    current: BrowserSerializedContinueConfig,
+  ) => BrowserSerializedContinueConfig;
 }
 
 export function triggerConfigUpdate({
   store,
-  messenger,
-  configUpdates,
+  ideMessenger,
+  editConfig,
   newOrgs,
   newOrgId,
   newProfileId,
 }: TestConfigUpdateParams) {
   const state = store.getState();
-  messenger.mockMessageToWebview("configUpdate", {
+  ideMessenger.mockMessageToWebview("configUpdate", {
     organizations: newOrgs ?? state.profiles.organizations,
     selectedOrgId: newOrgId ?? state.profiles.selectedOrganizationId,
     profileId: newProfileId ?? state.profiles.selectedProfileId,
     result: {
-      config: {
-        ...state.config.config,
-        ...configUpdates,
-      },
+      config: editConfig
+        ? editConfig(copyOf(state.config.config))
+        : state.config.config,
       configLoadInterrupted: false,
       errors: [],
     },
@@ -40,31 +40,25 @@ export function triggerConfigUpdate({
 
 export function addAndSelectChatModel(
   store: EnhancedStore,
-  messenger: MockIdeMessenger,
+  ideMessenger: MockIdeMessenger,
   llmDesc: ModelDescription,
 ) {
-  const state = store.getState() as RootState;
   triggerConfigUpdate({
     store,
-    messenger,
-    configUpdates: {
-      modelsByRole: {
-        ...state.config.config.modelsByRole,
-        chat: [...state.config.config.modelsByRole.chat, llmDesc],
-      },
-      selectedModelByRole: {
-        ...state.config.config.selectedModelByRole,
-        chat: llmDesc,
-      },
+    ideMessenger,
+    editConfig(current) {
+      current.modelsByRole.chat.push(llmDesc);
+      current.selectedModelByRole.chat = llmDesc;
+      return current;
     },
   });
 }
 
 export function addAndSelectMockLlm(
   store: EnhancedStore,
-  messenger: MockIdeMessenger,
+  ideMessenger: MockIdeMessenger,
 ) {
-  addAndSelectChatModel(store, messenger, {
+  addAndSelectChatModel(store, ideMessenger, {
     model: "mock",
     provider: "mock",
     title: "Mock LLM",
