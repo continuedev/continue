@@ -290,8 +290,8 @@ export class NextEditWindowManager {
     const position = editor.selection.active;
 
     let success = false;
-    if (this.textApplier && false) {
-      success = await this.textApplier!.applyText(
+    if (this.textApplier) {
+      success = await this.textApplier.applyText(
         editor,
         text,
         position,
