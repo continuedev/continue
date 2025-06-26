@@ -34,8 +34,8 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
         name: "toolUsage",
         data: {
           toolCallId: toolCallState.toolCallId,
-          functionName: toolCallState.toolCall.function.name,
-          functionArgs: toolCallState.toolCall.function.arguments,
+          functionName: toolCallState.toolCall?.function?.name,
+          functionArgs: toolCallState.toolCall?.function?.arguments,
           toolCallArgs: safeParseToolCallArgs(toolCallState.toolCall),
           parsedArgs: toolCallState.parsedArgs,
           output: finalOutput || toolCallState.output || [],
