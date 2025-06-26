@@ -42,6 +42,11 @@ import {
   tokensGeneratedEventSchema_0_2_0,
   tokensGeneratedEventSchema_0_2_0_noCode,
 } from "./tokensGenerated/v0.2.0.js";
+import { toolUsageEventAllSchema } from "./toolUsage/index.js";
+import {
+  toolUsageEventSchema_0_2_0,
+  toolUsageEventSchema_0_2_0_noCode,
+} from "./toolUsage/v0.2.0.js";
 
 const semverRegex =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
@@ -72,6 +77,7 @@ const devEventAllVersionDataSchemas = z.object({
   tokensGenerated: tokensGeneratedEventAllSchema,
   chatInteraction: chatInteractionEventAllSchema,
   editInteraction: editInteractionEventAllSchema,
+  toolUsage: toolUsageEventAllSchema,
 });
 
 // Version and level specific schemas are organized here
@@ -97,6 +103,7 @@ export const devDataVersionedSchemas = {
       tokensGenerated: tokensGeneratedEventSchema_0_2_0,
       chatInteraction: chatInteractionEventSchema_0_2_0,
       editInteraction: editInteractionEventSchema_0_2_0,
+      toolUsage: toolUsageEventSchema_0_2_0,
     },
     noCode: {
       autocomplete: autocompleteEventSchema_0_2_0_noCode,
@@ -104,6 +111,7 @@ export const devDataVersionedSchemas = {
       tokensGenerated: tokensGeneratedEventSchema_0_2_0_noCode,
       chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
       editInteraction: editInteractionEventSchema_0_2_0_noCode,
+      toolUsage: toolUsageEventSchema_0_2_0_noCode,
     },
   },
 };
