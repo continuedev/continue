@@ -24,8 +24,6 @@ export async function retrieveContextItemsFromEmbeddings(
   // }
   const includeEmbeddings = !!extras.config.selectedModelByRole.embed;
 
-  console.log("debug1 running retrieval");
-
   // Get tags to retrieve for
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
 
@@ -72,7 +70,12 @@ export async function retrieveContextItemsFromEmbeddings(
   };
 
   const pipeline = new pipelineType(pipelineOptions);
-  const results = [] as any[];
+  const results = await pipeline.run({
+    tags,
+    filterDirectory,
+    query: extras.fullInput,
+    includeEmbeddings,
+  });
 
   if (results.length === 0) {
     if (extras.config.disableIndexing) {
