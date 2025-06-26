@@ -1,7 +1,4 @@
-import * as fs from "fs/promises";
 import { JSDOM } from "jsdom";
-import satori from "satori";
-// import puppeteer, { Browser, ScreenshotOptions } from "puppeteer";
 import { BundledTheme, codeToHtml, getSingletonHighlighter } from "shiki";
 import { escapeForSVG, kebabOfStr } from "../util/text";
 
@@ -24,16 +21,6 @@ interface ConversionOptions extends HTMLOptions {
 interface Dimensions {
   width: number;
   height: number;
-}
-
-interface DataAndDimensions {
-  data: Buffer;
-  dimensions: Dimensions;
-}
-
-interface DataUriAndDimensions {
-  uri: DataUri;
-  dimensions: Dimensions;
 }
 
 type DataUri = PngUri | SvgUri;
@@ -159,48 +146,6 @@ export class SyntaxHighlighter {
     });
   }
 
-  // async convertToPNG(
-  //   code: string,
-  //   language: string = "javascript",
-  //   fontSize: number,
-  //   dimensions: Dimensions,
-  //   lineHeight: number,
-  //   options: ConversionOptions,
-  // ): Promise<DataAndDimensions> {
-  //   if (!this.browser) {
-  //     throw new Error("Browser not initialized. Call init() first.");
-  //   }
-
-  //   const highlightedCodeHtml = await this.highlightCode(code, language);
-
-  //   const page = await this.browser.newPage();
-  //   await page.setContent(highlightedCodeHtml);
-
-  //   const dims = await page.evaluate(() => {
-  //     const body = document.body;
-  //     return {
-  //       width: body.scrollWidth,
-  //       height: body.scrollHeight,
-  //     };
-  //   });
-
-  //   await page.setViewport({
-  //     width: 3840,
-  //     height: 2160,
-  //     deviceScaleFactor: 1,
-  //   });
-
-  //   const screenshot = await page.screenshot({
-  //     type: "png",
-  //     omitBackground: true,
-  //     ...options.screenshotOptions,
-  //   });
-
-  //   await page.close();
-
-  //   return { data: screenshot, dimensions: dims };
-  // }
-
   async convertToBlankSVG(
     dimensions: Dimensions,
     options: ConversionOptions,
@@ -239,51 +184,6 @@ export class SyntaxHighlighter {
 </svg>`;
 
     return Buffer.from(svg, "utf8");
-  }
-
-  async convertToSVGWithSatori(
-    code: string,
-    language: string = "javascript",
-    fontSize: number,
-    dimensions: Dimensions,
-    lineHeight: number,
-    options: ConversionOptions,
-  ): Promise<Buffer> {
-    const highlightedCodeHtml = await this.highlightCode(code, language);
-
-    console.log(code);
-    console.log(highlightedCodeHtml);
-
-    // Convert to SVG using Satori
-    const fontData = await this.loadFont();
-    const svg = await satori(highlightedCodeHtml, {
-      width: dimensions.width, // You'll need to determine appropriate width
-      height: dimensions.height, // Dynamic height based on content
-      fonts: [
-        {
-          name: "YourMonospaceFontName",
-          data: fontData,
-          style: "normal",
-        },
-      ],
-    });
-
-    console.log(svg);
-    return Buffer.from(svg, "utf8");
-  }
-
-  // Function to load your font
-  async loadFont(): Promise<Buffer> {
-    // Option 1: If running in Node.js, you can load from the filesystem
-    console.log(process.cwd());
-    return Buffer.from(
-      await fs.readFile(
-        // TODO: fix this to actually resolve to path
-        "/home/jacob/continue/continue/fonts/Cascadia_Mono/static/CascadiaMono-Regular.ttf",
-        "binary",
-      ),
-      "binary",
-    );
   }
 
   convertShikiHtmlToSvgGut(
