@@ -51,6 +51,7 @@ type SessionState = {
     curIndex: number;
   };
   newestToolbarPreviewForInput: Record<string, string>;
+  hasReasoningEnabled?: boolean;
 };
 
 const initialState: SessionState = {
@@ -594,6 +595,9 @@ export const sessionSlice = createSlice({
     setIsInEdit: (state, action: PayloadAction<boolean>) => {
       state.isInEdit = action.payload;
     },
+    setHasReasoningEnabled: (state, action: PayloadAction<boolean>) => {
+      state.hasReasoningEnabled = action.payload;
+    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -691,6 +695,7 @@ export const {
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
   setIsInEdit,
+  setHasReasoningEnabled,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

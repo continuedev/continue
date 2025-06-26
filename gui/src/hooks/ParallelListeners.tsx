@@ -5,7 +5,7 @@ import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
-import { setConfigResult } from "../redux/slices/configSlice";
+import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
   updateEditStateApplyState,
@@ -20,6 +20,7 @@ import {
 import {
   acceptToolCall,
   addContextItemsAtIndex,
+  setHasReasoningEnabled,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
@@ -86,12 +87,20 @@ function ParallelListeners() {
         setLocalStorage("fontSize", configResult.config.ui.fontSize);
         document.body.style.fontSize = `${configResult.config.ui.fontSize}px`;
       }
+
+      if (
+        configResult.config?.selectedModelByRole.chat?.completionOptions
+          ?.reasoning
+      ) {
+        dispatch(setHasReasoningEnabled(true));
+      }
     },
     [dispatch, hasDoneInitialConfigLoad],
   );
 
   const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
+      dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
@@ -99,6 +108,7 @@ function ParallelListeners() {
       if (result.status === "success") {
         await handleConfigUpdate(initial, result.content);
       }
+      dispatch(setConfigLoading(false));
     },
     [ideMessenger, handleConfigUpdate],
   );
@@ -241,7 +251,7 @@ function ParallelListeners() {
         dispatch(updateEditStateApplyState(state));
 
         if (state.status === "closed") {
-          dispatch(exitEdit({}));
+          void dispatch(exitEdit({}));
         }
       } else {
         // chat or agent

@@ -43,7 +43,7 @@ export class CodebaseIndexer {
    * - To limit memory usage for indexes that perform computations locally, e.g. FTS
    * - To make as few requests as possible to the embeddings providers
    */
-  filesPerBatch = 500;
+  filesPerBatch = 200;
   private indexingCancellationController: AbortController | undefined;
   private codebaseIndexingState: IndexingProgressUpdate;
   private readonly pauseToken: PauseToken;
@@ -75,16 +75,10 @@ export class CodebaseIndexer {
     this.pauseToken = new PauseToken(initialPaused);
   }
 
-  /**
-   * Set the paused state of the indexer
-   */
   set paused(value: boolean) {
     this.pauseToken.paused = value;
   }
 
-  /**
-   * Get the current paused state of the indexer
-   */
   get paused(): boolean {
     return this.pauseToken.paused;
   }
@@ -235,7 +229,9 @@ export class CodebaseIndexer {
     }
   }
 
-  async *refreshFiles(files: string[]): AsyncGenerator<IndexingProgressUpdate> {
+  private async *refreshFiles(
+    files: string[],
+  ): AsyncGenerator<IndexingProgressUpdate> {
     let progress = 0;
     if (files.length === 0) {
       yield {
@@ -525,7 +521,7 @@ export class CodebaseIndexer {
             repoName,
           )) {
             yield {
-              progress: progress,
+              progress,
               desc,
               status: "indexing",
             };
