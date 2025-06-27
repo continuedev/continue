@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { varWithFallback } from "../styles/theme";
 
-export const defaultBorderRadius = "5px";
+export const defaultBorderRadius = "0.5rem";
 export const lightGray = "#999998";
 export const greenButtonColor = "#189e72";
 
