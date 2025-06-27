@@ -8,6 +8,7 @@
     Note, this was benchmarked at sub-millisecond
 */
 import { headerIsMarkdown } from "./headerIsMarkdown";
+import { isOpeningNestedBlock } from "./isOpeningNestedBlock";
 
 export const patchNestedMarkdown = (source: string): string => {
   // Early return if no markdown codeblock pattern is found (including GitHub variants)
@@ -24,10 +25,16 @@ export const patchNestedMarkdown = (source: string): string => {
     if (nestCount > 0) {
       // Inside a markdown block
       if (line.match(/^`+$/)) {
-        // Ending a block with just backticks (```)
-        nestCount--;
-        if (nestCount === 0) {
-          lines[i] = "~~~"; // End of markdown block
+        // Found bare backticks - determine if opening or closing
+        if (isOpeningNestedBlock(trimmedLines, i, nestCount)) {
+          // Opening a nested codeblock
+          nestCount++;
+        } else {
+          // Closing a block
+          nestCount--;
+          if (nestCount === 0) {
+            lines[i] = "~~~"; // End of markdown block
+          }
         }
       } else if (line.startsWith("```")) {
         // Going into a nested codeblock
