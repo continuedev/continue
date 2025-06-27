@@ -141,7 +141,7 @@ class SageMaker extends BaseLLM {
     }
   }
 
-  async embed(chunks: string[]) {
+  async _embed(chunks: string[]) {
     const credentials = await this._getCredentials();
     const client = new SageMakerRuntimeClient({
       region: this.region,

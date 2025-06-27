@@ -9,7 +9,6 @@ export interface ClientToolExtras {
   getState: () => RootState;
   dispatch: AppThunkDispatch;
   ideMessenger: IIdeMessenger;
-  streamId?: string;
 }
 
 export interface ClientToolOutput {

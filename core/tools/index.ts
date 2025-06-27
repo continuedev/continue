@@ -1,4 +1,4 @@
-import { ConfigDependentToolParams, Tool } from "..";
+import { ConfigDependentToolParams, IDE, Tool } from "..";
 import { createNewFileTool } from "./definitions/createNewFile";
 import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
@@ -16,11 +16,13 @@ import { viewDiffTool } from "./definitions/viewDiff";
 import { viewRepoMapTool } from "./definitions/viewRepoMap";
 import { viewSubdirectoryTool } from "./definitions/viewSubdirectory";
 
+// missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
+export const localOnlyToolDefinitions = [grepSearchTool];
+
 export const baseToolDefinitions = [
   readFileTool,
   createNewFileTool,
   runTerminalCommandTool,
-  grepSearchTool,
   globSearchTool,
   searchWebTool,
   viewDiffTool,
@@ -38,3 +40,8 @@ export const getConfigDependentToolDefinitions = (
     ? [searchAndReplaceInFileTool, viewRepoMapTool, viewSubdirectoryTool]
     : [editFileTool]),
 ];
+
+export const getToolsForIde = async (ide: IDE) =>
+  (await ide.isWorkspaceRemote())
+    ? baseToolDefinitions
+    : [...baseToolDefinitions, ...localOnlyToolDefinitions];
