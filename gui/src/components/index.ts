@@ -12,6 +12,9 @@ export const vscForeground = varWithFallback("foreground");
 export const vscButtonBackground = varWithFallback("primary-background");
 export const vscButtonForeground = varWithFallback("primary-foreground");
 export const vscEditorBackground = varWithFallback("editor-background");
+export const vscTextCodeBlockBackground = varWithFallback(
+  "textCodeBlockBackground",
+);
 export const vscListActiveBackground = varWithFallback("list-active");
 export const vscFocusBorder = varWithFallback("border-focus");
 export const vscListActiveForeground = varWithFallback(

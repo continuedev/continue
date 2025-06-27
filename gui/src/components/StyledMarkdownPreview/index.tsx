@@ -77,14 +77,13 @@ const StyledMarkdown = styled.div<{
     }
     word-wrap: break-word;
     border-radius: ${defaultBorderRadius};
-    background-color: ${vscEditorBackground};
+    background-color: var(--vscode-textCodeBlock-background);
     font-size: ${getFontSize() - 2}px;
     font-family: var(--vscode-editor-font-family);
   }
 
   code:not(pre > code) {
     font-family: var(--vscode-editor-font-family);
-    color: var(--vscode-input-placeholderForeground);
   }
 
   background-color: ${(props) => props.bgColor};
