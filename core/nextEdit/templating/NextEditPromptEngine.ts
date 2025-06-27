@@ -2,8 +2,11 @@ import { IDE, Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
 import {
+  EDITABLE_REGION_END_TOKEN,
+  EDITABLE_REGION_START_TOKEN,
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+  USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
 
 export type Prompt = SystemPrompt | UserPrompt;
@@ -106,7 +109,7 @@ export async function renderFineTunedUserPrompt(
       //   helper.filepath,
       // );
 
-      const editedCodeWithPins = insertPins(
+      const editedCodeWithPins = insertTokens(
         helper.fileContents.split("\n"),
         helper.pos,
       );
@@ -125,23 +128,14 @@ export async function renderFineTunedUserPrompt(
 }
 
 export async function renderDefaultBasicUserPrompt(
-  // originalCode: string,
-  // editedCode: string,
   snippets: SnippetPayload,
   ide: IDE,
-  // cursorPos: Position,
   helper: HelperVars,
 ): Promise<UserPrompt> {
   const ideInfo = await ide.getIdeInfo();
   switch (ideInfo.ideType) {
     case "vscode":
-      // const diffs = await compareAndReturnDiff(
-      //   originalCode,
-      //   editedCode,
-      //   helper.filepath,
-      // );
-
-      const editedCodeWithPins = insertPins(
+      const editedCodeWithPins = insertTokens(
         helper.fileContents.split("\n"),
         helper.pos,
       );
@@ -160,11 +154,8 @@ export async function renderDefaultBasicUserPrompt(
 }
 
 export async function renderFineTunedBasicUserPrompt(
-  // originalCode: string,
-  // editedCode: string,
   snippets: SnippetPayload,
   ide: IDE,
-  // cursorPos: Position,
   helper: HelperVars,
   diffContext: string,
 ): Promise<UserPrompt> {
@@ -172,7 +163,7 @@ export async function renderFineTunedBasicUserPrompt(
   switch (ideInfo.ideType) {
     case "vscode":
       const lines = helper.fileContents.split("\n");
-      const editedCodeWithPins = insertPins(lines, helper.pos);
+      const editedCodeWithPins = insertTokens(lines, helper.pos);
 
       return {
         role: "user",
@@ -187,13 +178,13 @@ export async function renderFineTunedBasicUserPrompt(
   }
 }
 
-function insertPins(lines: string[], cursorPos: Position) {
-  const a = insertCursorPin(lines, cursorPos);
-  const b = insertEditableRegionPinsWithStaticRange(a, cursorPos);
+function insertTokens(lines: string[], cursorPos: Position) {
+  const a = insertCursorToken(lines, cursorPos);
+  const b = insertEditableRegionTokensWithStaticRange(a, cursorPos);
   return b.join("\n");
 }
 
-function insertCursorPin(lines: string[], cursorPos: Position) {
+function insertCursorToken(lines: string[], cursorPos: Position) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
@@ -204,13 +195,13 @@ function insertCursorPin(lines: string[], cursorPos: Position) {
 
   lines[cursorPos.line] =
     lines[cursorPos.line].slice(0, charPos) +
-    "<|user_cursor_is_here|>" +
+    USER_CURSOR_IS_HERE_TOKEN +
     lines[cursorPos.line].slice(charPos);
 
   return lines;
 }
 
-function insertEditableRegionPinsWithStaticRange(
+function insertEditableRegionTokensWithStaticRange(
   lines: string[],
   cursorPos: Position,
 ) {
@@ -230,16 +221,19 @@ function insertEditableRegionPinsWithStaticRange(
 
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),
-    "<|editable_region_start|>",
+    EDITABLE_REGION_START_TOKEN,
     ...lines.slice(editableRegionStart, editableRegionEnd + 1),
-    "<|editable_region_end|>",
+    EDITABLE_REGION_END_TOKEN,
     ...lines.slice(editableRegionEnd + 1),
   ];
 
   return instrumentedLines;
 }
 
-function insertEditableRegionPinsWithAst(lines: string[], cursorPos: Position) {
+function insertEditableRegionTokensWithAst(
+  lines: string[],
+  cursorPos: Position,
+) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
@@ -248,9 +242,8 @@ function insertEditableRegionPinsWithAst(lines: string[], cursorPos: Position) {
   const lineLength = lines[cursorPos.line].length;
   const charPos = Math.min(Math.max(0, cursorPos.character), lineLength);
 
-  lines[cursorPos.line] =
-    lines[cursorPos.line].slice(0, charPos) +
-    "<|user_cursor_is_here|>" +
+  (lines[cursorPos.line] =
+    lines[cursorPos.line].slice(0, charPos) + USER_CURSOR_IS_HERE_TOKEN),
     lines[cursorPos.line].slice(charPos);
 
   return lines;
