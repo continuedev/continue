@@ -2,6 +2,7 @@ import { IDE, Position } from "../..";
 import { GetLspDefinitionsFunction } from "../../autocomplete/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { NextEditProvider } from "../NextEditProvider";
+import { EditAggregator } from "./aggregateEdits";
 import { BeforeAfterDiff, createDiff, DiffFormatType } from "./diffFormatting";
 import { processNextEditData } from "./processNextEditData";
 
@@ -23,7 +24,8 @@ export const processSmallEdit = async (
   );
 
   // Get the current context data from the most recent message
-  const currentData = (global._editAggregator as any).latestContextData || {
+  const currentData = (EditAggregator.getInstance() as any)
+    .latestContextData || {
     configHandler: configHandler,
     getDefsFromLspFunction: getDefsFromLspFunction,
     recentlyEditedRanges: [],

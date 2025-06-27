@@ -28,8 +28,6 @@ declare global {
       messageIde: string,
     ) => void;
   }
-
-  var _editAggregator: EditAggregator | undefined;
 }
 
 export interface ChunkWithoutID {

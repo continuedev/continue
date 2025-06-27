@@ -21,7 +21,6 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
-import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
@@ -68,6 +67,7 @@ import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
 import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
+import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
 import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -715,31 +715,30 @@ export class Core {
         contextSize: 5,
       };
 
-      if (!global._editAggregator) {
-        global._editAggregator = new EditAggregator(
-          EDIT_AGGREGATION_OPTIONS,
-          (
-            beforeAfterdiff: BeforeAfterDiff,
-            cursorPosBeforeEdit: Position,
-            cursorPosAfterPrevEdit: Position,
-          ) => {
-            void processSmallEdit(
-              beforeAfterdiff,
-              cursorPosBeforeEdit,
-              cursorPosAfterPrevEdit,
-              data.configHandler,
-              data.getDefsFromLspFunction,
-              this.ide,
-            );
-          },
-        );
-      }
+      EditAggregator.getInstance(
+        EDIT_AGGREGATION_OPTIONS,
+        (
+          beforeAfterdiff: BeforeAfterDiff,
+          cursorPosBeforeEdit: Position,
+          cursorPosAfterPrevEdit: Position,
+        ) => {
+          void processSmallEdit(
+            beforeAfterdiff,
+            cursorPosBeforeEdit,
+            cursorPosAfterPrevEdit,
+            data.configHandler,
+            data.getDefsFromLspFunction,
+            this.ide,
+          );
+        },
+      );
 
       const workspaceDir =
         data.actions.length > 0 ? data.actions[0].workspaceDir : undefined;
 
-      // Store the latest context data on the aggregator
-      (global._editAggregator as any).latestContextData = {
+      // Store the latest context data
+      const instance = EditAggregator.getInstance();
+      (instance as any).latestContextData = {
         configHandler: data.configHandler,
         getDefsFromLspFunction: data.getDefsFromLspFunction,
         recentlyEditedRanges: data.recentlyEditedRanges,
@@ -749,7 +748,7 @@ export class Core {
 
       // queueMicrotask prevents blocking the UI thread during typing
       queueMicrotask(() => {
-        void global._editAggregator.processEdits(data.actions);
+        void EditAggregator.getInstance().processEdits(data.actions);
       });
     });
 
