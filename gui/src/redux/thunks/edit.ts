@@ -17,6 +17,7 @@ import {
 import {
   newSession,
   setActive,
+  setInactive,
   setIsInEdit,
   setMainEditorContentTrigger,
   setMode,
@@ -59,6 +60,8 @@ export const streamEditThunk = createAsyncThunk<
           prompt,
           range: codeToEdit[0] as RangeInFileWithContents,
         });
+
+        dispatch(setInactive());
 
         if (response.status === "error") {
           throw new Error(response.error);
