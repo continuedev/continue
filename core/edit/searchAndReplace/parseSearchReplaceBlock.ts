@@ -96,6 +96,7 @@ export function parseSearchReplaceBlock(
  *
  * @param content - The content containing multiple search/replace blocks
  * @returns Array of complete search/replace blocks found
+ * @throws Error if any malformed blocks are encountered
  */
 export function parseAllSearchReplaceBlocks(
   content: string,
@@ -115,7 +116,11 @@ export function parseAllSearchReplaceBlocks(
         const result = parseSearchReplaceBlock(blockContent);
         if (result.isComplete) {
           blocks.push(result);
+        } else if (result.error) {
+          // Fail fast on any parsing error
+          throw new Error(result.error);
         }
+        // If incomplete but no error, it's just a partial block - continue processing
       }
       currentBlockLines = [line];
       inBlock = true;
@@ -129,7 +134,7 @@ export function parseAllSearchReplaceBlocks(
         if (result.isComplete) {
           blocks.push(result);
         } else if (result.error) {
-          // If there's an error, throw it immediately
+          // Fail fast on any parsing error
           throw new Error(result.error);
         }
         currentBlockLines = [];

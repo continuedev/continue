@@ -1290,6 +1290,13 @@ export interface ShowFilePayload {
   filepath: string;
 }
 
+export interface ApplyToFilePayload {
+  streamId: string;
+  filepath?: string;
+  text: string;
+  toolCallId?: string;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {

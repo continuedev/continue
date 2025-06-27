@@ -11,8 +11,9 @@ import {
 type EditToolCallProps = {
   relativeFilePath: string;
   changes: string;
-  toolCallId?: string;
   historyIndex: number;
+  toolCallId?: string;
+  expandCodeblocks?: boolean;
 };
 
 export function EditFile(props: EditToolCallProps) {
@@ -42,7 +43,7 @@ export function EditFile(props: EditToolCallProps) {
 
   return (
     <StyledMarkdownPreview
-      expandCodeblocks // TODO: Conditional based on edit tool or search & replace
+      expandCodeblocks={props.expandCodeblocks ?? false}
       isRenderingInStepContainer
       disableManualApply
       source={src}

@@ -58,13 +58,11 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     }
 
     // Single applyToFile call with all accumulated changes
-    // Use regular apply mode (not search/replace mode) to leverage existing diff logic
     await extras.ideMessenger.request("applyToFile", {
       text: currentContent,
       streamId: extras.streamId,
       filepath: resolvedFilepath,
       toolCallId,
-      // Don't use search/replace mode since we're providing the complete final content
     });
 
     // Return success - applyToFile will handle the completion state
