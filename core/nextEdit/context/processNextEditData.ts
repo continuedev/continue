@@ -5,7 +5,6 @@ import { ConfigHandler } from "../../config/ConfigHandler";
 import { DataLogger } from "../../data/log";
 import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
-import { createDiff, DiffFormatType } from "./diffFormatting";
 
 const randomNumberBetween = (min: number, max: number) => {
   min = Math.ceil(min); // Ensure min is an integer
@@ -65,9 +64,9 @@ export const processNextEditData = async ({
     modelName,
   );
 
-  console.log(
-    createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
-  );
+  // console.log(
+  //   createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
+  // );
 
   void DataLogger.getInstance().logDevData({
     name: "nextEdit",
