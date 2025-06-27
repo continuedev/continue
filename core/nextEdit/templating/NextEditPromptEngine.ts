@@ -1,4 +1,5 @@
-import { IDE, Position } from "../..";
+import Handlebars from "handlebars";
+import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
 import {
@@ -19,6 +20,74 @@ interface SystemPrompt {
 interface UserPrompt {
   role: "user";
   content: string;
+}
+
+export interface NextEditTemplate {
+  template: string;
+}
+
+export interface TemplateVars {
+  userEdits: string;
+  languageShorthand: string;
+  userExcerpts: string;
+}
+
+type TemplateRenderer = (vars: TemplateVars) => string;
+
+type NextEditModelName = "mercury-coder-nextedit" | "other-potential-model";
+
+const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
+  "mercury-coder-nextedit": {
+    template:
+      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n\`\`\`{{{languageShorthand}}}\n{{{userExcerpts}}}\`\`\`",
+  },
+  "other-potential-model": {
+    template: "", // Empty for now.
+  },
+};
+
+function templateRendererOfModel(
+  modelName: NextEditModelName,
+): TemplateRenderer {
+  const template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
+  if (!template) {
+    throw new Error(`Model ${modelName} is not supported for next edit.`);
+  }
+
+  const compiledTemplate = Handlebars.compile(template.template);
+
+  return (vars: TemplateVars): string => {
+    return compiledTemplate(vars);
+  };
+}
+
+export function renderPrompt(
+  helper: HelperVars,
+  userEdits: string,
+): UserPrompt {
+  const modelName = helper.modelName as NextEditModelName;
+
+  // Validate that the modelName is actually a supported model.
+  if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {
+    throw new Error(`${helper.modelName} is not yet supported for next edit.`);
+  }
+
+  const renderer = templateRendererOfModel(modelName);
+  const editedCodeWithTokens = insertTokens(
+    helper.fileContents.split("\n"),
+    helper.pos,
+  );
+
+  const tv: TemplateVars = {
+    userEdits,
+    languageShorthand: helper.lang.name,
+    userExcerpts: editedCodeWithTokens,
+  };
+
+  return {
+    role: "user",
+    content: renderer(tv),
+  };
 }
 
 export function renderDefaultSystemPrompt(): SystemPrompt {
@@ -92,91 +161,97 @@ export function renderDefaultUserPrompt(
   };
 }
 
-export async function renderFineTunedUserPrompt(
-  // originalCode: string,
-  // editedCode: string,
-  snippets: SnippetPayload,
-  ide: IDE,
-  // cursorPos: Position,
-  helper: HelperVars,
-): Promise<UserPrompt> {
-  const ideInfo = await ide.getIdeInfo();
-  switch (ideInfo.ideType) {
-    case "vscode":
-      // const diffs = await compareAndReturnDiff(
-      //   originalCode,
-      //   editedCode,
-      //   helper.filepath,
-      // );
+// export async function renderFineTunedUserPrompt(
+//   snippets: SnippetPayload,
+//   ide: IDE,
+//   helper: HelperVars,
+// ): Promise<UserPrompt> {
+//   const ideInfo = await ide.getIdeInfo();
+//   switch (ideInfo.ideType) {
+//     case "vscode":
+//       const editedCodeWithPins = insertTokens(
+//         helper.fileContents.split("\n"),
+//         helper.pos,
+//       );
 
-      const editedCodeWithPins = insertTokens(
-        helper.fileContents.split("\n"),
-        helper.pos,
-      );
+//       return {
+//         role: "user",
+//         content: renderStringTemplate(
+//           mercuryCoderTemplate,
+//           snippets.diffSnippets.join("\n"),
+//           helper.lang.name,
+//           editedCodeWithPins,
+//         ),
+//       };
 
-      return {
-        role: "user",
-        content: `### User Edits:\n\n${snippets.diffSnippets}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
-      };
+//     case "jetbrains":
+//       return {
+//         role: "user",
+//         content: "",
+//       };
+//   }
+// }
 
-    case "jetbrains":
-      return {
-        role: "user",
-        content: "",
-      };
-  }
-}
+// export async function renderDefaultBasicUserPrompt(
+//   snippets: SnippetPayload,
+//   ide: IDE,
+//   helper: HelperVars,
+// ): Promise<UserPrompt> {
+//   const ideInfo = await ide.getIdeInfo();
+//   switch (ideInfo.ideType) {
+//     case "vscode":
+//       const editedCodeWithPins = insertTokens(
+//         helper.fileContents.split("\n"),
+//         helper.pos,
+//       );
 
-export async function renderDefaultBasicUserPrompt(
-  snippets: SnippetPayload,
-  ide: IDE,
-  helper: HelperVars,
-): Promise<UserPrompt> {
-  const ideInfo = await ide.getIdeInfo();
-  switch (ideInfo.ideType) {
-    case "vscode":
-      const editedCodeWithPins = insertTokens(
-        helper.fileContents.split("\n"),
-        helper.pos,
-      );
+//       return {
+//         role: "user",
+//         content: renderStringTemplate(
+//           mercuryCoderTemplate,
+//           JSON.stringify(snippets),
+//           helper.lang.name,
+//           editedCodeWithPins,
+//         ),
+//       };
 
-      return {
-        role: "user",
-        content: `### User Edits:\n\n${JSON.stringify(snippets)}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
-      };
+//     case "jetbrains":
+//       return {
+//         role: "user",
+//         content: "",
+//       };
+//   }
+// }
 
-    case "jetbrains":
-      return {
-        role: "user",
-        content: "",
-      };
-  }
-}
+// export async function renderFineTunedBasicUserPrompt(
+//   snippets: SnippetPayload,
+//   ide: IDE,
+//   helper: HelperVars,
+//   diffContext: string,
+// ): Promise<UserPrompt> {
+//   const ideInfo = await ide.getIdeInfo();
+//   switch (ideInfo.ideType) {
+//     case "vscode":
+//       const lines = helper.fileContents.split("\n");
+//       const editedCodeWithPins = insertTokens(lines, helper.pos);
 
-export async function renderFineTunedBasicUserPrompt(
-  snippets: SnippetPayload,
-  ide: IDE,
-  helper: HelperVars,
-  diffContext: string,
-): Promise<UserPrompt> {
-  const ideInfo = await ide.getIdeInfo();
-  switch (ideInfo.ideType) {
-    case "vscode":
-      const lines = helper.fileContents.split("\n");
-      const editedCodeWithPins = insertTokens(lines, helper.pos);
+//       return {
+//         role: "user",
+//         content: renderStringTemplate(
+//           mercuryCoderTemplate,
+//           diffContext,
+//           helper.lang.name,
+//           editedCodeWithPins,
+//         ),
+//       };
 
-      return {
-        role: "user",
-        content: `### User Edits:\n\n${diffContext}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
-      };
-
-    case "jetbrains":
-      return {
-        role: "user",
-        content: "",
-      };
-  }
-}
+//     case "jetbrains":
+//       return {
+//         role: "user",
+//         content: "",
+//       };
+//   }
+// }
 
 function insertTokens(lines: string[], cursorPos: Position) {
   const a = insertCursorToken(lines, cursorPos);

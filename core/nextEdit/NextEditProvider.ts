@@ -23,7 +23,7 @@ import {
   Prompt,
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
-  renderFineTunedBasicUserPrompt,
+  renderPrompt,
 } from "./templating/NextEditPromptEngine.js";
 // import { renderPrompt } from "./templating/NextEditPromptEngine.js";
 
@@ -237,12 +237,13 @@ export class NextEditProvider {
       } else {
         prompts.push(
           // await renderFineTunedUserPrompt(snippetPayload, this.ide, helper),
-          await renderFineTunedBasicUserPrompt(
-            snippetPayload,
-            this.ide,
-            helper,
-            this.diffContext,
-          ),
+          // await renderFineTunedBasicUserPrompt(
+          //   snippetPayload,
+          //   this.ide,
+          //   helper,
+          //   this.diffContext,
+          // ),
+          renderPrompt(helper, this.diffContext),
         );
       }
 
