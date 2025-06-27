@@ -77,7 +77,7 @@ const StyledMarkdown = styled.div<{
     }
     word-wrap: break-word;
     border-radius: 0.3125rem;
-    background-color: var(--vscode-textCodeBlock-background);
+    background-color: ${vscEditorBackground};
     font-size: ${getFontSize() - 2}px;
     font-family: var(--vscode-editor-font-family);
   }
