@@ -1,6 +1,7 @@
 import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
 import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
+import { v4 as uuid } from "uuid";
 import { ClientToolImpl } from "./callClientTool";
 
 export const searchReplaceToolImpl: ClientToolImpl = async (
@@ -10,10 +11,7 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
 ) => {
   const { filepath, diff } = args;
 
-  // Check if we have a streamId from a pre-existing apply state
-  if (!extras.streamId) {
-    throw new Error("Invalid apply state - no streamId available");
-  }
+  const streamId = uuid();
 
   // Resolve the file path
   const resolvedFilepath = await resolveRelativePathInDir(
@@ -58,11 +56,15 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     }
 
     // Single applyToFile call with all accumulated changes
+    // This works becaues of our logic in `applyCodeBlock` that determines
+    // that the full file rewrite here can be applied instantly, so the diff
+    // lines are just st
     await extras.ideMessenger.request("applyToFile", {
-      text: currentContent,
-      streamId: extras.streamId,
-      filepath: resolvedFilepath,
+      streamId,
       toolCallId,
+      text: currentContent,
+      filepath: resolvedFilepath,
+      isSearchAndReplace: true,
     });
 
     // Return success - applyToFile will handle the completion state

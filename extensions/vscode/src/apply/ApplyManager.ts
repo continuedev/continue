@@ -4,6 +4,8 @@ import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
 import { ApplyToFilePayload } from "core";
+import { myersDiff } from "core/diff/myers";
+import { generateLines } from "core/diff/util";
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeIde } from "../VsCodeIde";
@@ -25,6 +27,7 @@ export class ApplyManager {
     filepath,
     text,
     toolCallId,
+    isSearchAndReplace,
   }: ApplyToFilePayload) {
     await this.webviewProtocol.request("updateApplyState", {
       streamId,
@@ -43,16 +46,30 @@ export class ApplyManager {
       return;
     }
 
-    // Regular apply logic
     const hasExistingDocument = !!activeTextEditor.document.getText().trim();
 
     if (hasExistingDocument) {
-      await this.handleExistingDocument(
-        activeTextEditor,
-        text,
-        streamId,
-        toolCallId,
-      );
+      // Currently `isSearchAndReplace` will always provide a full file rewrite
+      // as the contents of `text`, so we can just instantly apply
+      if (isSearchAndReplace) {
+        const diffLinesGenerator = generateLines(
+          myersDiff(activeTextEditor.document.getText(), text),
+        );
+
+        await this.verticalDiffManager.streamDiffLines(
+          diffLinesGenerator,
+          true,
+          streamId,
+          toolCallId,
+        );
+      } else {
+        await this.handleExistingDocument(
+          activeTextEditor,
+          text,
+          streamId,
+          toolCallId,
+        );
+      }
     } else {
       await this.handleEmptyDocument(
         activeTextEditor,
