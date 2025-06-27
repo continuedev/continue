@@ -91,8 +91,9 @@ async function bundleBinary(target) {
     child.on("message", (msg) => {
       if (msg.error) {
         reject();
+      } else {
+        resolve();
       }
-      resolve();
     });
   });
 }

@@ -154,8 +154,9 @@ async function copySqlite(target) {
     child.on("message", (msg) => {
       if (msg.error) {
         reject();
+      } else {
+        resolve();
       }
-      resolve();
     });
   });
 }
@@ -176,8 +177,9 @@ async function copyEsbuild(target) {
     child.on("message", (msg) => {
       if (msg.error) {
         reject();
+      } else {
+        resolve();
       }
-      resolve();
     });
   });
 }

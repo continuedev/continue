@@ -101,8 +101,9 @@ async function installAndCopyNodeModules(packageName, toCopy) {
     child.on("message", (msg) => {
       if (msg.error) {
         reject();
+      } else {
+        resolve();
       }
-      resolve();
     });
   });
 }
