@@ -32,7 +32,6 @@ describe("searchReplaceToolImpl", () => {
 
     // Create mock extras
     mockExtras = {
-      streamId: "test-stream-id",
       ideMessenger: mockIdeMessenger,
       getState: vi.fn(),
       dispatch: vi.fn(),
