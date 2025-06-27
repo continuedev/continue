@@ -19,7 +19,7 @@ class FolderContextProvider extends BaseContextProvider {
     displayTitle: "Folder",
     description: "Type to search",
     type: "submenu",
-    dependsOnIndexing: true,
+    indexTypes: ["embeddings"],
   };
 
   async getContextItems(
