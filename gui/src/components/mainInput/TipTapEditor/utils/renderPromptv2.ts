@@ -43,7 +43,7 @@ export async function getPromptV2ContextRequests(
 
       // Files
       const resolvedFileUri = await resolveRelativePathInDir(
-        match[0],
+        match[1],
         ideMessenger.ide,
         workspaceDirs,
       );
@@ -54,10 +54,11 @@ export async function getPromptV2ContextRequests(
             return [];
           }
           visitedFiles.add(resolvedFileUri);
+          // As well as any context providers it references
           await addContextRequestsRecursive(contents);
         }
         contextRequests.push({
-          provider: name,
+          provider: "file",
           query: resolvedFileUri,
         });
       }

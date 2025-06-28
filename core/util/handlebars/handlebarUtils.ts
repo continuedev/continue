@@ -90,7 +90,7 @@ export async function prepareTemplatedFilepaths(
       }
     } catch (e) {
       console.error(`Error reading file in prompt file ${filepath}:`, e);
-      templateData[letter] = `[Error reading file ${filepath}]`;
+      templateData[letter] = `[Error reading file "${filepath}"]`;
     }
   }
 

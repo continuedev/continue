@@ -30,7 +30,9 @@ export async function getRenderedV1Prompt(
         if (response.status === "success") {
           return response.content.map((item) => item.content).join("\n\n");
         } else {
-          throw new Error(`Failed to get context items from provider: ${name}`);
+          throw new Error(
+            `Failed to get context items from provider "${name}": ${response.error}`,
+          );
         }
       },
     ],
@@ -40,7 +42,7 @@ export async function getRenderedV1Prompt(
     return resolveRelativePathInDir(path, ideMessenger.ide, workspaceDirs);
   };
   const handlebars = await import("handlebars");
-  return await renderTemplatedString(
+  let rendered = await renderTemplatedString(
     handlebars,
     command.prompt,
     { input: userInput },
@@ -48,4 +50,9 @@ export async function getRenderedV1Prompt(
     ideMessenger.ide.readFile.bind(ideMessenger.ide),
     getUriFromPath,
   );
+  // For prompt file append the input if it isn't rendered
+  if (!rendered.includes(userInput)) {
+    rendered = rendered + `\n\n${userInput}`;
+  }
+  return rendered.trim();
 }
