@@ -1,23 +1,28 @@
-import { ArrowPathIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Tool, ToolCallState } from "core";
 import { ComponentType, useMemo, useState } from "react";
 import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
-import { ToolbarButtonWithTooltip } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ToolbarButtonWithTooltip";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { toolCallStateToContextItems } from "./toolCallStateToContextItem";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
+import { TruncateHistoryIcon } from "./TruncateHistoryIcon";
 
 interface SimpleToolCallUIProps {
   toolCallState: ToolCallState;
   tool: Tool | undefined;
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
+  historyIndex: number;
 }
 
 export function SimpleToolCallUI({
   icon: Icon,
   toolCallState,
   tool,
+  historyIndex,
 }: SimpleToolCallUIProps) {
+  const history = useAppSelector((state) => state.session.history);
+  const dispatch = useAppDispatch();
   const shownContextItems = useMemo(() => {
     const contextItems = toolCallStateToContextItems(toolCallState);
     return contextItems.filter((item) => !item.hidden);
@@ -55,15 +60,8 @@ export function SimpleToolCallUI({
           </div>
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
-        <div>
-          <ToolbarButtonWithTooltip
-            tooltipContent="Resubmit"
-            onClick={() => {
-              console.log("Resubmit clicked");
-            }}
-          >
-            <ArrowPathIcon className="h-4 w-4" />
-          </ToolbarButtonWithTooltip>
+        <div className="flex flex-row items-center gap-1.5">
+          <TruncateHistoryIcon historyIndex={historyIndex} />
           {args.length > 0 ? (
             <ArgsToggleIcon
               isShowing={showingArgs}

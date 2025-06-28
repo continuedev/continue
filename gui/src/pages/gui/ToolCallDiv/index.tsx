@@ -80,6 +80,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
         icon={
           props.toolCallState.status === "generated" ? ArrowRightIcon : icon
         }
+        historyIndex={props.historyIndex}
       />
     );
   }
@@ -89,6 +90,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       icon={getStatusIcon(props.toolCallState.status)}
       tool={tool}
       toolCallState={props.toolCallState}
+      historyIndex={props.historyIndex}
     >
       <FunctionSpecificToolCallDiv
         toolCall={props.toolCall}
