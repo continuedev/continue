@@ -52,7 +52,7 @@ import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
-import { generateCommitMessage } from "./commands/slash/commit";
+import { generateCommitMessage } from "./commands/slash/built-in-legacy/commit";
 import {
   setupLocalConfig,
   setupProviderConfig,

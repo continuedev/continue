@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 
 import { ContextMenuConfig, ILLM, ModelInstaller } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
-import { generateCommitMessage } from "core/commands/slash/commit";
+import { generateCommitMessage } from "core/commands/slash/built-in-legacy/commit";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
