@@ -546,7 +546,7 @@ class Bedrock extends BaseLLM {
   }
 
   // EMBED //
-  async embed(chunks: string[]): Promise<number[][]> {
+  async _embed(chunks: string[]): Promise<number[][]> {
     const credentials = await this._getCredentials();
     const client = new BedrockRuntimeClient({
       region: this.region,

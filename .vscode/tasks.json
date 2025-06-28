@@ -103,6 +103,9 @@
         "clear": true
       },
       "options": {
+        "env": {
+          "SKIP_INSTALLS": "true"
+        },
         "cwd": "${workspaceFolder}/extensions/vscode"
       }
     },

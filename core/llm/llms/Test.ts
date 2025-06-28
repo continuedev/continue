@@ -1,7 +1,9 @@
+import * as fs from "fs";
 import { ChatMessage, CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 const HARDCODED_CHAT_RESPONSE = "THIS IS A HARDCODED RESPONSE";
+const NEXT_EDIT_COMPLETION: string = "<|editable_region_start|>\nHELLO\n";
 
 class TestLLM extends BaseLLM {
   static providerName = "test";
@@ -24,7 +26,19 @@ class TestLLM extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    yield this.findResponse(prompt) || `PROMPT: ${prompt}`;
+    fs.writeFileSync(
+      "/home/jacob/testllm.txt",
+      JSON.stringify(prompt, null, 2),
+    );
+    if (
+      prompt === "NEXT_EDIT" ||
+      prompt ===
+        "<|im_start|>user\nNEXT_EDIT<|im_end|>\n<|im_start|>assistant\n"
+    ) {
+      yield NEXT_EDIT_COMPLETION;
+    } else {
+      yield this.findResponse(prompt) || `PROMPT: ${prompt}`;
+    }
   }
 
   protected async *_streamChat(

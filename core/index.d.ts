@@ -731,6 +731,8 @@ export interface IDE {
 
   isTelemetryEnabled(): Promise<boolean>;
 
+  isWorkspaceRemote(): Promise<boolean>;
+
   getUniqueId(): Promise<string>;
 
   getTerminalContents(): Promise<string>;

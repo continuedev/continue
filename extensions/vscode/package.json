@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.50",
+  "version": "1.1.52",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -336,12 +336,19 @@
         "group": "Continue"
       },
       {
-        "command": "nextEditWindow.hideTooltips",
-        "title": "Hide Tooltip Window"
+        "command": "continue.nextEditWindow.hideNextEditSuggestion",
+        "category": "Continue",
+        "title": "Hide Next Edit Suggestion"
       },
       {
-        "command": "nextEditWindow.acceptNextEdit",
+        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
+        "category": "Continue",
         "title": "Accept Next Edit Suggestion"
+      },
+      {
+        "command": "continue.forceNextEdit",
+        "category": "Continue",
+        "title": "Continue: Force Next Edit"
       }
     ],
     "keybindings": [

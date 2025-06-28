@@ -1,11 +1,18 @@
-import * as fs from "fs/promises";
+/**
+ * CodeRenderer is a class that, when given a code string,
+ * highlights the code string using shiki and
+ * returns a svg representation of it.
+ * We could technically just call shiki's methods to do a
+ * one-liner syntax highlighting code, but
+ * a separate class for this is useful because
+ * we rarely ever need syntax highlighting outside of
+ * creating a render of it.
+ */
 import { JSDOM } from "jsdom";
-import satori from "satori";
-// import puppeteer, { Browser, ScreenshotOptions } from "puppeteer";
 import { BundledTheme, codeToHtml, getSingletonHighlighter } from "shiki";
 import { escapeForSVG, kebabOfStr } from "../util/text";
 
-interface SyntaxHighlighterOptions {
+interface CodeRendererOptions {
   themesDir?: string;
   theme?: string;
 }
@@ -26,34 +33,23 @@ interface Dimensions {
   height: number;
 }
 
-interface DataAndDimensions {
-  data: Buffer;
-  dimensions: Dimensions;
-}
-
-interface DataUriAndDimensions {
-  uri: DataUri;
-  dimensions: Dimensions;
-}
-
 type DataUri = PngUri | SvgUri;
-
 type PngUri = string;
 type SvgUri = string;
 
-export class SyntaxHighlighter {
-  private static instance: SyntaxHighlighter;
+export class CodeRenderer {
+  private static instance: CodeRenderer;
   private currentTheme: string = "dark-plus";
   private editorBackground: string = "#000000";
   private editorForeground: string = "#FFFFFF";
 
-  private constructor(options: SyntaxHighlighterOptions = {}) {}
+  private constructor() {}
 
-  static getInstance(options?: SyntaxHighlighterOptions): SyntaxHighlighter {
-    if (!SyntaxHighlighter.instance) {
-      SyntaxHighlighter.instance = new SyntaxHighlighter(options);
+  static getInstance(): CodeRenderer {
+    if (!CodeRenderer.instance) {
+      CodeRenderer.instance = new CodeRenderer();
     }
-    return SyntaxHighlighter.instance;
+    return CodeRenderer.instance;
   }
 
   public async setTheme(themeName: string): Promise<void> {
@@ -159,59 +155,6 @@ export class SyntaxHighlighter {
     });
   }
 
-  // async convertToPNG(
-  //   code: string,
-  //   language: string = "javascript",
-  //   fontSize: number,
-  //   dimensions: Dimensions,
-  //   lineHeight: number,
-  //   options: ConversionOptions,
-  // ): Promise<DataAndDimensions> {
-  //   if (!this.browser) {
-  //     throw new Error("Browser not initialized. Call init() first.");
-  //   }
-
-  //   const highlightedCodeHtml = await this.highlightCode(code, language);
-
-  //   const page = await this.browser.newPage();
-  //   await page.setContent(highlightedCodeHtml);
-
-  //   const dims = await page.evaluate(() => {
-  //     const body = document.body;
-  //     return {
-  //       width: body.scrollWidth,
-  //       height: body.scrollHeight,
-  //     };
-  //   });
-
-  //   await page.setViewport({
-  //     width: 3840,
-  //     height: 2160,
-  //     deviceScaleFactor: 1,
-  //   });
-
-  //   const screenshot = await page.screenshot({
-  //     type: "png",
-  //     omitBackground: true,
-  //     ...options.screenshotOptions,
-  //   });
-
-  //   await page.close();
-
-  //   return { data: screenshot, dimensions: dims };
-  // }
-
-  async convertToBlankSVG(
-    dimensions: Dimensions,
-    options: ConversionOptions,
-  ): Promise<Buffer> {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
-  <g><rect width="${dimensions.width}" height="${dimensions.height}" fill="#ff0000" /><text fill="#ffffff" x="0" y="20" font-family="monospace" font-size="14" xml:space="preserve">TEST TEXT THIS IS</text></g>
-</svg>`;
-
-    return Buffer.from(svg, "utf8");
-  }
-
   async convertToSVG(
     code: string,
     language: string = "javascript",
@@ -239,51 +182,6 @@ export class SyntaxHighlighter {
 </svg>`;
 
     return Buffer.from(svg, "utf8");
-  }
-
-  async convertToSVGWithSatori(
-    code: string,
-    language: string = "javascript",
-    fontSize: number,
-    dimensions: Dimensions,
-    lineHeight: number,
-    options: ConversionOptions,
-  ): Promise<Buffer> {
-    const highlightedCodeHtml = await this.highlightCode(code, language);
-
-    console.log(code);
-    console.log(highlightedCodeHtml);
-
-    // Convert to SVG using Satori
-    const fontData = await this.loadFont();
-    const svg = await satori(highlightedCodeHtml, {
-      width: dimensions.width, // You'll need to determine appropriate width
-      height: dimensions.height, // Dynamic height based on content
-      fonts: [
-        {
-          name: "YourMonospaceFontName",
-          data: fontData,
-          style: "normal",
-        },
-      ],
-    });
-
-    console.log(svg);
-    return Buffer.from(svg, "utf8");
-  }
-
-  // Function to load your font
-  async loadFont(): Promise<Buffer> {
-    // Option 1: If running in Node.js, you can load from the filesystem
-    console.log(process.cwd());
-    return Buffer.from(
-      await fs.readFile(
-        // TODO: fix this to actually resolve to path
-        "/home/jacob/continue/continue/fonts/Cascadia_Mono/static/CascadiaMono-Regular.ttf",
-        "binary",
-      ),
-      "binary",
-    );
   }
 
   convertShikiHtmlToSvgGut(
@@ -368,27 +266,6 @@ export class SyntaxHighlighter {
           lineHeight,
           options,
         );
-        return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
-    }
-  }
-
-  async getBlankDataUri(
-    dimensions: Dimensions,
-    options: ConversionOptions,
-  ): Promise<DataUri> {
-    switch (options.imageType) {
-      // case "png":
-      //   const pngBuffer = await this.convertToPNG(
-      //     code,
-      //     language,
-      //     fontSize,
-      //     dimensions,
-      //     lineHeight,
-      //     options,
-      //   );
-      //   return `data:image/png;base64,${pngBuffer.data.toString("base64")}`;
-      case "svg":
-        const svgBuffer = await this.convertToBlankSVG(dimensions, options);
         return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
     }
   }

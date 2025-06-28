@@ -41,6 +41,9 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import setupNextEditWindowManager, {
+  NextEditWindowManager,
+} from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
 import { handleTextDocumentChange } from "../util/editLoggingUtils";
 import { VsCodeIdeUtils } from "../util/ideUtils";
@@ -160,6 +163,18 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
+        if (newConfig?.experimental?.optInNextEditFeature) {
+          // Set up next edit window manager only for Continue team members
+          await setupNextEditWindowManager(context);
+
+          this.activateNextEdit();
+          await NextEditWindowManager.freeTabAndEsc();
+        } else {
+          NextEditWindowManager.clearInstance();
+          this.deactivateNextEdit();
+          await NextEditWindowManager.freeTabAndEsc();
+        }
+
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);

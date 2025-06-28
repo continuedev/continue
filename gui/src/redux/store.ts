@@ -23,11 +23,6 @@ import sessionReducer from "./slices/sessionSlice";
 import tabsReducer from "./slices/tabsSlice";
 import uiReducer from "./slices/uiSlice";
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
-
 const rootReducer = combineReducers({
   session: sessionReducer,
   ui: uiReducer,

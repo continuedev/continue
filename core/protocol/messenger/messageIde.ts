@@ -106,6 +106,10 @@ export class MessageIde implements IDE {
     return this.request("isTelemetryEnabled", undefined);
   }
 
+  isWorkspaceRemote(): Promise<boolean> {
+    return this.request("isWorkspaceRemote", undefined);
+  }
+
   getUniqueId(): Promise<string> {
     return this.request("getUniqueId", undefined);
   }

@@ -2,9 +2,9 @@ package com.github.continuedev.continueintellijextension.auth
 
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.Desktop
 import com.google.gson.Gson
 import com.intellij.credentialStore.Credentials
+import com.intellij.ide.BrowserUtil
 import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.application.ApplicationManager
@@ -165,7 +165,7 @@ class ContinueAuthService {
 
         // Still open the URL in the browser (keeping existing behavior)
         if (authUrl != null) {
-            Desktop.browse(java.net.URI(authUrl))
+            BrowserUtil.open(authUrl!!)
         }
 
         return authUrl

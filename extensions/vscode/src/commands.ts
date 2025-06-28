@@ -779,6 +779,18 @@ const getCommandsMap: (
         );
       }
     },
+    "continue.forceNextEdit": async () => {
+      captureCommandTelemetry("forceNextEdit");
+
+      // This is basically the same logic as forceAutocomplete.
+      // I'm writing a new command KV pair here in case we diverge in features.
+
+      await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
+
+      await vscode.commands.executeCommand(
+        "editor.action.inlineSuggest.trigger",
+      );
+    },
   };
 };
 

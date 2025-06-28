@@ -15,8 +15,5 @@
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "typescript": "^5.6.3"
-  },
-  "dependencies": {
-    "jsdom": "^26.1.0"
   }
 }

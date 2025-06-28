@@ -19,7 +19,6 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
   async (_, { dispatch, extra, getState }) => {
     const state = getState();
     const toolCallState = selectCurrentToolCall(state);
-
     if (!toolCallState) {
       return;
     }
@@ -61,19 +60,15 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
     ) {
       // Tool is called on client side
       const {
-        output: clientToolOuput,
+        output: clientToolOutput,
         respondImmediately,
         errorMessage: clientToolError,
       } = await callClientTool(toolCallState, {
         dispatch,
         ideMessenger: extra.ideMessenger,
-        streamId: state.session.codeBlockApplyStates.states.find(
-          (state) =>
-            state.toolCallId && state.toolCallId === toolCallState.toolCallId,
-        )?.streamId,
         getState,
       });
-      output = clientToolOuput;
+      output = clientToolOutput;
       errorMessage = clientToolError;
       streamResponse = respondImmediately;
     } else {

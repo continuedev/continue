@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/config-yaml",
-  "version": "1.0.94",
+  "version": "1.0.95",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "@continuedev/config-yaml": "./dist/cli.js"
+    "config-yaml": "./dist/cli.js"
   },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
@@ -34,6 +34,11 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
-    "zod-to-json-schema": "^3.24.5"
+    "zod-to-json-schema": "^3.24.5",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/npm": "^10.0.6",
+    "semantic-release": "^21.1.2"
   }
 }
