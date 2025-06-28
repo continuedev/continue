@@ -13,25 +13,25 @@ Connect with the Continue community to discover, share, and collaborate on AI de
 
 Join thousands of developers using Continue. Share experiences, get help, and contribute to the ecosystem.
 
-[Join the Community →](./community)
+[Join our Discord Community →](https://discord.gg/continue)
 
 ## Publishing
 
 Share your custom assistants, blocks, and configurations with the Continue community.
 
-[Start Publishing →](./publishing)
+[Visit the Hub →](https://hub.continue.dev)
 
-## Featured Assistants
+## Browse Assistants
 
-Explore curated assistants created by the community for specific use cases and workflows.
+Explore assistants created by the community for specific use cases and workflows.
 
-[Browse Assistants →](./featured-assistants)
+[Browse Assistants →](https://hub.continue.dev)
 
 ## Using Assistants
 
 Learn how to discover, install, and use community-created assistants in your projects.
 
-[Use Assistants →](./using-assistants)
+[Learn About Assistants →](./assistants/00-intro.md)
 
 ---
 
