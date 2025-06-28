@@ -21,6 +21,26 @@
   to = "/features/agent/quick-start"
   status = 301
 
+[[redirects]]
+  from = "/chat/how-it-works"
+  to = "/features/chat/how-it-works"
+  status = 301
+
+[[redirects]]
+  from = "/autocomplete/how-it-works"
+  to = "/features/autocomplete/how-it-works"
+  status = 301
+
+[[redirects]]
+  from = "/edit/how-it-works"
+  to = "/features/edit/how-it-works"
+  status = 301
+
+[[redirects]]
+  from = "/agent/how-it-works"
+  to = "/features/agent/how-it-works"
+  status = 301
+
 # Top-level redirects
 [[redirects]]
   from = "/reference"
@@ -32,222 +52,6 @@
   to = "/advanced/troubleshooting"
   status = 301
 
-# Additional feature redirects
-[[redirects]]
-  from = "/chat/how-it-works"
-  to = "/features/chat/how-it-works"
-  status = 301
-
-[[redirects]]
-  from = "/chat/how-to-customize"
-  to = "/customization/chat"
-  status = 301
-
-[[redirects]]
-  from = "/chat/context-selection"
-  to = "/advanced/context-integration/chat-context"
-  status = 301
-
-[[redirects]]
-  from = "/chat/model-setup"
-  to = "/customization/models"
-  status = 301
-
-[[redirects]]
-  from = "/autocomplete/how-it-works"
-  to = "/features/autocomplete/how-it-works"
-  status = 301
-
-[[redirects]]
-  from = "/autocomplete/how-to-customize"
-  to = "/customization/autocomplete"
-  status = 301
-
-[[redirects]]
-  from = "/autocomplete/context-selection"
-  to = "/advanced/context-integration/autocomplete-context"
-  status = 301
-
-[[redirects]]
-  from = "/autocomplete/model-setup"
-  to = "/customization/models"
-  status = 301
-
-[[redirects]]
-  from = "/edit/how-it-works"
-  to = "/features/edit/how-it-works"
-  status = 301
-
-[[redirects]]
-  from = "/edit/how-to-customize"
-  to = "/customization/edit"
-  status = 301
-
-[[redirects]]
-  from = "/edit/context-selection"
-  to = "/advanced/context-integration/edit-context"
-  status = 301
-
-[[redirects]]
-  from = "/edit/model-setup"
-  to = "/customization/models"
-  status = 301
-
-[[redirects]]
-  from = "/agent/how-it-works"
-  to = "/features/agent/how-it-works"
-  status = 301
-
-[[redirects]]
-  from = "/agent/how-to-customize"
-  to = "/customization/agent"
-  status = 301
-
-[[redirects]]
-  from = "/agent/context-selection"
-  to = "/advanced/context-integration/agent-context"
-  status = 301
-
-[[redirects]]
-  from = "/agent/model-setup"
-  to = "/customization/models"
-  status = 301
-
-# Blocks redirects
-[[redirects]]
-  from = "/blocks/context-providers"
-  to = "/advanced/context-integration/custom-providers"
-  status = 301
-
-[[redirects]]
-  from = "/blocks/data"
-  to = "/advanced/deep-dives/data-blocks"
-  status = 301
-
-[[redirects]]
-  from = "/blocks/docs"
-  to = "/advanced/context-integration/documentation"
-  status = 301
-
-[[redirects]]
-  from = "/blocks/mcp"
-  to = "/customization/blocks/mcp-tools"
-  status = 301
-
-[[redirects]]
-  from = "/blocks/models"
-  to = "/customization/models"
-  status = 301
-
-[[redirects]]
-  from = "/blocks/prompts"
-  to = "/customization/blocks/prompts"
-  status = 301
-
-[[redirects]]
-  from = "/blocks/rules"
-  to = "/customization/rules"
-  status = 301
-
-# Customization redirects
-[[redirects]]
-  from = "/customize/overview"
-  to = "/customization/overview"
-  status = 301
-
-[[redirects]]
-  from = "/customize/context-providers"
-  to = "/advanced/context-integration/custom-providers"
-  status = 301
-
-# Deep dives redirects
-[[redirects]]
-  from = "/customize/deep-dives/autocomplete"
-  to = "/advanced/deep-dives/autocomplete"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/codebase"
-  to = "/advanced/context-integration/codebase"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/configuration"
-  to = "/advanced/deep-dives/configuration"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/development-data"
-  to = "/advanced/deep-dives/development-data"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/docs"
-  to = "/advanced/context-integration/documentation"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/mcp"
-  to = "/customization/blocks/mcp-tools"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/prompts"
-  to = "/customization/blocks/prompts"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/rules"
-  to = "/customization/rules"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/settings"
-  to = "/advanced/deep-dives/settings"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/slash-commands"
-  to = "/advanced/context-integration/slash-commands"
-  status = 301
-
-[[redirects]]
-  from = "/customize/deep-dives/vscode-actions"
-  to = "/advanced/deep-dives/vscode-actions"
-  status = 301
-
-# Hub redirects
-[[redirects]]
-  from = "/hub/introduction"
-  to = "/hub/overview"
-  status = 301
-
-[[redirects]]
-  from = "/hub/assistants/intro"
-  to = "/hub/featured-assistants"
-  status = 301
-
-[[redirects]]
-  from = "/hub/assistants/use-an-assistant"
-  to = "/hub/using-assistants"
-  status = 301
-
-[[redirects]]
-  from = "/hub/assistants/create-an-assistant"
-  to = "/hub/publishing"
-  status = 301
-
-[[redirects]]
-  from = "/hub/assistants/edit-an-assistant"
-  to = "/hub/publishing"
-  status = 301
-
-[[redirects]]
-  from = "/hub/source-control"
-  to = "/hub/publishing"
-  status = 301
-
-# Other important redirects
 [[redirects]]
   from = "/telemetry"
   to = "/advanced/telemetry"

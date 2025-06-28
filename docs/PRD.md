@@ -43,8 +43,8 @@ This PRD outlines the plan to restructure Continue's documentation from 10+ navi
 **Tasks:**
 - [x] Standardize feature pages (How it works, Quick start)
 - [x] Implement VS Code/JetBrains tabbed install guides
-  - [ ] Fix broken image
-- [ ] Update all internal links
+  - [x] Fix broken image
+- [x] Update all internal links
 - [ ] Add installation reminders in feature intros
 
 **Deliverables:**
@@ -176,8 +176,8 @@ advanced/
 4. **Rollback Plan** - Git history allows quick reversion
 
 ## Testing Checklist
-- [ ] All old URLs redirect to new locations
-- [ ] Internal links work correctly
+- [x] All old URLs redirect to new locations
+- [x] Internal links work correctly
 - [ ] Search functionality updated
 - [ ] Mobile navigation works
 - [ ] No console errors

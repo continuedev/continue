@@ -68,18 +68,7 @@ const config = {
     ],
   ],
 
-  plugins: [
-    [
-      "@docusaurus/plugin-content-docs",
-      {
-        id: "guides",
-        path: "guides",
-        routeBasePath: "guides",
-        sidebarPath: require.resolve("./sidebars.js"),
-        editUrl: "https://github.com/continuedev/continue/tree/main/docs",
-      },
-    ],
-  ],
+  plugins: [],
 
   scripts: [
     {
@@ -116,7 +105,7 @@ const config = {
             href: "/",
           },
           {
-            to: "/guides/",
+            to: "/guides/overview",
             label: "Guides",
             position: "left",
           },
