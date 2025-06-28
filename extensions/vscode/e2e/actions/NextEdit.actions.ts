@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import { TextEditor, VSBrowser, Workbench } from "vscode-extension-tester";
 
 import { DEFAULT_TIMEOUT } from "../constants";
@@ -5,6 +6,21 @@ import { NextEditSelectors } from "../selectors/NextEdit.selectors";
 import { TestUtils } from "../TestUtils";
 
 export class NextEditActions {
+  /**
+   * Test accepting a Next Edit suggestion with Tab
+   */
+  public static async acceptNextEditSuggestion(editor: TextEditor) {
+    const hasDecoration = await NextEditActions.forceNextEdit(editor);
+    expect(hasDecoration).to.be.true;
+    
+    await new Workbench().executeCommand("Continue: Accept Next Edit Suggestion");
+
+    // Check if HELLO is written into the editor.
+    const editorText = await editor.getTextAtLine(1);
+    
+    return editorText === "HELLO";
+  }
+
   /**
    * Force a Next Edit suggestion using command.
    */
@@ -14,7 +30,7 @@ export class NextEditActions {
 
     await new Workbench().executeCommand("Continue: Force Next Edit");
     await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.MD);
-
+    
     const svgDecoration = await TestUtils.waitForSuccess(
       () => NextEditSelectors.getSvgDecoration(VSBrowser.instance.driver),
       DEFAULT_TIMEOUT.XL
