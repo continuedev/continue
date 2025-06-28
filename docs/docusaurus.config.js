@@ -219,8 +219,8 @@ const config = {
       {
         redirects: [
           {
-            to: "/hub/00-introduction",
-            from: ["/hub", "/hub/introduction"],
+            to: "/hub/introduction",
+            from: ["/hub"],
           },
           {
             to: "/hub/governance/org-permissions",
