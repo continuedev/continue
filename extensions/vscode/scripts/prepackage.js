@@ -10,11 +10,11 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
-const {
-  copyConfigSchema,
-  writeBuildTimestamp,
-  generateConfigYamlSchema,
-} = require("./utils");
+const { copySqlite, copyEsbuild } = require("./download-copy-sqlite-esbuild");
+const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
+const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
+const { npmInstall } = require("./npm-install");
+const { writeBuildTimestamp, continueDir } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
@@ -27,6 +27,8 @@ if (!fs.existsSync(guiDist)) {
   fs.mkdirSync(guiDist, { recursive: true });
 }
 
+const skipInstalls = process.env.SKIP_INSTALLS === "true";
+
 // Get the target to package for
 let target = undefined;
 const args = process.argv;
@@ -36,10 +38,10 @@ if (args[2] === "--target") {
 
 let os;
 let arch;
-if (!target) {
-  [os, arch] = autodetectPlatformAndArch();
-} else {
+if (target) {
   [os, arch] = target.split("-");
+} else {
+  [os, arch] = autodetectPlatformAndArch();
 }
 
 if (os === "alpine") {
@@ -67,28 +69,14 @@ const isMacTarget = target?.startsWith("darwin");
 void (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Generate and copy over config-yaml-schema.json
-  generateConfigYamlSchema();
-
-  // Copy config schemas to intellij
-  copyConfigSchema();
-
-  if (!process.cwd().endsWith("vscode")) {
-    // This is sometimes run from root dir instead (e.g. in VS Code tasks)
-    process.chdir("extensions/vscode");
-  }
-
   // Make sure we have an initial timestamp file
   writeBuildTimestamp();
 
-  // Install node_modules //
-  execCmdSync("npm install");
-  console.log("[info] npm install in extensions/vscode completed");
+  if (!skipInstalls) {
+    await Promise.all([generateAndCopyConfigYamlSchema(), npmInstall()]);
+  }
 
-  process.chdir("../../gui");
-
-  execCmdSync("npm install");
-  console.log("[info] npm install in gui completed");
+  process.chdir(path.join(continueDir, "gui"));
 
   if (isInGitHubAction) {
     execCmdSync("npm run build");
@@ -280,120 +268,30 @@ void (async () => {
     );
   });
 
-  async function installNodeModuleInTempDirAndCopyToCurrent(
-    packageName,
-    toCopy,
-  ) {
-    console.log(`Copying ${packageName} to ${toCopy}`);
-    // This is a way to install only one package without npm trying to install all the dependencies
-    // Create a temporary directory for installing the package
-    const adjustedName = packageName.replace(/@/g, "").replace("/", "-");
-
-    const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
-    const currentDir = process.cwd();
-
-    // Remove the dir we will be copying to
-    rimrafSync(`node_modules/${toCopy}`);
-
-    // Ensure the temporary directory exists
-    fs.mkdirSync(tempDir, { recursive: true });
-
-    try {
-      // Move to the temporary directory
-      process.chdir(tempDir);
-
-      // Initialize a new package.json and install the package
-      execCmdSync(`npm init -y && npm i -f ${packageName} --no-save`);
-
+  if (!skipInstalls) {
+    // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
+    // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
+    if (isArmTarget) {
+      // lancedb binary
+      const packageToInstall = {
+        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+        "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
+      }[target];
       console.log(
-        `Contents of: ${packageName}`,
-        fs.readdirSync(path.join(tempDir, "node_modules", toCopy)),
+        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
       );
 
-      // Without this it seems the file isn't completely written to disk
-      // Ideally we validate file integrity in the validation at the end
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Copy the installed package back to the current directory
-      await new Promise((resolve, reject) => {
-        ncp(
-          path.join(tempDir, "node_modules", toCopy),
-          path.join(currentDir, "node_modules", toCopy),
-          { dereference: true },
-          (error) => {
-            if (error) {
-              console.error(
-                `[error] Error copying ${packageName} package`,
-                error,
-              );
-              reject(error);
-            } else {
-              resolve();
-            }
-          },
-        );
-      });
-    } finally {
-      // Clean up the temporary directory
-      // rimrafSync(tempDir);
-
-      // Return to the original directory
-      process.chdir(currentDir);
+      await Promise.all([
+        copyEsbuild(target),
+        copySqlite(target),
+        installAndCopyNodeModules(packageToInstall, "@lancedb"),
+      ]);
+    } else {
+      // Download esbuild from npm in tmp and copy over
+      console.log("[info] npm installing esbuild binary");
+      await installAndCopyNodeModules("esbuild@0.17.19", "@esbuild");
     }
-  }
-
-  // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-  // 02/07/25 - the above comment is out of date, there is now support for ARM runners on GitHub Actions
-  if (isArmTarget) {
-    // lancedb binary
-    const packageToInstall = {
-      "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-      "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-      "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
-    }[target];
-    console.log(
-      "[info] Downloading pre-built lancedb binary: " + packageToInstall,
-    );
-
-    await installNodeModuleInTempDirAndCopyToCurrent(
-      packageToInstall,
-      "@lancedb",
-    );
-
-    // Replace the installed with pre-built
-    console.log("[info] Downloading pre-built sqlite3 binary");
-    rimrafSync("../../core/node_modules/sqlite3/build");
-    const downloadUrl = {
-      "darwin-arm64":
-        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
-      "linux-arm64":
-        "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
-      // node-sqlite3 doesn't have a pre-built binary for win32-arm64
-      "win32-arm64":
-        "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz",
-    }[target];
-    execCmdSync(
-      `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
-    );
-    execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
-    fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
-
-    // Download and unzip esbuild
-    console.log("[info] Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild");
-    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execCmdSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
-    );
-    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
-    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-  } else {
-    // Download esbuild from npm in tmp and copy over
-    console.log("npm installing esbuild binary");
-    await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.17.19",
-      "@esbuild",
-    );
   }
 
   console.log("[info] Copying sqlite node binding from core");
@@ -465,7 +363,7 @@ void (async () => {
   );
 
   // delete esbuild/bin because platform-specific @esbuild is downloaded
-  fs.rmdirSync(`out/node_modules/esbuild/bin`, { recursive: true });
+  fs.rmSync(`out/node_modules/esbuild/bin`, { recursive: true });
 
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 
@@ -534,4 +432,6 @@ void (async () => {
     `out/node_modules/@lancedb/vectordb-${target}${isWinTarget ? "-msvc" : ""}${isLinuxTarget ? "-gnu" : ""}/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
   ]);
+
+  process.exit(0);
 })();

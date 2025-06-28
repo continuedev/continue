@@ -6,25 +6,23 @@ rules:
     rule: >-
       For unit testing in this project:
 
+      1. The project uses Vitest and Jest for testing. Prefer Vitest
 
-      1. The project uses Jest as the testing framework
+      2. Run tests from within the specific package directory (e.g., `cd core && ..`
 
-      2. Run tests using `npm test` from within the specific package/module
-      directory
+      3. For vitest tests,
+        - Test files follow the pattern `*.vitest.ts`
+         - Run tests using `vitest` from within the specific package/module
+      directory: `cd [directory] && vitest -- [test file path]`
 
-      3. Command structure: `cd [directory] && npm test -- [test file path]`
+      4. For jest tests, 
+         - Test files follow the pattern `*.test.ts`
+         - Run tests using `npm test` from within the specific package/module
+      directory: `cd [directory] && npm test -- [test file path]`
+         - The test script uses experimental VM modules via NODE_OPTIONS flag
 
-      4. The test script uses experimental VM modules via NODE_OPTIONS flag
-
-      5. Test files follow the pattern `*.test.ts`
-
-      6. Tests must import Jest with `import { jest } from "@jest/globals";`
-
-      7. Run tests from within the specific package directory (e.g., `cd core`
-      for core module tests)
-
-      8. Write tests as top-level `test()` functions - DO NOT use `describe()`
+      5. For both
+         - Write tests as top-level `test()` functions - DO NOT use `describe()`
       blocks
-
-      9. Include the function name being tested in the test description for
+         - Include the function name being tested in the test description for
       clarity

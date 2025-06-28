@@ -5,6 +5,7 @@ import { constructMessages } from "core/llm/constructMessages";
 import { getApplicableRules } from "core/llm/rules/getSystemMessageWithRules";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { getBaseSystemMessage } from "../../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -13,7 +14,6 @@ import {
   updateHistoryItemAtIndex,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { gatherContext } from "./gatherContext";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
@@ -25,15 +25,11 @@ export const streamResponseThunk = createAsyncThunk<
     editorState: JSONContent;
     modifiers: InputModifiers;
     index?: number;
-    promptPreamble?: string;
   },
   ThunkApiType
 >(
   "chat/streamResponse",
-  async (
-    { editorState, modifiers, index, promptPreamble },
-    { dispatch, extra, getState },
-  ) => {
+  async ({ editorState, modifiers, index }, { dispatch, extra, getState }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
@@ -49,19 +45,30 @@ export const streamResponseThunk = createAsyncThunk<
         );
         resetStateForNewMessage();
 
-        const result = await dispatch(
-          gatherContext({
-            editorState,
-            modifiers,
-            promptPreamble,
-          }),
-        );
+        const defaultContextProviders =
+          state.config.config.experimental?.defaultContext ?? [];
+
+        if (!selectedChatModel) {
+          console.error(
+            "gatherContext thunk: Cannot gather context, no model selected",
+          );
+          throw new Error("No chat model selected");
+        }
+
+        // Resolve context providers and construct new history
         const {
           selectedContextItems,
           selectedCode,
           content,
-          slashCommandWithInput,
-        } = unwrapResult(result);
+          legacyCommandWithInput,
+        } = await resolveEditorContent({
+          editorState,
+          modifiers,
+          ideMessenger: extra.ideMessenger,
+          defaultContextProviders,
+          availableSlashCommands: state.config.config.slashCommands,
+          dispatch,
+        });
 
         // symbols for both context items AND selected codeblocks
         const filesForSymbols = [
@@ -92,6 +99,7 @@ export const streamResponseThunk = createAsyncThunk<
         // Determine which rules apply to this message
         const userMsg = updatedHistory[inputIndex].message;
         const rules = getState().config.config.rules;
+        const rulePolicies = getState().ui.ruleSettings;
 
         // Calculate applicable rules once
         // We need to check the message type to match what getApplicableRules expects
@@ -101,6 +109,7 @@ export const streamResponseThunk = createAsyncThunk<
             : undefined,
           rules,
           selectedContextItems,
+          rulePolicies,
         );
 
         // Store in history for UI display
@@ -122,6 +131,7 @@ export const streamResponseThunk = createAsyncThunk<
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
           applicableRules,
+          rulePolicies,
         );
 
         posthog.capture("step run", {
@@ -130,9 +140,9 @@ export const streamResponseThunk = createAsyncThunk<
         });
         posthog.capture("userInput", {});
 
-        if (slashCommandWithInput) {
+        if (legacyCommandWithInput) {
           posthog.capture("step run", {
-            step_name: slashCommandWithInput.command.name,
+            step_name: legacyCommandWithInput.command.name,
             params: {},
           });
         }
@@ -141,12 +151,12 @@ export const streamResponseThunk = createAsyncThunk<
           await dispatch(
             streamNormalInput({
               messages,
-              legacySlashCommandData: slashCommandWithInput
+              legacySlashCommandData: legacyCommandWithInput
                 ? {
-                    command: slashCommandWithInput.command,
+                    command: legacyCommandWithInput.command,
                     contextItems: selectedContextItems,
                     historyIndex: inputIndex,
-                    input: slashCommandWithInput.input,
+                    input: legacyCommandWithInput.input,
                     selectedCode,
                   }
                 : undefined,

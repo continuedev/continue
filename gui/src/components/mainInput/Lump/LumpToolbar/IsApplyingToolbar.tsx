@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../../redux/hooks";
-import { cancelStream } from "../../../../redux/thunks";
+import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { getAltKeyLabel, getMetaKeyLabel } from "../../../../util";
 import { Container, StopButton } from "./components";
 import { GeneratingIndicator } from "./GeneratingIndicator";

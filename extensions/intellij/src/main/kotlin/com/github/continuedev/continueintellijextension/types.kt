@@ -102,6 +102,8 @@ interface IDE {
 
     suspend fun isTelemetryEnabled(): Boolean
 
+    suspend fun isWorkspaceRemote(): Boolean
+
     suspend fun getUniqueId(): String
 
     suspend fun getTerminalContents(): String
@@ -157,9 +159,9 @@ interface IDE {
 
     suspend fun getPinnedFiles(): List<String>
 
-    suspend fun getSearchResults(query: String): String
+    suspend fun getSearchResults(query: String, maxResults: Int?): String
 
-    suspend fun getFileResults(pattern: String): List<String>
+    suspend fun getFileResults(pattern: String, maxResults: Int?): List<String>
 
     // Note: This should be a `Pair<String, String>` but we use `List<Any>` because the keys of `Pair`
     // will serialize to `first and `second` rather than `0` and `1` like in JavaScript

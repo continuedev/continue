@@ -21,7 +21,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
-import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
+import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
@@ -42,13 +42,15 @@ import {
   IdeSettings,
   ModelDescription,
   RangeInFile,
+  ToolCall,
   type ContextItem,
   type ContextItemId,
   type IDE,
 } from ".";
 
-import { ConfigYaml } from "@continuedev/config-yaml";
+import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
+import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import { generateCommitMessage } from "./commands/slash/commit";
 import {
@@ -148,6 +150,18 @@ export class Core {
 
     MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
       void this.configHandler.reloadConfig();
+
+      // Refresh @mention dropdown submenu items for MCP providers
+      const mcpManager = MCPManagerSingleton.getInstance();
+      const mcpProviderNames = Array.from(mcpManager.connections.keys()).map(
+        (mcpId) => `mcp-${mcpId}`,
+      );
+
+      if (mcpProviderNames.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: mcpProviderNames,
+        });
+      }
     };
 
     this.codeBaseIndexer = new CodebaseIndexer(
@@ -368,6 +382,19 @@ export class Core {
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+    });
+    on("mcp/getPrompt", async (msg) => {
+      const { serverName, promptName, args } = msg.data;
+      const prompt = await MCPManagerSingleton.getInstance().getPrompt(
+        serverName,
+        promptName,
+        args,
+      );
+      const stringifiedPrompt = stringifyMcpPrompt(prompt);
+      return {
+        prompt: stringifiedPrompt,
+        description: prompt.description,
+      };
     });
     // Context providers
     on("context/addDocs", async (msg) => {
@@ -744,44 +771,9 @@ export class Core {
       return { url };
     });
 
-    on("tools/call", async ({ data: { toolCall } }) => {
-      const { config } = await this.configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      const tool = config.tools.find(
-        (t) => t.function.name === toolCall.function.name,
-      );
-
-      if (!tool) {
-        throw new Error(`Tool ${toolCall.function.name} not found`);
-      }
-
-      if (!config.selectedModelByRole.chat) {
-        throw new Error("No chat model selected");
-      }
-
-      // Define a callback for streaming output updates
-      const onPartialOutput = (params: {
-        toolCallId: string;
-        contextItems: ContextItem[];
-      }) => {
-        this.messenger.send("toolCallPartialOutput", params);
-      };
-
-      return await callTool(tool, toolCall, {
-        config,
-        ide: this.ide,
-        llm: config.selectedModelByRole.chat,
-        fetch: (url, init) =>
-          fetchwithRequestOptions(url, init, config.requestOptions),
-        tool,
-        toolCallId: toolCall.id,
-        onPartialOutput,
-        codeBaseIndexer: this.codeBaseIndexer,
-      });
-    });
+    on("tools/call", async ({ data: { toolCall } }) =>
+      this.handleToolCall(toolCall),
+    );
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
@@ -849,6 +841,45 @@ export class Core {
       // Always clean up the abortController on success/failure.
       this.abortById(msg.messageId);
     }
+  }
+
+  private async handleToolCall(toolCall: ToolCall) {
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
+
+    const tool = config.tools.find(
+      (t) => t.function.name === toolCall.function.name,
+    );
+
+    if (!tool) {
+      throw new Error(`Tool ${toolCall.function.name} not found`);
+    }
+
+    if (!config.selectedModelByRole.chat) {
+      throw new Error("No chat model selected");
+    }
+
+    // Define a callback for streaming output updates
+    const onPartialOutput = (params: {
+      toolCallId: string;
+      contextItems: ContextItem[];
+    }) => {
+      this.messenger.send("toolCallPartialOutput", params);
+    };
+
+    return await callTool(tool, toolCall, {
+      config,
+      ide: this.ide,
+      llm: config.selectedModelByRole.chat,
+      fetch: (url, init) =>
+        fetchwithRequestOptions(url, init, config.requestOptions),
+      tool,
+      toolCallId: toolCall.id,
+      onPartialOutput,
+      codeBaseIndexer: this.codeBaseIndexer,
+    });
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -938,7 +969,12 @@ export class Core {
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
           (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith(RULES_MARKDOWN_FILENAME)
+          uri.endsWith(RULES_MARKDOWN_FILENAME) ||
+          BLOCK_TYPES.some(
+            (blockType) =>
+              uri.includes(`.continue/${blockType}`) ||
+              uri.includes(`.continue\\${blockType}`),
+          )
         ) {
           await this.configHandler.reloadConfig();
         } else if (

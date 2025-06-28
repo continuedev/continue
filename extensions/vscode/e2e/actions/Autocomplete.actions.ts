@@ -30,14 +30,14 @@ export class AutocompleteActions {
     expect(ghostText1).to.equal(messagePair1.llmResponse);
   }
 
-    public static async forceCompletion(editor: TextEditor): Promise<string> {
+  public static async forceCompletion(editor: TextEditor): Promise<string> {
     await editor.setText("def main():\n    ");
     await editor.moveCursor(2, 5);
 
     await new Workbench().executeCommand("Continue: Force Autocomplete");
 
     const ghostText = await TestUtils.waitForSuccess(() =>
-      AutocompleteSelectors.getGhostTextContent(VSBrowser.instance.driver)
+      AutocompleteSelectors.getGhostTextContent(VSBrowser.instance.driver),
     );
 
     return ghostText;
