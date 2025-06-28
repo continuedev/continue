@@ -92,6 +92,7 @@ class MessageTypes {
             "config/updateSharedConfig",
             "config/updateSelectedModel",
             "mcp/reloadServer",
+            "mcp/getPrompt",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
