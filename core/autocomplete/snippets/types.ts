@@ -23,7 +23,19 @@ export interface AutocompleteClipboardSnippet extends BaseAutocompleteSnippet {
   copiedAt: string;
 }
 
+type Filepath = string;
+type RelevantType = string;
+type RelevantHeader = string;
+
+export interface AutocompleteStaticSnippet extends BaseAutocompleteSnippet {
+  type: AutocompleteSnippetType.Code;
+  holeType: string,
+  relevantTypes: Map<Filepath, RelevantType[]>,
+  relevantHeaders: Map<Filepath, RelevantHeader[]>
+}
+
 export type AutocompleteSnippet =
   | AutocompleteCodeSnippet
   | AutocompleteDiffSnippet
-  | AutocompleteClipboardSnippet;
+  | AutocompleteClipboardSnippet
+  | AutocompleteStaticSnippet;

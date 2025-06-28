@@ -1,3 +1,4 @@
+import { context } from "esbuild";
 import { IDE } from "../../index";
 import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
@@ -123,6 +124,7 @@ export const getAllSnippets = async ({
     ideSnippets,
     diffSnippets,
     clipboardSnippets,
+    staticSnippets
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
     racePromise(
@@ -133,6 +135,7 @@ export const getAllSnippets = async ({
       : [],
     [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     racePromise(getClipboardSnippets(ide)),
+    racePromise(contextRetrievalService.getStaticContextSnippets(helper))
   ]);
 
   return {

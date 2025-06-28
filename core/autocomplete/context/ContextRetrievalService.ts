@@ -2,16 +2,19 @@ import { IDE } from "../..";
 import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
+  AutocompleteStaticSnippet,
 } from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
 import { getSymbolsForSnippet } from "./ranking";
 import { RootPathContextService } from "./root-path-context/RootPathContextService";
+import { StaticContextService } from "./static-context/StaticContextService";
 
 export class ContextRetrievalService {
   private importDefinitionsService: ImportDefinitionsService;
   private rootPathContextService: RootPathContextService;
+  private staticContextService: StaticContextService;
 
   constructor(private readonly ide: IDE) {
     this.importDefinitionsService = new ImportDefinitionsService(this.ide);
@@ -19,6 +22,7 @@ export class ContextRetrievalService {
       this.importDefinitionsService,
       this.ide,
     );
+    this.staticContextService = new StaticContextService(this.ide);
   }
 
   public async getSnippetsFromImportDefinitions(
@@ -69,5 +73,11 @@ export class ContextRetrievalService {
       helper.filepath,
       helper.treePath,
     );
+  }
+
+  public async getStaticContextSnippets(
+    helper: HelperVars
+  ): Promise<AutocompleteStaticSnippet> {
+    return this.staticContextService.getContext(helper);
   }
 }
