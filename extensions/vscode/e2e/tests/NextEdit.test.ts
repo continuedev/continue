@@ -29,15 +29,17 @@ describe("Next Edit", () => {
     expect(false).to.be.true;
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it("Should accept Next Edit suggestion with Tab", async () => {
-    expect(false).to.be.true;
+  it.only("Should accept Next Edit suggestion with Tab", async () => {
+    // Trigger next edit by pressing tab.
+    const accepted = await NextEditActions.acceptNextEditSuggestion(editor);
+    expect (accepted).to.be.true;
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Should reject Next Edit suggestion with Esc", async () => {
     expect(false).to.be.true;
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it.only("Should force a Next Edit", async () => {
+  it("Should force a Next Edit", async () => {
     const hasDecoration = await NextEditActions.forceNextEdit(editor);
     expect(hasDecoration).to.be.true;
   }).timeout(DEFAULT_TIMEOUT.XL);
