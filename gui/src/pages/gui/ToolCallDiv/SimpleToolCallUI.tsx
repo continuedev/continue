@@ -2,7 +2,6 @@ import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Tool, ToolCallState } from "core";
 import { ComponentType, useMemo, useState } from "react";
 import { ContextItemsPeekItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { toolCallStateToContextItems } from "./toolCallStateToContextItem";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
@@ -21,8 +20,6 @@ export function SimpleToolCallUI({
   tool,
   historyIndex,
 }: SimpleToolCallUIProps) {
-  const history = useAppSelector((state) => state.session.history);
-  const dispatch = useAppDispatch();
   const shownContextItems = useMemo(() => {
     const contextItems = toolCallStateToContextItems(toolCallState);
     return contextItems.filter((item) => !item.hidden);

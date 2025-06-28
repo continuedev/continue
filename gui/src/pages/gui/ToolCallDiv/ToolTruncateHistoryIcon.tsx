@@ -19,7 +19,7 @@ export function ToolTruncateHistoryIcon({
   }, [history]);
   const dispatch = useAppDispatch();
   const { mainEditor } = useMainEditor();
-  if (isStreaming || lastMessageIndex) {
+  if (isStreaming || historyIndex === lastMessageIndex) {
     return null;
   }
   return (
@@ -34,8 +34,7 @@ export function ToolTruncateHistoryIcon({
         mainEditor?.commands.focus();
       }}
     >
-      {historyIndex}/{history.length - 1}
-      <BarsArrowUpIcon className="h-2.5 w-2.5 flex-shrink-0 opacity-60" />
+      <BarsArrowUpIcon className="h-2.5 w-2.5 flex-shrink-0" />
     </ToolbarButtonWithTooltip>
   );
 }

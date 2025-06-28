@@ -1,11 +1,13 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
 import { InputModifiers, ToolResultChatMessage, UserChatMessage } from "core";
+import { modelSupportsTools } from "core/llm/autodetect";
 import { constructMessages } from "core/llm/constructMessages";
 import { getApplicableRules } from "core/llm/rules/getSystemMessageWithRules";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
 import { getBaseSystemMessage } from "../../util";
+import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   setAppliedRulesAtIndex,
@@ -119,11 +121,16 @@ export const streamResponseThunk = createAsyncThunk<
           messageMode,
         );
 
+        const activeTools = selectActiveTools(state);
+        const toolsSupported = modelSupportsTools(selectedChatModel);
+        const availableTools = toolsSupported ? activeTools : [];
+
         const messages = constructMessages(
           messageMode,
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
           applicableRules,
+          availableTools,
           rulePolicies,
         );
 

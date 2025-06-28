@@ -4,11 +4,15 @@ import {
   ContextItemWithId,
   RuleWithSource,
   TextMessagePart,
+  Tool,
   ToolResultChatMessage,
   UserChatMessage,
 } from "../";
 import { findLast } from "../util/findLast";
-import { normalizeToMessageParts } from "../util/messageContent";
+import {
+  normalizeToMessageParts,
+  renderContextItems,
+} from "../util/messageContent";
 import { isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 import { RulePolicies } from "./rules/types";
@@ -109,30 +113,38 @@ export function constructMessages(
   history: ChatHistoryItem[],
   baseChatOrAgentSystemMessage: string | undefined,
   rules: RuleWithSource[],
+  tools: Tool[],
   rulePolicies?: RulePolicies,
 ): ChatMessage[] {
+  const validTools = new Set(tools.map((tool) => tool.function.name));
+
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
   const msgs: ChatMessage[] = [];
 
-  for (let i = 0; i < filteredHistory.length; i++) {
-    const historyItem = filteredHistory[i];
-
-    if (messageMode === "chat") {
-      const toolMessage: ToolResultChatMessage =
-        historyItem.message as ToolResultChatMessage;
-      if (historyItem.toolCallState?.toolCallId || toolMessage.toolCallId) {
-        // remove all tool calls from the history
-        continue;
-      }
+  for (const item of filteredHistory) {
+    if (item.message.role === "tool") {
+      continue; // Tool messages will be re-inserted
     }
 
-    if (historyItem.message.role === "user") {
-      // Gather context items for user messages
-      let content = normalizeToMessageParts(historyItem.message);
+    // This was implemented for APIs that require all tool calls to have
+    // A corresponsing tool sent, which means if a user excluded a tool
+    // Then sessions with that tool call in the history would fail
+    // if (messageMode === "chat") {
+    //   const toolMessage: ToolResultChatMessage =
+    //     historyItem.message as ToolResultChatMessage;
+    //   if (historyItem.toolCallState?.toolCallId || toolMessage.toolCallId) {
+    //     // remove all tool calls from the history
+    //     continue;
+    //   }
+    // }
 
-      const ctxItems = historyItem.contextItems
+    if (item.message.role === "user") {
+      // Gather context items for user messages
+      let content = normalizeToMessageParts(item.message);
+
+      const ctxItems = item.contextItems
         .map((ctxItem) => {
           return {
             type: "text",
@@ -143,11 +155,47 @@ export function constructMessages(
 
       content = [...ctxItems, ...content];
       msgs.push({
-        ...historyItem.message,
+        ...item.message,
         content,
       });
     } else {
-      msgs.push(historyItem.message);
+      msgs.push(item.message);
+    }
+
+    if (item.message.role === "assistant") {
+      // First, push a version of the message with any valid tools calls
+      const validToolCalls = item.message.toolCalls?.filter(
+        (toolCall) =>
+          toolCall.function?.name &&
+          toolCall.id &&
+          validTools.has(toolCall.function.name),
+      );
+
+      // Case where no valid tool calls or content are present
+      msgs.push({
+        ...item.message,
+        toolCalls: validToolCalls,
+      });
+
+      // Then push a tool message for each valid tool call
+      if (validToolCalls?.length) {
+        // If the assistant message has tool calls, we need to insert tool messages
+        for (const toolCall of validToolCalls) {
+          let content: string = "No tool output";
+          // TODO toolCallState only supports one tool call per message for now
+          if (
+            item.toolCallState?.toolCallId === toolCall.id &&
+            item.toolCallState?.output
+          ) {
+            content = renderContextItems(item.toolCallState.output);
+          }
+          msgs.push({
+            role: "tool",
+            content,
+            toolCallId: toolCall.id!,
+          });
+        }
+      }
     }
   }
 

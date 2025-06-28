@@ -143,7 +143,6 @@ export function ContextItemsPeekItem({
           {contextItem.uri?.type === "file"
             ? getUriPathBasename(contextItem.description)
             : contextItem.description}
-          adsfasdfasdjk; asdfl;kjasdl;fkjasdlk;fja asdfklj;asdl;fkjasdf
         </span>
         {isUrl && (
           <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0 text-gray-400 opacity-80 group-hover:opacity-100" />

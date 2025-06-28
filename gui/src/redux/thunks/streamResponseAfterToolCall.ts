@@ -1,8 +1,10 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage } from "core";
+import { modelSupportsTools } from "core/llm/autodetect";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
 import { getBaseSystemMessage } from "../../util";
+import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import { addContextItemsAtIndex, streamUpdate } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -67,11 +69,16 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           messageMode,
         );
 
+        const activeTools = selectActiveTools(state);
+        const toolsSupported = modelSupportsTools(selectedChatModel);
+        const availableTools = toolsSupported ? activeTools : [];
+
         const messages = constructMessages(
           messageMode,
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
           state.config.config.rules,
+          availableTools,
         );
 
         unwrapResult(await dispatch(streamNormalInput({ messages })));
