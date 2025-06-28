@@ -15,4 +15,4 @@ The **entire contents** of each file (the current file for Jetbrains inline Edit
 
 ## Context Providers
 
-In VS Code Edit mode, you can use `@` to add context using [Context Providers](../customize/context-providers.mdx), similar to [Chat](../chat/context-selection.md). Some context providers may be disabled in Edit mode.
+In VS Code Edit mode, you can use `@` to add context using [Context Providers](../advanced/context-integration/custom-providers), similar to [Chat](../chat/context-selection.md). Some context providers may be disabled in Edit mode.

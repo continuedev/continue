@@ -1,0 +1,32 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# Llamafile
+
+A [llamafile](https://github.com/Mozilla-Ocho/llamafile#readme) is a self-contained binary that can run an open-source LLM. You can configure this provider in your config.json as follows:
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Llamafile
+      provider: llamafile
+      model: mistral-7b
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Llamafile",
+        "provider": "llamafile",
+        "model": "mistral-7b"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Llamafile.ts)

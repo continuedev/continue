@@ -19,28 +19,28 @@ You can include the currently open file as context by pressing <kbd>opt</kbd> + 
 
 ## Specific file
 
-You can include a specific file in your current workspace as context by typing [`@Files`](../customize/context-providers.mdx#file) and selecting the file.
+You can include a specific file in your current workspace as context by typing [`@Files`](../advanced/context-integration/custom-providers#file) and selecting the file.
 
 ## Specific folder
 
-You can include a folder in your current workspace as context by typing [`@Folder`](../customize/context-providers.mdx#folder) and selecting the directory. It [works like `@Codebase`](../customize/deep-dives/codebase.mdx) but only includes the files in the selected folder.
+You can include a folder in your current workspace as context by typing [`@Folder`](../advanced/context-integration/custom-providers#folder) and selecting the directory. It [works like `@Codebase`](../advanced/deep-dives/codebase.mdx) but only includes the files in the selected folder.
 
 ## Codebase search
 
-You can automatically include relevant files from your codebase as context by typing [`@Codebase`](../customize/context-providers.mdx#codebase). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.mdx).
+You can automatically include relevant files from your codebase as context by typing [`@Codebase`](../advanced/context-integration/custom-providers#codebase). You can learn about how @Codebase works [here](../advanced/deep-dives/codebase.mdx).
 
 ## Documentation site
 
-You can include a documentation site as context by typing [`@Docs`](../customize/context-providers.mdx#docs) and selecting the documentation site. You can learn about how @Docs works [here](../customize/deep-dives/docs.mdx).
+You can include a documentation site as context by typing [`@Docs`](../advanced/context-integration/custom-providers#docs) and selecting the documentation site. You can learn about how @Docs works [here](../advanced/deep-dives/docs.mdx).
 
 ## Terminal contents
 
-You can include the contents of the terminal in your IDE as context by typing [`@Terminal`](../customize/context-providers.mdx#terminal).
+You can include the contents of the terminal in your IDE as context by typing [`@Terminal`](../advanced/context-integration/custom-providers#terminal).
 
 ## Git diff
 
-You can include all of the changes you've made to your current branch by typing [`@Git Diff`](../customize/context-providers.mdx#git-diff).
+You can include all of the changes you've made to your current branch by typing [`@Git Diff`](../advanced/context-integration/custom-providers#git-diff).
 
 ## Other context
 
-You can see a full list of built-in context providers [here](../customize/context-providers.mdx) and how to create your own custom context provider [here](../customize/tutorials/build-your-own-context-provider.mdx).
+You can see a full list of built-in context providers [here](../advanced/context-integration/custom-providers) and how to create your own custom context provider [here](../advanced/tutorials/build-your-own-context-provider.mdx).

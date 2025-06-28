@@ -7,7 +7,7 @@ keywords: [assistants, overview, customization]
 
 # Introduction to Assistants
 
-Custom AI code assistants are configurations of building [blocks](../blocks/intro.md) that enable a coding experience tailored to your specific use cases.
+Custom AI code assistants are configurations of building [blocks](../customization/blocks/intro.md) that enable a coding experience tailored to your specific use cases.
 
 `config.yaml` is a format for defining custom AI code assistants. An assistant has some top-level properties (e.g. `name`, `version`), but otherwise consists of composable lists of **blocks** such as `models` and `rules`, which are the atomic building blocks of an assistant.
 

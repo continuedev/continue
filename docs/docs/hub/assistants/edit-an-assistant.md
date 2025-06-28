@@ -19,7 +19,7 @@ For blocks that require secret values like API keys, you will see a small notifi
 
 To delete a block, click the trash icon.
 
-If a block you want to use does not exist yet, you can [create a new block](../blocks/create-a-block.md).
+If a block you want to use does not exist yet, you can [create a new block](../customization/blocks/create-a-block.md).
 
 When you are done editing, click "Publish" to publish a new version of the assistant.
 

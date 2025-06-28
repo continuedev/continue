@@ -17,4 +17,4 @@ These help organizations capture and analyze AI assistant usage data:
 
 ## Learn More
 
-You can read more about development data [here](../customize/deep-dives/development-data.md). Data destinations are configured in the [`data`](../reference.md#data) section of `config.yaml`.
+You can read more about development data [here](../advanced/deep-dives/development-data.md). Data destinations are configured in the [`data`](../advanced/reference#data) section of `config.yaml`.

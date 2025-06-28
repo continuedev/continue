@@ -1,0 +1,69 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+# Kindo
+
+Kindo offers centralized control over your organization's AI operations, ensuring data protection and compliance with internal policies while supporting various commercial and open-source models. To get started, sign up [here](https://app.kindo.ai/), create an API key in [Settings > API > API Keys](https://app.kindo.ai/settings/api), and choose a model from the list of supported models in the "Available Models" tab or copy and paste the config in [Plugins > Your Configuration](https://app.kindo.ai/plugins).
+
+## Config Example
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: kindo
+      model: claude-3-5-sonnet
+      apiKey: <YOUR_KINDO_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet",
+        "provider": "kindo",
+        "model": "claude-3-5-sonnet",
+        "apiKey": "<YOUR_KINDO_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Tab Autocomplete Config Example
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: WhiteRabbitNeo
+      provider: kindo
+      model: /models/WhiteRabbitNeo-33B-DeepSeekCoder
+      apiKey: <YOUR_KINDO_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": [
+      {
+        "title": "WhiteRabbitNeo",
+        "provider": "kindo",
+        "model": "/models/WhiteRabbitNeo-33B-DeepSeekCoder",
+        "apiKey": "<YOUR_KINDO_API_KEY>",
+        "template": "none"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Security
+
+To update your organization's model access, adjust the controls in [security settings](https://app.kindo.ai/security-settings).

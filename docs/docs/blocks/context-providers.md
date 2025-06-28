@@ -18,4 +18,4 @@ These blocks determine what internal information your AI assistant can access:
 
 ## Learn More
 
-Learn more about context providers [here](../reference.md#context), and check out [this guide](../customize/tutorials/build-your-own-context-provider.mdx) to creating your own custom context provider.
+Learn more about context providers [here](../advanced/reference#context), and check out [this guide](../advanced/tutorials/build-your-own-context-provider.mdx) to creating your own custom context provider.

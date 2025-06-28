@@ -16,4 +16,4 @@ This is how Continue brings your documentation directly into the IDE:
 
 ## Learn More
 
-Learn more in the [@Docs deep dive](../customize/deep-dives/docs.mdx), and view [`docs`](../reference.md#docs) in the YAML Reference for more details.
+Learn more in the [@Docs deep dive](../advanced/deep-dives/docs.mdx), and view [`docs`](../advanced/reference#docs) in the YAML Reference for more details.
