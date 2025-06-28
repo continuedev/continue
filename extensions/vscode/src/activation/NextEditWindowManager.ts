@@ -73,10 +73,10 @@ const SVG_CONFIG = {
 } as const;
 
 // Command ID - can be used in package.json
-export const HIDE_NEXT_EDIT_WINDOW_COMMAND =
-  "continue.nextEditWindow.hideTooltips";
-export const ACCEPT_NEXT_EDIT_COMMAND =
-  "continue.nextEditWindow.acceptNextEdit";
+export const HIDE_NEXT_EDIT_SUGGESTION_COMMAND =
+  "continue.nextEditWindow.hideNextEditSuggestion";
+export const ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND =
+  "continue.nextEditWindow.acceptNextEditSuggestion";
 
 export class NextEditWindowManager {
   private static instance: NextEditWindowManager | undefined;
@@ -174,11 +174,11 @@ export class NextEditWindowManager {
 
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
     this.registerCommandSafely(
-      HIDE_NEXT_EDIT_WINDOW_COMMAND,
+      HIDE_NEXT_EDIT_SUGGESTION_COMMAND,
       async () => await this.hideAllNextEditWindows(),
     );
     this.registerCommandSafely(
-      ACCEPT_NEXT_EDIT_COMMAND,
+      ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
       async () => await this.acceptNextEdit(),
     );
 
@@ -199,8 +199,8 @@ export class NextEditWindowManager {
    */
   private registerCommandSafely(
     commandId:
-      | "continue.nextEditWindow.hideTooltips"
-      | "continue.nextEditWindow.acceptNextEdit",
+      | "continue.nextEditWindow.hideNextEditSuggestion"
+      | "continue.nextEditWindow.acceptNextEditSuggestion",
     callback: () => Promise<void>,
   ) {
     if (!this.context) {
@@ -567,7 +567,7 @@ export class NextEditWindowManager {
 
   private buildHideTooltipHoverMsg() {
     const hoverMarkdown = new vscode.MarkdownString(
-      `[Reject (Esc)](command:${HIDE_NEXT_EDIT_WINDOW_COMMAND}) | [Accept (Tab)](command:${ACCEPT_NEXT_EDIT_COMMAND})`,
+      `[Reject (Esc)](command:${HIDE_NEXT_EDIT_SUGGESTION_COMMAND}) | [Accept (Tab)](command:${ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND})`,
     );
 
     hoverMarkdown.isTrusted = true;

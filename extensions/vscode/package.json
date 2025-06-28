@@ -336,12 +336,12 @@
         "group": "Continue"
       },
       {
-        "command": "continue.nextEditWindow.hideTooltips",
+        "command": "continue.nextEditWindow.hideNextEditSuggestion",
         "category": "Continue",
-        "title": "Hide Tooltip Window"
+        "title": "Hide Next Edit Suggestion"
       },
       {
-        "command": "continue.nextEditWindow.acceptNextEdit",
+        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
         "category": "Continue",
         "title": "Accept Next Edit Suggestion"
       },
