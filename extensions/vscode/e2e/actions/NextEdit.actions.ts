@@ -7,7 +7,7 @@ import { TestUtils } from "../TestUtils";
 
 export class NextEditActions {
   /**
-   * Test accepting a Next Edit suggestion with Tab
+   * Test accepting a Next Edit suggestion with Tab.
    */
   public static async acceptNextEditSuggestion(editor: TextEditor) {
     const hasDecoration = await NextEditActions.forceNextEdit(editor);
@@ -19,6 +19,21 @@ export class NextEditActions {
     const editorText = await editor.getTextAtLine(1);
     
     return editorText === "HELLO";
+  }
+
+  /**
+   * Test rejecting a Next Edit suggestion with Esc.
+   */
+  public static async rejectNextEditSuggestion(editor: TextEditor) {
+    const hasDecoration = await NextEditActions.forceNextEdit(editor);
+    expect(hasDecoration).to.be.true;
+    
+    await new Workbench().executeCommand("Continue: Hide Next Edit Suggestion");
+
+    // Check if the editor text didn't change.
+    const editorText = await editor.getText();
+    
+    return editorText === "def main():\n    ";
   }
 
   /**
