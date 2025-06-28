@@ -13,10 +13,10 @@ This PRD outlines the plan to restructure Continue's documentation from 10+ navi
 
 ### Day 1: Planning & Documentation
 **Tasks:**
-- [ ] Create comprehensive URL mapping document (old → new paths)
-- [ ] Document all internal link dependencies
-- [ ] Create redirect strategy for netlify.toml
-- [ ] Set up staging environment for testing
+- [x] Create comprehensive URL mapping document (old → new paths)
+- [x] Document all internal link dependencies
+- [x] Create redirect strategy for netlify.toml
+- [x] Set up staging environment for testing
 
 **Deliverables:**
 - URL_MAPPING.md with all path changes
@@ -25,12 +25,12 @@ This PRD outlines the plan to restructure Continue's documentation from 10+ navi
 
 ### Day 2: Structure Implementation
 **Tasks:**
-- [ ] Restructure sidebars.js with 5 main sections
-- [ ] Update top navigation in docusaurus.config.js
-- [ ] Create new directory structure
-- [ ] Move files to new locations
-- [ ] Create section overview pages
-- [ ] Set up Guides section structure
+- [x] Restructure sidebars.js with 5 main sections
+- [x] Update top navigation in docusaurus.config.js
+- [x] Create new directory structure
+- [x] Move files to new locations
+- [x] Create section overview pages
+- [x] Set up Guides section structure
 
 **Deliverables:**
 - Updated sidebars.js
@@ -41,8 +41,9 @@ This PRD outlines the plan to restructure Continue's documentation from 10+ navi
 
 ### Day 3: Content Updates
 **Tasks:**
-- [ ] Standardize feature pages (How it works, Quick start)
-- [ ] Implement VS Code/JetBrains tabbed install guides
+- [x] Standardize feature pages (How it works, Quick start)
+- [x] Implement VS Code/JetBrains tabbed install guides
+  - [ ] Fix broken image
 - [ ] Update all internal links
 - [ ] Add installation reminders in feature intros
 
