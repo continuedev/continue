@@ -70,6 +70,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
+  isWorkspaceRemote: [undefined, boolean];
   getUniqueId: [undefined, string];
   getTags: [string, IndexTag[]];
   readSecrets: [{ keys: string[] }, Record<string, string>];

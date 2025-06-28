@@ -48,7 +48,6 @@ class Bedrock extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    contextLength: 200_000,
     profile: "bedrock",
   };
 
@@ -547,7 +546,7 @@ class Bedrock extends BaseLLM {
   }
 
   // EMBED //
-  async embed(chunks: string[]): Promise<number[][]> {
+  async _embed(chunks: string[]): Promise<number[][]> {
     const credentials = await this._getCredentials();
     const client = new BedrockRuntimeClient({
       region: this.region,

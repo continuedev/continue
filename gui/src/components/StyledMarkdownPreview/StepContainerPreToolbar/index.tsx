@@ -11,8 +11,10 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useIdeMessengerRequest } from "../../../hooks/useIdeMessengerRequest";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
-import { selectCurrentToolCallApplyState } from "../../../redux/selectors/selectCurrentToolCall";
-import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
+import {
+  selectApplyStateByStreamId,
+  selectApplyStateByToolCallId,
+} from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
 import Spinner from "../../gui/Spinner";
 import { isTerminalCodeBlock } from "../utils";
@@ -54,6 +56,7 @@ export interface StepContainerPreToolbarProps {
   codeBlockIndex: number; // To track which codeblock we are applying
   isLastCodeblock: boolean;
   codeBlockStreamId: string;
+  forceToolCallId?: string; // If this is defined, we will use this streamId instead of the one from the codeBlock
   range?: string;
   children: any;
   expanded?: boolean;
@@ -68,6 +71,7 @@ export function StepContainerPreToolbar({
   codeBlockIndex,
   isLastCodeblock,
   codeBlockStreamId,
+  forceToolCallId,
   range,
   children,
   expanded,
@@ -99,8 +103,8 @@ export function StepContainerPreToolbar({
   const applyState = useAppSelector((state) =>
     selectApplyStateByStreamId(state, codeBlockStreamId),
   );
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
+  const toolCallApplyState = useAppSelector((state) =>
+    selectApplyStateByToolCallId(state, forceToolCallId),
   );
 
   /**
@@ -147,7 +151,7 @@ export function StepContainerPreToolbar({
         setRelativeFilepathUri(resolvedUri);
       }
     };
-    getRelativeFilepathUri();
+    void getRelativeFilepathUri();
   }, [relativeFilepath, ideMessenger.ide]);
 
   async function getFileUriToApplyTo() {
@@ -173,7 +177,7 @@ export function StepContainerPreToolbar({
   async function onClickApply() {
     const fileUri = await getFileUriToApplyTo();
     if (!fileUri) {
-      ideMessenger.ide.showToast(
+      void ideMessenger.ide.showToast(
         "error",
         "Could not resolve filepath to apply changes",
       );
@@ -188,7 +192,7 @@ export function StepContainerPreToolbar({
     });
 
     setAppliedFileUri(fileUri);
-    refreshFileExists();
+    void refreshFileExists();
   }
 
   function onClickInsertAtCursor() {
@@ -198,7 +202,7 @@ export function StepContainerPreToolbar({
   async function handleDiffAction(action: "accept" | "reject") {
     const filepath = await getFileUriToApplyTo();
     if (!filepath) {
-      ideMessenger.ide.showToast(
+      void ideMessenger.ide.showToast(
         "error",
         `Could not resolve filepath to ${action} changes`,
       );
@@ -233,10 +237,7 @@ export function StepContainerPreToolbar({
   }
 
   const renderActionButtons = () => {
-    const isPendingToolCall =
-      currentToolCallApplyState &&
-      currentToolCallApplyState.streamId === applyState?.streamId &&
-      currentToolCallApplyState.status === "not-started";
+    const isPendingToolCall = toolCallApplyState?.status === "not-started";
 
     if (isGeneratingCodeBlock || isPendingToolCall) {
       const numLines = codeBlockContent.split("\n").length;
@@ -271,7 +272,7 @@ export function StepContainerPreToolbar({
       return (
         <ApplyActions
           disableManualApply={disableManualApply}
-          applyState={applyState}
+          applyState={toolCallApplyState ?? applyState}
           onClickApply={onClickApply}
           onClickAccept={() => handleDiffAction("accept")}
           onClickReject={() => handleDiffAction("reject")}
@@ -293,6 +294,7 @@ export function StepContainerPreToolbar({
       <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
         <div className="max-w-[50% flex flex-row items-center">
           <ChevronDownIcon
+            data-testid="toggle-codeblock"
             onClick={() => setIsExpanded(!isExpanded)}
             className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
