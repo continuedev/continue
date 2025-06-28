@@ -1,6 +1,6 @@
 ---
-title: Create an assistant
-sidebar_label: Create an assistant
+title: Create An Assistant
+sidebar_label: Create An Assistant
 description: How to create a custom AI code assistant
 keywords: [assistants, creation, guide]
 ---

@@ -1,10 +1,11 @@
 ---
-title: Hub & Sharing Overview
+title: Sharing
 description: Discover, share, and collaborate with the Continue community
 keywords: [hub, sharing, community, assistants, collaboration]
+sidebar_label: Sharing
 ---
 
-# Hub & Sharing
+# Sharing
 
 Connect with the Continue community to discover, share, and collaborate on AI development tools.
 

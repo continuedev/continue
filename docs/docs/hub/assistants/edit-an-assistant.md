@@ -1,6 +1,6 @@
 ---
-title: Edit an Assistant
-sidebar_label: Edit an Assistant
+title: Edit An Assistant
+sidebar_label: Edit An Assistant
 description: How to edit a custom AI coding assistant.
 keywords: [assistants, creation, guide]
 ---
@@ -19,7 +19,7 @@ For blocks that require secret values like API keys, you will see a small notifi
 
 To delete a block, click the trash icon.
 
-If a block you want to use does not exist yet, you can [create a new block](../customization/blocks/create-a-block.md).
+If a block you want to use does not exist yet, you can [create a new block](../blocks/create-a-block.md).
 
 When you are done editing, click "Publish" to publish a new version of the assistant.
 

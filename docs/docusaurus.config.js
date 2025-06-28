@@ -58,9 +58,12 @@ const config = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
-        gtag: {
-          trackingID: "G-M3JWW8N2XQ",
-        },
+        ...(process.env.NODE_ENV === 'production' && {
+          gtag: {
+            trackingID: "G-M3JWW8N2XQ",
+            anonymizeIP: true,
+          },
+        }),
       }),
     ],
   ],
@@ -227,8 +230,8 @@ const config = {
       {
         redirects: [
           {
-            to: "/hub/introduction",
-            from: "/hub",
+            to: "/hub/00-introduction",
+            from: ["/hub", "/hub/introduction"],
           },
           {
             to: "/hub/governance/org-permissions",
@@ -251,7 +254,7 @@ const config = {
             from: ["/customize", "/customization"],
           },
           {
-            to: "/customization/blocks/mcp-tools",
+            to: "/customization/mcp-tools",
             from: "/customize/tools",
           },
           {
