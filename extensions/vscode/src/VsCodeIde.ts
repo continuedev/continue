@@ -88,6 +88,17 @@ class VsCodeIde implements IDE {
     return result;
   }
 
+  async gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    const result = await executeGotoProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeTypeDefinitionProvider",
+    });
+
+    return result;
+  }
+
   onDidChangeActiveTextEditor(callback: (uri: string) => void): void {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor) {
