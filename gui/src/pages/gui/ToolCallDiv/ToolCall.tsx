@@ -2,7 +2,7 @@ import { Tool, ToolCallState } from "core";
 import { useMemo, useState } from "react";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
-import { TruncateHistoryIcon } from "./TruncateHistoryIcon";
+import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 
 interface ToolCallDisplayProps {
   children: React.ReactNode;
@@ -43,7 +43,9 @@ export function ToolCallDisplay({
               />
             </div>
             <div className="gap 1.5 flex flex-row items-center">
-              <TruncateHistoryIcon historyIndex={historyIndex} />
+              {!!toolCallState.output && (
+                <ToolTruncateHistoryIcon historyIndex={historyIndex} />
+              )}
               {!!args.length ? (
                 <ArgsToggleIcon
                   isShowing={argsExpanded}

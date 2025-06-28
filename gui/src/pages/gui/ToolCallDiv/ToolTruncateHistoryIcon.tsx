@@ -1,17 +1,25 @@
-import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { BarsArrowUpIcon } from "@heroicons/react/24/outline";
+import { chatMessageIsEmpty } from "core/llm/messages";
+import { findLastIndex } from "core/util/findLast";
+import { useMemo } from "react";
+import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
 import { ToolbarButtonWithTooltip } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ToolbarButtonWithTooltip";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { truncateHistoryToMessage } from "../../../redux/slices/sessionSlice";
 
-export function TruncateHistoryIcon({
+export function ToolTruncateHistoryIcon({
   historyIndex,
 }: {
   historyIndex: number;
 }) {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const history = useAppSelector((state) => state.session.history);
+  const lastMessageIndex = useMemo(() => {
+    return findLastIndex(history, (item) => !chatMessageIsEmpty(item.message));
+  }, [history]);
   const dispatch = useAppDispatch();
-  if (isStreaming || historyIndex === history.length - 1) {
+  const { mainEditor } = useMainEditor();
+  if (isStreaming || lastMessageIndex) {
     return null;
   }
   return (
@@ -23,9 +31,11 @@ export function TruncateHistoryIcon({
             index: historyIndex,
           }),
         );
+        mainEditor?.commands.focus();
       }}
     >
-      <ArrowUpTrayIcon className="h-2.5 w-2.5" />
+      {historyIndex}/{history.length - 1}
+      <BarsArrowUpIcon className="h-2.5 w-2.5 flex-shrink-0 opacity-60" />
     </ToolbarButtonWithTooltip>
   );
 }

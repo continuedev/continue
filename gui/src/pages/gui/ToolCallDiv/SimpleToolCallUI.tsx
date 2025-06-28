@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { toolCallStateToContextItems } from "./toolCallStateToContextItem";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
-import { TruncateHistoryIcon } from "./TruncateHistoryIcon";
+import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 
 interface SimpleToolCallUIProps {
   toolCallState: ToolCallState;
@@ -61,7 +61,9 @@ export function SimpleToolCallUI({
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
         <div className="flex flex-row items-center gap-1.5">
-          <TruncateHistoryIcon historyIndex={historyIndex} />
+          {!!toolCallState.output?.length && (
+            <ToolTruncateHistoryIcon historyIndex={historyIndex} />
+          )}
           {args.length > 0 ? (
             <ArgsToggleIcon
               isShowing={showingArgs}
