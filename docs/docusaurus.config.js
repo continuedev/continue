@@ -65,6 +65,19 @@ const config = {
     ],
   ],
 
+  plugins: [
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "guides",
+        path: "guides",
+        routeBasePath: "guides",
+        sidebarPath: require.resolve("./sidebars.js"),
+        editUrl: "https://github.com/continuedev/continue/tree/main/docs",
+      },
+    ],
+  ],
+
   scripts: [
     {
       src: "/scripts/custom-reo.js", // it references from static folder
@@ -96,29 +109,20 @@ const config = {
             type: "docSidebar",
             sidebarId: "docsSidebar",
             position: "left",
-            label: "User Guide",
+            label: "Documentation",
             href: "/",
           },
           {
             type: "docSidebar",
-            sidebarId: "hubSidebar",
+            sidebarId: "guidesSidebar",
             position: "left",
-            label: "Hub",
-            href: "/hub/introduction",
+            label: "Guides",
+            href: "/guides",
           },
           {
-            type: "docSidebar",
-            sidebarId: "customizingSidebar",
+            to: "https://hub.continue.dev",
+            label: "Explore",
             position: "left",
-            label: "Customize",
-            href: "/customize/overview",
-          },
-          {
-            type: "docSidebar",
-            sidebarId: "customizingSidebar",
-            position: "left",
-            label: "Reference",
-            href: "/reference",
           },
 
           {
