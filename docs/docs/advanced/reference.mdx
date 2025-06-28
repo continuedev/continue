@@ -19,7 +19,7 @@ from [the Hub](https://hub.continue.dev/explore/assistants) or locally
   - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the **[Migration Guide](./yaml-migration.md)**.
+Config YAML replaces `config.json`, which is deprecated. View the **[Migration Guide](./yaml-migration)**.
 :::
 
 An assistant is made up of:
@@ -191,9 +191,9 @@ chat, editing, and summarizing.
   provider and model. Supported capabilities include `tool_use` and `image_input`.
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
-  `chat`, [`edit`](./advanced/model-roles/edit.mdx#prompt-templating), [
-  `apply`](./advanced/model-roles/apply.mdx#prompt-templating) and [
-  `autocomplete`](./advanced/model-roles/autocomplete.md#prompt-templating). The `chat` property must be a
+  `chat`, [`edit`](./model-roles/edit#prompt-templating), [
+  `apply`](./model-roles/apply#prompt-templating) and [
+  `autocomplete`](./model-roles/autocomplete#prompt-templating). The `chat` property must be a
   valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
@@ -295,8 +295,8 @@ context:
 ### `rules`
 
 List of rules that the LLM should follow. These are concatenated into the system message for
-all [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Agent](./agent/how-to-use-it.md) requests.
-See the [rules deep dive](./advanced/deep-dives/rules.mdx) for details.
+all [Chat](../features/chat/quick-start), [Edit](../features/edit/quick-start), and [Agent](../features/agent/quick-start) requests.
+See the [rules deep dive](../customization/rules) for details.
 
 Explicit rules can either be simple text or an object with the following properties:
 
@@ -400,7 +400,7 @@ mcpServers:
 
 ### `data`
 
-Destinations to which [development data](./advanced/deep-dives/development-data.md) will be sent.
+Destinations to which [development data](./deep-dives/development-data) will be sent.
 
 **Properties:**
 

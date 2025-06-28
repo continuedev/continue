@@ -1,0 +1,9 @@
+{
+  "label": "Guides",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "title": "Guides",
+    "description": "Learn how to use Continue with comprehensive guides and tutorials"
+  }
+}

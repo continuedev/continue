@@ -1,0 +1,9 @@
+{
+  "label": "Language Guides",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "title": "Language-Specific Guides",
+    "description": "Learn how to use Continue with different programming languages"
+  }
+}
