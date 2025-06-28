@@ -34,15 +34,15 @@ export interface TemplateVars {
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
-type NextEditModelName = "mercury-coder-nextedit" | "other-potential-model";
+type NextEditModelName = "mercury-coder-nextedit" | "this field is not used";
 
 const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   "mercury-coder-nextedit": {
     template:
       "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n\`\`\`{{{languageShorthand}}}\n{{{userExcerpts}}}\`\`\`",
   },
-  "other-potential-model": {
-    template: "", // Empty for now.
+  "this field is not used": {
+    template: "NEXT_EDIT",
   },
 };
 
@@ -66,6 +66,13 @@ export function renderPrompt(
   userEdits: string,
 ): UserPrompt {
   const modelName = helper.modelName as NextEditModelName;
+
+  if (modelName === "this field is not used") {
+    return {
+      role: "user",
+      content: "NEXT_EDIT",
+    };
+  }
 
   // Validate that the modelName is actually a supported model.
   if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {
