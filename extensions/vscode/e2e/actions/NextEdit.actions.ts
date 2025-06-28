@@ -53,4 +53,8 @@ export class NextEditActions {
     
     return svgDecoration !== null;
   }
+
+  public static async reload(): Promise<void> {
+    await new Workbench().executeCommand('workbench.action.reloadWindow');
+  }
 }
