@@ -4,7 +4,6 @@
 const sidebars = {
   docsSidebar: [
     "introduction",
-    "CLA",
     {
       type: "category",
       label: "Getting Started",
