@@ -1,6 +1,7 @@
 import { MessagePart, RangeInFile, SlashCommandDescWithSource } from "core";
 import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
+import { renderMcpPrompt } from "./mcpPromptArgs";
 import { getRenderedV1Prompt } from "./renderPromptv1";
 import { getPromptV2ContextRequests } from "./renderPromptv2";
 import { GetContextRequest } from "./types";
@@ -63,32 +64,20 @@ export async function renderSlashCommandPrompt(
       });
       break;
     case "mcp-prompt":
-      // TODO add support for mcp prompt args using command.mcpArgs
-      const args: { [key: string]: string } = {};
-      if (command.mcpArgs) {
-        command.mcpArgs.forEach((arg, i) => {
-          args[arg.name] = "";
-        });
-      }
-      const response = await ideMessenger.request("mcp/getPrompt", {
-        serverName: command.mcpServerName!,
-        promptName: command.name,
-        args: args,
+      const renderedMcpPrompt = await renderMcpPrompt(
+        command,
+        ideMessenger,
+        userInput,
+      );
+      slashedParts.push({
+        type: "text",
+        text: renderedMcpPrompt,
       });
-      if (response.status === "success") {
-        slashedParts.push({
-          type: "text",
-          text: `${response.content.prompt}${userInput ? "\n\n" + userInput : ""}`,
-        });
-      } else {
-        throw new Error(
-          `Failed to get MCP prompt for slash command ${command.name}`,
-        );
-      }
       break;
     case "prompt-file-v1":
     case "prompt-file-v2":
     case "yaml-prompt-block":
+    case "invokable-rule":
       if (!command.prompt) {
         console.warn(`Invalid/empty prompt from slash command ${command.name}`);
         break;
@@ -110,13 +99,13 @@ export async function renderSlashCommandPrompt(
           command,
         );
         contextRequests.push(...promptFileCtxRequests);
-        renderedPrompt = [command.prompt, userInput].join("\n\n");
+        renderedPrompt = [command.prompt, userInput].join("\n\n").trim();
       }
 
       if (renderedPrompt) {
         slashedParts.push({
           type: "text",
-          text: renderedPrompt.trim(), // Includes user input
+          text: renderedPrompt, // Includes user input
         });
       } else {
         console.warn(
@@ -126,14 +115,15 @@ export async function renderSlashCommandPrompt(
 
       break;
     case "built-in":
-    case "invokable-rule":
     case "json-custom-command":
       if (!command.prompt) {
         console.warn(`Slash command ${command.name} is missing prompt`);
         break;
       }
-      const rendered =
-        `${command.prompt}${userInput ? "\n\n" + userInput : ""}`.trim();
+      let rendered = command.prompt;
+      if (userInput) {
+        rendered += `\n\n${userInput}`;
+      }
       if (rendered) {
         slashedParts.push({
           type: "text",
