@@ -1,12 +1,12 @@
 import { Tree } from "web-tree-sitter";
 import { Range } from "../../..";
 
-interface TypeSpanAndSourceFile {
+export interface TypeSpanAndSourceFile {
   typeSpan: string,
   sourceFile: string,
 }
 
-interface TypeSpanAndSourceFileAndAst extends TypeSpanAndSourceFile {
+export interface TypeSpanAndSourceFileAndAst extends TypeSpanAndSourceFile {
   ast: Tree
 }
 
