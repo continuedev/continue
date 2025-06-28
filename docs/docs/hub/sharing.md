@@ -10,21 +10,25 @@ sidebar_label: Sharing
 Connect with the Continue community to discover, share, and collaborate on AI development tools.
 
 ## Community
+
 Join thousands of developers using Continue. Share experiences, get help, and contribute to the ecosystem.
 
 [Join the Community →](./community)
 
 ## Publishing
+
 Share your custom assistants, blocks, and configurations with the Continue community.
 
 [Start Publishing →](./publishing)
 
 ## Featured Assistants
+
 Explore curated assistants created by the community for specific use cases and workflows.
 
 [Browse Assistants →](./featured-assistants)
 
 ## Using Assistants
+
 Learn how to discover, install, and use community-created assistants in your projects.
 
 [Use Assistants →](./using-assistants)
