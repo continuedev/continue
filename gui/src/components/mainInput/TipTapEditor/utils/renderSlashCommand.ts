@@ -1,7 +1,7 @@
 import { MessagePart, RangeInFile, SlashCommandDescWithSource } from "core";
 import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
-import { renderMcpPrompt } from "./mcpPromptArgs";
+import { renderMcpPrompt } from "./renderMcpPrompt";
 import { getRenderedV1Prompt } from "./renderPromptv1";
 import { getPromptV2ContextRequests } from "./renderPromptv2";
 import { GetContextRequest } from "./types";
