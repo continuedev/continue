@@ -73,8 +73,10 @@ const SVG_CONFIG = {
 } as const;
 
 // Command ID - can be used in package.json
-export const HIDE_NEXT_EDIT_WINDOW_COMMAND = "nextEditWindow.hideTooltips";
-export const ACCEPT_NEXT_EDIT_COMMAND = "nextEditWindow.acceptNextEdit";
+export const HIDE_NEXT_EDIT_WINDOW_COMMAND =
+  "continue.nextEditWindow.hideTooltips";
+export const ACCEPT_NEXT_EDIT_COMMAND =
+  "continue.nextEditWindow.acceptNextEdit";
 
 export class NextEditWindowManager {
   private static instance: NextEditWindowManager | undefined;
@@ -196,7 +198,9 @@ export class NextEditWindowManager {
    * @param callback Function to run on command execution.
    */
   private registerCommandSafely(
-    commandId: "nextEditWindow.hideTooltips" | "nextEditWindow.acceptNextEdit",
+    commandId:
+      | "continue.nextEditWindow.hideTooltips"
+      | "continue.nextEditWindow.acceptNextEdit",
     callback: () => Promise<void>,
   ) {
     if (!this.context) {
