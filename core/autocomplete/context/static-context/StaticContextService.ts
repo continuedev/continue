@@ -2,10 +2,11 @@ import * as fs from "fs/promises";
 import { IDE, Position } from "../../..";
 import { AutocompleteCodeSnippet, AutocompleteStaticSnippet } from "../../snippets/types";
 import { HelperVars } from "../../util/HelperVars";
-import { HoleContext, RelevantHeaders, RelevantTypes } from "./types";
+import { HoleContext, RelevantHeaders, RelevantTypes, TypeSpanAndSourceFileAndAst } from "./types";
 import { getAst } from "../../util/ast";
 import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
 import path from "path";
+import { findEnclosingTypeDeclaration } from "./tree-sitter-utils";
 
 export class StaticContextService {
   private readonly ide: IDE;
@@ -24,7 +25,6 @@ export class StaticContextService {
       holeContext.fullHoverResult,
       holeContext.functionName,
       holeContext.range.start.line,
-      new Map<string, TypeSpanAndSourceFileAndAst>(),
       holeContext.source,
       new Map<string, string>(),
     );
@@ -147,9 +147,129 @@ export class StaticContextService {
     return res;
   }
 
-  private async extractRelevantTypes(): Promise<RelevantTypes> {
+  private async extractRelevantTypes(
+    declText: string,
+    typeName: string,
+    startLine: number,
+    currentFile: string,
+    foundContents: Map<string, string>, // uri -> contents
+  ): Promise<RelevantTypes> {
+    const foundSoFar = new Map<string, TypeSpanAndSourceFileAndAst>(); // identifier -> [full hover result, source]
 
+    await this.extractRelevantTypesHelper(
+      declText,
+      typeName,
+      startLine,
+      foundSoFar,
+      currentFile,
+      foundContents,
+    );
+
+    return foundSoFar;
   }
+
+  private async extractRelevantTypesHelper(
+    declText: string,
+    typeName: string,
+    startLine: number,
+    foundSoFar: Map<string, TypeSpanAndSourceFileAndAst>, // identifier -> [full hover result, source]
+    currentFile: string,
+    foundContents: Map<string, string>, // uri -> contents
+  ) {
+    if (!foundSoFar.has(typeName)) {
+      const ast = await getAst(currentFile, declText);
+      if (!ast) {
+        throw new Error(`failed to get ast for file ${currentFile}`);
+      }
+      foundSoFar.set(typeName, {
+        typeSpan: declText,
+        sourceFile: currentFile.slice(7),
+        ast: ast,
+      });
+
+      const language = getFullLanguageName(currentFile);
+      const query = await getQueryForFile(
+        currentFile,
+        path.join(
+          __dirname,
+          "queries",
+          "relevant-types-queries",
+          `${language}-extract-identifiers.scm`
+        )
+      );
+      if (!query) {
+        throw new Error(
+          `failed to get query for file ${currentFile} and language ${language}`
+        );
+      }
+
+      const identifiers = query.captures(ast.rootNode);
+
+      for (const { name, node } of identifiers) {
+        if (!foundSoFar.has(node.text)) {
+          try {
+            const typeDefinitionResult =
+              await this.ide.gotoTypeDefinition({
+                filepath: currentFile,
+                position: {
+                  character: node.startPosition.column,
+                  line: startLine + node.startPosition.row,
+                },
+              });
+
+            if (typeDefinitionResult.length != 0) {
+              const tdLocation = typeDefinitionResult[0];
+
+              let content = "";
+
+              if (foundContents.has(tdLocation.filepath)) {
+                content = foundContents.get(tdLocation.filepath)!;
+              } else {
+                content = await fs.readFile(tdLocation.filepath, "utf8");
+                foundContents.set(tdLocation.filepath, content);
+              }
+
+              const ast = await getAst(tdLocation.filepath, content);
+              if (!ast) {
+                throw new Error(
+                  `failed to get ast for file ${tdLocation.filepath}`
+                );
+              }
+              const decl = findEnclosingTypeDeclaration(
+                content,
+                tdLocation.range.start.line,
+                tdLocation.range.start.character,
+                ast
+              );
+              if (!decl) {
+                // throw new Error(`failed to get decl for file ${tdLocation.uri}`);
+                console.error(`failed to get decl for file ${tdLocation.filepath}`);
+              }
+
+              if (decl) {
+                await this.extractRelevantTypesHelper(
+                  decl.fullText,
+                  node.text,
+                  tdLocation.range.start.line,
+                  foundSoFar,
+                  tdLocation.filepath,
+                  foundContents,
+                );
+              } else {
+                // console.log("decl not found");
+              }
+            } else {
+              // console.log("td not found");
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        } else {
+        }
+      }
+    }
+  }
+
 
   private async extractRelevantHeaders(): Promise<RelevantHeaders> {
 
