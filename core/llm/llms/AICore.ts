@@ -8,13 +8,13 @@ const CAP_MESSAGE = `
 
         1. When the user provides their requirements to create CAP application, start by creating a comprehensive application summary. This summary should include:
 
-        <application_summary>
+        Application_summary:
         - A high-level description of the application's purpose and main features
         - A simplified storyboard-style diagram showing key entities and their relationships
         - Example data models defining main entities and how data is structured and accessed
         - Recommended technology stack (Node.js with CAP, SAP Fiori/UI5 or suitable low-code alternatives, database)
         - Project architecture outline (folder structure, main modules, and interactions)
-        </application_summary>
+       
 
         Keep the explanation concise, clear, and focused on system design. Do not generate implementation code or file scaffolding. Do not include a summary or closing paragraph.
 
@@ -46,10 +46,13 @@ const CAP_MESSAGE = `
         - GitHub token: {{GITHUB_TOKEN}}
         </user_info>
 
-        2. Edit the /home/user/.continue/config.yaml file to insert the GitHub token(the file is existing. use the edit_existing_file tool):
+        2.
+        - Edit the /home/user/.continue/config.yaml file to add a GitHub token configuration.
+        - Use the edit_existing_file tool
+        - Do not provide additional explanations - execute the edit directly
 
         <edit_config>
-        Read the config.yaml and add the following entry to the "mcpServers" entry(In focus on add, there is more entry dont run over it):
+        Add the following entry to the existing mcpServers section (preserve all existing entries):
         - name: GitHub
             command: node
             args:
@@ -58,6 +61,8 @@ const CAP_MESSAGE = `
             GITHUB_TOKEN: {{GITHUB_TOKEN}}
             
         </edit_config>
+        Important: 
+         - Append only - do not overwrite existing mcpServers entries
 
         3. Set up the application directory as the git work directory:
 
@@ -95,23 +100,23 @@ const CAP_MESSAGE = `
             https://{USER_NAME}:{GITHUB_TOKEN}@github.com/username/{REPO_NAME}.git
         </git_remote>
         
-        8. Add, commit, and push the files:
+        7. Add, commit, and push all the files.
 
 
         8. After completing all the above steps, provide the final output in two sections:
 
         <output>
-        1. Commands to set up the project locally:
-        git clone https://github.com/{{USER_NAME}}/{{REPO_NAME}}.git
-        cd {{REPO_NAME}}
-        npm install
-        npm start
+            1. Commands to set up the project locally:
+            git clone https://github.com/{{USER_NAME}}/{{REPO_NAME}}.git
+            cd {{REPO_NAME}}
+            npm install
+            npm run start
 
-        2. Prompt for the dev agent:
-        Please clone this repository (https://github.com/{{USER_NAME}}/{{REPO_NAME}}.git) and follow these steps to run the application:
-        Step 1: Navigate to the project directory
-        Step 2: Install dependencies using 'npm install'
-        Step 3: Start the application with 'npm run start'
+            2. Prompt for the dev agent:
+            Please clone this repository (https://github.com/{{USER_NAME}}/{{REPO_NAME}}.git) and follow these steps to run the application:
+            Step 1: Navigate to the project directory
+            Step 2: Install dependencies using 'npm install'
+            Step 3: Start the application with 'npm run start'
         </output>
 
         Your final response should only include the content within the <output> tags. Do not include any of the previous steps or explanations in your final output.
