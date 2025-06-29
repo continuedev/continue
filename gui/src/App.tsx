@@ -1,4 +1,8 @@
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch } from "./redux/store";
+import { syncToolSettingsWithAvailableTools } from "./redux/thunks/syncToolSettingsWithAvailableTools";
 import Layout from "./components/Layout";
 import { MainEditorProvider } from "./components/mainInput/TipTapEditor";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
@@ -51,6 +55,13 @@ const router = createMemoryRouter([
   most of which interact with redux etc.
 */
 function App() {
+  const dispatch = useDispatch<AppDispatch>();
+  const tools = useSelector((state: any) => state.config?.config?.tools);
+
+  useEffect(() => {
+    dispatch(syncToolSettingsWithAvailableTools());
+  }, [dispatch, tools]);
+
   return (
     <VscThemeProvider>
       <MainEditorProvider>
