@@ -2,6 +2,7 @@ export enum AutocompleteSnippetType {
   Code = "code",
   Diff = "diff",
   Clipboard = "clipboard",
+  Static = "static",
 }
 
 interface BaseAutocompleteSnippet {
@@ -23,15 +24,8 @@ export interface AutocompleteClipboardSnippet extends BaseAutocompleteSnippet {
   copiedAt: string;
 }
 
-type Filepath = string;
-type RelevantType = string;
-type RelevantHeader = string;
-
 export interface AutocompleteStaticSnippet extends BaseAutocompleteSnippet {
-  type: AutocompleteSnippetType.Code;
-  holeType: string,
-  relevantTypes: Map<Filepath, RelevantType[]>,
-  relevantHeaders: Map<Filepath, RelevantHeader[]>
+  type: AutocompleteSnippetType.Static;
 }
 
 export type AutocompleteSnippet =
