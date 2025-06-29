@@ -764,7 +764,9 @@ export class StaticContextService {
 
     async function scanRecursively(currentPath: string): Promise<void> {
       try {
-        const entries = await fs.readdir(currentPath, { withFileTypes: true });
+        const entries = await fs.readdir(currentPath, {
+          withFileTypes: true,
+        });
 
         for (const entry of entries) {
           const fullPath = localPathOrUriToPath(
