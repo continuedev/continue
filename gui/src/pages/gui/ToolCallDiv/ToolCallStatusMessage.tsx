@@ -58,7 +58,7 @@ export function ToolCallStatusMessage({
       style={{ fontSize }}
       data-testid="tool-call-title"
     >
-      {`Continue ${intro} ${message}`}
+      {`Build Studio ${intro} ${message}`}
     </div>
   );
 }
