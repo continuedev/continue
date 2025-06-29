@@ -1,12 +1,29 @@
 import * as fs from "fs/promises";
-import { IDE, Position } from "../../..";
-import { AutocompleteCodeSnippet, AutocompleteStaticSnippet } from "../../snippets/types";
-import { HelperVars } from "../../util/HelperVars";
-import { HoleContext, RelevantHeaders, RelevantTypes, TypeSpanAndSourceFileAndAst } from "./types";
-import { getAst } from "../../util/ast";
-import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
 import path from "path";
-import { findEnclosingTypeDeclaration } from "./tree-sitter-utils";
+import Parser from "web-tree-sitter";
+import { IDE, Position } from "../../..";
+import { localPathOrUriToPath } from "../../../util/pathToUri";
+import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
+import {
+  AutocompleteSnippetType,
+  AutocompleteStaticSnippet,
+} from "../../snippets/types";
+import { getAst } from "../../util/ast";
+import { HelperVars } from "../../util/HelperVars";
+import {
+  extractFunctionTypeFromDecl,
+  extractTopLevelDecls,
+  findEnclosingTypeDeclaration,
+  unwrapToBaseType,
+} from "./tree-sitter-utils";
+import {
+  HoleContext,
+  RelevantHeaders,
+  RelevantTypes,
+  StaticContext,
+  TypeSpanAndSourceFile,
+  TypeSpanAndSourceFileAndAst,
+} from "./types";
 
 export class StaticContextService {
   private readonly ide: IDE;
@@ -15,9 +32,58 @@ export class StaticContextService {
     this.ide = ide;
   }
 
+  public logAutocompleteStaticSnippet(
+    ctx: StaticContext,
+    label = "Static Snippet",
+  ) {
+    console.log(`=== ${label} ===`);
+    console.log("Hole Type:", ctx.holeType);
+
+    console.log(`\nRelevant Types (${ctx.relevantTypes.size} files):`);
+    ctx.relevantTypes.forEach((types, filepath) => {
+      console.log(`  📁 ${filepath}`);
+      types.forEach((type) => console.log(`    • ${type}`));
+    });
+
+    console.log(`\nRelevant Headers (${ctx.relevantHeaders.size} files):`);
+    ctx.relevantHeaders.forEach((headers, filepath) => {
+      console.log(`  📁 ${filepath}`);
+      headers.forEach((header) => console.log(`    • ${header}`));
+    });
+  }
+
+  public static formatAutocompleteStaticSnippet(ctx: StaticContext): string {
+    let output = `AutocompleteStaticSnippet:\n`;
+    output += `  holeType: ${ctx.holeType}\n`;
+
+    output += `  relevantTypes:\n`;
+    if (ctx.relevantTypes.size === 0) {
+      output += `    (none)\n`;
+    } else {
+      ctx.relevantTypes.forEach((types, filepath) => {
+        output += `    ${filepath}: [${types.join(", ")}]\n`;
+      });
+    }
+
+    output += `  relevantHeaders:\n`;
+    if (ctx.relevantHeaders.size === 0) {
+      output += `    (none)\n`;
+    } else {
+      ctx.relevantHeaders.forEach((headers, filepath) => {
+        output += `    ${filepath}: [${headers.join(", ")}]\n`;
+      });
+    }
+
+    return output;
+  }
+
   public async getContext(
-    helper: HelperVars
-  ): Promise<AutocompleteStaticSnippet> {
+    helper: HelperVars,
+  ): Promise<AutocompleteStaticSnippet[]> {
+    const start = Date.now();
+    const tsFiles = await this.getTypeScriptFilesFromWorkspaces(
+      helper.workspaceUris,
+    );
     // Get the three contexts holeContext, relevantTypes, relevantHeaders.
     const holeContext = await this.getHoleContext(helper.filepath, helper.pos);
 
@@ -29,22 +95,23 @@ export class StaticContextService {
       new Map<string, string>(),
     );
 
-    let repo: string[] = [];
-    if (this.language === "typescript") {
-      repo = getAllTSFiles(this.repoPath);
-    } else if (this.language === "ocaml") {
-      repo = getAllOCamlFiles(this.repoPath);
-    }
+    // if (this.language === "typescript") {
+    //   repo = getAllTSFiles(this.repoPath);
+    // } else if (this.language === "ocaml") {
+    //   repo = getAllOCamlFiles(this.repoPath);
+    // }
+    //
 
     const relevantHeaders = await this.extractRelevantHeaders(
-      repo,
+      tsFiles,
       relevantTypes,
       holeContext.functionTypeSpan,
-      holeContext.functionName,
-      this.repoPath
     );
 
-    const relevantTypesToReturn: Map<string, string[]> = new Map<string, string[]>();
+    const relevantTypesToReturn: Map<string, string[]> = new Map<
+      string,
+      string[]
+    >();
     relevantTypes.forEach(({ typeSpan: v, sourceFile: src }, _) => {
       if (relevantTypesToReturn.has(src)) {
         const updated = relevantTypesToReturn.get(src)!;
@@ -53,10 +120,12 @@ export class StaticContextService {
       } else {
         relevantTypesToReturn.set(src, [v]);
       }
-    })
+    });
 
-
-    const relevantHeadersToReturn: Map<string, string[]> = new Map<string, string[]>();
+    const relevantHeadersToReturn: Map<string, string[]> = new Map<
+      string,
+      string[]
+    >();
     relevantHeaders.forEach(({ typeSpan: v, sourceFile: src }) => {
       if (relevantHeadersToReturn.has(src)) {
         const updated = relevantHeadersToReturn.get(src)!;
@@ -67,25 +136,38 @@ export class StaticContextService {
       } else {
         relevantHeadersToReturn.set(src, [v]);
       }
-    })
+    });
 
-    return {
-      holeType: ""
-      relevantTypes: ""
-      relevantHeaders: ""
+    const ctx = {
+      holeType: holeContext.functionTypeSpan,
+      relevantTypes: relevantTypesToReturn,
+      relevantHeaders: relevantHeadersToReturn,
     };
+    const end = Date.now();
+
+    this.logAutocompleteStaticSnippet(ctx);
+
+    console.log(end - start);
+
+    return [
+      {
+        type: AutocompleteSnippetType.Static,
+        content: StaticContextService.formatAutocompleteStaticSnippet(ctx),
+      },
+    ];
   }
 
   private async getHoleContext(
     sketchFilePath: string,
-    cursorPosition: Position
+    cursorPosition: Position,
   ): Promise<HoleContext> {
     // We need to inject the hole @ to trigger a treesitter error node.
+    sketchFilePath = localPathOrUriToPath(sketchFilePath);
     const sketchFileContent = await fs.readFile(sketchFilePath, "utf8");
     const injectedContent = this.insertAtPosition(
       sketchFileContent,
       cursorPosition,
-      "@;"
+      "@;",
     );
 
     // The hole's position is cursorPosition.
@@ -98,11 +180,11 @@ export class StaticContextService {
     const language = getFullLanguageName(sketchFilePath);
     const query = await getQueryForFile(
       sketchFilePath,
-      path.join(`./queries/hole-queries/${language}.scm`)
+      `static-context-queries/hole-queries/${language}.scm`,
     );
     if (!query) {
       throw new Error(
-        `failed to get query for file ${sketchFilePath} and language ${language}`
+        `getHoleContext: failed to get query for file ${sketchFilePath} and language ${language}`,
       );
     }
 
@@ -190,96 +272,425 @@ export class StaticContextService {
       const language = getFullLanguageName(currentFile);
       const query = await getQueryForFile(
         currentFile,
-        path.join(
-          __dirname,
-          "queries",
-          "relevant-types-queries",
-          `${language}-extract-identifiers.scm`
-        )
+        `static-context-queries/relevant-types-queries/${language}-extract-identifiers.scm`,
       );
       if (!query) {
         throw new Error(
-          `failed to get query for file ${currentFile} and language ${language}`
+          `failed to get query for file ${currentFile} and language ${language}`,
         );
       }
 
       const identifiers = query.captures(ast.rootNode);
 
       for (const { name, node } of identifiers) {
-        if (!foundSoFar.has(node.text)) {
-          try {
-            const typeDefinitionResult =
-              await this.ide.gotoTypeDefinition({
-                filepath: currentFile,
-                position: {
-                  character: node.startPosition.column,
-                  line: startLine + node.startPosition.row,
-                },
-              });
+        if (foundSoFar.has(node.text)) continue;
 
-            if (typeDefinitionResult.length != 0) {
-              const tdLocation = typeDefinitionResult[0];
+        try {
+          const typeDefinitionResult = await this.ide.gotoTypeDefinition({
+            filepath: currentFile,
+            position: {
+              character: node.startPosition.column,
+              line: startLine + node.startPosition.row,
+            },
+          });
 
-              let content = "";
+          if (typeDefinitionResult.length > 0) {
+            const tdLocation = typeDefinitionResult[0];
 
-              if (foundContents.has(tdLocation.filepath)) {
-                content = foundContents.get(tdLocation.filepath)!;
-              } else {
-                content = await fs.readFile(tdLocation.filepath, "utf8");
-                foundContents.set(tdLocation.filepath, content);
-              }
+            let content = "";
 
-              const ast = await getAst(tdLocation.filepath, content);
-              if (!ast) {
-                throw new Error(
-                  `failed to get ast for file ${tdLocation.filepath}`
-                );
-              }
-              const decl = findEnclosingTypeDeclaration(
-                content,
-                tdLocation.range.start.line,
-                tdLocation.range.start.character,
-                ast
-              );
-              if (!decl) {
-                // throw new Error(`failed to get decl for file ${tdLocation.uri}`);
-                console.error(`failed to get decl for file ${tdLocation.filepath}`);
-              }
-
-              if (decl) {
-                await this.extractRelevantTypesHelper(
-                  decl.fullText,
-                  node.text,
-                  tdLocation.range.start.line,
-                  foundSoFar,
-                  tdLocation.filepath,
-                  foundContents,
-                );
-              } else {
-                // console.log("decl not found");
-              }
+            if (foundContents.has(tdLocation.filepath)) {
+              content = foundContents.get(tdLocation.filepath)!;
             } else {
-              // console.log("td not found");
+              content = await fs.readFile(
+                localPathOrUriToPath(tdLocation.filepath),
+                "utf8",
+              );
+              foundContents.set(tdLocation.filepath, content);
             }
-          } catch (err) {
-            console.log(err);
+
+            const ast = await getAst(tdLocation.filepath, content);
+            if (!ast) {
+              throw new Error(
+                `failed to get ast for file ${tdLocation.filepath}`,
+              );
+            }
+            const decl = findEnclosingTypeDeclaration(
+              content,
+              tdLocation.range.start.line,
+              tdLocation.range.start.character,
+              ast,
+            );
+            if (!decl) {
+              // throw new Error(`failed to get decl for file ${tdLocation.uri}`);
+              console.error(
+                `failed to get decl for file ${tdLocation.filepath}`,
+              );
+            }
+
+            if (decl) {
+              await this.extractRelevantTypesHelper(
+                decl.fullText,
+                node.text,
+                tdLocation.range.start.line,
+                foundSoFar,
+                tdLocation.filepath,
+                foundContents,
+              );
+            } else {
+              // console.log("decl not found");
+            }
+          } else {
+            // console.log("td not found");
           }
-        } else {
+        } catch (err) {
+          console.log(err);
         }
       }
     }
   }
 
+  private async extractRelevantHeaders(
+    sources: string[],
+    relevantTypes: Map<string, TypeSpanAndSourceFileAndAst>,
+    holeType: string,
+  ): Promise<RelevantHeaders> {
+    const relevantContext = new Set<TypeSpanAndSourceFile>();
+    // NOTE: This is necessary because TypeScript sucks.
+    // There is no way to compare objects by value,
+    // so sets of objects starts to accumulate tons of duplicates.
+    const relevantContextMap = new Map<string, TypeSpanAndSourceFile>();
+    const foundNormalForms = new Map<string, string>();
 
-  private async extractRelevantHeaders(): Promise<RelevantHeaders> {
+    const targetTypes = await this.generateTargetTypes(relevantTypes, holeType);
 
+    for (const source of sources) {
+      const topLevelDecls = await extractTopLevelDecls(source);
+      for (const tld of topLevelDecls) {
+        // pattern 0 is let/const, 1 is var, 2 is fun
+        // if (!seenDecls.has(JSON.stringify()) {
+        const originalDeclText =
+          tld.pattern === 2
+            ? tld.captures.find((d) => d.name === "top.fn.decl")!.node.text
+            : tld.captures.find((d) => d.name === "top.var.decl")!.node.text;
+
+        if (tld.pattern === 2) {
+          // build a type span
+          // TODO: this fails sometimes with Cannot read properties of undefined (reading 'text')
+          // most likely due to my scm query and how I'm not attaching param name along with param type
+          const funcType = extractFunctionTypeFromDecl(tld);
+          const wrapped = `type __TMP = ${funcType};`;
+
+          const ast = await getAst("file.ts", wrapped);
+          if (!ast) {
+            throw new Error(`failed to generate ast for ${wrapped}`);
+          }
+
+          console.log(ast.rootNode);
+          const alias = ast.rootNode.namedChild(0);
+          console.log(alias);
+          if (!alias || alias.type !== "type_alias_declaration") {
+            throw new Error(
+              "extractRelevantHeaders: Failed to parse type alias",
+            );
+          }
+
+          const valueNode = alias.childForFieldName("value");
+          if (!valueNode) throw new Error("No type value found");
+
+          const baseNode = unwrapToBaseType(valueNode);
+
+          await this.extractRelevantHeadersHelper(
+            originalDeclText,
+            baseNode,
+            targetTypes,
+            relevantTypes,
+            relevantContext,
+            relevantContextMap,
+            foundNormalForms,
+            source,
+          );
+        } else {
+          const varTypNode = tld.captures.find(
+            (d) => d.name === "top.var.type",
+          )!.node;
+          await this.extractRelevantHeadersHelper(
+            originalDeclText,
+            varTypNode,
+            targetTypes,
+            relevantTypes,
+            relevantContext,
+            relevantContextMap,
+            foundNormalForms,
+            source,
+          );
+        }
+      }
+    }
+
+    for (const v of relevantContextMap.values()) {
+      relevantContext.add(v);
+    }
+
+    return relevantContext;
   }
 
+  private async extractRelevantHeadersHelper(
+    originalDeclText: string,
+    node: Parser.SyntaxNode,
+    targetTypes: Set<Parser.SyntaxNode>,
+    relevantTypes: Map<string, TypeSpanAndSourceFileAndAst>,
+    relevantContext: Set<TypeSpanAndSourceFile>,
+    relevantContextMap: Map<string, TypeSpanAndSourceFile>,
+    foundNormalForms: Map<string, string>,
+    source: string,
+  ) {
+    for (const typ of targetTypes) {
+      if (
+        await this.isTypeEquivalent(node, typ, relevantTypes, foundNormalForms)
+      ) {
+        const ctx = { typeSpan: originalDeclText, sourceFile: source };
+        relevantContextMap.set(JSON.stringify(ctx), ctx);
+      }
+
+      if (node.type === "function_type") {
+        const retTypeNode = node.namedChildren.find(
+          (c) => c && c.type === "return_type",
+        );
+        if (retTypeNode) {
+          await this.extractRelevantHeadersHelper(
+            originalDeclText,
+            retTypeNode,
+            targetTypes,
+            relevantTypes,
+            relevantContext,
+            relevantContextMap,
+            foundNormalForms,
+            source,
+          );
+        }
+      } else if (node.type === "tuple_type") {
+        for (const c of node.namedChildren) {
+          await this.extractRelevantHeadersHelper(
+            originalDeclText,
+            c!,
+            targetTypes,
+            relevantTypes,
+            relevantContext,
+            relevantContextMap,
+            foundNormalForms,
+            source,
+          );
+        }
+      }
+    }
+  }
+
+  private async generateTargetTypes(
+    relevantTypes: Map<string, TypeSpanAndSourceFileAndAst>,
+    holeType: string,
+  ) {
+    const targetTypes = new Set<Parser.SyntaxNode>();
+    // const ast = relevantTypes.get(holeIdentifier)!.ast;
+    const ast = await getAst("file.ts", `type T = ${holeType};`);
+    if (!ast) {
+      throw new Error(`failed to generate ast for ${holeType}`);
+    }
+
+    const alias = ast.rootNode.namedChild(0);
+    if (!alias || alias.type !== "type_alias_declaration") {
+      throw new Error("generateTargetTypes: Failed to parse type alias");
+    }
+
+    const valueNode = alias.childForFieldName("value");
+    if (!valueNode) throw new Error("No type value found");
+
+    const baseNode = unwrapToBaseType(valueNode);
+    targetTypes.add(baseNode);
+    await this.generateTargetTypesHelper(
+      relevantTypes,
+      holeType,
+      targetTypes,
+      baseNode,
+    );
+
+    return targetTypes;
+  }
+
+  private async generateTargetTypesHelper(
+    relevantTypes: Map<string, TypeSpanAndSourceFileAndAst>,
+    currType: string,
+    targetTypes: Set<Parser.SyntaxNode>,
+    node: Parser.SyntaxNode | null,
+  ): Promise<void> {
+    if (!node) return;
+
+    if (node.type === "function_type") {
+      const returnType = node.childForFieldName("return_type");
+      if (returnType) {
+        targetTypes.add(returnType);
+        await this.generateTargetTypesHelper(
+          relevantTypes,
+          currType,
+          targetTypes,
+          returnType,
+        );
+      }
+    }
+
+    if (node.type === "tuple_type") {
+      for (const child of node.namedChildren) {
+        if (child) {
+          targetTypes.add(child);
+          await this.generateTargetTypesHelper(
+            relevantTypes,
+            currType,
+            targetTypes,
+            child,
+          );
+        }
+      }
+    }
+
+    if (relevantTypes.has(node.text)) {
+      // const ast = relevantTypes.get(node.text)!.ast;
+      const typeSpan = relevantTypes.get(node.text)?.typeSpan;
+
+      // const ast = await getAst("file.ts", `type T = ${typeSpan}`);
+      const ast = await getAst("file.ts", typeSpan!);
+      if (!ast) {
+        throw new Error(`failed to generate ast for ${typeSpan}`);
+      }
+
+      const alias = ast.rootNode.namedChild(0);
+      if (!alias || alias.type !== "type_alias_declaration") {
+        throw new Error(
+          "generateTargetTypesHelper: Failed to parse type alias",
+        );
+      }
+
+      const valueNode = alias.childForFieldName("value");
+      if (!valueNode) throw new Error("No type value found");
+
+      const baseNode = unwrapToBaseType(valueNode);
+      await this.generateTargetTypesHelper(
+        relevantTypes,
+        currType,
+        targetTypes,
+        baseNode,
+      );
+    }
+
+    // if (node.type === "type_identifier" || node.type === "predefined_type") {
+    //   return [node.text];
+    // }
+
+    return;
+  }
+
+  private async isTypeEquivalent(
+    node: Parser.SyntaxNode,
+    typ: Parser.SyntaxNode,
+    relevantTypes: Map<string, TypeSpanAndSourceFileAndAst>,
+    foundNormalForms: Map<string, string>,
+  ): Promise<boolean> {
+    if (!node || !typ) {
+      return false;
+    }
+    let normT1 = "";
+    let normT2 = "";
+    if (foundNormalForms.has(node.text)) {
+      // console.log("found t1", true)
+      normT1 = foundNormalForms.get(node.text)!;
+    } else {
+      // console.log("not found t1", false)
+      normT1 = await this.normalize(node, relevantTypes);
+      foundNormalForms.set(node.text, normT1);
+    }
+    if (foundNormalForms.has(typ.text)) {
+      // console.log("found t2", true)
+      normT2 = foundNormalForms.get(typ.text)!;
+    } else {
+      // console.log("not found t2", false)
+      normT2 = await this.normalize(typ, relevantTypes);
+      foundNormalForms.set(typ.text, normT2);
+    }
+    // const normT1 = foundNormalForms.has(t1) ? foundNormalForms.get(t1) : this.normalize2(t1, relevantTypes);
+    // const normT2 = foundNormalForms.has(t2) ? foundNormalForms.get(t2) : this.normalize2(t2, relevantTypes);
+    // console.log(`normal forms: ${normT1} {}{} ${normT2}`)
+    return normT1 === normT2;
+  }
+
+  private async normalize(
+    node: Parser.SyntaxNode,
+    relevantTypes: Map<string, TypeSpanAndSourceFileAndAst>,
+  ): Promise<string> {
+    if (!node) return "";
+
+    switch (node.type) {
+      case "function_type": {
+        const params = node.child(0); // formal_parameters
+        const returnType =
+          node.childForFieldName("type") || node.namedChildren[1]; // function_type → parameters, =>, return
+
+        const paramTypes =
+          params?.namedChildren
+            .map((param) =>
+              this.normalize(
+                param!.childForFieldName("type")! ||
+                  param!.namedChildren.at(-1),
+                relevantTypes,
+              ),
+            )
+            .join(", ") || "";
+
+        const ret = this.normalize(returnType!, relevantTypes);
+        return `(${paramTypes}) => ${ret}`;
+      }
+
+      case "tuple_type": {
+        const elements = node.namedChildren.map((c) =>
+          this.normalize(c!, relevantTypes),
+        );
+        return `[${elements.join(", ")}]`;
+      }
+
+      case "union_type": {
+        const parts = node.namedChildren.map((c) =>
+          this.normalize(c!, relevantTypes),
+        );
+        return parts.join(" | ");
+      }
+
+      case "type_identifier": {
+        const alias = relevantTypes.get(node.text);
+        if (!alias) return node.text;
+
+        // Parse the alias's type span
+        const wrapped = `type __TMP = ${alias};`;
+        const tree = await getAst("file.ts", wrapped);
+        const valueNode = tree!.rootNode
+          .descendantsOfType("type_alias_declaration")[0]
+          ?.childForFieldName("value");
+
+        return this.normalize(valueNode!, relevantTypes);
+      }
+
+      case "predefined_type":
+      case "number":
+      case "string":
+        return node.text;
+
+      default:
+        // Fallback for types like array, etc.
+        return node.text;
+    }
+  }
 
   private insertAtPosition = (
     contents: string,
-    cursorPosition: { line: number, character: number },
-    insertText: string
+    cursorPosition: { line: number; character: number },
+    insertText: string,
   ): string => {
     const lines = contents.split(/\r?\n/); // Handle both LF and CRLF line endings
     const { line, character } = cursorPosition;
@@ -294,8 +705,90 @@ export class StaticContextService {
     }
 
     // Insert the text
-    lines[line] = targetLine.slice(0, character) + insertText + targetLine.slice(character);
+    lines[line] =
+      targetLine.slice(0, character) + insertText + targetLine.slice(character);
 
     return lines.join("\n"); // Reconstruct the file
+  };
+
+  private async getTypeScriptFilesFromWorkspaces(
+    workspaceUris: string[],
+  ): Promise<string[]> {
+    const tsExtensions = [".ts"];
+    const allTsFiles: string[] = [];
+
+    for (const workspaceUri of workspaceUris) {
+      try {
+        // Convert URI to file path
+        const folderPath = workspaceUri.startsWith("file://")
+          ? new URL(workspaceUri).pathname
+          : workspaceUri;
+
+        const tsFiles = await this.scanDirectoryForTypeScriptFiles(
+          folderPath,
+          tsExtensions,
+        );
+        allTsFiles.push(...tsFiles);
+      } catch (error) {
+        console.error(`Error scanning workspace ${workspaceUri}:`, error);
+      }
+    }
+
+    return allTsFiles;
+  }
+
+  private async scanDirectoryForTypeScriptFiles(
+    dirPath: string,
+    tsExtensions: string[],
+  ): Promise<string[]> {
+    const tsFiles: string[] = [];
+
+    const shouldSkipDirectory = (dirName: string): boolean => {
+      const skipDirs = [
+        "node_modules",
+        ".git",
+        ".vscode",
+        "dist",
+        "build",
+        "out",
+        ".next",
+        "coverage",
+        ".nyc_output",
+        "tmp",
+        "temp",
+        ".cache",
+      ];
+
+      return skipDirs.includes(dirName) || dirName.startsWith(".");
+    };
+
+    async function scanRecursively(currentPath: string): Promise<void> {
+      try {
+        const entries = await fs.readdir(currentPath, { withFileTypes: true });
+
+        for (const entry of entries) {
+          const fullPath = localPathOrUriToPath(
+            path.join(currentPath, entry.name),
+          );
+
+          if (entry.isDirectory()) {
+            // Skip common directories that typically don't contain source files
+            if (!shouldSkipDirectory(entry.name)) {
+              await scanRecursively(fullPath);
+            }
+          } else if (entry.isFile()) {
+            const extension = path.extname(entry.name).toLowerCase();
+            if (tsExtensions.includes(extension)) {
+              tsFiles.push(fullPath);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error reading directory ${currentPath}:`, error);
+      }
+    }
+
+    await scanRecursively(dirPath);
+    return tsFiles;
   }
 }

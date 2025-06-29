@@ -1,4 +1,3 @@
-import { context } from "esbuild";
 import { IDE } from "../../index";
 import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
@@ -11,6 +10,7 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteDiffSnippet,
   AutocompleteSnippetType,
+  AutocompleteStaticSnippet,
 } from "./types";
 
 const IDE_SNIPPETS_ENABLED = false; // ideSnippets is not used, so it's temporarily disabled
@@ -23,6 +23,7 @@ export interface SnippetPayload {
   recentlyVisitedRangesSnippets: AutocompleteCodeSnippet[];
   diffSnippets: AutocompleteDiffSnippet[];
   clipboardSnippets: AutocompleteClipboardSnippet[];
+  staticSnippet: AutocompleteStaticSnippet[];
 }
 
 function racePromise<T>(promise: Promise<T[]>, timeout = 100): Promise<T[]> {
@@ -124,7 +125,7 @@ export const getAllSnippets = async ({
     ideSnippets,
     diffSnippets,
     clipboardSnippets,
-    staticSnippets
+    staticSnippet,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
     racePromise(
@@ -135,7 +136,7 @@ export const getAllSnippets = async ({
       : [],
     [], // racePromise(getDiffSnippets(ide)) // temporarily disabled, see https://github.com/continuedev/continue/pull/5882,
     racePromise(getClipboardSnippets(ide)),
-    racePromise(contextRetrievalService.getStaticContextSnippets(helper))
+    contextRetrievalService.getStaticContextSnippets(helper),
   ]);
 
   return {
@@ -146,5 +147,6 @@ export const getAllSnippets = async ({
     diffSnippets,
     clipboardSnippets,
     recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
+    staticSnippet,
   };
 };
