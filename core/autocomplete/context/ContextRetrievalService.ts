@@ -77,7 +77,7 @@ export class ContextRetrievalService {
 
   public async getStaticContextSnippets(
     helper: HelperVars
-  ): Promise<AutocompleteStaticSnippet> {
+  ): Promise<AutocompleteStaticSnippet[]> {
     return this.staticContextService.getContext(helper);
   }
 }
