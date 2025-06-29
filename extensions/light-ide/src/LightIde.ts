@@ -6,6 +6,8 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import crypto from "crypto";
 
+const CONTINUE_CONFIG_YAML_PATH  = "/home/user/.continue/config.yaml"
+
 const execAsync = promisify(exec);
 
 export class LightIde implements IDE {
@@ -105,10 +107,14 @@ export class LightIde implements IDE {
 
   async writeFile(filePath: string, contents: string): Promise<void> {
     filePath = this.revertFilePath(filePath);
+    
     await fs.writeFile(filePath, contents, "utf-8");
   }
 
   private revertFilePath(filePath: string) {
+    if(filePath.includes(CONTINUE_CONFIG_YAML_PATH)){
+      return CONTINUE_CONFIG_YAML_PATH
+    }
     filePath = filePath.replace(/^file:\/\//, '');
     const projectsPath = path.join(os.homedir(), "projects");
     
