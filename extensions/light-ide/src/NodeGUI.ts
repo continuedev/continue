@@ -219,6 +219,7 @@ export class NodeGUI {
                 if (inputDiv.innerText.trim() !== initialPrompt.trim()) {
                   inputDiv.innerHTML = "<p>" + initialPrompt + "</p>";
                   inputDiv.dispatchEvent(new Event("input", { bubbles: true }));
+                  inputDiv.dispatchEvent(new Event("change", { bubbles: true }));
                   return;
                 }
                  
@@ -232,8 +233,10 @@ export class NodeGUI {
                     bubbles: true,
                     cancelable: true
                   };
-                  inputDiv.dispatchEvent(new KeyboardEvent("keydown", enterEventOptions));
-                  inputDiv.dispatchEvent(new KeyboardEvent("keyup", enterEventOptions));
+                  ["keydown", "keypress", "keyup"].forEach(eventType => {
+                    inputDiv.dispatchEvent(new KeyboardEvent(eventType, enterEventOptions));
+                  });
+                  
                   clearInterval(interval); // Done!
                 }
               }, 150);
