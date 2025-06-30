@@ -494,6 +494,59 @@ const config = {
             to: "/advanced/deep-dives/prompts",
             from: "/customize/deep-dives/prompt-files",
           },
+          // Migrated from netlify.toml
+          {
+            to: "/features/chat/quick-start",
+            from: "/chat/how-to-use-it",
+          },
+          {
+            to: "/features/autocomplete/quick-start",
+            from: "/autocomplete/how-to-use-it",
+          },
+          {
+            to: "/features/edit/quick-start",
+            from: "/edit/how-to-use-it",
+          },
+          {
+            to: "/features/agent/quick-start",
+            from: "/agent/how-to-use-it",
+          },
+          {
+            to: "/features/chat/how-it-works",
+            from: "/chat/how-it-works",
+          },
+          {
+            to: "/features/autocomplete/how-it-works",
+            from: "/autocomplete/how-it-works",
+          },
+          {
+            to: "/features/edit/how-it-works",
+            from: "/edit/how-it-works",
+          },
+          {
+            to: "/features/agent/how-it-works",
+            from: "/agent/how-it-works",
+          },
+          {
+            to: "/advanced/reference",
+            from: "/reference",
+          },
+          {
+            to: "/advanced/troubleshooting",
+            from: "/troubleshooting",
+          },
+          {
+            to: "/advanced/telemetry",
+            from: "/telemetry",
+          },
+          {
+            to: "/advanced/reference",
+            from: "/json-reference",
+          },
+          {
+            to: "/advanced/yaml-migration",
+            from: "/yaml-migration",
+          },
         ],
       },
     ],
