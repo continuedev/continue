@@ -21,7 +21,9 @@ class TerminalContextProvider extends BaseContextProvider {
     return [
       {
         description: "The contents of the terminal",
-        content: `Current terminal contents:\n\n${content}`,
+        content: `Current terminal contents:\n\n${
+          content || "The terminal is empty."
+        }`,
         name: "Terminal",
       },
     ];

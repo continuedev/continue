@@ -19,10 +19,12 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
 export const DEFAULT_AGENT_SYSTEM_MESSAGE_URL =
   "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
 
-const EDIT_MESSAGE = `\
+export const CODEBLOCK_FORMATTING_INSTRUCTIONS = `\
   Always include the language and file name in the info string when you write code blocks.
   If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
+`;
 
+export const EDIT_CODE_INSTRUCTIONS = `\
   When addressing code modification requests, present a concise code snippet that
   emphasizes only the necessary changes and uses abbreviated placeholders for
   unmodified sections. For example:
@@ -69,14 +71,15 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   If the user asks to make changes to files offer that they can use the Apply Button on the code block, or switch to Agent Mode to make the suggested updates automatically.
   If needed consisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
 
-${EDIT_MESSAGE}
+${CODEBLOCK_FORMATTING_INSTRUCTIONS}
+${EDIT_CODE_INSTRUCTIONS}
 </important_rules>`;
 
 export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in agent mode.
 
-${EDIT_MESSAGE}
+${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 </important_rules>`;
 
 /**

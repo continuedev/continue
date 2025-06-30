@@ -96,7 +96,7 @@ class DiffStreamHandler(
         prefix: String,
         highlighted: String,
         suffix: String,
-        modelTitle: String,
+        modelTitle: String?,
         includeRulesInSystemMessage: Boolean
     ) {
         isRunning = true
