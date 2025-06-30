@@ -1,4 +1,5 @@
 import {
+  AssistantChatMessage,
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
@@ -13,7 +14,7 @@ import {
   normalizeToMessageParts,
   renderContextItems,
 } from "../util/messageContent";
-import { isUserOrToolMsg } from "./messages";
+import { chatMessageIsEmpty, isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 import { RulePolicies } from "./rules/types";
 
@@ -118,27 +119,16 @@ export function constructMessages(
 ): ChatMessage[] {
   const validTools = new Set(tools.map((tool) => tool.function.name));
 
-  const filteredHistory = history.filter(
-    (item) => item.message.role !== "system",
-  );
   const msgs: ChatMessage[] = [];
-
-  for (const item of filteredHistory) {
-    if (item.message.role === "tool") {
-      continue; // Tool messages will be re-inserted
+  for (const item of history) {
+    if (
+      item.message.role === "system" ||
+      item.message.role === "tool" ||
+      chatMessageIsEmpty(item.message)
+    ) {
+      continue;
+      // Tool messages will be re-inserted
     }
-
-    // This was implemented for APIs that require all tool calls to have
-    // A corresponsing tool sent, which means if a user excluded a tool
-    // Then sessions with that tool call in the history would fail
-    // if (messageMode === "chat") {
-    //   const toolMessage: ToolResultChatMessage =
-    //     historyItem.message as ToolResultChatMessage;
-    //   if (historyItem.toolCallState?.toolCallId || toolMessage.toolCallId) {
-    //     // remove all tool calls from the history
-    //     continue;
-    //   }
-    // }
 
     if (item.message.role === "user") {
       // Gather context items for user messages
@@ -171,13 +161,26 @@ export function constructMessages(
           validTools.has(toolCall.function.name),
       );
 
-      // Case where no valid tool calls or content are present
-      msgs.push({
+      const msgWithValidToolCalls: AssistantChatMessage = {
         ...item.message,
         toolCalls: validToolCalls,
-      });
+      };
 
-      // Then push a tool message for each valid tool call
+      if (chatMessageIsEmpty(msgWithValidToolCalls)) {
+        msgs.push({
+          role: "assistant",
+          content: "Message redacted", // TODO this might be confusing, edge case situation where tools are excluded
+        });
+      }
+
+      // This was implemented for APIs that require all tool calls to have
+      // A corresponsing tool sent, which means if a user excluded a tool
+      // Then sessions with that tool call in the history would fail
+
+      // Case where no valid tool calls or content are present
+      msgs.push(msgWithValidToolCalls);
+
+      // Add a tool message for each valid tool call
       if (validToolCalls?.length) {
         // If the assistant message has tool calls, we need to insert tool messages
         for (const toolCall of validToolCalls) {
