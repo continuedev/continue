@@ -59,6 +59,12 @@ export async function* llmStreamChat(
       },
       true,
     );
+    if (!slashCommand.run) {
+      console.error(
+        `Slash command ${command.name} (${command.source}) has no run function`,
+      );
+      throw new Error(`Slash command not found`);
+    }
 
     const gen = slashCommand.run({
       input,
