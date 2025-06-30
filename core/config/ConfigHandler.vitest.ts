@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { describe, expect, test } from "vitest";
 import { testConfigHandler } from "../test/fixtures";
 import { TEST_DIR } from "../test/testDir";
 import { getConfigTsPath } from "../util/paths";
@@ -24,7 +25,7 @@ describe.skip("Test the ConfigHandler and E2E config loading", () => {
     );
   });
 
-  test.skip("should add a system message from config.ts", async () => {
+  test("should add a system message from config.ts", async () => {
     const configTs = `export function modifyConfig(config: Config): Config {
     config.systemMessage = "SYSTEM";
     return config;
@@ -39,7 +40,7 @@ describe.skip("Test the ConfigHandler and E2E config loading", () => {
     expect(config.systemMessage).toBe("SYSTEM");
   });
 
-  test.skip("should acknowledge override from .continuerc.json", async () => {
+  test("should acknowledge override from .continuerc.json", async () => {
     fs.writeFileSync(
       path.join(TEST_DIR, ".continuerc.json"),
       JSON.stringify({ systemMessage: "SYSTEM2" }),

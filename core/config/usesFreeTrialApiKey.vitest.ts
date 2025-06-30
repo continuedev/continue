@@ -1,11 +1,11 @@
-import { jest } from "@jest/globals";
+import { beforeEach, expect, test, vi } from "vitest";
 import { BrowserSerializedContinueConfig } from "..";
 
 // Create the mock before importing anything else
-const mockDecodeSecretLocation = jest.fn();
+const mockDecodeSecretLocation = vi.fn();
 
 // Mock the module
-jest.unstable_mockModule("@continuedev/config-yaml", () => ({
+vi.mock("@continuedev/config-yaml", () => ({
   SecretType: {
     User: "user",
     Organization: "organization",
@@ -259,7 +259,7 @@ test("usesFreeTrialApiKey should return true when free trial model is in a diffe
 });
 
 test("usesFreeTrialApiKey should return false and log error when decodeSecretLocation throws", () => {
-  const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
   const config: BrowserSerializedContinueConfig = {
     modelsByRole: {
