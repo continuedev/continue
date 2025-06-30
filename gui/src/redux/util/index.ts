@@ -1,4 +1,5 @@
 import { ToolCallState } from "core";
+import { ChatHistoryItemWithMessageId } from "../slices/sessionSlice";
 import { RootState } from "../store";
 
 export function findCurrentToolCall(
@@ -14,4 +15,14 @@ export function findToolCall(
   return chatHistory.find(
     (item) => item.toolCallState?.toolCallId === toolCallId,
   )?.toolCallState;
+}
+
+export function findToolOutput(
+  chatHistory: RootState["session"]["history"],
+  toolCallId: string,
+): ChatHistoryItemWithMessageId | undefined {
+  return chatHistory.find(
+    (item) =>
+      item.message.role === "tool" && item.message.toolCallId === toolCallId,
+  );
 }

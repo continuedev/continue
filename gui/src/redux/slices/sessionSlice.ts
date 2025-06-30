@@ -20,13 +20,16 @@ import {
   SessionMetadata,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
-import { renderChatMessage } from "core/util/messageContent";
+import {
+  renderChatMessage,
+  renderContextItems,
+} from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
-import { findCurrentToolCall, findToolCall } from "../util";
+import { findCurrentToolCall, findToolCall, findToolOutput } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -547,6 +550,7 @@ export const sessionSlice = createSlice({
         contextItems: ContextItem[];
       }>,
     ) => {
+      // Update tool call state and corresponding tool output message
       const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
@@ -554,6 +558,22 @@ export const sessionSlice = createSlice({
       if (toolCallState) {
         toolCallState.output = action.payload.contextItems;
       }
+      const toolItem = findToolOutput(state.history, action.payload.toolCallId);
+      if (toolItem) {
+        toolItem.message.content = renderContextItems(
+          action.payload.contextItems,
+        );
+      }
+      //           addContextItemsAtIndex({
+      //               index: initialHistory.length,
+      //               contextItems: toolOutput.map((contextItem) => ({
+      //                 ...contextItem,
+      //                 id: {
+      //                   providerTitle: "toolCall",
+      //                   itemId: toolCallId,
+      //                 },
+      //               })),
+      //             }),
     },
     cancelToolCall: (
       state,

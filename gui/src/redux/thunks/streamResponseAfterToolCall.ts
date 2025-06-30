@@ -1,12 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
-import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
-import { getBaseSystemMessage } from "../../util";
-import { selectActiveTools } from "../selectors/selectActiveTools";
-import { selectSelectedChatModel } from "../slices/configSlice";
-import { addContextItemsAtIndex, streamUpdate } from "../slices/sessionSlice";
+import { streamUpdate } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { findToolCall } from "../util";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
@@ -23,15 +18,8 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const initialHistory = state.session.history;
-        const selectedChatModel = selectSelectedChatModel(state);
-
-        if (!selectedChatModel) {
-          throw new Error("No model selected");
-        }
 
         const toolCallState = findToolCall(state.session.history, toolCallId);
-
         if (!toolCallState) {
           return; // in cases where edit tool is cancelled mid apply, this will be triggered
         }
@@ -42,46 +30,15 @@ export const streamResponseAfterToolCall = createAsyncThunk<
 
         await new Promise((resolve) => setTimeout(resolve, 0));
 
+        // TODO paralell tool calls - dispatch one tool message per tool call
         const newMessage: ChatMessage = {
           role: "tool",
           content: renderContextItems(toolOutput),
           toolCallId,
         };
         dispatch(streamUpdate([newMessage]));
-        dispatch(
-          addContextItemsAtIndex({
-            index: initialHistory.length,
-            contextItems: toolOutput.map((contextItem) => ({
-              ...contextItem,
-              id: {
-                providerTitle: "toolCall",
-                itemId: toolCallId,
-              },
-            })),
-          }),
-        );
 
-        const updatedHistory = getState().session.history;
-        const messageMode = getState().session.mode;
-
-        const baseChatOrAgentSystemMessage = getBaseSystemMessage(
-          selectedChatModel,
-          messageMode,
-        );
-
-        const activeTools = selectActiveTools(state);
-        const toolsSupported = modelSupportsTools(selectedChatModel);
-        const availableTools = toolsSupported ? activeTools : [];
-
-        const messages = constructMessages(
-          messageMode,
-          [...updatedHistory],
-          baseChatOrAgentSystemMessage,
-          state.config.config.rules,
-          availableTools,
-        );
-
-        unwrapResult(await dispatch(streamNormalInput({ messages })));
+        unwrapResult(await dispatch(streamNormalInput({})));
       }),
     );
   },

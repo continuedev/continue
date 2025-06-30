@@ -2,19 +2,19 @@ import {
   AssistantChatMessage,
   ChatHistoryItem,
   ChatMessage,
-  ContextItemWithId,
+  ModelDescription,
   RuleWithSource,
   TextMessagePart,
   Tool,
   ToolResultChatMessage,
   UserChatMessage,
 } from "../";
-import { findLast } from "../util/findLast";
+import { findLastIndex } from "../util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
 } from "../util/messageContent";
-import { chatMessageIsEmpty, isUserOrToolMsg } from "./messages";
+import { chatMessageIsEmpty } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 import { RulePolicies } from "./rules/types";
 
@@ -84,50 +84,30 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 ${EDIT_MESSAGE}
 </important_rules>`;
 
-/**
- * Helper function to get the context items for a user message
- */
-function getUserContextItems(
-  userMsg: UserChatMessage | ToolResultChatMessage | undefined,
-  history: ChatHistoryItem[],
-): ContextItemWithId[] {
-  if (!userMsg) return [];
-
-  // Find the history item that contains the userMsg
-  const historyItem = history.find((item) => {
-    // Check if the message ID matches
-    if ("id" in userMsg && "id" in item.message) {
-      return (item.message as any).id === (userMsg as any).id;
-    }
-    // Fallback to content comparison
-    return (
-      item.message.content === userMsg.content &&
-      item.message.role === userMsg.role
-    );
-  });
-
-  return historyItem?.contextItems || [];
-}
-
 export function constructMessages(
   messageMode: string,
   history: ChatHistoryItem[],
-  baseChatOrAgentSystemMessage: string | undefined,
-  rules: RuleWithSource[],
+  model: ModelDescription,
+  availableRules: RuleWithSource[],
+  rulePolicies: RulePolicies,
   tools: Tool[],
-  rulePolicies?: RulePolicies,
-): ChatMessage[] {
+): {
+  messages: ChatMessage[];
+  appliedRulesIndex: number;
+  appliedRules: RuleWithSource[];
+} {
+  const historyCopy = [...history];
   const validTools = new Set(tools.map((tool) => tool.function.name));
 
   const msgs: ChatMessage[] = [];
-  for (const item of history) {
+  for (const item of historyCopy) {
     if (
       item.message.role === "system" ||
       item.message.role === "tool" ||
       chatMessageIsEmpty(item.message)
     ) {
-      continue;
       // Tool messages will be re-inserted
+      continue;
     }
 
     if (item.message.role === "user") {
@@ -169,7 +149,7 @@ export function constructMessages(
       if (chatMessageIsEmpty(msgWithValidToolCalls)) {
         msgs.push({
           role: "assistant",
-          content: "Message redacted", // TODO this might be confusing, edge case situation where tools are excluded
+          content: "Tool call message redacted in chat mode", // TODO this might be confusing, edge case situation where tools are excluded
         });
       }
 
@@ -202,21 +182,41 @@ export function constructMessages(
     }
   }
 
-  const lastUserMsg = findLast(msgs, isUserOrToolMsg) as
-    | UserChatMessage
-    | ToolResultChatMessage
-    | undefined;
-
-  // Get context items for the last user message
-  const lastUserContextItems = getUserContextItems(
-    lastUserMsg,
-    filteredHistory,
+  const lastUserMsgIndex = findLastIndex(
+    historyCopy,
+    (item) => item.message.role === "user",
   );
-  const systemMessage = getSystemMessageWithRules({
+  const lastUserOrToolMsgIndex = findLastIndex(
+    historyCopy,
+    (item) => item.message.role === "user" || item.message.role === "tool",
+  );
+  const lastUserOrToolMsg = historyCopy[lastUserOrToolMsgIndex]?.message as
+    | UserChatMessage
+    | ToolResultChatMessage;
+  const itemsBackToLastUserMessage = history
+    .slice(lastUserMsgIndex, historyCopy.length)
+    .filter(
+      (item) => item.message.role === "tool" || item.message.role === "user",
+    );
+  const rulesContextItems = itemsBackToLastUserMessage
+    .map((item) => item.contextItems)
+    .flat();
+
+  // Get system message
+  let baseChatOrAgentSystemMessage: string | undefined;
+  if (messageMode === "agent") {
+    baseChatOrAgentSystemMessage =
+      model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
+  } else {
+    baseChatOrAgentSystemMessage =
+      model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
+  }
+
+  const { systemMessage } = getSystemMessageWithRules({
     baseSystemMessage: baseChatOrAgentSystemMessage,
-    rules,
-    userMessage: lastUserMsg,
-    contextItems: lastUserContextItems,
+    availableRules,
+    userMessage: lastUserOrToolMsg,
+    contextItems: rulesContextItems,
     rulePolicies,
   });
 
@@ -227,9 +227,13 @@ export function constructMessages(
     });
   }
 
-  // Remove the "id" from all of the messages
-  return msgs.map((msg) => {
+  const messages = msgs.map((msg) => {
     const { id, ...rest } = msg as any;
     return rest;
   });
+  return {
+    messages,
+    appliedRulesIndex: lastUserOrToolMsgIndex,
+    appliedRules: availableRules,
+  };
 }

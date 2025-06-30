@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions } from "core";
+import { LLMFullCompletionOptions } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
+import { constructMessages } from "core/llm/constructMessages";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
@@ -9,6 +10,7 @@ import {
   abortStream,
   addPromptCompletionPair,
   setActive,
+  setAppliedRulesAtIndex,
   setInactive,
   setToolGenerated,
   streamUpdate,
@@ -19,28 +21,30 @@ import { callCurrentTool } from "./callCurrentTool";
 export const streamNormalInput = createAsyncThunk<
   void,
   {
-    messages: ChatMessage[];
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async (
-    { messages, legacySlashCommandData },
-    { dispatch, extra, getState },
-  ) => {
-    // Gather state
+  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
-    const streamAborter = state.session.streamAborter;
     if (!selectedChatModel) {
-      throw new Error("Default model not defined");
+      throw new Error("No chat model selected");
     }
 
-    let completionOptions: LLMFullCompletionOptions = {};
+    const chatHistory = state.session.history;
+    const messageMode = state.session.mode;
+    const rulePolicies = state.ui.ruleSettings;
+    const streamAborter = state.session.streamAborter;
+
+    // Get tools
     const activeTools = selectActiveTools(state);
     const toolsSupported = modelSupportsTools(selectedChatModel);
+
+    // Construct completion options
+    let completionOptions: LLMFullCompletionOptions = {};
     if (toolsSupported && activeTools.length > 0) {
       completionOptions = {
         tools: activeTools,
@@ -54,6 +58,23 @@ export const streamNormalInput = createAsyncThunk<
         reasoningBudgetTokens: completionOptions.reasoningBudgetTokens ?? 2048,
       };
     }
+
+    // Construct messages
+    const { messages, appliedRules, appliedRulesIndex } = constructMessages(
+      messageMode,
+      chatHistory,
+      selectedChatModel,
+      state.config.config.rules,
+      rulePolicies,
+      toolsSupported ? activeTools : [],
+    );
+
+    dispatch(
+      setAppliedRulesAtIndex({
+        index: appliedRulesIndex,
+        appliedRules: appliedRules,
+      }),
+    );
 
     dispatch(setActive());
 
