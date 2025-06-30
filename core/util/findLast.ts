@@ -1,6 +1,6 @@
-export function findLastIndex(
-  arr: any[],
-  criterion: (item: any) => boolean,
+export function findLastIndex<T = any>(
+  arr: T[],
+  criterion: (item: T) => boolean,
 ): number {
   let lastIndex = -1;
 
