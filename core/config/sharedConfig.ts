@@ -19,6 +19,7 @@ export const sharedConfigSchema = z
     readResponseTTS: z.boolean(),
     promptPath: z.string(),
     useCurrentFileAsContext: z.boolean(),
+    enableExperimentalTools: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -157,6 +158,12 @@ export function modifyAnyConfigWithSharedConfig<
   configCopy.experimental = {
     ...configCopy.experimental,
   };
+
+  if (sharedConfig.enableExperimentalTools !== undefined) {
+    configCopy.experimental.enableExperimentalTools =
+      sharedConfig.enableExperimentalTools;
+  }
+
   if (sharedConfig.promptPath !== undefined) {
     configCopy.experimental.promptPath = sharedConfig.promptPath;
   }
