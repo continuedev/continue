@@ -1,8 +1,8 @@
-import express from "express";
-import path from "path";
-import crypto from "crypto";
 import bodyParser from "body-parser";
 import { Message } from "core/protocol/messenger";
+import crypto from "crypto";
+import express from "express";
+import path from "path";
 type MessageHandler = (data: any, messageId?: string) => Promise<any>;
 export type Handler<T, U> = (message: Message<T>) => Promise<U> | U;
 
@@ -187,6 +187,10 @@ export class NodeGUI {
                 const message = JSON.parse(event.data);
                 // Dispatch as a window message event to be compatible with existing code
                 window.dispatchEvent(new MessageEvent('message', { data: message }));
+                // Forward to parent window if running in an iframe
+                 if (window.parent && window.parent !== window) {
+                  window.parent.postMessage(message, '*');
+                }
               } catch (err) {
                 console.error('Error processing SSE message:', err);
               }
