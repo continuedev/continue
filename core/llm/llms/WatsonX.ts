@@ -1,17 +1,17 @@
 import { streamResponse, streamSse } from "@continuedev/fetch";
 import {
+  AssistantChatMessage,
   ChatMessage,
   Chunk,
   CompletionOptions,
   LLMOptions,
+  ToolCallDelta,
+  ToolResultChatMessage,
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { fromChatCompletionChunk } from "../openaiTypeConverters.js";
 
-let watsonxToken = {
-  expiration: 0,
-  token: "",
-};
+let watsonxToken = { expiration: 0, token: "" };
 
 class WatsonX extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> | undefined = {
@@ -45,10 +45,7 @@ class WatsonX extends BaseLLM {
       // watsonx Software
       if (!this.apiKey?.includes(":")) {
         // Using ZenApiKey auth
-        return {
-          token: this.apiKey ?? "",
-          expiration: -1,
-        };
+        return { token: this.apiKey ?? "", expiration: -1 };
       } else {
         // Using username/password auth
         const userPass = this.apiKey?.split(":");
@@ -74,10 +71,7 @@ class WatsonX extends BaseLLM {
             },
           })
         ).json();
-        return {
-          token: wxToken["token"],
-          expiration: wxTokenExpiry["exp"],
-        };
+        return { token: wxToken["token"], expiration: wxTokenExpiry["exp"] };
       }
     }
   }
@@ -89,30 +83,21 @@ class WatsonX extends BaseLLM {
   static providerName = "watsonx";
 
   protected _convertMessage(message: ChatMessage) {
-    if (typeof message.content === "string") {
-      return message;
+    let message_ = message as any;
+    if (message_.role == "tool") {
+      message_.tool_call_id = (message as ToolResultChatMessage).toolCallId;
+      delete message_.toolCallId;
+    } else if (message.role == "assistant" && !!message.toolCalls) {
+      message_.tool_calls = message.toolCalls.map((t) => ({
+        ...t,
+        type: "function",
+      }));
+      delete message_.toolCalls;
+      delete message_.content;
+    } else if (message_.role == "user" && typeof message_.content == "string") {
+      message_.content = [{ type: "text", text: message_.content }];
     }
-
-    if (message.role === "tool") {
-      return null;
-    }
-
-    const parts = message.content.map((part) => {
-      if (part.type === "imageUrl") {
-        return {
-          type: "image_url",
-          image_url: { ...part.imageUrl, detail: "low" },
-        };
-      }
-      return {
-        type: "text",
-        text: part.text,
-      };
-    });
-    return {
-      ...message,
-      content: parts,
-    };
+    return message_;
   }
 
   protected _convertArgs(options: any, messages: ChatMessage[]) {
@@ -201,10 +186,7 @@ class WatsonX extends BaseLLM {
       parameters.top_k = options.topK || 100;
     }
 
-    const payload: any = {
-      input: prompt,
-      parameters: parameters,
-    };
+    const payload: any = { input: prompt, parameters: parameters };
     if (!this.deploymentId) {
       payload.model_id = options.model;
       payload.project_id = this.projectId;
@@ -257,11 +239,11 @@ class WatsonX extends BaseLLM {
     const headers = this._getHeaders();
 
     const payload: any = {
-      messages: messages,
+      messages: messages.map(this._convertMessage).filter(Boolean),
       max_tokens: options.maxTokens ?? 1024,
       stop: stopSequences,
-      frequency_penalty: options.frequencyPenalty || 1,
-      presence_penalty: options.presencePenalty || 1,
+      frequency_penalty: options.frequencyPenalty ?? 0,
+      presence_penalty: options.presencePenalty ?? 0,
     };
 
     if (!this.deploymentId) {
@@ -291,12 +273,150 @@ class WatsonX extends BaseLLM {
       signal,
     });
 
+    let toolName;
+    let toolCallId = null;
+    let doAccumulateToolCallingChunks = false;
+
+    // These variables are used to accumulate tool calling data
+    let accumulatedToolCallingChunks = "";
+    let accumulatedToolArguments = "";
+    let accumulatedStructuredToolArguments = "";
+
     for await (const value of streamSse(response)) {
-      const chunk = fromChatCompletionChunk(value);
-      if (chunk) {
-        yield chunk;
+      const message = fromChatCompletionChunk(value);
+      if (!!message) {
+        if (
+          (message as AssistantChatMessage).toolCalls &&
+          (message as AssistantChatMessage).toolCalls?.length !== 0
+        ) {
+          let chunk = message as AssistantChatMessage;
+          // For now handle single tool calls
+          if (!!chunk.toolCalls?.[0]?.id) {
+            toolCallId = chunk.toolCalls?.[0]?.id;
+          }
+          if (!!chunk.toolCalls?.[0]?.function?.name) {
+            toolName = chunk.toolCalls[0].function.name;
+            continue;
+          }
+          if (!!toolName) {
+            accumulatedToolCallingChunks = "";
+
+            if (value?.choices?.[0]?.finish_reason == "tool_calls") {
+              // If final assistant message has "tool_calls" as finish_reason
+              let args: string | undefined;
+              try {
+                accumulatedStructuredToolArguments +=
+                  chunk.toolCalls?.[0]?.function?.arguments;
+                // Check if accumulated argument chunks are parsable
+                args = JSON.stringify(
+                  JSON.parse(accumulatedStructuredToolArguments),
+                );
+              } catch (e) {
+                // Otherwise use arguments from final assistant tool call message
+                args = chunk.toolCalls?.[0]?.function?.arguments;
+              }
+              const toolCall = {
+                function: { name: toolName, arguments: args },
+                id: toolCallId,
+              };
+              chunk.toolCalls = [toolCall as ToolCallDelta];
+            } else {
+              // Message is not final
+              // Accumulate assistant tool calling chunks
+              if (!!chunk.content) accumulatedToolArguments += chunk.content;
+              // If chunk is parsable with toolCalls property, accumulate tool call arguments chunks
+              else if (!!chunk.toolCalls?.[0]?.function?.arguments)
+                accumulatedStructuredToolArguments +=
+                  chunk.toolCalls?.[0]?.function?.arguments;
+              continue;
+            }
+          }
+        } else {
+          // With Mistral models, tool calls are prefixed with [TOOL_CALLS]
+          // TODO Handle other models
+          if (message.content.toString().startsWith("[TOOL")) {
+            doAccumulateToolCallingChunks = true;
+            accumulatedToolCallingChunks += message.content;
+            continue;
+          }
+          // On subsequent chunks, keep accumulating tool calling chunks
+          if (doAccumulateToolCallingChunks) {
+            accumulatedToolCallingChunks += message.content;
+            continue;
+          }
+        }
+        yield message;
+      }
+
+      if (accumulatedToolCallingChunks) {
+        // If tool calling chunks were accumulated
+        const toolCallMessage: ChatMessage = this._parseToolCall(
+          accumulatedToolCallingChunks,
+        );
+        // Reset accumulated chunks
+        accumulatedToolCallingChunks = "";
+        yield toolCallMessage;
+      } else if (toolName && accumulatedToolArguments) {
+        // If tool call arguments chunks were accumulated
+        const toolCallMessage: ChatMessage = this._createToolCallMessage(
+          toolName,
+          accumulatedToolArguments,
+        );
+        // Reset accumulated chunks
+        accumulatedToolArguments = "";
+        yield toolCallMessage;
       }
     }
+  }
+
+  _parseToolCall(accumulatedToolCallingChunks: string): ChatMessage {
+    // With Mistral models, tool calls are prefixed with [TOOL_CALLS]
+    if (accumulatedToolCallingChunks.startsWith("[TOOL_CALLS]"))
+      accumulatedToolCallingChunks = accumulatedToolCallingChunks.slice(
+        "[TOOL_CALLS]".length,
+      );
+
+    try {
+      let parsedToolCallingChunks = JSON.parse(accumulatedToolCallingChunks);
+      let parsedArguments = parsedToolCallingChunks[0].arguments;
+
+      let toolCall = {
+        function: {
+          name: parsedToolCallingChunks[0].name,
+          arguments: !!parsedArguments ? JSON.stringify(parsedArguments) : "",
+        },
+        id: this._generateToolCallId(),
+      };
+      let toolCallMessage: ChatMessage = {
+        role: "assistant",
+        content: "",
+        toolCalls: [toolCall],
+      };
+      return toolCallMessage;
+    } catch (e) {
+      return { role: "assistant", content: "" };
+    }
+  }
+
+  _createToolCallMessage(
+    toolCallName: string,
+    accumulatedToolArguments: any,
+  ): ChatMessage {
+    let toolCall = {
+      function: { name: toolCallName, arguments: accumulatedToolArguments },
+      // Generate a random ID as tool call is unstructured and doesn't have an ID
+      id: this._generateToolCallId(),
+    };
+    let toolCallMessage: ChatMessage = {
+      role: "assistant",
+      content: "",
+      toolCalls: [toolCall],
+    };
+    return toolCallMessage;
+  }
+
+  _generateToolCallId(): string {
+    return Math.random().toString(36).substring(2, 11);
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
@@ -321,11 +441,7 @@ class WatsonX extends BaseLLM {
       new URL(
         `${this.apiBase}/ml/v1/text/embeddings?version=${this.apiVersion}`,
       ),
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: headers,
-      },
+      { method: "POST", body: JSON.stringify(payload), headers: headers },
     );
 
     if (!resp.ok) {
@@ -359,9 +475,7 @@ class WatsonX extends BaseLLM {
         query: query,
         parameters: {
           truncate_input_tokens: 500,
-          return_options: {
-            top_n: chunks.length,
-          },
+          return_options: { top_n: chunks.length },
         },
         model_id: this.model,
         project_id: this.projectId,
@@ -369,11 +483,7 @@ class WatsonX extends BaseLLM {
 
       const resp = await this.fetch(
         new URL(`${this.apiBase}/ml/v1/text/rerank?version=${this.apiVersion}`),
-        {
-          method: "POST",
-          headers: headers,
-          body: JSON.stringify(payload),
-        },
+        { method: "POST", headers: headers, body: JSON.stringify(payload) },
       );
 
       if (!resp.ok) {
