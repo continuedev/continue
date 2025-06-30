@@ -422,27 +422,6 @@ export function UserSettingsForm() {
                   text="Enable experimental tools"
                 />
 
-                {/* <ToggleSwitch
-                  isToggled={logEditingData}
-                  onToggle={() =>
-                    handleUpdate({
-                      logEditingData: !logEditingData,
-                    })
-                  }
-                  text="Log Editing Data"
-                  showIfToggled={
-                    <>
-                      <ExclamationTriangleIcon
-                        data-tooltip-id={`auto-accept-diffs-warning-tooltip`}
-                        className="h-3 w-3 text-yellow-500"
-                      />
-                      <ToolTip id={`auto-accept-diffs-warning-tooltip`}>
-                        {`Only turn this on if you want to log your editing processes in addition to the normal dev data. Note that this will store a lot of data.`}
-                      </ToolTip>
-                    </>
-                  }
-                /> */}
-
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
                     logEditingData={logEditingData}
