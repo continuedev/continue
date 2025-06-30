@@ -1,7 +1,12 @@
 import * as fs from "fs/promises";
 
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
+import {
+  ContextIndexingType,
+  IDE,
+  IndexingProgressUpdate,
+  IndexTag,
+} from "../index.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
@@ -123,27 +128,42 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes: CodebaseIndex[] = [
-      new ChunkCodebaseIndex(
-        this.ide.readFile.bind(this.ide),
-        continueServerClient,
-        embeddingsModel.maxEmbeddingChunkSize,
-      ), // Chunking must come first
-    ];
-
-    const lanceDbIndex = await LanceDbIndex.create(
-      embeddingsModel,
-      this.ide.readFile.bind(this.ide),
+    const indexTypesToBuild = new Set( // use set to remove duplicates
+      config.contextProviders
+        .map((provider) => provider.description.indexTypes)
+        .filter((indexType) => Array.isArray(indexType)) // remove undefined indexTypes
+        .flat(),
     );
 
-    if (lanceDbIndex) {
-      indexes.push(lanceDbIndex);
+    const indexTypeToIndexerMapping: Record<
+      ContextIndexingType,
+      () => Promise<CodebaseIndex | null>
+    > = {
+      chunk: async () =>
+        new ChunkCodebaseIndex(
+          this.ide.readFile.bind(this.ide),
+          continueServerClient,
+          embeddingsModel.maxEmbeddingChunkSize,
+        ),
+      codeSnippets: async () => new CodeSnippetsCodebaseIndex(this.ide),
+      fullTextSearch: async () => new FullTextSearchCodebaseIndex(),
+      embeddings: async () => {
+        const lanceDbIndex = await LanceDbIndex.create(
+          embeddingsModel,
+          this.ide.readFile.bind(this.ide),
+        );
+        return lanceDbIndex;
+      },
+    };
+
+    const indexes: CodebaseIndex[] = [];
+    // not parallelizing to avoid race conditions in sqlite
+    for (const indexType of indexTypesToBuild) {
+      const index = await indexTypeToIndexerMapping[indexType]();
+      if (index) {
+        indexes.push(index);
+      }
     }
-
-    indexes.push(
-      new FullTextSearchCodebaseIndex(),
-      new CodeSnippetsCodebaseIndex(this.ide),
-    );
 
     return indexes;
   }
