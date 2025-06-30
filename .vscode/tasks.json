@@ -103,42 +103,12 @@
         "clear": true
       },
       "options": {
+        "env": {
+          "SKIP_INSTALLS": "true"
+        },
         "cwd": "${workspaceFolder}/extensions/vscode"
       }
     },
-    //
-    // Compile and bundle tests
-    {
-      "label": "vscode-extension:tests:build",
-      "dependsOn": [
-        // Build the extension
-        "vscode-extension:build",
-        // To detect compile errors - this type checks both the extension and the tests
-        "tsc:watch",
-        "vscode-extension:tests:esbuild"
-      ]
-    },
-    {
-      "label": "vscode-extension:tests:esbuild",
-      "type": "npm",
-      "script": "build-test",
-      "path": "extensions/vscode",
-      "problemMatcher": [
-        {
-          "pattern": [
-            {
-              "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
-              "file": 1,
-              "line": 2,
-              "column": 3,
-              "severity": 4,
-              "message": 5
-            }
-          ]
-        }
-      ]
-    },
-    //
     // Install or update all dependencies for all projects in the monrepo
     {
       "label": "install-all-dependencies",

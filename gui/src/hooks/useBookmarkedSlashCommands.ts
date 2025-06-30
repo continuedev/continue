@@ -1,4 +1,4 @@
-import { SlashCommandDescription } from "core";
+import { SlashCommandDescWithSource } from "core";
 import { usePostHog } from "posthog-js/react";
 
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
@@ -17,7 +17,7 @@ export function useBookmarkedSlashCommands() {
     return bookmarkedCommands.includes(commandName);
   };
 
-  const toggleBookmark = (command: SlashCommandDescription) => {
+  const toggleBookmark = (command: SlashCommandDescWithSource) => {
     const isBookmarked = isCommandBookmarked(command.name);
 
     posthog.capture("toggle_bookmarked_slash_command", {
