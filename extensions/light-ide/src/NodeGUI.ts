@@ -210,10 +210,21 @@ export class NodeGUI {
             const initialPrompt = ${initialPromptJS};
 
             if (initialPrompt) {
+              const POLL_INTERVAL = 1000; // ms
+              const MAX_ATTEMPTS = 20;
+              let attempts = 0;
+
               const interval = setInterval(() => {
+                attempts++;
+                if (attempts > MAX_ATTEMPTS) {
+                  clearInterval(interval);
+                  console.warn("Gave up waiting for inputDiv or prompt injection after too many attempts.");
+                  return;
+                }
+
                 const inputDiv = document.evaluate("//div[@contenteditable='true' and contains(@class, 'ProseMirror')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (!inputDiv) return;
-               
+
                 inputDiv.focus();
 
                 if (inputDiv.innerText.trim() !== initialPrompt.trim()) {
@@ -222,24 +233,23 @@ export class NodeGUI {
                   inputDiv.dispatchEvent(new Event("change", { bubbles: true }));
                   return;
                 }
-                 
-                // Only dispatch Enter if the innerText is correct and not empty
+
                 if (inputDiv.innerText.trim() === initialPrompt.trim()) {
-                  const enterEventOptions = {
-                    key: "Enter",
-                    code: "Enter",
-                    keyCode: 13,
-                    which: 13,
-                    bubbles: true,
-                    cancelable: true
-                  };
-                  ["keydown", "keypress", "keyup"].forEach(eventType => {
-                    inputDiv.dispatchEvent(new KeyboardEvent(eventType, enterEventOptions));
-                  });
-                  
-                  clearInterval(interval); // Done!
+                  // Wait a bit to ensure the input is processed
+                  setTimeout(() => {
+                    const submitBtn = document.querySelector('[data-testid="submit-input-button"]');
+                    if (submitBtn && !submitBtn.disabled) {
+                      submitBtn.focus();
+                      submitBtn.click();
+                      submitBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                      console.log("Clicked submit after sleep.");
+                    } else {
+                      console.warn("Submit button not found or not enabled.");
+                    }
+                    clearInterval(interval);
+                  }, 500);
                 }
-              }, 150);
+              }, POLL_INTERVAL);
             }
 
             ${triggerNewSessionScript}
