@@ -37,14 +37,55 @@ export interface EditClusterConfig {
 
 export class EditAggregator {
   private fileStates: Map<string, FileState> = new Map();
-  private config: EditClusterConfig;
+  public config: EditClusterConfig;
   private previousEditFinalCursorPosition: Position;
   private lastProcessedFilePath: string | null = null;
-  private onComparisonFinalized: (
+  public onComparisonFinalized: (
     diff: BeforeAfterDiff,
     beforeCursorPos: Position,
     afterPrevEditCursorPos: Position,
   ) => void;
+
+  private static _instance: EditAggregator | null = null;
+
+  public static getInstance(
+    config?: Partial<EditClusterConfig>,
+    onComparisonFinalized?: (
+      diff: BeforeAfterDiff,
+      beforeCursorPos: Position,
+      afterPrevEditCursorPos: Position,
+    ) => void,
+  ): EditAggregator {
+    // Create instance if it doesn't exist
+    if (!EditAggregator._instance) {
+      EditAggregator._instance = new EditAggregator(
+        config,
+        onComparisonFinalized,
+      );
+    }
+    // Update instance if new parameters are provided
+    else if (config || onComparisonFinalized) {
+      if (config) {
+        EditAggregator._instance.config = {
+          deltaT: config.deltaT ?? EditAggregator._instance.config.deltaT,
+          deltaL: config.deltaL ?? EditAggregator._instance.config.deltaL,
+          maxEdits: config.maxEdits ?? EditAggregator._instance.config.maxEdits,
+          maxDuration:
+            config.maxDuration ?? EditAggregator._instance.config.maxDuration,
+          contextSize:
+            config.contextSize ?? EditAggregator._instance.config.contextSize,
+          contextLines:
+            config.contextLines ?? EditAggregator._instance.config.contextLines,
+        };
+      }
+
+      if (onComparisonFinalized) {
+        EditAggregator._instance.onComparisonFinalized = onComparisonFinalized;
+      }
+    }
+
+    return EditAggregator._instance;
+  }
 
   constructor(
     config: Partial<EditClusterConfig> = {},

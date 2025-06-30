@@ -729,31 +729,30 @@ export class Core {
         contextSize: 5,
       };
 
-      if (!global._editAggregator) {
-        global._editAggregator = new EditAggregator(
-          EDIT_AGGREGATION_OPTIONS,
-          (
-            beforeAfterdiff: BeforeAfterDiff,
-            cursorPosBeforeEdit: Position,
-            cursorPosAfterPrevEdit: Position,
-          ) => {
-            void processSmallEdit(
-              beforeAfterdiff,
-              cursorPosBeforeEdit,
-              cursorPosAfterPrevEdit,
-              data.configHandler,
-              data.getDefsFromLspFunction,
-              this.ide,
-            );
-          },
-        );
-      }
+      EditAggregator.getInstance(
+        EDIT_AGGREGATION_OPTIONS,
+        (
+          beforeAfterdiff: BeforeAfterDiff,
+          cursorPosBeforeEdit: Position,
+          cursorPosAfterPrevEdit: Position,
+        ) => {
+          void processSmallEdit(
+            beforeAfterdiff,
+            cursorPosBeforeEdit,
+            cursorPosAfterPrevEdit,
+            data.configHandler,
+            data.getDefsFromLspFunction,
+            this.ide,
+          );
+        },
+      );
 
       const workspaceDir =
         data.actions.length > 0 ? data.actions[0].workspaceDir : undefined;
 
-      // Store the latest context data on the aggregator
-      (global._editAggregator as any).latestContextData = {
+      // Store the latest context data
+      const instance = EditAggregator.getInstance();
+      (instance as any).latestContextData = {
         configHandler: data.configHandler,
         getDefsFromLspFunction: data.getDefsFromLspFunction,
         recentlyEditedRanges: data.recentlyEditedRanges,
@@ -763,7 +762,7 @@ export class Core {
 
       // queueMicrotask prevents blocking the UI thread during typing
       queueMicrotask(() => {
-        void global._editAggregator.processEdits(data.actions);
+        void EditAggregator.getInstance().processEdits(data.actions);
       });
     });
 
