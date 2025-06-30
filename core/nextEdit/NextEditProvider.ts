@@ -23,7 +23,7 @@ import {
   Prompt,
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
-  renderFineTunedBasicUserPrompt,
+  renderPrompt,
 } from "./templating/NextEditPromptEngine.js";
 // import { renderPrompt } from "./templating/NextEditPromptEngine.js";
 
@@ -237,12 +237,13 @@ export class NextEditProvider {
       } else {
         prompts.push(
           // await renderFineTunedUserPrompt(snippetPayload, this.ide, helper),
-          await renderFineTunedBasicUserPrompt(
-            snippetPayload,
-            this.ide,
-            helper,
-            this.diffContext,
-          ),
+          // await renderFineTunedBasicUserPrompt(
+          //   snippetPayload,
+          //   this.ide,
+          //   helper,
+          //   this.diffContext,
+          // ),
+          renderPrompt(helper, this.diffContext),
         );
       }
 
@@ -250,7 +251,6 @@ export class NextEditProvider {
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
           const nextCompletion = JSON.parse(msg.content).newCode;
-
           const outcomeNext: AutocompleteOutcome = {
             time: Date.now() - startTime,
             completion: nextCompletion,
@@ -306,7 +306,6 @@ export class NextEditProvider {
           // const diffLines = myersDiff(helper.fileContents, nextCompletion);
 
           // const diff = getRenderableDiff(diffLines);
-
           const outcomeNext: AutocompleteOutcome = {
             time: Date.now() - startTime,
             completion: nextCompletion,

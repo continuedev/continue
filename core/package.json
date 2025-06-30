@@ -100,7 +100,6 @@
     "quick-lru": "^7.0.0",
     "replicate": "^0.26.0",
     "request": "^2.88.2",
-    "satori": "^0.15.2",
     "socket.io-client": "^4.7.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",

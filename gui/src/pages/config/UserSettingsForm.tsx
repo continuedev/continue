@@ -67,6 +67,14 @@ export function UserSettingsForm() {
     });
   };
 
+  const handleLogEditingDataToggle = (value: boolean) => {
+    handleUpdate({ logEditingData: value });
+  };
+
+  const handleOptInNextEditToggle = (value: boolean) => {
+    handleUpdate({ optInNextEditFeature: value });
+  };
+
   useEffect(() => {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
@@ -400,7 +408,7 @@ export function UserSettingsForm() {
                   text="Add Current File by Default"
                 />
 
-                <ToggleSwitch
+                {/* <ToggleSwitch
                   isToggled={logEditingData}
                   onToggle={() =>
                     handleUpdate({
@@ -419,12 +427,14 @@ export function UserSettingsForm() {
                       </ToolTip>
                     </>
                   }
-                />
+                /> */}
 
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
+                    logEditingData={logEditingData}
+                    handleLogEditingDataToggle={handleLogEditingDataToggle}
                     optInNextEditFeature={optInNextEditFeature}
-                    handleUpdate={handleUpdate}
+                    handleOptInNextEditToggle={handleOptInNextEditToggle}
                   />
                 )}
               </div>
