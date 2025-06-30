@@ -9,6 +9,9 @@ import { searchReplaceToolImpl } from "./searchReplaceImpl";
 vi.mock("core/edit/searchAndReplace/findSearchMatch");
 vi.mock("core/edit/searchAndReplace/parseSearchReplaceBlock");
 vi.mock("core/util/ideUtils");
+vi.mock("uuid", () => ({
+  v4: vi.fn(() => "test-stream-id"),
+}));
 
 const mockFindSearchMatch = vi.mocked(findSearchMatch);
 const mockParseAllSearchReplaceBlocks = vi.mocked(parseAllSearchReplaceBlocks);
@@ -39,21 +42,6 @@ describe("searchReplaceToolImpl", () => {
   });
 
   describe("basic validation", () => {
-    it("should throw error when no streamId is provided", async () => {
-      const extrasWithoutStreamId = {
-        ...mockExtras,
-        streamId: undefined,
-      };
-
-      await expect(
-        searchReplaceToolImpl(
-          { filepath: "test.txt", diff: "some diff" },
-          "tool-call-id",
-          extrasWithoutStreamId,
-        ),
-      ).rejects.toThrow("Invalid apply state - no streamId available");
-    });
-
     it("should throw error when file does not exist", async () => {
       mockResolveRelativePathInDir.mockResolvedValue(undefined);
 
@@ -132,6 +120,7 @@ describe("searchReplaceToolImpl", () => {
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.js",
         toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
       });
     });
   });
@@ -222,6 +211,7 @@ const c = 3;`;
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.js",
         toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
       });
     });
   });
@@ -268,6 +258,7 @@ keep this too`;
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
         toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
       });
     });
 
@@ -301,6 +292,7 @@ keep this too`;
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
         toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
       });
     });
   });
@@ -445,6 +437,7 @@ keep this too`;
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
         toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
       });
     });
 
@@ -478,6 +471,7 @@ keep this too`;
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
         toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
       });
     });
   });
@@ -524,6 +518,7 @@ keep this too`;
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
         toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
       });
     });
   });
