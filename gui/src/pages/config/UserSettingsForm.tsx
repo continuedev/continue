@@ -67,6 +67,10 @@ export function UserSettingsForm() {
     });
   };
 
+  const handleLogEditingDataToggle = (value: boolean) => {
+    handleUpdate({ logEditingData: value });
+  };
+
   const handleOptInNextEditToggle = (value: boolean) => {
     handleUpdate({ optInNextEditFeature: value });
   };
@@ -404,7 +408,7 @@ export function UserSettingsForm() {
                   text="Add Current File by Default"
                 />
 
-                <ToggleSwitch
+                {/* <ToggleSwitch
                   isToggled={logEditingData}
                   onToggle={() =>
                     handleUpdate({
@@ -423,10 +427,12 @@ export function UserSettingsForm() {
                       </ToolTip>
                     </>
                   }
-                />
+                /> */}
 
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
+                    logEditingData={logEditingData}
+                    handleLogEditingDataToggle={handleLogEditingDataToggle}
                     optInNextEditFeature={optInNextEditFeature}
                     handleOptInNextEditToggle={handleOptInNextEditToggle}
                   />
