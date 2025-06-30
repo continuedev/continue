@@ -7,7 +7,6 @@ import com.github.continuedev.continueintellijextension.utils.uuid
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.application.*
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.InlayProperties
@@ -64,8 +63,7 @@ class AutocompleteService(private val project: Project) {
     var lastChangeWasPartialAccept = false
 
     fun triggerCompletion(editor: Editor) {
-        val settings =
-            ServiceManager.getService(ContinueExtensionSettings::class.java)
+        val settings = service<ContinueExtensionSettings>()
         if (!settings.continueState.enableTabAutocomplete) {
             return
         }
@@ -183,7 +181,7 @@ class AutocompleteService(private val project: Project) {
         }
         if (isInjectedFile(editor)) return
         // Skip rendering completions if the code completion dropdown is already visible and the IDE completion side-by-side setting is disabled
-        if (shouldSkipRender(ServiceManager.getService(ContinueExtensionSettings::class.java))) {
+        if (shouldSkipRender()) {
             return
         }
 
@@ -230,9 +228,10 @@ class AutocompleteService(private val project: Project) {
         }
     }
 
-    private fun shouldSkipRender(settings: ContinueExtensionSettings) =
-        !settings.continueState.showIDECompletionSideBySide && !autocompleteLookupListener.isLookupEmpty()
-
+    private fun shouldSkipRender(): Boolean {
+        val settings = service<ContinueExtensionSettings>()
+        return !settings.continueState.showIDECompletionSideBySide && !autocompleteLookupListener.isLookupEmpty()
+    }
 
     private fun splitKeepingDelimiters(input: String, delimiterPattern: String = "\\s+"): List<String> {
         val initialSplit = input.split("(?<=$delimiterPattern)|(?=$delimiterPattern)".toRegex())

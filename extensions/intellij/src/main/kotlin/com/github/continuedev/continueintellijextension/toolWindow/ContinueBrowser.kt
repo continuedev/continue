@@ -9,30 +9,21 @@ import com.github.continuedev.continueintellijextension.utils.uuid
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.*
 import com.intellij.ui.jcef.JBCefClient.Properties
-import com.intellij.util.application
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 
 class ContinueBrowser(val project: Project, url: String) {
-    private fun registerAppSchemeHandler() {
-        CefApp.getInstance().registerSchemeHandlerFactory(
-            "http",
-            "continue",
-            CustomSchemeHandlerFactory()
-        )
-    }
 
     val browser: JBCefBrowser
 
-    val continuePluginService: ContinuePluginService = project.getService(ContinuePluginService::class.java)
-
     init {
-        val isOSREnabled = application.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+        val isOSREnabled = service<ContinueExtensionSettings>().continueState.enableOSR
 
         this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build().apply {
             // To avoid using System.setProperty to affect other plugins,
@@ -43,7 +34,7 @@ class ContinueBrowser(val project: Project, url: String) {
         }
 
         registerAppSchemeHandler()
-        Disposer.register(ContinuePluginDisposable.getInstance(project), browser)
+        Disposer.register(project.service<ContinuePluginDisposable>(), browser)
 
         // Listen for events sent from browser
         val myJSQueryOpenInBrowser = JBCefJSQuery.create((browser as JBCefBrowserBase?)!!)
@@ -60,7 +51,7 @@ class ContinueBrowser(val project: Project, url: String) {
             }
 
             if (PASS_THROUGH_TO_CORE.contains(messageType)) {
-                continuePluginService.coreMessenger?.request(messageType, data, messageId, respond)
+                project.service<ContinuePluginService>().coreMessenger?.request(messageType, data, messageId, respond)
                 return@addHandler null
             }
 
@@ -75,7 +66,7 @@ class ContinueBrowser(val project: Project, url: String) {
             }
 
             if (msg != null) {
-                continuePluginService.ideProtocolClient?.handleMessage(msg, respondToWebview)
+                project.service<ContinuePluginService>().ideProtocolClient?.handleMessage(msg, respondToWebview)
             }
 
             null
@@ -99,7 +90,7 @@ class ContinueBrowser(val project: Project, url: String) {
         // Load the url only after the protocolClient is initialized,
         // otherwise some messages will be lost, which are some configurations when the page is loaded.
         // Moreover, we should add LoadHandler before loading the url.
-        continuePluginService.onProtocolClientInitialized {
+        project.service<ContinuePluginService>().onProtocolClientInitialized {
             browser.loadURL(url)
         }
 
@@ -136,6 +127,14 @@ class ContinueBrowser(val project: Project, url: String) {
         } catch (error: IllegalStateException) {
             println("Webview not initialized yet $error")
         }
+    }
+
+    private fun registerAppSchemeHandler() {
+        CefApp.getInstance().registerSchemeHandlerFactory(
+            "http",
+            "continue",
+            CustomSchemeHandlerFactory()
+        )
     }
 
     private fun buildJavaScript(jsonData: String): String {

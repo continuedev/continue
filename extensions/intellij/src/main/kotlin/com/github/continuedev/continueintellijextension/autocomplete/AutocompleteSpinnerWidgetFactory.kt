@@ -26,7 +26,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     private val animatedIcon = AnimatedIcon.Default()
 
     init {
-        Disposer.register(ContinuePluginDisposable.getInstance(project), this)
+        Disposer.register(project.service<ContinuePluginDisposable>(), this)
         updateIcon()
     }
 

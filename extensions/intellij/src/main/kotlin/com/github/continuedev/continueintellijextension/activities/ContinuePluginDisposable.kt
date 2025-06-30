@@ -1,9 +1,7 @@
 package com.github.continuedev.continueintellijextension.activities
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.project.Project
 
 /**
  * The service is a parent disposable that represents the entire plugin lifecycle
@@ -18,15 +16,4 @@ class ContinuePluginDisposable : Disposable {
     override fun dispose() {
     }
 
-    companion object {
-
-        fun getInstance(): ContinuePluginDisposable {
-            return ApplicationManager.getApplication().getService(ContinuePluginDisposable::class.java)
-        }
-
-        fun getInstance(project: Project): ContinuePluginDisposable {
-            return project.getService(ContinuePluginDisposable::class.java)
-        }
-
-    }
 }

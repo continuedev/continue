@@ -111,7 +111,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
 
     companion object {
         val instance: ContinueExtensionSettings
-            get() = ServiceManager.getService(ContinueExtensionSettings::class.java)
+            get() = service<ContinueExtensionSettings>()
     }
 
 
