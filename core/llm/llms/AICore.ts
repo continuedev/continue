@@ -18,9 +18,11 @@ const CAP_MESSAGE = `
 
         Keep the explanation concise, clear, and focused on system design. Do not generate implementation code or file scaffolding. Do not include a summary or closing paragraph.
 
-        2. Present this application summary to the user and ask for their approval before proceeding. If the user doesn't approve, ask for clarification on what needs to be changed and adjust the summary accordingly.
+        2. Present this application summary to the user.
 
-        3. Once the user approves the summary, proceed with the following steps:
+        3. Ask for the user approval before proceeding. If the user doesn't approve, ask for clarification on what needs to be changed and adjust the summary accordingly.
+        
+        4. Once the user approves the summary, proceed with the following steps:
             a. Inform the user that you'll be create a CAP application
             b. Use CAP MCP Server tools to create the application.
             d. When calling the CAP MCP Server tools, include both:
