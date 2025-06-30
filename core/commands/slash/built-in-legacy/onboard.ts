@@ -1,17 +1,17 @@
 import ignore from "ignore";
 
-import type { FileType, IDE, SlashCommand } from "../..";
+import type { FileType, IDE, SlashCommand } from "../../..";
 import {
   DEFAULT_IGNORE,
   getGlobalContinueIgArray,
   gitIgArrayFromFile,
-} from "../../indexing/ignore";
-import { renderChatMessage } from "../../util/messageContent";
+} from "../../../indexing/ignore";
+import { renderChatMessage } from "../../../util/messageContent";
 import {
   findUriInDirs,
   getUriPathBasename,
   joinPathsToUri,
-} from "../../util/uri";
+} from "../../../util/uri";
 
 const LANGUAGE_DEP_MGMT_FILENAMES = [
   "package.json", // JavaScript (Node.js)

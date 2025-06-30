@@ -1,6 +1,6 @@
-import { ChatMessage, SlashCommand } from "../../index.js";
-import { removeQuotesAndEscapes } from "../../util/index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { ChatMessage, SlashCommand } from "../../../index.js";
+import { removeQuotesAndEscapes } from "../../../util/index.js";
+import { renderChatMessage } from "../../../util/messageContent.js";
 
 const PROMPT = (
   input: string,

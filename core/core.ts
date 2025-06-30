@@ -21,7 +21,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
-import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
+import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
@@ -50,6 +50,7 @@ import {
 
 import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
+import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import {
   setupLocalConfig,
@@ -380,6 +381,19 @@ export class Core {
 
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+    });
+    on("mcp/getPrompt", async (msg) => {
+      const { serverName, promptName, args } = msg.data;
+      const prompt = await MCPManagerSingleton.getInstance().getPrompt(
+        serverName,
+        promptName,
+        args,
+      );
+      const stringifiedPrompt = stringifyMcpPrompt(prompt);
+      return {
+        prompt: stringifiedPrompt,
+        description: prompt.description,
+      };
     });
     // Context providers
     on("context/addDocs", async (msg) => {

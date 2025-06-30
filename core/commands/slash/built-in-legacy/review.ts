@@ -1,5 +1,5 @@
-import { ChatMessage, SlashCommand } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { ChatMessage, SlashCommand } from "../../../index.js";
+import { renderChatMessage } from "../../../util/messageContent.js";
 
 const prompt = `
      Review the following code, focusing on Readability, Maintainability, Code Smells, Speed, and Memory Performance. Provide feedback with these guidelines:
