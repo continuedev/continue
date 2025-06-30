@@ -25,6 +25,7 @@ import {
   renderContextItems,
 } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
+import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
@@ -108,19 +109,35 @@ export const sessionSlice = createSlice({
         curMessage.isGatheringContext = payload;
       }
     },
-    clearLastEmptyResponse: (state) => {
+    clearDanglingMessages: (state) => {
+      // This is used during cancellation
+      // After the last user or tool message, we can have thinking and or valid assitant message (content or generated tool calls) OR nothing.
+      // The only thing allowed after the last assistant message that has either content or generated tool calls
+      // is a user or tool message
       if (state.history.length < 2) {
         return;
       }
-      const lastMessage = state.history[state.history.length - 1];
+      const lastUserOrToolIdx = findLastIndex(
+        state.history,
+        (item) => item.message.role === "tool" || item.message.role === "user",
+      );
 
-      // Only clear in the case of an empty message
-      if (!lastMessage.message.content.length) {
-        state.mainEditorContentTrigger =
-          state.history[state.history.length - 2].editorState;
-        state.history = state.history.slice(0, -2);
-        // TODO is this logic correct for tool use conversations?
-        // Maybe slice at last index of "user" role message?
+      let validAssistantMessageIdx = -1;
+      for (let i = state.history.length - 1; i > lastUserOrToolIdx; i--) {
+        const message = state.history[i];
+        if (
+          message.message.content ||
+          message.toolCallState?.status === "generated"
+        ) {
+          validAssistantMessageIdx = i;
+          break;
+        }
+      }
+
+      if (validAssistantMessageIdx === -1) {
+        state.history = state.history.slice(0, lastUserOrToolIdx + 1);
+      } else {
+        state.history = state.history.slice(0, validAssistantMessageIdx + 1);
       }
     },
     // Trigger value picked up by editor with isMainInput to set its content
@@ -720,7 +737,7 @@ export const {
   submitEditorAndInitAtIndex,
   truncateHistoryToMessage,
   updateHistoryItemAtIndex,
-  clearLastEmptyResponse,
+  clearDanglingMessages,
   setMainEditorContentTrigger,
   deleteMessage,
   setIsGatheringContext,
