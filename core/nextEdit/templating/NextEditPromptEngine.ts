@@ -164,7 +164,7 @@ export function renderDefaultUserPrompt(
 
   return {
     role: "user",
-    content: `Your junior made the following edit: ${JSON.stringify(userEdit)}. What is the most possible next edit your junior TypeScript developer will make?`,
+    content: `Your junior made the following edit: ${JSON.stringify(userEdit)}. What is the most possible next edit your junior ${helper.lang.name} developer will make?`,
   };
 }
 
