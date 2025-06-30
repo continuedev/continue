@@ -214,6 +214,43 @@ export class NodeGUI {
               const MAX_ATTEMPTS = 20;
               let attempts = 0;
 
+              function findInputDiv() {
+                // Try to find a follow-up input first
+                // 1. Try to find by placeholder if possible (not shown in your HTML snippet)
+                // 2. Otherwise, use the context and structure:
+                //   - A div[contenteditable][class*='ProseMirror'] that is visible and NOT the first message input (which may have 'Ask anything')
+                //   - The follow-up input is usually after the thread-message section
+
+                // Find all contenteditable ProseMirror editors
+                const editors = Array.from(document.querySelectorAll("div[contenteditable='true'].ProseMirror"));
+                if (editors.length === 1) return editors[0];
+
+                // More than one input: try to distinguish
+                // (a) If there's a 'thread-message' in the DOM, the *last* ProseMirror is probably the follow-up
+                // (b) Otherwise, use the first one
+
+                const threadMessages = document.querySelectorAll('.thread-message');
+                if (threadMessages.length && editors.length > 1) {
+                  // Return the last ProseMirror (after the thread)
+                  return editors[editors.length - 1];
+                }
+                // Fallback: just use the first one
+                return editors[0];
+              }
+
+              function findSubmitButtonForInput(inputDiv) {
+                // Go up from inputDiv to find a parent container that holds the button
+                let parent = inputDiv;
+                for (let i = 0; i < 6; i++) { // Go up max 6 levels just in case
+                  if (!parent) break;
+                  const submitBtn = parent.querySelector?.('[data-testid="submit-input-button"]');
+                  if (submitBtn) return submitBtn;
+                  parent = parent.parentElement;
+                }
+                // fallback: just grab the first on page
+                return document.querySelector('[data-testid="submit-input-button"]');
+              }
+
               const interval = setInterval(() => {
                 attempts++;
                 if (attempts > MAX_ATTEMPTS) {
@@ -222,7 +259,7 @@ export class NodeGUI {
                   return;
                 }
 
-                const inputDiv = document.evaluate("//div[@contenteditable='true' and contains(@class, 'ProseMirror')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                const inputDiv = findInputDiv();
                 if (!inputDiv) return;
 
                 inputDiv.focus();
@@ -237,7 +274,7 @@ export class NodeGUI {
                 if (inputDiv.innerText.trim() === initialPrompt.trim()) {
                   // Wait a bit to ensure the input is processed
                   setTimeout(() => {
-                    const submitBtn = document.querySelector('[data-testid="submit-input-button"]');
+                    const submitBtn = findSubmitButtonForInput(inputDiv);
                     if (submitBtn && !submitBtn.disabled) {
                       submitBtn.focus();
                       submitBtn.click();
