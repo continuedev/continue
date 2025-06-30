@@ -11,12 +11,12 @@ fun Sync.prepareSandbox() {
 val remoteRobotVersion = "0.11.23"
 
 plugins {
-    id("java") // Java support
-    alias(libs.plugins.kotlin) // Kotlin support
-    alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
-    alias(libs.plugins.changelog) // Gradle Changelog Plugin
-    alias(libs.plugins.qodana) // Gradle Qodana Plugin
-    alias(libs.plugins.kover) // Gradle Kover Plugin
+    id("java")
+    kotlin("jvm") version "1.9.0"
+    id("org.jetbrains.intellij") version "1.15.0"
+    id("org.jetbrains.changelog") version "2.1.2"
+    id("org.jetbrains.qodana") version "0.1.13"
+    id("org.jetbrains.kotlinx.kover") version "0.7.3"
     kotlin("plugin.serialization") version "1.8.0"
 }
 
@@ -33,7 +33,6 @@ repositories {
 // Dependencies are managed with Gradle version catalog - read more:
 // https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    //    implementation(libs.annotations)
     implementation("com.squareup.okhttp3:okhttp:4.12.0") {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
     }
