@@ -4,8 +4,9 @@ import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 type EditToolCallProps = {
   relativeFilePath: string;
   changes: string;
-  toolCallId?: string;
   historyIndex: number;
+  toolCallId?: string;
+  expandCodeblocks?: boolean;
 };
 
 export function EditFile(props: EditToolCallProps) {
@@ -17,11 +18,11 @@ export function EditFile(props: EditToolCallProps) {
 
   return (
     <StyledMarkdownPreview
+      expandCodeblocks={props.expandCodeblocks ?? false}
       isRenderingInStepContainer
       disableManualApply
       source={src}
       toolCallId={props.toolCallId}
-      expandCodeblocks={false}
       itemIndex={props.historyIndex}
     />
   );

@@ -230,6 +230,8 @@ export default async function doLoadConfig(options: {
   newConfig.tools.push(
     ...getConfigDependentToolDefinitions({
       rules: newConfig.rules,
+      enableExperimentalTools:
+        newConfig.experimental?.enableExperimentalTools ?? false,
     }),
   );
 

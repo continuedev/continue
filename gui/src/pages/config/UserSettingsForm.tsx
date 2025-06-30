@@ -78,7 +78,8 @@ export function UserSettingsForm() {
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
     config.experimental?.useCurrentFileAsContext ?? false;
-
+  const enableExperimentalTools =
+    config.experimental?.enableExperimentalTools ?? false;
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
 
@@ -106,9 +107,11 @@ export function UserSettingsForm() {
 
   const [hubEnabled, setHubEnabled] = useState(false);
   useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
-      setHubEnabled(continueTestEnvironment === "production");
-    });
+    void ideMessenger.ide
+      .getIdeSettings()
+      .then(({ continueTestEnvironment }) => {
+        setHubEnabled(continueTestEnvironment === "production");
+      });
   }, [ideMessenger]);
 
   return (
@@ -385,6 +388,16 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Add Current File by Default"
+                />
+
+                <ToggleSwitch
+                  isToggled={enableExperimentalTools}
+                  onToggle={() =>
+                    handleUpdate({
+                      enableExperimentalTools: !enableExperimentalTools,
+                    })
+                  }
+                  text="Enable experimental tools"
                 />
               </div>
             </div>
