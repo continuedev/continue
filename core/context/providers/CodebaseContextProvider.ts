@@ -13,7 +13,7 @@ class CodebaseContextProvider extends BaseContextProvider {
     description: "Automatically find relevant files",
     type: "normal",
     renderInlineAs: "",
-    indexTypes: ["embeddings", "fullTextSearch", "chunk"],
+    dependsOnIndexing: ["embeddings", "fullTextSearch", "chunk"],
   };
 
   async getContextItems(
