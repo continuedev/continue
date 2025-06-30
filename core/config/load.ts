@@ -30,12 +30,11 @@ import {
   ModelDescription,
   RerankerDescription,
   SerializedContinueConfig,
-  SlashCommand,
+  SlashCommandWithSource,
 } from "..";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands/index";
+import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/built-in-legacy";
+import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
+import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
@@ -48,8 +47,7 @@ import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
-import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
-import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
+import { getAllPromptFiles } from "../promptFiles/getPromptFiles";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
@@ -66,6 +64,7 @@ import {
 import { localPathToUri } from "../util/pathToUri";
 
 import { baseToolDefinitions } from "../tools";
+import { resolveRelativePathInDir } from "../util/ideUtils";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
@@ -174,15 +173,15 @@ async function serializedToIntermediateConfig(
   ide: IDE,
 ): Promise<Config> {
   // DEPRECATED - load custom slash commands
-  const slashCommands: SlashCommand[] = [];
+  const slashCommands: SlashCommandWithSource[] = [];
   for (const command of initial.slashCommands || []) {
-    const newCommand = slashCommandFromDescription(command);
+    const newCommand = getLegacyBuiltInSlashCommandFromDescription(command);
     if (newCommand) {
       slashCommands.push(newCommand);
     }
   }
   for (const command of initial.customCommands || []) {
-    slashCommands.push(slashFromCustomCommand(command));
+    slashCommands.push(convertCustomCommandToSlashCommand(command));
   }
 
   // DEPRECATED - load slash commands from v1 prompt files
@@ -194,7 +193,7 @@ async function serializedToIntermediateConfig(
   );
 
   for (const file of promptFiles) {
-    const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
+    const slashCommand = slashCommandFromPromptFile(file.path, file.content);
     if (slashCommand) {
       slashCommands.push(slashCommand);
     }
@@ -254,7 +253,10 @@ async function intermediateToFinalConfig({
   loadPromptFiles?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
-
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  const getUriFromPath = (path: string) => {
+    return resolveRelativePathInDir(path, ide, workspaceDirs);
+  };
   // Auto-detect models
   let models: BaseLLM[] = [];
   await Promise.all(
@@ -263,6 +265,7 @@ async function intermediateToFinalConfig({
         const llm = await llmFromDescription(
           desc,
           ide.readFile.bind(ide),
+          getUriFromPath,
           uniqueId,
           ideSettings,
           llmLogger,
@@ -284,6 +287,7 @@ async function intermediateToFinalConfig({
                     title: modelName,
                   },
                   ide.readFile.bind(ide),
+                  getUriFromPath,
                   uniqueId,
                   ideSettings,
                   llmLogger,
@@ -360,6 +364,7 @@ async function intermediateToFinalConfig({
           const llm = await llmFromDescription(
             desc,
             ide.readFile.bind(ide),
+            getUriFromPath,
             uniqueId,
             ideSettings,
             llmLogger,
@@ -529,7 +534,7 @@ async function intermediateToFinalConfig({
     contextProviders,
     tools: [...baseToolDefinitions],
     mcpServerStatuses: [],
-    slashCommands: config.slashCommands ?? [],
+    slashCommands: [],
     modelsByRole: {
       chat: models,
       edit: models,
@@ -550,6 +555,17 @@ async function intermediateToFinalConfig({
     },
     rules: [],
   };
+
+  for (const cmd of config.slashCommands ?? []) {
+    if ("source" in cmd) {
+      continueConfig.slashCommands.push(cmd);
+    } else {
+      continueConfig.slashCommands.push({
+        ...cmd,
+        source: "config-ts-slash-command",
+      });
+    }
+  }
 
   if (config.systemMessage) {
     continueConfig.rules.unshift({
@@ -651,9 +667,10 @@ async function finalToBrowserConfig(
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map(
-      ({ run, ...slashCommandDescription }) => slashCommandDescription,
-    ),
+    slashCommands: final.slashCommands?.map(({ run, ...rest }) => ({
+      ...rest,
+      isLegacy: !!run,
+    })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,
@@ -975,7 +992,6 @@ async function loadContinueConfigFromJson(
 
 export {
   finalToBrowserConfig,
-  intermediateToFinalConfig,
   loadContinueConfigFromJson,
   type BrowserSerializedContinueConfig,
 };
