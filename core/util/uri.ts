@@ -188,6 +188,7 @@ export function getUriDescription(uri: string, dirUriCandidates: string[]) {
     dirUriCandidates,
   );
   const baseName = getUriPathBasename(uri);
+  const extension = getFileExtensionFromBasename(baseName);
   const last2Parts = getLastNUriRelativePathParts(dirUriCandidates, uri, 2);
   return {
     uri,
@@ -195,5 +196,6 @@ export function getUriDescription(uri: string, dirUriCandidates: string[]) {
     foundInDir,
     last2Parts,
     baseName,
+    extension,
   };
 }

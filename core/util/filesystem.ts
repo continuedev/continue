@@ -48,6 +48,10 @@ class FileSystemIde implements IDE {
     return;
   }
 
+  isWorkspaceRemote(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
   async getIdeSettings(): Promise<IdeSettings> {
     return {
       remoteConfigServerUrl: undefined,

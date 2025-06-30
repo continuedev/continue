@@ -33,7 +33,7 @@ import {
   Session,
   SessionMetadata,
   SiteIndexingConfig,
-  SlashCommandDescription,
+  SlashCommandDescWithSource,
   StreamDiffLinesPayload,
   ToolCall,
 } from "../";
@@ -125,6 +125,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcp/getPrompt": [
+    {
+      serverName: string;
+      promptName: string;
+      args?: Record<string, string>;
+    },
+    {
+      prompt: string;
+      description: string | undefined;
+    },
+  ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
@@ -148,7 +159,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
       legacySlashCommandData?: {
-        command: SlashCommandDescription;
+        command: SlashCommandDescWithSource;
         input: string;
         contextItems: ContextItemWithId[];
         historyIndex: number;

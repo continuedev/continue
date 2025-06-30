@@ -10,6 +10,7 @@ import com.github.continuedev.continueintellijextension.utils.*
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
+import com.intellij.ide.BrowserUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
@@ -125,6 +126,10 @@ class IntelliJIDE(
         return true
     }
 
+    override suspend fun isWorkspaceRemote(): Boolean {
+        return this.getIdeInfo().remoteName != "local"
+    }
+
     override suspend fun getUniqueId(): String {
         return getMachineUniqueID()
     }
@@ -211,7 +216,7 @@ class IntelliJIDE(
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {
-            Desktop.browse(URI(url))
+            BrowserUtil.browse(url)
         }
     }
 
