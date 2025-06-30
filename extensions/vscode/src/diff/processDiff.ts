@@ -1,5 +1,7 @@
 import { Core } from "core/core";
+import { DataLogger } from "core/data/log";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
+import { EditOutcomeTracker } from "../extension/EditOutcomeTracker";
 import { VsCodeIde } from "../VsCodeIde";
 import { VerticalDiffManager } from "./vertical/manager";
 
@@ -36,6 +38,13 @@ export async function processDiff(
 
   if (streamId) {
     const fileContent = await ide.readFile(newOrCurrentUri);
+
+    // Record the edit outcome before updating the apply state
+    await EditOutcomeTracker.getInstance().recordEditOutcome(
+      streamId,
+      action === "accept",
+      DataLogger.getInstance()
+    );
 
     await sidebar.webviewProtocol.request("updateApplyState", {
       fileContent,
