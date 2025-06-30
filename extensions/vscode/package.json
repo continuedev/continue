@@ -443,12 +443,12 @@
         "key": "alt+a"
       },
       {
-        "command": "nextEditWindow.hideTooltips",
+        "command": "continue.nextEditWindow.hideNextEditSuggestion",
         "key": "escape",
         "when": "editorTextFocus && nextEditWindowActive"
       },
       {
-        "command": "nextEditWindow.acceptNextEdit",
+        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
         "key": "tab",
         "when": "editorTextFocus && nextEditWindowActive"
       }
