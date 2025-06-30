@@ -15,18 +15,13 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
-import { profilesReducer } from "./slices";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editState";
 import indexingReducer from "./slices/indexingSlice";
+import { profilesReducer } from "./slices/profilesSlice";
 import sessionReducer from "./slices/sessionSlice";
 import tabsReducer from "./slices/tabsSlice";
 import uiReducer from "./slices/uiSlice";
-
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
 
 const rootReducer = combineReducers({
   session: sessionReducer,

@@ -2,10 +2,8 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
-import {
-  callCurrentTool,
-  cancelCurrentToolCall,
-} from "../../../../redux/thunks";
+import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
+import { cancelCurrentToolCall } from "../../../../redux/thunks/cancelCurrentToolCall";
 import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
