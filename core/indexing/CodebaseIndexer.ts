@@ -159,9 +159,11 @@ export class CodebaseIndexer {
     const indexes: CodebaseIndex[] = [];
     // not parallelizing to avoid race conditions in sqlite
     for (const indexType of indexTypesToBuild) {
-      const index = await indexTypeToIndexerMapping[indexType]();
-      if (index) {
-        indexes.push(index);
+      if (indexType && indexType in indexTypeToIndexerMapping) {
+        const index = await indexTypeToIndexerMapping[indexType]();
+        if (index) {
+          indexes.push(index);
+        }
       }
     }
 
