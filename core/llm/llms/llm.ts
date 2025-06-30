@@ -10,7 +10,7 @@ const RERANK_PROMPT = (
 
   Query: Where is the FastAPI server?
   Snippet:
-  \`\`\`/Users/andrew/Desktop/server/main.py
+  \`\`\`python /Users/andrew/Desktop/server/main.py
   from fastapi import FastAPI
   app = FastAPI()
   @app.get("/")
@@ -21,7 +21,7 @@ const RERANK_PROMPT = (
 
   Query: Where in the documentation does it talk about the UI?
   Snippet:
-  \`\`\`/Users/andrew/Projects/bubble_sort/src/lib.rs
+  \`\`\`rust /Users/andrew/Projects/bubble_sort/src/lib.rs
   fn bubble_sort<T: Ord>(arr: &mut [T]) {{
       for i in 0..arr.len() {{
           for j in 1..arr.len() - i {{

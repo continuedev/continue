@@ -1,4 +1,4 @@
-import { getMarkdownLanguageTagForFile } from "core/util";
+import { formatCodeblock } from "core/util/formatCodeblock";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 
 type EditToolCallProps = {
@@ -13,7 +13,7 @@ export function EditFile(props: EditToolCallProps) {
     return null;
   }
 
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes}\n\`\`\``;
+  const src = formatCodeblock(props.relativeFilePath ?? "", props.changes);
 
   return (
     <StyledMarkdownPreview

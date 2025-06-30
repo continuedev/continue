@@ -6,6 +6,7 @@ import { diff as myersDiff } from "myers-diff";
 import { DiffLine } from "../..";
 import { myersDiff as continueMyersDiff } from "../../diff/myers";
 import { dedent } from "../../util";
+import { localPathToUri } from "../../util/pathToUri";
 import { deterministicApplyLazyEdit } from "./deterministic";
 
 const UNIFIED_DIFF_SYMBOLS = {
@@ -17,14 +18,14 @@ const UNIFIED_DIFF_SYMBOLS = {
 async function collectDiffs(
   oldFile: string,
   newFile: string,
-  filename: string,
+  fileUri: string,
 ): Promise<{ ourDiffs: DiffLine[]; myersDiffs: any }> {
   const ourDiffs: DiffLine[] = [];
 
   for (const diffLine of (await deterministicApplyLazyEdit({
     oldFile,
     newLazyFile: newFile,
-    filename,
+    fileUri,
   })) ?? []) {
     ourDiffs.push(diffLine);
   }
@@ -61,7 +62,12 @@ async function expectDiff(file: string) {
   const [oldFile, newFile, expectedDiff] = testFileContents
     .split("\n---\n")
     .map((s) => s.replace(/^\n+/, "").trimEnd());
-  const { ourDiffs: streamDiffs } = await collectDiffs(oldFile, newFile, file);
+  const fileUri = localPathToUri(testFilePath);
+  const { ourDiffs: streamDiffs } = await collectDiffs(
+    oldFile,
+    newFile,
+    fileUri,
+  );
   const displayedDiff = displayDiff(streamDiffs);
 
   if (!expectedDiff || expectedDiff.trim() === "") {

@@ -1,5 +1,3 @@
-import path from "path";
-
 import { distance } from "fastest-levenshtein";
 import Parser from "web-tree-sitter";
 
@@ -8,6 +6,7 @@ import { LANGUAGES } from "../../autocomplete/constants/AutocompleteLanguageInfo
 import { myersDiff } from "../../diff/myers";
 import { getParserForFile } from "../../util/treeSitter";
 
+import { getUriFileExtension } from "../../util/uri";
 import { findInAst } from "./findInAst";
 
 type AstReplacements = Array<{
@@ -109,12 +108,10 @@ function shouldRejectDiff(diff: DiffLine[]): boolean {
 
 function nodeSurroundedInLazyBlocks(
   parser: Parser,
-
   file: string,
-  filename: string,
+  fileExt: string,
 ): { newTree: Parser.Tree; newFile: string } | undefined {
-  const ext = path.extname(filename).slice(1);
-  const language = LANGUAGES[ext];
+  const language = LANGUAGES[fileExt];
   if (language) {
     const newFile = `${language.singleLineComment} ... existing code ...\n\n${file}\n\n${language.singleLineComment} ... existing code...`;
     const newTree = parser.parse(newFile);
@@ -129,7 +126,7 @@ function nodeSurroundedInLazyBlocks(
 export async function deterministicApplyLazyEdit({
   oldFile,
   newLazyFile,
-  filename,
+  fileUri,
   /**
    * Using this as a flag to slowly reintroduce lazy applies.
    * With this set, we will only attempt to deterministically apply
@@ -140,10 +137,11 @@ export async function deterministicApplyLazyEdit({
 }: {
   oldFile: string;
   newLazyFile: string;
-  filename: string;
+  fileUri: string;
   onlyFullFileRewrite?: boolean;
 }): Promise<DiffLine[] | undefined> {
-  const parser = await getParserForFile(filename);
+  const fileExt = getUriFileExtension(fileUri);
+  const parser = await getParserForFile(fileUri);
   if (!parser) {
     return undefined;
   }
@@ -175,7 +173,7 @@ export async function deterministicApplyLazyEdit({
     );
     if (firstSimilarNode?.parent?.equals(oldTree.rootNode)) {
       // If so, we tack lazy blocks to start and end, and run the usual algorithm
-      const result = nodeSurroundedInLazyBlocks(parser, newLazyFile, filename);
+      const result = nodeSurroundedInLazyBlocks(parser, newLazyFile, fileExt);
       if (result) {
         newLazyFile = result.newFile;
         newTree = result.newTree;

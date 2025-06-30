@@ -118,12 +118,13 @@ export const IGNORE_PATH_PATTERNS: Partial<Record<LanguageName, RegExp[]>> = {
   [LanguageName.JAVASCRIPT]: [/.*node_modules/],
 };
 
-export async function getParserForFile(filepath: string) {
+export async function getParserForFile(fileUri: string) {
   try {
     await Parser.init();
     const parser = new Parser();
+    const fileExt = getUriFileExtension(fileUri);
 
-    const language = await getLanguageForFile(filepath);
+    const language = await getLanguageForFileExt(fileExt);
     if (!language) {
       return undefined;
     }
@@ -132,7 +133,7 @@ export async function getParserForFile(filepath: string) {
 
     return parser;
   } catch (e) {
-    console.debug("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file", fileUri, e);
     return undefined;
   }
 }
@@ -142,40 +143,39 @@ export async function getParserForFile(filepath: string) {
 // to Language object
 const nameToLanguage = new Map<string, Language>();
 
-export async function getLanguageForFile(
-  filepath: string,
+async function getLanguageForFileExt(
+  fileExt: string,
 ): Promise<Language | undefined> {
   try {
     await Parser.init();
-    const extension = getUriFileExtension(filepath);
-
-    const languageName = supportedLanguages[extension];
+    const languageName = supportedLanguages[fileExt];
     if (!languageName) {
       return undefined;
     }
     let language = nameToLanguage.get(languageName);
 
     if (!language) {
-      language = await loadLanguageForFileExt(extension);
+      language = await loadLanguageForFileExt(fileExt);
       nameToLanguage.set(languageName, language);
     }
     return language;
   } catch (e) {
-    console.debug("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file extension", fileExt, e);
     return undefined;
   }
 }
 
-export const getFullLanguageName = (filepath: string) => {
-  const extension = getUriFileExtension(filepath);
+export const getFullLanguageName = (fileUri: string) => {
+  const extension = getUriFileExtension(fileUri);
   return supportedLanguages[extension];
 };
 
 export async function getQueryForFile(
-  filepath: string,
+  fileUri: string,
   queryPath: string,
 ): Promise<Parser.Query | undefined> {
-  const language = await getLanguageForFile(filepath);
+  const fileExt = getUriFileExtension(fileUri);
+  const language = await getLanguageForFileExt(fileExt);
   if (!language) {
     return undefined;
   }
@@ -197,15 +197,13 @@ export async function getQueryForFile(
   return query;
 }
 
-async function loadLanguageForFileExt(
-  fileExtension: string,
-): Promise<Language> {
+async function loadLanguageForFileExt(fileExt: string): Promise<Language> {
   const wasmPath = path.join(
     process.env.NODE_ENV === "test" ? process.cwd() : __dirname,
     ...(process.env.NODE_ENV === "test"
       ? ["node_modules", "tree-sitter-wasms", "out"]
       : ["tree-sitter-wasms"]),
-    `tree-sitter-${supportedLanguages[fileExtension]}.wasm`,
+    `tree-sitter-${supportedLanguages[fileExt]}.wasm`,
   );
   return await Parser.Language.load(wasmPath);
 }
@@ -225,10 +223,11 @@ const GET_SYMBOLS_FOR_NODE_TYPES: Parser.SyntaxNode["type"][] = [
 ];
 
 export async function getSymbolsForFile(
-  filepath: string,
+  fileUri: string,
   contents: string,
 ): Promise<SymbolWithRange[] | undefined> {
-  const parser = await getParserForFile(filepath);
+  const fileExt = getUriFileExtension(fileUri);
+  const parser = await getParserForFile(fileExt);
   if (!parser) {
     return;
   }
@@ -237,10 +236,9 @@ export async function getSymbolsForFile(
   try {
     tree = parser.parse(contents);
   } catch (e) {
-    console.log(`Error parsing file: ${filepath}`);
+    console.log(`Error parsing file: ${fileUri}`);
     return;
   }
-  // console.log(`file: ${filepath}`);
 
   // Function to recursively find all named nodes (classes and functions)
   const symbols: SymbolWithRange[] = [];
@@ -268,7 +266,7 @@ export async function getSymbolsForFile(
 
       if (identifier?.text) {
         symbols.push({
-          filepath,
+          filepath: fileUri,
           type: node.type,
           name: identifier.text,
           range: {

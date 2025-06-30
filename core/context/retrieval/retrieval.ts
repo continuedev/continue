@@ -1,4 +1,5 @@
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
+import { formatCodeblock } from "../../util/formatCodeblock";
 import { getUriDescription } from "../../util/uri";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 
@@ -100,17 +101,24 @@ export async function retrieveContextItemsFromEmbeddings(
     ...results
       .sort((a, b) => a.filepath.localeCompare(b.filepath))
       .map((r) => {
-        const { relativePathOrBasename, last2Parts, baseName } =
+        const { relativePathOrBasename, last2Parts, baseName, extension } =
           getUriDescription(r.filepath, workspaceDirs);
 
         if (baseName === "package.json") {
           console.warn("Retrieval pipeline: package.json detected");
         }
 
+        const rangeString = `(${r.startLine + 1}-${r.endLine + 1})`;
+        const codeblock = formatCodeblock(
+          relativePathOrBasename,
+          r.content,
+          extension,
+          rangeString,
+        );
         return {
-          name: `${baseName} (${r.startLine + 1}-${r.endLine + 1})`,
+          name: `${baseName} ${rangeString}`,
           description: last2Parts,
-          content: `\`\`\`${relativePathOrBasename}\n${r.content}\n\`\`\``,
+          content: codeblock,
           uri: {
             type: "file" as const,
             value: r.filepath,
