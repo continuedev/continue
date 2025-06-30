@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import { ChatMessage, CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
@@ -26,10 +25,6 @@ class TestLLM extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    fs.writeFileSync(
-      "/home/jacob/testllm.txt",
-      JSON.stringify(prompt, null, 2),
-    );
     if (
       prompt === "NEXT_EDIT" ||
       prompt ===
