@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import * as fs from "fs";
+import * as fs from "fs/promises";
 import { EditorView, TextEditor } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
@@ -11,44 +11,75 @@ describe("Next Edit", () => {
   let editor: TextEditor;
 
   before(async function () {
-    this.timeout(DEFAULT_TIMEOUT.XL);
+    // this.timeout(DEFAULT_TIMEOUT.XL);
+
+    const globalContextPath = TestUtils.getGlobalContextFilePath();
     
     // Update config.json to add optInNextEditFeature.
-    const globalContext = fs.readFileSync(TestUtils.getGlobalContextFilePath(), "utf8");
-    const sharedConfig = JSON.parse(globalContext).sharedConfig;
-    
-    const sharedConfigWithNextEditEnabled = {
-      ...sharedConfig,
-      "optInNextEditFeature": true
-    };
+    // globalContext.json does not exist in CI before this test runs.
+    if (await TestUtils.fileExists(globalContextPath)) {
+      const globalContext = await fs.readFile(globalContextPath, "utf8");
+      const sharedConfig = JSON.parse(globalContext).sharedConfig;
+      
+      const sharedConfigWithNextEditEnabled = {
+        ...sharedConfig,
+        "optInNextEditFeature": true
+      };
+  
+      const globalContextWithNextEditEnabled = {
+        ...JSON.parse(globalContext),
+        "sharedConfig": sharedConfigWithNextEditEnabled
+      };
+      
+      await fs.writeFile(globalContextPath, JSON.stringify(globalContextWithNextEditEnabled, null, 2), "utf8");
+    } else {
+      fs.writeFile(
+         globalContextPath,
+         JSON.stringify(
+           {
+             sharedConfig: {
+               optInNextEditFeature: true
+             },
+             selectedModelsByProfileId: {
+               local: {
+                 chat: "TEST LLM",
+                 edit: "TEST LLM",
+                 apply: "TEST LLM",
+                 embed: "Transformers.js (Built-In)",
+                 autocomplete: "TEST LLM",
+                 rerank: null,
+                 summarize: null
+               }
+             }
+           },
+           null,
+           2,
+         ),
+       );
+    }
 
-    const globalContextWithNextEditEnabled = {
-      ...JSON.parse(globalContext),
-      "sharedConfig": sharedConfigWithNextEditEnabled
-    };
-    
-    fs.writeFileSync(TestUtils.getGlobalContextFilePath(), JSON.stringify(globalContextWithNextEditEnabled, null, 2), "utf8");
     await NextEditActions.reload();
-  });
+  }).timeout(DEFAULT_TIMEOUT.XL);
 
   beforeEach(async function () {
-    this.timeout(DEFAULT_TIMEOUT.XL);
+    // this.timeout(DEFAULT_TIMEOUT.XL);
 
     await GlobalActions.openTestWorkspace();
     ({ editor } = await GlobalActions.createAndOpenNewTextFile());
-  });
+  }).timeout(DEFAULT_TIMEOUT.XL);
 
   afterEach(async function () {
-    this.timeout(DEFAULT_TIMEOUT.XL);
+    // this.timeout(DEFAULT_TIMEOUT.XL);
+
     await editor.clearText();
     await new EditorView().closeAllEditors();
-  });
+  }).timeout(DEFAULT_TIMEOUT.XL);
 
   after(async function () {
-    this.timeout(DEFAULT_TIMEOUT.XL);
+    // this.timeout(DEFAULT_TIMEOUT.XL);
     
     // Update config.json to delete optInNextEditFeature.
-    const globalContext = fs.readFileSync(TestUtils.getGlobalContextFilePath(), "utf8");
+    const globalContext = await fs.readFile(TestUtils.getGlobalContextFilePath(), "utf8");
     const sharedConfig = JSON.parse(globalContext).sharedConfig;
   
     const sharedConfigWithoutNextEdit = { ...sharedConfig };
@@ -59,9 +90,9 @@ describe("Next Edit", () => {
       "sharedConfig": sharedConfigWithoutNextEdit
     };
 
-    fs.writeFileSync(TestUtils.getGlobalContextFilePath(), JSON.stringify(globalContextWithNextEditEnabled, null, 2), "utf8");
+    await fs.writeFile(TestUtils.getGlobalContextFilePath(), JSON.stringify(globalContextWithNextEditEnabled, null, 2), "utf8");
     await NextEditActions.reload();
-  });
+  }).timeout(DEFAULT_TIMEOUT.XL);
 
   // it("Should enable Next Edit feature in settings", async () => {
   //   expect(false).to.be.true;
