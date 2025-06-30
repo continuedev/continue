@@ -1,12 +1,6 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { useContext, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  vscCommandCenterInactiveBorder,
-  vscEditorBackground,
-} from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useIdeMessengerRequest } from "../../../hooks/useIdeMessengerRequest";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
@@ -24,29 +18,6 @@ import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
 import { InsertButton } from "./InsertButton";
 import { RunInTerminalButton } from "./RunInTerminalButton";
-
-const TopDiv = styled.div`
-  display: flex;
-  flex-direction: column;
-  outline: 1px solid ${vscCommandCenterInactiveBorder};
-  outline-offset: -0.5px;
-  border-radius: ${defaultBorderRadius};
-  margin-bottom: 8px !important;
-  margin-top: 8px !important;
-  background-color: ${vscEditorBackground};
-  min-width: 0;
-`;
-
-const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: ${getFontSize() - 2}px;
-  padding: 4px 6px;
-  margin: 0;
-  border-bottom: ${({ isExpanded }) =>
-    isExpanded ? `1px solid ${vscCommandCenterInactiveBorder}` : "inherit"};
-`;
 
 export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
@@ -290,9 +261,12 @@ export function StepContainerPreToolbar({
   }
 
   return (
-    <TopDiv>
-      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
-        <div className="max-w-[50% flex flex-row items-center">
+    <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mb-2 mt-2 flex min-w-0 flex-col outline outline-1">
+      <div
+        className={`find-widget-skip m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "border-command-border border-b" : ""}`}
+        style={{ fontSize: `${getFontSize() - 2}px` }}
+      >
+        <div className="flex max-w-[50%] flex-row items-center">
           <ChevronDownIcon
             data-testid="toggle-codeblock"
             onClick={() => setIsExpanded(!isExpanded)}
@@ -323,11 +297,11 @@ export function StepContainerPreToolbar({
 
           {renderActionButtons()}
         </div>
-      </ToolbarDiv>
+      </div>
 
       {isExpanded && (
         <div className="overflow-hidden overflow-y-auto">{children}</div>
       )}
-    </TopDiv>
+    </div>
   );
 }

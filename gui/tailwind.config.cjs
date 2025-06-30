@@ -29,6 +29,9 @@ module.exports = {
       borderRadius: {
         default: "5px",
       },
+      outlineOffset: {
+        0.5: "0.5px",
+      },
       colors: {
         background: varWithFallback("background"),
         foreground: varWithFallback("foreground"),
