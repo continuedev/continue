@@ -334,6 +334,14 @@
         "category": "Continue",
         "title": "Enter Enterprise License Key",
         "group": "Continue"
+      },
+      {
+        "command": "nextEditWindow.hideTooltips",
+        "title": "Hide Tooltip Window"
+      },
+      {
+        "command": "nextEditWindow.acceptNextEdit",
+        "title": "Accept Next Edit Suggestion"
       }
     ],
     "keybindings": [
@@ -426,6 +434,16 @@
         "command": "continue.applyCodeFromChat",
         "mac": "alt+a",
         "key": "alt+a"
+      },
+      {
+        "command": "nextEditWindow.hideTooltips",
+        "key": "escape",
+        "when": "editorTextFocus && nextEditWindowActive"
+      },
+      {
+        "command": "nextEditWindow.acceptNextEdit",
+        "key": "tab",
+        "when": "editorTextFocus && nextEditWindowActive"
       }
     ],
     "submenus": [

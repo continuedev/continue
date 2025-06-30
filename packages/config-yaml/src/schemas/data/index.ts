@@ -28,6 +28,11 @@ import {
   editInteractionEventSchema_0_2_0,
   editInteractionEventSchema_0_2_0_noCode,
 } from "./editInteraction/v0.2.0.js";
+import { nextEditEventAllSchema } from "./nextEdit/index.js";
+import {
+  nextEditEventSchema_0_2_0,
+  nextEditEventSchema_0_2_0_noCode,
+} from "./nextEdit/v0.2.0.js";
 import { quickEditEventAllSchema } from "./quickEdit/index.js";
 import {
   quickEditEventSchema_0_1_0,
@@ -72,6 +77,7 @@ const devEventAllVersionDataSchemas = z.object({
   tokensGenerated: tokensGeneratedEventAllSchema,
   chatInteraction: chatInteractionEventAllSchema,
   editInteraction: editInteractionEventAllSchema,
+  nextEdit: nextEditEventAllSchema,
 });
 
 // Version and level specific schemas are organized here
@@ -97,6 +103,7 @@ export const devDataVersionedSchemas = {
       tokensGenerated: tokensGeneratedEventSchema_0_2_0,
       chatInteraction: chatInteractionEventSchema_0_2_0,
       editInteraction: editInteractionEventSchema_0_2_0,
+      nextEdit: nextEditEventSchema_0_2_0,
     },
     noCode: {
       autocomplete: autocompleteEventSchema_0_2_0_noCode,
@@ -104,6 +111,7 @@ export const devDataVersionedSchemas = {
       tokensGenerated: tokensGeneratedEventSchema_0_2_0_noCode,
       chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
       editInteraction: editInteractionEventSchema_0_2_0_noCode,
+      nextEdit: nextEditEventSchema_0_2_0_noCode,
     },
   },
 };

@@ -41,6 +41,8 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { getDefinitionsFromLsp } from "../autocomplete/lsp";
+import { handleTextDocumentChange } from "../util/editLoggingUtils";
 import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -62,6 +64,7 @@ export class VsCodeExtension {
   private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
+  private completionProvider: ContinueCompletionProvider;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -124,6 +127,8 @@ export class VsCodeExtension {
       configHandlerPromise,
       this.workOsAuthProvider,
       this.editDecorationManager,
+      context,
+      this,
     );
 
     this.core = new Core(inProcessMessenger, this.ide);
@@ -178,14 +183,15 @@ export class VsCodeExtension {
     setupStatusBar(
       enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
     );
+    this.completionProvider = new ContinueCompletionProvider(
+      this.configHandler,
+      this.ide,
+      this.sidebar.webviewProtocol,
+    );
     context.subscriptions.push(
       vscode.languages.registerInlineCompletionItemProvider(
         [{ pattern: "**" }],
-        new ContinueCompletionProvider(
-          this.configHandler,
-          this.ide,
-          this.sidebar.webviewProtocol,
-        ),
+        this.completionProvider,
       ),
     );
 
@@ -281,6 +287,18 @@ export class VsCodeExtension {
         return;
       }
       this.configHandler.reloadConfig();
+    });
+
+    vscode.workspace.onDidChangeTextDocument(async (event) => {
+      const editInfo = await handleTextDocumentChange(
+        event,
+        this.configHandler,
+        this.ide,
+        this.completionProvider,
+        getDefinitionsFromLsp,
+      );
+
+      if (editInfo) this.core.invoke("files/smallEdit", editInfo);
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
@@ -409,5 +427,13 @@ export class VsCodeExtension {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.configHandler.registerCustomContextProvider(contextProvider);
+  }
+
+  public activateNextEdit() {
+    this.completionProvider.activateNextEdit();
+  }
+
+  public deactivateNextEdit() {
+    this.completionProvider.deactivateNextEdit();
   }
 }
