@@ -36,6 +36,21 @@ export function chatChunk(options: {
   };
 }
 
+export function usageChatChunk(options: {
+  model: string;
+  id?: string | null;
+  usage?: CompletionUsage;
+}): ChatCompletionChunk {
+  return {
+    choices: [],
+    usage: options.usage,
+    created: Date.now(),
+    id: options.id ?? "",
+    model: options.model,
+    object: "chat.completion.chunk",
+  };
+}
+
 export function chatChunkFromDelta(options: {
   delta: ChatCompletionChunk.Choice["delta"];
   model: string;
