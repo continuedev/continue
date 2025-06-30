@@ -1,11 +1,3 @@
----
-title: Amazon Bedrock
-slug: ../bedrock
----
-
-import TabItem from "@theme/TabItem";
-import Tabs from "@theme/Tabs";
-
 Amazon Bedrock is a fully managed service on AWS that provides access to foundation models from various AI companies through a single API.
 
 ## Chat model
@@ -200,9 +192,9 @@ To setup Bedrock using custom imported models, add the following to your config 
     - name: AWS Bedrock deepseek-coder-6.7b-instruct
       provider: bedrockimport
       model: deepseek-coder-6.7b-instruct
-      region: us-west-2
-      profile: bedrock
       env:
+        region: us-west-2
+        profile: bedrock
         modelArn: arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX
   ```
   </TabItem>
