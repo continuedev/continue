@@ -25,7 +25,7 @@ nltk==3.6.3
 spacy==3.1.2
 
 # Deep Learning
-torch==2.6.0
+torch==2.7.1
 keras==2.6.0
 
 # Image processing
