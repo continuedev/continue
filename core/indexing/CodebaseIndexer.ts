@@ -130,7 +130,7 @@ export class CodebaseIndexer {
 
     const indexTypesToBuild = new Set( // use set to remove duplicates
       config.contextProviders
-        .map((provider) => provider.description.indexTypes)
+        .map((provider) => provider.description.dependsOnIndexing)
         .filter((indexType) => Array.isArray(indexType)) // remove undefined indexTypes
         .flat(),
     );

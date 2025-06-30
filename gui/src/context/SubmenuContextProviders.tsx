@@ -227,7 +227,7 @@ export const SubmenuContextProvidersProvider = ({
   );
 
   const loadSubmenuItems = useCallback(
-    async (providers: "indexTypes" | "all" | ContextProviderName[]) => {
+    async (providers: "dependsOnIndexing" | "all" | ContextProviderName[]) => {
       await Promise.allSettled(
         submenuContextProviders.map(
           async (description: ContextProviderDescription) => {
@@ -236,13 +236,13 @@ export const SubmenuContextProvidersProvider = ({
               const refreshProvider =
                 providers === "all"
                   ? true
-                  : providers === "indexTypes"
-                    ? description.indexTypes &&
-                      description.indexTypes?.length > 0
+                  : providers === "dependsOnIndexing"
+                    ? description.dependsOnIndexing &&
+                      description.dependsOnIndexing?.length > 0
                     : providers.includes(description.title);
 
               if (!refreshProvider) {
-                if (providers === "indexTypes") {
+                if (providers === "dependsOnIndexing") {
                   console.debug(
                     `Skipping ${description.title} provider due to disabled indexing`,
                   );
@@ -361,7 +361,7 @@ export const SubmenuContextProvidersProvider = ({
     "indexProgress",
     async (data) => {
       if (data.status === "done") {
-        void loadSubmenuItems("indexTypes");
+        void loadSubmenuItems("dependsOnIndexing");
       }
     },
     [loadSubmenuItems],

@@ -24,7 +24,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
   refreshSubmenuItems: [
     {
-      providers: "all" | "indexTypes" | ContextProviderName[];
+      providers: "all" | "dependsOnIndexing" | ContextProviderName[];
     },
     void,
   ];
