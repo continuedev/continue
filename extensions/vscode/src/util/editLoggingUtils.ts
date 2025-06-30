@@ -55,7 +55,7 @@ export const handleTextDocumentChange = async (
   // Ensure that loggin will only happen in the open-source continue repo
   const workspaceDirInfo = await getWorkspaceDirInfo(event, ide);
   if (!workspaceDirInfo) return;
-  if (!workspaceDirInfo.isContinueRepo) return;
+  // if (!workspaceDirInfo.isContinueRepo) return;
 
   const activeCursorPos = editor.selection.active;
   const editActions: RangeInFileWithNextEditInfo[] = changes.map((change) => ({

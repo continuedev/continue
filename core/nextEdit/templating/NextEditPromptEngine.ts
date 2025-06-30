@@ -1,6 +1,14 @@
-import { IDE, Position } from "../..";
+import Handlebars from "handlebars";
+import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
+import {
+  EDITABLE_REGION_END_TOKEN,
+  EDITABLE_REGION_START_TOKEN,
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+  USER_CURSOR_IS_HERE_TOKEN,
+} from "../constants";
 
 export type Prompt = SystemPrompt | UserPrompt;
 
@@ -12,6 +20,81 @@ interface SystemPrompt {
 interface UserPrompt {
   role: "user";
   content: string;
+}
+
+export interface NextEditTemplate {
+  template: string;
+}
+
+export interface TemplateVars {
+  userEdits: string;
+  languageShorthand: string;
+  userExcerpts: string;
+}
+
+type TemplateRenderer = (vars: TemplateVars) => string;
+
+type NextEditModelName = "mercury-coder-nextedit" | "this field is not used";
+
+const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
+  "mercury-coder-nextedit": {
+    template:
+      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n\`\`\`{{{languageShorthand}}}\n{{{userExcerpts}}}\`\`\`",
+  },
+  "this field is not used": {
+    template: "NEXT_EDIT",
+  },
+};
+
+function templateRendererOfModel(
+  modelName: NextEditModelName,
+): TemplateRenderer {
+  const template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
+  if (!template) {
+    throw new Error(`Model ${modelName} is not supported for next edit.`);
+  }
+
+  const compiledTemplate = Handlebars.compile(template.template);
+
+  return (vars: TemplateVars): string => {
+    return compiledTemplate(vars);
+  };
+}
+
+export function renderPrompt(
+  helper: HelperVars,
+  userEdits: string,
+): UserPrompt {
+  const modelName = helper.modelName as NextEditModelName;
+
+  if (modelName === "this field is not used") {
+    return {
+      role: "user",
+      content: "NEXT_EDIT",
+    };
+  }
+
+  // Validate that the modelName is actually a supported model.
+  if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {
+    throw new Error(`${helper.modelName} is not yet supported for next edit.`);
+  }
+
+  const renderer = templateRendererOfModel(modelName);
+  const editedCodeWithTokens = insertTokens(
+    helper.fileContents.split("\n"),
+    helper.pos,
+  );
+
+  const tv: TemplateVars = {
+    userEdits,
+    languageShorthand: helper.lang.name,
+    userExcerpts: editedCodeWithTokens,
+  };
+
+  return {
+    role: "user",
+    content: renderer(tv),
+  };
 }
 
 export function renderDefaultSystemPrompt(): SystemPrompt {
@@ -81,115 +164,109 @@ export function renderDefaultUserPrompt(
 
   return {
     role: "user",
-    content: `Your junior made the following edit: ${JSON.stringify(userEdit)}. What is the most possible next edit your junior TypeScript developer will make ? `,
+    content: `Your junior made the following edit: ${JSON.stringify(userEdit)}. What is the most possible next edit your junior ${helper.lang.name} developer will make?`,
   };
 }
 
-export async function renderFineTunedUserPrompt(
-  // originalCode: string,
-  // editedCode: string,
-  snippets: SnippetPayload,
-  ide: IDE,
-  // cursorPos: Position,
-  helper: HelperVars,
-): Promise<UserPrompt> {
-  const ideInfo = await ide.getIdeInfo();
-  switch (ideInfo.ideType) {
-    case "vscode":
-      // const diffs = await compareAndReturnDiff(
-      //   originalCode,
-      //   editedCode,
-      //   helper.filepath,
-      // );
+// export async function renderFineTunedUserPrompt(
+//   snippets: SnippetPayload,
+//   ide: IDE,
+//   helper: HelperVars,
+// ): Promise<UserPrompt> {
+//   const ideInfo = await ide.getIdeInfo();
+//   switch (ideInfo.ideType) {
+//     case "vscode":
+//       const editedCodeWithPins = insertTokens(
+//         helper.fileContents.split("\n"),
+//         helper.pos,
+//       );
 
-      const editedCodeWithPins = insertPins(
-        helper.fileContents.split("\n"),
-        helper.pos,
-      );
+//       return {
+//         role: "user",
+//         content: renderStringTemplate(
+//           mercuryCoderTemplate,
+//           snippets.diffSnippets.join("\n"),
+//           helper.lang.name,
+//           editedCodeWithPins,
+//         ),
+//       };
 
-      return {
-        role: "user",
-        content: `### User Edits:\n\n${snippets.diffSnippets}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
-      };
+//     case "jetbrains":
+//       return {
+//         role: "user",
+//         content: "",
+//       };
+//   }
+// }
 
-    case "jetbrains":
-      return {
-        role: "user",
-        content: "",
-      };
-  }
-}
+// export async function renderDefaultBasicUserPrompt(
+//   snippets: SnippetPayload,
+//   ide: IDE,
+//   helper: HelperVars,
+// ): Promise<UserPrompt> {
+//   const ideInfo = await ide.getIdeInfo();
+//   switch (ideInfo.ideType) {
+//     case "vscode":
+//       const editedCodeWithPins = insertTokens(
+//         helper.fileContents.split("\n"),
+//         helper.pos,
+//       );
 
-export async function renderDefaultBasicUserPrompt(
-  // originalCode: string,
-  // editedCode: string,
-  snippets: SnippetPayload,
-  ide: IDE,
-  // cursorPos: Position,
-  helper: HelperVars,
-): Promise<UserPrompt> {
-  const ideInfo = await ide.getIdeInfo();
-  switch (ideInfo.ideType) {
-    case "vscode":
-      // const diffs = await compareAndReturnDiff(
-      //   originalCode,
-      //   editedCode,
-      //   helper.filepath,
-      // );
+//       return {
+//         role: "user",
+//         content: renderStringTemplate(
+//           mercuryCoderTemplate,
+//           JSON.stringify(snippets),
+//           helper.lang.name,
+//           editedCodeWithPins,
+//         ),
+//       };
 
-      const editedCodeWithPins = insertPins(
-        helper.fileContents.split("\n"),
-        helper.pos,
-      );
+//     case "jetbrains":
+//       return {
+//         role: "user",
+//         content: "",
+//       };
+//   }
+// }
 
-      return {
-        role: "user",
-        content: `### User Edits:\n\n${JSON.stringify(snippets)}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
-      };
+// export async function renderFineTunedBasicUserPrompt(
+//   snippets: SnippetPayload,
+//   ide: IDE,
+//   helper: HelperVars,
+//   diffContext: string,
+// ): Promise<UserPrompt> {
+//   const ideInfo = await ide.getIdeInfo();
+//   switch (ideInfo.ideType) {
+//     case "vscode":
+//       const lines = helper.fileContents.split("\n");
+//       const editedCodeWithPins = insertTokens(lines, helper.pos);
 
-    case "jetbrains":
-      return {
-        role: "user",
-        content: "",
-      };
-  }
-}
+//       return {
+//         role: "user",
+//         content: renderStringTemplate(
+//           mercuryCoderTemplate,
+//           diffContext,
+//           helper.lang.name,
+//           editedCodeWithPins,
+//         ),
+//       };
 
-export async function renderFineTunedBasicUserPrompt(
-  // originalCode: string,
-  // editedCode: string,
-  snippets: SnippetPayload,
-  ide: IDE,
-  // cursorPos: Position,
-  helper: HelperVars,
-  diffContext: string,
-): Promise<UserPrompt> {
-  const ideInfo = await ide.getIdeInfo();
-  switch (ideInfo.ideType) {
-    case "vscode":
-      const lines = helper.fileContents.split("\n");
-      const editedCodeWithPins = insertPins(lines, helper.pos);
+//     case "jetbrains":
+//       return {
+//         role: "user",
+//         content: "",
+//       };
+//   }
+// }
 
-      return {
-        role: "user",
-        content: `### User Edits:\n\n${diffContext}\n\n### User Excerpts:\n\n\`\`\`${helper.lang.name}\n${editedCodeWithPins}\`\`\``,
-      };
-
-    case "jetbrains":
-      return {
-        role: "user",
-        content: "",
-      };
-  }
-}
-
-function insertPins(lines: string[], cursorPos: Position) {
-  const a = insertCursorPin(lines, cursorPos);
-  const b = insertEditableRegionPinsWithStaticRange(a, cursorPos, 5, 5);
+function insertTokens(lines: string[], cursorPos: Position) {
+  const a = insertCursorToken(lines, cursorPos);
+  const b = insertEditableRegionTokensWithStaticRange(a, cursorPos);
   return b.join("\n");
 }
 
-function insertCursorPin(lines: string[], cursorPos: Position) {
+function insertCursorToken(lines: string[], cursorPos: Position) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
@@ -200,41 +277,45 @@ function insertCursorPin(lines: string[], cursorPos: Position) {
 
   lines[cursorPos.line] =
     lines[cursorPos.line].slice(0, charPos) +
-    "<|user_cursor_is_here|>" +
+    USER_CURSOR_IS_HERE_TOKEN +
     lines[cursorPos.line].slice(charPos);
 
   return lines;
 }
 
-function insertEditableRegionPinsWithStaticRange(
+function insertEditableRegionTokensWithStaticRange(
   lines: string[],
   cursorPos: Position,
-  marginTop: number,
-  marginBottom: number,
 ) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
 
   // Ensure editable regions are within bounds.
-  const editableRegionStart = Math.max(cursorPos.line - marginTop, 0);
+  const editableRegionStart = Math.max(
+    cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+    0,
+  );
   const editableRegionEnd = Math.min(
-    cursorPos.line + marginBottom,
-    lines.length - 1,
+    cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+    lines.length - 1, // Line numbers should be zero-indexed.
   );
 
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),
-    "<|editable_region_start|>",
+    EDITABLE_REGION_START_TOKEN,
     ...lines.slice(editableRegionStart, editableRegionEnd + 1),
-    "<|editable_region_end|>",
+    EDITABLE_REGION_END_TOKEN,
     ...lines.slice(editableRegionEnd + 1),
   ];
 
   return instrumentedLines;
 }
 
-function insertEditableRegionPinsWithAst(lines: string[], cursorPos: Position) {
+function insertEditableRegionTokensWithAst(
+  lines: string[],
+  cursorPos: Position,
+) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
@@ -243,9 +324,8 @@ function insertEditableRegionPinsWithAst(lines: string[], cursorPos: Position) {
   const lineLength = lines[cursorPos.line].length;
   const charPos = Math.min(Math.max(0, cursorPos.character), lineLength);
 
-  lines[cursorPos.line] =
-    lines[cursorPos.line].slice(0, charPos) +
-    "<|user_cursor_is_here|>" +
+  (lines[cursorPos.line] =
+    lines[cursorPos.line].slice(0, charPos) + USER_CURSOR_IS_HERE_TOKEN),
     lines[cursorPos.line].slice(charPos);
 
   return lines;
