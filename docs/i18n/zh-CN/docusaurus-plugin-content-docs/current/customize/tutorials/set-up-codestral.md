@@ -4,7 +4,7 @@ description: 如何设置 Codestral
 keywords: [codestral, mistral, 模型设置]
 ---
 
-![mistral x continue](../../../../../../static/img/mistral-x-continue.png)
+![mistral x continue](/img/mistral-x-continue.png)
 
 **这是一个分步指南，关于如何在 Continue 设置 Codestral ，使用 Mistral AI API ：**
 

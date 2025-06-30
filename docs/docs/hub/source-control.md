@@ -40,7 +40,7 @@ This is the only configuration necessary, but you can view the full list of opti
 
 ### 4. Commit and push
 
-Add the [YAML for your assistants and blocks](../reference.md) to the appropriate directories:
+Add the [YAML for your assistants and blocks](../advanced/reference) to the appropriate directories:
 
 - `assistants/public` for public assistants
 - `assistants/private` for private (visible only within your organization) assistants

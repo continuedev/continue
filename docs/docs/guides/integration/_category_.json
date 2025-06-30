@@ -1,0 +1,9 @@
+{
+  "label": "Integration Guides",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "title": "Integration Guides",
+    "description": "Integrate Continue with your tools and workflows"
+  }
+}
