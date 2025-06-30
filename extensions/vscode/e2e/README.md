@@ -34,8 +34,8 @@ All e2e tests are separated (by folder) into
 
 ### How is it connecting to the LLM?
 
-- This depends on the model provider written inside the `config.json`. If the model provider is `mock`, it will use `MockLLM`, and if it uses `test`, it will use `TestLLM`.
+- This depends on the model provider written inside the `test-continue/config.json`. If the model provider is `mock`, it will use `MockLLM`, and if it uses `test`, it will use `TestLLM`.
 
 ### Quirks
 
-- For non-macOS systems, `codesign` is not available. You should get rid of `npm run e2e:sign-vscode` from the right hand side of `e2e:all` inside `scripts` in `extensions/vscode/package.json`.
+- For non-macOS systems, `codesign` is not available. You should run `npm run e2e:all-non-mac` instead of `npm run e2e:all`.
