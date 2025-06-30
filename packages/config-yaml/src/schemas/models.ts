@@ -95,7 +95,7 @@ const templateSchema = z.enum([
   "chatml",
   "none",
   "openchat",
-  "deepseek",
+  // "deepseek",
   "xwin-coder",
   "neural-chat",
   "codellama-70b",
