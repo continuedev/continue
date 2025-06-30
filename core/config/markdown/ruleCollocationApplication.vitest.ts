@@ -161,19 +161,19 @@ describe("Rule Colocation Application", () => {
         rules,
         [componentTsxContextItem],
       );
-      expect(applicableRules.map((r) => r.name)).toContain("Root Rule");
+      expect(applicableRules.map((r) => r.rule.name)).toContain("Root Rule");
 
       // Test with redux file
       applicableRules = getApplicableRules(userMessageWithReduxFile, rules, [
         reduxContextItem,
       ]);
-      expect(applicableRules.map((r) => r.name)).toContain("Root Rule");
+      expect(applicableRules.map((r) => r.rule.name)).toContain("Root Rule");
 
       // Test with root-level file
       applicableRules = getApplicableRules(userMessageWithRootFile, rules, [
         rootContextItem,
       ]);
-      expect(applicableRules.map((r) => r.name)).toContain("Root Rule");
+      expect(applicableRules.map((r) => r.rule.name)).toContain("Root Rule");
     });
   });
 
@@ -194,7 +194,7 @@ describe("Rule Colocation Application", () => {
         [impliedComponentRule],
         [componentTsxContextItem],
       );
-      expect(applicableRules.map((r) => r.name)).toContain(
+      expect(applicableRules.map((r) => r.rule.name)).toContain(
         "Implied Components Rule",
       );
 
@@ -207,7 +207,7 @@ describe("Rule Colocation Application", () => {
       );
 
       // THIS WILL FAIL - Current implementation doesn't restrict by directory
-      expect(applicableRules.map((r) => r.name)).not.toContain(
+      expect(applicableRules.map((r) => r.rule.name)).not.toContain(
         "Implied Components Rule",
       );
 
@@ -220,7 +220,7 @@ describe("Rule Colocation Application", () => {
       );
 
       // THIS WILL FAIL - Current implementation doesn't restrict by directory
-      expect(applicableRules.map((r) => r.name)).not.toContain(
+      expect(applicableRules.map((r) => r.rule.name)).not.toContain(
         "Implied Components Rule",
       );
     });
@@ -243,7 +243,7 @@ describe("Rule Colocation Application", () => {
         [typescriptComponentRule],
         [componentTsxContextItem],
       );
-      expect(applicableRules.map((r) => r.name)).toContain(
+      expect(applicableRules.map((r) => r.rule.name)).toContain(
         "TypeScript Component Rule",
       );
 
@@ -254,7 +254,7 @@ describe("Rule Colocation Application", () => {
         [typescriptComponentRule],
         [componentJsxContextItem],
       );
-      expect(applicableRules.map((r) => r.name)).not.toContain(
+      expect(applicableRules.map((r) => r.rule.name)).not.toContain(
         "TypeScript Component Rule",
       );
 
@@ -267,7 +267,7 @@ describe("Rule Colocation Application", () => {
       );
 
       // THIS WILL FAIL - Current impl only checks file extension, not directory
-      expect(applicableRules.map((r) => r.name)).not.toContain(
+      expect(applicableRules.map((r) => r.rule.name)).not.toContain(
         "TypeScript Component Rule",
       );
     });
@@ -290,7 +290,7 @@ describe("Rule Colocation Application", () => {
         [apiUtilsRule],
         [apiUtilContextItem],
       );
-      expect(applicableRules.map((r) => r.name)).toContain("API Utils Rule");
+      expect(applicableRules.map((r) => r.rule.name)).toContain("API Utils Rule");
 
       // Test with TS file in general utils directory - should NOT apply
       // This test will fail because current implementation doesn't consider directory boundaries
@@ -301,7 +301,7 @@ describe("Rule Colocation Application", () => {
       );
 
       // THIS WILL FAIL - Current impl only checks file extension, not directory
-      expect(applicableRules.map((r) => r.name)).not.toContain(
+      expect(applicableRules.map((r) => r.rule.name)).not.toContain(
         "API Utils Rule",
       );
     });
@@ -364,10 +364,10 @@ describe("Rule Colocation Application", () => {
 
       // These assertions will fail with current implementation
       // but represent the desired behavior
-      expect(applicableModelsRules.map((r) => r.name)).toContain(
+      expect(applicableModelsRules.map((r) => r.rule.name)).toContain(
         "Inferred Rule for src/models",
       );
-      expect(applicableModelsRules.map((r) => r.name)).not.toContain(
+      expect(applicableModelsRules.map((r) => r.rule.name)).not.toContain(
         "Inferred Rule for src/services",
       );
 
@@ -380,10 +380,10 @@ describe("Rule Colocation Application", () => {
 
       // These assertions will fail with current implementation
       // but represent the desired behavior
-      expect(applicableServicesRules.map((r) => r.name)).not.toContain(
+      expect(applicableServicesRules.map((r) => r.rule.name)).not.toContain(
         "Inferred Rule for src/models",
       );
-      expect(applicableServicesRules.map((r) => r.name)).toContain(
+      expect(applicableServicesRules.map((r) => r.rule.name)).toContain(
         "Inferred Rule for src/services",
       );
     });

@@ -112,7 +112,7 @@ describe("alwaysApply Behavior", () => {
     );
     expect(applicableRules).toHaveLength(1);
     expect(applicableRules[0].name).toBe("Conditional Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Never Apply Rule",
     );
 
@@ -153,7 +153,7 @@ describe("alwaysApply Behavior", () => {
     );
     expect(applicableRules).toHaveLength(1);
     expect(applicableRules[0].name).toBe("Default No Globs Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Default With Globs Rule",
     );
 
@@ -164,10 +164,10 @@ describe("alwaysApply Behavior", () => {
       [matchingFileContext],
     );
     expect(applicableRules).toHaveLength(2);
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Default No Globs Rule",
     );
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Default With Globs Rule",
     );
 
@@ -179,7 +179,7 @@ describe("alwaysApply Behavior", () => {
     );
     expect(applicableRules).toHaveLength(1);
     expect(applicableRules[0].name).toBe("Default No Globs Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Default With Globs Rule",
     );
   });

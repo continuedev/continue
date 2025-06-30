@@ -461,7 +461,7 @@ export interface ChatHistoryItem {
   toolCallState?: ToolCallState;
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
-  appliedRules?: RuleWithSource[];
+  appliedRules?: RuleWithApplicationReason[];
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -1623,6 +1623,19 @@ export interface RuleWithSource {
   description?: string;
   ruleFile?: string;
   alwaysApply?: boolean;
+}
+
+export type RuleApplicationReason =
+  | "alwaysApply"
+  | "implicitGlobal"
+  | "globMatch"
+  | "regexMatch"
+  | "globAndRegexMatch"
+  | "directoryMatch";
+
+export interface RuleWithApplicationReason {
+  rule: RuleWithSource;
+  reason: RuleApplicationReason;
 }
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
