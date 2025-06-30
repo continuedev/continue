@@ -34,27 +34,26 @@ export const streamEditThunk = createAsyncThunk<
   },
   ThunkApiType
 >(
-  "chat/streamResponse",
+  "edit/streamResponse",
   async ({ editorState, codeToEdit }, { dispatch, extra }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         dispatch(setActive());
-        const [contextItems, __, userInstructions, _] =
-          await resolveEditorContent({
-            editorState,
-            modifiers: {
-              noContext: true,
-              useCodebase: false,
-            },
-            ideMessenger: extra.ideMessenger,
-            defaultContextProviders: [],
-            availableSlashCommands: [],
-            dispatch,
-          });
+        const { selectedContextItems, content } = await resolveEditorContent({
+          editorState,
+          modifiers: {
+            noContext: true,
+            useCodebase: false,
+          },
+          ideMessenger: extra.ideMessenger,
+          defaultContextProviders: [],
+          availableSlashCommands: [],
+          dispatch,
+        });
 
         const prompt = [
-          ...contextItems.map((item) => item.content),
-          stripImages(userInstructions),
+          ...selectedContextItems.map((item) => item.content),
+          stripImages(content),
         ].join("\n\n");
 
         const response = await extra.ideMessenger.request("edit/sendPrompt", {

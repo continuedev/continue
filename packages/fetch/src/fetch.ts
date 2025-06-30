@@ -4,7 +4,7 @@ import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { BodyInit, RequestInit, Response } from "node-fetch";
 import { getAgentOptions } from "./getAgentOptions.js";
-import fetch from "./node-fetch-patch.js";
+import patchedFetch from "./node-fetch-patch.js";
 import { getProxy, shouldBypassProxy } from "./util.js";
 
 const { http, https } = (followRedirects as any).default;
@@ -144,7 +144,7 @@ export async function fetchwithRequestOptions(
 
   // fetch the request with the provided options
   try {
-    const resp = await fetch(url, {
+    const resp = await patchedFetch(url, {
       ...init,
       body: finalBody,
       headers: headers,
