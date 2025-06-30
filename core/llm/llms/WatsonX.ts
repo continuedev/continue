@@ -84,17 +84,20 @@ class WatsonX extends BaseLLM {
 
   protected _convertMessage(message: ChatMessage) {
     let message_ = message as any;
-    if (message_.role == "tool") {
+    if (message_.role === "tool") {
       message_.tool_call_id = (message as ToolResultChatMessage).toolCallId;
       delete message_.toolCallId;
-    } else if (message.role == "assistant" && !!message.toolCalls) {
+    } else if (message.role === "assistant" && !!message.toolCalls) {
       message_.tool_calls = message.toolCalls.map((t) => ({
         ...t,
         type: "function",
       }));
       delete message_.toolCalls;
       delete message_.content;
-    } else if (message_.role == "user" && typeof message_.content == "string") {
+    } else if (
+      message_.role === "user" &&
+      typeof message_.content === "string"
+    ) {
       message_.content = [{ type: "text", text: message_.content }];
     }
     return message_;
@@ -301,7 +304,7 @@ class WatsonX extends BaseLLM {
           if (!!toolName) {
             accumulatedToolCallingChunks = "";
 
-            if (value?.choices?.[0]?.finish_reason == "tool_calls") {
+            if (value?.choices?.[0]?.finish_reason === "tool_calls") {
               // If final assistant message has "tool_calls" as finish_reason
               let args: string | undefined;
               try {
