@@ -1,6 +1,6 @@
-import { streamLines } from "../../diff/util.js";
-import { SlashCommand } from "../../index.js";
-import { removeQuotesAndEscapes } from "../../util/index.js";
+import { streamLines } from "../../../diff/util.js";
+import { SlashCommand } from "../../../index.js";
+import { removeQuotesAndEscapes } from "../../../util/index.js";
 
 function commandIsPotentiallyDangerous(command: string) {
   return (

@@ -1,6 +1,6 @@
-import { IDE } from "../..";
-import { GlobalContext } from "../../util/GlobalContext";
-import { joinPathsToUri } from "../../util/uri";
+import { IDE } from "..";
+import { GlobalContext } from "../util/GlobalContext";
+import { joinPathsToUri } from "../util/uri";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
 # It is used to define and reuse prompts within Continue

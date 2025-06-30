@@ -16,9 +16,9 @@ import {
   ILLMLogger,
   RuleWithSource,
   SerializedContinueConfig,
+  SlashCommandDescWithSource,
   Tool,
 } from "../../";
-import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import RulesContextProvider from "../../context/providers/RulesContextProvider";
@@ -190,14 +190,15 @@ export default async function doLoadConfig(options: {
       }));
       newConfig.tools.push(...serverTools);
 
-      const serverSlashCommands = server.prompts.map((prompt) =>
-        constructMcpSlashCommand(
-          server.client,
-          prompt.name,
-          prompt.description,
-          prompt.arguments?.map((a: any) => a.name),
-        ),
-      );
+      const serverSlashCommands: SlashCommandDescWithSource[] =
+        server.prompts.map((prompt) => ({
+          name: prompt.name,
+          description: prompt.description ?? "MCP Prompt",
+          source: "mcp-prompt",
+          isLegacy: false,
+          mcpServerName: server.name, // Used in client to retrieve prompt
+          mcpArgs: prompt.arguments,
+        }));
       newConfig.slashCommands.push(...serverSlashCommands);
 
       const submenuItems = server.resources
