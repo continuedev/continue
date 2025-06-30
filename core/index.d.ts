@@ -1036,6 +1036,7 @@ interface ToolChoice {
 
 export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
+  enableExperimentalTools: boolean;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;
@@ -1321,6 +1322,14 @@ export interface ShowFilePayload {
   filepath: string;
 }
 
+export interface ApplyToFilePayload {
+  streamId: string;
+  filepath?: string;
+  text: string;
+  toolCallId?: string;
+  isSearchAndReplace?: boolean;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1376,6 +1385,7 @@ export interface ExperimentalConfig {
   modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
+  enableExperimentalTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
