@@ -18,6 +18,7 @@ plugins {
     id("org.jetbrains.qodana") version "0.1.13"
     id("org.jetbrains.kotlinx.kover") version "0.7.3"
     kotlin("plugin.serialization") version "1.8.0"
+    id("io.sentry.jvm.gradle") version "5.8.0"
 }
 
 group = properties("pluginGroup").get()
