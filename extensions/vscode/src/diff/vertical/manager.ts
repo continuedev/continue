@@ -13,7 +13,7 @@ import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { stripImages } from "core/util/messageContent";
-import { EditOutcomeTracker } from "../../extension/EditOutcomeTracker";
+import { editOutcomeTracker } from "../../extension/EditOutcomeTracker";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -535,7 +535,7 @@ export class VerticalDiffManager {
     const lineChange = newCodeLines - previousCodeLines;
 
     // Store pending edit data for outcome tracking
-    EditOutcomeTracker.getInstance().trackEditInteraction({
+    editOutcomeTracker.trackEditInteraction({
       streamId: EDIT_MODE_STREAM_ID,
       timestamp: new Date().toISOString(),
       modelProvider: model.underlyingProviderName,

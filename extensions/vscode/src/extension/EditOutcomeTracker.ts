@@ -17,7 +17,7 @@ export interface PendingEditData {
   lineChange: number;
 }
 
-export class EditOutcomeTracker {
+class EditOutcomeTracker {
   private static instance: EditOutcomeTracker;
   private pendingEdits: Map<string, PendingEditData> = new Map();
 
@@ -92,3 +92,5 @@ export class EditOutcomeTracker {
     return this.pendingEdits.size;
   }
 }
+
+export const editOutcomeTracker = EditOutcomeTracker.getInstance();
