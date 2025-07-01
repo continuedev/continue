@@ -46,13 +46,13 @@ describe("Implicit global rules application", () => {
 
     // Both global rules should be included regardless of context
     expect(applicableRules).toHaveLength(2);
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Implicit Global Rule",
     );
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Explicit Global Rule",
     );
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Nested Directory Rule",
     );
   });
@@ -96,13 +96,13 @@ describe("Implicit global rules application", () => {
 
     // Should include all rules
     expect(applicableRules).toHaveLength(3);
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Implicit Global Rule",
     );
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Explicit Global Rule",
     );
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Nested Directory Rule",
     );
   });

@@ -47,8 +47,8 @@ describe("Nested directory rules application", () => {
 
     // Both rules should apply
     expect(applicableRules).toHaveLength(2);
-    expect(applicableRules.map((r) => r.name)).toContain("Global Rule");
-    expect(applicableRules.map((r) => r.name)).toContain("Nested Folder Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Global Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Nested Folder Rule");
   });
 
   it("should also work with file references in messages", () => {
@@ -68,8 +68,8 @@ describe("Nested directory rules application", () => {
 
     // Both rules should apply
     expect(applicableRules).toHaveLength(2);
-    expect(applicableRules.map((r) => r.name)).toContain("Global Rule");
-    expect(applicableRules.map((r) => r.name)).toContain("Nested Folder Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Global Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Nested Folder Rule");
   });
 
   it("should NOT apply nested directory rules to files outside that directory", () => {
@@ -90,8 +90,8 @@ describe("Nested directory rules application", () => {
     );
 
     // Only the global rule should be included
-    expect(applicableRules.map((r) => r.name)).toContain("Global Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Global Rule");
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Nested Folder Rule",
     );
   });
@@ -148,8 +148,8 @@ describe("Nested directory rules application", () => {
       [srcPythonRule, utilsPythonRule],
       [srcPythonFileContext],
     );
-    expect(applicableRules.map((r) => r.name)).toContain("Src Python Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Src Python Rule");
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Utils Python Rule",
     );
 
@@ -159,8 +159,8 @@ describe("Nested directory rules application", () => {
       [srcPythonRule, utilsPythonRule],
       [utilsPythonFileContext],
     );
-    expect(applicableRules.map((r) => r.name)).not.toContain("Src Python Rule");
-    expect(applicableRules.map((r) => r.name)).toContain("Utils Python Rule");
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain("Src Python Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Utils Python Rule");
 
     // Apply both rules to manual-testing-sandbox file - should not match either
     applicableRules = getApplicableRules(
@@ -168,8 +168,8 @@ describe("Nested directory rules application", () => {
       [srcPythonRule, utilsPythonRule],
       [manualTestingPythonFileContext],
     );
-    expect(applicableRules.map((r) => r.name)).not.toContain("Src Python Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain("Src Python Rule");
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Utils Python Rule",
     );
   });

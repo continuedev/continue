@@ -2,6 +2,7 @@ import {
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
+  RuleWithApplicationReason,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
@@ -111,7 +112,7 @@ export function constructMessages(
   messageMode: string,
   history: ChatHistoryItem[],
   baseChatOrAgentSystemMessage: string | undefined,
-  rules: RuleWithSource[],
+  rulesWithReasons: RuleWithApplicationReason[],
   rulePolicies?: RulePolicies,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
@@ -166,7 +167,7 @@ export function constructMessages(
   );
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatOrAgentSystemMessage,
-    rules,
+    rules: rulesWithReasons.map(r => r.rule),
     userMessage: lastUserMsg,
     contextItems: lastUserContextItems,
     rulePolicies,

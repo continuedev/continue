@@ -15,6 +15,7 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
+  RuleWithApplicationReason,
   RuleWithSource,
   Session,
   SessionMetadata,
@@ -257,7 +258,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: RuleWithSource[];
+        appliedRules: RuleWithApplicationReason[];
       }>,
     ) => {
       if (state.history[payload.index]) {

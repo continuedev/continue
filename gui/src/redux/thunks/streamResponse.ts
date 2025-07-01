@@ -103,7 +103,7 @@ export const streamResponseThunk = createAsyncThunk<
 
         // Calculate applicable rules once
         // We need to check the message type to match what getApplicableRules expects
-        const applicableRules = getApplicableRules(
+        const applicableRulesWithReasons = getApplicableRules(
           userMsg.role === "user" || userMsg.role === "tool"
             ? (userMsg as UserChatMessage | ToolResultChatMessage)
             : undefined,
@@ -116,7 +116,7 @@ export const streamResponseThunk = createAsyncThunk<
         dispatch(
           setAppliedRulesAtIndex({
             index: inputIndex,
-            appliedRules: applicableRules,
+            appliedRules: applicableRulesWithReasons,
           }),
         );
 
@@ -130,7 +130,7 @@ export const streamResponseThunk = createAsyncThunk<
           messageMode,
           [...updatedHistory],
           baseChatOrAgentSystemMessage,
-          applicableRules,
+          applicableRulesWithReasons,
           rulePolicies,
         );
 

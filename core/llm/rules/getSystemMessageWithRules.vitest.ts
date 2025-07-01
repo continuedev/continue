@@ -398,7 +398,8 @@ describe("Content pattern matching", () => {
     );
 
     expect(applicableRules).toHaveLength(1);
-    expect(applicableRules[0].name).toBe("Arrow Function Rule");
+    expect(applicableRules[0].rule.name).toBe("Arrow Function Rule");
+    expect(applicableRules[0].reason).toBe("regexMatch");
 
     // Message with code block that doesn't match the pattern
     const messageWithoutArrowFn: UserChatMessage = {

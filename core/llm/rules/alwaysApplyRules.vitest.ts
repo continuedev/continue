@@ -42,10 +42,11 @@ describe("Rule application with alwaysApply", () => {
 
     // The always apply rule should be included regardless of context
     expect(applicableRules).toHaveLength(1);
-    expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Always Apply Rule");
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Nested Directory Rule",
     );
+    expect(applicableRules.find(r => r.rule.name === "Always Apply Rule")?.reason).toBe("alwaysApply");
   });
 
   it("should apply nested directory rules to files in that directory", () => {
@@ -67,8 +68,8 @@ describe("Rule application with alwaysApply", () => {
 
     // Both rules should apply
     expect(applicableRules).toHaveLength(2);
-    expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Always Apply Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Nested Directory Rule",
     );
   });
@@ -92,10 +93,11 @@ describe("Rule application with alwaysApply", () => {
 
     // Only the always apply rule should be included
     expect(applicableRules).toHaveLength(1);
-    expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
-    expect(applicableRules.map((r) => r.name)).not.toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Always Apply Rule");
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain(
       "Nested Directory Rule",
     );
+    expect(applicableRules.find(r => r.rule.name === "Always Apply Rule")?.reason).toBe("alwaysApply");
   });
 
   it("should correctly apply rules when a file is mentioned in a message", () => {
@@ -115,8 +117,8 @@ describe("Rule application with alwaysApply", () => {
 
     // Both rules should apply
     expect(applicableRules).toHaveLength(2);
-    expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
-    expect(applicableRules.map((r) => r.name)).toContain(
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Always Apply Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain(
       "Nested Directory Rule",
     );
   });
@@ -125,7 +127,7 @@ describe("Rule application with alwaysApply", () => {
     // Test with no message or context
     let applicableRules = getApplicableRules(undefined, [alwaysApplyRule], []);
     expect(applicableRules).toHaveLength(1);
-    expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Always Apply Rule");
 
     // Test with message but no file references and no context
     const simpleMessage: UserChatMessage = {
@@ -135,7 +137,7 @@ describe("Rule application with alwaysApply", () => {
 
     applicableRules = getApplicableRules(simpleMessage, [alwaysApplyRule], []);
     expect(applicableRules).toHaveLength(1);
-    expect(applicableRules.map((r) => r.name)).toContain("Always Apply Rule");
+    expect(applicableRules.map((r) => r.rule.name)).toContain("Always Apply Rule");
   });
 
   it("should respect 'off' rulePolicies over alwaysApply when there are no file paths", () => {
@@ -169,6 +171,6 @@ describe("Rule application with alwaysApply", () => {
     );
 
     expect(applicableRules).toHaveLength(0);
-    expect(applicableRules.map((r) => r.name)).not.toContain("Global Rule");
+    expect(applicableRules.map((r) => r.rule.name)).not.toContain("Global Rule");
   });
 });

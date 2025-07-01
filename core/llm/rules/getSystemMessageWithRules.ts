@@ -11,6 +11,19 @@ import { extractContentFromCodeBlock } from "../utils/extractContentFromCodeBloc
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
 import { RulePolicies } from "./types";
 
+export type RuleApplicationReason =
+  | "alwaysApply"
+  | "implicitGlobal"
+  | "globMatch"
+  | "regexMatch"
+  | "globAndRegexMatch"
+  | "directoryMatch";
+
+export interface RuleWithApplicationReason {
+  rule: RuleWithSource;
+  reason: RuleApplicationReason;
+}
+
 /**
  * Checks if a path matches any of the provided globs
  * Supports negative patterns with ! prefix
@@ -166,30 +179,42 @@ const checkGlobsAndRegex = ({
   rule: RuleWithSource;
   filePaths: string[];
   fileContents: Record<string, string>;
-}) => {
+}): { matches: boolean; reason?: RuleApplicationReason } => {
   const matchingFiles = rule.globs
     ? filePaths.filter((filePath) => matchesGlobs(filePath, rule.globs))
     : filePaths;
 
   // If no files match the globs, don't apply the rule
   if (matchingFiles.length === 0) {
-    return false;
+    return { matches: false };
   }
 
   // Now check for pattern matches in file contents if regex are specified
   if (rule.regex) {
     // Check if any of the matching files also match the content regex
-    return matchingFiles.some((filePath) => {
+    const hasRegexMatch = matchingFiles.some((filePath) => {
       const content = fileContents[filePath];
       // If we don't have the content, we can't check regex
       if (!content) return false;
       return contentMatchesRegex(content, rule.regex!);
     });
+
+    if (hasRegexMatch) {
+      return { 
+        matches: true, 
+        reason: rule.globs ? "globAndRegexMatch" : "regexMatch" 
+      };
+    } else {
+      return { matches: false };
+    }
   }
 
   // If we have no regex or if we couldn't check regex (no content),
   // just go with the glob matches
-  return matchingFiles.length > 0;
+  return { 
+    matches: matchingFiles.length > 0, 
+    reason: rule.globs ? "globMatch" : "directoryMatch" 
+  };
 };
 
 /**
@@ -199,31 +224,34 @@ const checkGlobsAndRegex = ({
  * @param filePaths - Array of file paths to check against the rule's globs
  * @param fileContents - Map of file paths to their contents for pattern matching
  * @param rulePolicies - Optional policies that can override normal rule behavior
- * @returns true if the rule should be applied, false otherwise
+ * @returns object with matches boolean and reason if applicable
  */
 export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
   rulePolicies: RulePolicies = {},
   fileContents: Record<string, string> = {},
-): boolean => {
+): { matches: boolean; reason?: RuleApplicationReason } => {
   const policy = rulePolicies[rule.name || ""];
 
   // Never apply if policy is "off"
   if (policy === "off") {
-    return false;
+    return { matches: false };
   }
 
   // If it's a global rule, always apply it regardless of file paths
   if (isGlobalRule(rule)) {
-    return true;
+    const reason: RuleApplicationReason = rule.alwaysApply === true 
+      ? "alwaysApply" 
+      : "implicitGlobal";
+    return { matches: true, reason };
   }
 
   // If there are no file paths to check and we've made it here:
   // - We've already handled global rules above
   // - Don't apply other rules since we have no files to match against
   if (filePaths.length === 0) {
-    return false;
+    return { matches: false };
   }
 
   // Check if this is a root-level rule (in .continue directory or no file path)
@@ -254,7 +282,7 @@ export const shouldApplyRule = (
     rule.globs === undefined &&
     rule.regex === undefined
   ) {
-    return false;
+    return { matches: false };
   }
 
   return checkGlobsAndRegex({
@@ -270,14 +298,14 @@ export const shouldApplyRule = (
  * @param userMessage - The user or tool message to check for file paths in code blocks
  * @param rules - The list of rules to filter
  * @param contextItems - Context items to check for file paths
- * @returns List of applicable rules
+ * @returns List of applicable rules with their application reasons
  */
 export const getApplicableRules = (
   userMessage: UserChatMessage | ToolResultChatMessage | undefined,
   rules: RuleWithSource[],
   contextItems: ContextItemWithId[],
   rulePolicies: RulePolicies = {},
-): RuleWithSource[] => {
+): RuleWithApplicationReason[] => {
   // Get file paths from message and context for rule matching
   const filePathsFromMessage = userMessage
     ? extractPathsFromCodeBlocks(renderChatMessage(userMessage))
@@ -317,12 +345,21 @@ export const getApplicableRules = (
 
   // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
   // and path matching in a consistent way
-  const applicableRules = rules.filter((rule) =>
-    shouldApplyRule(rule, allFilePaths, rulePolicies, fileContents),
-  );
+  const applicableRules: RuleWithApplicationReason[] = [];
+  
+  for (const rule of rules) {
+    const result = shouldApplyRule(rule, allFilePaths, rulePolicies, fileContents);
+    if (result.matches && result.reason) {
+      applicableRules.push({
+        rule,
+        reason: result.reason,
+      });
+    }
+  }
 
   return applicableRules;
 };
+
 
 export const getSystemMessageWithRules = ({
   baseSystemMessage,
@@ -345,8 +382,8 @@ export const getSystemMessageWithRules = ({
   );
   let systemMessage = baseSystemMessage ?? "";
 
-  for (const rule of applicableRules) {
-    systemMessage += `\n\n${rule.rule}`;
+  for (const ruleWithReason of applicableRules) {
+    systemMessage += `\n\n${ruleWithReason.rule.rule}`;
   }
 
   return systemMessage;
