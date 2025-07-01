@@ -7,8 +7,8 @@ import {
   JSONModelDescription,
   LLMOptions,
 } from "../..";
-import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../../../gui/src/redux/util/constructMessages";
 import { renderTemplatedString } from "../../util/handlebars/renderTemplatedString";
+import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../defaultSystemMessages";
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
