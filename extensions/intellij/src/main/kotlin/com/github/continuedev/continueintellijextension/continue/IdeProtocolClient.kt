@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.*
 import com.github.continuedev.continueintellijextension.utils.*
@@ -463,8 +464,10 @@ class IdeProtocolClient(
                         println("Unknown message type: $messageType")
                     }
                 }
-            } catch (error: Exception) {
-                ide.showToast(ToastType.ERROR, " Error handling message of type $messageType: $error")
+            } catch (exception: Exception) {
+                val exceptionMessage = "Error handling message of type $messageType: $exception"
+                service<ContinueErrorService>().report(exception, exceptionMessage)
+                ide.showToast(ToastType.ERROR, exceptionMessage)
             }
         }
     }
