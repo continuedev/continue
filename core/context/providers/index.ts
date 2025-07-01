@@ -2,6 +2,7 @@ import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
 
 import ClipboardContextProvider from "./ClipboardContextProvider";
+import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
 import CurrentFileContextProvider from "./CurrentFileContextProvider";
@@ -56,6 +57,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   JiraIssuesContextProvider,
   PostgresContextProvider,
   DatabaseContextProvider,
+  CodebaseContextProvider,
   CodeContextProvider,
   CurrentFileContextProvider,
   URLContextProvider,

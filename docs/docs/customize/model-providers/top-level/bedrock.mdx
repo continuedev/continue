@@ -200,9 +200,10 @@ To setup Bedrock using custom imported models, add the following to your config 
     - name: AWS Bedrock deepseek-coder-6.7b-instruct
       provider: bedrockimport
       model: deepseek-coder-6.7b-instruct
-      modelArn: arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX
-      region: us-west-2
-      profile: bedrock
+      env:
+        region: us-west-2
+        profile: bedrock
+        modelArn: arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
