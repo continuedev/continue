@@ -157,8 +157,6 @@ const getCommandsMap: (
       throw new Error("Config not loaded");
     }
 
-    console.log("debug1 onlyOneInsertion", onlyOneInsertion);
-
     const llm =
       config.selectedModelByRole.edit ?? config.selectedModelByRole.chat;
 
