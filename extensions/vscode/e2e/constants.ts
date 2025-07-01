@@ -5,4 +5,5 @@ export const DEFAULT_TIMEOUT = {
   SM: BASELINE * 0.5,
   MD: BASELINE,
   XL: BASELINE * 5,
+  XXL: BASELINE * 7,
 };

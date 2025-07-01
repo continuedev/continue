@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { SlashCommandDescription } from "core";
+import { SlashCommandDescWithSource } from "core";
 import { SerializedOrgWithProfiles } from "core/config/ProfileLifecycleManager";
 
 const DEFAULT_SLASH_COMMANDS_BOOKMARKS_COUNT = 5;
@@ -81,7 +81,7 @@ export const profilesSlice = createSlice({
       state,
       action: PayloadAction<{
         profileId: string;
-        defaultSlashCommands?: SlashCommandDescription[];
+        defaultSlashCommands?: SlashCommandDescWithSource[];
       }>,
     ) => {
       const { profileId, defaultSlashCommands = [] } = action.payload;

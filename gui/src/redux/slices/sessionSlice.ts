@@ -659,7 +659,9 @@ export const selectApplyStateByToolCallId = createSelector(
     (state: RootState, toolCallId?: string) => toolCallId,
   ],
   (states, toolCallId) => {
-    return states.find((state) => state.toolCallId === toolCallId);
+    if (toolCallId) {
+      return states.find((state) => state.toolCallId === toolCallId);
+    }
   },
 );
 
