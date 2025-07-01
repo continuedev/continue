@@ -319,7 +319,7 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? null : item.message.role ===
+              ) : item.message.role === "tool" ? null : item.message.role === // /> //   toolCallId={item.message.toolCallId} //   contextItems={item.contextItems} // <ToolOutput
                   "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (

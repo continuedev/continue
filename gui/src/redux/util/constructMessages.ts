@@ -114,7 +114,9 @@ export function constructMessages(
         for (const toolCall of item.message.toolCalls) {
           let content: string = "No tool output";
           // TODO toolCallState only supports one tool call per message for now
-          if (
+          if (item.toolCallState?.status === "canceled") {
+            content = "The user cancelled this tool call.";
+          } else if (
             item.toolCallState?.toolCallId === toolCall.id &&
             item.toolCallState?.output
           ) {
