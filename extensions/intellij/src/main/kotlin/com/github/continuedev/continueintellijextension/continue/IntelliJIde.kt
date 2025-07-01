@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
@@ -344,11 +345,10 @@ class IntelliJIDE(
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
                 return results.split("\n")
-            } catch (e: Exception) {
-                showToast(
-                    ToastType.ERROR, 
-                    "Error executing ripgrep: ${e.message}"
-                )
+            } catch (exception: Exception) {
+                val message = "Error executing ripgrep: ${exception.message}"
+                service<ContinueErrorService>().report(exception, message)
+                showToast(ToastType.ERROR, message)
                 return emptyList()
             }
         } else {
@@ -386,11 +386,10 @@ class IntelliJIDE(
     
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
-            } catch (e: Exception) {
-                showToast(
-                    ToastType.ERROR, 
-                    "Error executing ripgrep: ${e.message}"
-                )
+            } catch (exception: Exception) {
+                val message = "Error executing ripgrep: ${exception.message}"
+                service<ContinueErrorService>().report(exception, message)
+                showToast(ToastType.ERROR, message)
                 return "Error: Unable to execute ripgrep command."
             }
         } else {
