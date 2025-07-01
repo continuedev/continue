@@ -127,59 +127,82 @@ export async function collectAllLines(rawLines: LineStream): Promise<string[]> {
 }
 
 /**
- * Determines if we should stop at a markdown block based on nested markdown logic.
- * This handles the complex case where markdown blocks contain other markdown blocks.
+ * State tracker for markdown block analysis to avoid recomputing on each call.
  */
-export function shouldStopAtMarkdownBlock(
-  allLines: string[],
-  currentIndex: number,
-  hasNestedMarkdown: boolean,
-): boolean {
-  if (!hasNestedMarkdown || allLines[currentIndex].trim() !== "```") {
-    return false;
-  }
+export class MarkdownBlockState {
+  private trimmedLines: string[];
+  private bareBacktickPositions: number[];
+  private markdownNestCount: number = 0;
+  private lastProcessedIndex: number = -1;
 
-  // Apply the same nested markdown logic as patchNestedMarkdown
-  const trimmedLines = allLines.map((l) => l.trim());
-  let markdownNestCount = 0;
-  let shouldStop = false;
-
-  for (let j = 0; j <= currentIndex; j++) {
-    const currentLine = trimmedLines[j];
-
-    if (markdownNestCount > 0) {
-      // Inside a markdown block
-      if (currentLine.match(/^`+$/)) {
-        // Found bare backticks - count remaining ones
-        let remainingBareBackticks = 0;
-        for (let k = j + 1; k < trimmedLines.length; k++) {
-          if (trimmedLines[k].match(/^`+$/)) {
-            remainingBareBackticks++;
-          }
-        }
-
-        // If this is the last bare backticks and we're at position currentIndex, stop
-        if (remainingBareBackticks === 0 && j === currentIndex) {
-          markdownNestCount = 0;
-          shouldStop = true;
-          break;
-        }
-      } else if (currentLine.startsWith("```")) {
-        // Going into a nested codeblock
-        markdownNestCount++;
-      }
-    } else {
-      // Not inside a markdown block yet
-      if (currentLine.startsWith("```")) {
-        const header = currentLine.replaceAll("`", "");
-        if (headerIsMarkdown(header)) {
-          markdownNestCount = 1;
-        }
+  constructor(allLines: string[]) {
+    this.trimmedLines = allLines.map((l) => l.trim());
+    // Pre-compute positions of all bare backtick lines for faster lookup
+    this.bareBacktickPositions = [];
+    for (let i = 0; i < this.trimmedLines.length; i++) {
+      if (this.trimmedLines[i].match(/^`+$/)) {
+        this.bareBacktickPositions.push(i);
       }
     }
   }
 
-  return shouldStop;
+  /**
+   * Determines if we should stop at the given markdown block position.
+   * Maintains state across calls to avoid redundant computation.
+   */
+  shouldStopAtPosition(currentIndex: number): boolean {
+    if (this.trimmedLines[currentIndex] !== "```") {
+      return false;
+    }
+
+    // Process any lines we haven't seen yet up to currentIndex
+    for (let j = this.lastProcessedIndex + 1; j <= currentIndex; j++) {
+      const currentLine = this.trimmedLines[j];
+
+      if (this.markdownNestCount > 0) {
+        // Inside a markdown block
+        if (currentLine.match(/^`+$/)) {
+          // Found bare backticks - check if this is the last one
+          if (j === currentIndex) {
+            const remainingBareBackticks = this.bareBacktickPositions.filter(
+              (pos) => pos > j,
+            ).length;
+            if (remainingBareBackticks === 0) {
+              this.markdownNestCount = 0;
+              this.lastProcessedIndex = j;
+              return true;
+            }
+          }
+        } else if (currentLine.startsWith("```")) {
+          // Going into a nested codeblock
+          this.markdownNestCount++;
+        }
+      } else {
+        // Not inside a markdown block yet
+        if (currentLine.startsWith("```")) {
+          const header = currentLine.replaceAll("`", "");
+          if (headerIsMarkdown(header)) {
+            this.markdownNestCount = 1;
+          }
+        }
+      }
+    }
+
+    this.lastProcessedIndex = currentIndex;
+    return false;
+  }
+}
+
+/**
+ * Determines if we should stop at a markdown block based on nested markdown logic.
+ * This handles the complex case where markdown blocks contain other markdown blocks.
+ * Uses optimized state tracking to avoid redundant computation.
+ */
+export function shouldStopAtMarkdownBlock(
+  stateTracker: MarkdownBlockState,
+  currentIndex: number,
+): boolean {
+  return stateTracker.shouldStopAtPosition(currentIndex);
 }
 
 /**
@@ -491,6 +514,12 @@ export async function* filterCodeBlockLines(
   const firstLine = allLines[0] || "";
   const hasNestedMarkdown = hasNestedMarkdownBlocks(firstLine, filepath);
 
+  // Create optimized state tracker for markdown block analysis if needed
+  let markdownStateTracker: MarkdownBlockState | undefined;
+  if (hasNestedMarkdown) {
+    markdownStateTracker = new MarkdownBlockState(allLines);
+  }
+
   for (let i = 0; i < allLines.length; i++) {
     const line = allLines[i];
 
@@ -511,8 +540,12 @@ export async function* filterCodeBlockLines(
         // Ending a block with just backticks (```) or STOP
 
         // For markdown files with nested markdown blocks, apply special logic
-        if (hasNestedMarkdown && line.trim() === "```") {
-          if (shouldStopAtMarkdownBlock(allLines, i, hasNestedMarkdown)) {
+        if (
+          hasNestedMarkdown &&
+          line.trim() === "```" &&
+          markdownStateTracker
+        ) {
+          if (shouldStopAtMarkdownBlock(markdownStateTracker, i)) {
             return; // Stop without yielding the final closing ```
           } else {
             // This is an inner block delimiter, yield it as content
