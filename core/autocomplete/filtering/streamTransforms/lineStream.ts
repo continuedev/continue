@@ -88,6 +88,118 @@ function isUselessLine(line: string): boolean {
   return hasUselessLine || trimmed.startsWith("// end");
 }
 
+/**
+ * Determines if a file is a markdown file based on its filepath.
+ */
+export function isMarkdownFile(filepath?: string): boolean {
+  if (!filepath) {
+    return false;
+  }
+
+  return ["md", "markdown", "gfm"].includes(
+    filepath.split(".").pop()?.toLowerCase() || "",
+  );
+}
+
+/**
+ * Determines if the code block has nested markdown blocks.
+ */
+export function hasNestedMarkdownBlocks(
+  firstLine: string,
+  filepath?: string,
+): boolean {
+  return (
+    (firstLine.startsWith("```") &&
+      headerIsMarkdown(firstLine.replace(/`/g, ""))) ||
+    Boolean(filepath && headerIsMarkdown(filepath))
+  );
+}
+
+/**
+ * Collects all lines from a LineStream into an array for analysis.
+ */
+export async function collectAllLines(rawLines: LineStream): Promise<string[]> {
+  const allLines: string[] = [];
+  for await (const line of rawLines) {
+    allLines.push(line);
+  }
+  return allLines;
+}
+
+/**
+ * Determines if we should stop at a markdown block based on nested markdown logic.
+ * This handles the complex case where markdown blocks contain other markdown blocks.
+ */
+export function shouldStopAtMarkdownBlock(
+  allLines: string[],
+  currentIndex: number,
+  hasNestedMarkdown: boolean,
+): boolean {
+  if (!hasNestedMarkdown || allLines[currentIndex].trim() !== "```") {
+    return false;
+  }
+
+  // Apply the same nested markdown logic as patchNestedMarkdown
+  const trimmedLines = allLines.map((l) => l.trim());
+  let markdownNestCount = 0;
+  let shouldStop = false;
+
+  for (let j = 0; j <= currentIndex; j++) {
+    const currentLine = trimmedLines[j];
+
+    if (markdownNestCount > 0) {
+      // Inside a markdown block
+      if (currentLine.match(/^`+$/)) {
+        // Found bare backticks - count remaining ones
+        let remainingBareBackticks = 0;
+        for (let k = j + 1; k < trimmedLines.length; k++) {
+          if (trimmedLines[k].match(/^`+$/)) {
+            remainingBareBackticks++;
+          }
+        }
+
+        // If this is the last bare backticks and we're at position currentIndex, stop
+        if (remainingBareBackticks === 0 && j === currentIndex) {
+          markdownNestCount = 0;
+          shouldStop = true;
+          break;
+        }
+      } else if (currentLine.startsWith("```")) {
+        // Going into a nested codeblock
+        markdownNestCount++;
+      }
+    } else {
+      // Not inside a markdown block yet
+      if (currentLine.startsWith("```")) {
+        const header = currentLine.replaceAll("`", "");
+        if (headerIsMarkdown(header)) {
+          markdownNestCount = 1;
+        }
+      }
+    }
+  }
+
+  return shouldStop;
+}
+
+/**
+ * Processes block nesting logic and returns updated state.
+ */
+export function processBlockNesting(
+  line: string,
+  seenFirstFence: boolean,
+): { newSeenFirstFence: boolean; shouldSkip: boolean } {
+  if (!seenFirstFence && shouldRemoveLineBeforeStart(line)) {
+    return { newSeenFirstFence: false, shouldSkip: true };
+  }
+
+  if (!seenFirstFence) {
+    return { newSeenFirstFence: true, shouldSkip: false };
+  }
+
+  return { newSeenFirstFence: seenFirstFence, shouldSkip: false };
+}
+
 export const USELESS_LINES = [""];
 export const CODE_KEYWORDS_ENDING_IN_SEMICOLON = ["def"];
 export const CODE_STOP_BLOCK = "[/CODE]";
@@ -372,34 +484,22 @@ export async function* filterCodeBlockLines(
   // when all blocks are matched. When no outer fence is discovered the function will always continue to the end.
   let nestCount = 0;
 
-  // Check if this is a markdown file and collect lines for analysis
-  const isMarkdownFile =
-    filepath &&
-    ["md", "markdown", "gfm"].includes(
-      filepath.split(".").pop()?.toLowerCase() || "",
-    );
-
-  const allLines: string[] = [];
-  for await (const line of rawLines) {
-    allLines.push(line);
-  }
+  // Collect all lines for analysis
+  const allLines = await collectAllLines(rawLines);
 
   // Check if it has nested markdown blocks (like ```markdown or ```md)
   const firstLine = allLines[0] || "";
-  const hasNestedMarkdown =
-    (firstLine.startsWith("```") &&
-      headerIsMarkdown(firstLine.replace(/`/g, ""))) ||
-    (filepath && headerIsMarkdown(filepath));
+  const hasNestedMarkdown = hasNestedMarkdownBlocks(firstLine, filepath);
 
   for (let i = 0; i < allLines.length; i++) {
     const line = allLines[i];
 
-    if (!seenFirstFence) {
-      if (shouldRemoveLineBeforeStart(line)) {
-        // Filter out starting ``` or START block
-        continue;
-      }
-      // Regardless of a fence or START block start tracking the nesting level
+    // Process block nesting logic for the first fence
+    const nesting = processBlockNesting(line, seenFirstFence);
+    if (nesting.shouldSkip) {
+      continue; // Filter out starting ``` or START block
+    }
+    if (!seenFirstFence && nesting.newSeenFirstFence) {
       seenFirstFence = true;
       nestCount = 1;
     }
@@ -412,48 +512,7 @@ export async function* filterCodeBlockLines(
 
         // For markdown files with nested markdown blocks, apply special logic
         if (hasNestedMarkdown && line.trim() === "```") {
-          // Apply the same nested markdown logic as patchNestedMarkdown
-          const trimmedLines = allLines.map((l) => l.trim());
-
-          let markdownNestCount = 0;
-          let shouldStop = false;
-
-          for (let j = 0; j <= i; j++) {
-            const currentLine = trimmedLines[j];
-
-            if (markdownNestCount > 0) {
-              // Inside a markdown block
-              if (currentLine.match(/^`+$/)) {
-                // Found bare backticks - count remaining ones
-                let remainingBareBackticks = 0;
-                for (let k = j + 1; k < trimmedLines.length; k++) {
-                  if (trimmedLines[k].match(/^`+$/)) {
-                    remainingBareBackticks++;
-                  }
-                }
-
-                // If this is the last bare backticks and we're at position i, stop
-                if (remainingBareBackticks === 0 && j === i) {
-                  markdownNestCount = 0;
-                  shouldStop = true;
-                  break;
-                }
-              } else if (currentLine.startsWith("```")) {
-                // Going into a nested codeblock
-                markdownNestCount++;
-              }
-            } else {
-              // Not inside a markdown block yet
-              if (currentLine.startsWith("```")) {
-                const header = currentLine.replaceAll("`", "");
-                if (headerIsMarkdown(header)) {
-                  markdownNestCount = 1;
-                }
-              }
-            }
-          }
-
-          if (shouldStop) {
+          if (shouldStopAtMarkdownBlock(allLines, i, hasNestedMarkdown)) {
             return; // Stop without yielding the final closing ```
           } else {
             // This is an inner block delimiter, yield it as content
