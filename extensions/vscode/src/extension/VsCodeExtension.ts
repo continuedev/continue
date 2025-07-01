@@ -36,12 +36,12 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
+import { VsCodeIdeUtils } from "../util/ideUtils";
 import { VsCodeIde } from "../VsCodeIde";
 
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
-import { VsCodeIdeUtils } from "../util/ideUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -66,7 +66,7 @@ export class VsCodeExtension {
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
-    this.workOsAuthProvider.refreshSessions();
+    void this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
 
     this.editDecorationManager = new EditDecorationManager(context);
@@ -130,19 +130,20 @@ export class VsCodeExtension {
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
-    this.configHandler.loadConfig();
+    void this.configHandler.loadConfig();
 
     this.verticalDiffManager = new VerticalDiffManager(
       this.sidebar.webviewProtocol,
       this.editDecorationManager,
+      this.ide,
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
 
-    setupRemoteConfigSync(
+    void setupRemoteConfigSync(
       this.configHandler.reloadConfig.bind(this.configHandler),
     );
 
-    this.configHandler.loadConfig().then(({ config }) => {
+    void this.configHandler.loadConfig().then(({ config }) => {
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.verticalDiffManager.fileUriToCodeLens,
@@ -280,7 +281,7 @@ export class VsCodeExtension {
       if (stats.size === 0) {
         return;
       }
-      this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig();
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
@@ -311,7 +312,7 @@ export class VsCodeExtension {
     vscode.authentication.onDidChangeSessions(async (e) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       if (e.provider.id === env.AUTH_TYPE) {
-        vscode.commands.executeCommand(
+        void vscode.commands.executeCommand(
           "setContext",
           "continue.isSignedInToControlPlane",
           true,
@@ -322,7 +323,7 @@ export class VsCodeExtension {
           sessionInfo,
         });
       } else {
-        vscode.commands.executeCommand(
+        void vscode.commands.executeCommand(
           "setContext",
           "continue.isSignedInToControlPlane",
           false,
@@ -335,7 +336,7 @@ export class VsCodeExtension {
     });
 
     // Refresh index when branch is changed
-    this.ide.getWorkspaceDirs().then((dirs) =>
+    void this.ide.getWorkspaceDirs().then((dirs) =>
       dirs.forEach(async (dir) => {
         const repo = await this.ide.getRepo(dir);
         if (repo) {

@@ -28,7 +28,6 @@ import {
 import { handleLLMError } from "../util/errorHandling";
 import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
-import { EditOutcomeTracker } from "./EditOutcomeTracker";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -229,29 +228,6 @@ export class VsCodeMessenger {
           new vscode.Position(end.line, end.character),
         ),
         rulesToInclude: config.rules,
-      });
-
-      // Get previous code content for outcome tracking
-      const previousCode = await ide.readFile(msg.data.range.filepath);
-      const newCode = fileAfterEdit ?? "";
-      const previousCodeLines = previousCode.split('\n').length;
-      const newCodeLines = newCode.split('\n').length;
-      const lineChange = newCodeLines - previousCodeLines;
-
-      // Store pending edit data for outcome tracking
-      EditOutcomeTracker.getInstance().trackEditInteraction({
-        streamId: EDIT_MODE_STREAM_ID,
-        timestamp: new Date().toISOString(),
-        modelProvider: model.underlyingProviderName,
-        modelTitle: model.title ?? "",
-        prompt: stripImages(prompt),
-        completion: newCode,
-        previousCode,
-        newCode,
-        filepath: msg.data.range.filepath,
-        previousCodeLines,
-        newCodeLines,
-        lineChange,
       });
 
       // Log dev data
