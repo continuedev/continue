@@ -18,6 +18,11 @@
     "noEmitOnError": false,
     "types": ["jest", "node"]
   },
-  "include": ["./**/*.ts", "./**/*.js", "./**/*.d.ts"],
+  "include": [
+    "./**/*.ts",
+    "./**/*.js",
+    "./**/*.d.ts",
+    "../gui/src/redux/util/constructMessages.ts"
+  ],
   "exclude": ["dist"]
 }

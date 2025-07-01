@@ -1,8 +1,11 @@
 import { ContextItemWithId, ToolCallState } from "core";
 
 export function toolCallStateToContextItems(
-  toolCallState: ToolCallState,
+  toolCallState: ToolCallState | undefined,
 ): ContextItemWithId[] {
+  if (!toolCallState) {
+    return [];
+  }
   return (
     toolCallState.output?.map((item) => ({
       ...item,

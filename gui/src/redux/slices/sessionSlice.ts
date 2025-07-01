@@ -34,8 +34,9 @@ import { findCurrentToolCall, findToolCall, findToolOutput } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
+export type ChatMessageWithId = ChatMessage & { id: string };
 export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
-  message: ChatMessage & { id: string };
+  message: ChatMessageWithId;
 };
 
 type SessionState = {

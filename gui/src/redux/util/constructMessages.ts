@@ -2,27 +2,29 @@ import {
   AssistantChatMessage,
   ChatHistoryItem,
   ChatMessage,
+  ContextItemWithId,
   ModelDescription,
   RuleWithSource,
   TextMessagePart,
   Tool,
   ToolResultChatMessage,
   UserChatMessage,
-} from "../";
-import { findLastIndex } from "../util/findLast";
+} from "core";
+import { chatMessageIsEmpty } from "core/llm/messages";
+import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
+import { RulePolicies } from "core/llm/rules/types";
+import { findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
-} from "../util/messageContent";
-import { chatMessageIsEmpty } from "./messages";
-import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
-import { RulePolicies } from "./rules/types";
+} from "core/util/messageContent";
+import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
-  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
+  "https://github.com/continuedev/continue/blob/main/gui/src/redux/util/constructMessages.ts";
 
 export const DEFAULT_AGENT_SYSTEM_MESSAGE_URL =
-  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts";
+  "https://github.com/continuedev/continue/blob/main/gui/src/redux/util/constructMessages.ts";
 
 const EDIT_MESSAGE = `\
   Always include the language and file name in the info string when you write code blocks.
@@ -99,7 +101,10 @@ export function constructMessages(
   const historyCopy = [...history];
   const validTools = new Set(tools.map((tool) => tool.function.name));
 
-  const msgs: ChatMessage[] = [];
+  const msgs: {
+    ctxItems: ContextItemWithId[];
+    message: ChatMessage;
+  }[] = [];
   for (const item of historyCopy) {
     if (
       item.message.role === "system" ||
@@ -125,14 +130,18 @@ export function constructMessages(
 
       content = [...ctxItems, ...content];
       msgs.push({
-        ...item.message,
-        content,
+        ctxItems: item.contextItems,
+        message: {
+          ...item.message,
+          content,
+        },
       });
-    } else {
-      msgs.push(item.message);
-    }
-
-    if (item.message.role === "assistant") {
+    } else if (item.message.role === "thinking") {
+      msgs.push({
+        ctxItems: item.contextItems,
+        message: item.message,
+      });
+    } else if (item.message.role === "assistant") {
       // First, push a version of the message with any valid tools calls
       const validToolCalls = item.message.toolCalls?.filter(
         (toolCall) =>
@@ -148,8 +157,11 @@ export function constructMessages(
 
       if (chatMessageIsEmpty(msgWithValidToolCalls)) {
         msgs.push({
-          role: "assistant",
-          content: "Tool call message redacted in chat mode", // TODO this might be confusing, edge case situation where tools are excluded
+          ctxItems: [],
+          message: {
+            role: "assistant",
+            content: "Tool call message redacted in chat mode", // TODO this might be confusing, edge case situation where tools are excluded
+          },
         });
       }
 
@@ -158,7 +170,10 @@ export function constructMessages(
       // Then sessions with that tool call in the history would fail
 
       // Case where no valid tool calls or content are present
-      msgs.push(msgWithValidToolCalls);
+      msgs.push({
+        ctxItems: item.contextItems,
+        message: msgWithValidToolCalls,
+      });
 
       // Add a tool message for each valid tool call
       if (validToolCalls?.length) {
@@ -173,9 +188,12 @@ export function constructMessages(
             content = renderContextItems(item.toolCallState.output);
           }
           msgs.push({
-            role: "tool",
-            content,
-            toolCallId: toolCall.id!,
+            ctxItems: toolCallStateToContextItems(item.toolCallState),
+            message: {
+              role: "tool",
+              content,
+              toolCallId: toolCall.id!,
+            },
           });
         }
       }
@@ -183,23 +201,23 @@ export function constructMessages(
   }
 
   const lastUserMsgIndex = findLastIndex(
-    historyCopy,
+    msgs,
     (item) => item.message.role === "user",
   );
   const lastUserOrToolMsgIndex = findLastIndex(
-    historyCopy,
+    msgs,
     (item) => item.message.role === "user" || item.message.role === "tool",
   );
-  const lastUserOrToolMsg = historyCopy[lastUserOrToolMsgIndex]?.message as
+  const lastUserOrToolMsg = msgs[lastUserOrToolMsgIndex]?.message as
     | UserChatMessage
     | ToolResultChatMessage;
-  const itemsBackToLastUserMessage = history
-    .slice(lastUserMsgIndex, historyCopy.length)
+  const itemsBackToLastUserMessage = msgs
+    .slice(lastUserMsgIndex, msgs.length)
     .filter(
       (item) => item.message.role === "tool" || item.message.role === "user",
     );
   const rulesContextItems = itemsBackToLastUserMessage
-    .map((item) => item.contextItems)
+    .map((item) => item.ctxItems)
     .flat();
 
   // Get system message
@@ -222,15 +240,15 @@ export function constructMessages(
 
   if (systemMessage.trim()) {
     msgs.unshift({
-      role: "system",
-      content: systemMessage,
+      ctxItems: [],
+      message: {
+        role: "system",
+        content: systemMessage,
+      },
     });
   }
 
-  const messages = msgs.map((msg) => {
-    const { id, ...rest } = msg as any;
-    return rest;
-  });
+  const messages = msgs.map((m) => m.message);
   return {
     messages,
     appliedRulesIndex: lastUserOrToolMsgIndex,

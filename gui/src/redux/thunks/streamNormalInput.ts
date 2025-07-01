@@ -60,9 +60,13 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // Construct messages
+    const withoutMessageIds = chatHistory.map((item) => {
+      const { id, ...messageWithoutId } = item.message;
+      return { ...item, message: messageWithoutId };
+    });
     const { messages, appliedRules, appliedRulesIndex } = constructMessages(
       messageMode,
-      chatHistory,
+      withoutMessageIds,
       selectedChatModel,
       state.config.config.rules,
       rulePolicies,
