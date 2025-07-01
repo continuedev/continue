@@ -27,13 +27,10 @@ import { setTTSActive } from "../redux/slices/uiSlice";
 import { exitEdit } from "../redux/thunks/edit";
 import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
 
-import { safeParseToolCallArgs } from "core/tools/parseArgs";
-import { store } from "../redux/store";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
-import { findToolCall } from "../redux/util";
 import {
   setDocumentStylesFromLocalStorage,
   setDocumentStylesFromTheme,
@@ -286,32 +283,6 @@ function ParallelListeners() {
       }
     },
     [currentToolCallApplyState, history],
-  );
-
-  useWebviewListener(
-    "toolCallCompleted",
-    async (data) => {
-      const state = store.getState();
-      const toolCallState = findToolCall(
-        state.session.history,
-        data.toolCallId,
-      );
-      if (toolCallState) {
-        ideMessenger.post("devdata/log", {
-          name: "toolUsage",
-          data: {
-            toolCallId: toolCallState.toolCallId,
-            functionName: toolCallState.toolCall.function.name,
-            functionArgs: toolCallState.toolCall.function.arguments,
-            toolCallArgs: safeParseToolCallArgs(toolCallState.toolCall),
-            parsedArgs: toolCallState.parsedArgs,
-            output: data.contextItems,
-            succeeded: data.succeeded,
-          },
-        });
-      }
-    },
-    [ideMessenger, store],
   );
 
   useEffect(() => {

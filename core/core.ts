@@ -821,12 +821,6 @@ export class Core {
       codeBaseIndexer: this.codeBaseIndexer,
     });
 
-    this.messenger.send("toolCallCompleted", {
-      toolCallId: toolCall.id,
-      contextItems: result.contextItems,
-      succeeded: !result.errorMessage,
-    });
-
     return result;
   }
 
