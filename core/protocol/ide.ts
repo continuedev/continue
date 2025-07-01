@@ -1,6 +1,5 @@
 import type {
   ContinueRcJson,
-  DiffLine,
   FileStatsMap,
   FileType,
   IDE,
@@ -35,15 +34,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
-  diffLine: [
-    {
-      diffLine: DiffLine;
-      filepath: string;
-      startLine: number;
-      endLine: number;
-    },
-    void,
-  ];
   getProblems: [{ filepath: string }, Problem[]];
   getOpenFiles: [undefined, string[]];
   getCurrentFile: [
@@ -70,6 +60,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
+  isWorkspaceRemote: [undefined, boolean];
   getUniqueId: [undefined, string];
   getTags: [string, IndexTag[]];
   readSecrets: [{ keys: string[] }, Record<string, string>];

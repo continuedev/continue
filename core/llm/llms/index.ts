@@ -1,3 +1,4 @@
+import Handlebars from "handlebars";
 import {
   BaseCompletionOptions,
   IdeSettings,
@@ -6,10 +7,9 @@ import {
   JSONModelDescription,
   LLMOptions,
 } from "../..";
-import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
+import { renderTemplatedString } from "../../util/handlebars/renderTemplatedString";
 import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
 import { BaseLLM } from "../index";
-
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
 import Azure from "./Azure";
@@ -121,6 +121,7 @@ export const LLMClasses = [
 export async function llmFromDescription(
   desc: JSONModelDescription,
   readFile: (filepath: string) => Promise<string>,
+  getUriFromPath: (path: string) => Promise<string | undefined>,
   uniqueId: string,
   ideSettings: IdeSettings,
   llmLogger: ILLMLogger,
@@ -142,9 +143,12 @@ export async function llmFromDescription(
     baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
     baseChatSystemMessage += "\n\n";
     baseChatSystemMessage += await renderTemplatedString(
+      Handlebars,
       desc.systemMessage,
-      readFile,
       {},
+      [],
+      readFile,
+      getUriFromPath,
     );
   }
 

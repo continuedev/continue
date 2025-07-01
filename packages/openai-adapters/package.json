@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.40",
+  "version": "1.0.44",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
   "dependencies": {
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/config-yaml": "^1.0.51",
-    "@continuedev/fetch": "^1.0.11",
+    "@continuedev/fetch": "^1.0.15",
     "dotenv": "^16.5.0",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",

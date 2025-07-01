@@ -19,20 +19,19 @@ import {
   IdeSettings,
   ILLMLogger,
 } from "../..";
-import { slashFromCustomCommand } from "../../commands";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
 import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
-import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
-import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
+import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
-import { baseToolDefinitions } from "../../tools";
+import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
+import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { getToolsForIde } from "../../tools";
 import {
   getLocalPackageIdentifiers,
   mergeUnrolledAssistants,
@@ -148,7 +147,7 @@ async function configYamlToContinueConfig(options: {
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    tools: [...baseToolDefinitions],
+    tools: await getToolsForIde(ide),
     mcpServerStatuses: [],
     contextProviders: [],
     modelsByRole: {
@@ -224,7 +223,7 @@ async function configYamlToContinueConfig(options: {
 
     promptFiles.forEach((file) => {
       try {
-        const slashCommand = slashCommandFromPromptFileV1(
+        const slashCommand = slashCommandFromPromptFile(
           file.path,
           file.content,
         );
@@ -247,7 +246,7 @@ async function configYamlToContinueConfig(options: {
 
   config.prompts?.forEach((prompt) => {
     try {
-      const slashCommand = slashFromCustomCommand(prompt);
+      const slashCommand = convertPromptBlockToSlashCommand(prompt);
       continueConfig.slashCommands?.push(slashCommand);
     } catch (e) {
       localErrors.push({
@@ -346,13 +345,7 @@ async function configYamlToContinueConfig(options: {
   }
 
   // Context providers
-  const codebaseContextParams: IContextProvider[] =
-    (config.context || []).find((cp) => cp.provider === "codebase")?.params ||
-    {};
-  const DEFAULT_CONTEXT_PROVIDERS = [
-    new FileContextProvider({}),
-    new CodebaseContextProvider(codebaseContextParams),
-  ];
+  const DEFAULT_CONTEXT_PROVIDERS = [new FileContextProvider({})];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
     ({ description: { title } }) => title,

@@ -41,6 +41,7 @@
     "myers-diff": "^2.1.0",
     "onnxruntime-common": "1.14.0",
     "onnxruntime-web": "1.14.0",
+    "shiki": "^3.6.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.6.3",
     "vitest": "^3.1.4"
@@ -53,7 +54,7 @@
     "@continuedev/config-yaml": "file:../packages/config-yaml",
     "@continuedev/fetch": "^1.0.14",
     "@continuedev/llm-info": "^1.0.8",
-    "@continuedev/openai-adapters": "^1.0.32",
+    "@continuedev/openai-adapters": "file:../packages/openai-adapters",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@mozilla/readability": "^0.5.0",
     "@octokit/rest": "^20.1.1",

@@ -1,12 +1,12 @@
 import { MessageModes, ModelDescription } from "core";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
-import _ from "lodash";
-import { KeyboardEvent } from "react";
-import { getLocalStorage } from "./localStorage";
 import {
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_AGENT_SYSTEM_MESSAGE,
+  DEFAULT_CHAT_SYSTEM_MESSAGE,
 } from "core/llm/constructMessages";
+import _ from "lodash";
+import { KeyboardEvent as ReactKeyboardEvent } from "react";
+import { getLocalStorage } from "./localStorage";
 
 export type Platform = "mac" | "linux" | "windows" | "unknown";
 
@@ -26,7 +26,7 @@ export function getPlatform(): Platform {
 export function isMetaEquivalentKeyPressed({
   metaKey,
   ctrlKey,
-}: KeyboardEvent): boolean {
+}: KeyboardEvent | ReactKeyboardEvent): boolean {
   const platform = getPlatform();
   switch (platform) {
     case "mac":

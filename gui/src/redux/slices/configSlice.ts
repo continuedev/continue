@@ -10,16 +10,7 @@ export type ConfigState = {
 };
 
 export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
-  slashCommands: [
-    {
-      name: "share",
-      description: "Export the current chat session to markdown",
-    },
-    {
-      name: "cmd",
-      description: "Generate a shell command",
-    },
-  ],
+  slashCommands: [],
   contextProviders: [],
   tools: [],
   mcpServerStatuses: [],
