@@ -757,4 +757,217 @@ describe("lineStream", () => {
       expect(mockFullStop).toHaveBeenCalledTimes(1);
     });
   });
+
+  // Tests for new helper functions
+  describe("isMarkdownFile", () => {
+    it("should return true for markdown file extensions", () => {
+      expect(lineStream.isMarkdownFile("README.md")).toBe(true);
+      expect(lineStream.isMarkdownFile("docs.markdown")).toBe(true);
+      expect(lineStream.isMarkdownFile("notes.gfm")).toBe(true);
+      expect(lineStream.isMarkdownFile("path/to/file.md")).toBe(true);
+    });
+
+    it("should return false for non-markdown file extensions", () => {
+      expect(lineStream.isMarkdownFile("script.js")).toBe(false);
+      expect(lineStream.isMarkdownFile("styles.css")).toBe(false);
+      expect(lineStream.isMarkdownFile("document.txt")).toBe(false);
+      expect(lineStream.isMarkdownFile("config.json")).toBe(false);
+    });
+
+    it("should return false for undefined or empty filepath", () => {
+      expect(lineStream.isMarkdownFile(undefined)).toBe(false);
+      expect(lineStream.isMarkdownFile("")).toBe(false);
+    });
+
+    it("should handle case insensitive extensions", () => {
+      expect(lineStream.isMarkdownFile("README.MD")).toBe(true);
+      expect(lineStream.isMarkdownFile("docs.MARKDOWN")).toBe(true);
+      expect(lineStream.isMarkdownFile("notes.GFM")).toBe(true);
+    });
+  });
+
+  describe("hasNestedMarkdownBlocks", () => {
+    it("should detect nested markdown blocks from first line", () => {
+      expect(lineStream.hasNestedMarkdownBlocks("```markdown", undefined)).toBe(
+        true,
+      );
+      expect(lineStream.hasNestedMarkdownBlocks("```md", undefined)).toBe(true);
+      expect(lineStream.hasNestedMarkdownBlocks("```gfm", undefined)).toBe(
+        true,
+      );
+    });
+
+    it("should detect nested markdown blocks from filepath", () => {
+      expect(
+        lineStream.hasNestedMarkdownBlocks("```typescript", "README.md"),
+      ).toBe(true);
+      expect(
+        lineStream.hasNestedMarkdownBlocks("```javascript", "docs.markdown"),
+      ).toBe(true);
+    });
+
+    it("should return false for non-markdown scenarios", () => {
+      expect(
+        lineStream.hasNestedMarkdownBlocks("```typescript", "script.js"),
+      ).toBe(false);
+      expect(lineStream.hasNestedMarkdownBlocks("```python", undefined)).toBe(
+        false,
+      );
+      expect(
+        lineStream.hasNestedMarkdownBlocks("const x = 5;", undefined),
+      ).toBe(false);
+    });
+
+    it("should handle complex first line scenarios", () => {
+      expect(
+        lineStream.hasNestedMarkdownBlocks("```markdown README.md", undefined),
+      ).toBe(true);
+      expect(
+        lineStream.hasNestedMarkdownBlocks("```md with extra text", undefined),
+      ).toBe(true);
+    });
+  });
+
+  describe("collectAllLines", () => {
+    it("should collect all lines from a stream", async () => {
+      const linesGenerator = await getLineGenerator([
+        "line1",
+        "line2",
+        "line3",
+      ]);
+
+      const result = await lineStream.collectAllLines(linesGenerator);
+
+      expect(result).toEqual(["line1", "line2", "line3"]);
+    });
+
+    it("should handle empty stream", async () => {
+      const linesGenerator = await getLineGenerator([]);
+
+      const result = await lineStream.collectAllLines(linesGenerator);
+
+      expect(result).toEqual([]);
+    });
+
+    it("should handle stream with empty lines", async () => {
+      const linesGenerator = await getLineGenerator(["", "line2", "", "line4"]);
+
+      const result = await lineStream.collectAllLines(linesGenerator);
+
+      expect(result).toEqual(["", "line2", "", "line4"]);
+    });
+  });
+
+  describe("shouldStopAtMarkdownBlock", () => {
+    it("should return false when hasNestedMarkdown is false", () => {
+      const allLines = ["```markdown", "content", "```"];
+      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, false)).toBe(
+        false,
+      );
+    });
+
+    it("should return false when current line is not closing backticks", () => {
+      const allLines = ["```markdown", "content", "more content"];
+      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, true)).toBe(
+        false,
+      );
+    });
+
+    it("should handle simple nested markdown case", () => {
+      const allLines = ["```markdown", "# Title", "```"];
+      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, true)).toBe(
+        true,
+      );
+    });
+
+    it("should handle complex nested markdown with inner code blocks", () => {
+      const allLines = [
+        "```markdown",
+        "# Title",
+        "```javascript",
+        "console.log('hello');",
+        "```",
+        "```",
+      ];
+      // At index 4 (first inner closing), should not stop
+      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 4, true)).toBe(
+        false,
+      );
+      // At index 5 (outer closing), should stop
+      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 5, true)).toBe(
+        true,
+      );
+    });
+
+    it("should handle multiple bare backticks scenario", () => {
+      const allLines = [
+        "```markdown",
+        "Content with ```inline code```",
+        "```",
+        "More content",
+        "```",
+      ];
+      // At index 2, should not stop (not the last bare backticks)
+      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, true)).toBe(
+        false,
+      );
+      // At index 4, should stop (last bare backticks)
+      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 4, true)).toBe(
+        true,
+      );
+    });
+  });
+
+  describe("processBlockNesting", () => {
+    it("should skip lines that should be removed before start", () => {
+      const result = lineStream.processBlockNesting("```typescript", false);
+      expect(result).toEqual({
+        newSeenFirstFence: false,
+        shouldSkip: true,
+      });
+    });
+
+    it("should skip [CODE] blocks", () => {
+      const result = lineStream.processBlockNesting("[CODE]", false);
+      expect(result).toEqual({
+        newSeenFirstFence: false,
+        shouldSkip: true,
+      });
+    });
+
+    it("should set first fence when not seen yet", () => {
+      const result = lineStream.processBlockNesting("const x = 5;", false);
+      expect(result).toEqual({
+        newSeenFirstFence: true,
+        shouldSkip: false,
+      });
+    });
+
+    it("should not change state when first fence already seen", () => {
+      const result = lineStream.processBlockNesting("const x = 5;", true);
+      expect(result).toEqual({
+        newSeenFirstFence: true,
+        shouldSkip: false,
+      });
+    });
+
+    it("should handle <COMPLETION> prefix", () => {
+      const result = lineStream.processBlockNesting("<COMPLETION>", false);
+      expect(result).toEqual({
+        newSeenFirstFence: false,
+        shouldSkip: true,
+      });
+    });
+
+    it("should handle START EDITING HERE blocks", () => {
+      const result = lineStream.processBlockNesting(
+        "<START EDITING HERE>",
+        false,
+      );
+      expect(result).toEqual({
+        newSeenFirstFence: false,
+        shouldSkip: true,
+      });
+    });
+  });
 });
