@@ -301,6 +301,37 @@ describe("lineStream", () => {
       ]);
     });
 
+    it("should ignore ticks inside of code blocks such as tests", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```typescript",
+        'it("should handle included inner ticks", async () => {',
+        " const linesGenerator = await getLineGenerator([`",
+        ' "```md"',
+        ' "const x = 5;"',
+        ' "```bash"',
+        ' "echo ```test```"',
+        ' "```"',
+        ' "```"',
+        "]);",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(linesGenerator);
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual([
+        'it("should handle included inner ticks", async () => {',
+        " const linesGenerator = await getLineGenerator([`",
+        ' "```md"',
+        ' "const x = 5;"',
+        ' "```bash"',
+        ' "echo ```test```"',
+        ' "```"',
+        ' "```"',
+        "]);",
+      ]);
+    });
+
     it("should handle included inner ticks", async () => {
       const linesGenerator = await getLineGenerator([
         "```md",
@@ -392,6 +423,119 @@ describe("lineStream", () => {
         "const x = 5;",
         "```bash",
         "ls -al",
+        "```",
+      ]);
+    });
+
+    // Markdown-aware tests
+    it("should handle markdown files with nested code blocks and a filename is included", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```markdown README.md",
+        "# Project Structure",
+        "",
+        "```",
+        "debug-test-folder/",
+        "├── AdvancedPage.tsx",
+        "├── Calculator.java",
+        "└── test.ts",
+        "```",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(
+        linesGenerator,
+        "README.md",
+      );
+      const filteredLines = await getFilteredLines(result);
+
+      // Should include all content up to the final closing ```
+      expect(filteredLines).toEqual([
+        "# Project Structure",
+        "",
+        "```",
+        "debug-test-folder/",
+        "├── AdvancedPage.tsx",
+        "├── Calculator.java",
+        "└── test.ts",
+        "```",
+      ]);
+    });
+
+    // Markdown-aware tests
+    it("should handle markdown files with nested code blocks and a filename is excluded", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```markdown README.md",
+        "# Project Structure",
+        "",
+        "```",
+        "debug-test-folder/",
+        "├── AdvancedPage.tsx",
+        "├── Calculator.java",
+        "└── test.ts",
+        "```",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(linesGenerator);
+      const filteredLines = await getFilteredLines(result);
+
+      // Should include all content up to the final closing ```
+      expect(filteredLines).toEqual([
+        "# Project Structure",
+        "",
+        "```",
+        "debug-test-folder/",
+        "├── AdvancedPage.tsx",
+        "├── Calculator.java",
+        "└── test.ts",
+        "```",
+      ]);
+    });
+
+    it("should handle non-markdown files normally with filepath parameter", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```",
+        "function test() {",
+        "  return 'hello';",
+        "}",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(linesGenerator, "test.js");
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual([
+        "function test() {",
+        "  return 'hello';",
+        "}",
+      ]);
+    });
+
+    it("should handle simple markdown code blocks", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```",
+        "Here's some code:",
+        "```",
+        "function example() {",
+        "  console.log('test');",
+        "}",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(
+        linesGenerator,
+        "README.md",
+      );
+      const filteredLines = await getFilteredLines(result);
+
+      // Should remove the outer markdown wrapper, and return just the inner content.
+      // The lack of an end tag should cause it to return all remaining lines.
+      expect(filteredLines).toEqual([
+        "Here's some code:",
+        "```",
+        "function example() {",
+        "  console.log('test');",
+        "}",
         "```",
       ]);
     });
