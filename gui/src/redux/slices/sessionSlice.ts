@@ -128,9 +128,13 @@ export const sessionSlice = createSlice({
         const message = state.history[i];
         if (
           message.message.content ||
-          message.toolCallState?.status === "generated"
+          message.toolCallState?.status !== "generating"
         ) {
           validAssistantMessageIdx = i;
+          // Cancel any tool calls that are dangling and generated
+          if (message.toolCallState?.status === "generated") {
+            message.toolCallState.status = "canceled";
+          }
           break;
         }
       }
