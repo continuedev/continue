@@ -119,18 +119,11 @@ const CAP_MESSAGE = `
         9. After completing all the above steps, provide the final output in two sections:
 
         <output>
-        here are two options for you to try in your local VSCode:
-            1. Commands to set up the project locally:
-            git clone https://github.com/{{USER_NAME}}/{{REPO_NAME}}.git
-            cd {{REPO_NAME}}
-            npm install
-            npm run start
-
-            2. Prompt for the dev agent:
-            Please clone this repository (https://github.com/{{USER_NAME}}/{{REPO_NAME}}.git) and follow these steps to run the application:
-            Step 1: Navigate to the project directory
-            Step 2: Install dependencies using 'npm install'
-            Step 3: Start the application with 'npm run start'
+            To set up the project locally, run the following commands or send them to the AI agent:
+                - git clone https://github.com/{{USER_NAME}}/{{REPO_NAME}}.git
+                - cd {{REPO_NAME}}
+                - npm install
+                - npm run start
         </output>
 
         Your final response should only include the content within the <output> tags. Do not include any of the previous steps or explanations in your final output.
@@ -146,10 +139,10 @@ export class AICore extends BaseLLM {
 
     static defaultOptions: Partial<LLMOptions> = {
         model: "anthropic--claude-3.7-sonnet",
-        contextLength: 128_000,
+        contextLength: 200_000,
         completionOptions: {
             model: "anthropic--claude-3.7-sonnet",
-            maxTokens: 4096,
+            maxTokens: 8192,
         },
     };
 
