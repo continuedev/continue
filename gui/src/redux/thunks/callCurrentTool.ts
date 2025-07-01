@@ -102,7 +102,6 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
         }),
       );
 
-      console.log("logging Tool from callCurrentTool");
       logToolUsage(toolCallState, false, extra.ideMessenger, output);
     } else if (output?.length) {
       dispatch(
@@ -112,7 +111,6 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
         }),
       );
 
-      console.log("logging Tool from callCurrentTool");
       logToolUsage(toolCallState, true, extra.ideMessenger, output);
     }
 
