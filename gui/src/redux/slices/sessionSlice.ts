@@ -171,28 +171,6 @@ export const sessionSlice = createSlice({
         state.history[index].contextItems = contextItems;
       }
     },
-    truncateHistoryToMessage: (
-      state,
-      {
-        payload,
-      }: PayloadAction<{
-        index: number;
-      }>,
-    ) => {
-      const { index } = payload;
-
-      if (state.history.length && index < state.history.length) {
-        state.codeBlockApplyStates.curIndex = 0;
-        state.history = state.history.slice(0, index + 1).concat({
-          message: {
-            id: uuidv4(),
-            role: "assistant",
-            content: "", // IMPORTANT - this is subsequently updated by response streaming
-          },
-          contextItems: [],
-        });
-      }
-    },
     submitEditorAndInitAtIndex: (
       state,
       {
@@ -733,7 +711,6 @@ export const {
   addPromptCompletionPair,
   setActive,
   submitEditorAndInitAtIndex,
-  truncateHistoryToMessage,
   updateHistoryItemAtIndex,
   clearDanglingMessages,
   setMainEditorContentTrigger,

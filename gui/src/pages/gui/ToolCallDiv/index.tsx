@@ -12,7 +12,12 @@ import {
   PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { ToolCallDelta, ToolCallState, ToolStatus } from "core";
+import {
+  ContextItemWithId,
+  ToolCallDelta,
+  ToolCallState,
+  ToolStatus,
+} from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { ComponentType, useMemo } from "react";
 import { vscButtonBackground } from "../../../components";
@@ -25,6 +30,7 @@ import { ToolCallDisplay } from "./ToolCall";
 interface ToolCallDivProps {
   toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
+  output?: ContextItemWithId[];
   historyIndex: number;
 }
 
@@ -80,7 +86,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
         icon={
           props.toolCallState.status === "generated" ? ArrowRightIcon : icon
         }
-        historyIndex={props.historyIndex}
+        contextItems={props.output ?? []}
       />
     );
   }
@@ -90,7 +96,6 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       icon={getStatusIcon(props.toolCallState.status)}
       tool={tool}
       toolCallState={props.toolCallState}
-      historyIndex={props.historyIndex}
     >
       <FunctionSpecificToolCallDiv
         toolCall={props.toolCall}
