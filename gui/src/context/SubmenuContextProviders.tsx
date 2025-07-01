@@ -356,6 +356,16 @@ export const SubmenuContextProvidersProvider = ({
     [loadSubmenuItems],
   );
 
+  useWebviewListener(
+    "indexProgress",
+    async (data) => {
+      if (data.status === "done") {
+        loadSubmenuItems("dependsOnIndexing");
+      }
+    },
+    [loadSubmenuItems],
+  );
+
   // Reload all submenu items on the initial config load
   useEffect(() => {
     if (!submenuContextProviders.length) {

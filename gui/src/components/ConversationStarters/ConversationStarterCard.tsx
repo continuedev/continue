@@ -1,9 +1,9 @@
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import { SlashCommandDescription } from "core";
+import { SlashCommandDescWithSource } from "core";
 
 interface ConversationStarterCardProps {
-  command: SlashCommandDescription;
-  onClick: (command: SlashCommandDescription) => void;
+  command: SlashCommandDescWithSource;
+  onClick: (command: SlashCommandDescWithSource) => void;
 }
 
 export function ConversationStarterCard({

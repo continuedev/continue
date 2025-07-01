@@ -7,6 +7,7 @@ import {
 } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { getCleanUriPath } from "../../util/uri";
+import { extractContentFromCodeBlock } from "../utils/extractContentFromCodeBlocks";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
 import { RulePolicies } from "./types";
 
@@ -47,6 +48,47 @@ const matchesGlobs = (
       positivePatterns.some((pattern) => minimatch(filePath, pattern)) &&
       !negativePatterns.some((pattern) => minimatch(filePath, pattern))
     );
+  }
+
+  return false;
+};
+
+/**
+ * Checks if file content matches any of the provided regex regex
+ *
+ * @param fileContent - The content of the file to check
+ * @param regex - A single regex pattern string or array of regex pattern strings
+ * @returns true if the content matches any pattern (or if no regex is provided), false otherwise
+ */
+const contentMatchesRegex = (
+  fileContent: string,
+  regex: string | string[],
+): boolean => {
+  // Handle single string pattern
+  if (typeof regex === "string") {
+    try {
+      const expression = new RegExp(regex);
+      return expression.test(fileContent);
+    } catch (e) {
+      console.error(`Invalid regex pattern: ${regex}`, e);
+      return false;
+    }
+  }
+
+  // Handle array of regex
+  if (Array.isArray(regex)) {
+    if (regex.length === 0) return true;
+
+    // Content must match at least one pattern
+    return regex.some((pattern) => {
+      try {
+        const regex = new RegExp(pattern);
+        return regex.test(fileContent);
+      } catch (e) {
+        console.error(`Invalid regex pattern: ${pattern}`, e);
+        return false;
+      }
+    });
   }
 
   return false;
@@ -103,25 +145,67 @@ const isGlobalRule = (rule: RuleWithSource): boolean => {
     return true;
   }
 
-  // Root-level rules with no globs are implicitly global
-  if (isRootLevelRule(rule) && !rule.globs && rule.alwaysApply !== false) {
+  // Root-level rules with no globs or regex are implicitly global
+  if (
+    isRootLevelRule(rule) &&
+    !rule.globs &&
+    !rule.regex &&
+    rule.alwaysApply !== false
+  ) {
     return true;
   }
 
   return false;
 };
 
+const checkGlobsAndRegex = ({
+  rule,
+  filePaths,
+  fileContents,
+}: {
+  rule: RuleWithSource;
+  filePaths: string[];
+  fileContents: Record<string, string>;
+}) => {
+  const matchingFiles = rule.globs
+    ? filePaths.filter((filePath) => matchesGlobs(filePath, rule.globs))
+    : filePaths;
+
+  // If no files match the globs, don't apply the rule
+  if (matchingFiles.length === 0) {
+    return false;
+  }
+
+  // Now check for pattern matches in file contents if regex are specified
+  if (rule.regex) {
+    // Check if any of the matching files also match the content regex
+    return matchingFiles.some((filePath) => {
+      const content = fileContents[filePath];
+      // If we don't have the content, we can't check regex
+      if (!content) return false;
+      return contentMatchesRegex(content, rule.regex!);
+    });
+  }
+
+  // If we have no regex or if we couldn't check regex (no content),
+  // just go with the glob matches
+  return matchingFiles.length > 0;
+};
+
 /**
- * Determines if a rule should be applied based on its alwaysApply property and file path matching
+ * Determines if a rule should be applied based on its properties and file matching
  *
  * @param rule - The rule to check
  * @param filePaths - Array of file paths to check against the rule's globs
+ * @param fileContents - Map of file paths to their contents for pattern matching
+ * @param rulePolicies - Optional policies that can override normal rule behavior
  * @returns true if the rule should be applied, false otherwise
  */
 export const shouldApplyRule = (
   rule: RuleWithSource,
   filePaths: string[],
   rulePolicies: RulePolicies = {},
+  fileContents: Record<string, string> = {},
 ): boolean => {
   const policy = rulePolicies[rule.name || ""];
 
@@ -157,40 +241,27 @@ export const shouldApplyRule = (
       isFileInDirectory(filePath, ruleDirPath),
     );
 
-    // If no files are in this directory, don't apply the rule
-    if (filesInRuleDirectory.length === 0) {
-      return false;
-    }
-
-    // If we have globs, check if any files in this directory match them
-    if (rule.globs) {
-      return filesInRuleDirectory.some((filePath) =>
-        matchesGlobs(filePath, rule.globs),
-      );
-    }
-
-    // No globs but files are in this directory, so apply the rule
-    return true;
+    return checkGlobsAndRegex({
+      filePaths: filesInRuleDirectory,
+      fileContents,
+      rule,
+    });
   }
 
-  // For root-level rules:
-
-  // If alwaysApply is explicitly false, only apply if there are globs AND they match
-  if (rule.alwaysApply === false) {
-    if (!rule.globs) {
-      return false;
-    }
-    return filePaths.some((path) => matchesGlobs(path, rule.globs));
+  // If alwaysApply is explicitly false, we need to check globs and/or regex
+  if (
+    rule.alwaysApply === false &&
+    rule.globs === undefined &&
+    rule.regex === undefined
+  ) {
+    return false;
   }
 
-  // Default behavior for root rules with globs:
-  // - Only apply if they match the globs
-  if (rule.globs) {
-    return filePaths.some((path) => matchesGlobs(path, rule.globs));
-  }
-
-  // This point should not be reached as we've handled all cases above
-  return false;
+  return checkGlobsAndRegex({
+    filePaths,
+    fileContents,
+    rule,
+  });
 };
 
 /**
@@ -220,10 +291,34 @@ export const getApplicableRules = (
   // Combine file paths from both sources
   const allFilePaths = [...filePathsFromMessage, ...filePathsFromContextItems];
 
+  // Create a map of file paths to their contents for pattern matching
+  const fileContents: Record<string, string> = {};
+
+  // Extract contents from context items with file URIs
+  contextItems.forEach((item) => {
+    if (item.uri?.type === "file" && item.uri?.value) {
+      fileContents[item.uri.value] = item.content;
+    }
+  });
+
+  // Extract contents from code blocks in the message for paths that don't have content yet
+  if (userMessage) {
+    const messageContent = renderChatMessage(userMessage);
+    filePathsFromMessage.forEach((path) => {
+      // Only extract content if we don't already have it from context items
+      if (!fileContents[path]) {
+        const blockContent = extractContentFromCodeBlock(messageContent, path);
+        if (blockContent) {
+          fileContents[path] = blockContent;
+        }
+      }
+    });
+  }
+
   // Apply shouldApplyRule to all rules - this will handle global rules, rule policies,
   // and path matching in a consistent way
   const applicableRules = rules.filter((rule) =>
-    shouldApplyRule(rule, allFilePaths, rulePolicies),
+    shouldApplyRule(rule, allFilePaths, rulePolicies, fileContents),
   );
 
   return applicableRules;

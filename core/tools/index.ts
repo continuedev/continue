@@ -1,4 +1,4 @@
-import { ConfigDependentToolParams, Tool } from "..";
+import { ConfigDependentToolParams, IDE, Tool } from "..";
 import { createNewFileTool } from "./definitions/createNewFile";
 import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
@@ -13,12 +13,14 @@ import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
 
+// missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
+export const localOnlyToolDefinitions = [grepSearchTool];
+
 export const baseToolDefinitions = [
   readFileTool,
   editFileTool,
   createNewFileTool,
   runTerminalCommandTool,
-  grepSearchTool,
   globSearchTool,
   searchWebTool,
   viewDiffTool,
@@ -34,3 +36,8 @@ export const baseToolDefinitions = [
 export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => [requestRuleTool(params)];
+
+export const getToolsForIde = async (ide: IDE) =>
+  (await ide.isWorkspaceRemote())
+    ? baseToolDefinitions
+    : [...baseToolDefinitions, ...localOnlyToolDefinitions];
