@@ -122,13 +122,8 @@ export function ContextItemsPeekItem({
 
   return (
     <div
-<<<<<<< HEAD
-      onClick={openContextItem}
-      className="mr-2 flex cursor-pointer flex-row items-center gap-1.5 rounded px-1.5 py-1 text-xs hover:bg-white/10"
-=======
       onClick={() => openContextItem(contextItem, ideMessenger)}
-      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
->>>>>>> d22ab74b15007ff7d84e3462bd344080305e1dc9
+      className="mr-2 flex cursor-pointer flex-row items-center gap-1.5 whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
       data-testid="context-items-peek-item"
     >
       {getContextItemIcon()}
