@@ -16,6 +16,23 @@ export type CharacterFilter = (args: {
   multiline: boolean;
 }) => AsyncGenerator<string>;
 
+// Duplicated from gui/src/components/StyledMarkdownPreview/utils/headerIsMarkdown.ts
+function headerIsMarkdown(header: string): boolean {
+  return (
+    header === "md" ||
+    header === "markdown" ||
+    header === "gfm" ||
+    header === "github-markdown" ||
+    header.includes(" md") ||
+    header.includes(" markdown") ||
+    header.includes(" gfm") ||
+    header.includes(" github-markdown") ||
+    header.split(" ")[0]?.split(".").pop() === "md" ||
+    header.split(" ")[0]?.split(".").pop() === "markdown" ||
+    header.split(" ")[0]?.split(".").pop() === "gfm"
+  );
+}
+
 function isBracketEnding(line: string): boolean {
   return line
     .trim()
@@ -331,25 +348,52 @@ export async function* removeTrailingWhitespace(
 
 /**
  * Filters and processes lines from a code block, removing unnecessary markers and handling edge cases.
+ * Now includes markdown-aware processing to handle nested markdown blocks properly.
  *
  * @param {LineStream} rawLines - The input stream of lines to filter.
+ * @param {string} filepath - Optional filepath to determine if this is a markdown file.
  * @yields {string} Filtered and processed lines from the code block.
  *
  * @description
  * This generator function performs the following tasks:
  * 1. Removes initial lines that should be removed before the actual code starts.
- * 2. Filters out ending code block markers (```) unless they are the last line.
- * 3. Handles special cases where lines should be changed and the stream should stop.
- * 4. Yields processed lines that are part of the actual code block content.
+ * 2. For markdown files, applies nested markdown block logic to avoid premature termination.
+ * 3. For non-markdown files, uses original stopping behavior.
+ * 4. Handles special cases where lines should be changed and the stream should stop.
+ * 5. Yields processed lines that are part of the actual code block content.
  */
-export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
+export async function* filterCodeBlockLines(
+  rawLines: LineStream,
+  filepath?: string,
+): LineStream {
   let seenFirstFence = false;
   // nestCount is set to 1 when the entire code block is wrapped with ``` or START blocks. It's then incremented
-  // when an inner code block is discovered to avoid exiting the function prematurly. The function will exit early
+  // when an inner code block is discovered to avoid exiting the function prematurely. The function will exit early
   // when all blocks are matched. When no outer fence is discovered the function will always continue to the end.
   let nestCount = 0;
 
+  // Check if this is a markdown file and collect lines for analysis
+  const isMarkdownFile =
+    filepath &&
+    ["md", "markdown", "gfm"].includes(
+      filepath.split(".").pop()?.toLowerCase() || "",
+    );
+
+  const allLines: string[] = [];
   for await (const line of rawLines) {
+    allLines.push(line);
+  }
+
+  // Check if it has nested markdown blocks (like ```markdown or ```md)
+  const firstLine = allLines[0] || "";
+  const hasNestedMarkdown =
+    (firstLine.startsWith("```") &&
+      headerIsMarkdown(firstLine.replace(/`/g, ""))) ||
+    (filepath && headerIsMarkdown(filepath));
+
+  for (let i = 0; i < allLines.length; i++) {
+    const line = allLines[i];
+
     if (!seenFirstFence) {
       if (shouldRemoveLineBeforeStart(line)) {
         // Filter out starting ``` or START block
@@ -365,14 +409,66 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
       const changedEndLine = shouldChangeLineAndStop(line);
       if (typeof changedEndLine === "string") {
         // Ending a block with just backticks (```) or STOP
+
+        // For markdown files with nested markdown blocks, apply special logic
+        if (hasNestedMarkdown && line.trim() === "```") {
+          // Apply the same nested markdown logic as patchNestedMarkdown
+          const trimmedLines = allLines.map((l) => l.trim());
+
+          let markdownNestCount = 0;
+          let shouldStop = false;
+
+          for (let j = 0; j <= i; j++) {
+            const currentLine = trimmedLines[j];
+
+            if (markdownNestCount > 0) {
+              // Inside a markdown block
+              if (currentLine.match(/^`+$/)) {
+                // Found bare backticks - count remaining ones
+                let remainingBareBackticks = 0;
+                for (let k = j + 1; k < trimmedLines.length; k++) {
+                  if (trimmedLines[k].match(/^`+$/)) {
+                    remainingBareBackticks++;
+                  }
+                }
+
+                // If this is the last bare backticks and we're at position i, stop
+                if (remainingBareBackticks === 0 && j === i) {
+                  markdownNestCount = 0;
+                  shouldStop = true;
+                  break;
+                }
+              } else if (currentLine.startsWith("```")) {
+                // Going into a nested codeblock
+                markdownNestCount++;
+              }
+            } else {
+              // Not inside a markdown block yet
+              if (currentLine.startsWith("```")) {
+                const header = currentLine.replaceAll("`", "");
+                if (headerIsMarkdown(header)) {
+                  markdownNestCount = 1;
+                }
+              }
+            }
+          }
+
+          if (shouldStop) {
+            return; // Stop without yielding the final closing ```
+          } else {
+            // This is an inner block delimiter, yield it as content
+            yield line;
+            continue;
+          }
+        }
+
+        // Original logic for non-markdown files or simple cases
         nestCount--;
         if (nestCount === 0) {
-          // if we are closing the outer block then exit early
-          // only exit early if the outer block was started with a block
-          // it it was text, we will never exit early
+          // We've closed the outer wrapper - stop without yielding the closing ```
           return;
         } else {
-          // otherwise just yield the line
+          // This is a nested block closing, yield it as content
           yield line;
         }
       } else if (line.startsWith("```")) {
@@ -380,7 +476,7 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
         nestCount++;
         yield line;
       } else {
-        // otherwise just yield the line
+        // Otherwise just yield the line as content
         yield line;
       }
     }
