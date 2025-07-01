@@ -174,6 +174,93 @@ describe("lineStream", () => {
       expect(filteredLines).toEqual(["const x = 5;", "let y = 10;"]);
       expect(mockFullStop).toHaveBeenCalledTimes(1);
     });
+
+    it("should stop at lines with leading whitespace", async () => {
+      const linesGenerator = await getLineGenerator([
+        "const x = 5;",
+        "let y = 10;",
+        `    ${lineStream.LINES_TO_STOP_AT[0]}`,
+        "const z = 15;",
+      ]);
+
+      const result = lineStream.stopAtLines(linesGenerator, mockFullStop);
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual(["const x = 5;", "let y = 10;"]);
+      expect(mockFullStop).toHaveBeenCalledTimes(1);
+    });
+
+    it("should NOT stop when stop phrase is inside quotes", async () => {
+      const linesGenerator = await getLineGenerator([
+        "const x = 5;",
+        'console.log("# End of file. not really");',
+        "let y = 10;",
+        "const z = 15;",
+      ]);
+
+      const result = lineStream.stopAtLines(linesGenerator, mockFullStop);
+      const filteredLines = await getFilteredLines(result);
+
+      // Should not stop, should yield all lines
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        'console.log("# End of file. not really");',
+        "let y = 10;",
+        "const z = 15;",
+      ]);
+      expect(mockFullStop).toHaveBeenCalledTimes(0);
+    });
+
+    it("should NOT stop when stop phrase is inside single quotes", async () => {
+      const linesGenerator = await getLineGenerator([
+        "const x = 5;",
+        "const message = '# End of file. not really';",
+        "let y = 10;",
+      ]);
+
+      const result = lineStream.stopAtLines(linesGenerator, mockFullStop);
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "const message = '# End of file. not really';",
+        "let y = 10;",
+      ]);
+      expect(mockFullStop).toHaveBeenCalledTimes(0);
+    });
+
+    it("should NOT stop when stop phrase is part of larger text", async () => {
+      const linesGenerator = await getLineGenerator([
+        "const x = 5;",
+        "// This function stops<STOP EDITING HERE>after processing",
+        "let y = 10;",
+      ]);
+
+      const result = lineStream.stopAtLines(linesGenerator, mockFullStop);
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual([
+        "const x = 5;",
+        "// This function stops<STOP EDITING HERE>after processing",
+        "let y = 10;",
+      ]);
+      expect(mockFullStop).toHaveBeenCalledTimes(0);
+    });
+
+    it("should stop when stop phrase appears properly at start of content", async () => {
+      const linesGenerator = await getLineGenerator([
+        "const x = 5;",
+        "let y = 10;",
+        "# End of file. Done here",
+        "const z = 15;",
+      ]);
+
+      const result = lineStream.stopAtLines(linesGenerator, mockFullStop);
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual(["const x = 5;", "let y = 10;"]);
+      expect(mockFullStop).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("skipPrefixes", () => {
@@ -900,6 +987,53 @@ describe("lineStream", () => {
       expect(lineStream.shouldStopAtMarkdownBlock(state, 2)).toBe(false);
       // At index 4, should stop (last bare backticks)
       expect(lineStream.shouldStopAtMarkdownBlock(state, 4)).toBe(true);
+    });
+  });
+
+  describe("shouldChangeLineAndStop", () => {
+    it("should handle [/CODE] at start of line", () => {
+      const result = lineStream.shouldChangeLineAndStop("[/CODE]");
+      expect(result).toBe("[/CODE]");
+    });
+
+    it("should handle [/CODE] with leading whitespace", () => {
+      const result = lineStream.shouldChangeLineAndStop("    [/CODE]");
+      expect(result).toBe("    [/CODE]");
+    });
+
+    it("should return partial line before [/CODE] when at start/after whitespace", () => {
+      const result = lineStream.shouldChangeLineAndStop(
+        "some code [/CODE] more text",
+      );
+      expect(result).toBe("some code");
+    });
+
+    it("should NOT trigger on [/CODE] within quotes or non-whitespace preceded", () => {
+      // This test demonstrates the current bug - it WILL fail initially
+      const result = lineStream.shouldChangeLineAndStop(
+        'console.log("test [/CODE] end");',
+      );
+      expect(result).toBeUndefined(); // Should not trigger stopping
+    });
+
+    it("should NOT trigger on [/CODE] in middle of identifier", () => {
+      // Another case that shows the bug
+      const result = lineStream.shouldChangeLineAndStop(
+        'const var[/CODE]Name = "test";',
+      );
+      expect(result).toBeUndefined(); // Should not trigger stopping
+    });
+
+    it("should handle ``` with trimStart correctly", () => {
+      const result = lineStream.shouldChangeLineAndStop("    ```");
+      expect(result).toBe("    ```");
+    });
+
+    it("should NOT handle ``` in middle of line", () => {
+      const result = lineStream.shouldChangeLineAndStop(
+        'console.log("test ``` end");',
+      );
+      expect(result).toBeUndefined();
     });
   });
 
