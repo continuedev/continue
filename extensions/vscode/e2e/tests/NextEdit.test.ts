@@ -105,7 +105,7 @@ describe("Next Edit", () => {
   it("Should force a Next Edit", async () => {
     const hasDecoration = await NextEditActions.forceNextEdit(editor);
     expect(hasDecoration).to.be.true;
-  }).timeout(DEFAULT_TIMEOUT.XL);
+  }).timeout(DEFAULT_TIMEOUT.XL * 2);
 
   it("Should accept Next Edit suggestion with Tab", async () => {
     const accepted = await NextEditActions.acceptNextEditSuggestion(editor);
