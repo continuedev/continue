@@ -44,11 +44,11 @@ export class NextEditActions {
     await editor.moveCursor(2, 4);
 
     await new Workbench().executeCommand("Continue: Force Next Edit");
-    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.MD);
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XL);
     
     const svgDecoration = await TestUtils.waitForSuccess(
       () => NextEditSelectors.getSvgDecoration(VSBrowser.instance.driver),
-      DEFAULT_TIMEOUT.XL * 3
+      DEFAULT_TIMEOUT.XL
     );
     
     return svgDecoration !== null;
