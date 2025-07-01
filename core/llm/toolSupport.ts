@@ -179,6 +179,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     deepseek: (model) => {
+      // https://api-docs.deepseek.com/guides/function_calling
       if (
         model === "deepseek-reasoner" ||
         model === "deepseek-chat" ||
