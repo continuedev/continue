@@ -157,6 +157,8 @@ const getCommandsMap: (
       throw new Error("Config not loaded");
     }
 
+    console.log("debug1 onlyOneInsertion", onlyOneInsertion);
+
     const llm =
       config.selectedModelByRole.edit ?? config.selectedModelByRole.chat;
 
@@ -355,10 +357,10 @@ const getCommandsMap: (
     "continue.writeDocstringForCode": async () => {
       captureCommandTelemetry("writeDocstringForCode");
 
-      streamInlineEdit(
+      void streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
-        true,
+        false,
       );
     },
     "continue.fixCode": async () => {
