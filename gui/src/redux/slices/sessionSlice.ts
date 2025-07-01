@@ -27,6 +27,7 @@ import {
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
+import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
@@ -580,17 +581,10 @@ export const sessionSlice = createSlice({
         toolItem.message.content = renderContextItems(
           action.payload.contextItems,
         );
+        toolItem.contextItems = action.payload.contextItems.map((item) =>
+          toolCallCtxItemToCtxItemWithId(item, action.payload.toolCallId),
+        );
       }
-      //           addContextItemsAtIndex({
-      //               index: initialHistory.length,
-      //               contextItems: toolOutput.map((contextItem) => ({
-      //                 ...contextItem,
-      //                 id: {
-      //                   providerTitle: "toolCall",
-      //                   itemId: toolCallId,
-      //                 },
-      //               })),
-      //             }),
     },
     cancelToolCall: (
       state,

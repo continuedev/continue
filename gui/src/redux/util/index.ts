@@ -8,6 +8,7 @@ export function findCurrentToolCall(
   return chatHistory[chatHistory.length - 1]?.toolCallState;
 }
 
+// TODO parallel tool calls - find tool call must search within arrays
 export function findToolCall(
   chatHistory: RootState["session"]["history"],
   toolCallId: string,

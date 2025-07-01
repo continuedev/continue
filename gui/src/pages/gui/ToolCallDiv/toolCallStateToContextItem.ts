@@ -1,4 +1,4 @@
-import { ContextItemWithId, ToolCallState } from "core";
+import { ContextItem, ContextItemWithId, ToolCallState } from "core";
 
 export function toolCallStateToContextItems(
   toolCallState: ToolCallState | undefined,
@@ -7,12 +7,21 @@ export function toolCallStateToContextItems(
     return [];
   }
   return (
-    toolCallState.output?.map((item) => ({
-      ...item,
-      id: {
-        providerTitle: "toolCall",
-        itemId: toolCallState.toolCallId,
-      },
-    })) ?? []
+    toolCallState.output?.map((ctxItem) =>
+      toolCallCtxItemToCtxItemWithId(ctxItem, toolCallState.toolCallId),
+    ) ?? []
   );
+}
+
+export function toolCallCtxItemToCtxItemWithId(
+  ctxItem: ContextItem,
+  toolCallId: string,
+): ContextItemWithId {
+  return {
+    ...ctxItem,
+    id: {
+      providerTitle: "toolCall",
+      itemId: toolCallId,
+    },
+  };
 }
