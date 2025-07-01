@@ -43,7 +43,7 @@ export class EditOutcomeTracker {
   public async recordEditOutcome(
     streamId: string,
     accepted: boolean,
-    dataLogger: any
+    dataLogger: any,
   ): Promise<void> {
     const pendingEdit = this.pendingEdits.get(streamId);
     if (!pendingEdit) {
