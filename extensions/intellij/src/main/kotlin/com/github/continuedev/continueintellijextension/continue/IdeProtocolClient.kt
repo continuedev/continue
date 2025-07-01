@@ -46,7 +46,7 @@ class IdeProtocolClient(
     init {
         // Setup config.json / config.ts save listeners
         VirtualFileManager.getInstance().addAsyncFileListener(
-            AsyncFileSaveListener(continuePluginService), ContinuePluginDisposable.getInstance(project)
+            AsyncFileSaveListener(continuePluginService), project.service<ContinuePluginDisposable>()
         )
     }
 
@@ -67,8 +67,7 @@ class IdeProtocolClient(
                     }
 
                     "jetbrains/isOSREnabled" -> {
-                        val isOSREnabled =
-                            ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+                        val isOSREnabled = service<ContinueExtensionSettings>().continueState.enableOSR
                         respond(isOSREnabled)
                     }
 

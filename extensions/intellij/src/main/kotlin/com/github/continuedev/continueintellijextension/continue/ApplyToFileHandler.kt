@@ -10,6 +10,7 @@ import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.protocol.ApplyToFileParams
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -201,7 +202,7 @@ class ApplyToFileHandler(
                 if (EditorUtils.editorFileExist(params.filepath)) EditorUtils.getOrOpenEditor(project, params.filepath)
                 else EditorUtils.getEditorByCreateFile(project, params.filepath)
 
-            val diffStreamService = project.getService(DiffStreamService::class.java)
+            val diffStreamService = project.service<DiffStreamService>()
 
             val handler = ApplyToFileHandler(
                 project, continuePluginService, ide, params, editorUtils, diffStreamService

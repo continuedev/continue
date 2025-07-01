@@ -5,7 +5,7 @@ import com.github.continuedev.continueintellijextension.services.ContinueExtensi
 import com.intellij.openapi.actionSystem.ActionPromoter
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.DataContext
-import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.components.service
 import org.jetbrains.annotations.NotNull
 
 class ContinueActionPromote : ActionPromoter {
@@ -13,7 +13,7 @@ class ContinueActionPromote : ActionPromoter {
     override fun promote(@NotNull actions: List<AnAction>, @NotNull context: DataContext): List<AnAction>? {
         // For autocomplete actions
         if (actions.any { it is AcceptAutocompleteAction }) {
-            val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
+            val settings = service<ContinueExtensionSettings>()
             if (settings.continueState.showIDECompletionSideBySide) {
                 return actions.filterIsInstance<AcceptAutocompleteAction>()
             }
