@@ -57,6 +57,7 @@ export interface IndexingProgressUpdate {
     | "disabled"
     | "cancelled";
   debugInfo?: string;
+  warnings?: string[];
 }
 
 // This is more or less a V2 of IndexingProgressUpdate for docs etc.
