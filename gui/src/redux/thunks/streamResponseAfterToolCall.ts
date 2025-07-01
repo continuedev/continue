@@ -30,7 +30,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
 
         await new Promise((resolve) => setTimeout(resolve, 0));
 
-        // TODO paralell tool calls - dispatch one tool message per tool call
+        // TODO parallel tool calls - dispatch one tool message per tool call
         const newMessage: ChatMessage = {
           role: "tool",
           content: renderContextItems(toolOutput),

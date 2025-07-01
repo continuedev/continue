@@ -42,7 +42,7 @@ export function ToolCallDisplay({
                 toolCallState={toolCallState}
               />
             </div>
-            <div className="gap 1.5 flex flex-row items-center">
+            <div className="flex flex-row items-center gap-1.5">
               {!!toolCallState.output && (
                 <ToolTruncateHistoryIcon historyIndex={historyIndex} />
               )}
