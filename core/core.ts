@@ -10,7 +10,6 @@ import {
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
-import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -1095,8 +1094,6 @@ export class Core {
         // user doesn't need these in their config.json for the shortcuts to work
         // option+enter
         new CurrentFileContextProvider({}),
-        // cmd+enter
-        new CodebaseContextProvider({}),
       ].find((provider) => provider.description.title === name);
     if (!provider) {
       return [];
