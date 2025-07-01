@@ -15,7 +15,10 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { constructMessages } from "../util/constructMessages";
+import {
+  constructMessages,
+  getBaseSystemMessage,
+} from "../util/constructMessages";
 import { callCurrentTool } from "./callCurrentTool";
 
 export const streamNormalInput = createAsyncThunk<
@@ -33,11 +36,6 @@ export const streamNormalInput = createAsyncThunk<
     if (!selectedChatModel) {
       throw new Error("No chat model selected");
     }
-
-    const chatHistory = state.session.history;
-    const messageMode = state.session.mode;
-    const rulePolicies = state.ui.ruleSettings;
-    const streamAborter = state.session.streamAborter;
 
     // Get tools
     const activeTools = selectActiveTools(state);
@@ -59,41 +57,46 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
-    // Construct messages
-    const withoutMessageIds = chatHistory.map((item) => {
+    // Construct messages (excluding system message)
+    const baseSystemMessage = getBaseSystemMessage(
+      state.session.mode,
+      selectedChatModel,
+    );
+
+    const withoutMessageIds = state.session.history.map((item) => {
       const { id, ...messageWithoutId } = item.message;
       return { ...item, message: messageWithoutId };
     });
-    const { messages, appliedRules, appliedRulesIndex } = constructMessages(
-      messageMode,
+    const { messages, appliedRules } = constructMessages(
       withoutMessageIds,
-      selectedChatModel,
+      baseSystemMessage,
       state.config.config.rules,
-      rulePolicies,
-      toolsSupported ? activeTools : [],
+      state.ui.ruleSettings,
     );
 
+    // TODO parallel tool calls will cause issues with this
+    // because there will be multiple tool messages, so which one should have applied rules?
     dispatch(
       setAppliedRulesAtIndex({
-        index: appliedRulesIndex,
+        index: messages.length - 1,
         appliedRules: appliedRules,
       }),
     );
 
     dispatch(setActive());
 
-    // Send request
+    // Send request and stream response
+    const streamAborter = state.session.streamAborter;
     const gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
-        messages,
+        messages: messages,
         legacySlashCommandData,
       },
       streamAborter.signal,
     );
 
-    // Stream response
     let next = await gen.next();
     while (!next.done) {
       if (!getState().session.isStreaming) {

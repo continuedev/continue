@@ -349,7 +349,10 @@ export const getSystemMessageWithRules = ({
   let systemMessage = baseSystemMessage ?? "";
 
   for (const rule of appliedRules) {
-    systemMessage += `\n\n${rule.rule}`;
+    if (systemMessage) {
+      systemMessage += "\n\n";
+    }
+    systemMessage += rule.rule;
   }
 
   return {
