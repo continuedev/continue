@@ -1,7 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
-import { constructMessages } from "core/llm/constructMessages";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
@@ -16,6 +15,7 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { constructMessages } from "../util/constructMessages";
 import { callCurrentTool } from "./callCurrentTool";
 
 export const streamNormalInput = createAsyncThunk<
