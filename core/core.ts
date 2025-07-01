@@ -1105,6 +1105,10 @@ export class Core {
         itemId: uuidv4(),
       };
 
+      void Telemetry.capture("context_provider_get_context_items", {
+        name: provider.description.title,
+      });
+
       const items = await provider.getContextItems(query, {
         config,
         llm,
