@@ -48,7 +48,9 @@ const CAP_MESSAGE = `
 
     <PUBLISH_APPLICATION_TO_GIT_HUB_FLOW>
         You are an AI assistant tasked with helping a user publish their application to GitHub. Follow these steps carefully, using the provided GitHub and Git MCPs (Managed Command Palettes) for all GitHub and Git actions respectively, unless otherwise specified.
-        
+        General instractions for github flow:
+            -  gitignore already exist do not create new one.
+            
         1. First, collect the necessary information from the user:
 
         <user_info>
@@ -107,7 +109,6 @@ const CAP_MESSAGE = `
         </git_init>
         
         7. remote the repo to the github repository that we just created
-           IMPORTANT: gitignore already exist do not create new one.  
         <git_remote>
             https://{USER_NAME}:{GITHUB_TOKEN}@github.com/username/{REPO_NAME}.git
         </git_remote>
