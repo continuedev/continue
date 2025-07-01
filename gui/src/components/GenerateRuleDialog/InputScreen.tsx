@@ -1,0 +1,81 @@
+import React from "react";
+import { Button } from "../ui";
+import { RuleTemplateChip } from "./RuleTemplateChip";
+import { RuleTemplate, ruleTemplates } from "./ruleTemplates";
+
+interface InputScreenProps {
+  inputPrompt: string;
+  setInputPrompt: (value: string) => void;
+  onGenerate: (prompt: string) => void;
+  onCancel: () => void;
+  onRuleTemplateClick: (template: RuleTemplate) => void;
+}
+
+export function InputScreen({
+  inputPrompt,
+  setInputPrompt,
+  onGenerate,
+  onCancel,
+  onRuleTemplateClick,
+}: InputScreenProps) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!inputPrompt.trim()) {
+      return;
+    }
+
+    onGenerate(inputPrompt);
+  };
+
+  return (
+    <div className="px-2 pb-2 pt-4 sm:px-4">
+      <div>
+        <div className="text-center">
+          <h2 className="mb-0">Generate Rule</h2>
+          <p className="text-description m-0 mt-2 p-0">
+            This will generate a new rule using the content of your chat history
+          </p>
+        </div>
+        <div className="mt-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
+              <textarea
+                className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full resize-none rounded border p-2 text-xs focus:outline-none"
+                placeholder="Describe your rule..."
+                rows={5}
+                value={inputPrompt}
+                onChange={(e) => setInputPrompt(e.target.value)}
+              />
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              {ruleTemplates.map((template, index) => (
+                <RuleTemplateChip
+                  key={index}
+                  icon={template.icon}
+                  text={template.title}
+                  onClick={() => onRuleTemplateClick(template)}
+                />
+              ))}
+            </div>
+
+            <div className="mt-4 flex flex-row justify-center gap-5">
+              <Button
+                type="button"
+                className="min-w-16"
+                onClick={onCancel}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button className="min-w-16" disabled={!inputPrompt.trim()}>
+                Generate
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

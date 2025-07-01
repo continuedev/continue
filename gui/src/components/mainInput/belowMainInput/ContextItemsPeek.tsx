@@ -135,7 +135,7 @@ export function ContextItemsPeekItem({
             {contextItem.name}
           </div>
           <div
-            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
+            className={`text-description-muted min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs ${isUrl ? "hover:underline" : ""}`}
             onClick={
               isUrl
                 ? (e) => {
@@ -156,7 +156,7 @@ export function ContextItemsPeekItem({
         </div>
 
         {isUrl && (
-          <ArrowTopRightOnSquareIcon className="mx-2 h-4 w-4 flex-shrink-0 text-gray-400 opacity-0 group-hover:opacity-100" />
+          <ArrowTopRightOnSquareIcon className="text-description-muted mx-2 h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100" />
         )}
       </div>
     </div>
@@ -201,7 +201,9 @@ export function ContextItemsPeek({
           <ContextItemsPeekItem key={idx} contextItem={contextItem} />
         ))
       ) : (
-        <div className="pl-2 text-xs italic text-gray-400">No results</div>
+        <div className="text-description-muted pl-2 text-xs italic">
+          No results
+        </div>
       )}
     </ToggleDiv>
   );
