@@ -4,7 +4,10 @@ import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
 import { ComponentType, useContext, useMemo } from "react";
 import { AnimatedEllipsis } from "../..";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import {
+  IdeMessengerContext,
+  IIdeMessenger,
+} from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectIsGatheringContext } from "../../../redux/slices/sessionSlice";
 import FileIcon from "../../FileIcon";
@@ -24,32 +27,35 @@ interface ContextItemsPeekItemProps {
   contextItem: ContextItemWithId;
 }
 
+export function openContextItem(
+  contextItem: ContextItemWithId,
+  ideMessenger: IIdeMessenger,
+) {
+  const { uri, name, content } = contextItem;
+
+  if (uri && uri?.type === "file") {
+    const isRangeInFile = name.includes(" (") && name.endsWith(")");
+
+    if (isRangeInFile) {
+      const rif = ctxItemToRifWithContents(contextItem, true);
+      void ideMessenger.ide.showLines(
+        rif.filepath,
+        rif.range.start.line,
+        rif.range.end.line,
+      );
+    } else {
+      void ideMessenger.ide.openFile(uri.value);
+    }
+  } else {
+    void ideMessenger.ide.showVirtualFile(name, content);
+  }
+}
+
 export function ContextItemsPeekItem({
   contextItem,
 }: ContextItemsPeekItemProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const isUrl = contextItem.uri?.type === "url";
-
-  function openContextItem() {
-    const { uri, name, content } = contextItem;
-
-    if (uri && uri?.type === "file") {
-      const isRangeInFile = name.includes(" (") && name.endsWith(")");
-
-      if (isRangeInFile) {
-        const rif = ctxItemToRifWithContents(contextItem, true);
-        void ideMessenger.ide.showLines(
-          rif.filepath,
-          rif.range.start.line,
-          rif.range.end.line,
-        );
-      } else {
-        void ideMessenger.ide.openFile(uri.value);
-      }
-    } else {
-      void ideMessenger.ide.showVirtualFile(name, content);
-    }
-  }
 
   function getContextItemIcon() {
     const dimensions = "18px";
@@ -116,8 +122,13 @@ export function ContextItemsPeekItem({
 
   return (
     <div
+<<<<<<< HEAD
       onClick={openContextItem}
       className="mr-2 flex cursor-pointer flex-row items-center gap-1.5 rounded px-1.5 py-1 text-xs hover:bg-white/10"
+=======
+      onClick={() => openContextItem(contextItem, ideMessenger)}
+      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+>>>>>>> d22ab74b15007ff7d84e3462bd344080305e1dc9
       data-testid="context-items-peek-item"
     >
       {getContextItemIcon()}

@@ -1,5 +1,4 @@
 import {
-  AssistantChatMessage,
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
@@ -24,6 +23,10 @@ import {
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
 
+interface MessageWithContextItems {
+  ctxItems: ContextItemWithId[];
+  message: ChatMessage;
+}
 export function constructMessages(
   messageMode: string,
   history: ChatHistoryItem[],
@@ -39,10 +42,7 @@ export function constructMessages(
   const historyCopy = [...history];
   const validTools = new Set(tools.map((tool) => tool.function.name));
 
-  const msgs: {
-    ctxItems: ContextItemWithId[];
-    message: ChatMessage;
-  }[] = [];
+  const msgs: MessageWithContextItems[] = [];
   for (const item of historyCopy) {
     if (
       item.message.role === "system" ||
@@ -80,43 +80,38 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
-      // First, push a version of the message with any valid tools calls
-      const validToolCalls = item.message.toolCalls?.filter(
-        (toolCall) =>
-          toolCall.function?.name &&
-          toolCall.id &&
-          validTools.has(toolCall.function.name),
-      );
-
-      const msgWithValidToolCalls: AssistantChatMessage = {
-        ...item.message,
-        toolCalls: validToolCalls,
-      };
-
-      if (chatMessageIsEmpty(msgWithValidToolCalls)) {
-        msgs.push({
-          ctxItems: [],
-          message: {
-            role: "assistant",
-            content: "Tool call message redacted in chat mode", // TODO this might be confusing, edge case situation where tools are excluded
-          },
-        });
-      }
-
       // This was implemented for APIs that require all tool calls to have
       // A corresponsing tool sent, which means if a user excluded a tool
       // Then sessions with that tool call in the history would fail
 
+      // // First, push a version of the message with any valid tools calls
+      // const validToolCalls = item.message.toolCalls?.filter(
+      //   (toolCall) =>
+      //     toolCall.function?.name &&
+      //     toolCall.id &&
+      //     validTools.has(toolCall.function.name),
+      // );
+
+      // const msgWithValidToolCalls: AssistantChatMessage = {
+      //   ...item.message,
+      //   toolCalls: validToolCalls,
+      // };
+
+      // if (chatMessageIsEmpty(msgWithValidToolCalls)) {
+      // msgs.push(...getChatSafeMessagesFromAgentToolCall(item));
+      // }
+
       // Case where no valid tool calls or content are present
       msgs.push({
         ctxItems: item.contextItems,
-        message: msgWithValidToolCalls,
+        message: item.message,
       });
 
       // Add a tool message for each valid tool call
-      if (validToolCalls?.length) {
+      // if(validToolCalls?.length) {
+      if (item.message.toolCalls?.length) {
         // If the assistant message has tool calls, we need to insert tool messages
-        for (const toolCall of validToolCalls) {
+        for (const toolCall of item.message.toolCalls) {
           let content: string = "No tool output";
           // TODO toolCallState only supports one tool call per message for now
           if (
@@ -193,3 +188,29 @@ export function constructMessages(
     appliedRules: availableRules,
   };
 }
+
+// function getChatSafeMessagesFromAgentToolCall(item: ChatHistoryItem): MessageWithContextItems[] {
+//   if(item.message.role !== "assistant" || !item.message.toolCalls?.length) {
+//     console.error("Misusing getChatSafeMessagesFromAgentToolCall")
+//     return []
+//   }
+//   const assistantItem: MessageWithContextItems = {
+//     ctxItems: item.toolCallState?.output ?? [],
+//     message: {
+//       role: "assistant",
+//       content: item.message.content + "\n\n" + item.message.toolCalls.map(tc => tc.function.name).join(", ")
+//     }
+//   }
+//   const userItem: MessageWithContextItems = {
+//     ctxItems: item.toolCallState?.output,
+//     message: {
+//       role: "user",
+//       content: item.message.content,
+//     }
+//   return [item, userItem]
+
+//   if(message)
+
+//   const msgs: MessageWithContextItems[] = [];
+//   if (message.message.role === "assistant" && message.message.toolCalls) {
+// }
