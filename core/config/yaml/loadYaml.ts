@@ -26,7 +26,6 @@ import {
   RuleWithSource,
 } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
@@ -385,13 +384,7 @@ async function configYamlToContinueConfig(options: {
   }
 
   // Context providers
-  const codebaseContextParams: IContextProvider[] =
-    (config.context || []).find((cp) => cp.provider === "codebase")?.params ||
-    {};
-  const DEFAULT_CONTEXT_PROVIDERS = [
-    new FileContextProvider({}),
-    new CodebaseContextProvider(codebaseContextParams),
-  ];
+  const DEFAULT_CONTEXT_PROVIDERS = [new FileContextProvider({})];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
     ({ description: { title } }) => title,

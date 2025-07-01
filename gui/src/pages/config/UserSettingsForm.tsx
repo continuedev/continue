@@ -8,6 +8,7 @@ import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
 } from "core/config/sharedConfig";
+import { HubSessionInfo } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useState } from "react";
 import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
@@ -15,10 +16,12 @@ import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
 import { ToolTip } from "../../components/gui/Tooltip";
 import { useFontSize } from "../../components/ui/font";
+import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
 import { setLocalStorage } from "../../util/localStorage";
+import { ContinueFeaturesMenu } from "./ContinueFeaturesMenu";
 
 export function UserSettingsForm() {
   /////// User settings section //////
@@ -26,6 +29,7 @@ export function UserSettingsForm() {
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
   const [showExperimental, setShowExperimental] = useState(false);
+  const { session } = useAuth();
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -63,6 +67,14 @@ export function UserSettingsForm() {
     });
   };
 
+  const handleLogEditingDataToggle = (value: boolean) => {
+    handleUpdate({ logEditingData: value });
+  };
+
+  const handleOptInNextEditToggle = (value: boolean) => {
+    handleUpdate({ optInNextEditFeature: value });
+  };
+
   useEffect(() => {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
@@ -74,12 +86,16 @@ export function UserSettingsForm() {
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const autoAcceptEditToolDiffs = config.ui?.autoAcceptEditToolDiffs ?? false;
+  const logEditingData = config.experimental?.logEditingData ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
     config.experimental?.useCurrentFileAsContext ?? false;
   const enableExperimentalTools =
     config.experimental?.enableExperimentalTools ?? false;
+  const optInNextEditFeature =
+    config.experimental?.optInNextEditFeature ?? false;
+
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
 
@@ -113,6 +129,10 @@ export function UserSettingsForm() {
         setHubEnabled(continueTestEnvironment === "production");
       });
   }, [ideMessenger]);
+
+  const hasContinueEmail = (session as HubSessionInfo)?.account?.id.includes(
+    "@continue.dev",
+  );
 
   return (
     <div className="flex flex-col">
@@ -355,7 +375,9 @@ export function UserSettingsForm() {
             </div>
             <div
               className={`duration-400 overflow-hidden transition-all ease-in-out ${
-                showExperimental ? "max-h-40" : "max-h-0"
+                showExperimental
+                  ? "max-h-96" /* Increased from max-h-40 to max-h-96 to accommodate ContinueFeaturesMenu */
+                  : "max-h-0"
               }`}
             >
               <div className="flex flex-col gap-x-1 gap-y-4 pl-6">
@@ -399,6 +421,15 @@ export function UserSettingsForm() {
                   }
                   text="Enable experimental tools"
                 />
+
+                {hasContinueEmail && (
+                  <ContinueFeaturesMenu
+                    logEditingData={logEditingData}
+                    handleLogEditingDataToggle={handleLogEditingDataToggle}
+                    optInNextEditFeature={optInNextEditFeature}
+                    handleOptInNextEditToggle={handleOptInNextEditToggle}
+                  />
+                )}
               </div>
             </div>
           </div>

@@ -36,7 +36,6 @@ import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/b
 import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
 import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
@@ -398,13 +397,7 @@ async function intermediateToFinalConfig({
         | undefined
     )?.params || {};
 
-  const DEFAULT_CONTEXT_PROVIDERS = [
-    new FileContextProvider({}),
-    // Add codebase provider if indexing is enabled
-    ...(!config.disableIndexing
-      ? [new CodebaseContextProvider(codebaseContextParams)]
-      : []),
-  ];
+  const DEFAULT_CONTEXT_PROVIDERS = [new FileContextProvider({})];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
     ({ description: { title } }) => title,
