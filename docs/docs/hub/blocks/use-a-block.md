@@ -1,5 +1,5 @@
 ---
-title: Use A Block
+title: Use a Block
 description: Guide to using blocks
 keywords: [blocks, usage, use]
 ---

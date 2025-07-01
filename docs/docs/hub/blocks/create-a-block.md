@@ -1,6 +1,6 @@
 ---
-title: Create A Block
-sidebar_label: Create A Block
+title: Create a Block
+sidebar_label: Create a Block
 description: Guide to creating blocks
 keywords: [blocks, creation, create, use]
 ---

@@ -1,6 +1,6 @@
 ---
-title: Edit An Assistant
-sidebar_label: Edit An Assistant
+title: Edit an Assistant
+sidebar_label: Edit an Assistant
 description: How to edit a custom AI coding assistant.
 keywords: [assistants, creation, guide]
 ---

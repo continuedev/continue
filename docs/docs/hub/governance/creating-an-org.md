@@ -1,6 +1,6 @@
 ---
-title: Creating An Organization
-description: Creating An Organization
+title: Creating an Organization
+description: Creating an Organization
 keywords: [governance, organization, org, create]
 ---
 
