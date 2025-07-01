@@ -1037,6 +1037,7 @@ interface ToolChoice {
 
 export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
+  enableExperimentalTools: boolean;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;
@@ -1258,6 +1259,7 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
   showSessionTabs?: boolean;
   autoAcceptEditToolDiffs?: boolean;
+  logEditingData?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1321,6 +1323,14 @@ export interface ShowFilePayload {
   filepath: string;
 }
 
+export interface ApplyToFilePayload {
+  streamId: string;
+  filepath?: string;
+  text: string;
+  toolCallId?: string;
+  isSearchAndReplace?: boolean;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1328,6 +1338,16 @@ export interface RangeInFileWithContents {
     end: { line: number; character: number };
   };
   contents: string;
+}
+
+export interface RangeInFileWithNextEditInfo {
+  filepath: string;
+  range: Range;
+  fileContents: string;
+  editText: string;
+  afterCursorPos: Position;
+  beforeCursorPos: Position;
+  workspaceDir: string;
 }
 
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
@@ -1366,6 +1386,7 @@ export interface ExperimentalConfig {
   modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
+  enableExperimentalTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
@@ -1390,6 +1411,16 @@ export interface ExperimentalConfig {
    * If enabled, will add the current file as context.
    */
   useCurrentFileAsContext?: boolean;
+
+  /**
+   * If enabled, will save data on the user's editing processes
+   */
+  logEditingData?: boolean;
+
+  /**
+   * If enabled, will enable next edit in place of autocomplete
+   */
+  optInNextEditFeature?: boolean;
 }
 
 export interface AnalyticsConfig {

@@ -63,6 +63,7 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
       [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
       [BuiltInToolNames.RequestRule]: "disabled",
+      [BuiltInToolNames.SearchAndReplaceInFile]: "allowedWithPermission",
     },
     toolGroupSettings: {
       [BUILT_IN_GROUP_NAME]: "include",
