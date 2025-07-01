@@ -48,6 +48,7 @@ async function getContextProviderExtras(
     llm: config.modelsByRole.chat[0],
     reranker: config.selectedModelByRole.rerank,
     selectedCode: [],
+    isInAgentMode: true,
   };
 }
 
