@@ -23,7 +23,6 @@ export class VerticalDiffManager {
   public refreshCodeLens: () => void = () => {};
 
   private fileUriToHandler: Map<string, VerticalDiffHandler> = new Map();
-
   fileUriToCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
 
   private userChangeListener: vscode.Disposable | undefined;
@@ -67,6 +66,10 @@ export class VerticalDiffManager {
 
   getHandlerForFile(fileUri: string) {
     return this.fileUriToHandler.get(fileUri);
+  }
+
+  getStreamIdForFile(fileUri: string): string | undefined {
+    return this.fileUriToHandler.get(fileUri)?.streamId;
   }
 
   // Creates a listener for document changes by user.
@@ -229,6 +232,7 @@ export class VerticalDiffManager {
             filepath: fileUri,
             toolCallId,
           }),
+        streamId,
       },
     );
 
@@ -373,6 +377,7 @@ export class VerticalDiffManager {
             filepath: fileUri,
             toolCallId,
           }),
+        streamId,
       },
     );
 

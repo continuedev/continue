@@ -29,6 +29,11 @@ export async function processDiff(
 
   await ide.openFile(newOrCurrentUri);
 
+  // If streamId is not provided, try to get it from the VerticalDiffManager
+  if (!streamId) {
+    streamId = verticalDiffManager.getStreamIdForFile(newOrCurrentUri);
+  }
+
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
   if (action === "reject") {
@@ -43,7 +48,7 @@ export async function processDiff(
     await EditOutcomeTracker.getInstance().recordEditOutcome(
       streamId,
       action === "accept",
-      DataLogger.getInstance()
+      DataLogger.getInstance(),
     );
 
     await sidebar.webviewProtocol.request("updateApplyState", {
