@@ -1,7 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
-import { safeParseToolCallArgs } from "core/tools/parseArgs";
 import posthog from "posthog-js";
 import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
@@ -13,6 +12,7 @@ import {
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
@@ -28,21 +28,6 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
     if (toolCallState.status !== "generated") {
       return;
     }
-
-    const logToolUsage = (success: boolean, finalOutput?: ContextItem[]) => {
-      extra.ideMessenger.post("devdata/log", {
-        name: "toolUsage",
-        data: {
-          toolCallId: toolCallState.toolCallId,
-          functionName: toolCallState.toolCall?.function?.name,
-          functionArgs: toolCallState.toolCall?.function?.arguments,
-          toolCallArgs: safeParseToolCallArgs(toolCallState.toolCall),
-          parsedArgs: toolCallState.parsedArgs,
-          output: finalOutput || toolCallState.output || [],
-          succeeded: success,
-        },
-      });
-    };
 
     const selectedChatModel = selectSelectedChatModel(state);
 
@@ -122,7 +107,7 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
         }),
       );
 
-      logToolUsage(false, output);
+      logToolUsage(toolCallState, false, extra.ideMessenger, output);
     } else if (output?.length) {
       dispatch(
         updateToolCallOutput({
@@ -131,7 +116,7 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
         }),
       );
 
-      logToolUsage(true, output);
+      logToolUsage(toolCallState, true, extra.ideMessenger, output);
     }
 
     // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
