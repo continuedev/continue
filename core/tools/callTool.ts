@@ -3,6 +3,7 @@ import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
+import { codebaseToolImpl } from "./implementations/codebaseTool";
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { createRuleBlockImpl } from "./implementations/createRuleBlock";
 import { fetchUrlContentImpl } from "./implementations/fetchUrlContent";
@@ -164,6 +165,8 @@ async function callBuiltInTool(
       return await createRuleBlockImpl(args, extras);
     case BuiltInToolNames.RequestRule:
       return await requestRuleImpl(args, extras);
+    case BuiltInToolNames.CodebaseTool:
+      return await codebaseToolImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

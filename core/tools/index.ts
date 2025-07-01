@@ -1,4 +1,5 @@
 import { ConfigDependentToolParams, IDE, Tool } from "..";
+import { codebaseTool } from "./definitions/codebaseTool";
 import { createNewFileTool } from "./definitions/createNewFile";
 import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
@@ -37,7 +38,12 @@ export const getConfigDependentToolDefinitions = (
 ): Tool[] => [
   requestRuleTool(params),
   ...(params.enableExperimentalTools
-    ? [searchAndReplaceInFileTool, viewRepoMapTool, viewSubdirectoryTool]
+    ? [
+        searchAndReplaceInFileTool,
+        viewRepoMapTool,
+        viewSubdirectoryTool,
+        codebaseTool,
+      ]
     : [editFileTool]),
 ];
 
