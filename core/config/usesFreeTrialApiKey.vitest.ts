@@ -1,5 +1,7 @@
+import { SecretType } from "@continuedev/config-yaml";
 import { beforeEach, expect, test, vi } from "vitest";
 import { BrowserSerializedContinueConfig } from "..";
+import { usesFreeTrialApiKey } from "./usesFreeTrialApiKey";
 
 // Create the mock before importing anything else
 const mockDecodeSecretLocation = vi.fn();
@@ -13,10 +15,6 @@ vi.mock("@continuedev/config-yaml", () => ({
   },
   decodeSecretLocation: mockDecodeSecretLocation,
 }));
-
-// Import after mocking
-const { usesFreeTrialApiKey } = await import("./usesFreeTrialApiKey");
-const { SecretType } = await import("@continuedev/config-yaml");
 
 beforeEach(() => {
   mockDecodeSecretLocation.mockReset();
