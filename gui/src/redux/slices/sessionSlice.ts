@@ -203,6 +203,28 @@ export const sessionSlice = createSlice({
 
       state.isStreaming = true;
     },
+    truncateHistoryToMessage: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        index: number;
+      }>,
+    ) => {
+      const { index } = payload;
+
+      if (state.history.length && index < state.history.length) {
+        state.codeBlockApplyStates.curIndex = 0;
+        state.history = state.history.slice(0, index + 1).concat({
+          message: {
+            id: uuidv4(),
+            role: "assistant",
+            content: "", // IMPORTANT - this is subsequently updated by response streaming
+          },
+          contextItems: [],
+        });
+      }
+    },
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
       state.history.splice(action.payload - 1, 2);
@@ -676,6 +698,7 @@ export const {
   addPromptCompletionPair,
   setActive,
   submitEditorAndInitAtIndex,
+  truncateHistoryToMessage,
   updateHistoryItemAtIndex,
   clearLastEmptyResponse,
   setMainEditorContentTrigger,
