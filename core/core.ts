@@ -1021,6 +1021,7 @@ export class Core {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
+      isInAgentMode: boolean;
     }>,
   ) => {
     const { config } = await this.configHandler.loadConfig();
@@ -1068,6 +1069,7 @@ export class Core {
         reranker: config.selectedModelByRole.rerank,
         fetch: (url, init) =>
           fetchwithRequestOptions(url, init, config.requestOptions),
+        isInAgentMode: msg.data.isInAgentMode,
       });
 
       void Telemetry.capture(

@@ -85,12 +85,15 @@ export async function retrieveContextItemsFromEmbeddings(
       );
       return [];
     }
-    return [
-      {
-        ...INSTRUCTIONS_BASE_ITEM,
-        content: "No results were found. Try using other tools.",
-      },
-    ];
+    if (extras.isInAgentMode) {
+      return [
+        {
+          ...INSTRUCTIONS_BASE_ITEM,
+          content: "No results were found. Try using other tools.",
+        },
+      ];
+    }
+    return [];
   }
 
   return [

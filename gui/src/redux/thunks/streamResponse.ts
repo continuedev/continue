@@ -68,6 +68,7 @@ export const streamResponseThunk = createAsyncThunk<
           defaultContextProviders,
           availableSlashCommands: state.config.config.slashCommands,
           dispatch,
+          getState,
         });
 
         // symbols for both context items AND selected codeblocks
@@ -77,7 +78,7 @@ export const streamResponseThunk = createAsyncThunk<
             .map((item) => item.uri!.value),
           ...selectedCode.map((rif) => rif.filepath),
         ];
-        dispatch(updateFileSymbolsFromFiles(filesForSymbols));
+        void dispatch(updateFileSymbolsFromFiles(filesForSymbols));
 
         dispatch(
           updateHistoryItemAtIndex({

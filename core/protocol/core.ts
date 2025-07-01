@@ -109,6 +109,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
+      isInAgentMode: boolean;
     },
     ContextItemWithId[],
   ];
