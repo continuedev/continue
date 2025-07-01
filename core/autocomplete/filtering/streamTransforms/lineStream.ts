@@ -67,13 +67,47 @@ function shouldRemoveLineBeforeStart(line: string): boolean {
   );
 }
 
-function shouldChangeLineAndStop(line: string): string | undefined {
+export function shouldChangeLineAndStop(line: string): string | undefined {
   if (line.trimStart() === "```") {
     return line;
   }
 
+  // Check if [/CODE] appears in the line
   if (line.includes(CODE_STOP_BLOCK)) {
-    return line.split(CODE_STOP_BLOCK)[0].trimEnd();
+    const stopBlockIndex = line.indexOf(CODE_STOP_BLOCK);
+
+    // Check if [/CODE] is preceded by a non-whitespace character
+    // If so, it might be part of an identifier, so don't handle it
+    if (stopBlockIndex > 0) {
+      const charBefore = line[stopBlockIndex - 1];
+      if (charBefore && !charBefore.match(/\s/)) {
+        return undefined; // Don't handle [/CODE] that's part of an identifier
+      }
+    }
+
+    // Check if [/CODE] appears to be inside quotes
+    // Simple heuristic: count unmatched quotes before the stop block
+    const beforeStopBlock = line.substring(0, stopBlockIndex);
+    const singleQuotes = (beforeStopBlock.match(/'/g) || []).length;
+    const doubleQuotes = (beforeStopBlock.match(/"/g) || []).length;
+
+    // If there's an odd number of quotes before [/CODE], we're likely inside quotes
+    if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
+      return undefined; // Don't handle [/CODE] inside quotes
+    }
+
+    // Get the trimmed line to check if [/CODE] is at logical start
+    const trimmedLine = line.trimStart();
+
+    if (trimmedLine.startsWith(CODE_STOP_BLOCK)) {
+      // [/CODE] is at the logical start (after whitespace only)
+      if (trimmedLine === CODE_STOP_BLOCK) {
+        return line; // Return the whole line including leading whitespace
+      }
+    }
+
+    // [/CODE] appears after some content (separated by whitespace) - return part before
+    return beforeStopBlock.trimEnd();
   }
 
   return undefined;
@@ -413,7 +447,54 @@ export async function* stopAtLines(
   linesToStopAt: string[] = LINES_TO_STOP_AT,
 ): LineStream {
   for await (const line of stream) {
-    if (linesToStopAt.some((stopAt) => line.trim().includes(stopAt))) {
+    let shouldStop = false;
+
+    // Check each stop phrase
+    for (const stopAt of linesToStopAt) {
+      if (line.includes(stopAt)) {
+        const stopAtIndex = line.indexOf(stopAt);
+
+        // Check if stop phrase is preceded by a non-whitespace character
+        // If so, it might be part of an identifier, so don't handle it
+        if (stopAtIndex > 0) {
+          const charBefore = line[stopAtIndex - 1];
+          if (charBefore && !charBefore.match(/\s/)) {
+            continue; // Don't handle stop phrase that's part of an identifier
+          }
+        }
+
+        // Check if stop phrase appears to be inside quotes
+        // Simple heuristic: count unmatched quotes before the stop phrase
+        const beforeStopPhrase = line.substring(0, stopAtIndex);
+        const singleQuotes = (beforeStopPhrase.match(/'/g) || []).length;
+        const doubleQuotes = (beforeStopPhrase.match(/"/g) || []).length;
+
+        // If there's an odd number of quotes before stop phrase, we're likely inside quotes
+        if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
+          continue; // Don't handle stop phrase inside quotes
+        }
+
+        // Get the trimmed line to check if stop phrase is at logical start
+        const trimmedLine = line.trimStart();
+
+        if (trimmedLine.startsWith(stopAt)) {
+          // Stop phrase is at the logical start (after whitespace only) - should stop
+          shouldStop = true;
+          break;
+        } else {
+          // Stop phrase appears after some content - check if it's separated by whitespace
+          const contentBeforeStopPhrase = beforeStopPhrase.trimEnd();
+          if (contentBeforeStopPhrase.length < beforeStopPhrase.length) {
+            // There's whitespace before the stop phrase, so it's properly separated
+            shouldStop = true;
+            break;
+          }
+          // If no whitespace separation, it's part of larger text, so continue
+        }
+      }
+    }
+
+    if (shouldStop) {
       fullStop();
       break;
     }
