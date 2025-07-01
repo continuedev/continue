@@ -1,7 +1,4 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import Image from "@tiptap/extension-image";
-import { Paragraph } from "@tiptap/extension-paragraph";
-import { Text } from "@tiptap/extension-text";
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
@@ -10,44 +7,35 @@ import {
   MessageContent,
   MessagePart,
   RangeInFile,
-  SlashCommandDescription,
-  TextMessagePart,
+  SlashCommandDescWithSource,
 } from "core";
-import { ctxItemToRifWithContents } from "core/commands/util";
-import { renderChatMessage, stripImages } from "core/util/messageContent";
-import { getUriFileExtension } from "core/util/uri";
+import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
-import { CodeBlock, Mention, PromptBlock } from "../extensions";
-
-interface MentionAttrs {
-  label: string;
-  id: string;
-  itemType?: string;
-  query?: string;
-}
+import { processEditorContent } from "./processEditorContent";
+import { renderSlashCommandPrompt } from "./renderSlashCommand";
+import { GetContextRequest } from "./types";
 
 interface ResolveEditorContentInput {
   editorState: JSONContent;
   modifiers: InputModifiers;
   ideMessenger: IIdeMessenger;
   defaultContextProviders: DefaultContextProvider[];
-  availableSlashCommands: SlashCommandDescription[];
+  availableSlashCommands: SlashCommandDescWithSource[];
   dispatch: Dispatch;
 }
 
-type ResolveEditorContentOutput = [
-  ContextItemWithId[],
-  RangeInFile[],
-  MessageContent,
-  (
+interface ResolveEditorContentOutput {
+  selectedContextItems: ContextItemWithId[];
+  selectedCode: RangeInFile[];
+  content: MessageContent;
+  legacyCommandWithInput:
     | {
-        command: SlashCommandDescription;
+        command: SlashCommandDescWithSource;
         input: string;
       }
-    | undefined
-  ),
-];
+    | undefined;
+}
 
 /**
  * This function converts the input from the editor to a string, resolving any context items
@@ -61,26 +49,43 @@ export async function resolveEditorContent({
   availableSlashCommands,
   dispatch,
 }: ResolveEditorContentInput): Promise<ResolveEditorContentOutput> {
-  const { parts, contextItemAttrs, selectedCode, slashCommandName } =
-    processEditorContent(editorState);
-
-  const slashCommandWithInput = processSlashCommand(
-    slashCommandName,
-    availableSlashCommands,
+  const {
     parts,
+    contextRequests: editorContextRequests,
+    selectedCode,
+    slashCommandName,
+  } = processEditorContent(editorState);
+
+  const {
+    slashedParts,
+    contextRequests: slashContextRequests,
+    legacyCommandWithInput,
+  } = await renderSlashCommandPrompt(
+    ideMessenger,
+    slashCommandName,
+    parts,
+    availableSlashCommands,
+    selectedCode,
   );
 
-  const shouldGatherContext = modifiers.useCodebase || slashCommandWithInput;
+  const contextRequests = [...editorContextRequests, ...slashContextRequests];
+
+  const shouldGatherContext =
+    defaultContextProviders.length > 0 ||
+    modifiers.useCodebase ||
+    !modifiers.noContext ||
+    contextRequests.length > 0;
+
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(true));
   }
 
-  const contextItems = await gatherContextItems({
-    contextItemAttrs,
+  const selectedContextItems = await gatherContextItems({
+    contextRequests,
     modifiers,
     ideMessenger,
     defaultContextProviders,
-    parts,
+    parts: slashedParts,
     selectedCode,
   });
 
@@ -88,140 +93,11 @@ export async function resolveEditorContent({
     dispatch(setIsGatheringContext(false));
   }
 
-  return [contextItems, selectedCode, parts, slashCommandWithInput];
-}
-
-/**
- * Processes editor content and extracts parts, context items, code, and slash commands
- */
-function processEditorContent(editorState: JSONContent) {
-  const contextItemAttrs: MentionAttrs[] = [];
-  const selectedCode: RangeInFile[] = [];
-  let slashCommandName: string | undefined;
-
-  const parts = (editorState?.content || []).reduce<MessagePart[]>(
-    (parts, p) => {
-      switch (p.type) {
-        case PromptBlock.name: {
-          slashCommandName = resvolePromptBlock(p);
-        }
-
-        case Paragraph.name: {
-          const [text, ctxItems] = resolveParagraph(p);
-
-          contextItemAttrs.push(...ctxItems);
-
-          if (!text) return parts;
-
-          // Merge with previous text part if possible
-          if (parts[parts.length - 1]?.type === "text") {
-            (parts[parts.length - 1] as TextMessagePart).text += "\n" + text;
-            return parts;
-          }
-
-          return [...parts, { type: "text", text }];
-        }
-
-        case CodeBlock.name: {
-          if (!p.attrs?.item) {
-            console.warn("codeBlock has no item attribute");
-            return parts;
-          }
-
-          const contextItem = p.attrs.item as ContextItemWithId;
-          const rif = ctxItemToRifWithContents(contextItem, true);
-          selectedCode.push(rif);
-
-          // If editing, only include in selectedCode
-          if (contextItem.editing) {
-            return parts;
-          }
-
-          const fileExtension = getUriFileExtension(rif.filepath);
-          const codeText = [
-            "\n\n```",
-            fileExtension,
-            " ",
-            contextItem.description,
-            "\n",
-            contextItem.content,
-            "\n```",
-          ].join("");
-
-          if (parts[parts.length - 1]?.type === "text") {
-            (parts[parts.length - 1] as TextMessagePart).text +=
-              "\n" + codeText;
-            return parts;
-          }
-
-          return [...parts, { type: "text", text: codeText }];
-        }
-
-        case Image.name: {
-          return [
-            ...parts,
-            {
-              type: "imageUrl",
-              imageUrl: { url: p.attrs?.src },
-            },
-          ];
-        }
-
-        default: {
-          console.warn("Unexpected content type", p.type);
-          return parts;
-        }
-      }
-    },
-    [],
-  );
-
-  return { parts, contextItemAttrs, selectedCode, slashCommandName };
-}
-
-/**
- * Processes slash commands and prepares the command with input
- */
-function processSlashCommand(
-  slashCommandName: string | undefined,
-  availableSlashCommands: SlashCommandDescription[],
-  parts: MessagePart[],
-): { command: SlashCommandDescription; input: string } | undefined {
-  if (!slashCommandName) return;
-
-  const command = availableSlashCommands.find(
-    (c) => c.name === slashCommandName,
-  );
-
-  if (!command) return;
-
-  const lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
-  const lastTextPart = parts[lastTextIndex] as TextMessagePart;
-
-  const originalPrompt = command.prompt ? " " + command.prompt : "";
-
-  let input: string;
-
-  /**
-   * Although we no longer render slash command <span /> tags from the editor,
-   * we are inserting a slash command style text back into the text here.
-   * This is a a hack, but there's a number of assumptions in `core` that there
-   * is slash command text at the beginning of the text in order to process slash commands.
-   */
-  if (lastTextPart) {
-    input = renderChatMessage({
-      role: "user",
-      content: lastTextPart.text,
-    }).trimStart();
-    lastTextPart.text = `/${command.name}${originalPrompt} ${lastTextPart.text}`;
-  } else {
-    input = "";
-    parts.push({ type: "text", text: `/${command.name}${originalPrompt}` });
-  }
-
   return {
-    command,
-    input,
+    selectedContextItems,
+    selectedCode,
+    content: slashedParts,
+    legacyCommandWithInput,
   };
 }
 
@@ -229,26 +105,44 @@ function processSlashCommand(
  * Gathers context items from various sources
  */
 async function gatherContextItems({
-  contextItemAttrs,
+  contextRequests,
   modifiers,
   ideMessenger,
   defaultContextProviders,
   parts,
   selectedCode,
 }: {
-  contextItemAttrs: MentionAttrs[];
+  contextRequests: GetContextRequest[];
   modifiers: InputModifiers;
   ideMessenger: IIdeMessenger;
   defaultContextProviders: DefaultContextProvider[];
   parts: MessagePart[];
   selectedCode: RangeInFile[];
 }): Promise<ContextItemWithId[]> {
+  const defaultRequests: GetContextRequest[] = defaultContextProviders.map(
+    (def) => ({
+      provider: def.name,
+      query: def.query,
+    }),
+  );
+  const withDefaults = [...contextRequests, ...defaultRequests];
+  const deduplicatedInputs = withDefaults.reduce<GetContextRequest[]>(
+    (acc, item) => {
+      if (
+        !acc.some((i) => i.provider === item.provider && i.query === item.query)
+      ) {
+        acc.push(item);
+      }
+      return acc;
+    },
+    [],
+  );
   let contextItems: ContextItemWithId[] = [];
 
   // Process context item attributes
-  for (const item of contextItemAttrs) {
+  for (const item of deduplicatedInputs) {
     const result = await ideMessenger.request("context/getContextItems", {
-      name: item.itemType === "contextProvider" ? item.id : item.itemType!,
+      name: item.provider,
       query: item.query ?? "",
       fullInput: stripImages(parts),
       selectedCode,
@@ -259,7 +153,10 @@ async function gatherContextItems({
   }
 
   // cmd+enter to use codebase
-  if (modifiers.useCodebase) {
+  if (
+    modifiers.useCodebase &&
+    !deduplicatedInputs.some((item) => item.provider === "codebase")
+  ) {
     const result = await ideMessenger.request("context/getContextItems", {
       name: "codebase",
       query: "",
@@ -272,62 +169,51 @@ async function gatherContextItems({
     }
   }
 
-  // Include default context providers
-  const defaultContextItems = await Promise.all(
-    defaultContextProviders.map(async (provider) => {
-      const result = await ideMessenger.request("context/getContextItems", {
-        name: provider.name,
-        query: provider.query ?? "",
-        fullInput: stripImages(parts),
-        selectedCode,
-      });
-      if (result.status === "success") {
-        return result.content;
-      } else {
-        return [];
+  // noContext modifier adds currently open file if it's not already present
+  if (
+    !modifiers.noContext &&
+    !deduplicatedInputs.some((item) => item.provider === "currentFile")
+  ) {
+    const currentFileResponse = await ideMessenger.request(
+      "context/getContextItems",
+      {
+        name: "currentFile",
+        query: "non-mention-usage",
+        fullInput: "",
+        selectedCode: [],
+      },
+    );
+    if (currentFileResponse.status === "success") {
+      const currentFile = currentFileResponse.content[0];
+      if (currentFile.uri?.value) {
+        currentFile.id = {
+          providerTitle: "file",
+          itemId: currentFile.uri.value,
+        };
+        contextItems.unshift(currentFile);
       }
-    }),
-  );
-  contextItems.push(...defaultContextItems.flat());
-
-  return contextItems;
-}
-
-function findLastIndex<T>(
-  array: T[],
-  predicate: (value: T, index: number, obj: T[]) => boolean,
-): number {
-  for (let i = array.length - 1; i >= 0; i--) {
-    if (predicate(array[i], i, array)) {
-      return i;
     }
   }
-  return -1; // if no element satisfies the predicate
-}
 
-function resvolePromptBlock(p: JSONContent): string | undefined {
-  return p.attrs?.item.name;
-}
-
-function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
-  const contextItems: MentionAttrs[] = [];
-
-  const text = (p.content || [])
-    .map((child) => {
-      switch (child.type) {
-        case Text.name:
-          return child.text;
-        case Mention.name:
-          contextItems.push(child.attrs as MentionAttrs);
-          return child.attrs?.renderInlineAs ?? child.attrs?.label;
-
-        default:
-          console.warn("Unexpected child type", child.type);
-          return "";
+  // Deduplicates based on either providerTitle + itemId or uri type + value
+  const deduplicatedOutputs = contextItems.reduce<ContextItemWithId[]>(
+    (acc, item) => {
+      if (
+        !acc.some(
+          (i) =>
+            (i.id.providerTitle === item.id.providerTitle &&
+              i.id.itemId === item.id.itemId) ||
+            (i.uri &&
+              item.uri &&
+              i.uri.type === item.uri.type &&
+              i.uri.value === item.uri.value),
+        )
+      ) {
+        acc.push(item);
       }
-    })
-    .join("")
-    .trimStart();
-
-  return [text, contextItems];
+      return acc;
+    },
+    [],
+  );
+  return deduplicatedOutputs;
 }

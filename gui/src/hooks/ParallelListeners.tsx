@@ -5,7 +5,7 @@ import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
-import { setConfigResult } from "../redux/slices/configSlice";
+import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
   updateEditStateApplyState,
@@ -20,6 +20,7 @@ import {
 import {
   acceptToolCall,
   addContextItemsAtIndex,
+  selectCurrentToolCall,
   setHasReasoningEnabled,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
@@ -100,6 +101,7 @@ function ParallelListeners() {
 
   const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
+      dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
@@ -107,6 +109,7 @@ function ParallelListeners() {
       if (result.status === "success") {
         await handleConfigUpdate(initial, result.content);
       }
+      dispatch(setConfigLoading(false));
     },
     [ideMessenger, handleConfigUpdate],
   );
@@ -242,6 +245,10 @@ function ParallelListeners() {
     dispatch(updateIndexingStatus(data));
   });
 
+  const autoAcceptEditToolDiffs = useAppSelector(
+    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
+  );
+  const currentToolCall = useAppSelector(selectCurrentToolCall);
   useWebviewListener(
     "updateApplyState",
     async (state) => {
@@ -257,30 +264,45 @@ function ParallelListeners() {
 
         // Handle apply status updates that are associated with current tool call
         if (
-          state.status === "closed" &&
           currentToolCallApplyState &&
           currentToolCallApplyState.streamId === state.streamId
         ) {
-          // const output: ContextItem = {
-          //   name: "Edit tool output",
-          //   content: "Completed edit",
-          //   description: "",
-          // };
-          dispatch(
-            acceptToolCall({
-              toolCallId: currentToolCallApplyState.toolCallId!,
-            }),
-          );
-          // dispatch(setToolCallOutput([]));
-          void dispatch(
-            streamResponseAfterToolCall({
-              toolCallId: currentToolCallApplyState.toolCallId!,
-            }),
-          );
+          if (state.status === "done" && autoAcceptEditToolDiffs) {
+            console.log("AUTO ACCEPTED");
+            ideMessenger.post("acceptDiff", {
+              streamId: state.streamId,
+              filepath: state.filepath,
+            });
+          }
+          if (state.status === "closed") {
+            if (currentToolCall?.status !== "canceled") {
+              dispatch(
+                acceptToolCall({
+                  toolCallId: currentToolCallApplyState.toolCallId!,
+                }),
+              );
+            }
+            // const output: ContextItem = {
+            //   name: "Edit tool output",
+            //   content: "Completed edit",
+            //   description: "",
+            // };
+            // dispatch(setToolCallOutput([]));
+            void dispatch(
+              streamResponseAfterToolCall({
+                toolCallId: currentToolCallApplyState.toolCallId!,
+              }),
+            );
+          }
         }
       }
     },
-    [currentToolCallApplyState, history],
+    [
+      currentToolCall,
+      currentToolCallApplyState,
+      autoAcceptEditToolDiffs,
+      ideMessenger,
+    ],
   );
 
   useEffect(() => {

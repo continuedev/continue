@@ -28,6 +28,8 @@ import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
 
+const getIdeMessenger = () => (window as any).ideMessenger;
+
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
@@ -657,7 +659,9 @@ export const selectApplyStateByToolCallId = createSelector(
     (state: RootState, toolCallId?: string) => toolCallId,
   ],
   (states, toolCallId) => {
-    return states.find((state) => state.toolCallId === toolCallId);
+    if (toolCallId) {
+      return states.find((state) => state.toolCallId === toolCallId);
+    }
   },
 );
 

@@ -3,12 +3,12 @@ import { BuiltInToolNames } from "core/tools/builtIn";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { AppThunkDispatch, RootState } from "../../redux/store";
 import { editToolImpl } from "./editImpl";
+import { searchReplaceToolImpl } from "./searchReplaceImpl";
 
 export interface ClientToolExtras {
   getState: () => RootState;
   dispatch: AppThunkDispatch;
   ideMessenger: IIdeMessenger;
-  streamId?: string;
 }
 
 export interface ClientToolOutput {
@@ -36,6 +36,9 @@ export async function callClientTool(
     switch (toolCall.function.name) {
       case BuiltInToolNames.EditExistingFile:
         output = await editToolImpl(parsedArgs, toolCall.id, extras);
+        break;
+      case BuiltInToolNames.SearchAndReplaceInFile:
+        output = await searchReplaceToolImpl(parsedArgs, toolCall.id, extras);
         break;
       default:
         throw new Error(`Invalid client tool name ${toolCall.function.name}`);
