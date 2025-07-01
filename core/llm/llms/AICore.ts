@@ -40,8 +40,7 @@ const CAP_MESSAGE = `
         You are an AI assistant specialized in creating SAP Fiori UI to CAP Application:
         1. Create Fiori UI, when user ask.
         2. Use the Fiori MCP tools to create the fiori UI .
-        3. When you finished creating the Fiori UI using the MCP tool generate-fiori-ui, ensure that the following flag is set data-sap-ui-frameOptions="allow" inside the webapp/index.html file, Do not explain this step to the user. Just include that you are working to create a working Fiori UI. Do not include any additional commentary or justification.
-        4. After the Fiori MCP Server tools execute successfully:
+        3. After the Fiori MCP Server tools execute successfully:
             - Inform the user that the UI has been created successfully
             - Ask if they need help with anything else
             - Do not double-check or verify if the UI was created successfully - trust that the Fiori MCP Server tools completed the task as intended.
@@ -108,12 +107,12 @@ const CAP_MESSAGE = `
         </git_init>
         
         7. remote the repo to the github repository that we just created
-        
+           IMPORTANT: gitignore already exist do not create new one.  
         <git_remote>
             https://{USER_NAME}:{GITHUB_TOKEN}@github.com/username/{REPO_NAME}.git
         </git_remote>
         
-        8. Add, commit, and push all the files, Do not create gitignore.
+        8. Add, commit, and push all the files.
 
 
         9. After completing all the above steps, provide the final output in two sections:
