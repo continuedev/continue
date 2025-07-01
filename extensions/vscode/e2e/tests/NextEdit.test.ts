@@ -33,7 +33,7 @@ describe("Next Edit", () => {
       
       await fs.writeFile(globalContextPath, JSON.stringify(globalContextWithNextEditEnabled, null, 2), "utf8");
     } else {
-      fs.writeFile(
+      await fs.writeFile(
          globalContextPath,
          JSON.stringify(
            {
@@ -104,7 +104,7 @@ describe("Next Edit", () => {
 
   it("Should accept Next Edit suggestion with Tab", async () => {
     const accepted = await NextEditActions.acceptNextEditSuggestion(editor);
-    expect (accepted).to.be.true;
+    expect(accepted).to.be.true;
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Should reject Next Edit suggestion with Esc", async () => {
