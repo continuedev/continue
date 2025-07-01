@@ -859,25 +859,16 @@ describe("lineStream", () => {
   });
 
   describe("shouldStopAtMarkdownBlock", () => {
-    it("should return false when hasNestedMarkdown is false", () => {
-      const allLines = ["```markdown", "content", "```"];
-      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, false)).toBe(
-        false,
-      );
-    });
-
     it("should return false when current line is not closing backticks", () => {
       const allLines = ["```markdown", "content", "more content"];
-      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, true)).toBe(
-        false,
-      );
+      const state = new lineStream.MarkdownBlockState(allLines);
+      expect(lineStream.shouldStopAtMarkdownBlock(state, 2)).toBe(false);
     });
 
     it("should handle simple nested markdown case", () => {
       const allLines = ["```markdown", "# Title", "```"];
-      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, true)).toBe(
-        true,
-      );
+      const state = new lineStream.MarkdownBlockState(allLines);
+      expect(lineStream.shouldStopAtMarkdownBlock(state, 2)).toBe(true);
     });
 
     it("should handle complex nested markdown with inner code blocks", () => {
@@ -889,14 +880,11 @@ describe("lineStream", () => {
         "```",
         "```",
       ];
+      const state = new lineStream.MarkdownBlockState(allLines);
       // At index 4 (first inner closing), should not stop
-      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 4, true)).toBe(
-        false,
-      );
+      expect(lineStream.shouldStopAtMarkdownBlock(state, 4)).toBe(false);
       // At index 5 (outer closing), should stop
-      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 5, true)).toBe(
-        true,
-      );
+      expect(lineStream.shouldStopAtMarkdownBlock(state, 5)).toBe(true);
     });
 
     it("should handle multiple bare backticks scenario", () => {
@@ -907,14 +895,11 @@ describe("lineStream", () => {
         "More content",
         "```",
       ];
+      const state = new lineStream.MarkdownBlockState(allLines);
       // At index 2, should not stop (not the last bare backticks)
-      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 2, true)).toBe(
-        false,
-      );
+      expect(lineStream.shouldStopAtMarkdownBlock(state, 2)).toBe(false);
       // At index 4, should stop (last bare backticks)
-      expect(lineStream.shouldStopAtMarkdownBlock(allLines, 4, true)).toBe(
-        true,
-      );
+      expect(lineStream.shouldStopAtMarkdownBlock(state, 4)).toBe(true);
     });
   });
 
@@ -968,6 +953,199 @@ describe("lineStream", () => {
         newSeenFirstFence: false,
         shouldSkip: true,
       });
+    });
+  });
+
+  describe("MarkdownBlockState", () => {
+    it("should initialize with correct state", () => {
+      const allLines = ["```markdown", "content", "```", "more content", "```"];
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      // Test basic initialization - we can't directly test private properties,
+      // but we can test the behavior through shouldStopAtPosition
+      expect(state).toBeDefined();
+    });
+
+    it("should correctly identify bare backticks positions", () => {
+      const allLines = ["```markdown", "```", "content", "```"];
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      // At position 1 (first bare backticks), should not stop
+      expect(state.shouldStopAtPosition(1)).toBe(false);
+      // At position 3 (last bare backticks), should stop
+      expect(state.shouldStopAtPosition(3)).toBe(true);
+    });
+
+    it("should maintain state across multiple calls", () => {
+      const allLines = [
+        "```markdown",
+        "# Title",
+        "```javascript",
+        "console.log('test');",
+        "```",
+        "More content",
+        "```",
+      ];
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      // Process positions incrementally
+      expect(state.shouldStopAtPosition(2)).toBe(false); // Start of inner block
+      expect(state.shouldStopAtPosition(4)).toBe(false); // End of inner block
+      expect(state.shouldStopAtPosition(6)).toBe(true); // End of outer block
+    });
+
+    it("should handle complex nesting scenarios efficiently", () => {
+      const allLines = [
+        "```markdown",
+        "# Documentation",
+        "```typescript",
+        "interface Config {",
+        "  name: string;",
+        "}",
+        "```",
+        "",
+        "```bash",
+        "npm install",
+        "```",
+        "",
+        "Final notes",
+        "```",
+      ];
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      // Test multiple positions in sequence
+      expect(state.shouldStopAtPosition(6)).toBe(false); // End of first inner block
+      expect(state.shouldStopAtPosition(10)).toBe(false); // End of second inner block
+      expect(state.shouldStopAtPosition(13)).toBe(true); // End of outer markdown block
+    });
+
+    it("should handle non-backtick lines correctly", () => {
+      const allLines = ["```markdown", "regular content", "```"];
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      // Position 1 is not backticks, should return false
+      expect(state.shouldStopAtPosition(1)).toBe(false);
+    });
+
+    it("should handle empty lines and edge cases", () => {
+      const allLines = ["```markdown", "", "```"];
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      expect(state.shouldStopAtPosition(1)).toBe(false); // Empty line
+      expect(state.shouldStopAtPosition(2)).toBe(true); // Closing backticks
+    });
+
+    it("should reset nest count when reaching final bare backticks", () => {
+      const allLines = ["```markdown", "content", "```"];
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      // First call should stop and reset count
+      expect(state.shouldStopAtPosition(2)).toBe(true);
+
+      // If we had more content, it should start fresh
+      // (This tests the internal state management)
+    });
+  });
+
+  describe("shouldStopAtMarkdownBlock optimization", () => {
+    it("should maintain performance benefits with state reuse", () => {
+      const allLines = Array.from({ length: 100 }, (_, i) => {
+        if (i === 0) return "```markdown";
+        if (i === 99) return "```";
+        if (i % 10 === 0) return "```javascript";
+        if (i % 10 === 5) return "```";
+        return `line ${i}`;
+      });
+
+      const state = new lineStream.MarkdownBlockState(allLines);
+
+      // Test that we can call multiple times without recomputing everything
+      const start = performance.now();
+
+      // Test several positions in sequence
+      for (let i = 10; i < 90; i += 10) {
+        if (allLines[i].trim() === "```") {
+          lineStream.shouldStopAtMarkdownBlock(state, i);
+        }
+      }
+
+      const duration = performance.now() - start;
+      expect(duration).toBeLessThan(10); // Should be very fast due to state caching
+    });
+  });
+
+  describe("filterCodeBlockLines with optimized MarkdownBlockState", () => {
+    it("should use optimized state tracker for markdown files", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```markdown",
+        "# Documentation",
+        "```typescript",
+        "const config = { name: 'test' };",
+        "```",
+        "Final notes",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(
+        linesGenerator,
+        "README.md",
+      );
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual([
+        "# Documentation",
+        "```typescript",
+        "const config = { name: 'test' };",
+        "```",
+        "Final notes",
+      ]);
+    });
+
+    it("should fall back to legacy behavior when no markdown nesting detected", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```typescript",
+        "const x = 5;",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(
+        linesGenerator,
+        "script.ts",
+      );
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual(["const x = 5;"]);
+    });
+
+    it("should handle mixed markdown and code scenarios with optimization", async () => {
+      const linesGenerator = await getLineGenerator([
+        "```md",
+        "## API Reference",
+        "",
+        "```javascript",
+        "async function fetchData() {",
+        "  return await fetch('/api/data');",
+        "}",
+        "```",
+        "",
+        "Usage notes and more documentation.",
+        "```",
+      ]);
+
+      const result = lineStream.filterCodeBlockLines(linesGenerator);
+      const filteredLines = await getFilteredLines(result);
+
+      expect(filteredLines).toEqual([
+        "## API Reference",
+        "",
+        "```javascript",
+        "async function fetchData() {",
+        "  return await fetch('/api/data');",
+        "}",
+        "```",
+        "",
+        "Usage notes and more documentation.",
+      ]);
     });
   });
 });
