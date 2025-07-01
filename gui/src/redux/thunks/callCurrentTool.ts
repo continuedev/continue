@@ -12,6 +12,7 @@ import {
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
@@ -100,6 +101,8 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
           ],
         }),
       );
+
+      logToolUsage(toolCallState, false, extra.ideMessenger, output);
     } else if (output?.length) {
       dispatch(
         updateToolCallOutput({
@@ -107,6 +110,8 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
           contextItems: output,
         }),
       );
+
+      logToolUsage(toolCallState, true, extra.ideMessenger, output);
     }
 
     // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
