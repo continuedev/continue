@@ -123,40 +123,35 @@ export function ContextItemsPeekItem({
   return (
     <div
       onClick={() => openContextItem(contextItem, ideMessenger)}
-      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      className="mr-2 flex cursor-pointer flex-row items-center gap-1.5 whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
       data-testid="context-items-peek-item"
     >
-      <div className="flex w-full items-center">
-        {getContextItemIcon()}
-        <div className="flex min-w-0 flex-1 gap-2 text-xs">
-          <div
-            className={`max-w-[50%] flex-shrink-0 truncate ${isUrl ? "hover:underline" : ""}`}
-          >
-            {contextItem.name}
-          </div>
-          <div
-            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
-            onClick={
-              isUrl
-                ? (e) => {
-                    if (contextItem.uri?.value) {
-                      e.stopPropagation();
-                      ideMessenger.post("openUrl", contextItem.uri.value);
-                    } else {
-                      console.error("Couldn't open url", contextItem.uri);
-                    }
-                  }
-                : undefined
-            }
-          >
-            {contextItem.uri?.type === "file"
-              ? getUriPathBasename(contextItem.description)
-              : contextItem.description}
-          </div>
-        </div>
-
+      {getContextItemIcon()}
+      <span className={`line-clamp-1 max-w-[130px] flex-shrink-0`}>
+        {contextItem.name}
+      </span>
+      <div
+        className={`group flex flex-row items-center gap-1.5 pr-1.5 text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
+        onClick={
+          isUrl
+            ? (e) => {
+                if (contextItem.uri?.value) {
+                  e.stopPropagation();
+                  ideMessenger.post("openUrl", contextItem.uri.value);
+                } else {
+                  console.error("Couldn't open url", contextItem.uri);
+                }
+              }
+            : undefined
+        }
+      >
+        <span className={`line-clamp-1 flex-1 break-all`}>
+          {contextItem.uri?.type === "file"
+            ? getUriPathBasename(contextItem.description)
+            : contextItem.description}
+        </span>
         {isUrl && (
-          <ArrowTopRightOnSquareIcon className="mx-2 h-4 w-4 flex-shrink-0 text-gray-400 opacity-0 group-hover:opacity-100" />
+          <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0 text-gray-400 opacity-80 group-hover:opacity-100" />
         )}
       </div>
     </div>

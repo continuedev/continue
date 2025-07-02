@@ -10,7 +10,7 @@ import {
   JSONModelDescription,
   PromptTemplate,
 } from "../";
-import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../llm/constructMessages";
+import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../llm/defaultSystemMessages";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigFile } from "../util/paths";
 
