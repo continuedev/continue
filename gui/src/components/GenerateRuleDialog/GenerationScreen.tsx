@@ -7,7 +7,7 @@ import {
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { createRuleFilePath } from "core/config/markdown/utils";
 import { CreateRuleBlockArgs } from "core/tools/implementations/createRuleBlock";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import Spinner from "../gui/Spinner";
@@ -50,11 +50,9 @@ export function GenerationScreen({
     useRuleGeneration(inputPrompt);
 
   // Start generation once when component mounts
-  const hasInitialized = useRef(false);
-  if (!hasInitialized.current) {
-    hasInitialized.current = true;
+  useEffect(() => {
     void generateRule();
-  }
+  }, []);
 
   // Handle form updates when generation completes
   useEffect(() => {
