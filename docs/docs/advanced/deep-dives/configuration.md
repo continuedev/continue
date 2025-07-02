@@ -26,7 +26,7 @@ To open this `config.yaml`, you need to open the assistants dropdown in the top-
 
 When editing this file, you can see the available options suggested as you type, or check the reference below. When you save a config file from the IDE, Continue will automatically refresh to take into account your changes. A config file is automatically created the first time you use Continue, and always automatically generated with default values if it doesn't exist.
 
-See the full reference for `config.yaml` [here](../../advanced/reference).
+See the full reference for `config.yaml` [here](/reference).
 
 ## Deprecated configuration methods
 
@@ -34,7 +34,7 @@ See the full reference for `config.yaml` [here](../../advanced/reference).
 View the `config.json` migration guide [here](../yaml-migration.mdx)
 :::
 
-- [`config.json`](../reference.mdx) - The original configuration format which is stored in a file at the same location as `config.yaml`
+- [`config.json`](/reference) - The original configuration format which is stored in a file at the same location as `config.yaml`
 - [`.continuerc.json`](#continuercjson) - Workspace-level configuration
 - [`config.ts`](#configts) - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
   - `~/.continue/config.ts` (MacOS / Linux)

@@ -22,7 +22,7 @@ Get Continue installed in your favorite IDE in just a few steps.
 ![move-to-right-sidebar](/img/move-to-right-sidebar.gif)
 
 :::info[Troubleshooting]
-If you have any problems, see the [troubleshooting guide](../advanced/troubleshooting) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs)
+If you have any problems, see the [troubleshooting guide](/troubleshooting) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs)
 :::
 
   </TabItem>
@@ -38,7 +38,7 @@ If you have any problems, see the [troubleshooting guide](../advanced/troublesho
 ![jetbrains-getting-started.png](/img/jetbrains-getting-started.png)
 
 :::info[Troubleshooting]
-If you have any problems, see the [troubleshooting guide](../advanced/troubleshooting) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ)
+If you have any problems, see the [troubleshooting guide](/troubleshooting) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ)
 :::
 
   </TabItem>
