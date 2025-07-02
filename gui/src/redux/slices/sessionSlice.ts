@@ -363,17 +363,13 @@ export const sessionSlice = createSlice({
               //
               // <think>Thinking text</think>
               // Text to show to the user
-              state.history.push({
-                message: {
-                  role: "thinking",
-                  content: thinkMatches[1].trim(),
-                  id: uuidv4(),
-                },
-                contextItems: [],
-              });
 
-              lastItem = state.history[state.history.length - 1];
-              lastMessage = lastItem.message;
+              lastItem.reasoning = {
+                text: thinkMatches[1].trim(),
+                startAt: Date.now(),
+                endAt: Date.now(),
+                active: false,
+              };
 
               // This is the chat message that we should show to the user.
               // We always need to push this even if it is empty,

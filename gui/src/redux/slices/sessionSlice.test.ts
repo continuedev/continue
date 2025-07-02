@@ -74,6 +74,7 @@ describe("sessionSlice streamUpdate", () => {
       curIndex: 0,
     },
     newestToolbarPreviewForInput: {},
+    isSessionMetadataLoading: false,
   });
 
   describe("Basic Chat Message", () => {
@@ -102,7 +103,7 @@ describe("sessionSlice streamUpdate", () => {
   });
 
   describe("Chat Message With Thinking", () => {
-    it("should split thinking and assistant content into separate messages", () => {
+    it("should split thinking and assistant content correctly", () => {
       const initialState = createInitialState();
       const action = {
         type: "session/streamUpdate",
@@ -117,21 +118,19 @@ describe("sessionSlice streamUpdate", () => {
 
       const newState = sessionSlice.reducer(initialState, action);
 
-      expect(newState.history).toHaveLength(3);
+      expect(newState.history).toHaveLength(2);
 
-      // Check thinking message
-      expect(newState.history[1].message.role).toBe("thinking");
-      expect(newState.history[1].message.content).toBe(
+      // Check reasoning
+      expect(newState.history[0].reasoning?.text).toBe(
         "I should send the user a response.",
       );
-      expect(newState.history[1].message.id).toBe("mock-uuid-1");
 
       // Check assistant message
-      expect(newState.history[2].message.role).toBe("assistant");
-      expect(newState.history[2].message.content).toBe(
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].message.content).toBe(
         "Here is a response to your message with thinking.",
       );
-      expect(newState.history[2].message.id).toBe("mock-uuid-2");
+      expect(newState.history[1].message.id).toBe("mock-uuid-1");
     });
   });
 
@@ -159,19 +158,18 @@ describe("sessionSlice streamUpdate", () => {
       };
 
       let newState = sessionSlice.reducer(initialState, toolCallAction);
-      expect(newState.history).toHaveLength(3);
+      expect(newState.history).toHaveLength(2);
 
-      // Check thinking message
-      expect(newState.history[1].message.role).toBe("thinking");
-      expect(newState.history[1].message.content).toBe(
+      // Check reasoning
+      expect(newState.history[0].reasoning?.text).toBe(
         "I should use a tool call.",
       );
 
       // Check generating message
-      expect(newState.history[2].message.role).toBe("assistant");
-      expect(newState.history[2].message.content).toBe("");
-      expect(newState.history[2].toolCallState?.status).toBe("generating");
-      expect(newState.history[2].toolCallState?.toolCallId).toBe("1234");
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].message.content).toBe("");
+      expect(newState.history[1].toolCallState?.status).toBe("generating");
+      expect(newState.history[1].toolCallState?.toolCallId).toBe("1234");
 
       const toolResponseAction = {
         type: "session/streamUpdate",
@@ -188,18 +186,18 @@ describe("sessionSlice streamUpdate", () => {
         ],
       };
       newState = sessionSlice.reducer(newState, toolResponseAction);
-      expect(newState.history).toHaveLength(5);
+      expect(newState.history).toHaveLength(4);
 
       // Check tool message
-      expect(newState.history[3].message.role).toBe("tool");
-      expect(newState.history[3].message.content).toBe(
+      expect(newState.history[2].message.role).toBe("tool");
+      expect(newState.history[2].message.content).toBe(
         "foo.txt\nbar.txt\nexample.php",
       );
-      expect((newState.history[3].message as any).toolCallId).toBe("1234");
+      expect((newState.history[2].message as any).toolCallId).toBe("1234");
 
       // Check final assistant message
-      expect(newState.history[4].message.role).toBe("assistant");
-      expect(newState.history[4].message.content).toBe(
+      expect(newState.history[3].message.role).toBe("assistant");
+      expect(newState.history[3].message.content).toBe(
         "I see, the tool found 3 files.",
       );
     });
@@ -229,19 +227,18 @@ describe("sessionSlice streamUpdate", () => {
       };
 
       let newState = sessionSlice.reducer(initialState, toolCallAction);
-      expect(newState.history).toHaveLength(3);
+      expect(newState.history).toHaveLength(2);
 
-      // Check thinking message
-      expect(newState.history[1].message.role).toBe("thinking");
-      expect(newState.history[1].message.content).toBe(
+      // Check reasoning
+      expect(newState.history[0].reasoning?.text).toBe(
         "I should use a tool call.",
       );
 
       // Check generating message
-      expect(newState.history[2].message.role).toBe("assistant");
-      expect(newState.history[2].message.content).toBe("");
-      expect(newState.history[2].toolCallState?.status).toBe("generating");
-      expect(newState.history[2].toolCallState?.toolCallId).toBe("1234");
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].message.content).toBe("");
+      expect(newState.history[1].toolCallState?.status).toBe("generating");
+      expect(newState.history[1].toolCallState?.toolCallId).toBe("1234");
 
       const toolResponseAction = {
         type: "session/streamUpdate",
@@ -296,23 +293,23 @@ describe("sessionSlice streamUpdate", () => {
 
       newState = sessionSlice.reducer(newState, toolResponseAction);
 
-      expect(newState.history).toHaveLength(5);
+      expect(newState.history).toHaveLength(4);
 
       // Check tool message
-      expect(newState.history[3].message.role).toBe("tool");
-      expect(newState.history[3].message.content).toBe(
+      expect(newState.history[2].message.role).toBe("tool");
+      expect(newState.history[2].message.content).toBe(
         "foo.txt\nbar.txt\nexample.php",
       );
 
       // Check response message
-      expect(newState.history[4].message.role).toBe("assistant");
-      expect(newState.history[4].message.content).toBe(
+      expect(newState.history[3].message.role).toBe("assistant");
+      expect(newState.history[3].message.content).toBe(
         "I see, the tool found 3 files.",
       );
-      expect(newState.history[4].reasoning?.text).toBe(
+      expect(newState.history[3].reasoning?.text).toBe(
         "Good, I received a list of files.",
       );
-      expect(newState.history[4].reasoning?.active).toBe(false);
+      expect(newState.history[3].reasoning?.active).toBe(false);
     });
   });
 
