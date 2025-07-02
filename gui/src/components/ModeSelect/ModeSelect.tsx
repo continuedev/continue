@@ -4,7 +4,7 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
-import { modelIsGreatWithNativeTools } from "core/llm/autodetect";
+import { modelIsGreatWithNativeTools } from "core/llm/toolSupport";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";

@@ -1,4 +1,5 @@
 import { parseProxyModelName } from "@continuedev/config-yaml";
+import { ModelDescription } from "..";
 
 export const NATIVE_TOOL_SUPPORT: Record<string, (model: string) => boolean> = {
   "continue-proxy": (model) => {
@@ -278,3 +279,116 @@ export const NATIVE_TOOL_SUPPORT: Record<string, (model: string) => boolean> = {
     return false;
   },
 };
+
+export function modelSupportsNativeTools(modelDescription: ModelDescription) {
+  if (modelDescription.capabilities?.tools !== undefined) {
+    return modelDescription.capabilities.tools;
+  }
+  const providerSupport = NATIVE_TOOL_SUPPORT[modelDescription.provider];
+  if (!providerSupport) {
+    return false;
+  }
+  return providerSupport(modelDescription.model) ?? false;
+}
+
+export const PROFICIENT_TOOL_SUPPORT: Record<
+  string,
+  (model: string) => boolean
+> = {
+  "continue-proxy": (model) => {
+    try {
+      const { provider, model: _model } = parseProxyModelName(model);
+      if (provider && _model && provider !== "continue-proxy") {
+        const fn = PROFICIENT_TOOL_SUPPORT[provider];
+        if (fn) {
+          return fn(_model);
+        }
+      }
+    } catch (e) {}
+
+    return [
+      "claude-3-5",
+      "claude-3.5",
+      "claude-3-7",
+      "claude-3.7",
+      "claude-sonnet-4",
+      "o3",
+    ].some((part) => model.toLowerCase().startsWith(part));
+  },
+  anthropic: (model) => {
+    if (
+      [
+        "claude-3-5",
+        "claude-3.5",
+        "claude-3-7",
+        "claude-3.7",
+        "claude-sonnet-4",
+      ].some((part) => model.toLowerCase().startsWith(part))
+    ) {
+      return true;
+    }
+
+    return false;
+  },
+  azure: (model) => {
+    if (model.toLowerCase().startsWith("o3")) return true;
+    return false;
+  },
+  openai: (model) => {
+    // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
+    if (model.toLowerCase().startsWith("o3")) {
+      return true;
+    }
+
+    return false;
+  },
+  gemini: (model) => {
+    return model.toLowerCase().includes("gemini-2.5");
+  },
+  vertexai: (model) => {
+    return model.toLowerCase().includes("gemini-2.5");
+  },
+  bedrock: (model) => {
+    // For Bedrock, only support Claude Sonnet models with versions 3.5/3-5 and 3.7/3-7
+    if (
+      model.toLowerCase().includes("sonnet") &&
+      [
+        "claude-3-5",
+        "claude-3.5",
+        "claude-3-7",
+        "claude-3.7",
+        "claude-sonnet-4",
+      ].some((part) => model.toLowerCase().includes(part))
+    ) {
+      return true;
+    }
+
+    return false;
+  },
+  openrouter: (model) => {
+    const supportedPrefixes = [
+      "openai/o1",
+      "openai/o3",
+      "openai/o4",
+      "anthropic/claude-3",
+      "anthropic/claude-4",
+      "microsoft/phi-3",
+    ];
+    for (const prefix of supportedPrefixes) {
+      if (model.toLowerCase().startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  },
+};
+
+export function modelIsGreatWithNativeTools(
+  modelDescription: ModelDescription,
+): boolean {
+  const providerSupport = PROFICIENT_TOOL_SUPPORT[modelDescription.provider];
+  if (!providerSupport) {
+    return false;
+  }
+  return providerSupport(modelDescription.model) ?? false;
+}

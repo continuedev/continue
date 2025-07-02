@@ -1,6 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions } from "core";
-import { modelSupportsNativeTools } from "core/llm/autodetect";
+import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { ToCoreProtocol } from "core/protocol";
 import { interceptXMLToolCalls } from "core/tools/systemMessageTools/interceptXmlToolCalls";
 import { selectActiveTools } from "../selectors/selectActiveTools";
