@@ -31,6 +31,7 @@ export function logToolUsage(
       functionName: toolCallState.toolCall?.function?.name,
       functionArgs: toolCallState.toolCall?.function?.arguments,
       toolCallArgs: safeParseToolCallArgs(toolCallState.toolCall),
+      parsedArgs: toolCallState.parsedArgs,
       output: finalOutput || toolCallState.output || [],
       succeeded: success,
     },
