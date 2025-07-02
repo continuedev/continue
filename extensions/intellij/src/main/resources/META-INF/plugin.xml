@@ -13,6 +13,10 @@
         com.intellij.modules.json
     </depends>
 
+    <depends optional="true" config-file="continueintellijextension-withGit4Idea.xml">
+        Git4Idea
+    </depends>
+
     <!-- com.intellij.openapi.module.ModuleManager.Companion is only available since this build -->
     <idea-version since-build="223.7571.182"/>
 
