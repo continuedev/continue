@@ -355,10 +355,10 @@ const getCommandsMap: (
     "continue.writeDocstringForCode": async () => {
       captureCommandTelemetry("writeDocstringForCode");
 
-      streamInlineEdit(
+      void streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
-        true,
+        false,
       );
     },
     "continue.fixCode": async () => {

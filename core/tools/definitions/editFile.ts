@@ -1,5 +1,5 @@
 import { Tool } from "../..";
-import { EDIT_CODE_INSTRUCTIONS } from "../../llm/constructMessages";
+import { EDIT_CODE_INSTRUCTIONS } from "../../llm/defaultSystemMessages";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export interface EditToolArgs {

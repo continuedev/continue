@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions } from "core";
+import { LLMFullCompletionOptions } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -9,38 +9,40 @@ import {
   abortStream,
   addPromptCompletionPair,
   setActive,
+  setAppliedRulesAtIndex,
   setInactive,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import {
+  constructMessages,
+  getBaseSystemMessage,
+} from "../util/constructMessages";
 import { callCurrentTool } from "./callCurrentTool";
 
 export const streamNormalInput = createAsyncThunk<
   void,
   {
-    messages: ChatMessage[];
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async (
-    { messages, legacySlashCommandData },
-    { dispatch, extra, getState },
-  ) => {
-    // Gather state
+  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
-    const streamAborter = state.session.streamAborter;
     if (!selectedChatModel) {
-      throw new Error("Default model not defined");
+      throw new Error("No chat model selected");
     }
 
-    let completionOptions: LLMFullCompletionOptions = {};
+    // Get tools
     const activeTools = selectActiveTools(state);
     const toolsSupported = modelSupportsTools(selectedChatModel);
+
+    // Construct completion options
+    let completionOptions: LLMFullCompletionOptions = {};
     if (toolsSupported && activeTools.length > 0) {
       completionOptions = {
         tools: activeTools,
@@ -55,20 +57,46 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
+    // Construct messages (excluding system message)
+    const baseSystemMessage = getBaseSystemMessage(
+      state.session.mode,
+      selectedChatModel,
+    );
+
+    const withoutMessageIds = state.session.history.map((item) => {
+      const { id, ...messageWithoutId } = item.message;
+      return { ...item, message: messageWithoutId };
+    });
+    const { messages, appliedRules, appliedRuleIndex } = constructMessages(
+      withoutMessageIds,
+      baseSystemMessage,
+      state.config.config.rules,
+      state.ui.ruleSettings,
+    );
+
+    // TODO parallel tool calls will cause issues with this
+    // because there will be multiple tool messages, so which one should have applied rules?
+    dispatch(
+      setAppliedRulesAtIndex({
+        index: appliedRuleIndex,
+        appliedRules: appliedRules,
+      }),
+    );
+
     dispatch(setActive());
 
-    // Send request
+    // Send request and stream response
+    const streamAborter = state.session.streamAborter;
     const gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
-        messages,
+        messages: messages,
         legacySlashCommandData,
       },
       streamAborter.signal,
     );
 
-    // Stream response
     let next = await gen.next();
     while (!next.done) {
       if (!getState().session.isStreaming) {
