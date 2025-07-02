@@ -24,7 +24,7 @@ export function ToolTruncateHistoryIcon({
   }
   return (
     <ToolbarButtonWithTooltip
-      tooltipContent="Truncate chat to this message"
+      tooltipContent="Trim chat to this message"
       onClick={() => {
         dispatch(
           truncateHistoryToMessage({
@@ -34,7 +34,7 @@ export function ToolTruncateHistoryIcon({
         mainEditor?.commands.focus();
       }}
     >
-      <BarsArrowUpIcon className="h-2.5 w-2.5 flex-shrink-0" />
+      <BarsArrowUpIcon className="h-3 w-3 flex-shrink-0" />
     </ToolbarButtonWithTooltip>
   );
 }
