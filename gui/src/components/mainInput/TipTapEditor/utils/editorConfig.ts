@@ -20,7 +20,8 @@ import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
-import { getFontSize, isJetBrains } from "../../../../util";
+import { isJetBrains } from "../../../../util";
+import { useFontSize } from "../../../ui";
 import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
@@ -96,6 +97,7 @@ export function createEditorConfig(options: {
     props.availableSlashCommands,
   );
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
+  const fontSize = useFontSize();
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -333,8 +335,8 @@ export function createEditorConfig(options: {
         "data-testid": props.isMainInput
           ? "editor-input-main"
           : `editor-input-${props.inputId}`,
-        class: "ProseMirror outline-none overflow-hidden",
-        style: `font-size: ${getFontSize()}px;`,
+        class: "tiptap ProseMirror outline-none overflow-hidden",
+        style: `font-size: ${fontSize}px;`,
       },
     },
     content: props.editorState,
