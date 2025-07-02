@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.Icons
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.intellij.openapi.Disposable
@@ -50,7 +51,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     }
 
     override fun getIcon(): Icon = if (isLoading) animatedIcon else
-        IconLoader.getIcon("/icons/continue.svg", javaClass)
+        Icons.Continue
 
     fun setLoading(loading: Boolean) {
         isLoading = loading
