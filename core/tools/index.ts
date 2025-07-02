@@ -49,5 +49,5 @@ export const getConfigDependentToolDefinitions = (
 
 export const getToolsForIde = async (ide: IDE) =>
   (await ide.isWorkspaceRemote())
-    ? baseToolDefinitions
+    ? [...baseToolDefinitions]
     : [...baseToolDefinitions, ...localOnlyToolDefinitions];
