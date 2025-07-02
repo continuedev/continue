@@ -1,8 +1,10 @@
 import { ContextItem, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
+import { DataLogger } from "../data/log";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
+import { codebaseToolImpl } from "./implementations/codebaseTool";
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { createRuleBlockImpl } from "./implementations/createRuleBlock";
 import { fetchUrlContentImpl } from "./implementations/fetchUrlContent";
@@ -164,9 +166,31 @@ async function callBuiltInTool(
       return await createRuleBlockImpl(args, extras);
     case BuiltInToolNames.RequestRule:
       return await requestRuleImpl(args, extras);
+    case BuiltInToolNames.CodebaseTool:
+      return await codebaseToolImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }
+}
+
+function logToolUsage(
+  toolCall: ToolCall,
+  args: Record<string, any>,
+  contextItems: ContextItem[],
+  success: boolean,
+) {
+  console.log(toolCall.function.arguments);
+  void DataLogger.getInstance().logDevData({
+    name: "toolUsage",
+    data: {
+      toolCallId: toolCall.id,
+      functionName: toolCall.function.name,
+      functionArgs: toolCall.function.arguments,
+      toolCallArgs: args,
+      output: contextItems,
+      succeeded: success,
+    },
+  });
 }
 
 // Handles calls for core/non-client tools
@@ -190,6 +214,7 @@ export async function callTool(
         item.icon = tool.faviconUrl;
       });
     }
+    logToolUsage(toolCall, args, contextItems, true);
     return {
       contextItems,
       errorMessage: undefined,
@@ -199,6 +224,7 @@ export async function callTool(
     if (e instanceof Error) {
       errorMessage = e.message;
     }
+    logToolUsage(toolCall, {}, [], false);
     return {
       contextItems: [],
       errorMessage,

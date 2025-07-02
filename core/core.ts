@@ -872,7 +872,7 @@ export class Core {
       this.messenger.send("toolCallPartialOutput", params);
     };
 
-    return await callTool(tool, toolCall, {
+    const result = await callTool(tool, toolCall, {
       config,
       ide: this.ide,
       llm: config.selectedModelByRole.chat,
@@ -883,6 +883,8 @@ export class Core {
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
     });
+
+    return result;
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -1104,6 +1106,10 @@ export class Core {
         providerTitle: provider.description.title,
         itemId: uuidv4(),
       };
+
+      void Telemetry.capture("context_provider_get_context_items", {
+        name: provider.description.title,
+      });
 
       const items = await provider.getContextItems(query, {
         config,

@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 
+import { afterAll, describe, expect, test } from "vitest";
 import { contextProviderClassFromName } from ".";
 import {
   ContextProviderExtras,
@@ -8,7 +9,7 @@ import {
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { LLMLogger } from "../../llm/logger";
-import { TEST_DIR } from "../../test/testDir";
+import { setUpTestDir, tearDownTestDir, TEST_DIR } from "../../test/testDir";
 import FileSystemIde from "../../util/filesystem";
 
 const CONTEXT_PROVIDERS_TO_TEST: ContextProviderWithParams[] = [
@@ -25,6 +26,7 @@ const CONTEXT_PROVIDERS_TO_TEST: ContextProviderWithParams[] = [
 async function getContextProviderExtras(
   fullInput: string,
 ): Promise<ContextProviderExtras> {
+  setUpTestDir();
   const ide = new FileSystemIde(TEST_DIR);
   const ideSettingsPromise = ide.getIdeSettings();
   const llmLogger = new LLMLogger();
@@ -52,6 +54,10 @@ async function getContextProviderExtras(
 }
 
 describe.skip("Should successfully run all context providers", () => {
+  afterAll(() => {
+    tearDownTestDir();
+  });
+
   const extrasPromise = getContextProviderExtras("Test");
 
   CONTEXT_PROVIDERS_TO_TEST.forEach((provider) => {

@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
+import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
-import { cancelCurrentToolCall } from "../../../../redux/thunks/cancelCurrentToolCall";
 import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
@@ -50,7 +50,11 @@ export function LumpToolbar() {
       } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
-        void dispatch(cancelCurrentToolCall());
+        void dispatch(
+          cancelToolCall({
+            toolCallId: toolCallState.toolCallId,
+          }),
+        );
       }
     };
 

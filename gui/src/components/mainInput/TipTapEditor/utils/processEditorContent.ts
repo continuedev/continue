@@ -37,6 +37,7 @@ function resolveParagraph(p: JSONContent): [string, GetContextRequest[]] {
           contextRequests.push({
             provider:
               attrs.itemType === "contextProvider" ? attrs.id : attrs.itemType!,
+            query: attrs.query,
           });
           return child.attrs?.renderInlineAs ?? child.attrs?.label;
 
