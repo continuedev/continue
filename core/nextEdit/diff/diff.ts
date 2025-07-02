@@ -125,10 +125,15 @@ export function checkFim(
   oldEditRange: string,
   newEditRange: string,
   cursorPosition: { line: number; character: number },
-): {
-  isFim: boolean;
-  fimText: string;
-} {
+):
+  | {
+      isFim: true;
+      fimText: string;
+    }
+  | {
+      isFim: false;
+      fimText: null;
+    } {
   // Find the common prefix.
   let prefixLength = 0;
   while (
@@ -177,11 +182,13 @@ export function checkFim(
   // Check if the old text is completely preserved (no deletion).
   const noTextDeleted = suffixStartInOld - prefixLength <= 0;
 
-  // Extract the content between prefix and suffix in the new string.
-  const fimText = newEditRange.substring(prefixLength, suffixStartInNew);
+  const isFim = cursorBetweenPrefixAndSuffix && noTextDeleted;
 
-  return {
-    isFim: cursorBetweenPrefixAndSuffix && noTextDeleted,
-    fimText,
-  };
+  if (isFim) {
+    // Extract the content between prefix and suffix in the new string.
+    const fimText = newEditRange.substring(prefixLength, suffixStartInNew);
+    return { isFim, fimText };
+  } else {
+    return { isFim, fimText: null };
+  }
 }
