@@ -73,10 +73,41 @@ export function History() {
   const platform = useMemo(() => getPlatform(), []);
 
   const filteredAndSortedSessions: SessionMetadata[] = useMemo(() => {
-    const sessionIds = minisearch
-      .search(searchTerm, {
-        fuzzy: 0.1,
-      })
+    // 1. Exact phrase matching
+    const exactResults = minisearch.search(searchTerm, {
+      fuzzy: false,
+    });
+
+    // 2. Fuzzy matching with higher tolerance
+    const fuzzyResults = minisearch.search(searchTerm, {
+      fuzzy: 0.3,
+    });
+
+    // 3. Prefix matching for partial words
+    const prefixResults = minisearch.search(searchTerm, {
+      prefix: true,
+      fuzzy: 0.2,
+    });
+
+    // Combine results, with exact matches having higher priority
+    const allResults = [
+      ...exactResults.map((r) => ({ ...r, priority: 3 })),
+      ...fuzzyResults.map((r) => ({ ...r, priority: 2 })),
+      ...prefixResults.map((r) => ({ ...r, priority: 1 })),
+    ];
+
+    // Remove duplicates while preserving highest priority
+    const uniqueResults = allResults.reduce((acc, result) => {
+      const existing = acc.find((r) => r.id === result.id);
+      if (!existing || existing.priority < result.priority) {
+        acc = acc.filter((r) => r.id !== result.id);
+        acc.push(result);
+      }
+      return acc;
+    }, [] as any[]);
+
+    const sessionIds = uniqueResults
+      .sort((a, b) => b.priority - a.priority || b.score - a.score)
       .map((result) => result.id);
 
     return allSessionMetadata
