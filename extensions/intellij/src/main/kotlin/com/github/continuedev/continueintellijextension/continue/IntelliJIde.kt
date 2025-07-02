@@ -18,6 +18,7 @@ import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
@@ -294,23 +295,26 @@ class IntelliJIDE(
         continuePluginService.diffManager?.showDiff(filepath, newContents, stepIndex)
     }
 
-    override suspend fun getOpenFiles(): List<String> {
-        val fileEditorManager = FileEditorManager.getInstance(project)
-        return fileEditorManager.openFiles.mapNotNull { it.toUriOrNull() }.toList()
-    }
-
-    override suspend fun getCurrentFile(): Map<String, Any>? {
-        val fileEditorManager = FileEditorManager.getInstance(project)
-        val editor = fileEditorManager.selectedTextEditor
-        val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
-        return virtualFile?.toUriOrNull()?.let {
-            mapOf(
-                "path" to it,
-                "contents" to editor.document.text,
-                "isUntitled" to false
-            )
+    override suspend fun getOpenFiles(): List<String> =
+        withContext(Dispatchers.EDT) {
+            FileEditorManager.getInstance(project).openFiles
+                .mapNotNull { it.toUriOrNull() }
+                .toList()
         }
-    }
+
+    override suspend fun getCurrentFile(): Map<String, Any>? =
+        withContext(Dispatchers.EDT) {
+            val fileEditorManager = FileEditorManager.getInstance(project)
+            val document = fileEditorManager.selectedTextEditor?.document
+            val virtualFile = document?.let { FileDocumentManager.getInstance().getFile(it) }
+            virtualFile?.toUriOrNull()?.let {
+                mapOf(
+                    "path" to it,
+                    "contents" to document.text,
+                    "isUntitled" to false
+                )
+            }
+        }
 
     override suspend fun getPinnedFiles(): List<String> {
         // Returning open files for now as per existing code
