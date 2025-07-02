@@ -31,6 +31,73 @@ function isMarkdownFile(filename: string): boolean {
   return ["md", "markdown", "gfm"].includes(ext || "");
 }
 
+/**
+ * Optimized state tracker for markdown block analysis to avoid recomputing on each call.
+ */
+class MarkdownBlockStateTracker {
+  private trimmedLines: string[];
+  private bareBacktickPositions: number[];
+  private markdownNestCount: number = 0;
+  private lastProcessedIndex: number = -1;
+
+  constructor(allLines: string[]) {
+    this.trimmedLines = allLines.map((l) => l.trim());
+    // Pre-compute positions of all bare backtick lines for faster lookup
+    this.bareBacktickPositions = [];
+    for (let i = 0; i < this.trimmedLines.length; i++) {
+      if (this.trimmedLines[i].match(/^`+$/)) {
+        this.bareBacktickPositions.push(i);
+      }
+    }
+  }
+
+  /**
+   * Determines if we should stop at the given markdown block position.
+   * Maintains state across calls to avoid redundant computation.
+   */
+  shouldStopAtPosition(currentIndex: number): boolean {
+    if (this.trimmedLines[currentIndex] !== "```") {
+      return false;
+    }
+
+    // Process any lines we haven't seen yet up to currentIndex
+    for (let j = this.lastProcessedIndex + 1; j <= currentIndex; j++) {
+      const currentLine = this.trimmedLines[j];
+
+      if (this.markdownNestCount > 0) {
+        // Inside a markdown block
+        if (currentLine.match(/^`+$/)) {
+          // Found bare backticks - check if this is the last one
+          if (j === currentIndex) {
+            const remainingBareBackticks = this.bareBacktickPositions.filter(
+              (pos) => pos > j,
+            ).length;
+            if (remainingBareBackticks === 0) {
+              this.markdownNestCount = 0;
+              this.lastProcessedIndex = j;
+              return true;
+            }
+          }
+        } else if (currentLine.startsWith("```")) {
+          // Going into a nested codeblock
+          this.markdownNestCount++;
+        }
+      } else {
+        // Not inside a markdown block yet
+        if (currentLine.startsWith("```")) {
+          const header = currentLine.replaceAll("`", "");
+          if (headerIsMarkdown(header)) {
+            this.markdownNestCount = 1;
+          }
+        }
+      }
+    }
+
+    this.lastProcessedIndex = currentIndex;
+    return false;
+  }
+}
+
 async function* stopAtLinesWithMarkdownSupport(
   lines: LineStream,
   filename: string,
@@ -64,6 +131,8 @@ async function* stopAtLinesWithMarkdownSupport(
     return;
   }
 
+  // Use optimized state tracker for markdown block analysis
+  const stateTracker = new MarkdownBlockStateTracker(allLines);
   let nestCount = 0;
   const trimmedLines = allLines.map((l) => l.trim());
 
@@ -72,15 +141,8 @@ async function* stopAtLinesWithMarkdownSupport(
 
     if (nestCount > 0) {
       if (line.match(/^`+$/)) {
-        let remainingBareBackticks = 0;
-        for (let j = i + 1; j < trimmedLines.length; j++) {
-          if (trimmedLines[j].match(/^`+$/)) {
-            remainingBareBackticks++;
-          }
-        }
-
-        if (remainingBareBackticks === 0) {
-          nestCount = 0;
+        // Use optimized state tracker for markdown block logic
+        if (stateTracker.shouldStopAtPosition(i)) {
           for (let j = 0; j < i; j++) {
             yield allLines[j];
           }

@@ -9,6 +9,40 @@
 */
 import { headerIsMarkdown } from "./headerIsMarkdown";
 
+/**
+ * Optimized state tracker for markdown patch operations to avoid recomputing on each call.
+ */
+class MarkdownPatchStateTracker {
+  private trimmedLines: string[];
+  private bareBacktickPositions: number[];
+
+  constructor(lines: string[]) {
+    this.trimmedLines = lines.map((l) => l.trim());
+    // Pre-compute positions of all bare backtick lines for faster lookup
+    this.bareBacktickPositions = [];
+    for (let i = 0; i < this.trimmedLines.length; i++) {
+      if (this.trimmedLines[i].match(/^`+$/)) {
+        this.bareBacktickPositions.push(i);
+      }
+    }
+  }
+
+  /**
+   * Efficiently determines if there are remaining bare backticks after the given position.
+   */
+  getRemainingBareBackticksAfter(currentIndex: number): number {
+    return this.bareBacktickPositions.filter((pos) => pos > currentIndex)
+      .length;
+  }
+
+  /**
+   * Checks if the line at the given index is a bare backtick line.
+   */
+  isBareBacktickLine(index: number): boolean {
+    return this.bareBacktickPositions.includes(index);
+  }
+}
+
 export const patchNestedMarkdown = (source: string): string => {
   // Early return if no markdown codeblock pattern is found (including GitHub variants)
   if (!source.match(/```(\w*|.*)(md|markdown|gfm|github-markdown)/))
@@ -18,20 +52,18 @@ export const patchNestedMarkdown = (source: string): string => {
   const lines = source.split("\n");
   const trimmedLines = lines.map((l) => l.trim());
 
+  // Use optimized state tracker for efficient bare backtick analysis
+  const stateTracker = new MarkdownPatchStateTracker(lines);
+
   for (let i = 0; i < trimmedLines.length; i++) {
     const line = trimmedLines[i];
 
     if (nestCount > 0) {
       // Inside a markdown block
-      if (line.match(/^`+$/)) {
-        // Found bare backticks
-        // Count how many bare backticks are remaining after this one
-        let remainingBareBackticks = 0;
-        for (let j = i + 1; j < trimmedLines.length; j++) {
-          if (trimmedLines[j].match(/^`+$/)) {
-            remainingBareBackticks++;
-          }
-        }
+      if (stateTracker.isBareBacktickLine(i)) {
+        // Found bare backticks - use optimized lookup for remaining count
+        const remainingBareBackticks =
+          stateTracker.getRemainingBareBackticksAfter(i);
 
         // If this is the last bare backticks, it closes the markdown block
         if (remainingBareBackticks === 0) {
