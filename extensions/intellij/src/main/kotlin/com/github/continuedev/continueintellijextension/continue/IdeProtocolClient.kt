@@ -202,6 +202,11 @@ class IdeProtocolClient(
                         respond(contents)
                     }
 
+                    "isWorkspaceRemote" -> {
+                        val isRemote = ide.isWorkspaceRemote()
+                        respond(isRemote)
+                    }
+
                     "saveFile" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
@@ -475,7 +480,7 @@ class IdeProtocolClient(
         val editor = EditorUtils.getEditor(project)
         val rif = editor?.getHighlightedRIF() ?: return
 
-       val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
+        val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
             filepath = rif.filepath,
             range = rif.range,
             contents = rif.contents
