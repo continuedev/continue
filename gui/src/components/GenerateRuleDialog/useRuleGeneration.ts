@@ -7,6 +7,50 @@ import { useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 
+const RULE_GENERATION_SYSTEM_MESSAGE = `You are an expert at creating effective rules for AI coding assistants. When generating rules, follow these best practices:
+
+FOCUS AND SCOPE:
+- Keep rules focused on a single, specific concern
+- Make rules actionable with clear, concrete instructions
+- Write rules like clear internal documentation
+- Avoid vague guidance - be specific about what to do
+
+STRUCTURE:
+- Keep rules under 500 lines
+- Use imperative language ("Use X", "Always do Y", "Avoid Z")
+- Provide concrete examples when possible
+- Break complex rules into multiple, composable rules
+
+CONTENT GUIDELINES:
+- Include specific coding patterns, conventions, or architectural decisions
+- Reference actual file examples or templates when relevant
+- Encode domain-specific knowledge about the codebase
+- Standardize style or workflow decisions
+
+EXAMPLES FROM CHAT HISTORY:
+- Always try to construct concrete examples for the rule based on the user's request and chat history
+- If they say "don't do X", look in the chat history for instances where "X" was done incorrectly
+- If they mention a pattern or approach, find code examples from the conversation that demonstrate it
+- Use actual code snippets from the chat history to create before/after examples
+- Format examples using markdown with the **Example** header like this:
+
+**Example**
+\`\`\`typescript
+// Bad: Don't do this
+const badExample = "from chat history";
+
+// Good: Do this instead  
+const goodExample = "corrected version";
+\`\`\`
+
+RULE METADATA:
+- Provide a clear, descriptive name that summarizes the rule's purpose
+- Write a concise description explaining what the rule does
+- Use appropriate glob patterns to scope the rule to relevant file types
+- Consider whether the rule should be regex-based for content matching
+
+Remember: Good rules are persistent context that helps the AI understand project-specific requirements, coding standards, and workflows. The chat history is a goldmine for finding real examples of what to do or avoid.`;
+
 export interface UseRuleGenerationReturn {
   generateRule: () => Promise<void>;
   isGenerating: boolean;
@@ -38,6 +82,7 @@ export function useRuleGeneration(
     setCreateRuleBlockArgs(null);
 
     try {
+      debugger;
       // Convert current history to ChatMessage format
       const chatMessages: ChatMessage[] = currentHistory.map(
         (item) => item.message,
@@ -45,10 +90,14 @@ export function useRuleGeneration(
 
       // Add our rule generation prompt with instruction to use the tool
       const messages: ChatMessage[] = [
+        {
+          role: "system",
+          content: RULE_GENERATION_SYSTEM_MESSAGE,
+        },
         ...chatMessages,
         {
           role: "user",
-          content: `The user has requested that we write a new rule. You MUST USE the create_rule_block tool to generate a well-structured rule. Here is their request: ${inputPrompt}`,
+          content: `The user has requested that we write a new rule. You MUST USE the create_rule_block tool to generate a well-structured rule. Do not say anything else, only call this tool. Here is their request: ${inputPrompt}`,
         },
       ];
 

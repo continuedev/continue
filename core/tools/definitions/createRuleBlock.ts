@@ -30,7 +30,8 @@ export const createRuleBlock: Tool = {
         },
         description: {
           type: "string",
-          description: "Short description of the rule",
+          description:
+            "Optional, only include a description if the rule should not be always applied.",
         },
         globs: {
           type: "string",
