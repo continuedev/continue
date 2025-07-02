@@ -4,7 +4,7 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
-import { modelIsGreatWithNativeTools } from "core/llm/toolSupport";
+import { isRecommendedAgentModel } from "core/llm/toolSupport";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
@@ -19,11 +19,11 @@ export function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const isGoodInAgentMode = useMemo(() => {
-    if (!selectedModel) {
-      return true; // no need to show warning if no model is selected
+  const showAgentModeWarning = useMemo(() => {
+    if (!selectedModel || isRecommendedAgentModel(selectedModel.model)) {
+      return false; // no need to show warning if no model is selected
     }
-    return modelIsGreatWithNativeTools(selectedModel);
+    return true;
   }, [selectedModel]);
   const { mainEditor } = useMainEditor();
   const metaKeyLabel = useMemo(() => {
@@ -95,7 +95,7 @@ export function ModeSelect() {
               <ModeIcon mode="agent" />
               <span className="">Agent</span>
             </div>
-            {!isGoodInAgentMode && (
+            {showAgentModeWarning && (
               <>
                 <ExclamationCircleIcon
                   data-tooltip-id="bad-at-agent-mode-tooltip"
