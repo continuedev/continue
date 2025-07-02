@@ -645,6 +645,7 @@ describe("constructMessages", () => {
     );
 
     // Verify context rule was applied in the system message due to the tool output
+    console.log(appliedRules);
     expect(appliedRules).toHaveLength(2);
     expect(appliedRules).toContainEqual(NORMAL_RULE);
     expect(appliedRules).toContainEqual(CONTEXT_RULE);

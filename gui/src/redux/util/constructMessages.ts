@@ -16,6 +16,7 @@ import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
+import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
 
 export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
 export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
@@ -114,8 +115,7 @@ export function constructMessages(
               content = renderContextItems(item.toolCallState.output);
             }
             msgs.push({
-              // ctxItems: toolCallStateToContextItems(item.toolCallState),
-              ctxItems: [],
+              ctxItems: toolCallStateToContextItems(item.toolCallState),
               message: {
                 role: "tool",
                 content,
