@@ -21,7 +21,7 @@ export const ruleTemplates: RuleTemplate[] = [
     icon: CodeBracketIcon,
     title: "Auto attached",
     template:
-      "Create an auto-attached rule where for all <GLOB_PATTERN> files, do <BEHAVIOR>",
+      "Create an auto-attached rule where for all <GLOB_PATTERN> files, <BEHAVIOR>",
   },
   {
     icon: SparklesIcon,
