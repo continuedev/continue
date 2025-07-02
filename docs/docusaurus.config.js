@@ -212,6 +212,15 @@ const config = {
       },
     ],
     [
+      "docusaurus-plugin-llms-txt",
+      {
+        // Optional configuration
+        outputPath: "static/llms.txt",
+        includePatterns: ["docs/**"],
+        excludePatterns: ["**/node_modules/**"],
+      },
+    ],
+    [
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [

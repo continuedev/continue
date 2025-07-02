@@ -28,6 +28,8 @@ import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall, findToolCall } from "../util";
 
+const getIdeMessenger = () => (window as any).ideMessenger;
+
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
@@ -51,6 +53,7 @@ type SessionState = {
     curIndex: number;
   };
   newestToolbarPreviewForInput: Record<string, string>;
+  hasReasoningEnabled?: boolean;
 };
 
 const initialState: SessionState = {
@@ -594,6 +597,9 @@ export const sessionSlice = createSlice({
     setIsInEdit: (state, action: PayloadAction<boolean>) => {
       state.isInEdit = action.payload;
     },
+    setHasReasoningEnabled: (state, action: PayloadAction<boolean>) => {
+      state.hasReasoningEnabled = action.payload;
+    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -653,7 +659,9 @@ export const selectApplyStateByToolCallId = createSelector(
     (state: RootState, toolCallId?: string) => toolCallId,
   ],
   (states, toolCallId) => {
-    return states.find((state) => state.toolCallId === toolCallId);
+    if (toolCallId) {
+      return states.find((state) => state.toolCallId === toolCallId);
+    }
   },
 );
 
@@ -691,6 +699,7 @@ export const {
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
   setIsInEdit,
+  setHasReasoningEnabled,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

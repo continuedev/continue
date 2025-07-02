@@ -45,6 +45,14 @@ function parseThemeString(themeString: string | undefined): any {
   return JSON.parse(themeString ?? "{}");
 }
 
+export function getThemeString(): string {
+  const workbenchConfig = vscode.workspace.getConfiguration();
+  const themeString =
+    workbenchConfig.get<string>("workbench.colorTheme") ??
+    "Default Dark Modern";
+  return themeString;
+}
+
 export function getTheme() {
   let currentTheme: string | undefined = undefined;
   // Get color theme from settings
