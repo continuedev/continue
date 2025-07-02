@@ -3,22 +3,16 @@ import {
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
-  ModelDescription,
   RuleWithSource,
   ThinkingChatMessage,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
-import {
-  DEFAULT_AGENT_SYSTEM_MESSAGE,
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
-} from "core/llm/defaultSystemMessages";
 import { renderChatMessage } from "core/util/messageContent";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
   constructMessages,
-  getBaseSystemMessage,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
 } from "./constructMessages";
 
@@ -86,33 +80,6 @@ vi.mock("core/llm/rules/getSystemMessageWithRules", async (importOriginal) => {
       return { systemMessage, appliedRules };
     },
   };
-});
-
-test("getBaseSystemMessage should return the correct system message based on mode", () => {
-  const mockModel = {
-    baseAgentSystemMessage: "Custom Agent System Message",
-    baseChatSystemMessage: "Custom Chat System Message",
-  } as ModelDescription;
-
-  // Test agent mode with custom message
-  expect(getBaseSystemMessage("agent", mockModel)).toBe(
-    "Custom Agent System Message",
-  );
-
-  // Test chat mode with custom message
-  expect(getBaseSystemMessage("chat", mockModel)).toBe(
-    "Custom Chat System Message",
-  );
-
-  // Test agent mode with default message
-  expect(getBaseSystemMessage("agent", {} as ModelDescription)).toBe(
-    DEFAULT_AGENT_SYSTEM_MESSAGE,
-  );
-
-  // Test chat mode with default message
-  expect(getBaseSystemMessage("chat", {} as ModelDescription)).toBe(
-    DEFAULT_CHAT_SYSTEM_MESSAGE,
-  );
 });
 
 describe("constructMessages", () => {

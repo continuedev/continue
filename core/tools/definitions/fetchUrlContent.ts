@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
 
 export const fetchUrlContentTool: Tool = {
   type: "function",
@@ -25,4 +26,9 @@ export const fetchUrlContentTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.FetchUrlContent,
+    `To fetch the content of a URL, use the ${BuiltInToolNames.FetchUrlContent} tool. For example, to read the contents of a webpage, you might respond with:`,
+    `<url>https://example.com</url>`,
+  ),
 };

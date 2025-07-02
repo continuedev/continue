@@ -15,10 +15,8 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import {
-  constructMessages,
-  getBaseSystemMessage,
-} from "../util/constructMessages";
+import { constructMessages } from "../util/constructMessages";
+import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callCurrentTool } from "./callCurrentTool";
 
 export const streamNormalInput = createAsyncThunk<
@@ -61,6 +59,7 @@ export const streamNormalInput = createAsyncThunk<
     const baseSystemMessage = getBaseSystemMessage(
       state.session.mode,
       selectedChatModel,
+      useNativeTools ? [] : activeTools,
     );
 
     const withoutMessageIds = state.session.history.map((item) => {
