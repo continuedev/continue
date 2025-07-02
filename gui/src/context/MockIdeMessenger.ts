@@ -18,6 +18,14 @@ type MockResponses = Partial<{
   [K in keyof FromWebviewProtocol]: FromWebviewProtocol[K][1];
 }>;
 
+export type MockResponseHandler<T extends keyof FromWebviewProtocol> = (
+  input: FromWebviewProtocol[T][0],
+) => Promise<FromWebviewProtocol[T][1]>;
+
+type MockResponseHandlers = Partial<{
+  [K in keyof FromWebviewProtocol]: MockResponseHandler<K>;
+}>;
+
 const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   fileExists: true,
   getCurrentFile: {
@@ -66,6 +74,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,
   acceptDiff: undefined,
+  readFile: "File contents",
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [
@@ -119,6 +128,7 @@ export class MockIdeMessenger implements IIdeMessenger {
   }
 
   responses: MockResponses = { ...DEFAULT_MOCK_CORE_RESPONSES };
+  responseHandlers: MockResponseHandlers = {};
   chatResponse: ChatMessage[] = DEFAULT_CHAT_RESPONSE;
   chatStreamDelay: number = 0;
   setChatResponseText(text: string): void {
@@ -164,6 +174,14 @@ export class MockIdeMessenger implements IIdeMessenger {
     messageType: T,
     data: FromWebviewProtocol[T][0],
   ): Promise<WebviewSingleProtocolMessage<T>> {
+    if (this.responseHandlers[messageType]) {
+      const content = await this.responseHandlers[messageType](data);
+      return {
+        status: "success",
+        content,
+        done: true,
+      };
+    }
     if (messageType in this.responses) {
       const content = this.responses[messageType];
       return {
@@ -173,7 +191,10 @@ export class MockIdeMessenger implements IIdeMessenger {
       };
     }
     console.error(messageType);
-    throw new Error("MockIdeMessenger: No response defined for " + messageType);
+    throw new Error(
+      "MockIdeMessenger: No response handler or response defined for " +
+        messageType,
+    );
   }
 
   respond<T extends keyof ToWebviewProtocol>(
@@ -195,6 +216,7 @@ export class MockIdeMessenger implements IIdeMessenger {
 
   resetMocks(): void {
     this.responses = { ...DEFAULT_MOCK_CORE_RESPONSES };
+    this.responseHandlers = {};
     this.chatResponse = DEFAULT_CHAT_RESPONSE;
     this.chatStreamDelay = 0;
   }
