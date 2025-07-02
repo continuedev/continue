@@ -38,6 +38,7 @@ import {
 } from "../styles/theme";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
+import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
 function ParallelListeners() {
@@ -309,6 +310,10 @@ function ParallelListeners() {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
   }, [isInEdit, history]);
+
+  useEffect(() => {
+    migrateLocalStorage(dispatch);
+  }, []);
 
   return <></>;
 }
