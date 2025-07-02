@@ -65,6 +65,8 @@ const sidebars = {
         },
       ],
     },
+    "troubleshooting",
+    "reference",
   ],
 };
 

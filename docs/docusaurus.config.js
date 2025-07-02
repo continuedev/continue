@@ -526,14 +526,6 @@ const config = {
             from: "/agent/how-it-works",
           },
           {
-            to: "/advanced/reference",
-            from: "/reference",
-          },
-          {
-            to: "/advanced/troubleshooting",
-            from: "/troubleshooting",
-          },
-          {
             to: "/advanced/telemetry",
             from: "/telemetry",
           },
@@ -544,6 +536,10 @@ const config = {
           {
             to: "/advanced/yaml-migration",
             from: "/yaml-migration",
+          },
+          {
+            to: "/troubleshooting",
+            from: "/advanced/troubleshooting",
           },
         ],
       },
