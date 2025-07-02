@@ -38,6 +38,7 @@ import {
 } from "../styles/theme";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
+import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
 function ParallelListeners() {
@@ -268,7 +269,6 @@ function ParallelListeners() {
           currentToolCallApplyState.streamId === state.streamId
         ) {
           if (state.status === "done" && autoAcceptEditToolDiffs) {
-            console.log("AUTO ACCEPTED");
             ideMessenger.post("acceptDiff", {
               streamId: state.streamId,
               filepath: state.filepath,
@@ -281,6 +281,11 @@ function ParallelListeners() {
                   toolCallId: currentToolCallApplyState.toolCallId!,
                 }),
               );
+              void dispatch(
+                streamResponseAfterToolCall({
+                  toolCallId: currentToolCallApplyState.toolCallId!,
+                }),
+              );
             }
             // const output: ContextItem = {
             //   name: "Edit tool output",
@@ -288,11 +293,6 @@ function ParallelListeners() {
             //   description: "",
             // };
             // dispatch(setToolCallOutput([]));
-            void dispatch(
-              streamResponseAfterToolCall({
-                toolCallId: currentToolCallApplyState.toolCallId!,
-              }),
-            );
           }
         }
       }
@@ -310,6 +310,10 @@ function ParallelListeners() {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
   }, [isInEdit, history]);
+
+  useEffect(() => {
+    migrateLocalStorage(dispatch);
+  }, []);
 
   return <></>;
 }
