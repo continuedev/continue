@@ -36,12 +36,13 @@ export async function* interceptXMLToolCalls(
       const splitContent = splitAtTagBoundaries(content); // split at tag starts/ends e.g. < >
 
       for (const chunk of splitContent) {
+        console.log("Processing chunk:", chunk);
         buffer += chunk;
         if (!inToolCall) {
           // Check for entry into tool call
-          if (buffer.startsWith("<tool_call>")) {
+          if (buffer.toLowerCase().startsWith("<tool_call>")) {
             inToolCall = true;
-          } else if ("<tool_call>".startsWith(buffer)) {
+          } else if ("<tool_call>".startsWith(buffer.toLowerCase())) {
             // We have a partial start tag, continue
             continue;
           }

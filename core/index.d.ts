@@ -1025,7 +1025,7 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
-  systemMessageDescription: string;
+  systemMessageDescription?: string;
 }
 
 interface ToolChoice {

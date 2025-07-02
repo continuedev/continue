@@ -7,7 +7,15 @@ import { RootState } from "../store";
 export function findCurrentToolCall(
   chatHistory: RootState["session"]["history"],
 ): ToolCallState | undefined {
-  return chatHistory[chatHistory.length - 1]?.toolCallState;
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const item = chatHistory[i];
+    if (item.message.role !== "assistant") {
+      break;
+    }
+    if (item.toolCallState) {
+      return item.toolCallState;
+    }
+  }
 }
 
 // TODO parallel tool calls - find tool call must search within arrays

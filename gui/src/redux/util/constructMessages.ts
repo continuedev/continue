@@ -2,25 +2,20 @@ import {
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
-  ModelDescription,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
-import {
-  DEFAULT_AGENT_SYSTEM_MESSAGE,
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
-} from "core/llm/defaultSystemMessages";
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import { convertToolCallStateToXmlCallsAndOutput } from "core/tools/systemMessageTools/textify";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
-import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
 
 export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
 export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
@@ -34,6 +29,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
+  useNativeTools: boolean = false,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
@@ -83,33 +79,50 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
-      msgs.push({
-        ctxItems: item.contextItems,
-        message: item.message,
-      });
+      if (item.toolCallState && !useNativeTools) {
+        const { userMessage, assistantMessage } =
+          convertToolCallStateToXmlCallsAndOutput(
+            item.message,
+            item.toolCallState,
+          );
+        msgs.push({
+          message: assistantMessage,
+          ctxItems: [],
+        });
+        msgs.push({
+          message: userMessage,
+          ctxItems: [],
+        });
+      } else {
+        msgs.push({
+          ctxItems: item.contextItems,
+          message: item.message,
+        });
 
-      // Add a tool message for each tool call
-      if (item.message.toolCalls?.length) {
-        // If the assistant message has tool calls, we need to insert tool messages
-        for (const toolCall of item.message.toolCalls) {
-          let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
-          // TODO parallel tool calls: toolCallState only supports one tool call per message for now
-          if (item.toolCallState?.status === "canceled") {
-            content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (
-            item.toolCallState?.toolCallId === toolCall.id &&
-            item.toolCallState?.output
-          ) {
-            content = renderContextItems(item.toolCallState.output);
+        // If the assistant message has tool calls, insert tool messages for each call
+        // Or for system message tools add one user message with tool outputs
+        if (item.message.toolCalls?.length) {
+          for (const toolCall of item.message.toolCalls) {
+            let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
+            // TODO parallel tool calls: toolCallState only supports one tool call per message for now
+            if (item.toolCallState?.status === "canceled") {
+              content = CANCELLED_TOOL_CALL_MESSAGE;
+            } else if (
+              item.toolCallState?.toolCallId === toolCall.id &&
+              item.toolCallState?.output
+            ) {
+              content = renderContextItems(item.toolCallState.output);
+            }
+            msgs.push({
+              // ctxItems: toolCallStateToContextItems(item.toolCallState),
+              ctxItems: [],
+              message: {
+                role: "tool",
+                content,
+                toolCallId: toolCall.id!,
+              },
+            });
           }
-          msgs.push({
-            ctxItems: toolCallStateToContextItems(item.toolCallState),
-            message: {
-              role: "tool",
-              content,
-              toolCallId: toolCall.id!,
-            },
-          });
         }
       }
     }
@@ -159,15 +172,4 @@ export function constructMessages(
     appliedRules,
     appliedRuleIndex,
   };
-}
-
-export function getBaseSystemMessage(
-  messageMode: string,
-  model: ModelDescription,
-): string {
-  if (messageMode === "agent") {
-    return model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
-  } else {
-    return model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
-  }
 }

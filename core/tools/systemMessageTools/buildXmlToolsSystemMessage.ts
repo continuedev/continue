@@ -129,8 +129,9 @@ export function createSystemMessageExampleCall(
   instructions: string,
   argsExample: string = "",
 ) {
-  return `${instructions}\n${TOOL_CALL_TAG}
-  ${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}${
+  return `${instructions}
+${TOOL_CALL_TAG}
+${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}${
     argsExample
       ? `\n  ${TOOL_ARGS_TAG}
     ${argsExample}

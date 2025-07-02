@@ -298,8 +298,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     );
   }
 
-  console.log({ message });
-
   return (
     <div className="flex flex-col gap-4 px-3 pb-3 pt-3">
       {/* Concise error title */}
