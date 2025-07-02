@@ -28,6 +28,7 @@ import {
 } from "./autocomplete/statusBar";
 import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
+import { processDiff } from "./diff/processDiff";
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
@@ -84,56 +85,6 @@ function hideGUI() {
     vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     // vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   }
-}
-
-async function processDiff(
-  action: "accept" | "reject",
-  sidebar: ContinueGUIWebviewViewProvider,
-  ide: VsCodeIde,
-  core: Core,
-  verticalDiffManager: VerticalDiffManager,
-  newFileUri?: string,
-  streamId?: string,
-  toolCallId?: string,
-) {
-  captureCommandTelemetry(`${action}Diff`);
-
-  const currentFile = await ide.getCurrentFile();
-
-  let newOrCurrentUri = newFileUri;
-  if (!newOrCurrentUri) {
-    newOrCurrentUri = currentFile?.path;
-  }
-  if (!newOrCurrentUri) {
-    console.warn(
-      `No file provided or current file open while attempting to resolve diff`,
-    );
-    return;
-  }
-
-  await ide.openFile(newOrCurrentUri);
-
-  // Clear vertical diffs depending on action
-  verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
-  if (action === "reject") {
-    core.invoke("cancelApply", undefined);
-  }
-
-  if (streamId) {
-    const fileContent = await ide.readFile(newOrCurrentUri);
-
-    await sidebar.webviewProtocol.request("updateApplyState", {
-      fileContent,
-      filepath: newOrCurrentUri,
-      streamId,
-      status: "closed",
-      numDiffs: 0,
-      toolCallId,
-    });
-  }
-
-  // Save the file
-  await ide.saveFile(newOrCurrentUri);
 }
 
 function waitForSidebarReady(
@@ -226,8 +177,9 @@ const getCommandsMap: (
   }
 
   return {
-    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
-      processDiff(
+    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) => {
+      captureCommandTelemetry("acceptDiff");
+      void processDiff(
         "accept",
         sidebar,
         ide,
@@ -235,10 +187,12 @@ const getCommandsMap: (
         verticalDiffManager,
         newFileUri,
         streamId,
-      ),
+      );
+    },
 
-    "continue.rejectDiff": async (newFileUri?: string, streamId?: string) =>
-      processDiff(
+    "continue.rejectDiff": async (newFileUri?: string, streamId?: string) => {
+      captureCommandTelemetry("rejectDiff");
+      void processDiff(
         "reject",
         sidebar,
         ide,
@@ -246,7 +200,8 @@ const getCommandsMap: (
         verticalDiffManager,
         newFileUri,
         streamId,
-      ),
+      );
+    },
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
@@ -823,6 +778,18 @@ const getCommandsMap: (
           `Failed to set enterprise license key: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+    },
+    "continue.forceNextEdit": async () => {
+      captureCommandTelemetry("forceNextEdit");
+
+      // This is basically the same logic as forceAutocomplete.
+      // I'm writing a new command KV pair here in case we diverge in features.
+
+      await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
+
+      await vscode.commands.executeCommand(
+        "editor.action.inlineSuggest.trigger",
+      );
     },
   };
 };

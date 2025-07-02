@@ -292,6 +292,7 @@ export abstract class BaseLLM implements ILLM {
       apiKey: this.apiKey ?? "",
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
+      env: this._llmOptions.env,
     });
   }
 
@@ -491,26 +492,30 @@ export abstract class BaseLLM implements ILLM {
     const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
     for (const msg of msgsCopy) {
-      let contentToShow = "";
-      if (msg.role === "tool") {
-        contentToShow = msg.content;
-      } else if (msg.role === "assistant" && msg.toolCalls) {
-        contentToShow = msg.toolCalls
-          ?.map(
-            (toolCall) =>
-              `${toolCall.function?.name}(${toolCall.function?.arguments})`,
-          )
-          .join("\n");
-      } else if ("content" in msg) {
-        if (Array.isArray(msg.content)) {
-          msg.content = renderChatMessage(msg);
-        }
-        contentToShow = msg.content;
-      }
-
-      formatted += `<${msg.role}>\n${contentToShow}\n\n`;
+      formatted += this._formatChatMessage(msg);
     }
     return formatted;
+  }
+
+  private _formatChatMessage(msg: ChatMessage): string {
+    let contentToShow = "";
+    if (msg.role === "tool") {
+      contentToShow = msg.content;
+    } else if (msg.role === "assistant" && msg.toolCalls) {
+      contentToShow = msg.toolCalls
+        ?.map(
+          (toolCall) =>
+            `${toolCall.function?.name}(${toolCall.function?.arguments})`,
+        )
+        .join("\n");
+    } else if ("content" in msg) {
+      if (Array.isArray(msg.content)) {
+        msg.content = renderChatMessage(msg);
+      }
+      contentToShow = msg.content;
+    }
+
+    return `<${msg.role}>\n${contentToShow}\n\n`;
   }
 
   protected async *_streamFim(
@@ -568,11 +573,12 @@ export abstract class BaseLLM implements ILLM {
           const result = fromChatCompletionChunk(chunk);
           if (result) {
             const content = renderChatMessage(result);
+            const formattedContent = this._formatChatMessage(result);
             interaction?.logItem({
               kind: "chunk",
-              chunk: content,
+              chunk: formattedContent,
             });
-            completion += content;
+            completion += formattedContent;
             yield content;
           }
         }
@@ -931,7 +937,7 @@ export abstract class BaseLLM implements ILLM {
             );
             const msg = fromChatResponse(response);
             yield msg;
-            completion = renderChatMessage(msg);
+            completion = this._formatChatMessage(msg);
           } else {
             // Stream true
             const stream = this.openaiAdapter.chatCompletionStream(
@@ -944,7 +950,7 @@ export abstract class BaseLLM implements ILLM {
             for await (const chunk of stream) {
               const result = fromChatCompletionChunk(chunk);
               if (result) {
-                completion += result.content;
+                completion += this._formatChatMessage(result);
                 interaction?.logItem({
                   kind: "message",
                   message: result,
@@ -960,7 +966,7 @@ export abstract class BaseLLM implements ILLM {
             completionOptions,
           )) {
             if (chunk.role === "assistant") {
-              completion += chunk.content;
+              completion += this._formatChatMessage(chunk);
             } else if (chunk.role === "thinking") {
               thinking += chunk.content;
             }
@@ -1068,9 +1074,17 @@ export abstract class BaseLLM implements ILLM {
         documents: chunks.map((chunk) => chunk.content),
       });
 
-      // Put them in the order they were given
-      const sortedResults = results.data.sort((a, b) => a.index - b.index);
-      return sortedResults.map((result) => result.relevance_score);
+      // Standard OpenAI format
+      if (results.data && Array.isArray(results.data)) {
+        return results.data
+          .sort((a, b) => a.index - b.index)
+          .map((result) => result.relevance_score);
+      }
+
+      throw new Error(
+        `Unexpected rerank response format from ${this.providerName}. ` +
+          `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`,
+      );
     }
 
     throw new Error(
