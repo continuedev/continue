@@ -20,15 +20,10 @@ export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
       const previousParts = normalizeToMessageParts(
         flattened[flattened.length - 1],
       );
-      const currentParts: MessagePart[] = normalizeToMessageParts(msg).map(
-        (p, i) =>
-          i === 0 && p.type === "text"
-            ? {
-                type: "text",
-                text: `\n\n${p.text.trimStart()}`,
-              }
-            : p,
-      );
+      const currentParts: MessagePart[] = normalizeToMessageParts(msg);
+      if (previousParts.length > 0 && currentParts[0]?.type === "text") {
+        currentParts[0].text = `\n\n${currentParts[0].text.trimStart()}`;
+      }
       flattened[flattened.length - 1].content = [
         ...previousParts,
         ...currentParts,

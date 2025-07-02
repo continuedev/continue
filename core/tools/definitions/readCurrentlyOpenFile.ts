@@ -22,7 +22,7 @@ export const readCurrentlyOpenFileTool: Tool = {
   },
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.ReadCurrentlyOpenFile,
-    `To view the user's currenly open file, use the ${BuiltInToolNames.ReadCurrentlyOpenFile} tool.
+    `To view the user's currently open file, use the ${BuiltInToolNames.ReadCurrentlyOpenFile} tool.
 If the user is asking about a file and you don't see any code, use this to check the current file`,
   ),
 };
