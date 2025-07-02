@@ -199,7 +199,7 @@ export class ApplyManager {
       range: rangeToApplyTo,
       newCode: text,
       toolCallId,
-      rulesToInclude: undefined, // No rules for apply
+      rulesToInclude: config.rules,
     });
   }
 }
