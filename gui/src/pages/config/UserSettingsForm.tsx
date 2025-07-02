@@ -93,6 +93,8 @@ export function UserSettingsForm() {
     config.experimental?.useCurrentFileAsContext ?? false;
   const enableExperimentalTools =
     config.experimental?.enableExperimentalTools ?? false;
+  const onlyUseSystemMessageTools =
+    config.experimental?.onlyUseSystemMessageTools ?? false;
   const optInNextEditFeature =
     config.experimental?.optInNextEditFeature ?? false;
 
@@ -420,6 +422,16 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Enable experimental tools"
+                />
+
+                <ToggleSwitch
+                  isToggled={onlyUseSystemMessageTools}
+                  onToggle={() =>
+                    handleUpdate({
+                      onlyUseSystemMessageTools: !onlyUseSystemMessageTools,
+                    })
+                  }
+                  text="Only use system message tools"
                 />
 
                 {hasContinueEmail && (

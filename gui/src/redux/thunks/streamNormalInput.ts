@@ -39,7 +39,9 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools
     const activeTools = selectActiveTools(state);
     // TODO only use native tools for the best models
-    const useNativeTools = modelSupportsNativeTools(selectedChatModel);
+    const useNativeTools =
+      !state.config.config.experimental?.onlyUseSystemMessageTools &&
+      modelSupportsNativeTools(selectedChatModel);
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};

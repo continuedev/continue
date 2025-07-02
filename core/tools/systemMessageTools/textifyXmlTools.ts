@@ -17,9 +17,11 @@ function toolCallsToXml(toolCall: ToolCallDelta): string {
     suppressEmptyNode: true,
   });
   return builder.build({
-    name: toolCall.function?.name,
-    id: toolCall.id,
-    args: toolCall.function?.arguments,
+    tool_call: {
+      name: toolCall.function?.name,
+      id: toolCall.id,
+      args: toolCall.function?.arguments,
+    },
   });
 }
 export function convertToolCallStateToXmlCallsAndOutput(
@@ -29,6 +31,7 @@ export function convertToolCallStateToXmlCallsAndOutput(
   assistantMessage: AssistantChatMessage;
   userMessage: UserChatMessage;
 } {
+  debugger;
   const parts = normalizeToMessageParts(originalAssistantMessage);
   if (originalAssistantMessage.toolCalls?.length) {
     const toolCallParts: MessagePart[] = originalAssistantMessage.toolCalls.map(

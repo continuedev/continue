@@ -22,6 +22,7 @@ export const sharedConfigSchema = z
     logEditingData: z.boolean(),
     optInNextEditFeature: z.boolean(),
     enableExperimentalTools: z.boolean(),
+    onlyUseSystemMessageTools: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -186,6 +187,10 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.optInNextEditFeature !== undefined) {
     configCopy.experimental.optInNextEditFeature =
       sharedConfig.optInNextEditFeature;
+  }
+  if (sharedConfig.onlyUseSystemMessageTools !== undefined) {
+    configCopy.experimental.onlyUseSystemMessageTools =
+      sharedConfig.onlyUseSystemMessageTools;
   }
 
   return configCopy;

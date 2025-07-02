@@ -489,19 +489,16 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private _formatChatMessages(messages: ChatMessage[]): string {
-    const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
-    let formatted = "";
-    for (const msg of msgsCopy) {
-      formatted += this._formatChatMessage(msg);
-    }
-    return formatted;
+    return (messages ?? [])
+      .map((msg) => this._formatChatMessage(msg))
+      .join("\n\n");
   }
 
   private _formatChatMessage(msg: ChatMessage): string {
     let contentToShow = "";
     if (msg.role === "tool") {
       contentToShow = msg.content;
-    } else if (msg.role === "assistant" && msg.toolCalls) {
+    } else if (msg.role === "assistant" && msg.toolCalls?.length) {
       contentToShow = msg.toolCalls
         ?.map(
           (toolCall) =>
@@ -509,13 +506,10 @@ export abstract class BaseLLM implements ILLM {
         )
         .join("\n");
     } else if ("content" in msg) {
-      if (Array.isArray(msg.content)) {
-        msg.content = renderChatMessage(msg);
-      }
-      contentToShow = msg.content;
+      contentToShow = renderChatMessage(msg);
     }
 
-    return `<${msg.role}>\n${contentToShow}\n\n`;
+    return `<${msg.role}>\n${contentToShow}`;
   }
 
   protected async *_streamFim(
