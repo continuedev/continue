@@ -235,7 +235,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [history, selectedModels, mode, isInEdit, codeToEdit, toolCallState],
+    [history, selectedModels, mode, isInEdit, codeToEdit, toolCallState, currentToolCallApplyState],
   );
 
   useWebviewListener(
