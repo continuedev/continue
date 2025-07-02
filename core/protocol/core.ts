@@ -5,7 +5,10 @@ import {
   ModelRole,
 } from "@continuedev/config-yaml";
 
-import { AutocompleteInput } from "../autocomplete/util/types";
+import {
+  AutocompleteInput,
+  RecentlyEditedRange,
+} from "../autocomplete/util/types";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -25,6 +28,7 @@ import {
   ModelDescription,
   PromptLog,
   RangeInFile,
+  RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
   SessionMetadata,
@@ -33,6 +37,9 @@ import {
   StreamDiffLinesPayload,
   ToolCall,
 } from "../";
+import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
+import { GetLspDefinitionsFunction } from "../autocomplete/types";
+import { ConfigHandler } from "../config/ConfigHandler";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
@@ -193,6 +200,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "files/created": [{ uris?: string[] }, void];
   "files/deleted": [{ uris?: string[] }, void];
   "files/closed": [{ uris?: string[] }, void];
+  "files/smallEdit": [
+    {
+      actions: RangeInFileWithNextEditInfo[];
+      configHandler: ConfigHandler;
+      getDefsFromLspFunction: GetLspDefinitionsFunction;
+      recentlyEditedRanges: RecentlyEditedRange[];
+      recentlyVisitedRanges: AutocompleteCodeSnippet[];
+    },
+    void,
+  ];
 
   // Docs etc. Indexing. TODO move codebase to this
   "indexing/reindex": [{ type: string; id: string }, void];

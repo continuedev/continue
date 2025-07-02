@@ -1,9 +1,9 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.*
-import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
-import com.github.continuedev.continueintellijextension.`continue`.GitService
+import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
@@ -11,7 +11,6 @@ import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.BrowserUtil
-import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.notification.NotificationAction
@@ -38,9 +37,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
-import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.Paths
 
 class IntelliJIDE(
     private val project: Project,
@@ -344,11 +341,10 @@ class IntelliJIDE(
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
                 return results.split("\n")
-            } catch (e: Exception) {
-                showToast(
-                    ToastType.ERROR, 
-                    "Error executing ripgrep: ${e.message}"
-                )
+            } catch (exception: Exception) {
+                val message = "Error executing ripgrep: ${exception.message}"
+                service<ContinueErrorService>().report(exception, message)
+                showToast(ToastType.ERROR, message)
                 return emptyList()
             }
         } else {
@@ -386,11 +382,10 @@ class IntelliJIDE(
     
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
-            } catch (e: Exception) {
-                showToast(
-                    ToastType.ERROR, 
-                    "Error executing ripgrep: ${e.message}"
-                )
+            } catch (exception: Exception) {
+                val message = "Error executing ripgrep: ${exception.message}"
+                service<ContinueErrorService>().report(exception, message)
+                showToast(ToastType.ERROR, message)
                 return "Error: Unable to execute ripgrep command."
             }
         } else {

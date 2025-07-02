@@ -13,6 +13,7 @@ export enum BuiltInToolNames {
   CreateRuleBlock = "builtin_create_rule_block",
   RequestRule = "builtin_request_rule",
   FetchUrlContent = "builtin_fetch_url_content",
+  CodebaseTool = "builtin_codebase",
 
   // excluded from allTools for now
   ViewRepoMap = "builtin_view_repo_map",
