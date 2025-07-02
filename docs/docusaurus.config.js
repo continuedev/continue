@@ -324,11 +324,11 @@ const config = {
             from: ["/walkthroughs/quick-actions"],
           },
           {
-            to: "/advanced/reference",
+            to: "/reference",
             from: "/changelog",
           },
           {
-            to: "/advanced/reference",
+            to: "/reference",
             from: [
               "/customization/code-config",
               "/reference/config",
@@ -530,16 +530,12 @@ const config = {
             from: "/telemetry",
           },
           {
-            to: "/advanced/reference",
-            from: "/json-reference",
-          },
-          {
             to: "/advanced/yaml-migration",
             from: "/yaml-migration",
           },
           {
-            to: "/troubleshooting",
-            from: "/advanced/troubleshooting",
+            to: "/advanced/json-reference",
+            from: "/json-reference",
           },
         ],
       },
