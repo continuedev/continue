@@ -1,41 +1,170 @@
-import { useEffect, useRef, useState } from "react";
+import { createRuleMarkdown } from "@continuedev/config-yaml";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { createRuleFilePath } from "core/config/markdown/utils";
+import { CreateRuleBlockArgs } from "core/tools/implementations/createRuleBlock";
+import { useContext, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import Spinner from "../gui/Spinner";
+import { ToolTip } from "../gui/Tooltip";
 import { Button } from "../ui";
+import { useRuleGeneration } from "./useRuleGeneration";
+
+export enum RuleType {
+  Always = "Always",
+  AutoAttached = "Auto Attached",
+  AgentRequested = "Agent Requested",
+  Manual = "Manual",
+}
 
 interface GenerationScreenProps {
-  generatedContent: string;
-  isGenerating: boolean;
-  error: string | null;
+  inputPrompt: string;
   onBack: () => void;
-  onContinue: () => void;
+  onSuccess: () => void;
+}
+
+function determineRuleTypeFromData(data: CreateRuleBlockArgs): RuleType {
+  if (data.globs) {
+    return RuleType.AutoAttached;
+  }
+  if (data.description && !data.globs) {
+    return RuleType.AgentRequested;
+  }
+  return RuleType.Always;
+}
+
+function getRuleTypeTooltip(ruleType: RuleType): string {
+  switch (ruleType) {
+    case RuleType.Always:
+      return "*Always: Included with every request";
+    case RuleType.AutoAttached:
+      return "Auto Attached: Included when files matching a glob pattern are added as context";
+    case RuleType.AgentRequested:
+      return "Agent Requested: When in Agent mode, the description of the rule is made available to the agent to decide whether or not it needs to read the full content of the rule";
+    case RuleType.Manual:
+      return "Manual: Included only when manually referenced as @ruleName using the Rule context provider";
+    default:
+      return "";
+  }
 }
 
 export function GenerationScreen({
-  generatedContent,
-  isGenerating,
-  error,
+  inputPrompt,
   onBack,
-  onContinue,
+  onSuccess,
 }: GenerationScreenProps) {
-  const [editableContent, setEditableContent] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const ideMessenger = useContext(IdeMessengerContext);
 
-  // Update editable content when generation completes
+  const { register, watch, setValue, reset } = useForm<CreateRuleBlockArgs>({
+    defaultValues: {
+      name: "",
+      description: "",
+      globs: "",
+      alwaysApply: true,
+      rule: "",
+    },
+  });
+
+  const formData = watch();
+
+  // Track rule type separately from form data
+  const [selectedRuleType, setSelectedRuleType] = useState<RuleType>(
+    RuleType.Always,
+  );
+
+  // Use the generation hook with the input prompt
+  const { generateRule, isGenerating, error, createRuleBlockArgs } =
+    useRuleGeneration(inputPrompt);
+
+  // Start generation once when component mounts
+  const hasInitialized = useRef(false);
+  if (!hasInitialized.current) {
+    hasInitialized.current = true;
+    void generateRule();
+  }
+
+  // Handle form updates when generation completes
   useEffect(() => {
-    if (!isGenerating && generatedContent) {
-      setEditableContent(generatedContent);
+    if (createRuleBlockArgs && !isGenerating && !formData.rule) {
+      reset(createRuleBlockArgs);
+      handleRuleTypeChange(determineRuleTypeFromData(createRuleBlockArgs));
     }
-  }, [isGenerating, generatedContent]);
+  }, [createRuleBlockArgs, isGenerating, formData.rule, reset]);
 
-  // Auto-scroll textarea as content streams in
-  useEffect(() => {
-    if (textareaRef.current && isGenerating) {
-      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+  const handleRuleTypeChange = (newRuleType: RuleType) => {
+    setSelectedRuleType(newRuleType);
+
+    // Update alwaysApply based on rule type (false only for Agent Requested)
+    const alwaysApply = newRuleType !== RuleType.AgentRequested;
+    setValue("alwaysApply", alwaysApply);
+
+    // Clear optional fields when switching types
+    if (newRuleType !== RuleType.AgentRequested) {
+      setValue("description", "");
     }
-  }, [generatedContent, isGenerating]);
+    if (newRuleType !== RuleType.AutoAttached) {
+      setValue("globs", "");
+    }
+  };
 
-  const displayContent = isGenerating ? generatedContent : editableContent;
-  const showSpinner = isGenerating && !generatedContent;
+  const handleContinue = async () => {
+    if (!formData.name) {
+      console.error("Rule name is required");
+      return;
+    }
+
+    if (!formData.rule) {
+      console.error("Rule content is required");
+      return;
+    }
+
+    try {
+      debugger;
+      const options: any = {
+        alwaysApply: formData.alwaysApply,
+      };
+
+      if (formData.description) {
+        options.description = formData.description;
+      }
+
+      if (formData.globs) {
+        options.globs = formData.globs;
+      }
+
+      const fileContent = createRuleMarkdown(
+        formData.name,
+        formData.rule,
+        options,
+      );
+
+      const workspaceDirs = await ideMessenger.request(
+        "getWorkspaceDirs",
+        undefined,
+      );
+
+      if (workspaceDirs.status !== "success") {
+        return;
+      }
+
+      const localContinueDir = workspaceDirs.content[0];
+      const ruleFilePath = createRuleFilePath(localContinueDir, formData.name);
+
+      await ideMessenger.request("writeFile", {
+        path: ruleFilePath,
+        contents: fileContent,
+      });
+      ideMessenger.post("openFile", { path: ruleFilePath });
+
+      onSuccess();
+    } catch (err) {
+      console.error("Failed to create rule file:", err);
+    }
+  };
+
+  const showSpinner = isGenerating && !formData.rule;
+  const showNameSpinner = isGenerating && !formData.name;
+  const tooltipId = "rule-type-tooltip";
 
   return (
     <div className="px-2 pb-2 pt-4 sm:px-4">
@@ -48,25 +177,109 @@ export function GenerationScreen({
         </div>
         <div className="mt-5">
           <div className="flex flex-col gap-4">
-            <div className="relative">
-              <textarea
-                ref={textareaRef}
-                className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full resize-none rounded border p-2 text-xs focus:outline-none"
-                rows={10}
-                value={displayContent}
-                onChange={(e) => setEditableContent(e.target.value)}
-                disabled={isGenerating}
-                placeholder={
-                  showSpinner ? "" : "Your generated rule will appear here..."
-                }
-              />
-              {showSpinner && (
-                <div className="absolute left-2 top-2">
-                  <Spinner />
+            {/* Rule metadata form */}
+            <div className="space-y-4">
+              {/* Rule Name - Always visible */}
+              <div className="space-y-1">
+                <label className="text-foreground text-sm font-medium">
+                  Rule Name
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full rounded-md border px-3 py-2 text-xs focus:outline-none"
+                    placeholder={showNameSpinner ? "" : "Enter rule name..."}
+                    disabled={isGenerating}
+                    {...register("name")}
+                  />
+                  {showNameSpinner && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                      <Spinner />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Rule Type Selector - Always visible */}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <label className="text-foreground text-sm font-medium">
+                    Rule Type
+                  </label>
+                  <InformationCircleIcon
+                    data-tooltip-id={tooltipId}
+                    data-tooltip-content={getRuleTypeTooltip(selectedRuleType)}
+                    className="h-4 w-4 text-gray-500"
+                  />
+                  <ToolTip id={tooltipId} style={{ zIndex: 100001 }} />
+                </div>
+                <select
+                  className="border-input-border bg-input text-input-foreground focus:border-border-focus w-full rounded-md border px-3 py-2 text-xs focus:outline-none"
+                  value={selectedRuleType}
+                  onChange={(e) =>
+                    handleRuleTypeChange(e.target.value as RuleType)
+                  }
+                >
+                  <option value={RuleType.Always}>Always</option>
+                  <option value={RuleType.AutoAttached}>Auto Attached</option>
+                  <option value={RuleType.AgentRequested}>
+                    Agent Requested
+                  </option>
+                  <option value={RuleType.Manual}>Manual</option>
+                </select>
+              </div>
+
+              {/* Description (for Agent Requested only) */}
+              {selectedRuleType === RuleType.AgentRequested && (
+                <div className="space-y-1">
+                  <label className="text-foreground text-sm font-medium">
+                    Description
+                  </label>
+                  <textarea
+                    className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full resize-none rounded-md border px-3 py-2 text-xs focus:outline-none"
+                    rows={3}
+                    placeholder="Description of the task this rule is helpful for..."
+                    {...register("description")}
+                  />
+                </div>
+              )}
+
+              {/* File Pattern (for Auto Attached only) */}
+              {selectedRuleType === RuleType.AutoAttached && (
+                <div className="space-y-1">
+                  <label className="text-foreground text-sm font-medium">
+                    File pattern matches
+                  </label>
+                  <input
+                    type="text"
+                    className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full rounded-md border px-3 py-2 font-mono text-xs focus:outline-none"
+                    placeholder="*.tsx, **/*.{ts,tsx}, tests/**/*.ts ..."
+                    {...register("globs")}
+                  />
                 </div>
               )}
             </div>
 
+            {/* Rule Content */}
+            <div className="relative">
+              <label className="text-foreground text-sm font-medium">
+                Rule Content
+              </label>
+              <textarea
+                className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus mt-1 box-border w-full resize-none rounded border p-2 text-xs focus:outline-none"
+                rows={10}
+                placeholder={
+                  showSpinner ? "" : "Your generated rule will appear here..."
+                }
+                disabled={isGenerating}
+                {...register("rule")}
+              />
+              {showSpinner && (
+                <div className="absolute left-2 top-8">
+                  <Spinner />
+                </div>
+              )}
+            </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
 
             <div className="flex flex-row justify-center gap-5">
@@ -81,8 +294,10 @@ export function GenerationScreen({
               </Button>
               <Button
                 className="min-w-16"
-                onClick={onContinue}
-                disabled={isGenerating || (!generatedContent && !error)}
+                onClick={handleContinue}
+                disabled={
+                  isGenerating || (!formData.rule && !error) || !formData.name
+                }
               >
                 Continue
               </Button>

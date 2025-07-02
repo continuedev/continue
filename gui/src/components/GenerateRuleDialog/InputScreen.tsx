@@ -5,18 +5,16 @@ import { RuleTemplate, ruleTemplates } from "./ruleTemplates";
 
 interface InputScreenProps {
   inputPrompt: string;
-  setInputPrompt: (value: string) => void;
+  onInputChange: (prompt: string) => void;
   onGenerate: (prompt: string) => void;
   onCancel: () => void;
-  onRuleTemplateClick: (template: RuleTemplate) => void;
 }
 
 export function InputScreen({
   inputPrompt,
-  setInputPrompt,
+  onInputChange,
   onGenerate,
   onCancel,
-  onRuleTemplateClick,
 }: InputScreenProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +24,10 @@ export function InputScreen({
     }
 
     onGenerate(inputPrompt);
+  };
+
+  const handleRuleTemplateClick = (template: RuleTemplate) => {
+    onInputChange(template.template);
   };
 
   return (
@@ -45,7 +47,7 @@ export function InputScreen({
                 placeholder="Describe your rule..."
                 rows={5}
                 value={inputPrompt}
-                onChange={(e) => setInputPrompt(e.target.value)}
+                onChange={(e) => onInputChange(e.target.value)}
               />
             </div>
 
@@ -55,7 +57,7 @@ export function InputScreen({
                   key={index}
                   icon={template.icon}
                   text={template.title}
-                  onClick={() => onRuleTemplateClick(template)}
+                  onClick={() => handleRuleTemplateClick(template)}
                 />
               ))}
             </div>
