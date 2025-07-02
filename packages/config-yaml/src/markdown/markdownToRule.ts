@@ -1,3 +1,4 @@
+import path from "path";
 import * as YAML from "yaml";
 import {
   PackageIdentifier,
@@ -69,6 +70,30 @@ export function getRuleName(
   return displayName;
 }
 
+function getGlobPattern(
+  globs: RuleFrontmatter["globs"],
+  id: PackageIdentifier,
+) {
+  if (id.uriType !== "file") {
+    return globs;
+  }
+  const dir = path.dirname(id.filePath);
+  const prependDirAndApplyGlobstar = (glob: string) => {
+    // skip if glob is a directory
+    if (glob.includes("/")) {
+      return path.join(dir, glob);
+    }
+    return path.join(dir, `**/${glob}`);
+  };
+  if (!globs) {
+    return prependDirAndApplyGlobstar("**/*");
+  }
+  if (Array.isArray(globs)) {
+    return globs.map(prependDirAndApplyGlobstar);
+  }
+  return prependDirAndApplyGlobstar(globs);
+}
+
 export function markdownToRule(
   rule: string,
   id: PackageIdentifier,
@@ -78,7 +103,7 @@ export function markdownToRule(
   return {
     name: getRuleName(frontmatter, id),
     rule: markdown,
-    globs: frontmatter.globs,
+    globs: getGlobPattern(frontmatter.globs, id),
     regex: frontmatter.regex,
     description: frontmatter.description,
     alwaysApply: frontmatter.alwaysApply,

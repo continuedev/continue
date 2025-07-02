@@ -20,7 +20,7 @@ This is a test rule.`;
 
     const result = markdownToRule(content, mockId);
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
-    expect(result.globs).toBe("**/test/**/*.kt");
+    expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     expect(result.name).toBe("Custom Name");
   });
 
@@ -34,7 +34,7 @@ globs: "**/test/**/*.kt"
 This is a test rule.`;
 
     const result = markdownToRule(content, mockId);
-    expect(result.globs).toBe("**/test/**/*.kt");
+    expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
     expect(result.name).toBe("to/file"); // Should use last two path segments
   });
@@ -45,7 +45,7 @@ This is a test rule.`;
 This is a test rule without frontmatter.`;
 
     const result = markdownToRule(content, mockId);
-    expect(result.globs).toBeUndefined();
+    expect(result.globs).toBe("/path/to/**/*");
     expect(result.rule).toBe(content);
     expect(result.name).toBe("to/file"); // Should use last two path segments
   });
@@ -59,11 +59,75 @@ This is a test rule without frontmatter.`;
 This is a test rule with empty frontmatter.`;
 
     const result = markdownToRule(content, mockId);
-    expect(result.globs).toBeUndefined();
+    expect(result.globs).toBe("/path/to/**/*");
     expect(result.rule).toBe(
       "# Test Rule\n\nThis is a test rule with empty frontmatter.",
     );
     expect(result.name).toBe("to/file"); // Should use last two path segments
+  });
+
+  describe("glob patterns", () => {
+    it("should match glob pattern for file extensions", () => {
+      const content = `---
+globs: "*.ts"
+name: glob pattern testing
+---
+  
+  # Test Rule
+  
+  This is a test rule.`;
+
+      const result = markdownToRule(content, mockId);
+      expect(result.globs).toBe("/path/to/**/*.ts");
+    });
+
+    it("should match glob pattern for dotfiles", () => {
+      const content = `---
+globs: ".gitignore"
+name: glob pattern testing
+---
+  
+  # Test Rule
+  
+  This is a test rule.`;
+
+      const result = markdownToRule(content, mockId);
+      expect(result.globs).toBe("/path/to/**/.gitignore");
+    });
+
+    it("should also work in root as base directory", () => {
+      const content = `---
+globs: "src/**/Dockerfile"
+name: glob pattern testing
+---
+  
+  # Test Rule
+  
+  This is a test rule.`;
+
+      const result = markdownToRule(content, {
+        uriType: "file",
+        filePath: "/",
+      });
+      expect(result.globs).toBe("/src/**/Dockerfile");
+    });
+
+    it("should match have nested folder for multiple globs", () => {
+      const content = `---
+globs: ["**/nested/**/deeper/**/*.rs", ".zshrc"]
+name: glob pattern testing
+---
+
+# Test Rule
+
+This is a test rule.`;
+
+      const result = markdownToRule(content, mockId);
+      expect(result.globs).toEqual([
+        "/path/to/**/nested/**/deeper/**/*.rs",
+        "/path/to/**/.zshrc",
+      ]);
+    });
   });
 
   it("should handle frontmatter with whitespace", () => {
@@ -76,7 +140,7 @@ globs: "**/test/**/*.kt"
 This is a test rule.`;
 
     const result = markdownToRule(content, mockId);
-    expect(result.globs).toBe("**/test/**/*.kt");
+    expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
     expect(result.name).toBe("to/file"); // Should use last two path segments
   });
@@ -92,7 +156,7 @@ globs: "**/test/**/*.kt"\r
 This is a test rule.`;
 
     const result = markdownToRule(content, mockId);
-    expect(result.globs).toBe("**/test/**/*.kt");
+    expect(result.globs).toBe("/path/to/**/test/**/*.kt");
     // The result should be normalized to \n
     expect(result.rule).toBe("# Test Rule\n\nThis is a test rule.");
     expect(result.name).toBe("to/file"); // Should use last two path segments
@@ -110,7 +174,7 @@ This is a test rule.`;
 
     // Should treat as only markdown when frontmatter is malformed
     const result = markdownToRule(content, mockId);
-    expect(result.globs).toBeUndefined();
+    expect(result.globs).toBe("/path/to/**/*");
     expect(result.rule).toBe(content);
     expect(result.name).toBe("to/file"); // Should use last two path segments
   });
