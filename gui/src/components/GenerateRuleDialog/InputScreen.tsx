@@ -51,7 +51,7 @@ export function InputScreen({
               />
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3">
               {ruleTemplates.map((template, index) => (
                 <RuleTemplateChip
                   key={index}

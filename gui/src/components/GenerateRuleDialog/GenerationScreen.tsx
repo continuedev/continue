@@ -1,4 +1,9 @@
-import { createRuleMarkdown } from "@continuedev/config-yaml";
+import {
+  createRuleMarkdown,
+  getRuleType,
+  RuleType,
+  RuleTypeDescriptions,
+} from "@continuedev/config-yaml";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { createRuleFilePath } from "core/config/markdown/utils";
 import { CreateRuleBlockArgs } from "core/tools/implementations/createRuleBlock";
@@ -10,42 +15,10 @@ import { ToolTip } from "../gui/Tooltip";
 import { Button } from "../ui";
 import { useRuleGeneration } from "./useRuleGeneration";
 
-export enum RuleType {
-  Always = "Always",
-  AutoAttached = "Auto Attached",
-  AgentRequested = "Agent Requested",
-  Manual = "Manual",
-}
-
 interface GenerationScreenProps {
   inputPrompt: string;
   onBack: () => void;
   onSuccess: () => void;
-}
-
-function determineRuleTypeFromData(data: CreateRuleBlockArgs): RuleType {
-  if (data.globs) {
-    return RuleType.AutoAttached;
-  }
-  if (data.description && !data.globs) {
-    return RuleType.AgentRequested;
-  }
-  return RuleType.Always;
-}
-
-function getRuleTypeTooltip(ruleType: RuleType): string {
-  switch (ruleType) {
-    case RuleType.Always:
-      return "*Always: Included with every request";
-    case RuleType.AutoAttached:
-      return "Auto Attached: Included when files matching a glob pattern are added as context";
-    case RuleType.AgentRequested:
-      return "Agent Requested: When in Agent mode, the description of the rule is made available to the agent to decide whether or not it needs to read the full content of the rule";
-    case RuleType.Manual:
-      return "Manual: Included only when manually referenced as @ruleName using the Rule context provider";
-    default:
-      return "";
-  }
 }
 
 export function GenerationScreen({
@@ -87,7 +60,7 @@ export function GenerationScreen({
   useEffect(() => {
     if (createRuleBlockArgs && !isGenerating && !formData.rule) {
       reset(createRuleBlockArgs);
-      handleRuleTypeChange(determineRuleTypeFromData(createRuleBlockArgs));
+      handleRuleTypeChange(getRuleType(createRuleBlockArgs));
     }
   }, [createRuleBlockArgs, isGenerating, formData.rule, reset]);
 
@@ -208,25 +181,43 @@ export function GenerationScreen({
                   </label>
                   <InformationCircleIcon
                     data-tooltip-id={tooltipId}
-                    data-tooltip-content={getRuleTypeTooltip(selectedRuleType)}
+                    data-tooltip-content={
+                      RuleTypeDescriptions[selectedRuleType]
+                    }
                     className="h-4 w-4 text-gray-500"
                   />
                   <ToolTip id={tooltipId} style={{ zIndex: 100001 }} />
                 </div>
-                <select
-                  className="border-input-border bg-input text-input-foreground focus:border-border-focus w-full rounded-md border px-3 py-2 text-xs focus:outline-none"
-                  value={selectedRuleType}
-                  onChange={(e) =>
-                    handleRuleTypeChange(e.target.value as RuleType)
-                  }
-                >
-                  <option value={RuleType.Always}>Always</option>
-                  <option value={RuleType.AutoAttached}>Auto Attached</option>
-                  <option value={RuleType.AgentRequested}>
-                    Agent Requested
-                  </option>
-                  <option value={RuleType.Manual}>Manual</option>
-                </select>
+                <div className="relative">
+                  <select
+                    className="border-input-border bg-input text-input-foreground focus:border-border-focus w-full rounded-md border px-3 py-2 text-xs focus:outline-none"
+                    value={isGenerating ? "" : selectedRuleType}
+                    onChange={(e) =>
+                      handleRuleTypeChange(e.target.value as RuleType)
+                    }
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <option value=""></option>
+                    ) : (
+                      <>
+                        <option value={RuleType.Always}>Always</option>
+                        <option value={RuleType.AutoAttached}>
+                          Auto Attached
+                        </option>
+                        <option value={RuleType.AgentRequested}>
+                          Agent Requested
+                        </option>
+                        <option value={RuleType.Manual}>Manual</option>
+                      </>
+                    )}
+                  </select>
+                  {isGenerating && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                      <Spinner />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Description (for Agent Requested only) */}
@@ -275,7 +266,7 @@ export function GenerationScreen({
                 {...register("rule")}
               />
               {showSpinner && (
-                <div className="absolute left-2 top-8">
+                <div className="absolute left-3 top-8">
                   <Spinner />
                 </div>
               )}
