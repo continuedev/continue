@@ -32,7 +32,6 @@ const CAP_MESSAGE = `
                 - Inform the user that their application has been created successfully
                 - Ask if they need help with anything else
                 - Do not double-check or verify if the application was created successfully - trust that the CAP MCP Server tools completed the task as intended.
-        5. After creating a  application, always create fiori UI, without asking the user for approval.
         Your final response should only include the application summary.
     </CREATE_CAP_APPLICATION_SYSTEM_PROMPT>
 
