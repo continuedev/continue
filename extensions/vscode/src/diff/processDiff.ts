@@ -1,5 +1,7 @@
 import { Core } from "core/core";
+import { DataLogger } from "core/data/log";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
+import { editOutcomeTracker } from "../extension/EditOutcomeTracker";
 import { VsCodeIde } from "../VsCodeIde";
 import { VerticalDiffManager } from "./vertical/manager";
 
@@ -27,6 +29,11 @@ export async function processDiff(
 
   await ide.openFile(newOrCurrentUri);
 
+  // If streamId is not provided, try to get it from the VerticalDiffManager
+  if (!streamId) {
+    streamId = verticalDiffManager.getStreamIdForFile(newOrCurrentUri);
+  }
+
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
   if (action === "reject") {
@@ -36,6 +43,13 @@ export async function processDiff(
 
   if (streamId) {
     const fileContent = await ide.readFile(newOrCurrentUri);
+
+    // Record the edit outcome before updating the apply state
+    await editOutcomeTracker.recordEditOutcome(
+      streamId,
+      action === "accept",
+      DataLogger.getInstance(),
+    );
 
     await sidebar.webviewProtocol.request("updateApplyState", {
       fileContent,

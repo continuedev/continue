@@ -42,7 +42,7 @@ export class ApplyManager {
 
     const { activeTextEditor } = vscode.window;
     if (!activeTextEditor) {
-      vscode.window.showErrorMessage("No active editor to apply edits to");
+      void vscode.window.showErrorMessage("No active editor to apply edits to");
       return;
     }
 
@@ -116,14 +116,14 @@ export class ApplyManager {
   ) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
-      vscode.window.showErrorMessage("Config not loaded");
+      void vscode.window.showErrorMessage("Config not loaded");
       return;
     }
 
     const llm =
       config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
     if (!llm) {
-      vscode.window.showErrorMessage(
+      void vscode.window.showErrorMessage(
         `No model with roles "apply" or "chat" found in config.`,
       );
       return;
@@ -177,7 +177,7 @@ export class ApplyManager {
   ) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
-      vscode.window.showErrorMessage("Config not loaded");
+      void vscode.window.showErrorMessage("Config not loaded");
       return;
     }
 
