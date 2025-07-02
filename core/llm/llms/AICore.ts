@@ -44,7 +44,8 @@ const CAP_MESSAGE = `
             - Inform the user that the UI has been created successfully
             - Ask if they need help with anything else
             - Do not double-check or verify if the UI was created successfully - trust that the Fiori MCP Server tools completed the task as intended.
-        4. On any follow-up request to change or modify the UI of the full stack application, always try first to make the change by modifying only the annotations.cds file within the related UI application folder.
+        4. When completing creation of the application components do not provide more information on the created components and do not provide information on how to run it. 
+        5. On any follow-up request to change or modify the UI of the full stack application, always try first to make the change by modifying only the app/annotations.cds file. 
     </CREATE_FIORI_UI_SYSTEM_PROMPT>
 
     <PUBLISH_APPLICATION_TO_GIT_HUB_FLOW>
