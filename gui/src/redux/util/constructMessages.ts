@@ -10,7 +10,7 @@ import {
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
-import { convertToolCallStateToXmlCallsAndOutput } from "core/tools/systemMessageTools/textify";
+import { convertToolCallStateToXmlCallsAndOutput } from "core/tools/systemMessageTools/textifyXmlTools";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,

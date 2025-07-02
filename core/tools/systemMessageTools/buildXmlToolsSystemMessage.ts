@@ -2,7 +2,7 @@ import { XMLBuilder } from "fast-xml-parser";
 import { Tool } from "../..";
 import { closeTag } from "./xmlToolUtils";
 
-export const TOOL_INSTRUCTIONS_TAG = "<tools_instructions>";
+export const TOOL_INSTRUCTIONS_TAG = "<tool_use_instructions>";
 export const TOOL_DEFINITION_TAG = "<tool_definition>";
 export const TOOL_DESCRIPTION_TAG = "<description>";
 export const TOOL_CALL_TAG = "<tool_call>";
@@ -84,7 +84,7 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
 
   let prompt = TOOL_INSTRUCTIONS_TAG;
   prompt += `You have access to several "tools" that you can use at any time to perform tasks for the User and interact with the IDE.`;
-  prompt += `\nTo use a tool, respond with a ${TOOL_CALL_TAG}, specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG} as shown in the provided examples below.`;
+  prompt += `\nTo use a tool, respond with a ${TOOL_CALL_TAG} (NOT in a codeblock!!!), specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG} (if required) as shown in the relevant examples below.`;
 
   if (withPredefinedMessage.length > 0) {
     prompt += `\n\nThe following tools are available to you:`;
@@ -116,8 +116,7 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
   }
 
   prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool's description.`;
-  prompt += `\nDo NOT use codeblocks for tool calls. You can only call one tool at a time.`;
-  prompt += `\nYou are the one who sends the tool call, not the user. You must respond with <tool_call>... to use a tool.`;
+  prompt += `\nYou are the one who sends the tool call, not the user. You can only call one tool at a time.`;
 
   prompt += `\n${closeTag(TOOL_INSTRUCTIONS_TAG)}`;
 
