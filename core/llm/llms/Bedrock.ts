@@ -1,8 +1,10 @@
 import {
   BedrockRuntimeClient,
   ContentBlock,
+  ConversationRole,
   ConverseStreamCommand,
   ConverseStreamCommandOutput,
+  ImageFormat,
   InvokeModelCommand,
   Message,
   ToolConfiguration,
@@ -14,6 +16,7 @@ import {
   Chunk,
   CompletionOptions,
   LLMOptions,
+  MessageContent,
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
@@ -289,8 +292,8 @@ class Bedrock extends BaseLLM {
     const systemMessage = stripImages(
       messages.find((m) => m.role === "system")?.content ?? "",
     );
-    const convertedMessages = this._convertMessages(messages);
 
+    // Prompt and system message caching settings
     const shouldCacheSystemMessage =
       (!!systemMessage && this.cacheBehavior?.cacheSystemMessage) ||
       this.completionOptions.promptCaching;
@@ -298,9 +301,7 @@ class Bedrock extends BaseLLM {
       shouldCacheSystemMessage ||
       this.cacheBehavior?.cacheConversation ||
       this.completionOptions.promptCaching;
-    const shouldCacheToolsConfig = this.completionOptions.promptCaching;
 
-    // Add header for prompt caching
     if (enablePromptCaching) {
       this.requestOptions.headers = {
         ...this.requestOptions.headers,
@@ -308,29 +309,36 @@ class Bedrock extends BaseLLM {
       };
     }
 
+    // First get tools
     const supportsTools =
       (this.capabilities?.tools ||
         PROVIDER_TOOL_SUPPORT.bedrock?.(options.model)) ??
       false;
 
-    let toolConfig =
-      supportsTools && options.tools
-        ? ({
-            tools: options.tools.map((tool) => ({
-              toolSpec: {
-                name: tool.function.name,
-                description: tool.function.description,
-                inputSchema: {
-                  json: tool.function.parameters,
-                },
-              },
-            })),
-          } as ToolConfiguration)
-        : undefined;
-
-    if (toolConfig?.tools && shouldCacheToolsConfig) {
-      toolConfig.tools.push({ cachePoint: { type: "default" } });
+    let toolConfig: undefined | ToolConfiguration = undefined;
+    const availableTools = new Set<string>();
+    if (supportsTools && options.tools && options.tools.length > 0) {
+      toolConfig = {
+        tools: options.tools.map((tool) => ({
+          toolSpec: {
+            name: tool.function.name,
+            description: tool.function.description,
+            inputSchema: {
+              json: tool.function.parameters,
+            },
+          },
+        })),
+      } as ToolConfiguration;
+      const shouldCacheToolsConfig = this.completionOptions.promptCaching;
+      if (shouldCacheToolsConfig) {
+        toolConfig.tools!.push({ cachePoint: { type: "default" } });
+      }
+      options.tools.forEach((tool) => {
+        availableTools.add(tool.function.name);
+      });
     }
+
+    const convertedMessages = this._convertMessages(messages, availableTools);
 
     return {
       modelId: options.model,
@@ -368,25 +376,75 @@ class Bedrock extends BaseLLM {
     };
   }
 
-  private _convertMessage(
-    message: ChatMessage,
-    addCaching: boolean = false,
-  ): Message | null {
-    // Handle system messages explicitly
-    if (message.role === "system") {
-      return null;
+  private _convertMessages(
+    messages: ChatMessage[],
+    availableTools: Set<string>,
+  ): Message[] {
+    const nonSystemMessages = messages.filter((m) => m.role !== "system");
+
+    const lastTwoUserMsgIndices: number[] = [];
+    for (let i = nonSystemMessages.length - 1; i >= 0; i--) {
+      if (nonSystemMessages[i].role === "user") {
+        lastTwoUserMsgIndices.push(i);
+        if (lastTwoUserMsgIndices.length === 2) {
+          break;
+        }
+      }
     }
 
-    const cachePoint = addCaching
-      ? { cachePoint: { type: "default" } }
-      : undefined;
+    let currentRole: "user" | "assistant" = "user";
+    let currentBlocks: ContentBlock[] = [];
+    let addCachePoint = false;
 
-    // Tool response handling
-    if (message.role === "tool") {
-      return {
-        role: "user",
-        content: [
-          {
+    const converted: Message[] = [];
+    const pushCurrentMessage = () => {
+      if (currentBlocks.length === 0 && converted.length > 1) {
+        throw new Error(
+          `Bedrock: no content in ${currentRole} message before conversational turn change`,
+        );
+      }
+      if (currentBlocks.length > 0) {
+        if (addCachePoint) {
+          currentBlocks.push({ cachePoint: { type: "default" } });
+        }
+        converted.push({
+          role: currentRole,
+          content: currentBlocks,
+        });
+      }
+      // Change roles and reset
+      currentBlocks = [];
+      addCachePoint = false;
+    };
+
+    for (let idx = 0; idx < nonSystemMessages.length; idx++) {
+      const message = nonSystemMessages[idx];
+      if (message.role === "user" || message.role === "tool") {
+        pushCurrentMessage();
+        currentRole = ConversationRole.USER;
+
+        if (message.role === "user") {
+          if (message.content) {
+            // Add cache_control parameter to the last two user messages
+            // The second-to-last because it retrieves potentially already cached contents,
+            // The last one because we want it cached for later retrieval.
+            // See: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
+            const messageIsCached = !!(
+              this.cacheBehavior?.cacheConversation &&
+              lastTwoUserMsgIndices.includes(idx)
+            );
+            if (messageIsCached) {
+              addCachePoint = true;
+            }
+            currentBlocks.push(
+              ...this._convertMessageContentToBlocks(
+                message.content,
+                messageIsCached,
+              ),
+            );
+          }
+        } else if (message.role === "tool") {
+          currentBlocks.push({
             toolResult: {
               toolUseId: message.toolCallId,
               content: [
@@ -395,140 +453,115 @@ class Bedrock extends BaseLLM {
                 },
               ],
             },
-          },
-        ],
-      };
-    }
-
-    // Tool calls handling
-    if (message.role === "assistant" && message.toolCalls) {
-      return {
-        role: "assistant",
-        content: message.toolCalls.map((toolCall) => ({
-          toolUse: {
-            toolUseId: toolCall.id,
-            name: toolCall.function?.name,
-            input: safeParseToolCallArgs(toolCall),
-          },
-        })),
-      };
-    }
-
-    if (message.role === "thinking") {
-      if (message.redactedThinking) {
-        const content: ContentBlock.ReasoningContentMember = {
-          reasoningContent: {
-            redactedContent: new Uint8Array(
-              Buffer.from(message.redactedThinking),
-            ),
-          },
-        };
-        return {
-          role: "assistant",
-          content: [content],
-        };
+          });
+        }
       } else {
-        const content: ContentBlock.ReasoningContentMember = {
-          reasoningContent: {
-            reasoningText: {
-              text: (message.content as string) || "",
-              signature: message.signature,
-            },
-          },
-        };
-        return {
-          role: "assistant",
-          content: [content],
-        };
+        pushCurrentMessage();
+        currentRole = ConversationRole.ASSISTANT;
+
+        if (message.role === "assistant") {
+          if (message.content) {
+            currentBlocks.push(
+              ...this._convertMessageContentToBlocks(message.content, false),
+            );
+          }
+          if (message.toolCalls) {
+            for (const toolCall of message.toolCalls) {
+              if (availableTools.has(toolCall.function?.name || "")) {
+                currentBlocks.push({
+                  toolUse: {
+                    toolUseId: toolCall.id,
+                    name: toolCall.function?.name,
+                    input: safeParseToolCallArgs(toolCall),
+                  },
+                });
+              } else {
+                console.warn(
+                  `Tool ${toolCall.function?.name} is not available for this model.`,
+                );
+              }
+            }
+          }
+        } else if (message.role === "thinking") {
+          if (message.redactedThinking) {
+            const block: ContentBlock.ReasoningContentMember = {
+              reasoningContent: {
+                redactedContent: new Uint8Array(
+                  Buffer.from(message.redactedThinking),
+                ),
+              },
+            };
+            currentBlocks.push(block);
+          } else {
+            const block: ContentBlock.ReasoningContentMember = {
+              reasoningContent: {
+                reasoningText: {
+                  text: (message.content as string) || "",
+                  signature: message.signature,
+                },
+              },
+            };
+            currentBlocks.push(block);
+          }
+        }
       }
     }
 
-    // Standard text message
-    if (typeof message.content === "string") {
-      if (addCaching) {
-        message.content += getSecureID();
-      }
-      const content: any[] = [{ text: message.content }];
-      if (addCaching) {
-        content.push({ cachePoint: { type: "default" } });
-      }
-      return {
-        role: message.role,
-        content,
-      };
-    }
+    return converted;
+  }
 
-    // Improved multimodal content handling
-    if (Array.isArray(message.content)) {
-      const content: any[] = [];
-
-      // Process all parts first
-      message.content.forEach((part) => {
+  private _convertMessageContentToBlocks(
+    content: MessageContent,
+    addCaching: boolean,
+  ): ContentBlock[] {
+    const blocks: ContentBlock[] = [];
+    if (typeof content === "string") {
+      let contentText = content;
+      if (addCaching) {
+        contentText += getSecureID();
+      }
+      blocks.push({ text: contentText });
+      if (addCaching) {
+        blocks.push({ cachePoint: { type: "default" } });
+      }
+    } else {
+      for (const part of content) {
         if (part.type === "text") {
           if (addCaching) {
             part.text += getSecureID();
           }
-          content.push({ text: part.text });
+          blocks.push({ text: part.text });
         } else if (part.type === "imageUrl" && part.imageUrl) {
           try {
             const [mimeType, base64Data] = part.imageUrl.url.split(",");
             const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
-            content.push({
-              image: {
-                format,
-                source: {
-                  bytes: Buffer.from(base64Data, "base64"),
+            if (
+              format === ImageFormat.JPEG ||
+              format === ImageFormat.PNG ||
+              format === ImageFormat.WEBP ||
+              format === ImageFormat.GIF
+            ) {
+              blocks.push({
+                image: {
+                  format,
+                  source: {
+                    bytes: Uint8Array.from(Buffer.from(base64Data, "base64")),
+                  },
                 },
-              },
-            });
+              });
+            } else {
+              console.warn(
+                `Bedrock: skipping unsupported image part format: ${format}`,
+                part,
+              );
+            }
           } catch (error) {
-            console.warn(`Failed to process image: ${error}`);
+            console.warn("Bedrock: failed to process image part", error, part);
           }
         }
-      });
-
-      // Add cache point as a separate block at the end if needed
-      if (addCaching && content.length > 0) {
-        content.push({ cachePoint: { type: "default" } });
       }
-
-      return {
-        role: message.role,
-        content,
-      } as Message;
     }
-    return null;
-  }
-
-  private _convertMessages(messages: ChatMessage[]): any[] {
-    const filteredmessages = messages.filter(
-      (m) => m.role !== "system" && !!m.content,
-    );
-    const lastTwoUserMsgIndices = filteredmessages
-      .map((msg, index) => (msg.role === "user" ? index : -1))
-      .filter((index) => index !== -1)
-      .slice(-2);
-
-    const converted = filteredmessages
-      .map((message, filteredMsgIdx) => {
-        // Add cache_control parameter to the last two user messages
-        // The second-to-last because it retrieves potentially already cached contents,
-        // The last one because we want it cached for later retrieval.
-        // See: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
-        const addCaching =
-          this.cacheBehavior?.cacheConversation &&
-          lastTwoUserMsgIndices.includes(filteredMsgIdx);
-
-        try {
-          return this._convertMessage(message, addCaching);
-        } catch (error) {
-          console.error(`Failed to convert message: ${error}`);
-          return null;
-        }
-      })
-      .filter(Boolean);
-
-    return converted;
+    return blocks;
   }
 
   private async _getCredentials() {
