@@ -29,7 +29,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
-  useNativeTools: boolean,
+  useSystemMessageTools = false,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
@@ -79,7 +79,7 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
-      if (item.toolCallState && !useNativeTools) {
+      if (item.toolCallState && useSystemMessageTools) {
         const { userMessage, assistantMessage } =
           convertToolCallStateToXmlCallsAndOutput(
             item.message,
