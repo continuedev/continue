@@ -18,6 +18,7 @@ import {
   RuleWithSource,
   Session,
   SessionMetadata,
+  Tool,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -535,6 +536,7 @@ export const sessionSlice = createSlice({
       state,
       action: PayloadAction<{
         toolCallId: string;
+        tools: Tool[];
       }>,
     ) => {
       const toolCallState = findToolCall(
@@ -543,6 +545,13 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "generated";
+
+        const tool = action.payload.tools.find(
+          (t) => t.function.name === toolCallState.toolCall.function.name,
+        );
+        if (tool) {
+          toolCallState.tool = tool;
+        }
       }
     },
     updateToolCallOutput: (

@@ -186,7 +186,6 @@ function logToolUsage(
       functionName: toolCall.function.name,
       functionArgs: toolCall.function.arguments,
       toolCallArgs: args,
-      parsedArgs: args,
       output: contextItems,
       succeeded: success,
     },
