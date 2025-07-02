@@ -25,7 +25,8 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     expect(result).toBe(
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\nNo rules available.",
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
+        "No rules available.",
     );
   });
 
@@ -69,7 +70,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     const expected =
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
       "Agent Rule 1: First agent-requested rule\n" +
       "Agent Rule 2: Second agent-requested rule";
 
@@ -90,7 +91,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     const expected =
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
       "Rule Without Description: undefined";
 
     expect(result).toBe(expected);
@@ -110,7 +111,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     const expected =
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
       "undefined: Rule without name";
 
     expect(result).toBe(expected);
@@ -130,7 +131,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     const expected =
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
       "Rule Without File: Rule without file path";
 
     expect(result).toBe(expected);
@@ -159,7 +160,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     const expected =
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
       "Valid Agent Rule: This should be included";
 
     expect(result).toBe(expected);
@@ -198,7 +199,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     const expected =
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
       "Valid Agent Rule: This should be included";
 
     expect(result).toBe(expected);
@@ -210,7 +211,8 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     expect(result).toBe(
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\nNo rules available.",
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
+        "No rules available.",
     );
   });
 
@@ -229,7 +231,7 @@ describe("getRequestRuleDescription", () => {
     const result = getRequestRuleDescription(rules);
 
     const expected =
-      "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n" +
+      "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n" +
       "Single Rule: The only agent-requested rule";
 
     expect(result).toBe(expected);
