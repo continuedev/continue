@@ -376,26 +376,16 @@ class Bedrock extends BaseLLM {
     };
   }
 
+  /*
+    Converts the messages to the format expected by the Bedrock API.
+    
+    */
   private _convertMessages(
     messages: ChatMessage[],
     availableTools: Set<string>,
   ): Message[] {
-    const nonSystemMessages = messages.filter((m) => m.role !== "system");
-
-    const lastTwoUserMsgIndices: number[] = [];
-    for (let i = nonSystemMessages.length - 1; i >= 0; i--) {
-      if (nonSystemMessages[i].role === "user") {
-        lastTwoUserMsgIndices.push(i);
-        if (lastTwoUserMsgIndices.length === 2) {
-          break;
-        }
-      }
-    }
-
-    const hasAddedToolCallIds = new Set<string>();
     let currentRole: "user" | "assistant" = "user";
     let currentBlocks: ContentBlock[] = [];
-    let addCachePoint = false;
 
     const converted: Message[] = [];
     const pushCurrentMessage = () => {
@@ -405,53 +395,46 @@ class Bedrock extends BaseLLM {
         );
       }
       if (currentBlocks.length > 0) {
-        if (addCachePoint) {
-          currentBlocks.push({ cachePoint: { type: "default" } });
-        }
         converted.push({
           role: currentRole,
           content: currentBlocks,
         });
       }
-      // Change roles and reset
       currentBlocks = [];
-      addCachePoint = false;
     };
+
+    const nonSystemMessages = messages.filter((m) => m.role !== "system");
+    const hasAddedToolCallIds = new Set<string>();
 
     for (let idx = 0; idx < nonSystemMessages.length; idx++) {
       const message = nonSystemMessages[idx];
 
       if (message.role === "user" || message.role === "tool") {
+        // Detect conversational turn change
         if (currentRole !== ConversationRole.USER) {
           pushCurrentMessage();
           currentRole = ConversationRole.USER;
         }
 
+        // USER messages:
+        // Non-empty user message content is converted to "text" and "image" blocks
+        // If ANY user message part is cached, we add a single cache point block when we push the message
         if (message.role === "user") {
           const trimmedContent =
             typeof message.content === "string"
               ? message.content.trim()
               : message.content;
           if (trimmedContent) {
-            // Add cache_control parameter to the last two user messages
-            // The second-to-last because it retrieves potentially already cached contents,
-            // The last one because we want it cached for later retrieval.
-            // See: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
-            const messageIsCached = !!(
-              this.cacheBehavior?.cacheConversation &&
-              lastTwoUserMsgIndices.includes(idx)
-            );
-            if (messageIsCached) {
-              addCachePoint = true;
-            }
             currentBlocks.push(
-              ...this._convertMessageContentToBlocks(
-                trimmedContent,
-                messageIsCached,
-              ),
+              ...this._convertMessageContentToBlocks(trimmedContent),
             );
           }
-        } else if (message.role === "tool") {
+        }
+        // TOOL messages:
+        // Tool messages are represented by "toolResult" blocks
+        // toolResult blocks must follow valid toolUse blocks (which also verifies that the tool name is present in toolConfig)
+        // If it doesn't, we convert it to a text block
+        else if (message.role === "tool") {
           const trimmedContent = message.content.trim() || "No tool output";
           if (hasAddedToolCallIds.has(message.toolCallId)) {
             currentBlocks.push({
@@ -471,11 +454,14 @@ class Bedrock extends BaseLLM {
           }
         }
       } else if (message.role === "assistant" || message.role === "thinking") {
+        // Detect conversational turn change
         if (currentRole !== ConversationRole.ASSISTANT) {
           pushCurrentMessage();
           currentRole = ConversationRole.ASSISTANT;
         }
 
+        // ASSISTANT messages:
+        // Non-empty assistant message content is converted to "text" and "image" blocks
         if (message.role === "assistant") {
           const trimmedContent =
             typeof message.content === "string"
@@ -483,14 +469,18 @@ class Bedrock extends BaseLLM {
               : message.content;
           if (trimmedContent) {
             currentBlocks.push(
-              ...this._convertMessageContentToBlocks(trimmedContent, false),
+              ...this._convertMessageContentToBlocks(trimmedContent),
             );
           }
+          // TOOL CALLS:
+          // Tool calls are represented by "toolUse" blocks
+          // Each tool call must have an id and a function name
+          // The function name must match one of the available tools
+          // Otherwise, we will convert it to a text block (e.g. Chat mode will pass no tools)
           if (message.toolCalls) {
             for (const toolCall of message.toolCalls) {
               if (toolCall.id && toolCall.function?.name) {
                 if (availableTools.has(toolCall.function.name)) {
-                  hasAddedToolCallIds.add(toolCall.id);
                   currentBlocks.push({
                     toolUse: {
                       toolUseId: toolCall.id,
@@ -498,6 +488,7 @@ class Bedrock extends BaseLLM {
                       input: safeParseToolCallArgs(toolCall),
                     },
                   });
+                  hasAddedToolCallIds.add(toolCall.id);
                 } else {
                   const toolCallText = `Assistant tool call:\nTool name: ${toolCall.function.name}\nTool Call ID: ${toolCall.id}\nArguments: ${toolCall.function?.arguments ?? "{}"}`;
                   currentBlocks.push({
@@ -513,6 +504,8 @@ class Bedrock extends BaseLLM {
             }
           }
         } else if (message.role === "thinking") {
+          // THINKING:
+          // Thinking messages are represented by "reasoningContent" blocks which can have redacted content or reasoning content
           if (message.redactedThinking) {
             const block: ContentBlock.ReasoningContentMember = {
               reasoningContent: {
@@ -540,29 +533,47 @@ class Bedrock extends BaseLLM {
       pushCurrentMessage();
     }
 
+    // If caching is enabled, we add cache_control parameter to the last two user messages
+    // The second-to-last because it retrieves potentially already cached contents,
+    // The last one because we want it cached for later retrieval.
+    // See: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
+    if (this.cacheBehavior?.cacheConversation) {
+      this._addCachingToLastTwoUserMessages(converted);
+    }
+
     return converted;
   }
 
+  private _addCachingToLastTwoUserMessages(converted: Message[]) {
+    let numCached = 0;
+    for (let i = converted.length - 1; i >= 0; i--) {
+      const message = converted[i];
+      if (message.role === "user") {
+        message.content?.forEach((block) => {
+          if (block.text) {
+            block.text += getSecureID();
+          }
+        });
+        message.content?.push({ cachePoint: { type: "default" } });
+        numCached++;
+      }
+      if (numCached === 2) {
+        break;
+      }
+    }
+  }
+
+  // Converts Continue message content (string/parts) to Bedrock ContentBlock format.
+  // Unsupported/problematic image formats are skipped with a warning.
   private _convertMessageContentToBlocks(
     content: MessageContent,
-    addCaching: boolean,
   ): ContentBlock[] {
     const blocks: ContentBlock[] = [];
     if (typeof content === "string") {
-      let contentText = content;
-      if (addCaching) {
-        contentText += getSecureID();
-      }
-      blocks.push({ text: contentText });
-      if (addCaching) {
-        blocks.push({ cachePoint: { type: "default" } });
-      }
+      blocks.push({ text: content });
     } else {
       for (const part of content) {
         if (part.type === "text") {
-          if (addCaching) {
-            part.text += getSecureID();
-          }
           blocks.push({ text: part.text });
         } else if (part.type === "imageUrl" && part.imageUrl) {
           try {
