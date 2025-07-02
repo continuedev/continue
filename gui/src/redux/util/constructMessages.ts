@@ -37,11 +37,15 @@ export function constructMessages(
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
+  appliedRuleIndex: number;
 } {
   const historyCopy = [...history];
 
   const msgs: MessageWithContextItems[] = [];
+  let appliedRuleIndex = -1;
+  let index = -1;
   for (const item of historyCopy) {
+    index++;
     if (
       item.message.role === "system" ||
       item.message.role === "tool" ||
@@ -52,6 +56,7 @@ export function constructMessages(
     }
 
     if (item.message.role === "user") {
+      appliedRuleIndex = index;
       // Gather context items for user messages
       let content = normalizeToMessageParts(item.message);
 
@@ -152,6 +157,7 @@ export function constructMessages(
   return {
     messages,
     appliedRules,
+    appliedRuleIndex,
   };
 }
 

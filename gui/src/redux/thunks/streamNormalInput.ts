@@ -67,7 +67,7 @@ export const streamNormalInput = createAsyncThunk<
       const { id, ...messageWithoutId } = item.message;
       return { ...item, message: messageWithoutId };
     });
-    const { messages, appliedRules } = constructMessages(
+    const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
       baseSystemMessage,
       state.config.config.rules,
@@ -78,7 +78,7 @@ export const streamNormalInput = createAsyncThunk<
     // because there will be multiple tool messages, so which one should have applied rules?
     dispatch(
       setAppliedRulesAtIndex({
-        index: messages.length - 1,
+        index: appliedRuleIndex,
         appliedRules: appliedRules,
       }),
     );
