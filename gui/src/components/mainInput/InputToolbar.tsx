@@ -153,7 +153,9 @@ function InputToolbar(props: InputToolbarProps) {
                 />
 
                 <ToolTip id="model-reasoning-tooltip" place="top">
-                  Use Model Reasoning
+                  {hasReasoningEnabled
+                    ? "Disable model reasoning"
+                    : "Enable model reasoning"}
                 </ToolTip>
               </HoverItem>
             )}
