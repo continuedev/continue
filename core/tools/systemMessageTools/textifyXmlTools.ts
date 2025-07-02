@@ -1,6 +1,7 @@
 import { XMLBuilder } from "fast-xml-parser";
 import {
   AssistantChatMessage,
+  MessagePart,
   ToolCallDelta,
   ToolCallState,
   UserChatMessage,
@@ -9,7 +10,7 @@ import {
   normalizeToMessageParts,
   renderContextItems,
 } from "../../util/messageContent";
-function toolCallsToXml(toolCall: ToolCallDelta) {
+function toolCallsToXml(toolCall: ToolCallDelta): string {
   const builder = new XMLBuilder({
     format: true,
     ignoreAttributes: false,
@@ -30,7 +31,13 @@ export function convertToolCallStateToXmlCallsAndOutput(
 } {
   const parts = normalizeToMessageParts(originalAssistantMessage);
   if (originalAssistantMessage.toolCalls?.length) {
-    parts.push(...originalAssistantMessage.toolCalls.map(toolCallsToXml));
+    const toolCallParts: MessagePart[] = originalAssistantMessage.toolCalls.map(
+      (toolCall) => ({
+        type: "text",
+        text: toolCallsToXml(toolCall),
+      }),
+    );
+    parts.push(...toolCallParts);
   }
 
   // new message with tool calls moved to content

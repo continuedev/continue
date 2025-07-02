@@ -117,7 +117,7 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
 
   prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool's description.`;
   prompt += `\nDo NOT use codeblocks for tool calls. You can only call one tool at a time.`;
-  prompt += `\nYou are the one who sends the tool call, not the user. You must respond with the <tool_call> to use a tool.`;
+  prompt += `\nYou are the one who sends the tool call, not the user. You must respond with <tool_call>... to use a tool.`;
 
   prompt += `\n${closeTag(TOOL_INSTRUCTIONS_TAG)}`;
 

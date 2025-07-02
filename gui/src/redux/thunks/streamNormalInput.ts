@@ -72,6 +72,7 @@ export const streamNormalInput = createAsyncThunk<
       baseSystemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
+      useNativeTools,
     );
 
     // TODO parallel tool calls will cause issues with this

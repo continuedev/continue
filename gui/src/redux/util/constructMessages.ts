@@ -29,7 +29,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
-  useNativeTools: boolean = false,
+  useNativeTools: boolean,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
