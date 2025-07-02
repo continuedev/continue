@@ -49,9 +49,18 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
 function templateRendererOfModel(
   modelName: NextEditModelName,
 ): TemplateRenderer {
-  const template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
+  let template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
   if (!template) {
-    throw new Error(`Model ${modelName} is not supported for next edit.`);
+    // Check if modelName includes any known model name as substring.
+    const matchingModel = Object.keys(NEXT_EDIT_MODEL_TEMPLATES).find((key) =>
+      modelName.includes(key),
+    );
+
+    if (matchingModel) {
+      template = NEXT_EDIT_MODEL_TEMPLATES[matchingModel as NextEditModelName];
+    } else {
+      throw new Error(`Model ${modelName} is not supported for next edit.`);
+    }
   }
 
   const compiledTemplate = Handlebars.compile(template.template);
