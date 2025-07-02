@@ -1102,11 +1102,6 @@ export class Core {
     }
 
     try {
-      const id: ContextItemId = {
-        providerTitle: provider.description.title,
-        itemId: uuidv4(),
-      };
-
       void Telemetry.capture("context_provider_get_context_items", {
         name: provider.description.title,
       });
@@ -1131,10 +1126,14 @@ export class Core {
         true,
       );
 
-      return items.map((item) => ({
-        ...item,
-        id,
-      }));
+      return items.map((item) => {
+        const id: ContextItemId = {
+          providerTitle: provider.description.title,
+          itemId: uuidv4(),
+        };
+
+        return { ...item, id };
+      });
     } catch (e) {
       let knownError = false;
 
