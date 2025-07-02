@@ -1,5 +1,9 @@
 import { BuiltInToolNames } from "core/tools/builtIn";
-import { setToolPolicy, ToolPolicy } from "../redux/slices/uiSlice";
+import {
+  clearToolPolicy,
+  setToolPolicy,
+  ToolPolicy,
+} from "../redux/slices/uiSlice";
 import { AppDispatch } from "../redux/store";
 
 const validPolicyValues: ToolPolicy[] = [
@@ -39,7 +43,7 @@ function migrateToolPolicies(dispatch: AppDispatch) {
       if (parsedSettings) {
         let migratedToolSettings = 0;
         Object.entries(toFromMap).forEach(([newToolName, oldToolNames]) => {
-          for (const tool in oldToolNames) {
+          for (const tool of oldToolNames) {
             if (
               tool in parsedSettings &&
               validPolicyValues.includes(parsedSettings[tool])
@@ -50,6 +54,7 @@ function migrateToolPolicies(dispatch: AppDispatch) {
                   policy: parsedSettings[tool],
                 }),
               );
+              dispatch(clearToolPolicy(tool));
               migratedToolSettings++;
             }
           }

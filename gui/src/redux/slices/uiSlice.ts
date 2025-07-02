@@ -115,6 +115,9 @@ export const uiSlice = createSlice({
     ) => {
       state.toolSettings[action.payload.toolName] = action.payload.policy;
     },
+    clearToolPolicy: (state, action: PayloadAction<string>) => {
+      delete state.toolSettings[action.payload];
+    },
     toggleToolSetting: (state, action: PayloadAction<string>) => {
       const setting = state.toolSettings[action.payload];
 
@@ -176,6 +179,7 @@ export const {
   setHasDismissedExploreDialog,
   toggleToolSetting,
   setToolPolicy,
+  clearToolPolicy,
   toggleToolGroupSetting,
   addTool,
   addRule,
