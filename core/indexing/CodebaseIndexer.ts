@@ -677,10 +677,33 @@ export class CodebaseIndexer {
     );
   }
 
+  private isIndexingConfigSame(
+    config1: ContinueConfig | undefined,
+    config2: ContinueConfig,
+  ) {
+    const codebaseProvider1 = config1?.contextProviders?.find(
+      (provider) =>
+        provider.description.title ===
+        CodebaseContextProvider.description.title,
+    );
+    const codebaseProvider2 = config2.contextProviders?.find(
+      (provider) =>
+        provider.description.title ===
+        CodebaseContextProvider.description.title,
+    );
+    return (
+      config1?.selectedModelByRole.embed ===
+        config2.selectedModelByRole.embed &&
+      codebaseProvider1 === codebaseProvider2
+    );
+  }
+
   private async handleConfigUpdate({
     config: newConfig,
   }: ConfigResult<ContinueConfig>) {
     if (newConfig) {
+      const needsReindex = !this.isIndexingConfigSame(this.config, newConfig);
+
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
 
       // No point in indexing if no codebase context provider
@@ -695,8 +718,10 @@ export class CodebaseIndexer {
         return;
       }
 
-      const dirs = await this.ide.getWorkspaceDirs();
-      await this.refreshCodebaseIndex(dirs);
+      if (needsReindex) {
+        const dirs = await this.ide.getWorkspaceDirs();
+        await this.refreshCodebaseIndex(dirs);
+      }
     }
   }
 }

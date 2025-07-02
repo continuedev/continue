@@ -197,7 +197,7 @@ describe("CodebaseIndexer", () => {
 
   test("should have indexed all of the files", async () => {
     const indexed = await getAllIndexedFiles();
-    expect(indexed.length).toBeGreaterThanOrEqual(2);
+    expect(indexed.length).toBe(2);
     expect(indexed.some((file) => file.endsWith("test.ts"))).toBe(true);
     expect(indexed.some((file) => file.endsWith("main.py"))).toBe(true);
   });
@@ -221,7 +221,7 @@ describe("CodebaseIndexer", () => {
 
     // Check that the new file was indexed
     const files = await getAllIndexedFiles();
-    expect(files.length).toBeGreaterThanOrEqual(3);
+    expect(files.length).toBe(3);
     expect(files.some((file) => file.endsWith("main.rs"))).toBe(true);
   });
 
@@ -235,7 +235,7 @@ describe("CodebaseIndexer", () => {
 
     // Check that the deleted file was removed from the index
     const files = await getAllIndexedFiles();
-    expect(files.length).toBeGreaterThanOrEqual(2);
+    expect(files.length).toBe(2);
     expect(files.every((file) => !file.endsWith("main.rs"))).toBe(true);
   });
 
