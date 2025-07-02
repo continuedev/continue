@@ -9,10 +9,6 @@ import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
-import {
-  selectCurrentToolCall,
-  selectCurrentToolCallApplyState,
-} from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setHasReasoningEnabled } from "../../redux/slices/sessionSlice";
 import { exitEdit } from "../../redux/thunks/edit";
@@ -53,20 +49,12 @@ function InputToolbar(props: InputToolbarProps) {
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
-  const toolCallState = useAppSelector(selectCurrentToolCall);
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
-  );
   const hasReasoningEnabled = useAppSelector(
     (store) => store.session.hasReasoningEnabled,
   );
 
   const isEnterDisabled =
-    props.disabled ||
-    (isInEdit && codeToEdit.length === 0) ||
-    toolCallState?.status === "generated" ||
-    (currentToolCallApplyState &&
-      currentToolCallApplyState.status !== "closed");
+    props.disabled || (isInEdit && codeToEdit.length === 0);
 
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
