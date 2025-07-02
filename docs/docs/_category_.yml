@@ -1,4 +1,4 @@
-label: 'Continue Docs'
+label: "Continue Docs"
 className: red
 link:
   type: generated-index
