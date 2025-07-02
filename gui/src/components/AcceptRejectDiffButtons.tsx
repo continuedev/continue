@@ -28,7 +28,10 @@ export default function AcceptRejectAllButtons({
   );
   const dispatch = useAppDispatch();
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
-    if (currentToolCallApplyState?.status === "done") {
+    if (
+      status === "rejectDiff" &&
+      currentToolCallApplyState?.status === "done"
+    ) {
       dispatch(
         cancelToolCall({
           toolCallId: currentToolCallApplyState.toolCallId!,
