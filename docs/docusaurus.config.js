@@ -68,8 +68,6 @@ const config = {
     ],
   ],
 
-  plugins: [],
-
   scripts: [
     {
       src: "/scripts/custom-reo.js", // it references from static folder
