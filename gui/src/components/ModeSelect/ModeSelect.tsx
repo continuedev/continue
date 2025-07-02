@@ -1,11 +1,16 @@
-import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
+import { modelIsGreatWithNativeTools } from "core/llm/autodetect";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
+import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
@@ -14,23 +19,16 @@ export function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const agentModeSupported = useMemo(() => {
-    return selectedModel && modelSupportsTools(selectedModel);
+  const isGoodInAgentMode = useMemo(() => {
+    if (!selectedModel) {
+      return true; // no need to show warning if no model is selected
+    }
+    return modelIsGreatWithNativeTools(selectedModel);
   }, [selectedModel]);
   const { mainEditor } = useMainEditor();
   const metaKeyLabel = useMemo(() => {
     return getMetaKeyLabel();
   }, []);
-
-  // Switch to chat mode if agent mode is selected but not supported
-  useEffect(() => {
-    if (!selectedModel) {
-      return;
-    }
-    if (mode === "agent" && !agentModeSupported) {
-      dispatch(setMode("chat"));
-    }
-  }, [mode, agentModeSupported, dispatch, selectedModel]);
 
   const cycleMode = useCallback(() => {
     dispatch(setMode(mode === "chat" ? "agent" : "chat"));
@@ -92,19 +90,45 @@ export function ModeSelect() {
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
 
-          <ListboxOption
-            value="agent"
-            disabled={!agentModeSupported}
-            className={"gap-1"}
-          >
+          <ListboxOption value="agent" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="agent" />
               <span className="">Agent</span>
             </div>
-            {agentModeSupported ? (
-              mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />
+            {!isGoodInAgentMode && (
+              <>
+                <ExclamationCircleIcon
+                  data-tooltip-id="bad-at-agent-mode-tooltip"
+                  className="text-warning h-3 w-3"
+                />
+                <ToolTip
+                  id="bad-at-agent-mode-tooltip"
+                  style={{
+                    zIndex: 200001, // in front of listbox
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  Agent might not work well with this model.{" "}
+                  {/* can't seem to make link in tooltip clickable. globalCloseEvents or closeEvents? */}
+                  {/* <a
+                    href=""
+                    onClick={() => {
+                      ideMessenger.post(
+                        "openUrl",
+                        "https://docs.continue.dev/agent/model-setup",
+                      );
+                    }}
+                    className="text-link cursor-pointer"
+                  >
+                    See docs
+                  </a> */}
+                </ToolTip>
+              </>
+            )}
+            {mode === "agent" ? (
+              <CheckIcon className="ml-auto h-3 w-3" />
             ) : (
-              <span>(Not supported)</span>
+              <div className="ml-auto"></div>
             )}
           </ListboxOption>
 

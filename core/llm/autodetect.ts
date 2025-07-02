@@ -41,7 +41,7 @@ import {
   xWinCoderEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit.js";
-import { PROVIDER_TOOL_SUPPORT } from "./toolSupport.js";
+import { NATIVE_TOOL_SUPPORT } from "./toolSupport.js";
 
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
@@ -106,15 +106,28 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "granite-vision",
 ];
 
-function modelSupportsTools(modelDescription: ModelDescription) {
+function modelSupportsNativeTools(modelDescription: ModelDescription) {
   if (modelDescription.capabilities?.tools !== undefined) {
     return modelDescription.capabilities.tools;
   }
-  const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
+  const providerSupport = NATIVE_TOOL_SUPPORT[modelDescription.provider];
   if (!providerSupport) {
     return false;
   }
   return providerSupport(modelDescription.model) ?? false;
+}
+
+export function modelIsGreatWithNativeTools(
+  modelDescription: ModelDescription,
+): boolean {
+  const model = modelDescription.model;
+  if (
+    model.toLowerCase().includes("claude") &&
+    ["3.5", "3-5", "3.7", "3-7", "-4"].some((p) => model.includes(p))
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function modelSupportsImages(
@@ -393,5 +406,5 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
-  modelSupportsTools,
+  modelSupportsNativeTools,
 };
