@@ -3,6 +3,8 @@ import { distance } from "fastest-levenshtein";
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
 
+export { filterCodeBlockLines } from "./filterCodeBlock";
+
 export type LineFilter = (args: {
   lines: LineStream;
   fullStop: () => void;
@@ -559,100 +561,6 @@ export async function* removeTrailingWhitespace(
 ): LineStream {
   for await (const line of stream) {
     yield line.trimEnd();
-  }
-}
-
-/**
- * Filters and processes lines from a code block, removing unnecessary markers and handling edge cases.
- * Now includes markdown-aware processing to handle nested markdown blocks properly.
- *
- * @param {LineStream} rawLines - The input stream of lines to filter.
- * @param {string} filepath - Optional filepath to determine if this is a markdown file.
- * @yields {string} Filtered and processed lines from the code block.
- *
- * @description
- * This generator function performs the following tasks:
- * 1. Removes initial lines that should be removed before the actual code starts.
- * 2. For markdown files, applies nested markdown block logic to avoid premature termination.
- * 3. For non-markdown files, uses original stopping behavior.
- * 4. Handles special cases where lines should be changed and the stream should stop.
- * 5. Yields processed lines that are part of the actual code block content.
- */
-export async function* filterCodeBlockLines(
-  rawLines: LineStream,
-  filepath?: string,
-): LineStream {
-  let seenFirstFence = false;
-  // nestCount is set to 1 when the entire code block is wrapped with ``` or START blocks. It's then incremented
-  // when an inner code block is discovered to avoid exiting the function prematurely. The function will exit early
-  // when all blocks are matched. When no outer fence is discovered the function will always continue to the end.
-  let nestCount = 0;
-
-  // Collect all lines for analysis
-  const allLines = await collectAllLines(rawLines);
-
-  // Check if it has nested markdown blocks (like ```markdown or ```md)
-  const firstLine = allLines[0] || "";
-  const hasNestedMarkdown = hasNestedMarkdownBlocks(firstLine, filepath);
-
-  // Create optimized state tracker for markdown block analysis if needed
-  let markdownStateTracker: MarkdownBlockState | undefined;
-  if (hasNestedMarkdown) {
-    markdownStateTracker = new MarkdownBlockState(allLines);
-  }
-
-  for (let i = 0; i < allLines.length; i++) {
-    const line = allLines[i];
-
-    // Process block nesting logic for the first fence
-    const nesting = processBlockNesting(line, seenFirstFence);
-    if (nesting.shouldSkip) {
-      continue; // Filter out starting ``` or START block
-    }
-    if (!seenFirstFence && nesting.newSeenFirstFence) {
-      seenFirstFence = true;
-      nestCount = 1;
-    }
-
-    if (nestCount > 0) {
-      // Inside a block including the outer block
-      const changedEndLine = shouldChangeLineAndStop(line);
-      if (typeof changedEndLine === "string") {
-        // Ending a block with just backticks (```) or STOP
-
-        // For markdown files with nested markdown blocks, apply special logic
-        if (
-          hasNestedMarkdown &&
-          line.trim() === "```" &&
-          markdownStateTracker
-        ) {
-          if (shouldStopAtMarkdownBlock(markdownStateTracker, i)) {
-            return; // Stop without yielding the final closing ```
-          } else {
-            // This is an inner block delimiter, yield it as content
-            yield line;
-            continue;
-          }
-        }
-
-        // Original logic for non-markdown files or simple cases
-        nestCount--;
-        if (nestCount === 0) {
-          // We've closed the outer wrapper - stop without yielding the closing ```
-          return;
-        } else {
-          // This is a nested block closing, yield it as content
-          yield line;
-        }
-      } else if (line.startsWith("```")) {
-        // Going into a nested codeblock
-        nestCount++;
-        yield line;
-      } else {
-        // Otherwise just yield the line as content
-        yield line;
-      }
-    }
   }
 }
 
