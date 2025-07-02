@@ -179,6 +179,7 @@ function logToolUsage(
   contextItems: ContextItem[],
   success: boolean,
 ) {
+  console.log(toolCall.function.arguments);
   void DataLogger.getInstance().logDevData({
     name: "toolUsage",
     data: {
@@ -186,7 +187,6 @@ function logToolUsage(
       functionName: toolCall.function.name,
       functionArgs: toolCall.function.arguments,
       toolCallArgs: args,
-      parsedArgs: args,
       output: contextItems,
       succeeded: success,
     },
