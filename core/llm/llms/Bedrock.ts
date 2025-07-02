@@ -392,6 +392,7 @@ class Bedrock extends BaseLLM {
       }
     }
 
+    const hasAddedToolCallIds = new Set<string>();
     let currentRole: "user" | "assistant" = "user";
     let currentBlocks: ContentBlock[] = [];
     let addCachePoint = false;
@@ -419,12 +420,19 @@ class Bedrock extends BaseLLM {
 
     for (let idx = 0; idx < nonSystemMessages.length; idx++) {
       const message = nonSystemMessages[idx];
+
       if (message.role === "user" || message.role === "tool") {
-        pushCurrentMessage();
-        currentRole = ConversationRole.USER;
+        if (currentRole !== ConversationRole.USER) {
+          pushCurrentMessage();
+          currentRole = ConversationRole.USER;
+        }
 
         if (message.role === "user") {
-          if (message.content) {
+          const trimmedContent =
+            typeof message.content === "string"
+              ? message.content.trim()
+              : message.content;
+          if (trimmedContent) {
             // Add cache_control parameter to the last two user messages
             // The second-to-last because it retrieves potentially already cached contents,
             // The last one because we want it cached for later retrieval.
@@ -438,47 +446,69 @@ class Bedrock extends BaseLLM {
             }
             currentBlocks.push(
               ...this._convertMessageContentToBlocks(
-                message.content,
+                trimmedContent,
                 messageIsCached,
               ),
             );
           }
         } else if (message.role === "tool") {
-          currentBlocks.push({
-            toolResult: {
-              toolUseId: message.toolCallId,
-              content: [
-                {
-                  text: message.content || "",
-                },
-              ],
-            },
-          });
+          const trimmedContent = message.content.trim() || "No tool output";
+          if (hasAddedToolCallIds.has(message.toolCallId)) {
+            currentBlocks.push({
+              toolResult: {
+                toolUseId: message.toolCallId,
+                content: [
+                  {
+                    text: trimmedContent,
+                  },
+                ],
+              },
+            });
+          } else {
+            currentBlocks.push({
+              text: `Tool call output for Tool Call ID ${message.toolCallId}:\n\n${trimmedContent}`,
+            });
+          }
         }
-      } else {
-        pushCurrentMessage();
-        currentRole = ConversationRole.ASSISTANT;
+      } else if (message.role === "assistant" || message.role === "thinking") {
+        if (currentRole !== ConversationRole.ASSISTANT) {
+          pushCurrentMessage();
+          currentRole = ConversationRole.ASSISTANT;
+        }
 
         if (message.role === "assistant") {
-          if (message.content) {
+          const trimmedContent =
+            typeof message.content === "string"
+              ? message.content.trim()
+              : message.content;
+          if (trimmedContent) {
             currentBlocks.push(
-              ...this._convertMessageContentToBlocks(message.content, false),
+              ...this._convertMessageContentToBlocks(trimmedContent, false),
             );
           }
           if (message.toolCalls) {
             for (const toolCall of message.toolCalls) {
-              if (availableTools.has(toolCall.function?.name || "")) {
-                currentBlocks.push({
-                  toolUse: {
-                    toolUseId: toolCall.id,
-                    name: toolCall.function?.name,
-                    input: safeParseToolCallArgs(toolCall),
-                  },
-                });
+              if (toolCall.id && toolCall.function?.name) {
+                if (availableTools.has(toolCall.function.name)) {
+                  hasAddedToolCallIds.add(toolCall.id);
+                  currentBlocks.push({
+                    toolUse: {
+                      toolUseId: toolCall.id,
+                      name: toolCall.function.name,
+                      input: safeParseToolCallArgs(toolCall),
+                    },
+                  });
+                } else {
+                  const toolCallText = `Assistant tool call:\nTool name: ${toolCall.function.name}\nTool Call ID: ${toolCall.id}\nArguments: ${toolCall.function?.arguments ?? "{}"}`;
+                  currentBlocks.push({
+                    text: toolCallText,
+                  });
+                }
               } else {
                 console.warn(
-                  `Tool ${toolCall.function?.name} is not available for this model.`,
+                  `Bedrock: tool call missing id or name, skipping tool call: ${JSON.stringify(toolCall)}`,
                 );
+                continue;
               }
             }
           }
@@ -505,6 +535,9 @@ class Bedrock extends BaseLLM {
           }
         }
       }
+    }
+    if (currentBlocks.length > 0) {
+      pushCurrentMessage();
     }
 
     return converted;
