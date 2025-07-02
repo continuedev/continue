@@ -92,7 +92,6 @@ export function GenerationScreen({
     }
 
     try {
-      debugger;
       const options: any = {
         alwaysApply: formData.alwaysApply,
       };

@@ -82,7 +82,6 @@ export function useRuleGeneration(
     setCreateRuleBlockArgs(null);
 
     try {
-      debugger;
       // Convert current history to ChatMessage format
       const chatMessages: ChatMessage[] = currentHistory.map(
         (item) => item.message,
