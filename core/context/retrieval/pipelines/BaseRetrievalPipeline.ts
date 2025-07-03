@@ -15,23 +15,17 @@ import { openedFilesLruCache } from "../../../autocomplete/util/openedFilesLruCa
 import { chunkDocument } from "../../../indexing/chunk/chunk";
 import { FullTextSearchCodebaseIndex } from "../../../indexing/FullTextSearchCodebaseIndex";
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
-import { BuiltInToolNames } from "../../../tools/builtIn";
+import { callBuiltInTool } from "../../../tools/callTool";
 import { globSearchTool } from "../../../tools/definitions/globSearch";
 import { grepSearchTool } from "../../../tools/definitions/grepSearch";
 import { lsTool } from "../../../tools/definitions/lsTool";
 import { readFileTool } from "../../../tools/definitions/readFile";
 import { viewRepoMapTool } from "../../../tools/definitions/viewRepoMap";
 import { viewSubdirectoryTool } from "../../../tools/definitions/viewSubdirectory";
-import { fileGlobSearchImpl } from "../../../tools/implementations/globSearch";
-import { grepSearchImpl } from "../../../tools/implementations/grepSearch";
-import { lsToolImpl } from "../../../tools/implementations/lsTool";
-import { readFileImpl } from "../../../tools/implementations/readFile";
-import { viewRepoMapImpl } from "../../../tools/implementations/viewRepoMap";
-import { viewSubdirectoryImpl } from "../../../tools/implementations/viewSubdirectory";
 
 const DEFAULT_CHUNK_SIZE = 384;
 
-const availableTools: Tool[] = [
+const AVAILABLE_TOOLS: Tool[] = [
   globSearchTool,
   grepSearchTool,
   lsTool,
@@ -191,21 +185,18 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     const toolSelectionPrompt = `Given the following user input: "${input}"
 
 Available tools:
-${availableTools
-  .map((tool) => {
-    const requiredParams = tool.function.parameters?.required || [];
-    const properties = tool.function.parameters?.properties || {};
-    const paramDescriptions = requiredParams
-      .map(
-        (param: any) =>
-          `${param}: ${properties[param]?.description || "string"}`,
-      )
-      .join(", ");
+${AVAILABLE_TOOLS.map((tool) => {
+  const requiredParams = tool.function.parameters?.required || [];
+  const properties = tool.function.parameters?.properties || {};
+  const paramDescriptions = requiredParams
+    .map(
+      (param: any) => `${param}: ${properties[param]?.description || "string"}`,
+    )
+    .join(", ");
 
-    return `- ${tool.function.name}: ${tool.function.description}
+  return `- ${tool.function.name}: ${tool.function.description}
   Required arguments: ${paramDescriptions || "none"}`;
-  })
-  .join("\n")}
+}).join("\n")}
 
 Determine which tools should be used to answer this query. You should feel free to use multiple tools when they would be helpful for comprehensive results. Respond ONLY a JSON object containing the following and nothing else:
 {
@@ -218,14 +209,20 @@ Determine which tools should be used to answer this query. You should feel free 
 }`;
 
     // Get LLM response for tool selection
-    const toolSelectionResponse = await this.options.llm.complete(
-      toolSelectionPrompt,
+    const toolSelectionResponse = await this.options.llm.chat(
+      [{ role: "user", content: toolSelectionPrompt }],
       new AbortController().signal,
     );
 
     let toolCalls: { name: string; args: any }[] = [];
     try {
-      const parsed = JSON.parse(toolSelectionResponse);
+      const responseContent =
+        typeof toolSelectionResponse.content === "string"
+          ? toolSelectionResponse.content
+          : toolSelectionResponse.content
+              .map((part) => (part.type === "text" ? part.text : ""))
+              .join("");
+      const parsed = JSON.parse(responseContent);
       toolCalls = parsed.tools || [];
       console.log("retrieveWithTools", toolCalls);
     } catch (e) {
@@ -245,58 +242,17 @@ Determine which tools should be used to answer this query. You should feel free 
     };
 
     for (const toolCall of toolCalls) {
-      switch (toolCall.name) {
-        case BuiltInToolNames.FileGlobSearch:
-          toolExtras.tool = globSearchTool;
-          const globSearchContextItems = await fileGlobSearchImpl(
-            toolCall.args,
-            toolExtras,
-          );
-          allContextItems.push(...globSearchContextItems);
-          break;
+      const tool = AVAILABLE_TOOLS.find(
+        (t) => t.function.name === toolCall.name,
+      )!;
 
-        case BuiltInToolNames.GrepSearch:
-          toolExtras.tool = grepSearchTool;
-          const grepContextItems = await grepSearchImpl(
-            toolCall.args,
-            toolExtras,
-          );
-          allContextItems.push(...grepContextItems);
-          break;
-
-        case BuiltInToolNames.LSTool:
-          toolExtras.tool = lsTool;
-          const lsContextItems = await lsToolImpl(toolCall.args, toolExtras);
-          allContextItems.push(...lsContextItems);
-          break;
-
-        case BuiltInToolNames.ReadFile:
-          toolExtras.tool = readFileTool;
-          const readFileImplContextItems = await readFileImpl(
-            toolCall.args,
-            toolExtras,
-          );
-          allContextItems.push(...readFileImplContextItems);
-          break;
-
-        case BuiltInToolNames.ViewRepoMap:
-          toolExtras.tool = viewRepoMapTool;
-          const repoMapContextItems = await viewRepoMapImpl(
-            toolCall.args,
-            toolExtras,
-          );
-          allContextItems.push(...repoMapContextItems);
-          break;
-
-        case BuiltInToolNames.ViewSubdirectory:
-          toolExtras.tool = viewSubdirectoryTool;
-          const viewSubdirContextItems = await viewSubdirectoryImpl(
-            toolCall.args,
-            toolExtras,
-          );
-          allContextItems.push(...viewSubdirContextItems);
-          break;
-      }
+      toolExtras.tool = tool;
+      const contextItems = await callBuiltInTool(
+        toolCall.name,
+        toolCall.args,
+        toolExtras,
+      );
+      allContextItems.push(...contextItems);
     }
 
     const chunks: Chunk[] = [];
