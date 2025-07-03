@@ -9,7 +9,7 @@ import { markdownToRule } from "./markdownToRule.js";
 // Mock package identifier for testing
 const mockPackageId: PackageIdentifier = {
   uriType: "file",
-  filePath: "/path/to/file",
+  filePath: "/path/to/folder",
 };
 
 describe("sanitizeRuleName", () => {
@@ -85,7 +85,9 @@ Just markdown content.`;
 
     expect(parsed.name).toBe(originalFrontmatter.name);
     expect(parsed.description).toBe(originalFrontmatter.description);
-    expect(parsed.globs).toEqual(originalFrontmatter.globs);
+    expect(parsed.globs).toEqual(
+      originalFrontmatter.globs.map((glob) => `/path/to/**/${glob}`),
+    );
     expect(parsed.alwaysApply).toBe(originalFrontmatter.alwaysApply);
     expect(parsed.rule).toBe(originalMarkdown);
   });
@@ -102,7 +104,7 @@ describe("createRuleMarkdown", () => {
     const parsed = markdownToRule(result, mockPackageId);
 
     expect(parsed.description).toBe("Test description");
-    expect(parsed.globs).toEqual(["*.ts", "*.js"]);
+    expect(parsed.globs).toEqual(["/path/to/**/*.ts", "/path/to/**/*.js"]);
     expect(parsed.alwaysApply).toBe(true);
     expect(parsed.rule).toBe("This is the rule content");
   });
@@ -113,7 +115,7 @@ describe("createRuleMarkdown", () => {
     const parsed = markdownToRule(result, mockPackageId);
 
     expect(parsed.description).toBeUndefined();
-    expect(parsed.globs).toBeUndefined();
+    expect(parsed.globs).toBe("/path/to/**/*");
     expect(parsed.alwaysApply).toBeUndefined();
     expect(parsed.rule).toBe("Simple content");
   });
@@ -124,7 +126,7 @@ describe("createRuleMarkdown", () => {
     });
 
     const parsed = markdownToRule(result, mockPackageId);
-    expect(parsed.globs).toBe("*.py");
+    expect(parsed.globs).toBe("/path/to/**/*.py");
   });
 
   it("should trim description and globs", () => {
@@ -135,7 +137,7 @@ describe("createRuleMarkdown", () => {
 
     const parsed = markdownToRule(result, mockPackageId);
     expect(parsed.description).toBe("spaced description");
-    expect(parsed.globs).toBe("*.ts");
+    expect(parsed.globs).toBe("/path/to/**/*.ts");
   });
 
   it("should handle alwaysApply false explicitly", () => {
