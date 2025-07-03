@@ -52,8 +52,8 @@ export function GenerationScreen({
   const { generateRule, isGenerating, error } = useRuleGeneration(
     inputPrompt,
     (args) => {
-      // Only update form if it's empty (first time generation)
-      if (!formData.rule) {
+      // Streaming causes a lot of jank, so wait until done generating
+      if (!isGenerating) {
         reset(args);
         handleRuleTypeChange(getRuleType(args));
       }
