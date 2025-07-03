@@ -23,7 +23,7 @@ Learn more about context providers [here](/reference#context), and check out [th
 
 Docs are blocks that point to documentation sites, which will be indexed locally and then can be referenced as context using @Docs in Chat. [Explore docs](https://hub.continue.dev/explore/docs) on the hub.
 
-Learn more in the [@Docs deep dive](../../advanced/deep-dives/docs.mdx), and view [`docs`](/reference#docs) in the YAML Reference for more details.
+Learn more in the [@Docs deep dive](../../advanced/context/documentation.mdx), and view [`docs`](/reference#docs) in the YAML Reference for more details.
 
 ## MCP Servers
 

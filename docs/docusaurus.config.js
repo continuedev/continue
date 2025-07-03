@@ -287,10 +287,11 @@ const config = {
             from: ["/setup/select-provider", "/setup/model-providers"],
           },
           {
-            to: "/advanced/deep-dives/codebase",
+            to: "/advanced/context/codebase",
             from: [
               "/walkthroughs/codebase-embeddings",
               "/features/codebase-embeddings",
+              "/advanced/deep-dives/codebase",
             ],
           },
           {
@@ -336,8 +337,8 @@ const config = {
             ],
           },
           {
-            to: "/advanced/context/custom-providers",
-            from: ["/customization/context-providers", "/advanced/context-integration/custom-providers"],
+            to: "/advanced/custom-providers",
+            from: ["/customization/context-providers", "/advanced/context-integration/custom-providers", "/advanced/context/custom-providers"],
           },
           {
             to: "/advanced/deep-dives/development-data",
@@ -345,7 +346,7 @@ const config = {
           },
           {
             to: "/advanced/context/documentation",
-            from: ["/features/talk-to-your-docs", "/advanced/context-integration/documentation"],
+            from: ["/features/talk-to-your-docs", "/advanced/context-integration/documentation", "/advanced/deep-dives/docs"],
           },
           {
             to: "/advanced/model-providers/anthropic",
