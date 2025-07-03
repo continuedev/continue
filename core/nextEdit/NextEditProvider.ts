@@ -244,45 +244,17 @@ export class NextEditProvider {
       } else {
         const promptMetadata = renderPrompt(helper, this.diffContext);
         this.promptMetadata = promptMetadata;
-        prompts.push(
-          // await renderFineTunedUserPrompt(snippetPayload, this.ide, helper),
-          // await renderFineTunedBasicUserPrompt(
-          //   snippetPayload,
-          //   this.ide,
-          //   helper,
-          //   this.diffContext,
-          // ),
-          promptMetadata.prompt,
-        );
+        prompts.push(promptMetadata.prompt);
       }
 
       if (this.endpointType === "default") {
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
           const nextCompletion = JSON.parse(msg.content).newCode;
-          // const outcomeNext: AutocompleteOutcome = {
-          //   time: Date.now() - startTime,
-          //   completion: nextCompletion,
-          //   prefix: "",
-          //   suffix: "",
-          //   prompt: "",
-          //   modelProvider: llm.underlyingProviderName,
-          //   modelName: llm.model,
-          //   completionOptions: null,
-          //   cacheHit: false,
-          //   filepath: helper.filepath,
-          //   numLines: nextCompletion.split("\n").length,
-          //   completionId: helper.input.completionId,
-          //   gitRepo: await this.ide.getRepoName(helper.filepath),
-          //   uniqueId: await this.ide.getUniqueId(),
-          //   timestamp: Date.now(),
-          //   ...helper.options,
-          // };
-          // TODO: clean this up, or delete.
           const outcomeNext: NextEditOutcome = {
             elapsed: Date.now() - startTime,
             modelProvider: llm.underlyingProviderName,
-            modelName: llm.model,
+            modelName: llm.model + ":zetaDataset",
             completionOptions: null,
             // filepath: helper.filepath,
             completionId: helper.input.completionId,
@@ -298,36 +270,13 @@ export class NextEditProvider {
             originalEditableRange: "",
             completion: nextCompletion,
             cursorPosition: helper.pos,
-            finetunedOn: "zetaDataset",
             ...helper.options,
           };
           return outcomeNext;
         } else {
           return undefined;
         }
-        // const body = {
-        //   model: defaultModel,
-        //   messages: prompts,
-        //   // max_tokens: 15000,
-        //   // stop: ["<|editable_region_end|>"],
-        // };
-        //
-        // const resp = await fetch(defaultEndpoint, {
-        //   method: "POST",
-        //   headers: {
-        //     Authorization: `Bearer ${mercuryToken} `,
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(body),
-        // });
-        //
-        // const respJson = await resp.json();
-
-        // TODO: Do some zod schema validation here if needed.
       } else {
-        // const testController = new AbortController();
-        // const msg: ChatMessage = await llm.chat(prompts, testController.signal);
-        // const testToken = testController.signal;
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
           // TODO: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
@@ -335,27 +284,6 @@ export class NextEditProvider {
             msg.content.split("<|editable_region_start|>\n")[1],
           ).replace(/\n$/, "");
 
-          // const diffLines = myersDiff(helper.fileContents, nextCompletion);
-
-          // const diff = getRenderableDiff(diffLines);
-          // const outcomeNext: AutocompleteOutcome = {
-          //   time: Date.now() - startTime,
-          //   completion: nextCompletion,
-          //   prefix: "",
-          //   suffix: "",
-          //   prompt: "",
-          //   modelProvider: llm.underlyingProviderName,
-          //   modelName: llm.model,
-          //   completionOptions: null,
-          //   cacheHit: false,
-          //   filepath: helper.filepath,
-          //   numLines: nextCompletion.split("\n").length,
-          //   completionId: helper.input.completionId,
-          //   gitRepo: await this.ide.getRepoName(helper.filepath),
-          //   uniqueId: await this.ide.getUniqueId(),
-          //   timestamp: Date.now(),
-          //   ...helper.options,
-          // };
           const currCursorPos = helper.pos;
           const editableRegionStartLine = Math.max(
             currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
@@ -373,7 +301,7 @@ export class NextEditProvider {
           const outcomeNext: NextEditOutcome = {
             elapsed: Date.now() - startTime,
             modelProvider: llm.underlyingProviderName,
-            modelName: llm.model,
+            modelName: llm.model + ":zetaDataset",
             completionOptions: null,
             // filepath: helper.filepath,
             completionId: helper.input.completionId,
@@ -389,7 +317,6 @@ export class NextEditProvider {
             originalEditableRange: oldEditRangeSlice,
             completion: nextCompletion,
             cursorPosition: helper.pos,
-            finetunedOn: "zetaDataset",
             ...helper.options,
           };
           return outcomeNext;

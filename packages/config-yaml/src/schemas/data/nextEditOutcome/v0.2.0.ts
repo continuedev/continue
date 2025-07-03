@@ -28,7 +28,6 @@ export const nextEditOutcomeEventSchema_0_2_0 =
     accepted: true,
     modelProvider: true,
     modelName: true,
-    finetunedOn: true,
   });
 
 export const nextEditOutcomeEventSchema_0_2_0_noCode =

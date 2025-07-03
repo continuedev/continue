@@ -54,8 +54,6 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   completion: string;
   cursorPosition: { line: number; character: number };
   accepted?: boolean;
-  // model: string;
-  finetunedOn: string;
 }
 
 export interface PromptMetadata {

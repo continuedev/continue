@@ -19,5 +19,4 @@ export const nextEditOutcomeEventAllSchema = baseDevDataAllSchema.extend({
   accepted: z.boolean().optional(),
   modelProvider: z.string(),
   modelName: z.string(),
-  finetunedOn: z.string(),
 });
