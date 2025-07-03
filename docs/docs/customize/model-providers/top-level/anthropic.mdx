@@ -16,16 +16,16 @@ We recommend configuring **Claude 4 Sonnet** as your chat model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  +++yaml title="config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Claude 4 Sonnet
       provider: anthropic
       model: claude-sonnet-4-20250514
       apiKey: <YOUR_ANTHROPIC_API_KEY>
-  +++
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-  +++json title="config.json"
+  ```json title="config.json"
   {
     "models": [
       {
@@ -36,7 +36,7 @@ We recommend configuring **Claude 4 Sonnet** as your chat model.
       }
     ]
   }
-  +++
+  ```
   </TabItem>
 </Tabs>
 
@@ -62,7 +62,15 @@ Anthropic currently does not offer any reranking models.
 
 Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
 
-> **NOTE:** As part of their `Beta` support [Extended caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration)
+> **NOTE:** As part of their `Beta` support [Extended caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration) caching TTL can be extended to 1 hour.
+
+**Prompt caching is generally available for:**
+
+- Claude 4 Sonnet
+- Claude 3.7 Sonnet
+- Claude 3.5 Sonnet
+- Claude 3.5 Haiku
+
 
 ### Caching Options
 
@@ -72,32 +80,15 @@ Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/do
 * `useExtendedCacheTtlBeta` - if `true` will enable Beta feature and allow to set 5m or 1h ttl for caching
 * `cacheTtl` - accepts only `5m` or `1h` as values, and if parameter not set `5m` default cache will be used then.
 
-### How Caching Works
-
-Continue automatically caches the **last 2 messages** of each enabled type:
-- **User messages**: Last 2 user messages when `cacheConversation: true`
-- **Assistant messages**: Last 2 assistant responses when `cacheConversation: true`
-- **Tool results**: Last 2 tool result messages when `cacheToolMessages: true`
-- **Assistant tool calls**: Last 2 assistant tool call messages when `cacheToolMessages: true`
-
-This "last 2" approach is optimized for Anthropic's LRU caching where cache hits refresh the TTL, providing maximum efficiency with minimal configuration.
-
-### Model Support
-
-Prompt caching is generally available for:
-
-- Claude 4 Sonnet
-- Claude 3.7 Sonnet
-- Claude 3.5 Sonnet
-- Claude 3.5 Haiku
+> **NOTE:** `1h` cacheTtl can be set only if `useExtendedCacheTtlBeta` is `true`
 
 ### Basic Configuration
 
-To enable caching of the system message and conversation history:
+To enable caching of the system message and conversation history with basic five minutes caching support:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  +++yaml
+  ```yaml
   # config.yaml
   models:
     - name: Anthropic
@@ -111,20 +102,16 @@ To enable caching of the system message and conversation history:
       cacheBehavior:
         cacheSystemMessage: true
         cacheConversation: true
-        useExtendedCacheTtlBeta: true
-        cacheTtl: "1h"
-  +++
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-  +++json
+  ```json
   {
     "models": [
       {
         "cacheBehavior": {
           "cacheSystemMessage": true,
           "cacheConversation": true,
-          "useExtendedCacheTtlBeta": true,
-          "cacheTtl": "1h"
         },
         "title": "Anthropic",
         "provider": "anthropic",
@@ -136,17 +123,17 @@ To enable caching of the system message and conversation history:
       }
     ]
   }
-  +++
+  ```
   </TabItem>
 </Tabs>
 
-### Enhanced Configuration for Agent Mode
+### Enhanced Configuration with extended caching support
 
 For heavy Agent mode usage with tool calls, enable tool message caching to maximize efficiency:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  +++yaml
+  ```yaml
   # config.yaml
   models:
     - name: Claude Agent
@@ -164,10 +151,10 @@ For heavy Agent mode usage with tool calls, enable tool message caching to maxim
         cacheToolMessages: true
         useExtendedCacheTtlBeta: true
         cacheTtl: "1h"
-  +++
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-  +++json
+  ```json
   {
     "models": [
       {
@@ -189,49 +176,7 @@ For heavy Agent mode usage with tool calls, enable tool message caching to maxim
       }
     ]
   }
-  +++
-  </TabItem>
-</Tabs>
-
-### Conservative Configuration
-
-For basic usage without tool message caching:
-
-<Tabs groupId="config-example">
-  <TabItem value="yaml" label="YAML">
-  +++yaml
-  # config.yaml
-  models:
-    - name: Claude Conservative
-      provider: anthropic
-      model: claude-sonnet-4-20250514
-      apiKey: <YOUR_ANTHROPIC_API_KEY>
-      cacheBehavior:
-        cacheSystemMessage: true
-        cacheConversation: true
-        useExtendedCacheTtlBeta: true
-        cacheTtl: "1h"
-  +++
-  </TabItem>
-  <TabItem value="json" label="JSON">
-  +++json
-  {
-    "models": [
-      {
-        "title": "Claude Conservative",
-        "provider": "anthropic",
-        "model": "claude-sonnet-4-latest",
-        "cacheBehavior": {
-          "cacheSystemMessage": true,
-          "cacheConversation": true,
-          "useExtendedCacheTtlBeta": true,
-          "cacheTtl": "1h"
-        },
-        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-      }
-    ]
-  }
-  +++
+  ```
   </TabItem>
 </Tabs>
 
