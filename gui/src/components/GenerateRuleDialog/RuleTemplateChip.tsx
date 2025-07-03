@@ -19,8 +19,8 @@ export function RuleTemplateChip({
       className="flex items-center gap-2"
       variant="secondary"
     >
-      <Icon className="h-3.5 w-3.5" />
-      <span>{text}</span>
+      <Icon className="h-3 w-3" />
+      <span className="text-xs">{text}</span>
     </Button>
   );
 }

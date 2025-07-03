@@ -41,17 +41,7 @@ export function InputScreen({
         </div>
         <div className="mt-5">
           <form onSubmit={handleSubmit} className="flex flex-col gap-1">
-            <div className="flex flex-col gap-2">
-              <textarea
-                className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full resize-none rounded border p-2 text-xs focus:outline-none"
-                placeholder="Describe your rule..."
-                rows={5}
-                value={inputPrompt}
-                onChange={(e) => onInputChange(e.target.value)}
-              />
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3">
+            <div className="mb-2 flex flex-wrap items-center justify-center gap-x-3">
               {ruleTemplates.map((template, index) => (
                 <RuleTemplateChip
                   key={index}
@@ -60,6 +50,16 @@ export function InputScreen({
                   onClick={() => handleRuleTemplateClick(template)}
                 />
               ))}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <textarea
+                className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full resize-none rounded border p-2 text-xs focus:outline-none"
+                placeholder="Describe your rule..."
+                rows={5}
+                value={inputPrompt}
+                onChange={(e) => onInputChange(e.target.value)}
+              />
             </div>
 
             <div className="mt-4 flex flex-row justify-center gap-5">

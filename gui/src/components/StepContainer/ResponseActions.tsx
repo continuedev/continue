@@ -45,7 +45,10 @@ export default function ResponseActions({
         >
           <span className="flex cursor-pointer items-center hover:brightness-125">
             <PlusIcon className="mr-1 h-3 w-3" />
-            <span className="whitespace-nowrap">Generate rule</span>
+            <span className="xs:block hidden whitespace-nowrap">
+              Generate rule
+            </span>
+            <span className="xs:hidden block whitespace-nowrap">Rule</span>
           </span>
         </div>
       )}
