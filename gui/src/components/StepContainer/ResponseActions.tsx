@@ -18,6 +18,7 @@ export interface ResponseActionsProps {
   index: number;
   onDelete: () => void;
   item: ChatHistoryItem;
+  isLast: boolean;
 }
 
 export default function ResponseActions({
@@ -26,6 +27,7 @@ export default function ResponseActions({
   item,
   isTruncated,
   onDelete,
+  isLast,
 }: ResponseActionsProps) {
   const dispatch = useDispatch();
 
@@ -36,15 +38,17 @@ export default function ResponseActions({
 
   return (
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
-      <div
-        className="mr-1 border-y-0 border-l-0 border-r border-solid pr-2"
-        onClick={onGenerateRule}
-      >
-        <span className="flex cursor-pointer items-center hover:brightness-125">
-          <PlusIcon className="mr-1 h-3 w-3" />
-          <span className="whitespace-nowrap">Generate rule</span>
-        </span>
-      </div>
+      {isLast && (
+        <div
+          className="mr-1 border-y-0 border-l-0 border-r border-solid pr-2"
+          onClick={onGenerateRule}
+        >
+          <span className="flex cursor-pointer items-center hover:brightness-125">
+            <PlusIcon className="mr-1 h-3 w-3" />
+            <span className="whitespace-nowrap">Generate rule</span>
+          </span>
+        </div>
+      )}
 
       {isTruncated && (
         <HeaderButtonWithToolTip
