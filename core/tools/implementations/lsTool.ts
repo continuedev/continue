@@ -36,18 +36,25 @@ export const lsToolImpl: ToolImpl = async (args, extras) => {
       ? lines.join("\n")
       : `No files/folders found in ${dirPath}`;
 
-  if (entries.length > MAX_LS_TOOL_LINES) {
-    content += `\n... ${entries.length - MAX_LS_TOOL_LINES} entries were truncated`;
-    if (args?.recursive) {
-      content += ". Try using a non-recursive search";
-    }
-  }
-
-  return [
+  const contextItems = [
     {
       name: "File/folder list",
       description: `Files/folders in ${dirPath}`,
       content,
     },
   ];
+
+  if (entries.length > MAX_LS_TOOL_LINES) {
+    let warningContent = `${entries.length - MAX_LS_TOOL_LINES} ls entries were truncated`;
+    if (args?.recursive) {
+      warningContent += ". Try using a non-recursive search";
+    }
+    contextItems.push({
+      name: "ls truncation warning",
+      description: "Informs the model that ls results were truncated",
+      content: warningContent,
+    });
+  }
+
+  return contextItems;
 };
