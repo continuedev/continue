@@ -2,12 +2,14 @@ import { Tool, ToolCallState } from "core";
 import { useMemo, useState } from "react";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
+import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 
 interface ToolCallDisplayProps {
   children: React.ReactNode;
   icon: React.ReactNode;
   tool: Tool | undefined;
   toolCallState: ToolCallState;
+  historyIndex: number;
 }
 
 export function ToolCallDisplay({
@@ -15,6 +17,7 @@ export function ToolCallDisplay({
   toolCallState,
   children,
   icon,
+  historyIndex,
 }: ToolCallDisplayProps) {
   const [argsExpanded, setArgsExpanded] = useState(false);
 
@@ -39,13 +42,18 @@ export function ToolCallDisplay({
                 toolCallState={toolCallState}
               />
             </div>
-            {!!args.length ? (
-              <ArgsToggleIcon
-                isShowing={argsExpanded}
-                setIsShowing={setArgsExpanded}
-                toolCallId={toolCallState.toolCallId}
-              />
-            ) : null}
+            <div className="flex flex-row items-center gap-1.5">
+              {!!toolCallState.output && (
+                <ToolTruncateHistoryIcon historyIndex={historyIndex} />
+              )}
+              {!!args.length ? (
+                <ArgsToggleIcon
+                  isShowing={argsExpanded}
+                  setIsShowing={setArgsExpanded}
+                  toolCallId={toolCallState.toolCallId}
+                />
+              ) : null}
+            </div>
           </div>
           {argsExpanded && !!args.length && (
             <ArgsItems args={args} isShowing={argsExpanded} />
