@@ -4,8 +4,12 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
+import { modelSupportsTools } from "core/llm/autodetect";
 import { renderChatMessage } from "core/util/messageContent";
+import { useMemo } from "react";
 import { useDispatch } from "react-redux";
+import { useAppSelector } from "../../redux/hooks";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { FeedbackButtons } from "../FeedbackButtons";
 import { GenerateRuleDialog } from "../GenerateRuleDialog";
@@ -30,6 +34,10 @@ export default function ResponseActions({
   isLast,
 }: ResponseActionsProps) {
   const dispatch = useDispatch();
+  const selectedModel = useAppSelector(selectSelectedChatModel);
+  const ruleGenerationSupported = useMemo(() => {
+    return selectedModel && modelSupportsTools(selectedModel);
+  }, [selectedModel]);
 
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
@@ -38,7 +46,7 @@ export default function ResponseActions({
 
   return (
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
-      {isLast && (
+      {isLast && ruleGenerationSupported && (
         <div
           className="mr-1 border-y-0 border-l-0 border-r border-solid pr-2"
           onClick={onGenerateRule}
