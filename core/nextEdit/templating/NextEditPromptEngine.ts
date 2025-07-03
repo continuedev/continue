@@ -49,7 +49,7 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
 function templateRendererOfModel(
   modelName: NextEditModelName,
 ): TemplateRenderer {
-  const template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
+  let template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
   if (!template) {
     throw new Error(`Model ${modelName} is not supported for next edit.`);
   }
@@ -65,7 +65,7 @@ export function renderPrompt(
   helper: HelperVars,
   userEdits: string,
 ): UserPrompt {
-  const modelName = helper.modelName as NextEditModelName;
+  let modelName = helper.modelName as NextEditModelName;
 
   if (modelName === "this field is not used") {
     return {
@@ -76,7 +76,18 @@ export function renderPrompt(
 
   // Validate that the modelName is actually a supported model.
   if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {
-    throw new Error(`${helper.modelName} is not yet supported for next edit.`);
+    // Check if modelName includes any known model name as substring.
+    const matchingModel = Object.keys(NEXT_EDIT_MODEL_TEMPLATES).find((key) =>
+      modelName.includes(key),
+    );
+
+    if (matchingModel) {
+      modelName = matchingModel as NextEditModelName;
+    } else {
+      throw new Error(
+        `${helper.modelName} is not yet supported for next edit.`,
+      );
+    }
   }
 
   const renderer = templateRendererOfModel(modelName);

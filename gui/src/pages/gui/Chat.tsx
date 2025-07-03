@@ -321,7 +321,6 @@ export function Chat() {
                         key={i}
                         toolCallState={item.toolCallState!}
                         toolCall={toolCall}
-                        output={history[index + 1]?.contextItems}
                         historyIndex={index}
                       />
                     );

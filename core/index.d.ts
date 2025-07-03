@@ -443,6 +443,7 @@ interface ToolCallState {
   status: ToolStatus;
   parsedArgs: any;
   output?: ContextItem[];
+  tool?: Tool;
 }
 
 interface Reasoning {

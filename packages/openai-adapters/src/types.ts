@@ -71,9 +71,15 @@ export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
 });
 export type DeepseekConfig = z.infer<typeof DeepseekConfigSchema>;
 
+export const LlamastackConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("llamastack"),
+});
+export type LlamastackConfig = z.infer<typeof LlamastackConfigSchema>;
+
 export const MockConfigSchema = BasePlusConfig.extend({
   provider: z.literal("mock"),
 });
+
 export type MockConfig = z.infer<typeof MockConfigSchema>;
 
 // Other APIs
@@ -146,5 +152,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,
+  LlamastackConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;
