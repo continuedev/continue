@@ -1,3 +1,4 @@
+import * as path from "path";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { ChatMessage, IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
@@ -11,20 +12,21 @@ import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
 import { getAllSnippetsWithoutRace } from "../autocomplete/snippets/index.js";
 import { GetLspDefinitionsFunction } from "../autocomplete/types.js";
 import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebouncer.js";
-import { AutocompleteLoggingService } from "../autocomplete/util/AutocompleteLoggingService.js";
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
-import {
-  AutocompleteInput,
-  AutocompleteOutcome,
-} from "../autocomplete/util/types.js";
+import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
-  Prompt,
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "./constants.js";
+import { NextEditLoggingService } from "./NextEditLoggingService.js";
+import {
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
   renderPrompt,
 } from "./templating/NextEditPromptEngine.js";
+import { NextEditOutcome, Prompt, PromptMetadata } from "./types.js";
 // import { renderPrompt } from "./templating/NextEditPromptEngine.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -45,10 +47,11 @@ export class NextEditProvider {
   private bracketMatchingService = new BracketMatchingService();
   private debouncer = new AutocompleteDebouncer();
   private completionStreamer: CompletionStreamer;
-  private loggingService = new AutocompleteLoggingService();
+  private loggingService: NextEditLoggingService;
   private contextRetrievalService: ContextRetrievalService;
   private endpointType: "default" | "fineTuned";
   private diffContext: string = "";
+  private promptMetadata: PromptMetadata | null = null;
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -61,6 +64,7 @@ export class NextEditProvider {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
     this.endpointType = endpointType;
+    this.loggingService = NextEditLoggingService.getInstance();
   }
 
   public static initialize(
@@ -154,18 +158,21 @@ export class NextEditProvider {
     this.loggingService.cancel();
   }
 
-  public accept(completionId: string) {
-    const outcome = this.loggingService.accept(completionId);
-    if (!outcome) {
-      return;
-    }
-    this.bracketMatchingService.handleAcceptedCompletion(
-      outcome.completion,
-      outcome.filepath,
-    );
-  }
+  // public accept(completionId: string) {
+  //   const outcome = this.loggingService.accept(completionId);
+  //   if (!outcome) {
+  //     return;
+  //   }
+  // }
 
-  public markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
+  // public reject(completionId: string) {
+  //   const outcome = this.loggingService.reject(completionId);
+  //   if (!outcome) {
+  //     return;
+  //   }
+  // }
+
+  public markDisplayed(completionId: string, outcome: NextEditOutcome) {
     this.loggingService.markDisplayed(completionId, outcome);
   }
 
@@ -181,7 +188,7 @@ export class NextEditProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
-  ): Promise<AutocompleteOutcome | undefined> {
+  ): Promise<NextEditOutcome | undefined> {
     try {
       // Create abort signal if not given
       if (!token) {
@@ -235,6 +242,8 @@ export class NextEditProvider {
         prompts.push(renderDefaultSystemPrompt());
         prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
       } else {
+        const promptMetadata = renderPrompt(helper, this.diffContext);
+        this.promptMetadata = promptMetadata;
         prompts.push(
           // await renderFineTunedUserPrompt(snippetPayload, this.ide, helper),
           // await renderFineTunedBasicUserPrompt(
@@ -243,7 +252,7 @@ export class NextEditProvider {
           //   helper,
           //   this.diffContext,
           // ),
-          renderPrompt(helper, this.diffContext),
+          promptMetadata.prompt,
         );
       }
 
@@ -251,22 +260,45 @@ export class NextEditProvider {
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
           const nextCompletion = JSON.parse(msg.content).newCode;
-          const outcomeNext: AutocompleteOutcome = {
-            time: Date.now() - startTime,
-            completion: nextCompletion,
-            prefix: "",
-            suffix: "",
-            prompt: "",
+          // const outcomeNext: AutocompleteOutcome = {
+          //   time: Date.now() - startTime,
+          //   completion: nextCompletion,
+          //   prefix: "",
+          //   suffix: "",
+          //   prompt: "",
+          //   modelProvider: llm.underlyingProviderName,
+          //   modelName: llm.model,
+          //   completionOptions: null,
+          //   cacheHit: false,
+          //   filepath: helper.filepath,
+          //   numLines: nextCompletion.split("\n").length,
+          //   completionId: helper.input.completionId,
+          //   gitRepo: await this.ide.getRepoName(helper.filepath),
+          //   uniqueId: await this.ide.getUniqueId(),
+          //   timestamp: Date.now(),
+          //   ...helper.options,
+          // };
+          // TODO: clean this up, or delete.
+          const outcomeNext: NextEditOutcome = {
+            elapsed: Date.now() - startTime,
             modelProvider: llm.underlyingProviderName,
             modelName: llm.model,
             completionOptions: null,
-            cacheHit: false,
-            filepath: helper.filepath,
-            numLines: nextCompletion.split("\n").length,
+            // filepath: helper.filepath,
             completionId: helper.input.completionId,
             gitRepo: await this.ide.getRepoName(helper.filepath),
             uniqueId: await this.ide.getUniqueId(),
             timestamp: Date.now(),
+            fileUri: helper.filepath,
+            workspaceDirUri:
+              helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+            prompt: prompts.join("\n"),
+            userEdits: "",
+            userExcerpts: "",
+            originalEditableRange: "",
+            completion: nextCompletion,
+            cursorPosition: helper.pos,
+            finetunedOn: "zetaDataset",
             ...helper.options,
           };
           return outcomeNext;
@@ -306,163 +338,65 @@ export class NextEditProvider {
           // const diffLines = myersDiff(helper.fileContents, nextCompletion);
 
           // const diff = getRenderableDiff(diffLines);
-          const outcomeNext: AutocompleteOutcome = {
-            time: Date.now() - startTime,
-            completion: nextCompletion,
-            prefix: "",
-            suffix: "",
-            prompt: "",
+          // const outcomeNext: AutocompleteOutcome = {
+          //   time: Date.now() - startTime,
+          //   completion: nextCompletion,
+          //   prefix: "",
+          //   suffix: "",
+          //   prompt: "",
+          //   modelProvider: llm.underlyingProviderName,
+          //   modelName: llm.model,
+          //   completionOptions: null,
+          //   cacheHit: false,
+          //   filepath: helper.filepath,
+          //   numLines: nextCompletion.split("\n").length,
+          //   completionId: helper.input.completionId,
+          //   gitRepo: await this.ide.getRepoName(helper.filepath),
+          //   uniqueId: await this.ide.getUniqueId(),
+          //   timestamp: Date.now(),
+          //   ...helper.options,
+          // };
+          const currCursorPos = helper.pos;
+          const editableRegionStartLine = Math.max(
+            currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+            0,
+          );
+          const editableRegionEndLine = Math.min(
+            currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+            helper.fileLines.length - 1,
+          );
+          const oldEditRangeSlice = helper.fileContents
+            .split("\n")
+            .slice(editableRegionStartLine, editableRegionEndLine + 1)
+            .join("\n");
+
+          const outcomeNext: NextEditOutcome = {
+            elapsed: Date.now() - startTime,
             modelProvider: llm.underlyingProviderName,
             modelName: llm.model,
             completionOptions: null,
-            cacheHit: false,
-            filepath: helper.filepath,
-            numLines: nextCompletion.split("\n").length,
+            // filepath: helper.filepath,
             completionId: helper.input.completionId,
             gitRepo: await this.ide.getRepoName(helper.filepath),
             uniqueId: await this.ide.getUniqueId(),
             timestamp: Date.now(),
+            fileUri: helper.filepath,
+            workspaceDirUri:
+              helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+            prompt: this.promptMetadata!.prompt.content,
+            userEdits: this.promptMetadata!.userEdits,
+            userExcerpts: this.promptMetadata!.userExcerpts,
+            originalEditableRange: oldEditRangeSlice,
+            completion: nextCompletion,
+            cursorPosition: helper.pos,
+            finetunedOn: "zetaDataset",
             ...helper.options,
           };
           return outcomeNext;
         } else {
           return undefined;
         }
-        // const body = {
-        //   model: fineTunedModel,
-        //   messages: prompts,
-        //   max_tokens: 15000,
-        //   stop: ["<|editable_region_end|>"],
-        // };
-        //
-        // const resp = await fetch(fineTunedEndpoint, {
-        //   method: "POST",
-        //   headers: {
-        //     Authorization: `Bearer ${mercuryToken} `,
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(body),
-        // });
-        //
-        // const respJson = await resp.json();
-        //
-        // const nextCompletion = respJson.choices[0].message.content
-        //   .split("<|editable_region_start|>\n")[1]
-        //   .split("<|editable_region_end|>")[0]
-        //   .slice(1)
-        //   .slice(0, -1)
-        //   .replaceAll("\\n", "\n")
-        //   .replaceAll('\\"', '"');
-        //
-        // const outcomeNext: AutocompleteOutcome = {
-        //   time: Date.now() - startTime,
-        //   completion: nextCompletion,
-        //   prefix: "",
-        //   suffix: "",
-        //   prompt: "",
-        //   modelProvider: llm.underlyingProviderName,
-        //   modelName: llm.model,
-        //   completionOptions: null,
-        //   cacheHit: false,
-        //   filepath: helper.filepath,
-        //   numLines: nextCompletion.split("\n").length,
-        //   completionId: helper.input.completionId,
-        //   gitRepo: await this.ide.getRepoName(helper.filepath),
-        //   uniqueId: await this.ide.getUniqueId(),
-        //   timestamp: Date.now(),
-        //   ...helper.options,
-        // };
-        // return outcomeNext;
       }
-
-      // // Completion
-      // let completion: string | undefined = "";
-
-      // const cache = await autocompleteCache;
-      // const cachedCompletion = helper.options.useCache
-      //   ? await cache.get(helper.prunedPrefix)
-      //   : undefined;
-      // let cacheHit = false;
-      // if (cachedCompletion) {
-      //   // Cache
-      //   cacheHit = true;
-      //   completion = cachedCompletion;
-      // } else {
-      //   const multiline =
-      //     !helper.options.transform || shouldCompleteMultiline(helper);
-
-      //   const completionStream =
-      //     this.completionStreamer.streamCompletionWithFilters(
-      //       token,
-      //       llm,
-      //       prefix,
-      //       suffix,
-      //       prompt,
-      //       multiline,
-      //       completionOptions,
-      //       helper,
-      //     );
-
-      //   for await (const update of completionStream) {
-      //     completion += update;
-      //   }
-
-      //   // Don't postprocess if aborted
-      //   if (token.aborted) {
-      //     return undefined;
-      //   }
-
-      //   const processedCompletion = helper.options.transform
-      //     ? postprocessCompletion({
-      //         completion,
-      //         prefix: helper.prunedPrefix,
-      //         suffix: helper.prunedSuffix,
-      //         llm,
-      //       })
-      //     : completion;
-
-      //   completion = processedCompletion;
-      // }
-
-      // if (!completion) {
-      //   return undefined;
-      // }
-
-      // const outcome: AutocompleteOutcome = {
-      //   time: Date.now() - startTime,
-      //   completion,
-      //   prefix,
-      //   suffix,
-      //   prompt,
-      //   modelProvider: llm.underlyingProviderName,
-      //   modelName: llm.model,
-      //   completionOptions,
-      //   cacheHit,
-      //   filepath: helper.filepath,
-      //   numLines: completion.split("\n").length,
-      //   completionId: helper.input.completionId,
-      //   gitRepo: await this.ide.getRepoName(helper.filepath),
-      //   uniqueId: await this.ide.getUniqueId(),
-      //   timestamp: Date.now(),
-      //   ...helper.options,
-      // };
-
-      // //////////
-
-      // // Save to cache
-      // if (!outcome.cacheHit && helper.options.useCache) {
-      //   (await this.autocompleteCache)
-      //     .put(outcome.prefix, outcome.completion)
-      //     .catch((e) => console.warn(`Failed to save to cache: ${e.message}`));
-      // }
-
-      // // When using the JetBrains extension, Mark as displayed
-      // const ideType = (await this.ide.getIdeInfo()).ideType;
-      // if (ideType === "jetbrains") {
-      //   this.markDisplayed(input.completionId, outcome);
-      // }
-
-      // return outcome;
     } catch (e: any) {
       this.onError(e);
     } finally {

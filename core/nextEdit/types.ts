@@ -26,20 +26,62 @@ export interface AutocompleteInput {
 }
 
 export interface NextEditOutcome extends TabAutocompleteOptions {
-  accepted?: boolean;
-  time: number;
-  prefix: string;
-  suffix: string;
-  prompt: string;
-  completion: string;
+  // Originally from Autocomplete.
+  // accepted?: boolean;
+  elapsed: number;
+  // prefix: string;
+  // suffix: string;
+  // prompt: string;
+  // completion: string;
   modelProvider: string;
   modelName: string;
   completionOptions: any;
-  cacheHit: boolean;
-  numLines: number;
-  filepath: string;
-  gitRepo?: string;
+  // cacheHit: boolean;
+  // numLines: number;
+  // filepath: string;
   completionId: string;
+  gitRepo?: string;
   uniqueId: string;
   timestamp: number;
+
+  // New for Next Edit.
+  fileUri: string;
+  workspaceDirUri: string;
+  prompt: string;
+  userEdits: string;
+  userExcerpts: string;
+  originalEditableRange: string;
+  completion: string;
+  cursorPosition: { line: number; character: number };
+  accepted?: boolean;
+  // model: string;
+  finetunedOn: string;
+}
+
+export interface PromptMetadata {
+  prompt: UserPrompt;
+  userEdits: string;
+  userExcerpts: string;
+}
+
+export type Prompt = SystemPrompt | UserPrompt;
+
+export interface SystemPrompt {
+  role: "system";
+  content: string;
+}
+
+export interface UserPrompt {
+  role: "user";
+  content: string;
+}
+
+export interface NextEditTemplate {
+  template: string;
+}
+
+export interface TemplateVars {
+  userEdits: string;
+  languageShorthand: string;
+  userExcerpts: string;
 }

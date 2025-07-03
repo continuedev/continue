@@ -10,6 +10,7 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "core/nextEdit/constants";
 import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
+import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { getThemeString } from "../util/getTheme";
 
 export interface TextApplier {
@@ -93,6 +94,9 @@ export class NextEditWindowManager {
   private activeEditor: vscode.TextEditor | null = null;
   // Store the current tooltip text for accepting
   private currentTooltipText: string | null = null;
+  // Track for logging purposes.
+  private loggingService: NextEditLoggingService;
+  private mostRecentCompletionId: string | null = null;
 
   // Disposables
   private disposables: vscode.Disposable[] = [];
@@ -136,6 +140,8 @@ export class NextEditWindowManager {
     const editorConfig = vscode.workspace.getConfiguration("editor");
     this.fontSize = editorConfig.get<number>("fontSize") ?? 14;
     this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
+
+    this.loggingService = NextEditLoggingService.getInstance();
   }
 
   public static async reserveTabAndEsc() {
@@ -190,6 +196,14 @@ export class NextEditWindowManager {
     }
 
     await this.codeRenderer.setTheme(this.theme);
+  }
+
+  /**
+   * Update the most recent completion id.
+   * @param completionId The id of current completion request.
+   */
+  public updateCurrentCompletionId(completionId: string) {
+    this.mostRecentCompletionId = completionId;
   }
 
   /**
@@ -295,6 +309,14 @@ export class NextEditWindowManager {
     }
 
     await NextEditWindowManager.freeTabAndEsc();
+
+    // TODO: Log with accept = false.
+    await vscode.commands.executeCommand(
+      "continue.logNextEditOutcomeReject",
+      this.mostRecentCompletionId,
+      this.loggingService,
+    );
+    this.mostRecentCompletionId = null;
   }
 
   /**
@@ -362,6 +384,14 @@ export class NextEditWindowManager {
         await this.hideAllNextEditWindows();
       }
     }
+
+    // Log with accept = true.
+    await vscode.commands.executeCommand(
+      "continue.logNextEditOutcomeAccept",
+      this.mostRecentCompletionId,
+      this.loggingService,
+    );
+    this.mostRecentCompletionId = null;
   }
 
   /**
