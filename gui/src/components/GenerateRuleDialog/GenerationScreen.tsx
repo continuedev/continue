@@ -35,7 +35,7 @@ export function GenerationScreen({
       name: "",
       description: "",
       globs: "",
-      alwaysApply: true,
+      alwaysApply: undefined,
       rule: "",
     },
   });
@@ -70,8 +70,8 @@ export function GenerationScreen({
   const handleRuleTypeChange = (newRuleType: RuleType) => {
     setSelectedRuleType(newRuleType);
 
-    // Update alwaysApply based on rule type (false only for Agent Requested)
-    const alwaysApply = newRuleType !== RuleType.AgentRequested;
+    // Update alwaysApply based on rule type
+    const alwaysApply = newRuleType === RuleType.Always;
     setValue("alwaysApply", alwaysApply);
 
     // Don't clear optional fields - preserve their state
