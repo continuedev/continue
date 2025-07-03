@@ -120,7 +120,7 @@ describe("Anthropic Simplified Caching", () => {
     });
   });
 
-  test("should cache last 2 messages of each type", () => {
+  test("should cache last message of each type", () => {
     const messages: ChatMessage[] = [
       { role: "user", content: "First user" },
       { role: "user", content: "Second user" },
@@ -132,16 +132,16 @@ describe("Anthropic Simplified Caching", () => {
 
     const convertedMessages = anthropic.convertMessages(messages);
 
-    // Only last 2 user messages should be cached
+    // Only last user message should be cached
     const userMessages = convertedMessages.filter(
       (msg: any) => msg.role === "user" && msg.content[0]?.type === "text",
     );
     const cachedUserMessages = userMessages.filter(
       (msg: any) => msg.content[0]?.cache_control,
     );
-    expect(cachedUserMessages).toHaveLength(2);
+    expect(cachedUserMessages).toHaveLength(1);
 
-    // Only last 2 tool results should be cached
+    // Only last tool result should be cached
     const toolMessages = convertedMessages.filter(
       (msg: any) =>
         msg.role === "user" && msg.content[0]?.type === "tool_result",
@@ -149,7 +149,7 @@ describe("Anthropic Simplified Caching", () => {
     const cachedToolMessages = toolMessages.filter(
       (msg: any) => msg.content[0]?.cache_control,
     );
-    expect(cachedToolMessages).toHaveLength(2);
+    expect(cachedToolMessages).toHaveLength(1);
   });
 
   test("should not cache when caching is disabled", () => {
@@ -232,22 +232,22 @@ describe("Anthropic Simplified Caching", () => {
         (!!m.content || (m.role === "assistant" && m.toolCalls)),
     );
 
-    // Last user message should be cached (last 2 rule)
+    // Last user message should be cached (only last 1)
     expect(anthropic.shouldCacheMessage(messages[3], 3, filteredMessages)).toBe(
       true,
     );
 
-    // Second to last user message should be cached (last 2 rule)
-    expect(anthropic.shouldCacheMessage(messages[2], 2, filteredMessages)).toBe(
-      true,
-    );
-
-    // Tool message should be cached (last 2 rule)
+    // Tool message should be cached (only last 1)
     expect(anthropic.shouldCacheMessage(messages[4], 4, filteredMessages)).toBe(
       true,
     );
 
-    // First user message should not be cached (not in last 2)
+    // Second to last user message should NOT be cached (only last 1 is cached)
+    expect(anthropic.shouldCacheMessage(messages[2], 2, filteredMessages)).toBe(
+      false,
+    );
+
+    // First user message should not be cached (not the last one)
     expect(anthropic.shouldCacheMessage(messages[0], 0, filteredMessages)).toBe(
       false,
     );
@@ -272,14 +272,14 @@ describe("Anthropic Simplified Caching", () => {
 
     const convertedMessages = anthropicOriginal.convertMessages(messages);
 
-    // User messages should be cached (cacheConversation: true)
+    // Only last user message should be cached (last 1 rule)
     const userMessages = convertedMessages.filter(
       (msg: any) => msg.role === "user" && msg.content[0]?.type === "text",
     );
     const cachedUserMessages = userMessages.filter(
       (msg: any) => msg.content[0]?.cache_control,
     );
-    expect(cachedUserMessages).toHaveLength(2);
+    expect(cachedUserMessages).toHaveLength(1);
 
     // Tool messages should NOT be cached (cacheToolMessages not enabled)
     const toolMessages = convertedMessages.filter(
