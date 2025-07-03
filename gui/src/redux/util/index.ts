@@ -1,5 +1,5 @@
 import { ContextItem, ToolCallState } from "core";
-import { DataLogger } from "core/data/log";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { ChatHistoryItemWithMessageId } from "../slices/sessionSlice";
 import { RootState } from "../store";
 
@@ -33,9 +33,10 @@ export function logToolUsage(
   toolCallState: ToolCallState,
   accepted: boolean,
   success: boolean,
+  messenger: IIdeMessenger,
   finalOutput?: ContextItem[],
 ) {
-  void DataLogger.getInstance().logDevData({
+  messenger.post("devdata/log", {
     name: "toolUsage",
     data: {
       toolCallId: toolCallState.toolCallId,

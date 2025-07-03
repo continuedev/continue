@@ -264,7 +264,7 @@ function ParallelListeners() {
             state.toolCallId!,
           );
           if (toolCallState) {
-            logToolUsage(toolCallState, true, true);
+            logToolUsage(toolCallState, true, true, ideMessenger);
           }
           void dispatch(exitEdit({}));
         }

@@ -123,14 +123,14 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     if (streamResponse) {
       if (errorMessage) {
-        logToolUsage(toolCallState, false, false, output);
+        logToolUsage(toolCallState, false, false, extra.ideMessenger, output);
         dispatch(
           errorToolCall({
             toolCallId,
           }),
         );
       } else {
-        logToolUsage(toolCallState, true, true, output);
+        logToolUsage(toolCallState, true, true, extra.ideMessenger, output);
         dispatch(
           acceptToolCall({
             toolCallId,
