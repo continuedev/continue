@@ -558,7 +558,6 @@ export class Core {
           : undefined,
         input: data.input,
         language: data.language,
-        onlyOneInsertion: false,
         overridePrompt: undefined,
         abortController,
       });

@@ -1,6 +1,5 @@
 import { ContextItem, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
-import { DataLogger } from "../data/log";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
@@ -173,26 +172,6 @@ async function callBuiltInTool(
   }
 }
 
-function logToolUsage(
-  toolCall: ToolCall,
-  args: Record<string, any>,
-  contextItems: ContextItem[],
-  success: boolean,
-) {
-  console.log(toolCall.function.arguments);
-  void DataLogger.getInstance().logDevData({
-    name: "toolUsage",
-    data: {
-      toolCallId: toolCall.id,
-      functionName: toolCall.function.name,
-      functionArgs: toolCall.function.arguments,
-      toolCallArgs: args,
-      output: contextItems,
-      succeeded: success,
-    },
-  });
-}
-
 // Handles calls for core/non-client tools
 // Returns an error context item if the tool call fails
 // Note: Edit tool is handled on client
@@ -214,7 +193,6 @@ export async function callTool(
         item.icon = tool.faviconUrl;
       });
     }
-    logToolUsage(toolCall, args, contextItems, true);
     return {
       contextItems,
       errorMessage: undefined,
@@ -224,7 +202,6 @@ export async function callTool(
     if (e instanceof Error) {
       errorMessage = e.message;
     }
-    logToolUsage(toolCall, {}, [], false);
     return {
       contextItems: [],
       errorMessage,
