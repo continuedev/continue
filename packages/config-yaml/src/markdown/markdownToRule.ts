@@ -78,15 +78,17 @@ function getGlobPattern(
     return globs;
   }
   const dir = path.dirname(id.filePath);
+  if (dir.includes(".continue")) {
+    return globs;
+  }
   const prependDirAndApplyGlobstar = (glob: string) => {
-    // skip if glob is a directory
-    if (glob.includes("/")) {
+    if (glob.startsWith("**")) {
       return path.join(dir, glob);
     }
     return path.join(dir, `**/${glob}`);
   };
   if (!globs) {
-    return prependDirAndApplyGlobstar("**/*");
+    return path.join(dir, "**/*");
   }
   if (Array.isArray(globs)) {
     return globs.map(prependDirAndApplyGlobstar);

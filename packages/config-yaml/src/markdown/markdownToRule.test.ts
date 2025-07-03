@@ -67,6 +67,14 @@ This is a test rule with empty frontmatter.`;
   });
 
   describe("glob patterns", () => {
+    // we want to ensure the following glob changes happen
+    // *.ts -> path/to/**/*.ts
+    // **/subdir/** -> path/to/**/**/subdir/** OR path/to/**/subdir/**
+    // myfile -> path/to/**/myfile (any depth including 0)
+    // mydir/ -> path/to/**/mydir/**
+    // **abc** -> path/to/**abc**
+    // *xyz* -> path/to/**/*xyz*
+
     it("should match glob pattern for file extensions", () => {
       const content = `---
 globs: "*.ts"
@@ -109,12 +117,12 @@ name: glob pattern testing
         uriType: "file",
         filePath: "/",
       });
-      expect(result.globs).toBe("/src/**/Dockerfile");
+      expect(result.globs).toBe("/**/src/**/Dockerfile");
     });
 
-    it("should match have nested folder for multiple globs", () => {
+    it("should match for multiple globs", () => {
       const content = `---
-globs: ["**/nested/**/deeper/**/*.rs", ".zshrc"]
+globs: ["**/nested/**/deeper/**/*.rs", ".zshrc1", "**abc**", "*xyz*"]
 name: glob pattern testing
 ---
 
@@ -125,8 +133,27 @@ This is a test rule.`;
       const result = markdownToRule(content, mockId);
       expect(result.globs).toEqual([
         "/path/to/**/nested/**/deeper/**/*.rs",
-        "/path/to/**/.zshrc",
+        "/path/to/**/.zshrc1",
+        "/path/to/**abc**",
+        "/path/to/**/*xyz*",
       ]);
+    });
+
+    it("should not prepend when inside .continue", () => {
+      const content = `---
+globs: ".git"
+name: glob pattern testing
+---
+  
+  # Test Rule
+  
+  This is a test rule.`;
+
+      const result = markdownToRule(content, {
+        uriType: "file",
+        filePath: "/Documents/myproject/.continue/rules/rule1.md",
+      });
+      expect(result.globs).toBe(".git");
     });
   });
 
