@@ -1,6 +1,13 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
-import { ChatMessage, MessageContent, MessagePart, Tool } from "../index.js";
+import {
+  ChatMessage,
+  CompiledMessagesResult,
+  MessageContent,
+  MessagePart,
+  PruningStatus,
+  Tool,
+} from "../index.js";
 
 import { renderChatMessage } from "../util/messageContent.js";
 import {
@@ -15,7 +22,6 @@ import {
   chatMessageIsEmpty,
   flattenMessages,
   isUserOrToolMsg,
-  messageHasToolCallId,
 } from "./messages.js";
 interface Encoding {
   encode: Tiktoken["encode"];
@@ -344,7 +350,7 @@ function compileChatMessages({
   maxTokens: number;
   supportsImages: boolean;
   tools?: Tool[];
-}): ChatMessage[] {
+}): CompiledMessagesResult {
   let msgsCopy: ChatMessage[] = msgs.map((m) => ({ ...m }));
 
   // If images not supported, convert MessagePart[] to string
@@ -373,26 +379,6 @@ function compileChatMessages({
     msgsCopy.pop();
   }
 
-  const lastUserOrToolMsg = msgsCopy.pop();
-  if (!lastUserOrToolMsg || !isUserOrToolMsg(lastUserOrToolMsg)) {
-    throw new Error("Error parsing chat history: no user/tool message found"); // should never happen
-  }
-
-  let lastToolCallsMsg: ChatMessage | undefined = undefined;
-  if (lastUserOrToolMsg.role === "tool") {
-    lastToolCallsMsg = msgsCopy.pop();
-    if (!messageHasToolCallId(lastToolCallsMsg, lastUserOrToolMsg.toolCallId)) {
-      throw new Error(
-        `Error parsing chat history: no tool call found to match tool output for id "${lastUserOrToolMsg.toolCallId}"`,
-      );
-    }
-  }
-
-  let lastMessagesTokens = countChatMessageTokens(modelName, lastUserOrToolMsg);
-  if (lastToolCallsMsg) {
-    lastMessagesTokens += countChatMessageTokens(modelName, lastToolCallsMsg);
-  }
-
   // System message
   let systemMsgTokens = 0;
   if (systemMsg) {
@@ -417,7 +403,7 @@ function compileChatMessages({
   // Non-negotiable messages
   inputTokensAvailable -= toolTokens;
   inputTokensAvailable -= systemMsgTokens;
-  inputTokensAvailable -= lastMessagesTokens;
+  // inputTokensAvailable -= lastMessagesTokens;
 
   // Make sure there's enough context for the non-excludable items
   if (inputTokensAvailable < 0) {
@@ -429,7 +415,6 @@ function compileChatMessages({
       - counting safety buffer: ${countingSafetyBuffer}
       - tools: ~${toolTokens}
       - system message: ~${systemMsgTokens}
-      - last user or tool + tool call message tokens: ~${lastMessagesTokens}
       - max output tokens: ${maxTokens}`,
     );
   }
@@ -445,9 +430,12 @@ function compileChatMessages({
     };
   });
 
+  let pruningStatus: PruningStatus = "not-pruned";
+
   while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
     const message = historyWithTokens.shift()!;
     currentTotal -= message.tokens;
+    pruningStatus = "pruned";
 
     // At this point make sure no latent tool response without corresponding call
     while (historyWithTokens[0]?.role === "tool") {
@@ -456,20 +444,20 @@ function compileChatMessages({
     }
   }
 
+  if (historyWithTokens.length === 0) {
+    pruningStatus = "deleted-last-input";
+  }
+
   // Now reassemble
   const reassembled: ChatMessage[] = [];
   if (systemMsg) {
     reassembled.push(systemMsg);
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
-  if (lastToolCallsMsg) {
-    reassembled.push(lastToolCallsMsg);
-  }
-  reassembled.push(lastUserOrToolMsg);
 
   // Flatten the messages (combines adjacent similar messages)
   const flattenedHistory = flattenMessages(reassembled);
-  return flattenedHistory;
+  return { compiledChatMessages: flattenedHistory, pruningStatus };
 }
 
 export {

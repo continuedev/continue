@@ -120,6 +120,7 @@ export interface ILLM
     messages: ChatMessage[],
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
@@ -127,6 +128,11 @@ export interface ILLM
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
+
+  compileChatMessages(
+    messages: ChatMessage[],
+    options: LLMFullCompletionOpeions,
+  ): CompiledChatMessagesReport;
 
   embed(chunks: string[]): Promise<number[][]>;
 
@@ -1649,4 +1655,25 @@ export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;
   apiKey?: string;
+}
+
+export type PruningStatus = "deleted-last-input" | "pruned" | "not-pruned";
+
+export interface CompiledMessagesResult {
+  compiledChatMessages: ChatMessage[];
+  pruningStatus: PruningStatus;
+}
+
+export interface MessageOption {
+  precompiled: boolean;
+}
+
+export type WarningMessageLevel = "warning" | "fatal";
+
+export type WarningCategory = "exceeded-context-length" | "deleted-last-input";
+
+export interface WarningMessage {
+  message: string;
+  level: WarningMessageLevel;
+  category: WarningCategory;
 }

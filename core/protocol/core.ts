@@ -15,6 +15,7 @@ import { GlobalContextModelSelections } from "../util/GlobalContext";
 import {
   BrowserSerializedContinueConfig,
   ChatMessage,
+  CompiledMessagesResult,
   CompleteOnboardingPayload,
   ContextItem,
   ContextItemWithId,
@@ -25,6 +26,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MessageOption,
   ModelDescription,
   PromptLog,
   RangeInFile,
@@ -158,6 +160,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
+      messageOptions?: MessageOption;
       legacySlashCommandData?: {
         command: SlashCommandDescWithSource;
         input: string;
@@ -169,6 +172,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
   streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
+  "llm/compileChat": [
+    { messages: ChatMessage[]; options: LLMFullCompletionOptions },
+    CompiledMessagesResult,
+  ];
   "chatDescriber/describe": [
     {
       text: string;
