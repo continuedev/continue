@@ -356,6 +356,9 @@ export class ContinueCompletionProvider
 
         // We don't need to show the next edit window if the predicted edits is empty.
         if (newEditRangeSlice === "") {
+          this.nextEditLoggingService.cancelRejectionTimeout(
+            input.completionId,
+          );
           return undefined;
         }
 
@@ -377,6 +380,9 @@ export class ContinueCompletionProvider
 
         // We don't need to show the next edit window if the predicted edits are identical to the previous version.
         if (oldEditRangeSlice === newEditRangeSlice) {
+          this.nextEditLoggingService.cancelRejectionTimeout(
+            input.completionId,
+          );
           return undefined;
         }
 
