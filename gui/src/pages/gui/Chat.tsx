@@ -4,7 +4,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
-import { streamResponse } from "core/llm/stream";
 import { renderChatMessage } from "core/util/messageContent";
 import {
   useCallback,
@@ -239,11 +238,11 @@ export function Chat() {
     [
       history,
       selectedModels,
-      streamResponse,
       mode,
       isInEdit,
       codeToEdit,
       toolCallState,
+      currentToolCallApplyState,
     ],
   );
 

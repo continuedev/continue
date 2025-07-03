@@ -81,7 +81,17 @@ export function parseDataLine(line: string): any {
   try {
     const data = JSON.parse(json);
     if (data.error) {
-      throw new Error(`Error streaming response: ${data.error}`);
+      if (
+        data.error &&
+        typeof data.error === "object" &&
+        "message" in data.error
+      ) {
+        console.error("Error in streamed response:", data.error);
+        throw new Error(`Error streaming response: ${data.error.message}`);
+      }
+      throw new Error(
+        `Error streaming response: ${JSON.stringify(data.error)}`,
+      );
     }
 
     return data;
