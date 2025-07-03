@@ -132,7 +132,6 @@ export function GenerationScreen({
     }
   };
 
-  const showSpinner = isGenerating && !formData.rule;
   const showNameSpinner = isGenerating && !formData.name;
   const tooltipId = "rule-type-tooltip";
 
@@ -209,11 +208,6 @@ export function GenerationScreen({
                       </>
                     )}
                   </select>
-                  {isGenerating && (
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                      <Spinner />
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -256,17 +250,9 @@ export function GenerationScreen({
               <textarea
                 className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus mt-1 box-border w-full resize-none rounded border p-2 text-xs focus:outline-none"
                 rows={10}
-                placeholder={
-                  showSpinner ? "" : "Your generated rule will appear here..."
-                }
                 disabled={isGenerating}
                 {...register("rule")}
               />
-              {showSpinner && (
-                <div className="absolute left-3 top-8">
-                  <Spinner />
-                </div>
-              )}
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
 
