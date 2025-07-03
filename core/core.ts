@@ -45,7 +45,6 @@ import {
   RangeInFile,
   ToolCall,
   type ContextItem,
-  type ContextItemId,
   type IDE,
 } from ".";
 
@@ -1102,11 +1101,6 @@ export class Core {
     }
 
     try {
-      const id: ContextItemId = {
-        providerTitle: provider.description.title,
-        itemId: uuidv4(),
-      };
-
       void Telemetry.capture("context_provider_get_context_items", {
         name: provider.description.title,
       });
@@ -1133,7 +1127,10 @@ export class Core {
 
       return items.map((item) => ({
         ...item,
-        id,
+        id: {
+          providerTitle: provider.description.title,
+          itemId: item.uri?.value ?? uuidv4(),
+        },
       }));
     } catch (e) {
       let knownError = false;
