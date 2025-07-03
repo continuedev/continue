@@ -74,13 +74,8 @@ export function GenerationScreen({
     const alwaysApply = newRuleType !== RuleType.AgentRequested;
     setValue("alwaysApply", alwaysApply);
 
-    // Clear optional fields when switching types
-    if (newRuleType !== RuleType.AgentRequested) {
-      setValue("description", "");
-    }
-    if (newRuleType !== RuleType.AutoAttached) {
-      setValue("globs", "");
-    }
+    // Don't clear optional fields - preserve their state
+    // Users can manually clear them if needed
   };
 
   const handleContinue = async () => {
@@ -223,34 +218,34 @@ export function GenerationScreen({
               </div>
 
               {/* Description (for Agent Requested only) */}
-              {selectedRuleType === RuleType.AgentRequested && (
-                <div className="space-y-1">
-                  <label className="text-foreground text-sm font-medium">
-                    Description
-                  </label>
-                  <textarea
-                    className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full resize-none rounded-md border px-3 py-2 text-xs focus:outline-none"
-                    rows={3}
-                    placeholder="Description of the task this rule is helpful for..."
-                    {...register("description")}
-                  />
-                </div>
-              )}
+              <div
+                className={`space-y-1 ${selectedRuleType === RuleType.AgentRequested ? "" : "hidden"}`}
+              >
+                <label className="text-foreground text-sm font-medium">
+                  Description
+                </label>
+                <textarea
+                  className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full resize-none rounded-md border px-3 py-2 text-xs focus:outline-none"
+                  rows={3}
+                  placeholder="Description of the task this rule is helpful for..."
+                  {...register("description")}
+                />
+              </div>
 
               {/* File Pattern (for Auto Attached only) */}
-              {selectedRuleType === RuleType.AutoAttached && (
-                <div className="space-y-1">
-                  <label className="text-foreground text-sm font-medium">
-                    File pattern matches
-                  </label>
-                  <input
-                    type="text"
-                    className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full rounded-md border px-3 py-2 font-mono text-xs focus:outline-none"
-                    placeholder="*.tsx, **/*.{ts,tsx}, tests/**/*.ts ..."
-                    {...register("globs")}
-                  />
-                </div>
-              )}
+              <div
+                className={`space-y-1 ${selectedRuleType === RuleType.AutoAttached ? "" : "hidden"}`}
+              >
+                <label className="text-foreground text-sm font-medium">
+                  File pattern matches
+                </label>
+                <input
+                  type="text"
+                  className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full rounded-md border px-3 py-2 font-mono text-xs focus:outline-none"
+                  placeholder="*.tsx, **/*.{ts,tsx}, tests/**/*.ts ..."
+                  {...register("globs")}
+                />
+              </div>
             </div>
 
             {/* Rule Content */}
