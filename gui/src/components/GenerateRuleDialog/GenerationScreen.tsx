@@ -49,14 +49,16 @@ export function GenerationScreen({
   const [formError, setFormError] = useState<string | null>(null);
 
   // Use the generation hook with the input prompt
-  const { generateRule, isGenerating, error, createRuleBlockArgs } =
-    useRuleGeneration(inputPrompt, (args) => {
+  const { generateRule, isGenerating, error } = useRuleGeneration(
+    inputPrompt,
+    (args) => {
       // Only update form if it's empty (first time generation)
       if (!formData.rule) {
         reset(args);
         handleRuleTypeChange(getRuleType(args));
       }
-    });
+    },
+  );
 
   // Start generation once when component mounts (only if not in manual mode)
   useEffect(() => {

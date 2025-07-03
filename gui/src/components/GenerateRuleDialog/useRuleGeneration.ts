@@ -36,7 +36,6 @@ export interface UseRuleGenerationReturn {
   isGenerating: boolean;
   error: string | null;
   reset: () => void;
-  createRuleBlockArgs: CreateRuleBlockArgs | null;
 }
 
 export function useRuleGeneration(
@@ -45,8 +44,6 @@ export function useRuleGeneration(
 ): UseRuleGenerationReturn {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createRuleBlockArgs, setCreateRuleBlockArgs] =
-    useState<CreateRuleBlockArgs | null>(null);
 
   const ideMessenger = useContext(IdeMessengerContext);
   const currentHistory = useAppSelector((state) => state.session.history);
@@ -60,7 +57,6 @@ export function useRuleGeneration(
 
     setIsGenerating(true);
     setError(null);
-    setCreateRuleBlockArgs(null);
 
     try {
       // Convert current history to ChatHistoryItem format
@@ -114,10 +110,8 @@ export function useRuleGeneration(
               toolCallState,
             );
 
-            // Update the tool call args state as we stream
+            // Call the callback if provided with the parsed args
             if (toolCallState?.parsedArgs) {
-              setCreateRuleBlockArgs(toolCallState.parsedArgs);
-              // Call the callback if provided
               onGenerate?.(toolCallState.parsedArgs);
             }
           }
@@ -134,7 +128,6 @@ export function useRuleGeneration(
   const reset = useCallback(() => {
     setError(null);
     setIsGenerating(false);
-    setCreateRuleBlockArgs(null);
   }, []);
 
   return {
@@ -142,6 +135,5 @@ export function useRuleGeneration(
     isGenerating,
     error,
     reset,
-    createRuleBlockArgs,
   };
 }
