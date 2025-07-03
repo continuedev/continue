@@ -91,7 +91,7 @@ export async function retrieveContextItemsFromEmbeddings(
     return [];
   }
 
-  const result = [
+  return [
     {
       ...INSTRUCTIONS_BASE_ITEM,
       content:
@@ -122,6 +122,4 @@ export async function retrieveContextItemsFromEmbeddings(
         };
       }),
   ];
-
-  return result;
 }

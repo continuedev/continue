@@ -183,7 +183,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     );
   }
 
-  run(_args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
+  run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
     throw new Error("Not implemented");
   }
 
