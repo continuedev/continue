@@ -19,12 +19,14 @@ interface GenerationScreenProps {
   inputPrompt: string;
   onBack: () => void;
   onSuccess: () => void;
+  isManualMode?: boolean;
 }
 
 export function GenerationScreen({
   inputPrompt,
   onBack,
   onSuccess,
+  isManualMode = false,
 }: GenerationScreenProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -55,10 +57,12 @@ export function GenerationScreen({
       }
     });
 
-  // Start generation once when component mounts
+  // Start generation once when component mounts (only if not in manual mode)
   useEffect(() => {
-    void generateRule();
-  }, []);
+    if (!isManualMode) {
+      void generateRule();
+    }
+  }, [isManualMode]);
 
   const handleRuleTypeChange = (newRuleType: RuleType) => {
     setSelectedRuleType(newRuleType);
@@ -130,7 +134,7 @@ export function GenerationScreen({
     }
   };
 
-  const showNameSpinner = isGenerating && !formData.name;
+  const showNameSpinner = isGenerating && !formData.name && !isManualMode;
   const tooltipId = "rule-type-tooltip";
 
   return (
@@ -156,7 +160,7 @@ export function GenerationScreen({
                     type="text"
                     className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus box-border w-full rounded-md border px-3 py-2 text-xs focus:outline-none"
                     placeholder={showNameSpinner ? "" : "Enter rule name..."}
-                    disabled={isGenerating}
+                    disabled={isGenerating && !isManualMode}
                     {...register("name")}
                   />
                   {showNameSpinner && (
@@ -189,9 +193,9 @@ export function GenerationScreen({
                     onChange={(e) =>
                       handleRuleTypeChange(e.target.value as RuleType)
                     }
-                    disabled={isGenerating}
+                    disabled={isGenerating && !isManualMode}
                   >
-                    {isGenerating ? (
+                    {isGenerating && !isManualMode ? (
                       <option value=""></option>
                     ) : (
                       <>
@@ -248,7 +252,8 @@ export function GenerationScreen({
               <textarea
                 className="border-input-border bg-input text-input-foreground placeholder:text-input-placeholder focus:border-border-focus mt-1 box-border w-full resize-none rounded border p-2 text-xs focus:outline-none"
                 rows={10}
-                disabled={isGenerating}
+                disabled={isGenerating && !isManualMode}
+                placeholder="Your rule content..."
                 {...register("rule")}
               />
             </div>
@@ -260,7 +265,7 @@ export function GenerationScreen({
                 className="min-w-16"
                 onClick={onBack}
                 variant="outline"
-                disabled={isGenerating}
+                disabled={isGenerating && !isManualMode}
               >
                 Back
               </Button>
@@ -268,7 +273,9 @@ export function GenerationScreen({
                 className="min-w-16"
                 onClick={handleContinue}
                 disabled={
-                  isGenerating || (!formData.rule && !error) || !formData.name
+                  (isGenerating && !isManualMode) ||
+                  (!formData.rule && !error) ||
+                  !formData.name
                 }
               >
                 Continue

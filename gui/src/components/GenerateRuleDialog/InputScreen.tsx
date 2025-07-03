@@ -8,6 +8,7 @@ interface InputScreenProps {
   onInputChange: (prompt: string) => void;
   onGenerate: (prompt: string) => void;
   onCancel: () => void;
+  onManualWrite: () => void;
 }
 
 export function InputScreen({
@@ -15,6 +16,7 @@ export function InputScreen({
   onInputChange,
   onGenerate,
   onCancel,
+  onManualWrite,
 }: InputScreenProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,18 +64,26 @@ export function InputScreen({
               />
             </div>
 
-            <div className="mt-4 flex flex-row justify-center gap-5">
-              <Button
-                type="button"
-                className="min-w-16"
-                onClick={onCancel}
-                variant="outline"
+            <div className="my-4 flex flex-col items-center gap-2">
+              <div className="flex flex-row justify-center gap-3">
+                <Button
+                  type="button"
+                  className="min-w-16"
+                  onClick={onCancel}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button className="min-w-16" disabled={!inputPrompt.trim()}>
+                  Generate
+                </Button>
+              </div>
+              <span
+                className="text-description cursor-pointer text-xs underline"
+                onClick={onManualWrite}
               >
-                Cancel
-              </Button>
-              <Button className="min-w-16" disabled={!inputPrompt.trim()}>
-                Generate
-              </Button>
+                Or, write a rule from scratch
+              </span>
             </div>
           </form>
         </div>

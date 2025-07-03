@@ -10,16 +10,24 @@ export function GenerateRuleDialog() {
   const dispatch = useDispatch();
   const [screen, setScreen] = useState<Screen>("input");
   const [inputPrompt, setInputPrompt] = useState("");
+  const [isManualMode, setIsManualMode] = useState(false);
 
   const closeDialog = () => {
     setScreen("input");
     setInputPrompt("");
+    setIsManualMode(false);
     dispatch(setDialogMessage(undefined));
     dispatch(setShowDialog(false));
   };
 
   const handleGenerate = (prompt: string) => {
     setInputPrompt(prompt);
+    setIsManualMode(false);
+    setScreen("generation");
+  };
+
+  const handleManualWrite = () => {
+    setIsManualMode(true);
     setScreen("generation");
   };
 
@@ -38,6 +46,7 @@ export function GenerateRuleDialog() {
         onInputChange={setInputPrompt}
         onGenerate={handleGenerate}
         onCancel={closeDialog}
+        onManualWrite={handleManualWrite}
       />
     );
   }
@@ -47,6 +56,7 @@ export function GenerateRuleDialog() {
       inputPrompt={inputPrompt}
       onBack={handleBack}
       onSuccess={handleSuccess}
+      isManualMode={isManualMode}
     />
   );
 }
