@@ -9,6 +9,7 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
 - [Environment Setup](#environment-setup)
   - [IDE Installation](#ide-installation)
   - [IDE configuration](#ide-configuration)
+    - [Recommended plugins](#recommended-plugins)
   - [Node.js Requirements](#nodejs-requirements)
   - [Install all dependencies](#install-all-dependencies)
   - [Misc](#misc)
@@ -50,7 +51,13 @@ notes below).
 ### IDE configuration
 
 - Enable code formatting on save: `Settings | Tools | Actions on Save | Reformat code`
-- We recommend installing the [Thread Access Info](https://plugins.jetbrains.com/plugin/16815-thread-access-info) plugin
+
+#### Recommended plugins
+
+- [Thread Access Info](https://plugins.jetbrains.com/plugin/16815-thread-access-info) - adds an extra debug panel 
+  showing possible thread access violation (according to Intellij Platform SDK guidelines)
+- [File Expander](https://plugins.jetbrains.com/plugin/11940-file-expander) - allows you to easily preview archives as
+  directories (like `build/distributions/continue-*.zip`)
 
 ### Node.js Requirements
 
