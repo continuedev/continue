@@ -7,7 +7,6 @@ import {
   constructLlmApi,
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
-import { Response } from "node-fetch";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
 import { DataLogger } from "../data/log.js";
@@ -385,7 +384,7 @@ export abstract class BaseLLM implements ILLM {
     }
   }
 
-  private async parseError(resp: Response): Promise<Error> {
+  private async parseError(resp: any): Promise<Error> {
     let text = await resp.text();
 
     if (resp.status === 404 && !resp.url.includes("/v1")) {
