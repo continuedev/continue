@@ -46,6 +46,7 @@ export function GenerationScreen({
   const [selectedRuleType, setSelectedRuleType] = useState<RuleType>(
     RuleType.Always,
   );
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Use the generation hook with the input prompt
   const { generateRule, isGenerating, error, createRuleBlockArgs } =
@@ -81,13 +82,16 @@ export function GenerationScreen({
   };
 
   const handleContinue = async () => {
+    // Clear any previous errors
+    setFormError(null);
+
     if (!formData.name) {
-      console.error("Rule name is required");
+      setFormError("Rule name is required");
       return;
     }
 
     if (!formData.rule) {
-      console.error("Rule content is required");
+      setFormError("Rule content is required");
       return;
     }
 
@@ -116,6 +120,7 @@ export function GenerationScreen({
       );
 
       if (workspaceDirs.status !== "success") {
+        setFormError("Failed to get workspace directory");
         return;
       }
 
@@ -130,7 +135,9 @@ export function GenerationScreen({
 
       onSuccess();
     } catch (err) {
-      console.error("Failed to create rule file:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      setFormError(`Failed to create rule file: ${errorMessage}`);
     }
   };
 
@@ -259,27 +266,34 @@ export function GenerationScreen({
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
 
-            <div className="flex flex-row justify-center gap-5">
-              <Button
-                type="button"
-                className="min-w-16"
-                onClick={onBack}
-                variant="outline"
-                disabled={isGenerating && !isManualMode}
-              >
-                Back
-              </Button>
-              <Button
-                className="min-w-16"
-                onClick={handleContinue}
-                disabled={
-                  (isGenerating && !isManualMode) ||
-                  (!formData.rule && !error) ||
-                  !formData.name
-                }
-              >
-                Continue
-              </Button>
+            <div className="my-4 flex flex-col items-center gap-2">
+              <div className="flex flex-row justify-center gap-3">
+                <Button
+                  type="button"
+                  className="min-w-16"
+                  onClick={onBack}
+                  variant="outline"
+                  disabled={isGenerating && !isManualMode}
+                >
+                  Back
+                </Button>
+                <Button
+                  className="min-w-16"
+                  onClick={handleContinue}
+                  disabled={
+                    (isGenerating && !isManualMode) ||
+                    (!formData.rule && !error) ||
+                    !formData.name
+                  }
+                >
+                  Continue
+                </Button>
+              </div>
+              {formError && (
+                <span className="text-error text-center text-xs">
+                  Error creating rule: {formError}
+                </span>
+              )}
             </div>
           </div>
         </div>
