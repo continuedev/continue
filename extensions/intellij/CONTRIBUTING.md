@@ -54,7 +54,7 @@ notes below).
 
 #### Recommended plugins
 
-- [Thread Access Info](https://plugins.jetbrains.com/plugin/16815-thread-access-info) - adds an extra debug panel 
+- [Thread Access Info](https://plugins.jetbrains.com/plugin/16815-thread-access-info) - adds an extra debug panel
   showing possible thread access violation (according to Intellij Platform SDK guidelines)
 - [File Expander](https://plugins.jetbrains.com/plugin/11940-file-expander) - allows you to easily preview archives as
   directories (like `build/distributions/continue-*.zip`)
