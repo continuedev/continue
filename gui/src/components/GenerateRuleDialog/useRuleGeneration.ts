@@ -1,10 +1,11 @@
-import { ChatMessage, ToolCallDelta } from "core";
+import { ToolCallDelta } from "core";
 import { createRuleBlock } from "core/tools/definitions/createRuleBlock";
 import { CreateRuleBlockArgs } from "core/tools/implementations/createRuleBlock";
 import { useCallback, useContext, useState } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
+import { constructMessages } from "../../redux/util/constructMessages";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 
 const RULE_GENERATION_SYSTEM_MESSAGE = `You are an expert at creating effective rules for AI coding assistants. When generating rules, follow these best practices:
@@ -83,23 +84,28 @@ export function useRuleGeneration(
     setCreateRuleBlockArgs(null);
 
     try {
-      // Convert current history to ChatMessage format
-      const chatMessages: ChatMessage[] = currentHistory.map(
-        (item) => item.message,
-      );
+      // Convert current history to ChatHistoryItem format
 
       // Add our rule generation prompt with instruction to use the tool
-      const messages: ChatMessage[] = [
+      const history = [
         {
-          role: "system",
-          content: RULE_GENERATION_SYSTEM_MESSAGE,
+          message: {
+            role: "system" as const,
+            content: RULE_GENERATION_SYSTEM_MESSAGE,
+          },
+          contextItems: [],
         },
-        ...chatMessages,
+        ...currentHistory,
         {
-          role: "user",
-          content: `The user has requested that we write a new rule. You MUST USE the create_rule_block tool to generate a well-structured rule. Do not say anything else, only call this tool. Here is their request: ${inputPrompt}`,
+          message: {
+            role: "user" as const,
+            content: `The user has requested that we write a new rule. You MUST USE the create_rule_block tool to generate a well-structured rule. Do not say anything else, only call this tool. Here is their request: ${inputPrompt}`,
+          },
+          contextItems: [],
         },
       ];
+
+      const { messages } = constructMessages(history, undefined, [], {});
 
       // Create abort controller for this request
       const abortController = new AbortController();
