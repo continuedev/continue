@@ -494,22 +494,6 @@ const config = {
           },
           // Migrated from netlify.toml
           {
-            to: "/features/chat/quick-start",
-            from: "/chat/how-to-use-it",
-          },
-          {
-            to: "/features/autocomplete/quick-start",
-            from: "/autocomplete/how-to-use-it",
-          },
-          {
-            to: "/features/edit/quick-start",
-            from: "/edit/how-to-use-it",
-          },
-          {
-            to: "/features/agent/quick-start",
-            from: "/agent/how-to-use-it",
-          },
-          {
             to: "/features/chat/how-it-works",
             from: "/chat/how-it-works",
           },
