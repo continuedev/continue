@@ -49,15 +49,19 @@ test("lsToolImpl truncates output when entries exceed MAX_LS_TOOL_LINES", async 
   );
 
   // Check that the result contains the truncation message
-  expect(result[0].content).toContain("... 50 entries were truncated");
+  expect(result.length).toBe(2);
+  expect(result[0].content).toContain("file1.txt");
+  expect(result[0].content).toContain("file199.txt");
+  expect(result[1].content).toContain("Try using a non-recursive search");
+  expect(result[1].content).toContain("50 ls entries were truncated");
 
   // Check that only MAX_LS_TOOL_LINES entries are included
   const contentLines = result[0].content.split("\n");
   // Account for the truncation message line
-  expect(contentLines.length).toBe(201);
+  expect(contentLines.length).toBe(200);
 
   // Check the suggestion to use non-recursive search is included
-  expect(result[0].content).toContain("Try using a non-recursive search");
+  expect(result[1].content).toContain("Try using a non-recursive search");
 });
 
 test("lsToolImpl shows truncation message without suggestion for non-recursive search", async () => {
@@ -73,10 +77,11 @@ test("lsToolImpl shows truncation message without suggestion for non-recursive s
   );
 
   // Check that the result contains the truncation message
-  expect(result[0].content).toContain("... 50 entries were truncated");
+  expect(result.length).toBe(2);
+  expect(result[1].content).toContain("50 ls entries were truncated");
 
   // Check that the suggestion to use non-recursive search is NOT included
-  expect(result[0].content).not.toContain("Try using a non-recursive search");
+  expect(result[1].content).not.toContain("Try using a non-recursive search");
 });
 
 test("lsToolImpl shows message when no files are found", async () => {
@@ -86,5 +91,6 @@ test("lsToolImpl shows message when no files are found", async () => {
   const result = await lsToolImpl({ dirPath: "emptyDir" }, mockExtras);
 
   // Check that the result contains the "no files found" message
+  expect(result.length).toBe(1);
   expect(result[0].content).toBe("No files/folders found in emptyDir");
 });
