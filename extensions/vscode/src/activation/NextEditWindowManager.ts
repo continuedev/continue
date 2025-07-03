@@ -181,7 +181,7 @@ export class NextEditWindowManager {
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
     this.registerCommandSafely(
       HIDE_NEXT_EDIT_SUGGESTION_COMMAND,
-      async () => await this.hideAllNextEditWindows(),
+      async () => await this.hideAllNextEditWindowsAndResetCompletionId(),
     );
     this.registerCommandSafely(
       ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
@@ -309,8 +309,12 @@ export class NextEditWindowManager {
     }
 
     await NextEditWindowManager.freeTabAndEsc();
+  }
 
-    // TODO: Log with accept = false.
+  public async hideAllNextEditWindowsAndResetCompletionId() {
+    this.hideAllNextEditWindows();
+
+    // Log with accept = false.
     await vscode.commands.executeCommand(
       "continue.logNextEditOutcomeReject",
       this.mostRecentCompletionId,
