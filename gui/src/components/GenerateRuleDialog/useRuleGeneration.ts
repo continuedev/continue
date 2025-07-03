@@ -61,6 +61,7 @@ export interface UseRuleGenerationReturn {
 
 export function useRuleGeneration(
   inputPrompt: string,
+  onGenerate?: (args: CreateRuleBlockArgs) => void,
 ): UseRuleGenerationReturn {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +132,8 @@ export function useRuleGeneration(
             // Update the tool call args state as we stream
             if (toolCallState?.parsedArgs) {
               setCreateRuleBlockArgs(toolCallState.parsedArgs);
+              // Call the callback if provided
+              onGenerate?.(toolCallState.parsedArgs);
             }
           }
           // Ignore regular assistant content - we only care about the tool call
