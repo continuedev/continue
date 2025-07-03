@@ -7,6 +7,7 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../";
 import { walkDirs } from "../../indexing/walkDir";
+import { formatCodeblock } from "../../util/formatCodeblock";
 import {
   getShortestUniqueRelativeUriPaths,
   getUriDescription,
@@ -30,17 +31,21 @@ class FileContextProvider extends BaseContextProvider {
     // Assume the query is a filepath
     const fileUri = query.trim();
     const content = await extras.ide.readFile(fileUri);
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
 
-    const { relativePathOrBasename, last2Parts, baseName } = getUriDescription(
-      fileUri,
-      await extras.ide.getWorkspaceDirs(),
+    const { relativePathOrBasename, last2Parts, baseName, extension } =
+      getUriDescription(fileUri, workspaceDirs);
+    const codeblock = formatCodeblock(
+      relativePathOrBasename,
+      content,
+      extension,
     );
 
     return [
       {
         name: baseName,
         description: last2Parts,
-        content: `\`\`\`${relativePathOrBasename}\n${content}\n\`\`\``,
+        content: codeblock,
         uri: {
           type: "file",
           value: fileUri,

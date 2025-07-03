@@ -1,6 +1,5 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
-import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
 import { ApplyToFilePayload } from "core";
@@ -136,7 +135,7 @@ export class ApplyManager {
     const { isInstantApply, diffLinesGenerator } = await applyCodeBlock(
       editor.document.getText(),
       text,
-      getUriPathBasename(fileUri),
+      fileUri,
       llm,
       abortController,
     );

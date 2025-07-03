@@ -1,11 +1,12 @@
 import { ChatMessage } from "../..";
 import { dedent } from "../../util";
+import { getUriFileExtension } from "../../util/uri";
 
 export const UNCHANGED_CODE = "UNCHANGED CODE";
 
 type LazyApplyPrompt = (
   oldCode: string,
-  filename: string,
+  fileUri: string,
   newCode: string,
 ) => ChatMessage[];
 
@@ -21,18 +22,21 @@ const RULES = [
   "The code should always be syntactically valid, even with the comments.",
 ];
 
-function claude35SonnetLazyApplyPrompt(
-  ...args: Parameters<LazyApplyPrompt>
-): ReturnType<LazyApplyPrompt> {
+const claude35SonnetLazyApplyPrompt: LazyApplyPrompt = (
+  oldCode,
+  fileUri,
+  newCode,
+) => {
+  const fileExt = getUriFileExtension(fileUri);
   const userContent = dedent`
     ORIGINAL CODE:
-    \`\`\`${args[1]}
-    ${args[0]}
+    \`\`\`${fileExt} 
+    ${oldCode}
     \`\`\`
 
     NEW CODE:
-    \`\`\`
-    ${args[2]}
+    \`\`\`${fileExt}
+    ${newCode}
     \`\`\`
 
     Above is a code block containing the original version of a file (ORIGINAL CODE) and below it is a code snippet (NEW CODE) that was suggested as modification to the original file. Your task is to apply the NEW CODE to the ORIGINAL CODE and show what the entire file would look like after it is applied.
@@ -41,14 +45,14 @@ function claude35SonnetLazyApplyPrompt(
 
   const assistantContent = dedent`
     Sure! Here's the modified version of the file after applying the new code:
-    \`\`\`${args[1]}
+    \`\`\`${fileExt}
   `;
 
   return [
     { role: "user", content: userContent },
     { role: "assistant", content: assistantContent },
   ];
-}
+};
 
 export function lazyApplyPromptForModel(
   model: string,
