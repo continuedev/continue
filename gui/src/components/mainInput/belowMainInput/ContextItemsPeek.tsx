@@ -131,7 +131,7 @@ export function ContextItemsPeekItem({
         {contextItem.name}
       </span>
       <div
-        className={`group flex flex-row items-center gap-1.5 pr-1.5 text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
+        className={`group flex flex-row items-center gap-1.5 truncate pr-1.5 text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
         onClick={
           isUrl
             ? (e) => {

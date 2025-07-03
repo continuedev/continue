@@ -201,12 +201,12 @@ async function gatherContextItems({
       if (
         !acc.some(
           (i) =>
-            (i.id.providerTitle === item.id.providerTitle &&
-              i.id.itemId === item.id.itemId) ||
-            (i.uri &&
-              item.uri &&
-              i.uri.type === item.uri.type &&
-              i.uri.value === item.uri.value),
+            i.id.providerTitle === item.id.providerTitle &&
+            i.id.itemId === item.id.itemId &&
+            i.uri &&
+            item.uri &&
+            i.uri.type === item.uri.type &&
+            i.uri.value === item.uri.value,
         )
       ) {
         acc.push(item);
