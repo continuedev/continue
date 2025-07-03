@@ -139,8 +139,10 @@ const siteIndexingConfigsAreEqual = (
     siteConfig1.title === siteConfig2.title &&
     siteConfig1.maxDepth === siteConfig2.maxDepth &&
     siteConfig1.useLocalCrawling === siteConfig2.useLocalCrawling &&
-    contConfig1?.selectedModelByRole.embed ===
-      contConfig2.selectedModelByRole.embed &&
+    embedModelsAreEqual(
+      contConfig1?.selectedModelByRole.embed,
+      contConfig2.selectedModelByRole.embed,
+    ) &&
     codebaseProvider1 === codebaseProvider2
   );
 };
@@ -1338,4 +1340,15 @@ export default class DocsService {
       providers: ["docs"],
     });
   }
+}
+
+export function embedModelsAreEqual(
+  llm1: ILLM | null | undefined,
+  llm2: ILLM | null | undefined,
+): boolean {
+  return (
+    llm1?.underlyingProviderName === llm2?.underlyingProviderName &&
+    llm1?.title === llm2?.title &&
+    llm1?.maxEmbeddingChunkSize === llm2?.maxEmbeddingChunkSize
+  );
 }

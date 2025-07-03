@@ -21,6 +21,7 @@ import { LLMError } from "../llm/index.js";
 import { getRootCause } from "../util/errors.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
+import { embedModelsAreEqual } from "./docs/DocsService.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
@@ -694,9 +695,10 @@ export class CodebaseIndexer {
         CodebaseContextProvider.description.title,
     );
     return (
-      config1?.selectedModelByRole.embed ===
-        config2.selectedModelByRole.embed &&
-      codebaseProvider1 === codebaseProvider2
+      embedModelsAreEqual(
+        config1?.selectedModelByRole.embed,
+        config2.selectedModelByRole.embed,
+      ) && codebaseProvider1 === codebaseProvider2
     );
   }
 
