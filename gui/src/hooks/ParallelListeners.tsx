@@ -22,6 +22,7 @@ import {
   addContextItemsAtIndex,
   selectCurrentToolCall,
   setHasReasoningEnabled,
+  setIsSessionMetadataLoading,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
@@ -104,6 +105,7 @@ function ParallelListeners() {
 
   const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
+      dispatch(setIsSessionMetadataLoading(true));
       dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",

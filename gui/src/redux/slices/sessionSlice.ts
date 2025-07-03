@@ -44,6 +44,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 
 type SessionState = {
   lastSessionId?: string;
+  isSessionMetadataLoading: boolean;
   allSessionMetadata: SessionMetadata[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
@@ -63,6 +64,7 @@ type SessionState = {
 };
 
 const initialState: SessionState = {
+  isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
   isStreaming: false,
@@ -424,6 +426,12 @@ export const sessionSlice = createSlice({
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
       state.title = payload;
     },
+    setIsSessionMetadataLoading: (
+      state,
+      { payload }: PayloadAction<boolean>,
+    ) => {
+      state.isSessionMetadataLoading = payload;
+    },
     setAllSessionMetadata: (
       state,
       { payload }: PayloadAction<SessionMetadata[]>,
@@ -737,6 +745,7 @@ export const {
   setToolGenerated,
   updateToolCallOutput,
   setMode,
+  setIsSessionMetadataLoading,
   setAllSessionMetadata,
   addSessionMetadata,
   updateSessionMetadata,
