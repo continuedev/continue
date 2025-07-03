@@ -175,62 +175,48 @@ class Anthropic extends BaseLLM {
     index: number,
     filteredMessages: ChatMessage[],
   ): boolean {
-    if (!this.cacheBehavior?.cacheConversation) {
-      return false;
+    if (!this.cacheBehavior) return false;
+
+    // Cache last 2 user messages if cacheConversation is enabled
+    if (message.role === "user" && this.cacheBehavior.cacheConversation) {
+      const userMessages = filteredMessages.filter((m) => m.role === "user");
+          const userIndex = userMessages.findIndex((m) => m === message);
+      return userIndex >= userMessages.length - 2;
+        }
+
+    // Cache last 2 assistant messages (regular) if cacheConversation is enabled
+    if (
+      message.role === "assistant" &&
+      !message.toolCalls &&
+      this.cacheBehavior.cacheConversation
+    ) {
+      const assistantMessages = filteredMessages.filter(
+        (m) => m.role === "assistant" && !m.toolCalls,
+          );
+      const assistantIndex = assistantMessages.findIndex((m) => m === message);
+      return assistantIndex >= assistantMessages.length - 2;
     }
 
-    const {
-      cacheUserMessages = 2,
-      cacheAssistantMessages = 0,
-      cacheToolResults = 0,
-      cacheAssistantToolCalls = 0,
-    } = this.cacheBehavior;
-
-    switch (message.role) {
-      case "user":
-        if (cacheUserMessages > 0) {
-          const userMessages = filteredMessages.filter(
-            (m) => m.role === "user",
-          );
-          const userIndex = userMessages.findIndex((m) => m === message);
-          return userIndex >= userMessages.length - cacheUserMessages;
-        }
-        break;
-
-      case "assistant":
-        if (message.toolCalls && cacheAssistantToolCalls > 0) {
-          const assistantToolMessages = filteredMessages.filter(
-            (m) => m.role === "assistant" && m.toolCalls,
-          );
-          const assistantIndex = assistantToolMessages.findIndex(
-            (m) => m === message,
-          );
-          return (
-            assistantIndex >=
-            assistantToolMessages.length - cacheAssistantToolCalls
-          );
-        } else if (!message.toolCalls && cacheAssistantMessages > 0) {
-          const assistantMessages = filteredMessages.filter(
-            (m) => m.role === "assistant" && !m.toolCalls,
-          );
-          const assistantIndex = assistantMessages.findIndex(
-            (m) => m === message,
-          );
-          return (
-            assistantIndex >= assistantMessages.length - cacheAssistantMessages
-          );
-        }
-        break;
-
-      case "tool":
-        if (cacheToolResults > 0) {
-          const toolMessages = filteredMessages.filter(
-            (m) => m.role === "tool",
-          );
+    // Cache last 2 tool result messages if cacheToolMessages is enabled
+    if (message.role === "tool" && this.cacheBehavior.cacheToolMessages) {
+      const toolMessages = filteredMessages.filter((m) => m.role === "tool");
           const toolIndex = toolMessages.findIndex((m) => m === message);
-          return toolIndex >= toolMessages.length - cacheToolResults;
+      return toolIndex >= toolMessages.length - 2;
         }
-        break;
+
+    // Cache last 2 assistant tool call messages if cacheToolMessages is enabled
+    if (
+      message.role === "assistant" &&
+      message.toolCalls &&
+      this.cacheBehavior.cacheToolMessages
+    ) {
+      const assistantToolMessages = filteredMessages.filter(
+        (m) => m.role === "assistant" && m.toolCalls,
+    );
+      const assistantIndex = assistantToolMessages.findIndex(
+        (m) => m === message,
+      );
+      return assistantIndex >= assistantToolMessages.length - 2;
     }
 
     return false;
@@ -245,7 +231,7 @@ class Anthropic extends BaseLLM {
     );
 
     const messages = filteredmessages.map((message, filteredMsgIdx) => {
-      // Enhanced caching logic that supports tool messages
+      // Use simplified caching logic
       const addCaching = this.shouldCacheMessage(
         message,
         filteredMsgIdx,
@@ -277,8 +263,8 @@ class Anthropic extends BaseLLM {
     if (!this.apiKey || this.apiKey === "") {
       throw new Error(
         "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
-      );
-    }
+          );
+        }
 
     const systemMessage = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content ?? "",
@@ -346,7 +332,6 @@ class Anthropic extends BaseLLM {
       yield { role: "assistant", content: data.content[0].text };
       return;
     }
-
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
     for await (const value of streamSse(response)) {

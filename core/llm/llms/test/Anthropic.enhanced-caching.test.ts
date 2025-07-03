@@ -23,7 +23,7 @@ class TestAnthropic extends Anthropic {
   }
 }
 
-describe("Anthropic Enhanced Caching", () => {
+describe("Anthropic Simplified Caching", () => {
   let anthropic: TestAnthropic;
 
   beforeEach(() => {
@@ -32,9 +32,7 @@ describe("Anthropic Enhanced Caching", () => {
       apiKey: "test-key",
       cacheBehavior: {
         cacheConversation: true,
-        cacheUserMessages: 2,
-        cacheToolResults: 3,
-        cacheAssistantToolCalls: 2,
+        cacheToolMessages: true,
         useExtendedCacheTtlBeta: true,
         cacheTtl: "1h",
       },
@@ -122,41 +120,28 @@ describe("Anthropic Enhanced Caching", () => {
     });
   });
 
-  test("should respect per-type caching limits", () => {
-    // Test with specific limits per type
-    const anthropicLimited = new TestAnthropic({
-      model: "claude-3-5-sonnet-latest",
-      apiKey: "test-key",
-      cacheBehavior: {
-        cacheConversation: true,
-        cacheUserMessages: 1, // Only cache last 1 user message
-        cacheToolResults: 2, // Cache last 2 tool results
-        cacheAssistantToolCalls: 1, // Cache last 1 assistant tool call
-        useExtendedCacheTtlBeta: true,
-        cacheTtl: "1h",
-      },
-    });
-
+  test("should cache last 2 messages of each type", () => {
     const messages: ChatMessage[] = [
       { role: "user", content: "First user" },
       { role: "user", content: "Second user" },
+      { role: "user", content: "Third user" },
       { role: "tool", content: "First tool", toolCallId: "tool_1" },
       { role: "tool", content: "Second tool", toolCallId: "tool_2" },
       { role: "tool", content: "Third tool", toolCallId: "tool_3" },
     ];
 
-    const convertedMessages = anthropicLimited.convertMessages(messages);
+    const convertedMessages = anthropic.convertMessages(messages);
 
-    // Only last user message should be cached (1 out of 2)
+    // Only last 2 user messages should be cached
     const userMessages = convertedMessages.filter(
       (msg: any) => msg.role === "user" && msg.content[0]?.type === "text",
     );
     const cachedUserMessages = userMessages.filter(
       (msg: any) => msg.content[0]?.cache_control,
     );
-    expect(cachedUserMessages).toHaveLength(1);
+    expect(cachedUserMessages).toHaveLength(2);
 
-    // Last 2 tool results should be cached (2 out of 3)
+    // Only last 2 tool results should be cached
     const toolMessages = convertedMessages.filter(
       (msg: any) =>
         msg.role === "user" && msg.content[0]?.type === "tool_result",
@@ -173,6 +158,7 @@ describe("Anthropic Enhanced Caching", () => {
       apiKey: "test-key",
       cacheBehavior: {
         cacheConversation: false,
+        cacheToolMessages: false,
       },
     });
 
@@ -206,9 +192,9 @@ describe("Anthropic Enhanced Caching", () => {
       apiKey: "test-key",
       cacheBehavior: {
         cacheConversation: true,
-        cacheToolResults: 1,
+        cacheToolMessages: true,
         useExtendedCacheTtlBeta: true,
-        // cacheTtl not specified - should use fallback from implementation
+        // cacheTtl not specified - should use fallback "5m"
       },
     });
 
@@ -223,15 +209,12 @@ describe("Anthropic Enhanced Caching", () => {
     const convertedMessages = anthropicDefaultTtl.convertMessages(messages);
     const toolMsg = convertedMessages[0];
 
-    // Verify that cache_control exists and has some TTL value
+    // Verify that cache_control exists and uses fallback TTL
     expect(toolMsg.content[0]).toHaveProperty("cache_control");
-    expect(toolMsg.content[0].cache_control).toHaveProperty(
-      "type",
-      "ephemeral",
-    );
-    expect(toolMsg.content[0].cache_control).toHaveProperty("ttl");
-    // The actual fallback TTL value should match the implementation's default
-    expect(typeof toolMsg.content[0].cache_control.ttl).toBe("string");
+    expect(toolMsg.content[0].cache_control).toEqual({
+      type: "ephemeral",
+      ttl: "5m", // Default fallback TTL
+    });
   });
 
   test("shouldCacheMessage logic works correctly", () => {
@@ -249,17 +232,17 @@ describe("Anthropic Enhanced Caching", () => {
         (!!m.content || (m.role === "assistant" && m.toolCalls)),
     );
 
-    // Last user message should be cached (cacheUserMessages: 2)
+    // Last user message should be cached (last 2 rule)
     expect(anthropic.shouldCacheMessage(messages[3], 3, filteredMessages)).toBe(
       true,
     );
 
-    // Second to last user message should be cached (cacheUserMessages: 2)
+    // Second to last user message should be cached (last 2 rule)
     expect(anthropic.shouldCacheMessage(messages[2], 2, filteredMessages)).toBe(
       true,
     );
 
-    // Tool message should be cached (cacheToolResults: 3)
+    // Tool message should be cached (last 2 rule)
     expect(anthropic.shouldCacheMessage(messages[4], 4, filteredMessages)).toBe(
       true,
     );
@@ -268,5 +251,44 @@ describe("Anthropic Enhanced Caching", () => {
     expect(anthropic.shouldCacheMessage(messages[0], 0, filteredMessages)).toBe(
       false,
     );
+  });
+
+  test("backward compatibility - original cacheConversation behavior preserved", () => {
+    const anthropicOriginal = new TestAnthropic({
+      model: "claude-3-5-sonnet-latest",
+      apiKey: "test-key",
+      cacheBehavior: {
+        cacheConversation: true,
+        // cacheToolMessages not specified - should not cache tool messages
+      },
+    });
+
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Message 1" },
+      { role: "assistant", content: "Response 1" },
+      { role: "user", content: "Message 2" },
+      { role: "tool", content: "Tool result", toolCallId: "tool_1" },
+    ];
+
+    const convertedMessages = anthropicOriginal.convertMessages(messages);
+
+    // User messages should be cached (cacheConversation: true)
+    const userMessages = convertedMessages.filter(
+      (msg: any) => msg.role === "user" && msg.content[0]?.type === "text",
+    );
+    const cachedUserMessages = userMessages.filter(
+      (msg: any) => msg.content[0]?.cache_control,
+    );
+    expect(cachedUserMessages).toHaveLength(2);
+
+    // Tool messages should NOT be cached (cacheToolMessages not enabled)
+    const toolMessages = convertedMessages.filter(
+      (msg: any) =>
+        msg.role === "user" && msg.content[0]?.type === "tool_result",
+    );
+    const cachedToolMessages = toolMessages.filter(
+      (msg: any) => msg.content[0]?.cache_control,
+    );
+    expect(cachedToolMessages).toHaveLength(0);
   });
 });

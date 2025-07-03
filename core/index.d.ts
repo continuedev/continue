@@ -927,15 +927,10 @@ export interface RequestOptions {
 export interface CacheBehavior {
   cacheSystemMessage?: boolean;
   cacheConversation?: boolean;
+  cacheToolMessages?: boolean; // NEW: Simple flag for tool results + tool calls
   useExtendedCacheTtlBeta?: boolean;
   cacheTtl?: string;
-  // Enhanced per-type caching options
-  cacheUserMessages?: number; // Number of recent user messages to cache (default: 2)
-  cacheAssistantMessages?: number; // Number of recent assistant messages to cache (default: 0)
-  cacheToolResults?: number; // Number of recent tool result messages to cache (default: 0)
-  cacheAssistantToolCalls?: number; // Number of recent assistant tool call messages to cache (default: 0)
 }
-
 export interface ClientCertificateOptions {
   cert: string;
   key: string;
