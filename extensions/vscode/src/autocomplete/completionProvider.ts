@@ -15,6 +15,12 @@ import { handleLLMError } from "../util/errorHandling";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
+import { myersDiff } from "core/diff/myers";
+import {
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "core/nextEdit/constants";
+import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditWindowManager } from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "./lsp";
@@ -302,20 +308,14 @@ export class ContinueCompletionProvider
             new vscode.Position(startPos.line, result.range.end),
           );
         }
-        // console.log("range", range.start, range.end);
       } else {
         // Extend the range to the end of the line for multiline completions
         range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
-        // console.log("range", range.start, range.end);
       }
 
       const completionItem = new vscode.InlineCompletionItem(
         completionText,
         range,
-        // new vscode.Range(
-        //   new vscode.Position(36, 3),
-        //   new vscode.Position(36, 3),
-        // ),
         {
           title: "Log Autocomplete Outcome",
           command: "continue.logAutocompleteOutcome",
@@ -327,10 +327,71 @@ export class ContinueCompletionProvider
 
       if (this.isNextEditActive) {
         const editor = vscode.window.activeTextEditor;
-        if (editor && NextEditWindowManager.isInstantiated()) {
+        if (!editor) {
+          return undefined;
+        }
+
+        // Check the diff between old and new editable region.
+        const newEditRangeSlice = completionText;
+
+        // We don't need to show the next edit window if the predicted edits is empty.
+        if (newEditRangeSlice === "") {
+          return undefined;
+        }
+
+        // Get the contents of the old (current) editable region.
+        const currCursorPos = editor.selection.active;
+        const editableRegionStartLine = Math.max(
+          currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+          0,
+        );
+        const editableRegionEndLine = Math.min(
+          currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+          editor.document.lineCount - 1,
+        );
+        const oldEditRangeSlice = editor.document
+          .getText()
+          .split("\n")
+          .slice(editableRegionStartLine, editableRegionEndLine + 1)
+          .join("\n");
+
+        // We don't need to show the next edit window if the predicted edits are identical to the previous version.
+        if (oldEditRangeSlice === newEditRangeSlice) {
+          return undefined;
+        }
+
+        // If the diff is a FIM, render a ghost text.
+        const { isFim, fimText } = checkFim(
+          oldEditRangeSlice,
+          newEditRangeSlice,
+          currCursorPos,
+        );
+        if (isFim) {
+          const completionItem = new vscode.InlineCompletionItem(
+            fimText,
+            new vscode.Range(
+              new vscode.Position(currCursorPos.line, currCursorPos.character),
+              new vscode.Position(currCursorPos.line, currCursorPos.character),
+            ),
+            {
+              title: "Log Autocomplete Outcome",
+              command: "continue.logAutocompleteOutcome",
+              arguments: [input.completionId, this.completionProvider],
+            },
+          );
+          return [completionItem];
+        }
+
+        // Else, render a next edit window.
+        const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+
+        if (NextEditWindowManager.isInstantiated()) {
           await NextEditWindowManager.getInstance().showNextEditWindow(
             editor,
+            currCursorPos,
+            editableRegionStartLine,
             completionText,
+            diffLines,
           );
         }
 
