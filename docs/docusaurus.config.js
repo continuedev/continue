@@ -336,16 +336,16 @@ const config = {
             ],
           },
           {
-            to: "/advanced/context-integration/custom-providers",
-            from: ["/customization/context-providers"],
+            to: "/advanced/context/custom-providers",
+            from: ["/customization/context-providers", "/advanced/context-integration/custom-providers"],
           },
           {
             to: "/advanced/deep-dives/development-data",
             from: ["/development-data", "/customize/development-data"],
           },
           {
-            to: "/advanced/context-integration/documentation",
-            from: "/features/talk-to-your-docs",
+            to: "/advanced/context/documentation",
+            from: ["/features/talk-to-your-docs", "/advanced/context-integration/documentation"],
           },
           {
             to: "/advanced/model-providers/anthropic",
