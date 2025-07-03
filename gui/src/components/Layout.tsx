@@ -18,6 +18,7 @@ import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
+import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
 import {
@@ -191,6 +192,15 @@ const Layout = () => {
     "exitEditMode",
     async () => {
       await dispatch(exitEdit({}));
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "generateRule",
+    async () => {
+      dispatch(setShowDialog(true));
+      dispatch(setDialogMessage(<GenerateRuleDialog />));
     },
     [],
   );
