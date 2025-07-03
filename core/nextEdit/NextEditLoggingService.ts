@@ -78,6 +78,12 @@ export class NextEditLoggingService {
     }
   }
 
+  public cancelRejectionTimeoutButKeepCompletionId(completionId: string) {
+    if (this._logRejectionTimeouts.has(completionId)) {
+      clearTimeout(this._logRejectionTimeouts.get(completionId)!);
+    }
+  }
+
   public markDisplayed(completionId: string, outcome: NextEditOutcome) {
     const logRejectionTimeout = setTimeout(() => {
       // Wait 10 seconds, then assume it wasn't accepted
