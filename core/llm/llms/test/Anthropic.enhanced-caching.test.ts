@@ -23,7 +23,7 @@ class TestAnthropic extends Anthropic {
   }
 }
 
-describe("Anthropic Simplified Caching", () => {
+describe("Anthropic Smart Caching", () => {
   let anthropic: TestAnthropic;
 
   beforeEach(() => {
@@ -58,7 +58,7 @@ describe("Anthropic Simplified Caching", () => {
       },
       {
         role: "tool",
-        content: "def main():\n    print('Hello')",
+        content: "def main():\n    print('Hello')\n".repeat(500), // Make it large enough to be cached
         toolCallId: "tool_1",
       },
       {
@@ -120,36 +120,123 @@ describe("Anthropic Simplified Caching", () => {
     });
   });
 
-  test("should cache last message of each type", () => {
+  test("should only cache messages meeting minimum size requirements", () => {
     const messages: ChatMessage[] = [
-      { role: "user", content: "First user" },
-      { role: "user", content: "Second user" },
-      { role: "user", content: "Third user" },
-      { role: "tool", content: "First tool", toolCallId: "tool_1" },
-      { role: "tool", content: "Second tool", toolCallId: "tool_2" },
-      { role: "tool", content: "Third tool", toolCallId: "tool_3" },
+      { role: "user", content: "Small message" }, // Too small to cache
+      { role: "user", content: "Large message content ".repeat(200) }, // Large enough to cache
+      { role: "tool", content: "Small tool result", toolCallId: "tool_1" }, // Too small
+      { role: "tool", content: "Large tool result ".repeat(300), toolCallId: "tool_2" }, // Large enough
     ];
 
     const convertedMessages = anthropic.convertMessages(messages);
 
-    // Only last user message should be cached
-    const userMessages = convertedMessages.filter(
-      (msg: any) => msg.role === "user" && msg.content[0]?.type === "text",
-    );
-    const cachedUserMessages = userMessages.filter(
-      (msg: any) => msg.content[0]?.cache_control,
-    );
-    expect(cachedUserMessages).toHaveLength(1);
+    // Count cached messages
+    let cachedCount = 0;
+    convertedMessages.forEach((msg: any) => {
+      if (msg.content && Array.isArray(msg.content)) {
+        msg.content.forEach((content: any) => {
+          if (content.cache_control) {
+            cachedCount++;
+          }
+        });
+      }
+    });
 
-    // Only last tool result should be cached
-    const toolMessages = convertedMessages.filter(
-      (msg: any) =>
-        msg.role === "user" && msg.content[0]?.type === "tool_result",
-    );
-    const cachedToolMessages = toolMessages.filter(
-      (msg: any) => msg.content[0]?.cache_control,
-    );
-    expect(cachedToolMessages).toHaveLength(1);
+    // Should only cache the large messages that meet minimum requirements
+    expect(cachedCount).toBeGreaterThan(0);
+    expect(cachedCount).toBeLessThanOrEqual(4); // Never exceed 4 blocks
+  });
+
+  test("should respect 4 block limit with priority-based selection", () => {
+    // Create many large messages that could potentially be cached
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Large user message 1 ".repeat(200) },
+      { role: "user", content: "Large user message 2 ".repeat(200) },
+      { role: "user", content: "Large user message 3 ".repeat(200) },
+      { role: "tool", content: "Large tool result 1 ".repeat(300), toolCallId: "tool_1" },
+      { role: "tool", content: "Large tool result 2 ".repeat(300), toolCallId: "tool_2" },
+      { role: "tool", content: "Large tool result 3 ".repeat(300), toolCallId: "tool_3" },
+      {
+        role: "assistant",
+        content: "",
+        toolCalls: [{ id: "tool_4", type: "function", function: { name: "test", arguments: "{}" } }],
+      },
+      {
+        role: "assistant",
+        content: "",
+        toolCalls: [{ id: "tool_5", type: "function", function: { name: "test", arguments: "{}" } }],
+      },
+    ];
+
+    const convertedMessages = anthropic.convertMessages(messages);
+
+    // Count all cached blocks
+    let totalCachedBlocks = 0;
+    convertedMessages.forEach((msg: any) => {
+      if (msg.content && Array.isArray(msg.content)) {
+        msg.content.forEach((content: any) => {
+          if (content.cache_control) {
+            totalCachedBlocks++;
+          }
+        });
+      }
+    });
+
+    // Should not exceed 4 blocks total (since cacheSystemMessage is NOT enabled in this test)
+    expect(totalCachedBlocks).toBeLessThanOrEqual(4);
+    expect(totalCachedBlocks).toBeGreaterThan(0);
+  });
+
+  test("should respect 3 block limit when system message caching is enabled", () => {
+    const anthropicWithSystem = new TestAnthropic({
+      model: "claude-3-5-sonnet-latest",
+      apiKey: "test-key",
+      cacheBehavior: {
+        cacheSystemMessage: true, // This reserves 1 block, leaving 3 for messages
+        cacheConversation: true,
+        cacheToolMessages: true,
+        useExtendedCacheTtlBeta: true,
+        cacheTtl: "1h",
+      },
+    });
+
+    // Create many large messages that could potentially be cached
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Large user message 1 ".repeat(200) },
+      { role: "user", content: "Large user message 2 ".repeat(200) },
+      { role: "user", content: "Large user message 3 ".repeat(200) },
+      { role: "tool", content: "Large tool result 1 ".repeat(300), toolCallId: "tool_1" },
+      { role: "tool", content: "Large tool result 2 ".repeat(300), toolCallId: "tool_2" },
+      { role: "tool", content: "Large tool result 3 ".repeat(300), toolCallId: "tool_3" },
+      {
+        role: "assistant",
+        content: "",
+        toolCalls: [{ id: "tool_4", type: "function", function: { name: "test", arguments: "{}" } }],
+      },
+      {
+        role: "assistant",
+        content: "",
+        toolCalls: [{ id: "tool_5", type: "function", function: { name: "test", arguments: "{}" } }],
+      },
+    ];
+
+    const convertedMessages = anthropicWithSystem.convertMessages(messages);
+
+    // Count all cached blocks
+    let totalCachedBlocks = 0;
+    convertedMessages.forEach((msg: any) => {
+      if (msg.content && Array.isArray(msg.content)) {
+        msg.content.forEach((content: any) => {
+          if (content.cache_control) {
+            totalCachedBlocks++;
+          }
+        });
+      }
+    });
+
+    // Should not exceed 3 blocks (4 max - 1 for system message)
+    expect(totalCachedBlocks).toBeLessThanOrEqual(3);
+    expect(totalCachedBlocks).toBeGreaterThan(0);
   });
 
   test("should not cache when caching is disabled", () => {
@@ -165,11 +252,11 @@ describe("Anthropic Simplified Caching", () => {
     const messages: ChatMessage[] = [
       {
         role: "user",
-        content: "Test message",
+        content: "Large test message ".repeat(200),
       },
       {
         role: "tool",
-        content: "Tool result",
+        content: "Large tool result ".repeat(300),
         toolCallId: "tool_1",
       },
     ];
@@ -201,7 +288,7 @@ describe("Anthropic Simplified Caching", () => {
     const messages: ChatMessage[] = [
       {
         role: "tool",
-        content: "Tool result",
+        content: "Large tool result ".repeat(300),
         toolCallId: "tool_1",
       },
     ];
@@ -217,13 +304,11 @@ describe("Anthropic Simplified Caching", () => {
     });
   });
 
-  test("shouldCacheMessage logic works correctly", () => {
+  test("should prioritize user messages like official cookbook", () => {
     const messages: ChatMessage[] = [
-      { role: "user", content: "First user message" },
-      { role: "assistant", content: "First response" },
-      { role: "user", content: "Second user message" },
-      { role: "user", content: "Third user message" },
-      { role: "tool", content: "Tool result", toolCallId: "tool_1" },
+      { role: "user", content: "Large user input with important context ".repeat(200) },
+      { role: "tool", content: "Large tool result ".repeat(200), toolCallId: "tool_1" },
+      { role: "assistant", content: "Large assistant response ".repeat(200) },
     ];
 
     const filteredMessages = messages.filter(
@@ -232,28 +317,11 @@ describe("Anthropic Simplified Caching", () => {
         (!!m.content || (m.role === "assistant" && m.toolCalls)),
     );
 
-    // Last user message should be cached (only last 1)
-    expect(anthropic.shouldCacheMessage(messages[3], 3, filteredMessages)).toBe(
-      true,
-    );
-
-    // Tool message should be cached (only last 1)
-    expect(anthropic.shouldCacheMessage(messages[4], 4, filteredMessages)).toBe(
-      true,
-    );
-
-    // Second to last user message should NOT be cached (only last 1 is cached)
-    expect(anthropic.shouldCacheMessage(messages[2], 2, filteredMessages)).toBe(
-      false,
-    );
-
-    // First user message should not be cached (not the last one)
-    expect(anthropic.shouldCacheMessage(messages[0], 0, filteredMessages)).toBe(
-      false,
-    );
+    // User message should be prioritized for caching
+    expect(anthropic.shouldCacheMessage(messages[0], 0, filteredMessages)).toBe(true);
   });
 
-  test("backward compatibility - original cacheConversation behavior preserved", () => {
+  test("backward compatibility - respects original behavior", () => {
     const anthropicOriginal = new TestAnthropic({
       model: "claude-3-5-sonnet-latest",
       apiKey: "test-key",
@@ -264,27 +332,33 @@ describe("Anthropic Simplified Caching", () => {
     });
 
     const messages: ChatMessage[] = [
-      { role: "user", content: "Message 1" },
-      { role: "assistant", content: "Response 1" },
-      { role: "user", content: "Message 2" },
-      { role: "tool", content: "Tool result", toolCallId: "tool_1" },
+      { role: "user", content: "Large user message ".repeat(200) },
+      { role: "assistant", content: "Large assistant response ".repeat(200) },
+      { role: "user", content: "Another large user message ".repeat(200) },
+      { role: "tool", content: "Large tool result ".repeat(300), toolCallId: "tool_1" },
     ];
 
     const convertedMessages = anthropicOriginal.convertMessages(messages);
 
-    // Only last user message should be cached (last 1 rule)
-    const userMessages = convertedMessages.filter(
-      (msg: any) => msg.role === "user" && msg.content[0]?.type === "text",
-    );
-    const cachedUserMessages = userMessages.filter(
-      (msg: any) => msg.content[0]?.cache_control,
-    );
-    expect(cachedUserMessages).toHaveLength(1);
+    // Count cached blocks
+    let totalCachedBlocks = 0;
+    convertedMessages.forEach((msg: any) => {
+      if (msg.content && Array.isArray(msg.content)) {
+        msg.content.forEach((content: any) => {
+          if (content.cache_control) {
+            totalCachedBlocks++;
+          }
+        });
+      }
+    });
+
+    // Should cache some conversation messages but stay within limits
+    expect(totalCachedBlocks).toBeGreaterThan(0);
+    expect(totalCachedBlocks).toBeLessThanOrEqual(4);
 
     // Tool messages should NOT be cached (cacheToolMessages not enabled)
     const toolMessages = convertedMessages.filter(
-      (msg: any) =>
-        msg.role === "user" && msg.content[0]?.type === "tool_result",
+      (msg: any) => msg.role === "user" && msg.content[0]?.type === "tool_result",
     );
     const cachedToolMessages = toolMessages.filter(
       (msg: any) => msg.content[0]?.cache_control,

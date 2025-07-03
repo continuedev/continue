@@ -177,49 +177,135 @@ class Anthropic extends BaseLLM {
   ): boolean {
     if (!this.cacheBehavior) return false;
 
-    // Cache last 2 user messages if cacheConversation is enabled
-    if (message.role === "user" && this.cacheBehavior.cacheConversation) {
-      const userMessages = filteredMessages.filter((m) => m.role === "user");
-      const userIndex = userMessages.findIndex((m) => m === message);
-      return userIndex >= userMessages.length - 1;
+    // Get the cache plan for all messages
+    const cachePlan = this.calculateCachePlan(filteredMessages);
+
+    // Check if this specific message is in the cache plan
+    return cachePlan.has(message);
+  }
+
+  private getMessageSize(message: ChatMessage): number {
+    if (typeof message.content === "string") {
+      return message.content.length;
+    }
+    if (Array.isArray(message.content)) {
+      return message.content
+        .filter(part => part.type === "text")
+        .reduce((sum, part) => sum + part.text.length, 0);
+    }
+    return 0;
+  }
+
+  private meetsMinimumCacheSize(message: ChatMessage, model?: string): boolean {
+    const messageSize = this.getMessageSize(message);
+    const isHaiku = model?.includes("haiku") || false;
+
+    // Minimum cacheable sizes from Anthropic docs:
+    // - Haiku: 2048 tokens (~8192 chars)
+    // - Other models: 1024 tokens (~4096 chars)
+    const minChars = isHaiku ? 8192 : 4096;
+
+    return messageSize >= minChars;
+  }
+
+  private calculatePriority(message: ChatMessage, index: number, type: string): number {
+    const messageSize = this.getMessageSize(message);
+
+    // Base priorities aligned with Anthropic's patterns
+    // User input gets highest priority (like cookbook examples)
+    const basePriorities: { [key: string]: number } = {
+      user: 100,           // User input priority (as in cookbook)
+      tool_result: 90,     // Tool results important but not higher than user
+      assistant_tool_call: 80,
+      assistant: 70
+    };
+
+    // Size factor - larger content gets priority (like Pride & Prejudice example)
+    const sizeFactor = Math.min(Math.floor(messageSize / 1000), 50);
+
+    // Recency factor - more recent gets higher priority
+    const recencyFactor = index * 5;
+
+    return (basePriorities[type] || 50) + sizeFactor + recencyFactor;
+  }
+
+  private calculateCachePlan(filteredMessages: ChatMessage[]): Set<ChatMessage> {
+    const cachePlan = new Set<ChatMessage>();
+
+    // Start with max 4 cache blocks (Anthropic's limit)
+    let availableBlocks = 4;
+
+    // Reserve 1 block for system message if enabled (like cookbook)
+    if (this.cacheBehavior?.cacheSystemMessage) {
+      availableBlocks--;
     }
 
-    // Cache last 2 assistant messages (regular) if cacheConversation is enabled
-    if (
-      message.role === "assistant" &&
-      !message.toolCalls &&
-      this.cacheBehavior.cacheConversation
-    ) {
+    if (availableBlocks <= 0) return cachePlan;
+
+    // Collect candidates that meet minimum size requirements
+    const candidates: Array<{ message: ChatMessage; priority: number; type: string }> = [];
+
+    if (this.cacheBehavior?.cacheConversation) {
+      // User messages - prioritize like cookbook example
+      const userMessages = filteredMessages.filter((m) => m.role === "user");
+      userMessages.slice(-2).forEach((msg, idx) => {
+        if (this.meetsMinimumCacheSize(msg, this.model)) {
+          candidates.push({
+            message: msg,
+            priority: this.calculatePriority(msg, idx, "user"),
+            type: "user"
+          });
+        }
+      });
+
+      // Assistant messages (non-tool)
       const assistantMessages = filteredMessages.filter(
         (m) => m.role === "assistant" && !m.toolCalls,
       );
-      const assistantIndex = assistantMessages.findIndex((m) => m === message);
-      return assistantIndex >= assistantMessages.length - 1;
+      assistantMessages.slice(-2).forEach((msg, idx) => {
+        if (this.meetsMinimumCacheSize(msg, this.model)) {
+          candidates.push({
+            message: msg,
+            priority: this.calculatePriority(msg, idx, "assistant"),
+            type: "assistant"
+          });
+        }
+      });
     }
 
-    // Cache last 2 tool result messages if cacheToolMessages is enabled
-    if (message.role === "tool" && this.cacheBehavior.cacheToolMessages) {
+    if (this.cacheBehavior?.cacheToolMessages) {
+      // Tool results
       const toolMessages = filteredMessages.filter((m) => m.role === "tool");
-      const toolIndex = toolMessages.findIndex((m) => m === message);
-      return toolIndex >= toolMessages.length - 1;
-    }
+      toolMessages.slice(-2).forEach((msg, idx) => {
+        if (this.meetsMinimumCacheSize(msg, this.model)) {
+          candidates.push({
+            message: msg,
+            priority: this.calculatePriority(msg, idx, "tool_result"),
+            type: "tool_result"
+          });
+        }
+      });
 
-    // Cache last 2 assistant tool call messages if cacheToolMessages is enabled
-    if (
-      message.role === "assistant" &&
-      message.toolCalls &&
-      this.cacheBehavior.cacheToolMessages
-    ) {
+      // Assistant tool calls
       const assistantToolMessages = filteredMessages.filter(
         (m) => m.role === "assistant" && m.toolCalls,
       );
-      const assistantIndex = assistantToolMessages.findIndex(
-        (m) => m === message,
-      );
-      return assistantIndex >= assistantToolMessages.length - 1;
+      assistantToolMessages.slice(-2).forEach((msg, idx) => {
+        candidates.push({
+          message: msg,
+          priority: this.calculatePriority(msg, idx, "assistant_tool_call"),
+          type: "assistant_tool_call"
+        });
+      });
     }
 
-    return false;
+    // Sort by priority (highest first) and take only what fits in available blocks
+    candidates
+      .sort((a, b) => b.priority - a.priority)
+      .slice(0, availableBlocks)
+      .forEach(candidate => cachePlan.add(candidate.message));
+
+    return cachePlan;
   }
 
   public convertMessages(msgs: ChatMessage[]): any[] {
