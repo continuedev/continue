@@ -15,6 +15,7 @@ import { openedFilesLruCache } from "../../../autocomplete/util/openedFilesLruCa
 import { chunkDocument } from "../../../indexing/chunk/chunk";
 import { FullTextSearchCodebaseIndex } from "../../../indexing/FullTextSearchCodebaseIndex";
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
+import { BuiltInToolNames } from "../../../tools/builtIn";
 import { callBuiltInTool } from "../../../tools/callTool";
 import { globSearchTool } from "../../../tools/definitions/globSearch";
 import { grepSearchTool } from "../../../tools/definitions/grepSearch";
@@ -246,10 +247,15 @@ Determine which tools should be used to answer this query. You should feel free 
         (t) => t.function.name === toolCall.name,
       )!;
 
+      const args = toolCall.args;
+      if (toolCall.name === BuiltInToolNames.GrepSearch) {
+        args.splitByFile = true;
+      }
+
       toolExtras.tool = tool;
       const contextItems = await callBuiltInTool(
         toolCall.name,
-        toolCall.args,
+        args,
         toolExtras,
       );
       allContextItems.push(...contextItems);
@@ -258,53 +264,19 @@ Determine which tools should be used to answer this query. You should feel free 
     const chunks: Chunk[] = [];
 
     // Transform ContextItem[] to Chunk[]
-    for (const contextItem of allContextItems) {
-      const content = contextItem.content;
-      const matches = [...content.matchAll(/^\.\/([^\n]+)$/gm)];
+    for (let i = 0; i < allContextItems.length; i++) {
+      const contextItem = allContextItems[i];
+      const filepath = contextItem.uri?.value || contextItem.name || "unknown";
+      const cleanedFilepath = filepath.replace(/^file:\/\/\//, "");
 
-      if (matches.length === 0) {
-        // single chunk content or no file path patterns found that need to be split
-        const filepath =
-          contextItem.uri?.value || contextItem.name || "unknown";
-        const cleanedFilepath = filepath.replace(/^file:\/\/\//, "");
-
-        chunks.push({
-          content: contextItem.content,
-          startLine: -1,
-          endLine: -1,
-          digest: `file:///${cleanedFilepath}`,
-          filepath: `file:///${cleanedFilepath}`,
-          index: 0,
-        });
-      } else {
-        // Split grep search results by file paths and create separate chunks
-        for (let i = 0; i < matches.length; i++) {
-          const match = matches[i];
-          const filepath = match[1];
-          const startIndex = match.index!;
-          const endIndex =
-            i < matches.length - 1 ? matches[i + 1].index! : content.length;
-
-          // Extract grepped content for this file
-          const fileContent = content
-            .substring(startIndex, endIndex)
-            .replace(/^\.\/[^\n]+\n/, "") // remove the line with file path
-            .trim();
-
-          if (fileContent) {
-            // getUriDescription expects a full file path
-            const fullFilePath = `file:///${filepath}`;
-            chunks.push({
-              content: fileContent,
-              startLine: -1,
-              endLine: -1,
-              digest: fullFilePath,
-              filepath: fullFilePath,
-              index: i,
-            });
-          }
-        }
-      }
+      chunks.push({
+        content: contextItem.content,
+        startLine: -1,
+        endLine: -1,
+        digest: `file:///${cleanedFilepath}`,
+        filepath: `file:///${cleanedFilepath}`,
+        index: i,
+      });
     }
 
     console.log("retrieveWithTools chunks", chunks);
