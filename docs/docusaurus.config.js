@@ -338,7 +338,11 @@ const config = {
           },
           {
             to: "/advanced/custom-providers",
-            from: ["/customization/context-providers", "/advanced/context-integration/custom-providers", "/advanced/context/custom-providers"],
+            from: [
+              "/customization/context-providers",
+              "/advanced/context-integration/custom-providers",
+              "/advanced/context/custom-providers",
+            ],
           },
           {
             to: "/advanced/deep-dives/development-data",
@@ -346,7 +350,11 @@ const config = {
           },
           {
             to: "/advanced/context/documentation",
-            from: ["/features/talk-to-your-docs", "/advanced/context-integration/documentation", "/advanced/deep-dives/docs"],
+            from: [
+              "/features/talk-to-your-docs",
+              "/advanced/context-integration/documentation",
+              "/advanced/deep-dives/docs",
+            ],
           },
           {
             to: "/advanced/model-providers/anthropic",
