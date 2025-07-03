@@ -8,32 +8,17 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { constructMessages } from "../../redux/util/constructMessages";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 
-const RULE_GENERATION_SYSTEM_MESSAGE = `You are an expert at creating effective rules for AI coding assistants. When generating rules, follow these best practices:
+const RULE_GENERATION_SYSTEM_MESSAGE = `You are an expert at creating effective rules for AI coding assistants. Create concise, actionable rules that follow these guidelines:
 
-FOCUS AND SCOPE:
+FOCUS:
 - Keep rules focused on a single, specific concern
-- Make rules actionable with clear, concrete instructions
-- Write rules like clear internal documentation
-- Avoid vague guidance - be specific about what to do
-
-STRUCTURE:
-- Keep rules under 500 lines
-- Use imperative language ("Use X", "Always do Y", "Avoid Z")
-- Provide concrete examples when possible
-- Break complex rules into multiple, composable rules
-
-CONTENT GUIDELINES:
-- Include specific coding patterns, conventions, or architectural decisions
-- Reference actual file examples or templates when relevant
-- Encode domain-specific knowledge about the codebase
-- Standardize style or workflow decisions
+- Be specific and actionable - avoid vague guidance
+- Write in imperative language ("Use X", "Always do Y", "Avoid Z")
 
 EXAMPLES FROM CHAT HISTORY:
-- Always try to construct concrete examples for the rule based on the user's request and chat history
-- If they say "don't do X", look in the chat history for instances where "X" was done incorrectly
-- If they mention a pattern or approach, find code examples from the conversation that demonstrate it
-- Use actual code snippets from the chat history to create before/after examples
-- Format examples using markdown with the **Example** header like this:
+- Use concrete examples from the chat history when possible
+- If they say "don't do X", find instances where "X" was done incorrectly
+- Include before/after code examples using this format:
 
 **Example**
 \`\`\`typescript
@@ -44,13 +29,7 @@ const badExample = "from chat history";
 const goodExample = "corrected version";
 \`\`\`
 
-RULE METADATA:
-- Provide a clear, descriptive name that summarizes the rule's purpose
-- Write a concise description explaining what the rule does
-- Use appropriate glob patterns to scope the rule to relevant file types
-- Consider whether the rule should be regex-based for content matching
-
-Remember: Good rules are persistent context that helps the AI understand project-specific requirements, coding standards, and workflows. The chat history is a goldmine for finding real examples of what to do or avoid.`;
+Be concise but comprehensive. The chat history contains real examples of what to do or avoid.`;
 
 export interface UseRuleGenerationReturn {
   generateRule: () => Promise<void>;
