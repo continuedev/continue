@@ -2,29 +2,51 @@ import { ToolImpl } from ".";
 import { walkDir } from "../../indexing/walkDir";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 
+export function resolveLsToolDirPath(dirPath: string | undefined) {
+  if (!dirPath || dirPath === ".") {
+    return "/";
+  }
+  if (dirPath.startsWith(".")) {
+    return dirPath.slice(1);
+  }
+  return dirPath.replace(/\\/g, "/");
+}
+
+const MAX_LS_TOOL_LINES = 200;
+
 export const lsToolImpl: ToolImpl = async (args, extras) => {
-  const uri = await resolveRelativePathInDir(args.dirPath, extras.ide);
+  const dirPath = resolveLsToolDirPath(args?.dirPath);
+  const uri = await resolveRelativePathInDir(dirPath, extras.ide);
   if (!uri) {
     throw new Error(
-      `Directory ${args.dirPath} not found. Make sure to use forward-slash paths. Do not use e.g. "."`,
+      `Directory ${args.dirPath} not found. Make sure to use forward-slash paths`,
     );
   }
 
   const entries = await walkDir(uri, extras.ide, {
     returnRelativeUrisPaths: true,
     include: "both",
-    recursive: args.recursive ?? false,
+    recursive: args?.recursive ?? false,
   });
 
-  const content =
-    entries.length > 0
-      ? entries.join("\n")
-      : `No files/folders found in ${args.dirPath}`;
+  const lines = entries.slice(0, MAX_LS_TOOL_LINES);
+
+  let content =
+    lines.length > 0
+      ? lines.join("\n")
+      : `No files/folders found in ${dirPath}`;
+
+  if (entries.length > MAX_LS_TOOL_LINES) {
+    content += `\n... ${entries.length - MAX_LS_TOOL_LINES} entries were truncated`;
+    if (args?.recursive) {
+      content += ". Try using a non-recursive search";
+    }
+  }
 
   return [
     {
       name: "File/folder list",
-      description: `Files/folders in ${args.dirPath}`,
+      description: `Files/folders in ${dirPath}`,
       content,
     },
   ];
