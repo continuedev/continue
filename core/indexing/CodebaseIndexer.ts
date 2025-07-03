@@ -51,7 +51,9 @@ export class CodebaseIndexer {
    * - To make as few requests as possible to the embeddings providers
    */
   filesPerBatch = 200;
-  public isInitialized: Promise<void>;
+  // We normally allow this to run in the background,
+  // and only need to `await` it for tests.
+  public initPromise: Promise<void>;
   private config!: ContinueConfig;
   private indexingCancellationController: AbortController | undefined;
   private codebaseIndexingState: IndexingProgressUpdate;
@@ -83,7 +85,7 @@ export class CodebaseIndexer {
     // Initialize pause token
     this.pauseToken = new PauseToken(initialPaused);
 
-    this.isInitialized = this.init(configHandler);
+    this.initPromise = this.init(configHandler);
   }
 
   // Initialization - load config and attach config listener
@@ -202,7 +204,7 @@ export class CodebaseIndexer {
     workspaceDirs: string[],
   ): Promise<void> {
     if (this.pauseToken.paused) {
-      // NOTE: by returning here, there is a chance that while paused a file is modified and
+      // FIXME: by returning here, there is a chance that while paused a file is modified and
       // then after unpausing the file is not reindexed
       return;
     }

@@ -20,7 +20,7 @@ import { ConfigResult } from "@continuedev/config-yaml";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import { ContinueConfig } from "../index.js";
 import { localPathToUri } from "../util/pathToUri.js";
-import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
+import { CodebaseIndexer } from "./CodebaseIndexer.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
@@ -87,8 +87,6 @@ type MockMessengerType = {
 // These are more like integration tests, whereas we should separately test
 // the individual CodebaseIndex classes
 describe("CodebaseIndexer", () => {
-  const pauseToken = new PauseToken(false);
-
   // Replace mockProgressReporter with mockMessenger
   const mockMessenger: MockMessengerType = {
     send: jest.fn(),
@@ -98,13 +96,8 @@ describe("CodebaseIndexer", () => {
     onError: jest.fn(),
   };
 
-  const codebaseIndexer = new TestCodebaseIndexer(
-    testConfigHandler,
-    testIde,
-    mockMessenger as any,
-    false,
-  );
-  const testIndex = new TestCodebaseIndex();
+  let codebaseIndexer: TestCodebaseIndexer;
+  let testIndex: TestCodebaseIndex;
 
   beforeAll(async () => {
     tearDownTestDir();
@@ -115,6 +108,15 @@ describe("CodebaseIndexer", () => {
       cwd: TEST_DIR_PATH,
     });
     execSync('git config user.name "Test"', { cwd: TEST_DIR_PATH });
+
+    codebaseIndexer = new TestCodebaseIndexer(
+      testConfigHandler,
+      testIde,
+      mockMessenger as any,
+      false,
+    );
+    await codebaseIndexer.initPromise;
+    testIndex = new TestCodebaseIndex();
   });
 
   afterAll(async () => {
@@ -177,6 +179,7 @@ describe("CodebaseIndexer", () => {
   }
 
   test("should index test folder without problem", async () => {
+    walkDirCache.invalidate();
     addToTestDir([
       ["test.ts", TEST_TS],
       ["py/main.py", TEST_PY],
