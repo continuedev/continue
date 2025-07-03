@@ -49,7 +49,7 @@ export const getConfigDependentToolDefinitions = (
     : [editFileTool]),
 ];
 
-export const getToolsForIde = async (ide: IDE) =>
+export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>
   (await ide.isWorkspaceRemote())
     ? getBaseToolDefinitions()
     : [...getBaseToolDefinitions(), ...getLocalOnlyToolDefinitions()];
