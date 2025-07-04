@@ -11,7 +11,7 @@ import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
 import { getAllSnippets } from "./snippets/index.js";
-import { renderPrompt } from "./templating/index.js";
+import { renderPromptWithTokenLimit } from "./templating/index.js";
 import { GetLspDefinitionsFunction } from "./types.js";
 import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
 import { AutocompleteLoggingService } from "./util/AutocompleteLoggingService.js";
@@ -180,7 +180,7 @@ export class CompletionProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      const { prompt, prefix, suffix, completionOptions } = renderPrompt({
+      const { prompt, prefix, suffix, completionOptions } = renderPromptWithTokenLimit({
         snippetPayload,
         workspaceDirs,
         helper,
