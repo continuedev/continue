@@ -7,7 +7,7 @@ export const viewDiffImpl: ToolImpl = async (args, extras) => {
 
   return [
     {
-      name: ".diff",
+      name: "Diff",
       description: "The current git diff",
       content: diffs.join("\n"),
     },
