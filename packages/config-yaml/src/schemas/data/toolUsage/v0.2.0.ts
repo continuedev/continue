@@ -12,15 +12,16 @@ export const toolUsageEventSchema_0_2_0 = toolUsageEventAllSchema.pick({
   // tool-usage-specific
   toolCallId: true,
   functionName: true,
-  functionArgs: true,
+  functionParams: true,
   toolCallArgs: true,
+  accepted: true,
   succeeded: true,
   output: true,
 });
 
 export const toolUsageEventSchema_0_2_0_noCode =
   toolUsageEventSchema_0_2_0.omit({
-    functionArgs: true,
+    functionParams: true,
     toolCallArgs: true,
     output: true,
   });
