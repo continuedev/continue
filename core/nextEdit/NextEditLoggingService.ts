@@ -1,6 +1,7 @@
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../util/parameters";
 
 import { DataLogger } from "../data/log";
+import { Telemetry } from "../util/posthog";
 import { NextEditOutcome } from "./types";
 
 export class NextEditLoggingService {
@@ -133,24 +134,6 @@ export class NextEditLoggingService {
     });
 
     // const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
-    // void Telemetry.capture(
-    //   "autocomplete",
-    //   {
-    //     accepted: restOfOutcome.accepted,
-    //     cacheHit: restOfOutcome.cacheHit,
-    //     completionId: restOfOutcome.completionId,
-    //     completionOptions: restOfOutcome.completionOptions,
-    //     debounceDelay: restOfOutcome.debounceDelay,
-    //     fileExtension: getUriFileExtension(restOfOutcome.filepath),
-    //     maxPromptTokens: restOfOutcome.maxPromptTokens,
-    //     modelName: restOfOutcome.modelName,
-    //     modelProvider: restOfOutcome.modelProvider,
-    //     multilineCompletions: restOfOutcome.multilineCompletions,
-    //     time: restOfOutcome.time,
-    //     useRecentlyEdited: restOfOutcome.useRecentlyEdited,
-    //     numLines: restOfOutcome.numLines,
-    //   },
-    //   true,
-    // );
+    void Telemetry.capture("nextEditOutcome", outcome, true);
   }
 }
