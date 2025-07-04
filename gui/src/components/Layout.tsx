@@ -17,7 +17,6 @@ import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
-import Footer from "./Footer";
 import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
@@ -261,7 +260,6 @@ const Layout = () => {
                 <PostHogPageView />
                 <Outlet />
                 <FatalErrorIndicator />
-                <Footer />
               </GridDiv>
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
