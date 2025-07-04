@@ -234,6 +234,7 @@ export class CodeRenderer {
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}" shape-rendering="crispEdges">
   <g>
+  <rect x="0" y="0" width="${dimensions.width}" height="${dimensions.height}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
     ${lineBackgrounds}
     ${guts}
   </g>
