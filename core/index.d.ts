@@ -960,8 +960,10 @@ export interface RequestOptions {
 export interface CacheBehavior {
   cacheSystemMessage?: boolean;
   cacheConversation?: boolean;
+  cacheToolMessages?: boolean; // NEW: Simple flag for tool results + tool calls
+  useExtendedCacheTtlBeta?: boolean;
+  cacheTtl?: string;
 }
-
 export interface ClientCertificateOptions {
   cert: string;
   key: string;
