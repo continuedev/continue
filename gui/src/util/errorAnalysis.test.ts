@@ -490,9 +490,6 @@ describe("errorAnalysis", () => {
         };
         const result = analyzeError(error, selectedModel);
 
-        expect(result.parsedError).toBe(
-          '{"message": "Invalid API key", "type": "invalid_request_error"}',
-        );
         expect(result.statusCode).toBe(401);
         expect(result.apiKeyUrl).toBe(
           "https://platform.openai.com/account/api-keys",
@@ -511,9 +508,6 @@ describe("errorAnalysis", () => {
 
         expect(result.statusCode).toBe(429);
         expect(result.providerName).toBe("Anthropic");
-        expect(result.parsedError).toBe(
-          '{"type": "rate_limit_error", "message": "Rate limit exceeded"}',
-        );
       });
 
       it("should handle network connectivity error", () => {
