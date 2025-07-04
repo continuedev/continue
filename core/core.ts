@@ -38,6 +38,7 @@ import { TTS } from "./util/tts";
 
 import {
   CompleteOnboardingPayload,
+  ContextItemId,
   ContextItemWithId,
   IdeSettings,
   ModelDescription,
@@ -1124,13 +1125,14 @@ export class Core {
         true,
       );
 
-      return items.map((item) => ({
-        ...item,
-        id: {
+      return items.map((item) => {
+        const id: ContextItemId = {
           providerTitle: provider.description.title,
-          itemId: item.uri?.value ?? uuidv4(),
-        },
-      }));
+          itemId: uuidv4(),
+        };
+
+        return { ...item, id };
+      });
     } catch (e) {
       let knownError = false;
 
