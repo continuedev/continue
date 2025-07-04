@@ -5,7 +5,6 @@ import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 class Anthropic extends BaseLLM {
-
   static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-3-5-sonnet-latest",
@@ -32,16 +31,17 @@ class Anthropic extends BaseLLM {
         description: tool.function.description,
         input_schema: tool.function.parameters,
         // Add cache_control to last tool if cacheToolMessages is enabled
-        ...(this.cacheBehavior?.cacheToolMessages && index === options.tools!.length - 1
+        ...(this.cacheBehavior?.cacheToolMessages &&
+        index === options.tools!.length - 1
           ? {
-                  cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
-                    ? {
-                        type: "ephemeral",
-                        ttl: this.cacheBehavior?.cacheTtl ?? "5m",
-                      }
-                    : { type: "ephemeral" },
-                }
-              : {}),
+              cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                ? {
+                    type: "ephemeral",
+                    ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                  }
+                : { type: "ephemeral" },
+            }
+          : {}),
       })),
       thinking: options.reasoning
         ? {
@@ -63,7 +63,7 @@ class Anthropic extends BaseLLM {
         const toolSize = JSON.stringify({
           name: tool.function.name,
           description: tool.function.description,
-          parameters: tool.function.parameters
+          parameters: tool.function.parameters,
         }).length;
         return total + toolSize;
       }, 0);
@@ -77,13 +77,15 @@ class Anthropic extends BaseLLM {
         totalSize: totalToolsSize,
         estimatedTokens: estimatedToolsTokens,
         willCacheTools: willCacheTools,
-        lastToolCached: willCacheTools ? options.tools[lastToolIndex].function.name : "none",
-        toolNames: options.tools.map(t => t.function.name),
-        preview: willCacheTools ?
-          `${options.tools[lastToolIndex].function.name}: ${options.tools[lastToolIndex].function.description?.substring(0, 100)}...` :
-          "caching disabled"
+        lastToolCached: willCacheTools
+          ? options.tools[lastToolIndex].function.name
+          : "none",
+        toolNames: options.tools.map((t) => t.function.name),
+        preview: willCacheTools
+          ? `${options.tools[lastToolIndex].function.name}: ${options.tools[lastToolIndex].function.description?.substring(0, 100)}...`
+          : "caching disabled",
       });
-  }
+    }
 
     return finalOptions;
   }
@@ -209,14 +211,20 @@ class Anthropic extends BaseLLM {
 
   // Extensible message selection strategy for cacheConversation
   private selectMessagesToCache(filteredMessages: ChatMessage[]): number[] {
-    const strategy = "last_two" as "last_two" | "last_two_users" | "last_two_assistants" | "two_before_last";
+    const strategy = "last_two" as
+      | "last_two"
+      | "last_two_users"
+      | "last_two_assistants"
+      | "two_before_last";
 
     switch (strategy) {
       case "last_two":
         // Last 2 messages regardless of role
-        return filteredMessages.length >= 2 ?
-          [filteredMessages.length - 2, filteredMessages.length - 1] :
-          filteredMessages.length === 1 ? [0] : [];
+        return filteredMessages.length >= 2
+          ? [filteredMessages.length - 2, filteredMessages.length - 1]
+          : filteredMessages.length === 1
+            ? [0]
+            : [];
 
       case "last_two_users":
         // Find last 2 user messages
@@ -228,22 +236,25 @@ class Anthropic extends BaseLLM {
 
       case "two_before_last":
         // Any 2 messages, but NOT the last one
-        return filteredMessages.length >= 3 ?
-          [filteredMessages.length - 3, filteredMessages.length - 2] :
-          filteredMessages.length === 2 ? [0] : [];
+        return filteredMessages.length >= 3
+          ? [filteredMessages.length - 3, filteredMessages.length - 2]
+          : filteredMessages.length === 2
+            ? [0]
+            : [];
 
       default:
         return [];
     }
   }
-  private getLastTwoByRole(filteredMessages: ChatMessage[], role: string): number[] {
+  private getLastTwoByRole(
+    filteredMessages: ChatMessage[],
+    role: string,
+  ): number[] {
     const roleIndices = filteredMessages
       .map((msg, index) => (msg.role === role ? index : -1))
       .filter((index) => index !== -1);
 
-    return roleIndices.length >= 2 ?
-      roleIndices.slice(-2) :
-      roleIndices;
+    return roleIndices.length >= 2 ? roleIndices.slice(-2) : roleIndices;
   }
 
   private getMessageSize(message: ChatMessage): number {
@@ -252,7 +263,7 @@ class Anthropic extends BaseLLM {
     }
     if (Array.isArray(message.content)) {
       return message.content
-        .filter(part => part.type === "text")
+        .filter((part) => part.type === "text")
         .reduce((sum, part) => sum + part.text.length, 0);
     }
     return 0;
@@ -274,27 +285,32 @@ class Anthropic extends BaseLLM {
         cacheConversation: this.cacheBehavior.cacheConversation,
         conversationStrategy: "last_two",
         useExtendedTtl: this.cacheBehavior.useExtendedCacheTtlBeta,
-        totalMessages: filteredmessages.length
+        totalMessages: filteredmessages.length,
       });
     }
 
     // Select messages to cache based on strategy
-    const messagesToCache = this.cacheBehavior?.cacheConversation ?
-      this.selectMessagesToCache(filteredmessages) : [];
+    const messagesToCache = this.cacheBehavior?.cacheConversation
+      ? this.selectMessagesToCache(filteredmessages)
+      : [];
 
     // Debug message selection
     if (this.cacheBehavior?.cacheDebug && messagesToCache.length > 0) {
       console.log(`[ANTHROPIC CACHE DEBUG] 📝 Message Caching Selection:`, {
         strategy: "last_two",
         selectedIndices: messagesToCache,
-        selectedMessages: messagesToCache.map(idx => ({
+        selectedMessages: messagesToCache.map((idx) => ({
           index: idx,
           role: filteredmessages[idx].role,
           size: this.getMessageSize(filteredmessages[idx]),
-          estimatedTokens: Math.ceil(this.getMessageSize(filteredmessages[idx]) / 4),
-          preview: typeof filteredmessages[idx].content === "string" ?
-            filteredmessages[idx].content.substring(0, 100) + "..." : "[multipart]"
-        }))
+          estimatedTokens: Math.ceil(
+            this.getMessageSize(filteredmessages[idx]) / 4,
+          ),
+          preview:
+            typeof filteredmessages[idx].content === "string"
+              ? filteredmessages[idx].content.substring(0, 100) + "..."
+              : "[multipart]",
+        })),
       });
     }
 
@@ -317,10 +333,11 @@ class Anthropic extends BaseLLM {
         }
       });
 
-const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
+      const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
       const systemBreakpoint = this.cacheBehavior?.cacheSystemMessage ? 1 : 0;
       const messageBreakpoints = messagesToCache.length;
-      const totalBreakpoints = toolsBreakpoint + systemBreakpoint + messageBreakpoints;
+      const totalBreakpoints =
+        toolsBreakpoint + systemBreakpoint + messageBreakpoints;
 
       console.log(`[ANTHROPIC CACHE DEBUG] 🎯 Breakpoint Allocation:`, {
         toolsBreakpoint,
@@ -328,7 +345,7 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
         messageBreakpoints,
         totalBreakpoints,
         breakpointBudget: "4 max",
-        finalCacheBlocks: totalCachedBlocks
+        finalCacheBlocks: totalCachedBlocks,
       });
     }
 
@@ -372,9 +389,9 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
         size: systemSize,
         estimatedTokens: estimatedTokens,
         willCache: shouldCacheSystemMessage,
-        preview: systemMessage.substring(0, 100) + "..."
+        preview: systemMessage.substring(0, 100) + "...",
       });
-  }
+    }
 
     const msgs = this.convertMessages(messages);
 
@@ -405,22 +422,31 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
         totalMessages: msgs.length,
         toolsCount: apiPayload.tools?.length || 0,
         headers: {
-          'anthropic-beta': this.cacheBehavior?.useExtendedCacheTtlBeta
+          "anthropic-beta": this.cacheBehavior?.useExtendedCacheTtlBeta
             ? "extended-cache-ttl-2025-04-11"
-            : shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation || this.cacheBehavior?.cacheToolMessages
+            : shouldCacheSystemMessage ||
+                this.cacheBehavior?.cacheConversation ||
+                this.cacheBehavior?.cacheToolMessages
               ? "prompt-caching-2024-07-31"
-              : "none"
-        }
+              : "none",
+        },
       });
 
       // Debug each message with cache details (last 6 only)
-      console.log(`[ANTHROPIC CACHE DEBUG] 📋 Message Details (last 6 of ${msgs.length}):`);
+      console.log(
+        `[ANTHROPIC CACHE DEBUG] 📋 Message Details (last 6 of ${msgs.length}):`,
+      );
       const messagesToShow = msgs.slice(-6); // Only last 6 messages
       const startIndex = Math.max(0, msgs.length - 6);
       messagesToShow.forEach((msg: any, relativeIndex: number) => {
         const actualIndex = startIndex + relativeIndex;
         let hasCacheControl = false;
-        let cacheDetails: Array<{contentIndex: number, type: string, cacheType: string, ttl: string}> = [];
+        let cacheDetails: Array<{
+          contentIndex: number;
+          type: string;
+          cacheType: string;
+          ttl: string;
+        }> = [];
         if (msg.content && Array.isArray(msg.content)) {
           msg.content.forEach((content: any, contentIndex: number) => {
             if (content.cache_control) {
@@ -429,7 +455,7 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
                 contentIndex,
                 type: content.type,
                 cacheType: content.cache_control.type,
-                ttl: content.cache_control.ttl || "5m"
+                ttl: content.cache_control.ttl || "5m",
               });
             }
           });
@@ -440,9 +466,10 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
           contentParts: msg.content?.length || 0,
           hasCacheControl,
           cacheDetails: cacheDetails.length > 0 ? cacheDetails : "none",
-          preview: msg.content?.[0]?.text?.substring(0, 50) + "..." ||
-                  msg.content?.[0]?.type ||
-                  "[no preview]"
+          preview:
+            msg.content?.[0]?.text?.substring(0, 50) + "..." ||
+            msg.content?.[0]?.type ||
+            "[no preview]",
         });
       });
 
@@ -454,7 +481,7 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
             name: tool.name,
             hasCacheControl: !!tool.cache_control,
             cacheType: tool.cache_control?.type || "none",
-            ttl: tool.cache_control?.ttl || "none"
+            ttl: tool.cache_control?.ttl || "none",
           });
         });
       }
@@ -465,7 +492,7 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
           systemParts: apiPayload.system.length,
           hasCacheControl: !!apiPayload.system[0]?.cache_control,
           cacheType: apiPayload.system[0]?.cache_control?.type || "none",
-          ttl: apiPayload.system[0]?.cache_control?.ttl || "none"
+          ttl: apiPayload.system[0]?.cache_control?.ttl || "none",
         });
       }
     }
@@ -479,7 +506,9 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
         "x-api-key": this.apiKey as string,
         ...(this.cacheBehavior?.useExtendedCacheTtlBeta
           ? { "anthropic-beta": "extended-cache-ttl-2025-04-11" }
-          : shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation || this.cacheBehavior?.cacheToolMessages
+          : shouldCacheSystemMessage ||
+              this.cacheBehavior?.cacheConversation ||
+              this.cacheBehavior?.cacheToolMessages
             ? { "anthropic-beta": "prompt-caching-2024-07-31" }
             : {}),
       },
@@ -530,10 +559,12 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
         console.log(`[ANTHROPIC CACHE DEBUG] 📊 API Response (non-stream):`, {
           input_tokens: data.usage.input_tokens || 0,
           output_tokens: data.usage.output_tokens || 0,
-          cache_creation_input_tokens: data.usage.cache_creation_input_tokens || 0,
+          cache_creation_input_tokens:
+            data.usage.cache_creation_input_tokens || 0,
           cache_read_input_tokens: data.usage.cache_read_input_tokens || 0,
-          cache_hit_rate: data.usage.cache_read_input_tokens ?
-            `${Math.round((data.usage.cache_read_input_tokens / (data.usage.input_tokens + data.usage.cache_read_input_tokens)) * 100)}%` : "0%"
+          cache_hit_rate: data.usage.cache_read_input_tokens
+            ? `${Math.round((data.usage.cache_read_input_tokens / (data.usage.input_tokens + data.usage.cache_read_input_tokens)) * 100)}%`
+            : "0%",
         });
       }
 
@@ -622,10 +653,12 @@ const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
       console.log(`[ANTHROPIC CACHE DEBUG] 📊 API Response (streaming):`, {
         input_tokens: streamingUsage.input_tokens || 0,
         output_tokens: streamingUsage.output_tokens || 0,
-        cache_creation_input_tokens: streamingUsage.cache_creation_input_tokens || 0,
+        cache_creation_input_tokens:
+          streamingUsage.cache_creation_input_tokens || 0,
         cache_read_input_tokens: streamingUsage.cache_read_input_tokens || 0,
-        cache_hit_rate: streamingUsage.cache_read_input_tokens ?
-          `${Math.round((streamingUsage.cache_read_input_tokens / (streamingUsage.input_tokens + streamingUsage.cache_read_input_tokens)) * 100)}%` : "0%"
+        cache_hit_rate: streamingUsage.cache_read_input_tokens
+          ? `${Math.round((streamingUsage.cache_read_input_tokens / (streamingUsage.input_tokens + streamingUsage.cache_read_input_tokens)) * 100)}%`
+          : "0%",
       });
     }
   }
