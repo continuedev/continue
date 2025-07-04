@@ -575,6 +575,10 @@ export class NextEditWindowManager {
       (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight;
     // + SVG_CONFIG.strokeWidth * 2;
 
+    // Set the margin-left so that it's never covering code inside the editable region.
+    const marginLeft =
+      SVG_CONFIG.getTipWidth(code) -
+      SVG_CONFIG.getTipWidth(code.split("\n")[currLineOffsetFromTop]);
     return vscode.window.createTextEditorDecorationType({
       after: {
         contentIconPath: uri,
@@ -583,7 +587,7 @@ export class NextEditWindowManager {
                filter: ${SVG_CONFIG.filter};
                border-radius: ${SVG_CONFIG.radius}px;
                margin-top: ${-1 * offsetFromTop}px;
-               margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
+               margin-left: ${marginLeft}px;`,
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
       },
