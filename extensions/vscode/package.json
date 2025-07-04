@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.53",
+  "version": "1.1.55",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -349,6 +349,12 @@
         "command": "continue.forceNextEdit",
         "category": "Continue",
         "title": "Continue: Force Next Edit"
+      },
+      {
+        "command": "continue.generateRule",
+        "category": "Continue",
+        "title": "Generate Rule",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -478,6 +484,9 @@
         },
         {
           "command": "continue.enterEnterpriseLicenseKey"
+        },
+        {
+          "command": "continue.generateRule"
         }
       ],
       "editor/context": [

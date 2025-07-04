@@ -3,8 +3,8 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 // @ts-ignore
 import * as vscode from "vscode";
 
+import { DiffLine } from "core";
 import { CodeRenderer } from "core/codeRenderer/CodeRenderer";
-import { myersDiff } from "core/diff/myers";
 import {
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
@@ -225,7 +225,10 @@ export class NextEditWindowManager {
    */
   public async showNextEditWindow(
     editor: vscode.TextEditor,
+    currCursorPos: vscode.Position,
+    editableRegionStartLine: number,
     newEditRangeSlice: string,
+    diffLines: DiffLine[],
   ) {
     if (!newEditRangeSlice || !this.shouldRenderTip(editor.document.uri)) {
       return;
@@ -236,30 +239,6 @@ export class NextEditWindowManager {
 
     // Store the current tooltip text for accepting later.
     this.currentTooltipText = newEditRangeSlice;
-
-    // Get the contents of the old (current) editable region.
-    const currCursorPos = editor.selection.active;
-    const editableRegionStartLine = Math.max(
-      currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-      0,
-    );
-    const editableRegionEndLine = Math.min(
-      currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-      editor.document.lineCount - 1,
-    );
-    const oldEditRangeSlice = editor.document
-      .getText()
-      .split("\n")
-      .slice(editableRegionStartLine, editableRegionEndLine + 1)
-      .join("\n");
-
-    // We don't need to show the next edit window under these conditions:
-    // - There are no predicted edits.
-    // - The predicted edits are identical to the previous version.
-    if (newEditRangeSlice === "" || oldEditRangeSlice === newEditRangeSlice)
-      return;
-
-    const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
 
     // How far away is the current line from the start of the editable region?
     const lineOffsetAtCursorPos = currCursorPos.line - editableRegionStartLine;

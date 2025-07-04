@@ -113,7 +113,11 @@ export async function retrieveContextItemsFromEmbeddings(
         }
 
         return {
-          name: `${baseName} (${r.startLine + 1}-${r.endLine + 1})`,
+          // Don't show line numbers for tool calls where startLine = -1
+          name:
+            r.startLine === -1
+              ? baseName
+              : `${baseName} (${r.startLine + 1}-${r.endLine + 1})`,
           description: last2Parts,
           content: `\`\`\`${relativePathOrBasename}\n${r.content}\n\`\`\``,
           uri: {

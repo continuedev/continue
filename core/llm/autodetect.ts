@@ -187,7 +187,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("gemini") ||
     lower.includes("grok") ||
     lower.includes("moonshot") ||
-    lower.includes("mercury")
+    lower.includes("mercury") ||
+    /^o\d/.test(lower)
   ) {
     return undefined;
   }
