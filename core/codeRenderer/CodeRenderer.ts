@@ -8,10 +8,19 @@
  * we rarely ever need syntax highlighting outside of
  * creating a render of it.
  */
-import { transformerColorizedBrackets } from "@shikijs/colorized-brackets";
-import { transformerNotationHighlight } from "@shikijs/transformers";
+import {
+  transformerMetaHighlight,
+  transformerNotationDiff,
+  transformerNotationFocus,
+  transformerNotationHighlight,
+} from "@shikijs/transformers";
 import { JSDOM } from "jsdom";
-import { BundledTheme, codeToHtml, getSingletonHighlighter } from "shiki";
+import {
+  BundledLanguage,
+  BundledTheme,
+  getSingletonHighlighter,
+  Highlighter,
+} from "shiki";
 import { escapeForSVG, kebabOfStr } from "../util/text";
 
 interface CodeRendererOptions {
@@ -44,6 +53,8 @@ export class CodeRenderer {
   private currentTheme: string = "dark-plus";
   private editorBackground: string = "#000000";
   private editorForeground: string = "#FFFFFF";
+  private editorLineHighlight: string = "#000000";
+  private highlighter: Highlighter | null = null;
 
   private constructor() {}
 
@@ -64,13 +75,25 @@ export class CodeRenderer {
           ? "dark-plus"
           : kebabOfStr(themeName);
 
-      const highlighter = await getSingletonHighlighter({
+      this.highlighter = await getSingletonHighlighter({
+        langs: ["typescript"],
         themes: [this.currentTheme],
       });
 
-      const th = highlighter.getTheme(this.currentTheme);
+      const th = this.highlighter.getTheme(this.currentTheme);
+      // const customTheme = {
+      //   ...th,
+      //   colors: {
+      //     ...th.colors,
+      //     // "editor.lineHighlightBackground": "#ffffff1a", // VS Code's highlight color
+      //   },
+      // };
+
       this.editorBackground = th.bg;
       this.editorForeground = th.fg;
+      this.editorLineHighlight =
+        th.colors!["editor.lineHighlightBackground"] ?? "#000000";
+      console.log(th.colors);
     } else {
       this.currentTheme = "dark-plus";
     }
@@ -155,24 +178,31 @@ export class CodeRenderer {
     const annotatedCode = code
       .split("\n")
       .map((line, i) =>
-        i === currLineOffsetFromTop ? line + "// [\!code highlight]" : line,
+        i === currLineOffsetFromTop
+          ? line + " \/\/ \[\!code highlight\]"
+          : line,
       )
       .join("\n");
 
-    return await codeToHtml(annotatedCode, {
+    await this.highlighter!.loadLanguage(language as BundledLanguage);
+
+    return this.highlighter!.codeToHtml(annotatedCode, {
       lang: language,
       theme: this.currentTheme,
       transformers: [
-        transformerColorizedBrackets(),
+        // transformerColorizedBrackets(),
+        transformerMetaHighlight(),
         transformerNotationHighlight(),
+        transformerNotationDiff(),
+        transformerNotationFocus(),
       ],
-      decorations: [
-        {
-          start: { line: currLineOffsetFromTop, character: 0 },
-          end: { line: currLineOffsetFromTop, character: 0 },
-          properties: { class: "highlighted-line" },
-        },
-      ],
+      // decorations: [
+      //   {
+      //     start: { line: currLineOffsetFromTop, character: 0 },
+      //     end: { line: currLineOffsetFromTop, character: 0 },
+      //     properties: { class: "highlighted-line" },
+      //   },
+      // ],
     });
   }
 
@@ -194,7 +224,7 @@ export class CodeRenderer {
     );
     console.log(highlightedCodeHtml);
 
-    const guts = this.convertShikiHtmlToSvgGut(
+    const { guts, lineBackgrounds } = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
       fontSize,
       fontFamily,
@@ -204,7 +234,7 @@ export class CodeRenderer {
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
   <g>
-    <rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" stroke="${this.editorForeground}" stroke-width="${strokeWidth}" />
+    ${lineBackgrounds}
     ${guts}
   </g>
 </svg>`;
@@ -218,7 +248,7 @@ export class CodeRenderer {
     fontSize: number,
     fontFamily: string,
     lineHeight: number,
-  ): string {
+  ): { guts: string; lineBackgrounds: string } {
     const dom = new JSDOM(shikiHtml);
     const document = dom.window.document;
 
@@ -233,19 +263,38 @@ export class CodeRenderer {
           const el = node as HTMLElement;
           const style = el.getAttribute("style") || "";
           const colorMatch = style.match(/color:\s*(#[0-9a-fA-F]{6})/);
-          const fill = colorMatch ? ` fill="${colorMatch[1]}"` : "";
+          const classes = el.getAttribute("class") || "";
+          let fill = colorMatch ? ` fill="${colorMatch[1]}"` : "";
+          if (classes.includes("highlighted")) {
+            fill = ` fill="${this.editorLineHighlight}"`;
+          } else if (classes.includes("focused")) {
+            fill = ` fill="#111111"`;
+          }
           const content = el.textContent || "";
           return `<tspan xml:space="preserve"${fill}>${escapeForSVG(content)}</tspan>`;
         })
         .join("");
 
-      const y = (index + 1) * lineHeight;
-      return `<text x="0" y="${y}" font-family="${fontFamily}" font-size="${fontSize.toString()}" xml:space="preserve">${spans}</text>`;
+      // const y = index * lineHeight + lineHeight / 2 + fontSize / 3;
+      const y = index * lineHeight + lineHeight / 2;
+      return `<text x="0" y="${y}" font-family="${fontFamily}" font-size="${fontSize.toString()}" xml:space="preserve" dominant-baseline="middle">${spans}</text>`;
     });
 
-    return `
-  ${svgLines.join("\n")}
-  `.trim();
+    const lineBackgrounds = [...lines, null]
+      .map((line, index) => {
+        const classes = line?.getAttribute("class") || "";
+        const bgColor = classes.includes("highlighted")
+          ? this.editorLineHighlight
+          : this.editorBackground;
+        const y = index * lineHeight;
+        return `<rect x="0" y="${y}" width="100%" height="${lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
+      })
+      .join("\n");
+
+    return {
+      guts: svgLines.join("\n"),
+      lineBackgrounds,
+    };
   }
 
   getBackgroundColor(shikiHtml: string): string {
