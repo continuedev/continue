@@ -17,6 +17,7 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
+import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -543,6 +544,18 @@ const getCommandsMap: (
       completionProvider: CompletionProvider,
     ) => {
       completionProvider.accept(completionId);
+    },
+    "continue.logNextEditOutcomeAccept": (
+      completionId: string,
+      nextEditLoggingService: NextEditLoggingService,
+    ) => {
+      nextEditLoggingService.accept(completionId);
+    },
+    "continue.logNextEditOutcomeReject": (
+      completionId: string,
+      nextEditLoggingService: NextEditLoggingService,
+    ) => {
+      nextEditLoggingService.reject(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
       captureCommandTelemetry("toggleTabAutocompleteEnabled");

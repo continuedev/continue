@@ -33,6 +33,11 @@ import {
   editOutcomeEventSchema_0_2_0,
   editOutcomeEventSchema_0_2_0_noCode,
 } from "./editOutcome/v0.2.0.js";
+import { nextEditOutcomeEventAllSchema } from "./nextEditOutcome/index.js";
+import {
+  nextEditOutcomeEventSchema_0_2_0,
+  nextEditOutcomeEventSchema_0_2_0_noCode,
+} from "./nextEditOutcome/v0.2.0.js";
 import { nextEditEventAllSchema } from "./nextEditWithHistory/index.js";
 import {
   nextEditEventSchema_0_2_0,
@@ -88,6 +93,7 @@ const devEventAllVersionDataSchemas = z.object({
   chatInteraction: chatInteractionEventAllSchema,
   editInteraction: editInteractionEventAllSchema,
   editOutcome: editOutcomeEventAllSchema,
+  nextEditOutcome: nextEditOutcomeEventAllSchema,
   nextEditWithHistory: nextEditEventAllSchema,
   toolUsage: toolUsageEventAllSchema,
 });
@@ -116,6 +122,7 @@ export const devDataVersionedSchemas = {
       chatInteraction: chatInteractionEventSchema_0_2_0,
       editInteraction: editInteractionEventSchema_0_2_0,
       editOutcome: editOutcomeEventSchema_0_2_0,
+      nextEditOutcome: nextEditOutcomeEventSchema_0_2_0,
       nextEditWithHistory: nextEditEventSchema_0_2_0,
       toolUsage: toolUsageEventSchema_0_2_0,
     },
@@ -126,6 +133,7 @@ export const devDataVersionedSchemas = {
       chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
       editInteraction: editInteractionEventSchema_0_2_0_noCode,
       editOutcome: editOutcomeEventSchema_0_2_0_noCode,
+      nextEditOutcome: nextEditOutcomeEventSchema_0_2_0_noCode,
       nextEditWithHistory: nextEditEventSchema_0_2_0_noCode,
       toolUsage: toolUsageEventSchema_0_2_0_noCode,
     },
