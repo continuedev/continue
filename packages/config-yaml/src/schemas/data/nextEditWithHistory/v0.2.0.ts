@@ -10,6 +10,7 @@ export const nextEditEventSchema_0_2_0 = nextEditEventAllSchema.pick({
   schema: true,
 
   // nextedit-specific
+  previousEdits: true,
   fileURI: true,
   workspaceDirURI: true,
   beforeContent: true,
@@ -20,6 +21,7 @@ export const nextEditEventSchema_0_2_0 = nextEditEventAllSchema.pick({
 });
 
 export const nextEditEventSchema_0_2_0_noCode = nextEditEventSchema_0_2_0.omit({
+  previousEdits: true,
   fileURI: true,
   workspaceDirURI: true,
   beforeContent: true,

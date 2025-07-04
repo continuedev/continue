@@ -108,19 +108,22 @@ export const processNextEditData = async ({
     );
   }
 
-  void DataLogger.getInstance().logDevData({
-    name: "nextEditWithHistory",
-    data: {
-      previousEdits: filenamesAndDiffs,
-      fileURI: filePath,
-      workspaceDirURI: workspaceDir,
-      beforeContent,
-      afterContent,
-      beforeCursorPos: cursorPosBeforeEdit,
-      afterCursorPos: cursorPosAfterPrevEdit,
-      context: autocompleteContext,
-    },
-  });
+  if (filenamesAndDiffs.length > 0) {
+    // if there are previous edits, log
+    void DataLogger.getInstance().logDevData({
+      name: "nextEditWithHistory",
+      data: {
+        previousEdits: filenamesAndDiffs,
+        fileURI: filePath,
+        workspaceDirURI: workspaceDir,
+        beforeContent,
+        afterContent,
+        beforeCursorPos: cursorPosBeforeEdit,
+        afterCursorPos: cursorPosAfterPrevEdit,
+        context: autocompleteContext,
+      },
+    });
+  }
 
   // add current edit to history
   const thisEdit: prevEdit = {
