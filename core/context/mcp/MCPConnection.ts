@@ -329,6 +329,7 @@ class MCPConnection {
           command,
           args,
           env,
+          cwd: options.transport.cwd,
           stderr: "pipe",
         });
 
