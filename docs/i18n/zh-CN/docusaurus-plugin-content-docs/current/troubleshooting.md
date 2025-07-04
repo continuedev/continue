@@ -48,7 +48,7 @@ Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如
 
 我们不断地修复和改进 Continue ，但是最新的修改停留在 "预览" 版大概一周，让我们可以测试它们的稳定性。如果你遇到问题，你可以尝试预览版，通过去 VS Code 的 Continue 扩展页面，并选择 "切换到预览版" ，像下面显示的这样。
 
-![Pre-Release](../../../../static/img/prerelease.png)
+![Pre-Release](/img/prerelease.png)
 
 ### JetBrains
 

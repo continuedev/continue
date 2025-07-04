@@ -1422,6 +1422,12 @@ export interface ExperimentalConfig {
    * If enabled, will enable next edit in place of autocomplete
    */
   optInNextEditFeature?: boolean;
+
+  /**
+   * If enabled, @codebase will only use tool calling
+   * instead of embeddings, FTS, recently edited files, etc.
+   */
+  codebaseToolCallingOnly?: boolean;
 }
 
 export interface AnalyticsConfig {

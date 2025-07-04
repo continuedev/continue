@@ -21,7 +21,9 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "core/nextEdit/constants";
 import { checkFim } from "core/nextEdit/diff/diff";
+import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { NextEditOutcome } from "core/nextEdit/types";
 import { NextEditWindowManager } from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
@@ -63,6 +65,7 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private nextEditProvider: NextEditProvider;
+  private nextEditLoggingService: NextEditLoggingService;
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -98,6 +101,8 @@ export class ContinueCompletionProvider
       getDefinitionsFromLsp,
     );
 
+    // Logging service must be created first.
+    this.nextEditLoggingService = NextEditLoggingService.getInstance();
     this.nextEditProvider = NextEditProvider.initialize(
       this.configHandler,
       this.ide,
@@ -110,7 +115,7 @@ export class ContinueCompletionProvider
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
-  _lastShownCompletion: AutocompleteOutcome | undefined;
+  _lastShownCompletion: AutocompleteOutcome | NextEditOutcome | undefined;
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -231,7 +236,9 @@ export class ContinueCompletionProvider
 
       setupStatusBar(undefined, true);
 
-      const outcome = this.isNextEditActive
+      // TODO: fix type of outcome to be a union between NextEditOutcome and AutocompleteOutcome.
+      const outcome: AutocompleteOutcome | NextEditOutcome | undefined = this
+        .isNextEditActive
         ? await this.nextEditProvider.provideInlineCompletionItems(
             input,
             signal,
@@ -272,8 +279,19 @@ export class ContinueCompletionProvider
         return null;
       }
 
-      // Mark displayed
-      this.completionProvider.markDisplayed(input.completionId, outcome);
+      // Marking the outcome as displayed saves
+      // the current outcome as a value of the key completionId.
+      if (this.isNextEditActive) {
+        this.nextEditProvider.markDisplayed(
+          input.completionId,
+          outcome as NextEditOutcome,
+        );
+      } else {
+        this.completionProvider.markDisplayed(
+          input.completionId,
+          outcome as AutocompleteOutcome,
+        );
+      }
       this._lastShownCompletion = outcome;
 
       // Construct the range/text to show
@@ -283,6 +301,8 @@ export class ContinueCompletionProvider
       let range = new vscode.Range(startPos, startPos);
       // let range = new vscode.Range(startPos, endPos);
       let completionText = outcome.completion;
+
+      // NOTE: This seems like an autocomplete logic.
       const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
 
       if (isSingleLineCompletion) {
@@ -313,7 +333,7 @@ export class ContinueCompletionProvider
         range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
       }
 
-      const completionItem = new vscode.InlineCompletionItem(
+      const autocompleteCompletionItem = new vscode.InlineCompletionItem(
         completionText,
         range,
         {
@@ -323,7 +343,7 @@ export class ContinueCompletionProvider
         },
       );
 
-      (completionItem as any).completeBracketPairs = true;
+      (autocompleteCompletionItem as any).completeBracketPairs = true;
 
       if (this.isNextEditActive) {
         const editor = vscode.window.activeTextEditor;
@@ -336,6 +356,9 @@ export class ContinueCompletionProvider
 
         // We don't need to show the next edit window if the predicted edits is empty.
         if (newEditRangeSlice === "") {
+          this.nextEditLoggingService.cancelRejectionTimeout(
+            input.completionId,
+          );
           return undefined;
         }
 
@@ -357,6 +380,9 @@ export class ContinueCompletionProvider
 
         // We don't need to show the next edit window if the predicted edits are identical to the previous version.
         if (oldEditRangeSlice === newEditRangeSlice) {
+          this.nextEditLoggingService.cancelRejectionTimeout(
+            input.completionId,
+          );
           return undefined;
         }
 
@@ -367,37 +393,41 @@ export class ContinueCompletionProvider
           currCursorPos,
         );
         if (isFim) {
-          const completionItem = new vscode.InlineCompletionItem(
+          const nextEditCompletionItem = new vscode.InlineCompletionItem(
             fimText,
             new vscode.Range(
               new vscode.Position(currCursorPos.line, currCursorPos.character),
               new vscode.Position(currCursorPos.line, currCursorPos.character),
             ),
             {
-              title: "Log Autocomplete Outcome",
-              command: "continue.logAutocompleteOutcome",
-              arguments: [input.completionId, this.completionProvider],
+              title: "Log Next Edit Outcome",
+              command: "continue.logNextEditOutcomeAccept",
+              arguments: [input.completionId, this.nextEditLoggingService], // TODO: this may have to be this.completionProvider.
             },
           );
-          return [completionItem];
+          return [nextEditCompletionItem];
         }
 
         // Else, render a next edit window.
         const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
 
         if (NextEditWindowManager.isInstantiated()) {
+          NextEditWindowManager.getInstance().updateCurrentCompletionId(
+            input.completionId,
+          );
+
           await NextEditWindowManager.getInstance().showNextEditWindow(
             editor,
             currCursorPos,
             editableRegionStartLine,
-            completionText,
+            newEditRangeSlice,
             diffLines,
           );
         }
 
         return undefined;
       } else {
-        return [completionItem];
+        return [autocompleteCompletionItem];
       }
     } finally {
       stopStatusBarLoading();
@@ -408,7 +438,7 @@ export class ContinueCompletionProvider
     document: vscode.TextDocument,
     selectedCompletionInfo: vscode.SelectedCompletionInfo | undefined,
     abortSignal: AbortSignal,
-    outcome: AutocompleteOutcome,
+    outcome: AutocompleteOutcome | NextEditOutcome,
   ): boolean {
     if (selectedCompletionInfo) {
       const { text, range } = selectedCompletionInfo;

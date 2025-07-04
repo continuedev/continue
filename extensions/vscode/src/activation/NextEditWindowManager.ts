@@ -10,6 +10,7 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "core/nextEdit/constants";
 import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
+import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { getThemeString } from "../util/getTheme";
 
 export interface TextApplier {
@@ -89,10 +90,16 @@ export class NextEditWindowManager {
 
   // Current active decoration
   private currentDecoration: vscode.TextEditorDecorationType | null = null;
+  // A short-lived checker to determine if the cursor moved because of us accepting the next edit, or not.
+  // Distinguishing the two is necessary to determine if we should log it as an accepted or rejected.
+  private accepted: boolean = false;
   // Track which editor has the active decoration
   private activeEditor: vscode.TextEditor | null = null;
   // Store the current tooltip text for accepting
   private currentTooltipText: string | null = null;
+  // Track for logging purposes.
+  private loggingService: NextEditLoggingService;
+  private mostRecentCompletionId: string | null = null;
 
   // Disposables
   private disposables: vscode.Disposable[] = [];
@@ -136,6 +143,8 @@ export class NextEditWindowManager {
     const editorConfig = vscode.workspace.getConfiguration("editor");
     this.fontSize = editorConfig.get<number>("fontSize") ?? 14;
     this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
+
+    this.loggingService = NextEditLoggingService.getInstance();
   }
 
   public static async reserveTabAndEsc() {
@@ -175,7 +184,7 @@ export class NextEditWindowManager {
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
     this.registerCommandSafely(
       HIDE_NEXT_EDIT_SUGGESTION_COMMAND,
-      async () => await this.hideAllNextEditWindows(),
+      async () => await this.hideAllNextEditWindowsAndResetCompletionId(),
     );
     this.registerCommandSafely(
       ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
@@ -190,6 +199,14 @@ export class NextEditWindowManager {
     }
 
     await this.codeRenderer.setTheme(this.theme);
+  }
+
+  /**
+   * Update the most recent completion id.
+   * @param completionId The id of current completion request.
+   */
+  public updateCurrentCompletionId(completionId: string) {
+    this.mostRecentCompletionId = completionId;
   }
 
   /**
@@ -302,6 +319,18 @@ export class NextEditWindowManager {
     await NextEditWindowManager.freeTabAndEsc();
   }
 
+  public async hideAllNextEditWindowsAndResetCompletionId() {
+    this.hideAllNextEditWindows();
+
+    // Log with accept = false.
+    await vscode.commands.executeCommand(
+      "continue.logNextEditOutcomeReject",
+      this.mostRecentCompletionId,
+      this.loggingService,
+    );
+    this.mostRecentCompletionId = null;
+  }
+
   /**
    * Accept the current next edit suggestion by inserting it at cursor position.
    */
@@ -309,6 +338,7 @@ export class NextEditWindowManager {
     if (!this.activeEditor || !this.currentTooltipText) {
       return;
     }
+    this.accepted = true;
 
     const editor = this.activeEditor;
     const text = this.currentTooltipText;
@@ -367,6 +397,17 @@ export class NextEditWindowManager {
         await this.hideAllNextEditWindows();
       }
     }
+
+    // Log with accept = true.
+    await vscode.commands.executeCommand(
+      "continue.logNextEditOutcomeAccept",
+      this.mostRecentCompletionId,
+      this.loggingService,
+    );
+    this.mostRecentCompletionId = null;
+
+    // Reset to false for future logging.
+    this.accepted = false;
   }
 
   /**
@@ -430,6 +471,10 @@ export class NextEditWindowManager {
         this.activeEditor &&
         !vscode.window.visibleTextEditors.includes(this.activeEditor)
       ) {
+        if (this.mostRecentCompletionId)
+          this.loggingService.cancelRejectionTimeout(
+            this.mostRecentCompletionId,
+          );
         await this.hideAllNextEditWindows();
       }
     });
@@ -438,6 +483,11 @@ export class NextEditWindowManager {
     vscode.window.onDidChangeTextEditorSelection(async (e) => {
       // If the selection changed in our active editor, hide the tooltip.
       if (this.activeEditor && e.textEditor === this.activeEditor) {
+        // If the cursor moved because of something other than accepting next edit, stop logging it.
+        if (!this.accepted && this.mostRecentCompletionId)
+          this.loggingService.cancelRejectionTimeout(
+            this.mostRecentCompletionId,
+          );
         await this.hideAllNextEditWindows();
       }
     });
@@ -687,6 +737,12 @@ export class NextEditWindowManager {
         hoverMessage: [this.buildHideTooltipHoverMsg()],
       },
     ]);
+
+    // Clear the timeout while SVG is on the editor.
+    if (this.currentDecoration && this.mostRecentCompletionId)
+      this.loggingService.cancelRejectionTimeoutButKeepCompletionId(
+        this.mostRecentCompletionId,
+      );
   }
 }
 

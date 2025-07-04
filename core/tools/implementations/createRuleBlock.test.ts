@@ -36,6 +36,7 @@ test("createRuleBlockImpl should create a rule with glob pattern", async () => {
   const { frontmatter, markdown } = parseMarkdownRule(fileContent);
 
   expect(frontmatter).toEqual({
+    alwaysApply: true,
     description: "Always use interfaces",
     globs: "**/*.{ts,tsx}",
   });
@@ -72,6 +73,7 @@ test("createRuleBlockImpl should create a rule with description pattern", async 
   const { frontmatter, markdown } = parseMarkdownRule(fileContent);
 
   expect(frontmatter).toEqual({
+    alwaysApply: true,
     description: "This is a detailed explanation of the rule",
   });
 
@@ -94,6 +96,7 @@ test("createRuleBlockImpl should include both globs and description in frontmatt
   const { frontmatter, markdown } = parseMarkdownRule(fileContent);
 
   expect(frontmatter).toEqual({
+    alwaysApply: false,
     description: "This rule enforces our team standards",
     globs: "**/*.js",
   });
@@ -116,6 +119,7 @@ test("createRuleBlockImpl should create a rule with alwaysApply set to false", a
   const { frontmatter } = parseMarkdownRule(fileContent);
 
   expect(frontmatter).toEqual({
+    alwaysApply: false,
     description: "Optional rule",
   });
 });

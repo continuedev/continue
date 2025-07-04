@@ -17,10 +17,12 @@ import { viewDiffTool } from "./definitions/viewDiff";
 import { viewRepoMapTool } from "./definitions/viewRepoMap";
 import { viewSubdirectoryTool } from "./definitions/viewSubdirectory";
 
-// missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
-export const localOnlyToolDefinitions = [grepSearchTool];
+// I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 
-export const baseToolDefinitions = [
+// missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
+const getLocalOnlyToolDefinitions = () => [grepSearchTool];
+
+const getBaseToolDefinitions = () => [
   readFileTool,
   createNewFileTool,
   runTerminalCommandTool,
@@ -47,7 +49,7 @@ export const getConfigDependentToolDefinitions = (
     : [editFileTool]),
 ];
 
-export const getToolsForIde = async (ide: IDE) =>
+export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>
   (await ide.isWorkspaceRemote())
-    ? baseToolDefinitions
-    : [...baseToolDefinitions, ...localOnlyToolDefinitions];
+    ? getBaseToolDefinitions()
+    : [...getBaseToolDefinitions(), ...getLocalOnlyToolDefinitions()];
