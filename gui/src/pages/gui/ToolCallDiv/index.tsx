@@ -12,12 +12,7 @@ import {
   PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import {
-  ContextItemWithId,
-  ToolCallDelta,
-  ToolCallState,
-  ToolStatus,
-} from "core";
+import { ToolCallDelta, ToolCallState, ToolStatus } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { ComponentType, useMemo } from "react";
 import { vscButtonBackground } from "../../../components";
@@ -30,7 +25,6 @@ import { ToolCallDisplay } from "./ToolCall";
 interface ToolCallDivProps {
   toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
-  output?: ContextItemWithId[];
   historyIndex: number;
 }
 
@@ -46,9 +40,9 @@ const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.ViewRepoMap]: MapIcon,
   [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
   [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
-  // EditExistingFile = "builtin_edit_existing_file",
-  // CreateNewFile = "builtin_create_new_file",
-  // RunTerminalCommand = "builtin_run_terminal_command",
+  // EditExistingFile
+  // CreateNewFile
+  // RunTerminalCommand
 };
 
 function getStatusIcon(state: ToolStatus) {
@@ -86,7 +80,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
         icon={
           props.toolCallState.status === "generated" ? ArrowRightIcon : icon
         }
-        contextItems={props.output ?? []}
+        historyIndex={props.historyIndex}
       />
     );
   }
@@ -96,6 +90,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       icon={getStatusIcon(props.toolCallState.status)}
       tool={tool}
       toolCallState={props.toolCallState}
+      historyIndex={props.historyIndex}
     >
       <FunctionSpecificToolCallDiv
         toolCall={props.toolCall}

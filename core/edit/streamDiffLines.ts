@@ -66,7 +66,6 @@ export async function* streamDiffLines({
   abortController,
   input,
   language,
-  onlyOneInsertion,
   overridePrompt,
   rulesToInclude,
 }: {
@@ -77,7 +76,6 @@ export async function* streamDiffLines({
   abortController: AbortController;
   input: string;
   language: string | undefined;
-  onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
   rulesToInclude: RuleWithSource[] | undefined;
 }): AsyncGenerator<DiffLine> {
@@ -112,7 +110,7 @@ export async function* streamDiffLines({
   // If any rules are present this will result in using chat instead of legacy completion
   const systemMessage = rulesToInclude
     ? getSystemMessageWithRules({
-        rules: rulesToInclude,
+        availableRules: rulesToInclude,
         userMessage:
           typeof prompt === "string"
             ? ({
@@ -125,7 +123,7 @@ export async function* streamDiffLines({
               ) as UserChatMessage | ToolResultChatMessage | undefined),
         baseSystemMessage: undefined,
         contextItems: [],
-      })
+      }).systemMessage
     : undefined;
 
   if (systemMessage) {
@@ -182,13 +180,7 @@ export async function* streamDiffLines({
     diffLines = addIndentation(diffLines, indentation);
   }
 
-  let seenGreen = false;
   for await (const diffLine of diffLines) {
     yield diffLine;
-    if (diffLine.type === "new") {
-      seenGreen = true;
-    } else if (onlyOneInsertion && seenGreen && diffLine.type === "same") {
-      break;
-    }
   }
 }

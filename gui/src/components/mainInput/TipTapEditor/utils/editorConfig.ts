@@ -155,22 +155,24 @@ export function createEditorConfig(options: {
                     for (const item of items) {
                       const file = item.getAsFile();
                       file &&
-                        void modelSupportsImages(
+                        modelSupportsImages(
                           model.provider,
                           model.model,
                           model.title,
                           model.capabilities,
                         ) &&
-                        handleImageFile(ideMessenger, file).then((resp) => {
-                          if (!resp) return;
-                          const [img, dataUrl] = resp;
-                          const { schema } = view.state;
-                          const node = schema.nodes.image.create({
-                            src: dataUrl,
-                          });
-                          const tr = view.state.tr.insert(0, node);
-                          view.dispatch(tr);
-                        });
+                        void handleImageFile(ideMessenger, file).then(
+                          (resp) => {
+                            if (!resp) return;
+                            const [img, dataUrl] = resp;
+                            const { schema } = view.state;
+                            const node = schema.nodes.image.create({
+                              src: dataUrl,
+                            });
+                            const tr = view.state.tr.insert(0, node);
+                            view.dispatch(tr);
+                          },
+                        );
                     }
                   }
                 },
@@ -330,7 +332,10 @@ export function createEditorConfig(options: {
     ],
     editorProps: {
       attributes: {
-        class: "outline-none overflow-hidden",
+        "data-testid": props.isMainInput
+          ? "editor-input-main"
+          : `editor-input-${props.inputId}`,
+        class: "ProseMirror outline-none overflow-hidden",
         style: `font-size: ${getFontSize()}px;`,
       },
     },

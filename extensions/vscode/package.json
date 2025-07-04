@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.52",
+  "version": "1.1.55",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -334,6 +334,27 @@
         "category": "Continue",
         "title": "Enter Enterprise License Key",
         "group": "Continue"
+      },
+      {
+        "command": "continue.nextEditWindow.hideNextEditSuggestion",
+        "category": "Continue",
+        "title": "Hide Next Edit Suggestion"
+      },
+      {
+        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
+        "category": "Continue",
+        "title": "Accept Next Edit Suggestion"
+      },
+      {
+        "command": "continue.forceNextEdit",
+        "category": "Continue",
+        "title": "Continue: Force Next Edit"
+      },
+      {
+        "command": "continue.generateRule",
+        "category": "Continue",
+        "title": "Generate Rule",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -426,6 +447,16 @@
         "command": "continue.applyCodeFromChat",
         "mac": "alt+a",
         "key": "alt+a"
+      },
+      {
+        "command": "continue.nextEditWindow.hideNextEditSuggestion",
+        "key": "escape",
+        "when": "editorTextFocus && nextEditWindowActive"
+      },
+      {
+        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
+        "key": "tab",
+        "when": "editorTextFocus && nextEditWindowActive"
       }
     ],
     "submenus": [
@@ -453,6 +484,9 @@
         },
         {
           "command": "continue.enterEnterpriseLicenseKey"
+        },
+        {
+          "command": "continue.generateRule"
         }
       ],
       "editor/context": [
@@ -622,10 +656,8 @@
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "lint:fix": "eslint . --ext ts --fix",
-    "build-test": "npm run esbuild && node esbuild.test.mjs",
-    "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
+    "test": "vitest run",
     "vitest": "vitest run",
-    "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "write-build-timestamp": "node scripts/write-build-timestamp.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
@@ -646,6 +678,7 @@
     "e2e:test": "extest run-tests ${TEST_FILE:-'./e2e/_output/tests/*.test.js'} --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:clean": "rm -rf ./e2e/_output ./e2e/storage",
     "e2e:all": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
+    "e2e:all-non-mac": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
     "e2e:recompile-extension": "npm run package && npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
     "e2e:rebuild-gui": "rm -rf gui && cp -r ../../gui/dist gui && npm run package && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
     "e2e:quick": "npm run e2e:compile && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
@@ -661,11 +694,12 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/follow-redirects": "^1.14.4",
-    "@types/glob": "^8.0.0",
-    "@types/mocha": "^10.0.6",
+    "@types/mocha": "^10.0.10",
     "@types/node": "16.x",
+    "@types/node-fetch": "^2.6.12",
     "@types/react-dom": "^18.2.4",
     "@types/request": "^2.48.8",
+    "@types/uuid": "^10.0.0",
     "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
@@ -675,9 +709,7 @@
     "esbuild": "0.17.19",
     "esbuild-visualizer": "^0.6.0",
     "eslint": "^8.28.0",
-    "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
-    "mocha": "^10.4.0",
     "ovsx": "^0.8.3",
     "rimraf": "^5.0.5",
     "typescript": "^5.6.3",
@@ -689,10 +721,7 @@
     "@continuedev/fetch": "^1.0.10",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
-    "@types/node-fetch": "^2.6.11",
-    "@types/uuid": "^9.0.8",
     "@vscode/ripgrep": "^1.15.9",
-    "@vscode/test-electron": "^2.3.9",
     "axios": "^1.2.5",
     "core": "file:../../core",
     "cors": "^2.8.5",
@@ -714,6 +743,7 @@
     "jsdom": "^24.0.0",
     "lru-cache": "^11.0.2",
     "minisearch": "^7.0.0",
+    "mocha": "^11.7.1",
     "monaco-editor": "^0.45.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "ncp": "^2.0.0",

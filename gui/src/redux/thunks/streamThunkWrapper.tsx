@@ -3,7 +3,6 @@ import posthog from "posthog-js";
 import StreamErrorDialog from "../../pages/gui/StreamError";
 import { analyzeError } from "../../util/errorAnalysis";
 import { selectSelectedChatModel } from "../slices/configSlice";
-import { setInactive } from "../slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { cancelStream } from "./cancelStream";
@@ -26,9 +25,8 @@ export const streamThunkWrapper = createAsyncThunk<
         }),
       );
     }
-    dispatch(setInactive());
   } catch (e) {
-    dispatch(cancelStream());
+    await dispatch(cancelStream());
     dispatch(setDialogMessage(<StreamErrorDialog error={e} />));
     dispatch(setShowDialog(true));
 

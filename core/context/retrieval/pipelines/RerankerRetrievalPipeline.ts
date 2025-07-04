@@ -58,12 +58,22 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       console.error("Error retrieving repo map chunks:", error);
     }
 
-    retrievalResults.push(
-      ...recentlyEditedFilesChunks,
-      ...ftsChunks,
-      ...embeddingsChunks,
-      ...repoMapChunks,
-    );
+    if (config.experimental?.codebaseToolCallingOnly) {
+      let toolBasedChunks: Chunk[] = [];
+      try {
+        toolBasedChunks = await this.retrieveWithTools(input);
+      } catch (error) {
+        console.error("Error retrieving tool based chunks:", error);
+      }
+      retrievalResults.push(...toolBasedChunks);
+    } else {
+      retrievalResults.push(
+        ...recentlyEditedFilesChunks,
+        ...ftsChunks,
+        ...embeddingsChunks,
+        ...repoMapChunks,
+      );
+    }
 
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
@@ -107,7 +117,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
 
       results.sort(
-        (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
+        (a, b) => scores[chunkIndexMap.get(b)!] - scores[chunkIndexMap.get(a)!],
       );
       results = results.slice(-this.options.nFinal);
       return results;
