@@ -572,8 +572,8 @@ export class NextEditWindowManager {
     const tipHeight = dimensions.height;
 
     const offsetFromTop =
-      (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight +
-      SVG_CONFIG.strokeWidth * 2;
+      (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight;
+    // + SVG_CONFIG.strokeWidth * 2;
 
     return vscode.window.createTextEditorDecorationType({
       after: {
