@@ -232,7 +232,7 @@ export class CodeRenderer {
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}" shape-rendering="crispEdges">
   <g>
     ${lineBackgrounds}
     ${guts}
@@ -267,17 +267,24 @@ export class CodeRenderer {
           let fill = colorMatch ? ` fill="${colorMatch[1]}"` : "";
           if (classes.includes("highlighted")) {
             fill = ` fill="${this.editorLineHighlight}"`;
-          } else if (classes.includes("focused")) {
-            fill = ` fill="#111111"`;
           }
           const content = el.textContent || "";
           return `<tspan xml:space="preserve"${fill}>${escapeForSVG(content)}</tspan>`;
         })
         .join("");
 
-      // const y = index * lineHeight + lineHeight / 2 + fontSize / 3;
+      // Typography notes:
+      // Each line of code is a <text> inside a <rect>.
+      // Math becomes interesting here; the y value is actually aligned to the topmost border.
+      // So y = 0 will have the rect be flush with the top border.
+      // More importantly, text will also be positioned that way.
+      // Since y = 0 is the axis the text will align itself to, the default settings will actually have the text sitting "on top of" the y = 0 axis, which effectively shifts them up.
+      // To prevent this, we want the alignment axis to be at the middle of each rect, and have the text align itself vertically to the center (skwered by the axis).
+      // The first step is to add lineHeight / 2 to move the axis down.
+      // The second step is to add 'dominant-baseline="central"' to vertically center the text.
+      // Note that we choose "central" over "middle". "middle" will center the text too perfectly, which is actually undesirable!
       const y = index * lineHeight + lineHeight / 2;
-      return `<text x="0" y="${y}" font-family="${fontFamily}" font-size="${fontSize.toString()}" xml:space="preserve" dominant-baseline="middle">${spans}</text>`;
+      return `<text x="0" y="${y}" font-family="${fontFamily}" font-size="${fontSize.toString()}" xml:space="preserve" dominant-baseline="central" shape-rendering="crispEdges">${spans}</text>`;
     });
 
     const lineBackgrounds = [...lines, null]
@@ -287,6 +294,10 @@ export class CodeRenderer {
           ? this.editorLineHighlight
           : this.editorBackground;
         const y = index * lineHeight;
+        // SVG notes:
+        // By default SVGs have anti-aliasing on.
+        // This is undesirable in our case because pixel-perfect alignment of these rectangles will introduce thin gaps.
+        // Turning it off with 'shape-rendering="crispEdges"' solves the issue.
         return `<rect x="0" y="${y}" width="100%" height="${lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
       })
       .join("\n");
