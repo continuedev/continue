@@ -413,6 +413,10 @@ const config = {
             from: "/reference/Model Providers/flowise",
           },
           {
+            to: "/advanced/model-providers/llamastack",
+            from: "/advanced/model-providers/more/llamastack",
+          },
+          {
             to: "/advanced/model-providers/more/huggingfaceinferenceapi",
             from: "/reference/Model Providers/huggingfaceinferenceapi",
           },
