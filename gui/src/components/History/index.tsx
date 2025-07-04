@@ -97,14 +97,14 @@ export function History() {
     ];
 
     // Remove duplicates while preserving highest priority
-    const uniqueResults = allResults.reduce((acc, result) => {
-      const existing = acc.find((r) => r.id === result.id);
+    const uniqueResultsMap = new Map<string, any>();
+    allResults.forEach((result) => {
+      const existing = uniqueResultsMap.get(result.id);
       if (!existing || existing.priority < result.priority) {
-        acc = acc.filter((r) => r.id !== result.id);
-        acc.push(result);
+        uniqueResultsMap.set(result.id, result);
       }
-      return acc;
-    }, [] as any[]);
+    });
+    const uniqueResults = Array.from(uniqueResultsMap.values());
 
     const sessionIds = uniqueResults
       .sort((a, b) => b.priority - a.priority || b.score - a.score)
