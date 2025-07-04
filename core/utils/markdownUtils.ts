@@ -104,7 +104,9 @@ export class MarkdownBlockStateTracker {
 /**
  * Collects all lines from a LineStream into an array for analysis.
  */
-export async function collectAllLines<T>(stream: AsyncGenerator<T>): Promise<T[]> {
+export async function collectAllLines<T>(
+  stream: AsyncGenerator<T>,
+): Promise<T[]> {
   const allLines: T[] = [];
   for await (const line of stream) {
     allLines.push(line);
