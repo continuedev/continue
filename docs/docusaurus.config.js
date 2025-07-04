@@ -204,7 +204,7 @@ const config = {
       },
     ],
     // Custom plugin for better structured llms.txt
-    require.resolve('./plugins/custom-llms-txt.js'),
+    require.resolve("./plugins/custom-llms-txt.js"),
     // Keeping the original plugin commented out for now
     // [
     //   "docusaurus-plugin-llms-txt",
