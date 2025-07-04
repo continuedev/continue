@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
-import { ContextItemWithId, Tool, ToolCallState } from "core";
+import { Tool, ToolCallState } from "core";
 import { ComponentType, useContext, useMemo, useState } from "react";
 import {
   ContextItemsPeekItem,
@@ -7,26 +7,28 @@ import {
 } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
+import { toolCallStateToContextItems } from "./toolCallStateToContextItem";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
+import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 
 interface SimpleToolCallUIProps {
   toolCallState: ToolCallState;
   tool: Tool | undefined;
-  contextItems: ContextItemWithId[];
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
+  historyIndex: number;
 }
 
 export function SimpleToolCallUI({
-  contextItems,
   icon: Icon,
   toolCallState,
   tool,
+  historyIndex,
 }: SimpleToolCallUIProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-
-  const ctxItems = useMemo(() => {
-    return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
-  }, [contextItems]);
+  const shownContextItems = useMemo(() => {
+    const contextItems = toolCallStateToContextItems(toolCallState);
+    return contextItems.filter((item) => !item.hidden);
+  }, [toolCallState]);
 
   const [open, setOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -36,8 +38,8 @@ export function SimpleToolCallUI({
     return Object.entries(toolCallState.parsedArgs);
   }, [toolCallState.parsedArgs]);
 
-  const isToggleable = ctxItems.length > 1;
-  const isSingleItem = ctxItems.length === 1;
+  const isToggleable = shownContextItems.length > 1;
+  const isSingleItem = shownContextItems.length === 1;
   const shouldShowContent = isToggleable ? open : false;
   const isClickable = isToggleable || isSingleItem;
 
@@ -45,7 +47,7 @@ export function SimpleToolCallUI({
     if (isToggleable) {
       setOpen((prev) => !prev);
     } else if (isSingleItem) {
-      openContextItem(ctxItems[0], ideMessenger);
+      openContextItem(shownContextItems[0], ideMessenger);
     }
   }
 
@@ -71,7 +73,7 @@ export function SimpleToolCallUI({
   }
 
   return (
-    <div className="flex flex-col pl-5 pr-2 pt-4">
+    <div className="flex flex-col py-4 pl-5 pr-2">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2">
         <div
           className={`text-description flex min-w-0 flex-row items-center justify-between gap-1.5 text-xs transition-colors duration-200 ease-in-out ${
@@ -87,15 +89,19 @@ export function SimpleToolCallUI({
           </div>
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
-        {args.length > 0 && (
-          <ArgsToggleIcon
-            isShowing={showingArgs}
-            setIsShowing={setShowingArgs}
-            toolCallId={toolCallState.toolCallId}
-          />
-        )}
+        <div className="flex flex-row items-center gap-1.5">
+          {!!toolCallState.output?.length && (
+            <ToolTruncateHistoryIcon historyIndex={historyIndex} />
+          )}
+          {args.length > 0 ? (
+            <ArgsToggleIcon
+              isShowing={showingArgs}
+              setIsShowing={setShowingArgs}
+              toolCallId={toolCallState.toolCallId}
+            />
+          ) : null}
+        </div>
       </div>
-
       <ArgsItems args={args} isShowing={showingArgs} />
 
       {isToggleable && (
@@ -104,8 +110,8 @@ export function SimpleToolCallUI({
             shouldShowContent ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          {ctxItems.length > 0 ? (
-            ctxItems.map((contextItem, idx) => (
+          {shownContextItems.length > 0 ? (
+            shownContextItems.map((contextItem, idx) => (
               <ContextItemsPeekItem key={idx} contextItem={contextItem} />
             ))
           ) : (

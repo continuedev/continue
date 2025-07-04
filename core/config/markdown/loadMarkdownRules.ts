@@ -33,7 +33,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
           uriType: "file",
           filePath: file.path,
         });
-        rules.push({ ...rule, source: "rules-block" });
+        rules.push({ ...rule, source: "rules-block", ruleFile: file.path });
       } catch (e) {
         errors.push({
           fatal: false,

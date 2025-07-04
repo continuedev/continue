@@ -1,7 +1,7 @@
 import styled, { keyframes } from "styled-components";
 import { varWithFallback } from "../styles/theme";
 
-export const defaultBorderRadius = "5px";
+export const defaultBorderRadius = "0.5rem";
 export const lightGray = "#999998";
 export const greenButtonColor = "#189e72";
 
@@ -12,6 +12,9 @@ export const vscForeground = varWithFallback("foreground");
 export const vscButtonBackground = varWithFallback("primary-background");
 export const vscButtonForeground = varWithFallback("primary-foreground");
 export const vscEditorBackground = varWithFallback("editor-background");
+export const vscTextCodeBlockBackground = varWithFallback(
+  "textCodeBlockBackground",
+);
 export const vscListActiveBackground = varWithFallback("list-active");
 export const vscFocusBorder = varWithFallback("border-focus");
 export const vscListActiveForeground = varWithFallback(

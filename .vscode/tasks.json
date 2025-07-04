@@ -223,6 +223,19 @@
       ],
       "type": "shell",
       "problemMatcher": []
+    },
+    {
+      "label": "Terminate All Tasks",
+      "command": "${input:terminate}",
+      "type": "shell"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "terminateAll"
     }
   ]
 }

@@ -327,27 +327,36 @@ export const getApplicableRules = (
 export const getSystemMessageWithRules = ({
   baseSystemMessage,
   userMessage,
-  rules,
+  availableRules,
   contextItems,
   rulePolicies = {},
 }: {
   baseSystemMessage?: string;
   userMessage: UserChatMessage | ToolResultChatMessage | undefined;
-  rules: RuleWithSource[];
+  availableRules: RuleWithSource[];
   contextItems: ContextItemWithId[];
   rulePolicies?: RulePolicies;
-}) => {
-  const applicableRules = getApplicableRules(
+}): {
+  systemMessage: string;
+  appliedRules: RuleWithSource[];
+} => {
+  const appliedRules = getApplicableRules(
     userMessage,
-    rules,
+    availableRules,
     contextItems,
     rulePolicies,
   );
   let systemMessage = baseSystemMessage ?? "";
 
-  for (const rule of applicableRules) {
-    systemMessage += `\n\n${rule.rule}`;
+  for (const rule of appliedRules) {
+    if (systemMessage) {
+      systemMessage += "\n\n";
+    }
+    systemMessage += rule.rule;
   }
 
-  return systemMessage;
+  return {
+    systemMessage,
+    appliedRules,
+  };
 };

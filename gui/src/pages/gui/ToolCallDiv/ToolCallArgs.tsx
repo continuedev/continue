@@ -27,7 +27,7 @@ export const ArgsToggleIcon = ({
         }}
         className={`hover:description-muted/30 cursor-pointer select-none rounded px-1 py-0.5 hover:opacity-80 ${isShowing ? "bg-description-muted/30" : "bg-transparent"}`}
       >
-        <CodeBracketIcon className="h-2.5 w-2.5 flex-shrink-0 opacity-60" />
+        <CodeBracketIcon className="h-3 w-3 flex-shrink-0 opacity-60" />
       </div>
       <ToolTip id={argsTooltipId}>
         {isShowing ? "Hide args" : "Show args"}

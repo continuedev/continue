@@ -62,7 +62,7 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { baseToolDefinitions } from "../tools";
+import { getToolsForIde } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
@@ -525,7 +525,7 @@ async function intermediateToFinalConfig({
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    tools: [...baseToolDefinitions],
+    tools: await getToolsForIde(ide),
     mcpServerStatuses: [],
     slashCommands: [],
     modelsByRole: {

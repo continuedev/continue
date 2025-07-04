@@ -9,28 +9,13 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
   USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
-
-export type Prompt = SystemPrompt | UserPrompt;
-
-interface SystemPrompt {
-  role: "system";
-  content: string;
-}
-
-interface UserPrompt {
-  role: "user";
-  content: string;
-}
-
-export interface NextEditTemplate {
-  template: string;
-}
-
-export interface TemplateVars {
-  userEdits: string;
-  languageShorthand: string;
-  userExcerpts: string;
-}
+import {
+  NextEditTemplate,
+  PromptMetadata,
+  SystemPrompt,
+  TemplateVars,
+  UserPrompt,
+} from "../types";
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
@@ -39,7 +24,7 @@ type NextEditModelName = "mercury-coder-nextedit" | "this field is not used";
 const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   "mercury-coder-nextedit": {
     template:
-      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n\`\`\`{{{languageShorthand}}}\n{{{userExcerpts}}}\`\`\`",
+      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
   },
   "this field is not used": {
     template: "NEXT_EDIT",
@@ -49,7 +34,7 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
 function templateRendererOfModel(
   modelName: NextEditModelName,
 ): TemplateRenderer {
-  const template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
+  let template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
   if (!template) {
     throw new Error(`Model ${modelName} is not supported for next edit.`);
   }
@@ -64,19 +49,34 @@ function templateRendererOfModel(
 export function renderPrompt(
   helper: HelperVars,
   userEdits: string,
-): UserPrompt {
-  const modelName = helper.modelName as NextEditModelName;
+): PromptMetadata {
+  let modelName = helper.modelName as NextEditModelName;
 
   if (modelName === "this field is not used") {
     return {
-      role: "user",
-      content: "NEXT_EDIT",
+      prompt: {
+        role: "user",
+        content: "NEXT_EDIT",
+      },
+      userEdits,
+      userExcerpts: helper.fileContents,
     };
   }
 
   // Validate that the modelName is actually a supported model.
   if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {
-    throw new Error(`${helper.modelName} is not yet supported for next edit.`);
+    // Check if modelName includes any known model name as substring.
+    const matchingModel = Object.keys(NEXT_EDIT_MODEL_TEMPLATES).find((key) =>
+      modelName.includes(key),
+    );
+
+    if (matchingModel) {
+      modelName = matchingModel as NextEditModelName;
+    } else {
+      throw new Error(
+        `${helper.modelName} is not yet supported for next edit.`,
+      );
+    }
   }
 
   const renderer = templateRendererOfModel(modelName);
@@ -92,8 +92,12 @@ export function renderPrompt(
   };
 
   return {
-    role: "user",
-    content: renderer(tv),
+    prompt: {
+      role: "user",
+      content: renderer(tv),
+    },
+    userEdits,
+    userExcerpts: editedCodeWithTokens,
   };
 }
 

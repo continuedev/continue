@@ -10,7 +10,7 @@ import {
   DEFAULT_AGENT_SYSTEM_MESSAGE_URL,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
-} from "core/llm/constructMessages";
+} from "core/llm/defaultSystemMessages";
 import { useContext, useMemo } from "react";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";

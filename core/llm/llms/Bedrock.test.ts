@@ -1,12 +1,10 @@
-import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
-import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
-import Bedrock from "./Bedrock.js";
 import {
   ChatMessage,
   Chunk,
   CompletionOptions,
   UserChatMessage,
 } from "../../index.js";
+import Bedrock from "./Bedrock.js";
 
 // Mock AWS SDK
 jest.mock("@aws-sdk/client-bedrock-runtime", () => ({
@@ -317,96 +315,266 @@ describe("Bedrock", () => {
       });
     });
 
-    it("should convert text messages correctly", () => {
-      const message: ChatMessage = {
-        role: "user",
-        content: "Hello",
-      } as UserChatMessage;
-      const converted = bedrock["_convertMessage"](message);
-      expect(converted).toEqual({
-        role: "user",
-        content: [{ text: "Hello" }],
-      });
+    it("should convert simple user and assistant messages correctly", () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Hello" } as UserChatMessage,
+        { role: "assistant", content: "Hi there" },
+      ];
+
+      const availableTools = new Set<string>();
+      const converted = bedrock["_convertMessages"](messages, availableTools);
+
+      expect(converted).toEqual([
+        { role: "user", content: [{ text: "Hello" }] },
+        { role: "assistant", content: [{ text: "Hi there" }] },
+      ]);
     });
 
-    it("should convert tool responses correctly", () => {
-      const message: ChatMessage = {
-        role: "tool",
-        content: "Tool result",
-        toolCallId: "tool-1",
-      };
-      const converted = bedrock["_convertMessage"](message);
-      expect(converted).toEqual({
-        role: "user",
-        content: [
-          {
-            toolResult: {
-              toolUseId: "tool-1",
-              content: [{ text: "Tool result" }],
-            },
-          },
-        ],
-      });
-    });
-
-    it("should convert tool calls correctly", () => {
-      const message: ChatMessage = {
-        role: "assistant",
-        content: "",
-        toolCalls: [
-          {
-            id: "tool-1",
-            type: "function" as const,
-            function: {
-              name: "test_tool",
-              arguments: '{"arg":"value"}',
-            },
-          },
-        ],
-      };
-      const converted = bedrock["_convertMessage"](message);
-      expect(converted).toEqual({
-        role: "assistant",
-        content: [
-          {
-            toolUse: {
-              toolUseId: "tool-1",
-              name: "test_tool",
-              input: { arg: "value" },
-            },
-          },
-        ],
-      });
-    });
-
-    it("should handle multimodal content correctly", () => {
-      const message: ChatMessage = {
-        role: "user",
-        content: [
-          { type: "text", text: "Look at this image:" },
-          {
-            type: "imageUrl",
-            imageUrl: {
-              url: "data:image/jpeg;base64,/9j/4AAQSkZJRg==",
-            },
-          },
-        ],
-      } as UserChatMessage;
-      const converted = bedrock["_convertMessage"](message);
-      expect(converted).toEqual({
-        role: "user",
-        content: [
-          { text: "Look at this image:" },
-          {
-            image: {
-              format: "jpeg",
-              source: {
-                bytes: Buffer.from("/9j/4AAQSkZJRg==", "base64"),
+    it("should handle tool responses correctly", () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Use a tool" } as UserChatMessage,
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-1",
+              type: "function",
+              function: {
+                name: "test_tool",
+                arguments: '{"arg":"value"}',
               },
             },
-          },
-        ],
+          ],
+        },
+        {
+          role: "tool",
+          content: "Tool result",
+          toolCallId: "tool-1",
+        },
+      ];
+
+      const availableTools = new Set(["test_tool"]);
+      const converted = bedrock["_convertMessages"](messages, availableTools);
+
+      expect(converted).toEqual([
+        { role: "user", content: [{ text: "Use a tool" }] },
+        {
+          role: "assistant",
+          content: [
+            {
+              toolUse: {
+                toolUseId: "tool-1",
+                name: "test_tool",
+                input: { arg: "value" },
+              },
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              toolResult: {
+                toolUseId: "tool-1",
+                content: [{ text: "Tool result" }],
+              },
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should handle tool calls with unavailable tools as text", () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Use a tool" } as UserChatMessage,
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-1",
+              type: "function",
+              function: {
+                name: "unavailable_tool",
+                arguments: '{"arg":"value"}',
+              },
+            },
+          ],
+        },
+      ];
+
+      // Empty set means no tools are available
+      const availableTools = new Set<string>();
+      const converted = bedrock["_convertMessages"](messages, availableTools);
+
+      expect(converted).toEqual([
+        { role: "user", content: [{ text: "Use a tool" }] },
+        {
+          role: "assistant",
+          content: [
+            {
+              text: expect.stringContaining("Assistant tool call:"),
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should handle thinking messages correctly", () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Think about this" } as UserChatMessage,
+        { role: "thinking", content: "I am thinking about the solution" },
+        { role: "assistant", content: "Here's my answer" },
+      ];
+
+      const availableTools = new Set<string>();
+      const converted = bedrock["_convertMessages"](messages, availableTools);
+
+      expect(converted).toEqual([
+        { role: "user", content: [{ text: "Think about this" }] },
+        {
+          role: "assistant",
+          content: [
+            {
+              reasoningContent: {
+                reasoningText: {
+                  text: "I am thinking about the solution",
+                  signature: undefined,
+                },
+              },
+            },
+            { text: "Here's my answer" },
+          ],
+        },
+      ]);
+    });
+
+    it("should handle redacted thinking messages", () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Think about this" } as UserChatMessage,
+        {
+          role: "thinking",
+          content: "",
+          redactedThinking: "redacted-content-bytes",
+        },
+        { role: "assistant", content: "Here's my answer" },
+      ];
+
+      const availableTools = new Set<string>();
+      const converted = bedrock["_convertMessages"](messages, availableTools);
+
+      expect(converted).toEqual([
+        { role: "user", content: [{ text: "Think about this" }] },
+        {
+          role: "assistant",
+          content: [
+            {
+              reasoningContent: {
+                redactedContent: expect.any(Uint8Array),
+              },
+            },
+            { text: "Here's my answer" },
+          ],
+        },
+      ]);
+
+      // Check that the Uint8Array contains the expected bytes
+      const redactedContent =
+        converted[1].content?.[0].reasoningContent?.redactedContent;
+      expect(redactedContent).toBeInstanceOf(Uint8Array);
+      expect(Buffer.from(redactedContent!).toString()).toBe(
+        "redacted-content-bytes",
+      );
+    });
+
+    it("should convert multimodal content correctly", () => {
+      const messages: ChatMessage[] = [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Look at this image:" },
+            {
+              type: "imageUrl",
+              imageUrl: {
+                url: "data:image/jpeg;base64,/9j/4AAQSkZJRg==",
+              },
+            },
+          ],
+        } as UserChatMessage,
+      ];
+
+      const availableTools = new Set<string>();
+      const converted = bedrock["_convertMessages"](messages, availableTools);
+
+      expect(converted).toEqual([
+        {
+          role: "user",
+          content: [
+            { text: "Look at this image:" },
+            {
+              image: {
+                format: "jpeg",
+                source: {
+                  bytes: expect.any(Uint8Array),
+                },
+              },
+            },
+          ],
+        },
+      ]);
+
+      // Check that the image bytes were processed correctly
+      const imageBytes = converted[0].content?.[1].image?.source?.bytes;
+      expect(imageBytes).toBeInstanceOf(Uint8Array);
+      expect(Buffer.from(imageBytes!).toString("base64")).toBe(
+        "/9j/4AAQSkZJRg==",
+      );
+    });
+
+    it("should add cache points for prompt caching when needed", () => {
+      // Create a test instance with caching behavior enabled
+      const bedrockWithCaching = new TestBedrock({
+        apiKey: "test-key",
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+        region: "us-east-1",
       });
+
+      // Set caching behavior
+      bedrockWithCaching.cacheBehavior = {
+        cacheConversation: true,
+        cacheSystemMessage: true,
+      };
+
+      const messages: ChatMessage[] = [
+        { role: "system", content: "You are a helpful assistant" },
+        { role: "user", content: "First message" } as UserChatMessage,
+        { role: "assistant", content: "First response" },
+        { role: "user", content: "Second message" } as UserChatMessage,
+      ];
+
+      const availableTools = new Set<string>();
+      const converted = bedrockWithCaching["_convertMessages"](
+        messages,
+        availableTools,
+      );
+
+      // The last two user messages should have cache points
+      // But we're not testing the system message here since it's handled separately
+      expect(converted.length).toBe(3);
+      expect(converted[0].role).toBe("user");
+      expect(converted[0].content?.some((block) => block.cachePoint)).toBe(
+        true,
+      );
+      expect(converted[1].role).toBe("assistant");
+      expect(converted[2].role).toBe("user");
+      expect(converted[2].content?.some((block) => block.cachePoint)).toBe(
+        true,
+      );
+
+      // Verify that text content includes a cache ID suffix
+      const userMessageText = converted[0].content?.[0].text;
+      expect(userMessageText).toMatch(/First message.+/);
     });
   });
 });

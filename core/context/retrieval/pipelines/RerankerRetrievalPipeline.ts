@@ -58,12 +58,22 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       console.error("Error retrieving repo map chunks:", error);
     }
 
-    retrievalResults.push(
-      ...recentlyEditedFilesChunks,
-      ...ftsChunks,
-      ...embeddingsChunks,
-      ...repoMapChunks,
-    );
+    if (config.experimental?.codebaseToolCallingOnly) {
+      let toolBasedChunks: Chunk[] = [];
+      try {
+        toolBasedChunks = await this.retrieveWithTools(input);
+      } catch (error) {
+        console.error("Error retrieving tool based chunks:", error);
+      }
+      retrievalResults.push(...toolBasedChunks);
+    } else {
+      retrievalResults.push(
+        ...recentlyEditedFilesChunks,
+        ...ftsChunks,
+        ...embeddingsChunks,
+        ...repoMapChunks,
+      );
+    }
 
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
