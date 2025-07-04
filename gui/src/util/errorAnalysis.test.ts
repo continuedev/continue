@@ -1,5 +1,4 @@
 import { analyzeError } from "./errorAnalysis";
-import { providers } from "../pages/AddNewModel/configs/providers";
 
 describe("errorAnalysis", () => {
   describe("analyzeError", () => {
@@ -82,45 +81,53 @@ describe("errorAnalysis", () => {
       });
 
       it("should parse JSON error message after double newline", () => {
-        const error = new Error('Header message\n\n{"error": "JSON error message"}');
+        const error = new Error(
+          'Header message\n\n{"error": "JSON error message"}',
+        );
         const result = analyzeError(error, null);
 
         expect(result.parsedError).toBe('"JSON error message"');
       });
 
       it("should parse JSON message property after double newline", () => {
-        const error = new Error('Header message\n\n{"message": "JSON message content"}');
+        const error = new Error(
+          'Header message\n\n{"message": "JSON message content"}',
+        );
         const result = analyzeError(error, null);
 
         expect(result.parsedError).toBe('"JSON message content"');
       });
 
       it("should return raw JSON when no error or message property", () => {
-        const error = new Error('Header message\n\n{"code": 404, "details": "Not found"}');
+        const error = new Error(
+          'Header message\n\n{"code": 404, "details": "Not found"}',
+        );
         const result = analyzeError(error, null);
 
-        expect(result.parsedError).toBe('{"code": 404, "details": "Not found"}');
+        expect(result.parsedError).toBe(
+          '{"code": 404, "details": "Not found"}',
+        );
       });
 
       it("should handle invalid JSON after double newline", () => {
-        const error = new Error('Header message\n\n{invalid json}');
+        const error = new Error("Header message\n\n{invalid json}");
         const result = analyzeError(error, null);
 
-        expect(result.parsedError).toBe('{invalid json}');
+        expect(result.parsedError).toBe("{invalid json}");
       });
 
       it("should handle multiple double newlines", () => {
-        const error = new Error('Header\n\nFirst section\n\nSecond section');
+        const error = new Error("Header\n\nFirst section\n\nSecond section");
         const result = analyzeError(error, null);
 
-        expect(result.parsedError).toBe('First section\n\nSecond section');
+        expect(result.parsedError).toBe("First section\n\nSecond section");
       });
 
       it("should handle empty string after double newline", () => {
-        const error = new Error('Header message\n\n');
+        const error = new Error("Header message\n\n");
         const result = analyzeError(error, null);
 
-        expect(result.parsedError).toBe('');
+        expect(result.parsedError).toBe("");
       });
 
       it("should handle complex nested JSON", () => {
@@ -128,8 +135,8 @@ describe("errorAnalysis", () => {
           error: {
             code: 400,
             message: "Bad Request",
-            details: ["Invalid parameter", "Missing field"]
-          }
+            details: ["Invalid parameter", "Missing field"],
+          },
         };
         const error = new Error(`Header\n\n${JSON.stringify(complexJson)}`);
         const result = analyzeError(error, null);
@@ -224,20 +231,22 @@ describe("errorAnalysis", () => {
       it("should use selectedModel title and provider", () => {
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai"
+          provider: "openai",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
 
         expect(result.modelTitle).toBe("GPT-4");
         expect(result.providerName).toBe("OpenAI");
-        expect(result.apiKeyUrl).toBe("https://platform.openai.com/account/api-keys");
+        expect(result.apiKeyUrl).toBe(
+          "https://platform.openai.com/account/api-keys",
+        );
       });
 
       it("should use selectedModel info when no matching provider is found", () => {
         const selectedModel = {
           title: "Custom Model",
-          provider: "unknown-provider"
+          provider: "unknown-provider",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -249,19 +258,21 @@ describe("errorAnalysis", () => {
 
       it("should handle selectedModel with missing title", () => {
         const selectedModel = {
-          provider: "openai"
+          provider: "openai",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
 
         expect(result.modelTitle).toBe(undefined);
         expect(result.providerName).toBe("OpenAI");
-        expect(result.apiKeyUrl).toBe("https://platform.openai.com/account/api-keys");
+        expect(result.apiKeyUrl).toBe(
+          "https://platform.openai.com/account/api-keys",
+        );
       });
 
       it("should handle selectedModel with missing provider", () => {
         const selectedModel = {
-          title: "Custom Model"
+          title: "Custom Model",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -286,19 +297,21 @@ describe("errorAnalysis", () => {
       it("should match Anthropic provider", () => {
         const selectedModel = {
           title: "Claude 3.5 Sonnet",
-          provider: "anthropic"
+          provider: "anthropic",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
 
         expect(result.providerName).toBe("Anthropic");
-        expect(result.apiKeyUrl).toBe("https://console.anthropic.com/account/keys");
+        expect(result.apiKeyUrl).toBe(
+          "https://console.anthropic.com/account/keys",
+        );
       });
 
       it("should match Groq provider", () => {
         const selectedModel = {
           title: "Llama 3.1 70B",
-          provider: "groq"
+          provider: "groq",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -310,7 +323,7 @@ describe("errorAnalysis", () => {
       it("should match provider with no apiKeyUrl", () => {
         const selectedModel = {
           title: "Llama 3.1",
-          provider: "ollama"
+          provider: "ollama",
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -322,7 +335,7 @@ describe("errorAnalysis", () => {
       it("should be case sensitive for provider matching", () => {
         const selectedModel = {
           title: "GPT-4",
-          provider: "OpenAI" // Different case
+          provider: "OpenAI", // Different case
         };
         const error = new Error("Test error");
         const result = analyzeError(error, selectedModel);
@@ -334,19 +347,25 @@ describe("errorAnalysis", () => {
 
     describe("complex error scenarios", () => {
       it("should handle error with JSON message and status code", () => {
-        const error = new Error('HTTP 429 Rate Limited\n\n{"error": "Too many requests", "retry_after": 60}');
+        const error = new Error(
+          'HTTP 429 Rate Limited\n\n{"error": "Too many requests", "retry_after": 60}',
+        );
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai"
+          provider: "openai",
         };
         const result = analyzeError(error, selectedModel);
 
         expect(result.parsedError).toBe('"Too many requests"');
         expect(result.statusCode).toBe(429);
-        expect(result.message).toBe('HTTP 429 Rate Limited\n\n{"error": "Too many requests", "retry_after": 60}');
+        expect(result.message).toBe(
+          'HTTP 429 Rate Limited\n\n{"error": "Too many requests", "retry_after": 60}',
+        );
         expect(result.modelTitle).toBe("GPT-4");
         expect(result.providerName).toBe("OpenAI");
-        expect(result.apiKeyUrl).toBe("https://platform.openai.com/account/api-keys");
+        expect(result.apiKeyUrl).toBe(
+          "https://platform.openai.com/account/api-keys",
+        );
       });
 
       it("should handle error with complex nested JSON structure", () => {
@@ -355,13 +374,15 @@ describe("errorAnalysis", () => {
             message: "Invalid request",
             type: "invalid_request_error",
             param: "model",
-            code: "model_not_found"
-          }
+            code: "model_not_found",
+          },
         };
-        const error = new Error(`400 Bad Request\n\n${JSON.stringify(errorObj)}`);
+        const error = new Error(
+          `400 Bad Request\n\n${JSON.stringify(errorObj)}`,
+        );
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai"
+          provider: "openai",
         };
         const result = analyzeError(error, selectedModel);
 
@@ -388,14 +409,16 @@ describe("errorAnalysis", () => {
       });
 
       it("should handle empty JSON object", () => {
-        const error = new Error('Header\n\n{}');
+        const error = new Error("Header\n\n{}");
         const result = analyzeError(error, null);
 
-        expect(result.parsedError).toBe('{}');
+        expect(result.parsedError).toBe("{}");
       });
 
       it("should handle JSON with null values", () => {
-        const error = new Error('Header\n\n{"error": null, "message": "Something went wrong"}');
+        const error = new Error(
+          'Header\n\n{"error": null, "message": "Something went wrong"}',
+        );
         const result = analyzeError(error, null);
 
         expect(result.parsedError).toBe('"Something went wrong"');
@@ -439,7 +462,7 @@ describe("errorAnalysis", () => {
       it("should handle circular JSON references gracefully", () => {
         const obj: any = { name: "test" };
         obj.self = obj;
-        
+
         // This would normally cause JSON.stringify to throw
         const error = new Error('Header\n\n{"error": "circular reference"}');
         const result = analyzeError(error, null);
@@ -458,36 +481,46 @@ describe("errorAnalysis", () => {
 
     describe("real-world error scenarios", () => {
       it("should handle OpenAI API key error", () => {
-        const error = new Error('401 Unauthorized\n\n{"error": {"message": "Invalid API key", "type": "invalid_request_error"}}');
+        const error = new Error(
+          '401 Unauthorized\n\n{"error": {"message": "Invalid API key", "type": "invalid_request_error"}}',
+        );
         const selectedModel = {
           title: "GPT-4",
-          provider: "openai"
+          provider: "openai",
         };
         const result = analyzeError(error, selectedModel);
 
-        expect(result.parsedError).toBe('{"message": "Invalid API key", "type": "invalid_request_error"}');
+        expect(result.parsedError).toBe(
+          '{"message": "Invalid API key", "type": "invalid_request_error"}',
+        );
         expect(result.statusCode).toBe(401);
-        expect(result.apiKeyUrl).toBe("https://platform.openai.com/account/api-keys");
+        expect(result.apiKeyUrl).toBe(
+          "https://platform.openai.com/account/api-keys",
+        );
       });
 
       it("should handle Anthropic rate limit error", () => {
-        const error = new Error('429 Too Many Requests\n\n{"error": {"type": "rate_limit_error", "message": "Rate limit exceeded"}}');
+        const error = new Error(
+          '429 Too Many Requests\n\n{"error": {"type": "rate_limit_error", "message": "Rate limit exceeded"}}',
+        );
         const selectedModel = {
           title: "Claude 3.5 Sonnet",
-          provider: "anthropic"
+          provider: "anthropic",
         };
         const result = analyzeError(error, selectedModel);
 
         expect(result.statusCode).toBe(429);
         expect(result.providerName).toBe("Anthropic");
-        expect(result.parsedError).toBe('{"type": "rate_limit_error", "message": "Rate limit exceeded"}');
+        expect(result.parsedError).toBe(
+          '{"type": "rate_limit_error", "message": "Rate limit exceeded"}',
+        );
       });
 
       it("should handle network connectivity error", () => {
         const error = new Error("Network request failed");
         const selectedModel = {
           title: "Local Model",
-          provider: "ollama"
+          provider: "ollama",
         };
         const result = analyzeError(error, selectedModel);
 

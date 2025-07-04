@@ -10,21 +10,37 @@ export interface ErrorAnalysis {
 }
 
 function parseErrorMessage(fullErrMsg: string): string {
-  if (!fullErrMsg.includes("\n\n")) {
+  if (
+    !fullErrMsg ||
+    typeof fullErrMsg !== "string" ||
+    !fullErrMsg.includes("\n\n")
+  ) {
     return fullErrMsg;
   }
 
   const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
   try {
     const parsed = JSON.parse(msg);
-    return JSON.stringify(parsed.error ?? parsed.message ?? msg);
+    if (parsed.error !== undefined && parsed.error !== null) {
+      return JSON.stringify(parsed.error);
+    }
+    if (parsed.message !== undefined && parsed.message !== null) {
+      return JSON.stringify(parsed.message);
+    }
+    return msg;
   } catch (e) {
     return msg;
   }
 }
 
-export function analyzeError(error: unknown, selectedModel: any): ErrorAnalysis {
-  const parsedError = parseErrorMessage((error as any)?.message || "");
+export function analyzeError(
+  error: unknown,
+  selectedModel: any,
+): ErrorAnalysis {
+  const errorMessage = (error as any)?.message;
+  const parsedError = parseErrorMessage(
+    typeof errorMessage === "string" ? errorMessage : "",
+  );
 
   // Collect model information to display useful error info
   let modelTitle = "Chat model";
@@ -60,7 +76,17 @@ export function analyzeError(error: unknown, selectedModel: any): ErrorAnalysis 
   ) {
     message = error["message"];
     const parts = message?.split(" ") ?? [];
-    if (parts.length > 1) {
+
+    // Handle single word case (like "404")
+    if (parts.length === 1) {
+      const trimmed = parts[0].trim();
+      if (trimmed !== "") {
+        const code = Number(trimmed);
+        if (!Number.isNaN(code)) {
+          statusCode = code;
+        }
+      }
+    } else if (parts.length > 1) {
       const status = parts[0] === "HTTP" ? parts[1] : parts[0];
       if (status) {
         const code = Number(status);
