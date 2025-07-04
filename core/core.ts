@@ -722,8 +722,8 @@ export class Core {
       const EDIT_AGGREGATION_OPTIONS = {
         deltaT: 1.0,
         deltaL: 5,
-        maxEdits: 250,
-        maxDuration: 100.0,
+        maxEdits: 500,
+        maxDuration: 120.0,
         contextSize: 5,
       };
 
