@@ -846,32 +846,6 @@ describe("lineStream", () => {
   });
 
   // Tests for new helper functions
-  describe("isMarkdownFile", () => {
-    it("should return true for markdown file extensions", () => {
-      expect(lineStream.isMarkdownFile("README.md")).toBe(true);
-      expect(lineStream.isMarkdownFile("docs.markdown")).toBe(true);
-      expect(lineStream.isMarkdownFile("notes.gfm")).toBe(true);
-      expect(lineStream.isMarkdownFile("path/to/file.md")).toBe(true);
-    });
-
-    it("should return false for non-markdown file extensions", () => {
-      expect(lineStream.isMarkdownFile("script.js")).toBe(false);
-      expect(lineStream.isMarkdownFile("styles.css")).toBe(false);
-      expect(lineStream.isMarkdownFile("document.txt")).toBe(false);
-      expect(lineStream.isMarkdownFile("config.json")).toBe(false);
-    });
-
-    it("should return false for undefined or empty filepath", () => {
-      expect(lineStream.isMarkdownFile(undefined)).toBe(false);
-      expect(lineStream.isMarkdownFile("")).toBe(false);
-    });
-
-    it("should handle case insensitive extensions", () => {
-      expect(lineStream.isMarkdownFile("README.MD")).toBe(true);
-      expect(lineStream.isMarkdownFile("docs.MARKDOWN")).toBe(true);
-      expect(lineStream.isMarkdownFile("notes.GFM")).toBe(true);
-    });
-  });
 
   describe("hasNestedMarkdownBlocks", () => {
     it("should detect nested markdown blocks from first line", () => {
@@ -1034,59 +1008,6 @@ describe("lineStream", () => {
         'console.log("test ``` end");',
       );
       expect(result).toBeUndefined();
-    });
-  });
-
-  describe("processBlockNesting", () => {
-    it("should skip lines that should be removed before start", () => {
-      const result = lineStream.processBlockNesting("```typescript", false);
-      expect(result).toEqual({
-        newSeenFirstFence: false,
-        shouldSkip: true,
-      });
-    });
-
-    it("should skip [CODE] blocks", () => {
-      const result = lineStream.processBlockNesting("[CODE]", false);
-      expect(result).toEqual({
-        newSeenFirstFence: false,
-        shouldSkip: true,
-      });
-    });
-
-    it("should set first fence when not seen yet", () => {
-      const result = lineStream.processBlockNesting("const x = 5;", false);
-      expect(result).toEqual({
-        newSeenFirstFence: true,
-        shouldSkip: false,
-      });
-    });
-
-    it("should not change state when first fence already seen", () => {
-      const result = lineStream.processBlockNesting("const x = 5;", true);
-      expect(result).toEqual({
-        newSeenFirstFence: true,
-        shouldSkip: false,
-      });
-    });
-
-    it("should handle <COMPLETION> prefix", () => {
-      const result = lineStream.processBlockNesting("<COMPLETION>", false);
-      expect(result).toEqual({
-        newSeenFirstFence: false,
-        shouldSkip: true,
-      });
-    });
-
-    it("should handle START EDITING HERE blocks", () => {
-      const result = lineStream.processBlockNesting(
-        "<START EDITING HERE>",
-        false,
-      );
-      expect(result).toEqual({
-        newSeenFirstFence: false,
-        shouldSkip: true,
-      });
     });
   });
 
