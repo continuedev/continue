@@ -52,6 +52,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "cohere",
   "sagemaker",
   "continue-proxy",
   "mistral",
@@ -65,6 +66,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
+  "cohere",
   "gemini",
   "msty",
   "anthropic",
@@ -89,6 +91,8 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "gpt-4o-mini",
   "gpt-4-vision",
   "claude-3",
+  "c4ai-aya-vision-8b",
+  "c4ai-aya-vision-32b",
   "gemini-ultra",
   "gemini-1.5-pro",
   "gemini-1.5-flash",
@@ -140,6 +144,7 @@ function modelSupportsImages(
 const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
+  "cohere",
   "sagemaker",
   "deepinfra",
   "gemini",
@@ -176,12 +181,14 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   if (
     lower.includes("gpt") ||
     lower.includes("command") ||
+    lower.includes("aya") ||
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini") ||
     lower.includes("grok") ||
     lower.includes("moonshot") ||
-    lower.includes("mercury")
+    lower.includes("mercury") ||
+    /^o\d/.test(lower)
   ) {
     return undefined;
   }

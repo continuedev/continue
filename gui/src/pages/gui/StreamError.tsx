@@ -1,4 +1,5 @@
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   ClipboardIcon,
   Cog6ToothIcon,
@@ -7,35 +8,23 @@ import {
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
+import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
 import ToggleDiv from "../../components/ToggleDiv";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { selectSelectedProfile } from "../../redux/";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
+import { selectSelectedProfile } from "../../redux/slices/profilesSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isLocalProfile } from "../../util";
-import { providers } from "../AddNewModel/configs/providers";
+import { analyzeError } from "../../util/errorAnalysis";
 import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
 
 interface StreamErrorProps {
   error: unknown;
-}
-
-function parseErrorMessage(fullErrMsg: string): string {
-  if (!fullErrMsg.includes("\n\n")) {
-    return fullErrMsg;
-  }
-
-  const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
-  try {
-    const parsed = JSON.parse(msg);
-    return JSON.stringify(parsed.error ?? parsed.message ?? msg);
-  } catch (e) {
-    return msg;
-  }
 }
 
 const StreamErrorDialog = ({ error }: StreamErrorProps) => {
@@ -44,11 +33,16 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
+  const { mainEditor } = useMainEditor();
 
-  const parsedError = useMemo<string>(
-    () => parseErrorMessage((error as any)?.message || ""),
-    [error],
-  );
+  const {
+    parsedError,
+    statusCode,
+    message,
+    modelTitle,
+    providerName,
+    apiKeyUrl,
+  } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
   const handleRefreshProfiles = () => {
     void refreshProfiles();
@@ -60,56 +54,16 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     void navigator.clipboard.writeText(parsedError);
   };
 
-  // Collect model information to display useful error info
-  let modelTitle = "Chat model";
-  let providerName = "the model provider";
-  let apiKeyUrl: string | undefined = undefined;
-
-  if (selectedModel) {
-    modelTitle = selectedModel.title;
-    providerName = selectedModel.provider;
-
-    // If there's a matching provider from add model form provider info
-    // We can get more info
-    const foundProvider = Object.values(providers).find(
-      (p) => p?.provider === selectedModel.provider,
-    );
-    if (foundProvider) {
-      providerName = foundProvider.title;
-      if (foundProvider.apiKeyUrl) {
-        apiKeyUrl = foundProvider.apiKeyUrl;
-      }
-    }
-  }
-
-  let message: undefined | string = undefined;
-  let statusCode: undefined | number = undefined;
-
-  // Attempt to get error message and status code from error
-  if (
-    error &&
-    (error instanceof Error || typeof error === "object") &&
-    "message" in error &&
-    typeof error["message"] === "string"
-  ) {
-    message = error["message"];
-    const parts = message?.split(" ") ?? [];
-    if (parts.length > 1) {
-      const status = parts[0] === "HTTP" ? parts[1] : parts[0];
-      if (status) {
-        const code = Number(status);
-        if (!Number.isNaN(code)) {
-          statusCode = code;
-        }
-      }
-    }
-  }
+  const history = useAppSelector((store) => store.session.history);
 
   const checkKeysButton = apiKeyUrl ? (
     <GhostButton
       className="flex items-center"
       onClick={() => {
-        ideMessenger.post("openUrl", apiKeyUrl!);
+        ideMessenger.post("controlPlane/openUrl", {
+          path: apiKeyUrl,
+          orgSlug: undefined,
+        });
       }}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
@@ -131,6 +85,48 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   );
 
+  const resubmitButton = (
+    <GhostButton
+      className="flex items-center"
+      onClick={() => {
+        let index = -1;
+        for (let i = history.length - 1; i >= 0; i--) {
+          if (
+            history[i].message.role === "user" ||
+            history[i].message.role === "tool"
+          ) {
+            index = i;
+            break;
+          }
+        }
+
+        if (!mainEditor) {
+          console.error("Main editor not found, cannot resubmit message.");
+          return;
+        }
+
+        const editorState =
+          index === -1 ? mainEditor.getJSON() : history[index].editorState;
+
+        void dispatch(
+          streamResponseThunk({
+            editorState,
+            modifiers: {
+              noContext: true,
+              useCodebase: false,
+            },
+            index: index === -1 ? 0 : index,
+          }),
+        );
+        dispatch(setShowDialog(false));
+        dispatch(setDialogMessage(undefined));
+      }}
+    >
+      <ArrowPathIcon className="mr-1.5 h-3.5 w-3.5" />
+      <span>Resubmit last message</span>
+    </GhostButton>
+  );
+
   if (
     parsedError === "You have exceeded the chat limit for the Models Add-On."
   ) {
@@ -138,7 +134,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   }
 
   let errorContent = (
-    <div className="mb-3 mt-1">
+    <div className="mb-1 mt-3">
       <div className="m-0 p-0">
         <p className="m-0 mb-2 p-0">
           There was an error handling the response from{" "}
@@ -148,6 +144,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           Please try to submit your message again, and if the error persists,
           let us know by reporting the issue using the buttons below.
         </p>
+        <div className="mt-3">{resubmitButton}</div>
       </div>
     </div>
   );
@@ -233,7 +230,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (
     message &&
     (message.toLowerCase().includes("overloaded") ||
-      message.toLowerCase().includes("malformed"))
+      message.toLowerCase().includes("malformed json"))
   ) {
     errorContent = (
       <div className="flex flex-col gap-2">
@@ -299,7 +296,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("openUrl", GITHUB_LINK);
+              ideMessenger.post("controlPlane/openUrl", {
+                path: GITHUB_LINK,
+                orgSlug: undefined,
+              });
             }}
           >
             <GithubIcon className="h-5 w-5" />
@@ -308,7 +308,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("openUrl", DISCORD_LINK);
+              ideMessenger.post("controlPlane/openUrl", {
+                path: DISCORD_LINK,
+                orgSlug: undefined,
+              });
             }}
           >
             <DiscordIcon className="h-5 w-5" />

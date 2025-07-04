@@ -405,7 +405,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
           parameters: tool.function.parameters,
         },
       }));
-      chatOptions.stream = false; // Cannot set stream = true for tools calls
     }
     const headers: Record<string, string> = {
       "Content-Type": "application/json",

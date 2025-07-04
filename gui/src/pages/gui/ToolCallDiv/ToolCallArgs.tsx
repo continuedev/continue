@@ -27,7 +27,7 @@ export const ArgsToggleIcon = ({
         }}
         className={`hover:description-muted/30 cursor-pointer select-none rounded px-1 py-0.5 hover:opacity-80 ${isShowing ? "bg-description-muted/30" : "bg-transparent"}`}
       >
-        <CodeBracketIcon className="h-2.5 w-2.5 flex-shrink-0 opacity-60" />
+        <CodeBracketIcon className="h-3 w-3 flex-shrink-0 opacity-60" />
       </div>
       <ToolTip id={argsTooltipId}>
         {isShowing ? "Hide args" : "Show args"}
@@ -55,9 +55,7 @@ export const ArgsItems = ({ args, isShowing }: ArgsItemsProps) => {
       {args.map(([key, value]) => (
         <div key={key} className="flex flex-row items-center gap-2 py-0.5">
           <span className="text-lightgray">{key}:</span>
-          <code className="line-clamp-1 break-all">
-            {JSON.stringify(value)}
-          </code>
+          <code className="break-all">{JSON.stringify(value)}</code>
         </div>
       ))}
     </div>

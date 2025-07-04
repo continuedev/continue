@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import { EditorView, TextEditor } from "vscode-extension-tester";
 
 import { AutocompleteActions } from "../actions/Autocomplete.actions";
@@ -22,5 +23,9 @@ describe("Autocomplete", () => {
 
   it("Should display completions", async () => {
     await AutocompleteActions.testCompletions(editor);
+  }).timeout(DEFAULT_TIMEOUT.XL);
+  it("Should force a completion using the command", async () => {
+    const ghostText = await AutocompleteActions.forceCompletion(editor);
+    expect(ghostText).to.not.be.empty;
   }).timeout(DEFAULT_TIMEOUT.XL);
 });

@@ -292,6 +292,7 @@ export abstract class BaseLLM implements ILLM {
       apiKey: this.apiKey ?? "",
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
+      env: this._llmOptions.env,
     });
   }
 
@@ -383,6 +384,50 @@ export abstract class BaseLLM implements ILLM {
     }
   }
 
+  private async parseError(resp: any): Promise<Error> {
+    let text = await resp.text();
+
+    if (resp.status === 404 && !resp.url.includes("/v1")) {
+      const parsedError = JSON.parse(text);
+      const errorMessageRaw = parsedError?.error ?? parsedError?.message;
+      const error =
+        typeof errorMessageRaw === "string"
+          ? errorMessageRaw.replace(/"/g, "'")
+          : undefined;
+      let model = error?.match(/model '(.*)' not found/)?.[1];
+      if (model && resp.url.match("127.0.0.1:11434")) {
+        text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+        return new LLMError(text, this); // No need to add HTTP status details
+      } else if (text.includes("/api/chat")) {
+        text =
+          "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
+      } else {
+        text =
+          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+      }
+    } else if (resp.status === 404 && resp.url.includes("api.openai.com")) {
+      text =
+        "You may need to add pre-paid credits before using the OpenAI API.";
+    } else if (
+      resp.status === 401 &&
+      (resp.url.includes("api.mistral.ai") ||
+        resp.url.includes("codestral.mistral.ai"))
+    ) {
+      if (resp.url.includes("codestral.mistral.ai")) {
+        return new Error(
+          "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
+        );
+      } else {
+        return new Error(
+          "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
+        );
+      }
+    }
+    return new Error(
+      `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
+    );
+  }
+
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
@@ -398,44 +443,9 @@ export abstract class BaseLLM implements ILLM {
           if (resp.status === 499) {
             return resp; // client side cancellation
           }
-          let text = await resp.text();
-          if (resp.status === 404 && !resp.url.includes("/v1")) {
-            const error = JSON.parse(text)?.error?.replace(/"/g, "'");
-            let model = error?.match(/model '(.*)' not found/)?.[1];
-            if (model && resp.url.match("127.0.0.1:11434")) {
-              text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-              throw new LLMError(text, this); // No need to add HTTP status details
-            } else if (text.includes("/api/chat")) {
-              text =
-                "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
-            } else {
-              text =
-                "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
-            }
-          } else if (
-            resp.status === 404 &&
-            resp.url.includes("api.openai.com")
-          ) {
-            text =
-              "You may need to add pre-paid credits before using the OpenAI API.";
-          } else if (
-            resp.status === 401 &&
-            (resp.url.includes("api.mistral.ai") ||
-              resp.url.includes("codestral.mistral.ai"))
-          ) {
-            if (resp.url.includes("codestral.mistral.ai")) {
-              throw new Error(
-                "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
-              );
-            } else {
-              throw new Error(
-                "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
-              );
-            }
-          }
-          throw new Error(
-            `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
-          );
+
+          const error = await this.parseError(resp);
+          throw error;
         }
 
         return resp;
@@ -491,26 +501,30 @@ export abstract class BaseLLM implements ILLM {
     const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
     for (const msg of msgsCopy) {
-      let contentToShow = "";
-      if (msg.role === "tool") {
-        contentToShow = msg.content;
-      } else if (msg.role === "assistant" && msg.toolCalls) {
-        contentToShow = msg.toolCalls
-          ?.map(
-            (toolCall) =>
-              `${toolCall.function?.name}(${toolCall.function?.arguments})`,
-          )
-          .join("\n");
-      } else if ("content" in msg) {
-        if (Array.isArray(msg.content)) {
-          msg.content = renderChatMessage(msg);
-        }
-        contentToShow = msg.content;
-      }
-
-      formatted += `<${msg.role}>\n${contentToShow}\n\n`;
+      formatted += this._formatChatMessage(msg);
     }
     return formatted;
+  }
+
+  private _formatChatMessage(msg: ChatMessage): string {
+    let contentToShow = "";
+    if (msg.role === "tool") {
+      contentToShow = msg.content;
+    } else if (msg.role === "assistant" && msg.toolCalls) {
+      contentToShow = msg.toolCalls
+        ?.map(
+          (toolCall) =>
+            `${toolCall.function?.name}(${toolCall.function?.arguments})`,
+        )
+        .join("\n");
+    } else if ("content" in msg) {
+      if (Array.isArray(msg.content)) {
+        msg.content = renderChatMessage(msg);
+      }
+      contentToShow = msg.content;
+    }
+
+    return `<${msg.role}>\n${contentToShow}\n\n`;
   }
 
   protected async *_streamFim(
@@ -568,11 +582,12 @@ export abstract class BaseLLM implements ILLM {
           const result = fromChatCompletionChunk(chunk);
           if (result) {
             const content = renderChatMessage(result);
+            const formattedContent = this._formatChatMessage(result);
             interaction?.logItem({
               kind: "chunk",
-              chunk: content,
+              chunk: formattedContent,
             });
-            completion += content;
+            completion += formattedContent;
             yield content;
           }
         }
@@ -931,7 +946,7 @@ export abstract class BaseLLM implements ILLM {
             );
             const msg = fromChatResponse(response);
             yield msg;
-            completion = renderChatMessage(msg);
+            completion = this._formatChatMessage(msg);
           } else {
             // Stream true
             const stream = this.openaiAdapter.chatCompletionStream(
@@ -944,7 +959,7 @@ export abstract class BaseLLM implements ILLM {
             for await (const chunk of stream) {
               const result = fromChatCompletionChunk(chunk);
               if (result) {
-                completion += result.content;
+                completion += this._formatChatMessage(result);
                 interaction?.logItem({
                   kind: "message",
                   message: result,
@@ -960,7 +975,7 @@ export abstract class BaseLLM implements ILLM {
             completionOptions,
           )) {
             if (chunk.role === "assistant") {
-              completion += chunk.content;
+              completion += this._formatChatMessage(chunk);
             } else if (chunk.role === "thinking") {
               thinking += chunk.content;
             }
@@ -1068,9 +1083,17 @@ export abstract class BaseLLM implements ILLM {
         documents: chunks.map((chunk) => chunk.content),
       });
 
-      // Put them in the order they were given
-      const sortedResults = results.data.sort((a, b) => a.index - b.index);
-      return sortedResults.map((result) => result.relevance_score);
+      // Standard OpenAI format
+      if (results.data && Array.isArray(results.data)) {
+        return results.data
+          .sort((a, b) => a.index - b.index)
+          .map((result) => result.relevance_score);
+      }
+
+      throw new Error(
+        `Unexpected rerank response format from ${this.providerName}. ` +
+          `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`,
+      );
     }
 
     throw new Error(

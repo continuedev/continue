@@ -1,16 +1,16 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.*
-import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
-import com.github.continuedev.continueintellijextension.`continue`.GitService
+import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
-import com.intellij.ide.plugins.PluginManager
+import com.intellij.ide.BrowserUtil
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.notification.NotificationAction
@@ -18,6 +18,7 @@ import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
@@ -37,9 +38,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
-import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.Paths
 
 class IntelliJIDE(
     private val project: Project,
@@ -123,6 +122,10 @@ class IntelliJIDE(
 
     override suspend fun isTelemetryEnabled(): Boolean {
         return true
+    }
+
+    override suspend fun isWorkspaceRemote(): Boolean {
+        return this.getIdeInfo().remoteName != "local"
     }
 
     override suspend fun getUniqueId(): String {
@@ -211,7 +214,7 @@ class IntelliJIDE(
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {
-            Desktop.browse(URI(url))
+            BrowserUtil.browse(url)
         }
     }
 
@@ -292,34 +295,37 @@ class IntelliJIDE(
         continuePluginService.diffManager?.showDiff(filepath, newContents, stepIndex)
     }
 
-    override suspend fun getOpenFiles(): List<String> {
-        val fileEditorManager = FileEditorManager.getInstance(project)
-        return fileEditorManager.openFiles.mapNotNull { it.toUriOrNull() }.toList()
-    }
-
-    override suspend fun getCurrentFile(): Map<String, Any>? {
-        val fileEditorManager = FileEditorManager.getInstance(project)
-        val editor = fileEditorManager.selectedTextEditor
-        val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
-        return virtualFile?.toUriOrNull()?.let {
-            mapOf(
-                "path" to it,
-                "contents" to editor.document.text,
-                "isUntitled" to false
-            )
+    override suspend fun getOpenFiles(): List<String> =
+        withContext(Dispatchers.EDT) {
+            FileEditorManager.getInstance(project).openFiles
+                .mapNotNull { it.toUriOrNull() }
+                .toList()
         }
-    }
+
+    override suspend fun getCurrentFile(): Map<String, Any>? =
+        withContext(Dispatchers.EDT) {
+            val fileEditorManager = FileEditorManager.getInstance(project)
+            val document = fileEditorManager.selectedTextEditor?.document
+            val virtualFile = document?.let { FileDocumentManager.getInstance().getFile(it) }
+            virtualFile?.toUriOrNull()?.let {
+                mapOf(
+                    "path" to it,
+                    "contents" to document.text,
+                    "isUntitled" to false
+                )
+            }
+        }
 
     override suspend fun getPinnedFiles(): List<String> {
         // Returning open files for now as per existing code
         return getOpenFiles()
     }
 
-    override suspend fun getFileResults(pattern: String): List<String> {
+    override suspend fun getFileResults(pattern: String, maxResults: Int?): List<String> {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                val command = GeneralCommandLine(
+                var commandArgs = mutableListOf<String>(
                     ripgrep,
                     "--files",
                     "--iglob",
@@ -327,28 +333,33 @@ class IntelliJIDE(
                     "--ignore-file",
                     ".continueignore",
                     "--ignore-file",
-                    ".gitignore",
+                    ".gitignore"
                 )
+                if (maxResults != null) {
+                    commandArgs.add("--max-count")
+                    commandArgs.add(maxResults.toString())
+                }
+
+                val command = GeneralCommandLine(commandArgs)
     
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
                 return results.split("\n")
-            } catch (e: Exception) {
-                showToast(
-                    ToastType.ERROR, 
-                    "Error executing ripgrep: ${e.message}"
-                )
+            } catch (exception: Exception) {
+                val message = "Error executing ripgrep: ${exception.message}"
+                service<ContinueErrorService>().report(exception, message)
+                showToast(ToastType.ERROR, message)
                 return emptyList()
             }
         } else {
             throw NotImplementedError("Ripgrep not supported, this workspace is remote")
         }
     }
-    override suspend fun getSearchResults(query: String): String {
+    override suspend fun getSearchResults(query: String, maxResults: Int?): String {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                val command = GeneralCommandLine(
+                 val commandArgs = mutableListOf(
                     ripgrep,
                     "-i",
                     "--ignore-file",
@@ -357,19 +368,28 @@ class IntelliJIDE(
                     ".gitignore",
                     "-C",
                     "2",
-                    "--heading",
-                    "-e",
-                    query,
-                    "."
+                    "--heading"
                 )
+                
+                // Conditionally add maxResults flag
+                if (maxResults != null) {
+                    commandArgs.add("-m")
+                    commandArgs.add(maxResults.toString())
+                }
+                
+                // Add the search query and path
+                commandArgs.add("-e")
+                commandArgs.add(query)
+                commandArgs.add(".")
+
+                val command = GeneralCommandLine(commandArgs)
     
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
-            } catch (e: Exception) {
-                showToast(
-                    ToastType.ERROR, 
-                    "Error executing ripgrep: ${e.message}"
-                )
+            } catch (exception: Exception) {
+                val message = "Error executing ripgrep: ${exception.message}"
+                service<ContinueErrorService>().report(exception, message)
+                showToast(ToastType.ERROR, message)
                 return "Error: Unable to execute ripgrep command."
             }
         } else {
@@ -509,10 +529,9 @@ class IntelliJIDE(
             }
 
             val deferred = CompletableDeferred<String?>()
-            val icon = IconLoader.getIcon("/icons/continue.svg", javaClass)
 
             val notification = NotificationGroupManager.getInstance().getNotificationGroup("Continue")
-                .createNotification(message, notificationType).setIcon(icon)
+                .createNotification(message, notificationType).setIcon(Icons.Continue)
 
             val buttonTexts = otherParams.filterIsInstance<String>().toTypedArray()
             buttonTexts.forEach { buttonText ->

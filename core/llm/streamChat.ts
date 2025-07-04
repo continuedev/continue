@@ -1,6 +1,7 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ChatMessage, IDE, PromptLog } from "..";
 import { ConfigHandler } from "../config/ConfigHandler";
+import { usesFreeTrialApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
 import { Telemetry } from "../util/posthog";
@@ -58,6 +59,12 @@ export async function* llmStreamChat(
       },
       true,
     );
+    if (!slashCommand.run) {
+      console.error(
+        `Slash command ${command.name} (${command.source}) has no run function`,
+      );
+      throw new Error(`Slash command not found`);
+    }
 
     const gen = slashCommand.run({
       input,
@@ -84,6 +91,7 @@ export async function* llmStreamChat(
           config.requestOptions,
         ),
       completionOptions,
+      abortController,
     });
     let next = await gen.next();
     while (!next.done) {
@@ -135,10 +143,38 @@ export async function* llmStreamChat(
       true,
     );
 
+    void checkForFreeTrialExceeded(configHandler, messenger);
+
     if (!next.done) {
       throw new Error("Will never happen");
     }
 
     return next.value;
+  }
+}
+
+async function checkForFreeTrialExceeded(
+  configHandler: ConfigHandler,
+  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+) {
+  const { config } = await configHandler.getSerializedConfig();
+
+  // Only check if the user is using the free trial
+  if (config && !usesFreeTrialApiKey(config)) {
+    return;
+  }
+
+  try {
+    const freeTrialStatus =
+      await configHandler.controlPlaneClient.getFreeTrialStatus();
+    if (
+      freeTrialStatus &&
+      freeTrialStatus.chatCount &&
+      freeTrialStatus.chatCount > freeTrialStatus.chatLimit
+    ) {
+      void messenger.request("freeTrialExceeded", undefined);
+    }
+  } catch (error) {
+    console.error("Error checking free trial status:", error);
   }
 }

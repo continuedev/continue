@@ -1,7 +1,9 @@
 import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
+import { Telemetry } from "../../util/posthog";
 
 import ClipboardContextProvider from "./ClipboardContextProvider";
+import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
 import CurrentFileContextProvider from "./CurrentFileContextProvider";
@@ -25,6 +27,7 @@ import OSContextProvider from "./OSContextProvider";
 import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";
+import RulesContextProvider from "./RulesContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
@@ -55,6 +58,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   JiraIssuesContextProvider,
   PostgresContextProvider,
   DatabaseContextProvider,
+  CodebaseContextProvider,
   CodeContextProvider,
   CurrentFileContextProvider,
   URLContextProvider,
@@ -66,10 +70,18 @@ export const Providers: (typeof BaseContextProvider)[] = [
   MCPContextProvider,
   GitCommitContextProvider,
   ClipboardContextProvider,
+  RulesContextProvider,
 ];
 
 export function contextProviderClassFromName(
   name: ContextProviderName,
 ): typeof BaseContextProvider | undefined {
-  return Providers.find((cls) => cls.description.title === name);
+  const provider = Providers.find((cls) => cls.description.title === name);
+
+  void Telemetry.capture("context_provider_load", {
+    providerName: name,
+    found: !!provider, // also capture those which user expected to be present
+  });
+
+  return provider;
 }

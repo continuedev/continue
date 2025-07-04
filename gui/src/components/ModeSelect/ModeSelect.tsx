@@ -7,12 +7,7 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
 import { useMainEditor } from "../mainInput/TipTapEditor";
-import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "../ui/Listbox";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
 
 export function ModeSelect() {
@@ -39,7 +34,10 @@ export function ModeSelect() {
 
   const cycleMode = useCallback(() => {
     dispatch(setMode(mode === "chat" ? "agent" : "chat"));
-    mainEditor?.commands.focus();
+    // Only focus main editor if another one doesn't already have focus
+    if (!document.activeElement?.classList?.contains("ProseMirror")) {
+      mainEditor?.commands.focus();
+    }
   }, [mode, mainEditor]);
 
   const selectMode = useCallback(

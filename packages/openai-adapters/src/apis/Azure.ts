@@ -16,13 +16,13 @@ export class AzureApi extends OpenAIApi {
       provider: "openai",
     });
 
+    const { baseURL, defaultQuery } = this._getAzureBaseURL(azureConfig);
+
     this.openai = new OpenAI({
       apiKey: azureConfig.apiKey,
-      baseURL: this._getAzureBaseURL(azureConfig),
-      defaultQuery: azureConfig.env?.apiVersion
-        ? { "api-version": azureConfig.env.apiVersion }
-        : {},
+      baseURL,
       fetch: customFetch(azureConfig.requestOptions),
+      defaultQuery,
     });
   }
 
@@ -35,21 +35,47 @@ export class AzureApi extends OpenAIApi {
     return apiType === "azure-openai" || apiType === "azure";
   }
 
-  private _getAzureBaseURL(config: z.infer<typeof AzureConfigSchema>): string {
-    const baseURL = new URL(this.apiBase).toString().replace(/\/$/, "");
+  private _getAzureBaseURL(config: z.infer<typeof AzureConfigSchema>): {
+    baseURL: string;
+    defaultQuery: Record<string, string>;
+  } {
+    const url = new URL(this.apiBase);
+
+    // Copy search params to separate object for OpenAI
+    const queryParams: Record<string, string> = {};
+    for (const [key, value] of url.searchParams.entries()) {
+      queryParams[key] = value;
+    }
+
+    url.pathname = url.pathname.replace(/\/$/, ""); // Remove trailing slash if present
+    url.search = ""; // Clear original search params
 
     // Default is `azure-openai` in docs, but previously was `azure`
     if (this._isAzureOpenAI(config.env?.apiType)) {
       if (!config.env?.deployment) {
         throw new Error(
-          "Azure deployment is required if `apiType` is `azure-openai` or `azure`",
+          "`env.deployment` is a required configuration property for Azure OpenAI",
         );
       }
 
-      return `${baseURL}/openai/deployments/${config.env.deployment}`;
+      if (!config.env?.apiVersion) {
+        throw new Error(
+          "`env.apiVersion` is a required configuration property for Azure OpenAI",
+        );
+      }
+
+      const basePathname = `openai/deployments/${config.env.deployment}`;
+
+      url.pathname =
+        url.pathname === "/" ? basePathname : `${url.pathname}/${basePathname}`;
+
+      queryParams["api-version"] = config.env.apiVersion;
     }
 
-    return baseURL;
+    return {
+      baseURL: url.toString(),
+      defaultQuery: queryParams,
+    };
   }
 
   /**

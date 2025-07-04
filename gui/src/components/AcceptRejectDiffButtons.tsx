@@ -2,6 +2,9 @@ import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
+import { cancelToolCall } from "../redux/slices/sessionSlice";
 import { getMetaKeyLabel } from "../util";
 import { ToolTip } from "./gui/Tooltip";
 
@@ -20,8 +23,21 @@ export default function AcceptRejectAllButtons({
     (state) => state.status === "done",
   );
   const ideMessenger = useContext(IdeMessengerContext);
-
+  const currentToolCallApplyState = useAppSelector(
+    selectCurrentToolCallApplyState,
+  );
+  const dispatch = useAppDispatch();
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
+    if (
+      status === "rejectDiff" &&
+      currentToolCallApplyState?.status === "done"
+    ) {
+      dispatch(
+        cancelToolCall({
+          toolCallId: currentToolCallApplyState.toolCallId!,
+        }),
+      );
+    }
     for (const { filepath = "", streamId } of pendingApplyStates) {
       ideMessenger.post(status, {
         filepath,
@@ -51,8 +67,7 @@ export default function AcceptRejectAllButtons({
       >
         <div className="flex flex-row items-center gap-1">
           <XMarkIcon className="text-error h-4 w-4" />
-          <span>Reject</span>
-          <span className="xs:inline-block hidden">All</span>
+          <span className="hidden sm:inline">Reject</span>
         </div>
       </button>
       <ToolTip id="reject-shortcut" />
@@ -66,8 +81,7 @@ export default function AcceptRejectAllButtons({
       >
         <div className="flex flex-row items-center gap-1">
           <CheckIcon className="text-success h-4 w-4" />
-          <span>Accept</span>
-          <span className="xs:inline-block hidden">All</span>
+          <span className="hidden sm:inline">Accept</span>
         </div>
       </button>
       <ToolTip id="accept-shortcut" />

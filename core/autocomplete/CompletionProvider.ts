@@ -127,6 +127,7 @@ export class CompletionProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
+    force?: boolean,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
       // Create abort signal if not given
@@ -146,8 +147,12 @@ export class CompletionProvider {
       const options = await this._getAutocompleteOptions(llm);
 
       // Debounce
-      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
-        return undefined;
+      if (!force) {
+        if (
+          await this.debouncer.delayAndShouldDebounce(options.debounceDelay)
+        ) {
+          return undefined;
+        }
       }
 
       if (llm.promptTemplates?.autocomplete) {
