@@ -19,13 +19,16 @@ export function ToolTruncateHistoryIcon({
   }, [history]);
   const dispatch = useAppDispatch();
   const { mainEditor } = useMainEditor();
-  if (isStreaming || historyIndex === lastMessageIndex) {
+  if (historyIndex === lastMessageIndex) {
     return null;
   }
   return (
     <ToolbarButtonWithTooltip
-      tooltipContent="Trim chat to this message"
+      tooltipContent={isStreaming ? "" : "Trim chat to this message"}
       onClick={() => {
+        if (isStreaming) {
+          return;
+        }
         dispatch(
           truncateHistoryToMessage({
             index: historyIndex,
@@ -34,7 +37,9 @@ export function ToolTruncateHistoryIcon({
         mainEditor?.commands.focus();
       }}
     >
-      <BarsArrowUpIcon className="h-3 w-3 flex-shrink-0" />
+      <BarsArrowUpIcon
+        className={`h-3 w-3 flex-shrink-0 ${isStreaming ? "cursor-not-allowed" : "cursor-pointer"}`}
+      />
     </ToolbarButtonWithTooltip>
   );
 }
