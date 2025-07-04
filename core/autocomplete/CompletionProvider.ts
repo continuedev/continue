@@ -180,12 +180,13 @@ export class CompletionProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      const { prompt, prefix, suffix, completionOptions } = renderPromptWithTokenLimit({
-        snippetPayload,
-        workspaceDirs,
-        helper,
-        llm
-      });
+      const { prompt, prefix, suffix, completionOptions } =
+        renderPromptWithTokenLimit({
+          snippetPayload,
+          workspaceDirs,
+          helper,
+          llm,
+        });
 
       // Completion
       let completion: string | undefined = "";
@@ -202,8 +203,12 @@ export class CompletionProvider {
       } else {
         const multiline =
           !helper.options.transform || shouldCompleteMultiline(helper);
-        
-        const rawGeneration = await llm.complete(prompt, token, completionOptions);
+
+        const rawGeneration = await llm.complete(
+          prompt,
+          token,
+          completionOptions,
+        );
 
         const completionStream =
           this.completionStreamer.streamCompletionWithFilters(

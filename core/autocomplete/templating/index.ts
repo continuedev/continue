@@ -4,10 +4,14 @@ import { CompletionOptions } from "../..";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
-
 import { ILLM } from "../../index.js";
 import { DEFAULT_MAX_TOKENS } from "../../llm/constants.js";
-import { countTokens, getTokenCountingBufferSafety, pruneLinesFromBottom, pruneLinesFromTop } from "../../llm/countTokens";
+import {
+  countTokens,
+  getTokenCountingBufferSafety,
+  pruneLinesFromBottom,
+  pruneLinesFromTop,
+} from "../../llm/countTokens";
 import { getUriPathBasename } from "../../util/uri";
 import { SnippetPayload } from "../snippets";
 import { AutocompleteSnippet } from "../snippets/types";
@@ -184,7 +188,7 @@ function pruneLength(llm: ILLM, prompt: string): number {
   const safetyBuffer = getTokenCountingBufferSafety(contextLength);
   const maxAllowedPromptTokens = contextLength - reservedTokens - safetyBuffer;
   const promptTokenCount = countTokens(prompt, llm.model);
-  return promptTokenCount - maxAllowedPromptTokens
+  return promptTokenCount - maxAllowedPromptTokens;
 }
 
 export function renderPromptWithTokenLimit({
@@ -196,7 +200,7 @@ export function renderPromptWithTokenLimit({
   snippetPayload: SnippetPayload;
   workspaceDirs: string[];
   helper: HelperVars;
-  llm: ILLM | undefined
+  llm: ILLM | undefined;
 }): {
   prompt: string;
   prefix: string;
@@ -217,7 +221,11 @@ export function renderPromptWithTokenLimit({
 
   const snippets = getSnippets(helper, snippetPayload);
 
-  let { prompt, prefix: compiledPrefix, suffix: compiledSuffix } = buildPrompt(
+  let {
+    prompt,
+    prefix: compiledPrefix,
+    suffix: compiledSuffix,
+  } = buildPrompt(
     template,
     compilePrefixSuffix,
     prefix,
@@ -227,7 +235,7 @@ export function renderPromptWithTokenLimit({
     workspaceDirs,
     reponame,
   );
-  
+
   // Truncate prefix and suffix if prompt tokens exceed maxAllowedPromptTokens
   if (llm) {
     const prune = pruneLength(llm, prompt);
@@ -237,14 +245,28 @@ export function renderPromptWithTokenLimit({
       const suffixTokenCount = countTokens(suffix, helper.modelName);
       const totalContextTokens = prefixTokenCount + suffixTokenCount;
       if (totalContextTokens > 0) {
-        const dropPrefix = Math.ceil(tokensToDrop * (prefixTokenCount / totalContextTokens));
+        const dropPrefix = Math.ceil(
+          tokensToDrop * (prefixTokenCount / totalContextTokens),
+        );
         const dropSuffix = Math.ceil(tokensToDrop - dropPrefix);
         const allowedPrefixTokens = Math.max(0, prefixTokenCount - dropPrefix);
         const allowedSuffixTokens = Math.max(0, suffixTokenCount - dropSuffix);
-        prefix = pruneLinesFromTop(prefix, allowedPrefixTokens, helper.modelName);
-        suffix = pruneLinesFromBottom(suffix, allowedSuffixTokens, helper.modelName);
+        prefix = pruneLinesFromTop(
+          prefix,
+          allowedPrefixTokens,
+          helper.modelName,
+        );
+        suffix = pruneLinesFromBottom(
+          suffix,
+          allowedSuffixTokens,
+          helper.modelName,
+        );
       }
-      ({ prompt, prefix: compiledPrefix, suffix: compiledSuffix } = buildPrompt(
+      ({
+        prompt,
+        prefix: compiledPrefix,
+        suffix: compiledSuffix,
+      } = buildPrompt(
         template,
         compilePrefixSuffix,
         prefix,

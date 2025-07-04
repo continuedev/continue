@@ -480,5 +480,5 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop
+  pruneStringFromTop,
 };
