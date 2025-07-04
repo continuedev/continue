@@ -22,7 +22,7 @@ export const streamThunkWrapper = createAsyncThunk<
       );
     }
   } catch (e) {
-    dispatch(cancelStream());
+    await dispatch(cancelStream());
     dispatch(setDialogMessage(<StreamErrorDialog error={e} />));
     dispatch(setShowDialog(true));
   }

@@ -1,13 +1,13 @@
 import { CSSProperties } from "react";
 import ReactDOM from "react-dom";
 import { ITooltip, Tooltip } from "react-tooltip";
-import { vscBackground, vscForeground, vscInputBorder } from "..";
+import { vscBackground, vscForeground } from "..";
 import { fontSize } from "../../util";
 
 const TooltipStyles: CSSProperties = {
   fontSize: fontSize(-2),
   backgroundColor: vscBackground,
-  outline: `0.5px solid ${vscInputBorder}`,
+  outline: `0.5px solid ${vscForeground}`,
   color: vscForeground,
   padding: "4px 8px",
   zIndex: 1000,
@@ -26,7 +26,13 @@ export function ToolTip(props: ITooltip) {
   return (
     tooltipPortalDiv &&
     ReactDOM.createPortal(
-      <Tooltip {...props} style={combinedStyles} opacity={1} delayShow={200} />,
+      <Tooltip
+        {...props}
+        noArrow
+        style={combinedStyles}
+        opacity={1}
+        delayShow={200}
+      />,
       tooltipPortalDiv,
     )
   );

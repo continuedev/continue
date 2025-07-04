@@ -2,7 +2,7 @@ import { OnboardingModes } from "core/protocol/core";
 import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { CustomScrollbarDiv, defaultBorderRadius } from ".";
+import { CustomScrollbarDiv } from ".";
 import { AuthProvider } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
@@ -17,6 +17,7 @@ import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
+import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
 import {
@@ -29,7 +30,6 @@ import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
-  border-radius: ${defaultBorderRadius};
   position: relative;
   overflow-x: hidden;
 `;
@@ -190,6 +190,15 @@ const Layout = () => {
     "exitEditMode",
     async () => {
       await dispatch(exitEdit({}));
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "generateRule",
+    async () => {
+      dispatch(setShowDialog(true));
+      dispatch(setDialogMessage(<GenerateRuleDialog />));
     },
     [],
   );

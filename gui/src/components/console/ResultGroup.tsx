@@ -10,7 +10,11 @@ const ResultGroup = memo(function ResultGroup({ group }: ResultGroupProps) {
   return (
     <>
       {group.map((result, i) => (
-        <Result key={i} result={result} prevResult={group[i - 1]}></Result>
+        <Result
+          key={`${result.timestamp}-${i}`}
+          result={result}
+          prevResult={group[i - 1]}
+        ></Result>
       ))}
     </>
   );
