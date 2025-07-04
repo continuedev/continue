@@ -148,10 +148,18 @@ export class CodeRenderer {
   async highlightCode(
     code: string,
     language: string = "javascript",
+    currLineOffsetFromTop: number,
   ): Promise<string> {
     return await codeToHtml(code, {
       lang: language,
       theme: this.currentTheme,
+      decorations: [
+        {
+          start: { line: currLineOffsetFromTop, character: 0 },
+          end: { line: currLineOffsetFromTop, character: 0 },
+          properties: { class: "highlighted-line" },
+        },
+      ],
     });
   }
 
@@ -163,8 +171,15 @@ export class CodeRenderer {
     dimensions: Dimensions,
     lineHeight: number,
     options: ConversionOptions,
+    currLineOffsetFromTop: number,
   ): Promise<Buffer> {
-    const highlightedCodeHtml = await this.highlightCode(code, language);
+    const strokeWidth = 1;
+    const highlightedCodeHtml = await this.highlightCode(
+      code,
+      language,
+      currLineOffsetFromTop,
+    );
+    console.log(highlightedCodeHtml);
 
     const guts = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
@@ -176,10 +191,11 @@ export class CodeRenderer {
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}">
   <g>
-    <rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" stroke="${this.editorForeground}" stroke-width="1" />
+    <rect width="${dimensions.width}" height="${dimensions.height}" fill="${backgroundColor}" stroke="${this.editorForeground}" stroke-width="${strokeWidth}" />
     ${guts}
   </g>
 </svg>`;
+    console.log(svg);
 
     return Buffer.from(svg, "utf8");
   }
@@ -244,6 +260,7 @@ export class CodeRenderer {
     dimensions: Dimensions,
     lineHeight: number,
     options: ConversionOptions,
+    currLineOffsetFromTop: number,
   ): Promise<DataUri> {
     switch (options.imageType) {
       // case "png":
@@ -265,6 +282,7 @@ export class CodeRenderer {
           dimensions,
           lineHeight,
           options,
+          currLineOffsetFromTop,
         );
         return `data:image/svg+xml;base64,${svgBuffer.toString("base64")}`;
     }

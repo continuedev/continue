@@ -29,7 +29,7 @@ const SVG_CONFIG = {
   radius: 3,
   leftMargin: 40,
   defaultText: "",
-  lineSpacing: 1.2, // Line spacing multiplier
+  lineSpacing: 1.3, // Line spacing multiplier
   cursorOffset: 4, // Spaces to offset from cursor
 
   get fontSize() {
@@ -261,7 +261,12 @@ export class NextEditWindowManager {
     );
 
     // Create and apply decoration with the text.
-    await this.renderTooltip(editor, currCursorPos, newEditRangeSlice);
+    await this.renderTooltip(
+      editor,
+      currCursorPos,
+      newEditRangeSlice,
+      editableRegionStartLine,
+    );
 
     // Reserve tab and esc to either accept or reject the displayed next edit contents.
     await NextEditWindowManager.reserveTabAndEsc();
@@ -457,6 +462,7 @@ export class NextEditWindowManager {
    */
   private async createCodeRender(
     text: string,
+    currLineOffsetFromTop: number,
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
@@ -479,6 +485,7 @@ export class NextEditWindowManager {
         {
           imageType: "svg",
         },
+        currLineOffsetFromTop,
       );
 
       return {
@@ -498,8 +505,14 @@ export class NextEditWindowManager {
    */
   private async createCodeRenderDecoration(
     code: string,
+    position: vscode.Position,
+    editableRegionStartLine: number,
   ): Promise<vscode.TextEditorDecorationType | undefined> {
-    const uriAndDimensions = await this.createCodeRender(code);
+    const currLineOffsetFromTop = position.line - editableRegionStartLine;
+    const uriAndDimensions = await this.createCodeRender(
+      code,
+      currLineOffsetFromTop,
+    );
     if (!uriAndDimensions) {
       return undefined;
     }
@@ -508,38 +521,22 @@ export class NextEditWindowManager {
     const tipWidth = dimensions.width;
     const tipHeight = dimensions.height;
 
+    const offsetFromTop =
+      (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight +
+      SVG_CONFIG.strokeWidth * 2;
+
     return vscode.window.createTextEditorDecorationType({
       after: {
         contentIconPath: uri,
-        // border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px ${backgroundColour};
-        //           border-radius: ${SVG_CONFIG.radius}px;
-        //           filter: ${SVG_CONFIG.filter}`,
-        // width: `${tipWidth}px`,
-        // height: `${tipHeight}px`,
-        // border: `transparent; position: absolute; z-index: 1000;
-        //        box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke},
-        //                   inset 0 0 0 ${tipHeight}px ${backgroundColour};
-        //        border-radius: ${SVG_CONFIG.radius}px;
-        //        filter: ${SVG_CONFIG.filter};
-        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
         border: `transparent; position: absolute; z-index: 1000;
                box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px;
                filter: ${SVG_CONFIG.filter};
                border-radius: ${SVG_CONFIG.radius}px;
+               margin-top: ${-1 * offsetFromTop}px;
                margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
-        // border: `solid 1px white; position: absolute; z-index: 1000;
-        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
-        //        margin-top: 0em;`,
-        // border: `solid 1px white; position: absolute; z-index: 1000;
-        //        margin: 0em; padding: 0em;
-        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
-        //        margin-top: 0em;`,
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
-        // textDecoration: `none; transform: translateY(-100%);`,
       },
-      // Set a negative margin to make the decoration float if it starts to displace text.
-      // Also use absolute positioning.
       rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     });
   }
@@ -635,13 +632,18 @@ export class NextEditWindowManager {
     editor: vscode.TextEditor,
     position: vscode.Position,
     text: string,
+    editableRegionStartLine: number,
   ) {
     console.log("renderTooltip");
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
 
     // Create a new decoration with the text.
-    const decoration = await this.createCodeRenderDecoration(text);
+    const decoration = await this.createCodeRenderDecoration(
+      text,
+      position,
+      editableRegionStartLine,
+    );
     if (!decoration) {
       console.error("Failed to create decoration for text:", text);
       return;
