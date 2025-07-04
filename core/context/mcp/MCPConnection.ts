@@ -47,7 +47,8 @@ class MCPConnection {
   };
 
   constructor(public options: MCPOptions) {
-    this.transport = this.constructTransport(options);
+    // Don't construct transport in constructor to avoid blocking
+    this.transport = {} as Transport; // Will be set in connectClient
 
     this.client = new Client(
       {
@@ -132,7 +133,8 @@ class MCPConnection {
               });
             }),
             (async () => {
-              this.transport = this.constructTransport(this.options);
+              this.transport = await this.constructTransportAsync(this.options);
+
               try {
                 await this.client.connect(this.transport);
               } catch (error) {
@@ -295,7 +297,9 @@ class MCPConnection {
     };
   }
 
-  private constructTransport(options: MCPOptions): Transport {
+  private async constructTransportAsync(
+    options: MCPOptions,
+  ): Promise<Transport> {
     switch (options.transport.type) {
       case "stdio":
         const env: Record<string, string> = options.transport.env
@@ -309,7 +313,7 @@ class MCPConnection {
           // For non-Windows platforms, try to get the PATH from user shell
           if (process.platform !== "win32") {
             try {
-              const shellEnvPath = getEnvPathFromUserShell();
+              const shellEnvPath = await getEnvPathFromUserShell();
               if (shellEnvPath && shellEnvPath !== process.env.PATH) {
                 env.PATH = shellEnvPath;
               }
