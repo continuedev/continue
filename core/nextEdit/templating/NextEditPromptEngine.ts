@@ -24,7 +24,7 @@ type NextEditModelName = "mercury-coder-nextedit" | "this field is not used";
 const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   "mercury-coder-nextedit": {
     template:
-      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n\`\`\`{{{languageShorthand}}}\n{{{userExcerpts}}}\`\`\`",
+      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
   },
   "this field is not used": {
     template: "NEXT_EDIT",

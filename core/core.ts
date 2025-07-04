@@ -45,7 +45,6 @@ import {
   RangeInFile,
   ToolCall,
   type ContextItem,
-  type ContextItemId,
   type IDE,
 } from ".";
 
@@ -558,7 +557,6 @@ export class Core {
           : undefined,
         input: data.input,
         language: data.language,
-        onlyOneInsertion: false,
         overridePrompt: undefined,
         abortController,
       });
@@ -872,7 +870,7 @@ export class Core {
       this.messenger.send("toolCallPartialOutput", params);
     };
 
-    return await callTool(tool, toolCall, {
+    const result = await callTool(tool, toolCall, {
       config,
       ide: this.ide,
       llm: config.selectedModelByRole.chat,
@@ -883,6 +881,8 @@ export class Core {
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
     });
+
+    return result;
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -1100,10 +1100,9 @@ export class Core {
     }
 
     try {
-      const id: ContextItemId = {
-        providerTitle: provider.description.title,
-        itemId: uuidv4(),
-      };
+      void Telemetry.capture("context_provider_get_context_items", {
+        name: provider.description.title,
+      });
 
       const items = await provider.getContextItems(query, {
         config,
@@ -1127,7 +1126,10 @@ export class Core {
 
       return items.map((item) => ({
         ...item,
-        id,
+        id: {
+          providerTitle: provider.description.title,
+          itemId: item.uri?.value ?? uuidv4(),
+        },
       }));
     } catch (e) {
       let knownError = false;

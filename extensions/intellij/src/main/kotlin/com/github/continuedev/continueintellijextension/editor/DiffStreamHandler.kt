@@ -7,7 +7,7 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.command.undo.UndoManager
-import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.RangeHighlighter
@@ -42,7 +42,6 @@ class DiffStreamHandler(
     private var isRunning: Boolean = false
     private var hasAcceptedOrRejectedBlock: Boolean = false
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
-    private val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
     private val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
 
 
@@ -62,10 +61,10 @@ class DiffStreamHandler(
             numDiffs = diffBlocks.size,
             filepath = virtualFile?.url,
             fileContent = "not implemented",
-            toolCallId = toolCallId?.toString()
+            toolCallId = toolCallId
         )
 
-        continuePluginService.sendToWebview("updateApplyState", payload)
+        project.service<ContinuePluginService>().sendToWebview("updateApplyState", payload)
     }
 
     fun acceptAll() {
@@ -102,7 +101,7 @@ class DiffStreamHandler(
         isRunning = true
         sendUpdate(ApplyStateStatus.STREAMING)
 
-        continuePluginService.coreMessenger?.request(
+        project.service<ContinuePluginService>().coreMessenger?.request(
             "streamDiffLines",
             StreamDiffLinesPayload(
                 input = input,
