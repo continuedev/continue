@@ -54,6 +54,7 @@ type SessionState = {
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
+  readOnlyMode: boolean;
   isInEdit: boolean;
   codeBlockApplyStates: {
     states: ApplyState[];
@@ -73,6 +74,7 @@ const initialState: SessionState = {
   streamAborter: new AbortController(),
   symbols: {},
   mode: "chat",
+  readOnlyMode: false,
   isInEdit: false,
   codeBlockApplyStates: {
     states: [],
@@ -668,6 +670,9 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    setReadOnly: (state, action: PayloadAction<boolean>) => {
+      state.readOnlyMode = action.payload;
+    },
     setIsInEdit: (state, action: PayloadAction<boolean>) => {
       state.isInEdit = action.payload;
     },
@@ -768,6 +773,7 @@ export const {
   setToolGenerated,
   updateToolCallOutput,
   setMode,
+  setReadOnly,
   setIsSessionMetadataLoading,
   setAllSessionMetadata,
   addSessionMetadata,
