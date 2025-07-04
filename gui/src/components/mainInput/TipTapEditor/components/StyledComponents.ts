@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import {
-  defaultBorderRadius,
   lightGray,
   vscBadgeBackground,
   vscCommandCenterActiveBorder,
@@ -14,7 +13,7 @@ import { getFontSize } from "../../../../util";
 export const InputBoxDiv = styled.div<{}>`
   resize: none;
   font-family: inherit;
-  border-radius: ${defaultBorderRadius};
+  border-radius: 0.5rem;
   padding-bottom: 1px;
   margin: 0;
   height: auto;
