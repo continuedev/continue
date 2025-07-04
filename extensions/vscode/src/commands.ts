@@ -341,6 +341,11 @@ const getCommandsMap: (
       editDecorationManager.clear();
       void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
+    "continue.generateRule": async () => {
+      captureCommandTelemetry("generateRule");
+      focusGUI();
+      void sidebar.webviewProtocol?.request("generateRule", undefined);
+    },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 

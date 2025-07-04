@@ -349,6 +349,12 @@
         "command": "continue.forceNextEdit",
         "category": "Continue",
         "title": "Continue: Force Next Edit"
+      },
+      {
+        "command": "continue.generateRule",
+        "category": "Continue",
+        "title": "Generate Rule",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -478,6 +484,9 @@
         },
         {
           "command": "continue.enterEnterpriseLicenseKey"
+        },
+        {
+          "command": "continue.generateRule"
         }
       ],
       "editor/context": [
