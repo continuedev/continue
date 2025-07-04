@@ -300,7 +300,7 @@ export class LanceDbIndex implements CodebaseIndex {
           const vector = JSON.parse(item.vector);
           const { uuid, startLine, endLine, contents } = item;
 
-          cachedItems.push({
+          lanceRows.push({
             path,
             uuid,
             startLine,
