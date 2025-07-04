@@ -5,10 +5,11 @@ import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 class Anthropic extends BaseLLM {
+
   static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-3-5-sonnet-latest",
-    contextLength: 200_000,
+    contextLength: 200000,
     completionOptions: {
       model: "claude-3-5-sonnet-latest",
       maxTokens: 8192,
@@ -26,10 +27,21 @@ class Anthropic extends BaseLLM {
       model: options.model === "claude-2" ? "claude-2.1" : options.model,
       stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
       stream: options.stream ?? true,
-      tools: options.tools?.map((tool) => ({
+      tools: options.tools?.map((tool, index) => ({
         name: tool.function.name,
         description: tool.function.description,
         input_schema: tool.function.parameters,
+        // Add cache_control to last tool if cacheToolMessages is enabled
+        ...(this.cacheBehavior?.cacheToolMessages && index === options.tools!.length - 1
+          ? {
+                  cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                    ? {
+                        type: "ephemeral",
+                        ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                      }
+                    : { type: "ephemeral" },
+                }
+              : {}),
       })),
       thinking: options.reasoning
         ? {
@@ -45,6 +57,34 @@ class Anthropic extends BaseLLM {
         : undefined,
     };
 
+    // Debug tools caching
+    if (this.cacheBehavior?.cacheDebug && options.tools?.length) {
+      const totalToolsSize = options.tools.reduce((total, tool) => {
+        const toolSize = JSON.stringify({
+          name: tool.function.name,
+          description: tool.function.description,
+          parameters: tool.function.parameters
+        }).length;
+        return total + toolSize;
+      }, 0);
+
+      const estimatedToolsTokens = Math.ceil(totalToolsSize / 4);
+      const lastToolIndex = options.tools.length - 1;
+      const willCacheTools = this.cacheBehavior?.cacheToolMessages;
+
+      console.log(`[ANTHROPIC CACHE DEBUG] 🛠️ Tools Analysis:`, {
+        totalTools: options.tools.length,
+        totalSize: totalToolsSize,
+        estimatedTokens: estimatedToolsTokens,
+        willCacheTools: willCacheTools,
+        lastToolCached: willCacheTools ? options.tools[lastToolIndex].function.name : "none",
+        toolNames: options.tools.map(t => t.function.name),
+        preview: willCacheTools ?
+          `${options.tools[lastToolIndex].function.name}: ${options.tools[lastToolIndex].function.description?.substring(0, 100)}...` :
+          "caching disabled"
+      });
+  }
+
     return finalOptions;
   }
 
@@ -57,7 +97,6 @@ class Anthropic extends BaseLLM {
             type: "tool_result",
             tool_use_id: message.toolCallId,
             content: renderChatMessage(message) || undefined,
-            // Add caching support for tool results
             ...(addCaching
               ? {
                   cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
@@ -79,7 +118,6 @@ class Anthropic extends BaseLLM {
           id: toolCall.id,
           name: toolCall.function?.name,
           input: safeParseToolCallArgs(toolCall),
-          // Add caching support for assistant tool calls (last tool call only)
           ...(addCaching && index === message.toolCalls!.length - 1
             ? {
                 cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
@@ -144,7 +182,6 @@ class Anthropic extends BaseLLM {
         if (part.type === "text") {
           const newpart = {
             ...part,
-            // If multiple text parts, only add cache_control to the last one
             ...(addCaching && contentIdx === message.content.length - 1
               ? {
                   cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
@@ -170,18 +207,43 @@ class Anthropic extends BaseLLM {
     };
   }
 
-  protected shouldCacheMessage(
-    message: ChatMessage,
-    index: number,
-    filteredMessages: ChatMessage[],
-  ): boolean {
-    if (!this.cacheBehavior) return false;
+  // Extensible message selection strategy for cacheConversation
+  private selectMessagesToCache(filteredMessages: ChatMessage[]): number[] {
+    const strategy = "last_two" as "last_two" | "last_two_users" | "last_two_assistants" | "two_before_last";
 
-    // Get the cache plan for all messages
-    const cachePlan = this.calculateCachePlan(filteredMessages);
+    switch (strategy) {
+      case "last_two":
+        // Last 2 messages regardless of role
+        return filteredMessages.length >= 2 ?
+          [filteredMessages.length - 2, filteredMessages.length - 1] :
+          filteredMessages.length === 1 ? [0] : [];
 
-    // Check if this specific message is in the cache plan
-    return cachePlan.has(message);
+      case "last_two_users":
+        // Find last 2 user messages
+        return this.getLastTwoByRole(filteredMessages, "user");
+
+      case "last_two_assistants":
+        // Find last 2 assistant messages
+        return this.getLastTwoByRole(filteredMessages, "assistant");
+
+      case "two_before_last":
+        // Any 2 messages, but NOT the last one
+        return filteredMessages.length >= 3 ?
+          [filteredMessages.length - 3, filteredMessages.length - 2] :
+          filteredMessages.length === 2 ? [0] : [];
+
+      default:
+        return [];
+    }
+  }
+  private getLastTwoByRole(filteredMessages: ChatMessage[], role: string): number[] {
+    const roleIndices = filteredMessages
+      .map((msg, index) => (msg.role === role ? index : -1))
+      .filter((index) => index !== -1);
+
+    return roleIndices.length >= 2 ?
+      roleIndices.slice(-2) :
+      roleIndices;
   }
 
   private getMessageSize(message: ChatMessage): number {
@@ -196,118 +258,6 @@ class Anthropic extends BaseLLM {
     return 0;
   }
 
-  private meetsMinimumCacheSize(message: ChatMessage, model?: string): boolean {
-    const messageSize = this.getMessageSize(message);
-    const isHaiku = model?.includes("haiku") || false;
-
-    // Minimum cacheable sizes from Anthropic docs:
-    // - Haiku: 2048 tokens (~8192 chars)
-    // - Other models: 1024 tokens (~4096 chars)
-    const minChars = isHaiku ? 8192 : 4096;
-
-    return messageSize >= minChars;
-  }
-
-  private calculatePriority(message: ChatMessage, index: number, type: string): number {
-    const messageSize = this.getMessageSize(message);
-
-    // Base priorities aligned with Anthropic's patterns
-    // User input gets highest priority (like cookbook examples)
-    const basePriorities: { [key: string]: number } = {
-      user: 100,           // User input priority (as in cookbook)
-      tool_result: 90,     // Tool results important but not higher than user
-      assistant_tool_call: 80,
-      assistant: 70
-    };
-
-    // Size factor - larger content gets priority (like Pride & Prejudice example)
-    const sizeFactor = Math.min(Math.floor(messageSize / 1000), 50);
-
-    // Recency factor - more recent gets higher priority
-    const recencyFactor = index * 5;
-
-    return (basePriorities[type] || 50) + sizeFactor + recencyFactor;
-  }
-
-  private calculateCachePlan(filteredMessages: ChatMessage[]): Set<ChatMessage> {
-    const cachePlan = new Set<ChatMessage>();
-
-    // Start with max 4 cache blocks (Anthropic's limit)
-    let availableBlocks = 4;
-
-    // Reserve 1 block for system message if enabled (like cookbook)
-    if (this.cacheBehavior?.cacheSystemMessage) {
-      availableBlocks--;
-    }
-
-    if (availableBlocks <= 0) return cachePlan;
-
-    // Collect candidates that meet minimum size requirements
-    const candidates: Array<{ message: ChatMessage; priority: number; type: string }> = [];
-
-    if (this.cacheBehavior?.cacheConversation) {
-      // User messages - prioritize like cookbook example
-      const userMessages = filteredMessages.filter((m) => m.role === "user");
-      userMessages.slice(-2).forEach((msg, idx) => {
-        if (this.meetsMinimumCacheSize(msg, this.model)) {
-          candidates.push({
-            message: msg,
-            priority: this.calculatePriority(msg, idx, "user"),
-            type: "user"
-          });
-        }
-      });
-
-      // Assistant messages (non-tool)
-      const assistantMessages = filteredMessages.filter(
-        (m) => m.role === "assistant" && !m.toolCalls,
-      );
-      assistantMessages.slice(-2).forEach((msg, idx) => {
-        if (this.meetsMinimumCacheSize(msg, this.model)) {
-          candidates.push({
-            message: msg,
-            priority: this.calculatePriority(msg, idx, "assistant"),
-            type: "assistant"
-          });
-        }
-      });
-    }
-
-    if (this.cacheBehavior?.cacheToolMessages) {
-      // Tool results
-      const toolMessages = filteredMessages.filter((m) => m.role === "tool");
-      toolMessages.slice(-2).forEach((msg, idx) => {
-        if (this.meetsMinimumCacheSize(msg, this.model)) {
-          candidates.push({
-            message: msg,
-            priority: this.calculatePriority(msg, idx, "tool_result"),
-            type: "tool_result"
-          });
-        }
-      });
-
-      // Assistant tool calls
-      const assistantToolMessages = filteredMessages.filter(
-        (m) => m.role === "assistant" && m.toolCalls,
-      );
-      assistantToolMessages.slice(-2).forEach((msg, idx) => {
-        candidates.push({
-          message: msg,
-          priority: this.calculatePriority(msg, idx, "assistant_tool_call"),
-          type: "assistant_tool_call"
-        });
-      });
-    }
-
-    // Sort by priority (highest first) and take only what fits in available blocks
-    candidates
-      .sort((a, b) => b.priority - a.priority)
-      .slice(0, availableBlocks)
-      .forEach(candidate => cachePlan.add(candidate.message));
-
-    return cachePlan;
-  }
-
   public convertMessages(msgs: ChatMessage[]): any[] {
     // should be public for use within VertexAI
     const filteredmessages = msgs.filter(
@@ -316,17 +266,72 @@ class Anthropic extends BaseLLM {
         (!!m.content || (m.role === "assistant" && m.toolCalls)),
     );
 
-    const messages = filteredmessages.map((message, filteredMsgIdx) => {
-      // Use simplified caching logic
-      const addCaching = this.shouldCacheMessage(
-        message,
-        filteredMsgIdx,
-        filteredmessages,
-      );
+    // Debug configuration
+    if (this.cacheBehavior?.cacheDebug && this.cacheBehavior) {
+      console.log(`[ANTHROPIC CACHE DEBUG] 🔧 Cache Configuration:`, {
+        cacheToolMessages: this.cacheBehavior.cacheToolMessages,
+        cacheSystemMessage: this.cacheBehavior.cacheSystemMessage,
+        cacheConversation: this.cacheBehavior.cacheConversation,
+        conversationStrategy: "last_two",
+        useExtendedTtl: this.cacheBehavior.useExtendedCacheTtlBeta,
+        totalMessages: filteredmessages.length
+      });
+    }
 
-      const chatMessage = this.convertMessage(message, !!addCaching);
+    // Select messages to cache based on strategy
+    const messagesToCache = this.cacheBehavior?.cacheConversation ?
+      this.selectMessagesToCache(filteredmessages) : [];
+
+    // Debug message selection
+    if (this.cacheBehavior?.cacheDebug && messagesToCache.length > 0) {
+      console.log(`[ANTHROPIC CACHE DEBUG] 📝 Message Caching Selection:`, {
+        strategy: "last_two",
+        selectedIndices: messagesToCache,
+        selectedMessages: messagesToCache.map(idx => ({
+          index: idx,
+          role: filteredmessages[idx].role,
+          size: this.getMessageSize(filteredmessages[idx]),
+          estimatedTokens: Math.ceil(this.getMessageSize(filteredmessages[idx]) / 4),
+          preview: typeof filteredmessages[idx].content === "string" ?
+            filteredmessages[idx].content.substring(0, 100) + "..." : "[multipart]"
+        }))
+      });
+    }
+
+    const messages = filteredmessages.map((message, filteredMsgIdx) => {
+      const addCaching = messagesToCache.includes(filteredMsgIdx);
+      const chatMessage = this.convertMessage(message, addCaching);
       return chatMessage;
     });
+
+    // Debug breakpoint allocation
+    if (this.cacheBehavior?.cacheDebug) {
+      let totalCachedBlocks = 0;
+      messages.forEach((msg: any) => {
+        if (msg.content && Array.isArray(msg.content)) {
+          msg.content.forEach((content: any) => {
+            if (content.cache_control) {
+              totalCachedBlocks++;
+            }
+          });
+        }
+      });
+
+const toolsBreakpoint = this.cacheBehavior?.cacheToolMessages ? 1 : 0;
+      const systemBreakpoint = this.cacheBehavior?.cacheSystemMessage ? 1 : 0;
+      const messageBreakpoints = messagesToCache.length;
+      const totalBreakpoints = toolsBreakpoint + systemBreakpoint + messageBreakpoints;
+
+      console.log(`[ANTHROPIC CACHE DEBUG] 🎯 Breakpoint Allocation:`, {
+        toolsBreakpoint,
+        systemBreakpoint,
+        messageBreakpoints,
+        totalBreakpoints,
+        breakpointBudget: "4 max",
+        finalCacheBlocks: totalCachedBlocks
+      });
+    }
+
     return messages;
   }
 
@@ -359,7 +364,112 @@ class Anthropic extends BaseLLM {
       this.cacheBehavior?.cacheSystemMessage && systemMessage
     );
 
+    // Debug system message
+    if (this.cacheBehavior?.cacheDebug && systemMessage) {
+      const systemSize = systemMessage.length;
+      const estimatedTokens = Math.ceil(systemSize / 4);
+      console.log(`[ANTHROPIC CACHE DEBUG] 🎯 System Message:`, {
+        size: systemSize,
+        estimatedTokens: estimatedTokens,
+        willCache: shouldCacheSystemMessage,
+        preview: systemMessage.substring(0, 100) + "..."
+      });
+  }
+
     const msgs = this.convertMessages(messages);
+
+    // Debug complete API payload
+    if (this.cacheBehavior?.cacheDebug) {
+      const apiPayload = {
+        ...this.convertArgs(options),
+        messages: msgs,
+        system: shouldCacheSystemMessage
+          ? [
+              {
+                type: "text",
+                text: systemMessage,
+                cache_control: this.cacheBehavior?.useExtendedCacheTtlBeta
+                  ? {
+                      type: "ephemeral",
+                      ttl: this.cacheBehavior?.cacheTtl ?? "5m",
+                    }
+                  : { type: "ephemeral" },
+              },
+            ]
+          : systemMessage,
+      };
+
+      console.log(`[ANTHROPIC CACHE DEBUG] 📦 Complete API Payload:`, {
+        payloadSize: JSON.stringify(apiPayload).length,
+        systemCached: shouldCacheSystemMessage,
+        totalMessages: msgs.length,
+        toolsCount: apiPayload.tools?.length || 0,
+        headers: {
+          'anthropic-beta': this.cacheBehavior?.useExtendedCacheTtlBeta
+            ? "extended-cache-ttl-2025-04-11"
+            : shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation || this.cacheBehavior?.cacheToolMessages
+              ? "prompt-caching-2024-07-31"
+              : "none"
+        }
+      });
+
+      // Debug each message with cache details (last 6 only)
+      console.log(`[ANTHROPIC CACHE DEBUG] 📋 Message Details (last 6 of ${msgs.length}):`);
+      const messagesToShow = msgs.slice(-6); // Only last 6 messages
+      const startIndex = Math.max(0, msgs.length - 6);
+      messagesToShow.forEach((msg: any, relativeIndex: number) => {
+        const actualIndex = startIndex + relativeIndex;
+        let hasCacheControl = false;
+        let cacheDetails: Array<{contentIndex: number, type: string, cacheType: string, ttl: string}> = [];
+        if (msg.content && Array.isArray(msg.content)) {
+          msg.content.forEach((content: any, contentIndex: number) => {
+            if (content.cache_control) {
+              hasCacheControl = true;
+              cacheDetails.push({
+                contentIndex,
+                type: content.type,
+                cacheType: content.cache_control.type,
+                ttl: content.cache_control.ttl || "5m"
+              });
+            }
+          });
+        }
+
+        console.log(`  Message ${actualIndex}:`, {
+          role: msg.role,
+          contentParts: msg.content?.length || 0,
+          hasCacheControl,
+          cacheDetails: cacheDetails.length > 0 ? cacheDetails : "none",
+          preview: msg.content?.[0]?.text?.substring(0, 50) + "..." ||
+                  msg.content?.[0]?.type ||
+                  "[no preview]"
+        });
+      });
+
+      // Debug tools with cache details
+      if (apiPayload.tools?.length) {
+        console.log(`[ANTHROPIC CACHE DEBUG] 🛠️ Tools Details:`);
+        apiPayload.tools.forEach((tool, index) => {
+          console.log(`  Tool ${index}:`, {
+            name: tool.name,
+            hasCacheControl: !!tool.cache_control,
+            cacheType: tool.cache_control?.type || "none",
+            ttl: tool.cache_control?.ttl || "none"
+          });
+        });
+      }
+
+      // Debug system message details
+      if (shouldCacheSystemMessage && Array.isArray(apiPayload.system)) {
+        console.log(`[ANTHROPIC CACHE DEBUG] 🎯 System Details:`, {
+          systemParts: apiPayload.system.length,
+          hasCacheControl: !!apiPayload.system[0]?.cache_control,
+          cacheType: apiPayload.system[0]?.cache_control?.type || "none",
+          ttl: apiPayload.system[0]?.cache_control?.ttl || "none"
+        });
+      }
+    }
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
@@ -369,7 +479,7 @@ class Anthropic extends BaseLLM {
         "x-api-key": this.apiKey as string,
         ...(this.cacheBehavior?.useExtendedCacheTtlBeta
           ? { "anthropic-beta": "extended-cache-ttl-2025-04-11" }
-          : shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+          : shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation || this.cacheBehavior?.cacheToolMessages
             ? { "anthropic-beta": "prompt-caching-2024-07-31" }
             : {}),
       },
@@ -415,11 +525,25 @@ class Anthropic extends BaseLLM {
 
     if (options.stream === false) {
       const data = await response.json();
+
+      if (this.cacheBehavior?.cacheDebug && data.usage) {
+        console.log(`[ANTHROPIC CACHE DEBUG] 📊 API Response (non-stream):`, {
+          input_tokens: data.usage.input_tokens || 0,
+          output_tokens: data.usage.output_tokens || 0,
+          cache_creation_input_tokens: data.usage.cache_creation_input_tokens || 0,
+          cache_read_input_tokens: data.usage.cache_read_input_tokens || 0,
+          cache_hit_rate: data.usage.cache_read_input_tokens ?
+            `${Math.round((data.usage.cache_read_input_tokens / (data.usage.input_tokens + data.usage.cache_read_input_tokens)) * 100)}%` : "0%"
+        });
+      }
+
       yield { role: "assistant", content: data.content[0].text };
       return;
     }
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
+    let streamingUsage: any = null;
+
     for await (const value of streamSse(response)) {
       // https://docs.anthropic.com/en/api/messages-streaming#event-types
       switch (value.type) {
@@ -479,9 +603,30 @@ class Anthropic extends BaseLLM {
           lastToolUseId = undefined;
           lastToolUseName = undefined;
           break;
+        case "message_start":
+          if (value.message && value.message.usage) {
+            streamingUsage = value.message.usage;
+          }
+          break;
+        case "message_delta":
+          if (value.usage) {
+            streamingUsage = { ...streamingUsage, ...value.usage };
+          }
+          break;
         default:
           break;
       }
+    }
+
+    if (this.cacheBehavior?.cacheDebug && streamingUsage) {
+      console.log(`[ANTHROPIC CACHE DEBUG] 📊 API Response (streaming):`, {
+        input_tokens: streamingUsage.input_tokens || 0,
+        output_tokens: streamingUsage.output_tokens || 0,
+        cache_creation_input_tokens: streamingUsage.cache_creation_input_tokens || 0,
+        cache_read_input_tokens: streamingUsage.cache_read_input_tokens || 0,
+        cache_hit_rate: streamingUsage.cache_read_input_tokens ?
+          `${Math.round((streamingUsage.cache_read_input_tokens / (streamingUsage.input_tokens + streamingUsage.cache_read_input_tokens)) * 100)}%` : "0%"
+      });
     }
   }
 }

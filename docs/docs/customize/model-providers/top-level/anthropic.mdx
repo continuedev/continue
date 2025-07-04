@@ -78,6 +78,7 @@ Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/do
 * `cacheToolMessages` - if `true`, caches tool results and assistant tool calls (useful for Agent mode)
 * `useExtendedCacheTtlBeta` - if `true` will enable Beta feature and allow to set 5m or 1h ttl for caching
 * `cacheTtl` - accepts only `5m` or `1h` as values, and if parameter not set `5m` default cache will be used then.
+* `cacheDebug` - if `true`, will report into Console information which can help to see and understand usage of cache.
 
 > **NOTE:** `1h` cacheTtl can be set only if `useExtendedCacheTtlBeta` is `true`
 

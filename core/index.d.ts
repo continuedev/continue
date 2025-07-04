@@ -927,7 +927,8 @@ export interface RequestOptions {
 export interface CacheBehavior {
   cacheSystemMessage?: boolean;
   cacheConversation?: boolean;
-  cacheToolMessages?: boolean; // NEW: Simple flag for tool results + tool calls
+  cacheToolMessages?: boolean;
+  cacheDebug?: boolean;
   useExtendedCacheTtlBeta?: boolean;
   cacheTtl?: string;
 }
