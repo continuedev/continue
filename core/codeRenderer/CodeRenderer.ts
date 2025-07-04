@@ -8,6 +8,8 @@
  * we rarely ever need syntax highlighting outside of
  * creating a render of it.
  */
+import { transformerColorizedBrackets } from "@shikijs/colorized-brackets";
+import { transformerNotationHighlight } from "@shikijs/transformers";
 import { JSDOM } from "jsdom";
 import { BundledTheme, codeToHtml, getSingletonHighlighter } from "shiki";
 import { escapeForSVG, kebabOfStr } from "../util/text";
@@ -150,9 +152,20 @@ export class CodeRenderer {
     language: string = "javascript",
     currLineOffsetFromTop: number,
   ): Promise<string> {
-    return await codeToHtml(code, {
+    const annotatedCode = code
+      .split("\n")
+      .map((line, i) =>
+        i === currLineOffsetFromTop ? line + "// [\!code highlight]" : line,
+      )
+      .join("\n");
+
+    return await codeToHtml(annotatedCode, {
       lang: language,
       theme: this.currentTheme,
+      transformers: [
+        transformerColorizedBrackets(),
+        transformerNotationHighlight(),
+      ],
       decorations: [
         {
           start: { line: currLineOffsetFromTop, character: 0 },
