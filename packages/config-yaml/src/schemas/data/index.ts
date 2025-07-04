@@ -39,6 +39,10 @@ import {
   nextEditEventSchema_0_2_0_noCode,
 } from "./nextEdit/v0.2.0.js";
 import { nextEditOutcomeEventAllSchema } from "./nextEditOutcome/index.js";
+import {
+  nextEditOutcomeEventSchema_0_2_0,
+  nextEditOutcomeEventSchema_0_2_0_noCode,
+} from "./nextEditOutcome/v0.2.0.js";
 import { quickEditEventAllSchema } from "./quickEdit/index.js";
 import {
   quickEditEventSchema_0_1_0,
@@ -54,6 +58,10 @@ import {
   tokensGeneratedEventSchema_0_2_0_noCode,
 } from "./tokensGenerated/v0.2.0.js";
 import { toolUsageEventAllSchema } from "./toolUsage/index.js";
+import {
+  toolUsageEventSchema_0_2_0,
+  toolUsageEventSchema_0_2_0_noCode,
+} from "./toolUsage/v0.2.0.js";
 
 const semverRegex =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
@@ -126,6 +134,8 @@ export const devDataVersionedSchemas = {
       editInteraction: editInteractionEventSchema_0_2_0_noCode,
       editOutcome: editOutcomeEventSchema_0_2_0_noCode,
       nextEdit: nextEditEventSchema_0_2_0_noCode,
+      nextEditOutcome: nextEditOutcomeEventSchema_0_2_0_noCode,
+      toolUsage: toolUsageEventSchema_0_2_0_noCode,
     },
   },
 };
