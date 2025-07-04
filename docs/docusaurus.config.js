@@ -203,15 +203,20 @@ const config = {
         enableInDevelopment: false,
       },
     ],
-    [
-      "docusaurus-plugin-llms-txt",
-      {
-        // Optional configuration
-        outputPath: "static/llms.txt",
-        includePatterns: ["docs/**"],
-        excludePatterns: ["**/node_modules/**"],
-      },
-    ],
+    // Custom plugin for better structured llms.txt
+    require.resolve('./plugins/custom-llms-txt.js'),
+    // Keeping the original plugin commented out for now
+    // [
+    //   "docusaurus-plugin-llms-txt",
+    //   {
+    //     title: "Continue Documentation",
+    //     description: "Documentation for Continue - the open-source AI code assistant for developers",
+    //     // Optional configuration
+    //     outputPath: "static/llms.txt",
+    //     includePatterns: ["docs/**"],
+    //     excludePatterns: ["**/node_modules/**"],
+    //   },
+    // ],
     [
       "@docusaurus/plugin-client-redirects",
       {
