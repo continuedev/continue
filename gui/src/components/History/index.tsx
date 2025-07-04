@@ -54,6 +54,9 @@ export function History() {
   const allSessionMetadata = useAppSelector(
     (state) => state.session.allSessionMetadata,
   );
+  const isSessionMetadataLoading = useAppSelector(
+    (state) => state.session.isSessionMetadataLoading,
+  );
 
   useEffect(() => {
     try {
@@ -138,7 +141,7 @@ export function History() {
 
             // actual update + refresh
             await ideMessenger.request("history/clear", undefined);
-            dispatch(refreshSessionMetadata({}));
+            void dispatch(refreshSessionMetadata({}));
 
             // start a new session
             dispatch(newSession());
@@ -179,8 +182,15 @@ export function History() {
       <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto pr-4">
         {filteredAndSortedSessions.length === 0 && (
           <div className="m-3 text-center">
-            No past sessions found. To start a new session, either click the "+"
-            button or use the keyboard shortcut: <Shortcut>meta L</Shortcut>
+            {isSessionMetadataLoading ? (
+              "Loading Sessions..."
+            ) : (
+              <>
+                No past sessions found. To start a new session, either click the
+                "+" button or use the keyboard shortcut:{" "}
+                <Shortcut>meta L</Shortcut>
+              </>
+            )}
           </div>
         )}
 

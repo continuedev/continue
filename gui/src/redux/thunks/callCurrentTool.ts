@@ -101,8 +101,6 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
           ],
         }),
       );
-
-      logToolUsage(toolCallState, false, extra.ideMessenger, output);
     } else if (output?.length) {
       dispatch(
         updateToolCallOutput({
@@ -110,8 +108,6 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
           contextItems: output,
         }),
       );
-
-      logToolUsage(toolCallState, true, extra.ideMessenger, output);
     }
 
     // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
@@ -127,12 +123,14 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     if (streamResponse) {
       if (errorMessage) {
+        logToolUsage(toolCallState, false, false, extra.ideMessenger, output);
         dispatch(
           errorToolCall({
             toolCallId,
           }),
         );
       } else {
+        logToolUsage(toolCallState, true, true, extra.ideMessenger, output);
         dispatch(
           acceptToolCall({
             toolCallId,

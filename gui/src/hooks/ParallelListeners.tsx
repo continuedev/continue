@@ -22,22 +22,26 @@ import {
   addContextItemsAtIndex,
   selectCurrentToolCall,
   setHasReasoningEnabled,
+  setIsSessionMetadataLoading,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { exitEdit } from "../redux/thunks/edit";
 import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
 
+import { store } from "../redux/store";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
+import { findToolCall, logToolUsage } from "../redux/util";
 import {
   setDocumentStylesFromLocalStorage,
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
+import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
 function ParallelListeners() {
@@ -101,6 +105,7 @@ function ParallelListeners() {
 
   const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
+      dispatch(setIsSessionMetadataLoading(true));
       dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
@@ -256,6 +261,13 @@ function ParallelListeners() {
         dispatch(updateEditStateApplyState(state));
 
         if (state.status === "closed") {
+          const toolCallState = findToolCall(
+            store.getState().session.history,
+            state.toolCallId!,
+          );
+          if (toolCallState) {
+            logToolUsage(toolCallState, true, true, ideMessenger);
+          }
           void dispatch(exitEdit({}));
         }
       } else {
@@ -309,6 +321,10 @@ function ParallelListeners() {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
   }, [isInEdit, history]);
+
+  useEffect(() => {
+    migrateLocalStorage(dispatch);
+  }, []);
 
   return <></>;
 }
