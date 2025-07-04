@@ -2,11 +2,11 @@ package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
-import com.github.continuedev.continueintellijextension.utils.getContinueBinaryPath
 import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class CoreMessengerManager(
     private val project: Project,
@@ -19,30 +19,27 @@ class CoreMessengerManager(
 
     init {
         coroutineScope.launch {
-            val continueBinaryPath = getContinueBinaryPath()
-            setupCoreMessenger(continueBinaryPath)
+            setupCoreMessenger()
         }
     }
 
-    private fun setupCoreMessenger(continueCorePath: String) {
+    private fun setupCoreMessenger() {
         try {
-            coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
-
-        coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-            val allowAnonymousTelemetry = response.castNestedOrNull<Boolean>("content", "result", "config", "allowAnonymousTelemetry")
-
-            val telemetryService = service<TelemetryService>()
-            if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
-                telemetryService.setup(getMachineUniqueID())
-            }
-        }
-
-            // On exit, use exponential backoff to create another CoreMessenger
-            coreMessenger?.onDidExit {
+            coreMessenger = CoreMessenger(project, ideProtocolClient, coroutineScope, onExit = {
                 lastBackoffInterval *= 2
                 println("CoreMessenger exited, retrying in $lastBackoffInterval seconds")
                 Thread.sleep((lastBackoffInterval * 1000).toLong())
-                setupCoreMessenger(continueCorePath)
+                setupCoreMessenger()
+            })
+
+            coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
+                val allowAnonymousTelemetry =
+                    response.castNestedOrNull<Boolean>("content", "result", "config", "allowAnonymousTelemetry")
+
+                val telemetryService = service<TelemetryService>()
+                if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
+                    telemetryService.setup(getMachineUniqueID())
+                }
             }
         } catch (err: Throwable) {
             val telemetryService = service<TelemetryService>()
