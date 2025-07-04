@@ -32,7 +32,10 @@ export function ModeSelect() {
 
   const cycleMode = useCallback(() => {
     dispatch(setMode(mode === "chat" ? "agent" : "chat"));
-    mainEditor?.commands.focus();
+    // Only focus main editor if another one doesn't already have focus
+    if (!document.activeElement?.classList?.contains("ProseMirror")) {
+      mainEditor?.commands.focus();
+    }
   }, [mode, mainEditor]);
 
   const selectMode = useCallback(

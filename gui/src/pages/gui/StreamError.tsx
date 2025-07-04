@@ -20,25 +20,11 @@ import { selectSelectedProfile } from "../../redux/slices/profilesSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isLocalProfile } from "../../util";
-import { providers } from "../AddNewModel/configs/providers";
+import { analyzeError } from "../../util/errorAnalysis";
 import { ModelsAddOnLimitDialog } from "./ModelsAddOnLimitDialog";
 
 interface StreamErrorProps {
   error: unknown;
-}
-
-function parseErrorMessage(fullErrMsg: string): string {
-  if (!fullErrMsg.includes("\n\n")) {
-    return fullErrMsg;
-  }
-
-  const msg = fullErrMsg.split("\n\n").slice(1).join("\n\n");
-  try {
-    const parsed = JSON.parse(msg);
-    return JSON.stringify(parsed.error ?? parsed.message ?? msg);
-  } catch (e) {
-    return msg;
-  }
 }
 
 const StreamErrorDialog = ({ error }: StreamErrorProps) => {
@@ -49,10 +35,14 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const { session, refreshProfiles } = useAuth();
   const { mainEditor } = useMainEditor();
 
-  const parsedError = useMemo<string>(
-    () => parseErrorMessage((error as any)?.message || ""),
-    [error],
-  );
+  const {
+    parsedError,
+    statusCode,
+    message,
+    modelTitle,
+    providerName,
+    apiKeyUrl,
+  } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
   const handleRefreshProfiles = () => {
     void refreshProfiles();
@@ -66,56 +56,14 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
 
   const history = useAppSelector((store) => store.session.history);
 
-  // Collect model information to display useful error info
-  let modelTitle = "Chat model";
-  let providerName = "the model provider";
-  let apiKeyUrl: string | undefined = undefined;
-
-  if (selectedModel) {
-    modelTitle = selectedModel.title;
-    providerName = selectedModel.provider;
-
-    // If there's a matching provider from add model form provider info
-    // We can get more info
-    const foundProvider = Object.values(providers).find(
-      (p) => p?.provider === selectedModel.provider,
-    );
-    if (foundProvider) {
-      providerName = foundProvider.title;
-      if (foundProvider.apiKeyUrl) {
-        apiKeyUrl = foundProvider.apiKeyUrl;
-      }
-    }
-  }
-
-  let message: undefined | string = undefined;
-  let statusCode: undefined | number = undefined;
-
-  // Attempt to get error message and status code from error
-  if (
-    error &&
-    (error instanceof Error || typeof error === "object") &&
-    "message" in error &&
-    typeof error["message"] === "string"
-  ) {
-    message = error["message"];
-    const parts = message?.split(" ") ?? [];
-    if (parts.length > 1) {
-      const status = parts[0] === "HTTP" ? parts[1] : parts[0];
-      if (status) {
-        const code = Number(status);
-        if (!Number.isNaN(code)) {
-          statusCode = code;
-        }
-      }
-    }
-  }
-
   const checkKeysButton = apiKeyUrl ? (
     <GhostButton
       className="flex items-center"
       onClick={() => {
-        ideMessenger.post("openUrl", apiKeyUrl!);
+        ideMessenger.post("controlPlane/openUrl", {
+          path: apiKeyUrl,
+          orgSlug: undefined,
+        });
       }}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
@@ -346,7 +294,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("openUrl", GITHUB_LINK);
+              ideMessenger.post("controlPlane/openUrl", {
+                path: GITHUB_LINK,
+                orgSlug: undefined,
+              });
             }}
           >
             <GithubIcon className="h-5 w-5" />
@@ -355,7 +306,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("openUrl", DISCORD_LINK);
+              ideMessenger.post("controlPlane/openUrl", {
+                path: DISCORD_LINK,
+                orgSlug: undefined,
+              });
             }}
           >
             <DiscordIcon className="h-5 w-5" />

@@ -5,6 +5,13 @@ import { ConfigHandler } from "../../config/ConfigHandler";
 import { DataLogger } from "../../data/log";
 import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
+import { createDiff, DiffFormatType } from "./diffFormatting";
+import {
+  getPrevEditsDescending,
+  prevEdit,
+  prevEditLruCache,
+  setPrevEdit,
+} from "./prevEditLruCache";
 
 const randomNumberBetween = (min: number, max: number) => {
   min = Math.ceil(min); // Ensure min is an integer
@@ -25,6 +32,11 @@ interface ProcessNextEditDataParams {
   recentlyVisitedRanges: AutocompleteCodeSnippet[];
   workspaceDir: string;
   modelNameOrInstance?: string | undefined;
+}
+
+interface filenameAndDiff {
+  filename: string;
+  diff: string;
 }
 
 export const processNextEditData = async ({
@@ -48,7 +60,6 @@ export const processNextEditData = async ({
   //   undefined;
 
   const modelName = "Codestral";
-
   const maxPromptTokens = randomNumberBetween(500, 12000);
 
   const autocompleteContext = await getAutocompleteContext(
@@ -68,16 +79,64 @@ export const processNextEditData = async ({
   //   createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),
   // );
 
-  void DataLogger.getInstance().logDevData({
-    name: "nextEdit",
-    data: {
-      fileURI: filePath,
-      workspaceDirURI: workspaceDir,
+  let filenamesAndDiffs: filenameAndDiff[] = [];
+
+  const timestamp = Date.now();
+  let prevEdits: prevEdit[] = getPrevEditsDescending(); // edits from most to least recent
+  if (prevEdits.length > 0) {
+    // if last edit was 10+ minutes ago or the workspace changed, forget previous edits
+    if (
+      timestamp - prevEdits[0].timestamp >= 1000 * 60 * 10 ||
+      workspaceDir !== prevEdits[0].workspaceUri
+    ) {
+      prevEditLruCache.clear();
+      prevEdits = [];
+    }
+
+    // extract filenames and diffs for logging
+    filenamesAndDiffs = prevEdits.map(
+      (edit) =>
+        ({
+          // filename relative to workspace dir
+          filename: edit.fileUri
+            .replace(edit.workspaceUri, "")
+            .replace(/^[/\\]/, ""),
+
+          // diff without the first 4 lines (the file header)
+          diff: edit.unidiff.split("\n").slice(4).join("\n"),
+        }) as filenameAndDiff,
+    );
+  }
+
+  if (filenamesAndDiffs.length > 0) {
+    // if there are previous edits, log
+    void DataLogger.getInstance().logDevData({
+      name: "nextEditWithHistory",
+      data: {
+        previousEdits: filenamesAndDiffs,
+        fileURI: filePath,
+        workspaceDirURI: workspaceDir,
+        beforeContent,
+        afterContent,
+        beforeCursorPos: cursorPosBeforeEdit,
+        afterCursorPos: cursorPosAfterPrevEdit,
+        context: autocompleteContext,
+      },
+    });
+  }
+
+  // add current edit to history
+  const thisEdit: prevEdit = {
+    unidiff: createDiff(
       beforeContent,
       afterContent,
-      beforeCursorPos: cursorPosBeforeEdit,
-      afterCursorPos: cursorPosAfterPrevEdit,
-      context: autocompleteContext,
-    },
-  });
+      filePath,
+      DiffFormatType.Unified,
+    ),
+    fileUri: filePath,
+    workspaceUri: workspaceDir,
+    timestamp: timestamp,
+  };
+
+  setPrevEdit(thisEdit);
 };

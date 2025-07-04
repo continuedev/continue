@@ -23,6 +23,7 @@ export const sharedConfigSchema = z
     optInNextEditFeature: z.boolean(),
     enableExperimentalTools: z.boolean(),
     onlyUseSystemMessageTools: z.boolean(),
+    codebaseToolCallingOnly: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -191,6 +192,11 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.onlyUseSystemMessageTools !== undefined) {
     configCopy.experimental.onlyUseSystemMessageTools =
       sharedConfig.onlyUseSystemMessageTools;
+  }
+
+  if (sharedConfig.codebaseToolCallingOnly !== undefined) {
+    configCopy.experimental.codebaseToolCallingOnly =
+      sharedConfig.codebaseToolCallingOnly;
   }
 
   return configCopy;

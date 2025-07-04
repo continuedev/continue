@@ -97,6 +97,8 @@ export function UserSettingsForm() {
     config.experimental?.onlyUseSystemMessageTools ?? false;
   const optInNextEditFeature =
     config.experimental?.optInNextEditFeature ?? false;
+  const codebaseToolCallingOnly =
+    config.experimental?.codebaseToolCallingOnly ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -432,6 +434,16 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Only use system message tools"
+                />
+
+                <ToggleSwitch
+                  isToggled={codebaseToolCallingOnly}
+                  onToggle={() =>
+                    handleUpdate({
+                      codebaseToolCallingOnly: !codebaseToolCallingOnly,
+                    })
+                  }
+                  text="@Codebase: use tool calling only"
                 />
 
                 {hasContinueEmail && (

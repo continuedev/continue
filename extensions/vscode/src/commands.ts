@@ -17,6 +17,7 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
+import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -142,14 +143,12 @@ const getCommandsMap: (
    *
    * @param  promptName - The key for the prompt in the context menu configuration.
    * @param  fallbackPrompt - The prompt to use if the configured prompt is not available.
-   * @param  [onlyOneInsertion] - Optional. If true, only one insertion will be made.
    * @param  [range] - Optional. The range to edit if provided.
    * @returns
    */
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
     fallbackPrompt: string,
-    onlyOneInsertion?: boolean,
     range?: vscode.Range,
   ) {
     const { config } = await configHandler.loadConfig();
@@ -170,7 +169,6 @@ const getCommandsMap: (
       input:
         config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       llm,
-      onlyOneInsertion,
       range,
       rulesToInclude: config.rules,
     });
@@ -243,7 +241,7 @@ const getCommandsMap: (
     ) => {
       captureCommandTelemetry("customQuickActionStreamInlineEdit");
 
-      streamInlineEdit("docstring", prompt, false, range);
+      streamInlineEdit("docstring", prompt, range);
     },
     "continue.codebaseForceReIndex": async () => {
       core.invoke("index/forceReIndex", undefined);
@@ -344,6 +342,11 @@ const getCommandsMap: (
       editDecorationManager.clear();
       void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
+    "continue.generateRule": async () => {
+      captureCommandTelemetry("generateRule");
+      focusGUI();
+      void sidebar.webviewProtocol?.request("generateRule", undefined);
+    },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 
@@ -358,7 +361,6 @@ const getCommandsMap: (
       void streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
-        false,
       );
     },
     "continue.fixCode": async () => {
@@ -542,6 +544,18 @@ const getCommandsMap: (
       completionProvider: CompletionProvider,
     ) => {
       completionProvider.accept(completionId);
+    },
+    "continue.logNextEditOutcomeAccept": (
+      completionId: string,
+      nextEditLoggingService: NextEditLoggingService,
+    ) => {
+      nextEditLoggingService.accept(completionId);
+    },
+    "continue.logNextEditOutcomeReject": (
+      completionId: string,
+      nextEditLoggingService: NextEditLoggingService,
+    ) => {
+      nextEditLoggingService.reject(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
       captureCommandTelemetry("toggleTabAutocompleteEnabled");
