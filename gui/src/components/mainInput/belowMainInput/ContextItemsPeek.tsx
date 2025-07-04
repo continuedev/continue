@@ -3,13 +3,13 @@ import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
 import { ComponentType, useContext, useMemo } from "react";
-import { AnimatedEllipsis } from "../..";
 import {
   IdeMessengerContext,
   IIdeMessenger,
 } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectIsGatheringContext } from "../../../redux/slices/sessionSlice";
+import { AnimatedEllipsis } from "../../AnimatedEllipsis";
 import FileIcon from "../../FileIcon";
 import SafeImg from "../../SafeImg";
 import ToggleDiv from "../../ToggleDiv";
