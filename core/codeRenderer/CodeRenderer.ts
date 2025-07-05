@@ -291,31 +291,30 @@ export class CodeRenderer {
         const y = index * lineHeight;
         const isFirst = index === 0;
         const isLast = index === lines.length - 1;
-        const topRadius = isFirst ? "10" : "0";
-        const bottomRadius = isLast ? "10" : "0";
+        const radius = 10;
         // SVG notes:
         // By default SVGs have anti-aliasing on.
         // This is undesirable in our case because pixel-perfect alignment of these rectangles will introduce thin gaps.
         // Turning it off with 'shape-rendering="crispEdges"' solves the issue.
         return isFirst
           ? `<path d="M ${0} ${y + lineHeight} 
-           L ${0} ${y + 10} 
-           Q ${0} ${y} ${10} ${y} 
-           L ${dimensions.width - 10} ${y} 
-           Q ${dimensions.width} ${y} ${dimensions.width} ${y + 10} 
+           L ${0} ${y + radius} 
+           Q ${0} ${y} ${radius} ${y} 
+           L ${dimensions.width - radius} ${y} 
+           Q ${dimensions.width} ${y} ${dimensions.width} ${y + radius} 
            L ${dimensions.width} ${y + lineHeight}  
            Z" 
         fill="${bgColor}" />`
           : isLast
             ? `<path d="M ${0} ${y} 
-           L ${0} ${y + lineHeight - 10} 
-           Q ${0} ${y + lineHeight} ${10} ${y + lineHeight} 
-           L ${dimensions.width - 10} ${y + lineHeight} 
+           L ${0} ${y + lineHeight - radius} 
+           Q ${0} ${y + lineHeight} ${radius} ${y + lineHeight} 
+           L ${dimensions.width - radius} ${y + lineHeight} 
            Q ${dimensions.width} ${y + lineHeight} ${dimensions.width} ${y + lineHeight - 10} 
            L ${dimensions.width} ${y}  
            Z" 
         fill="${bgColor}" />`
-            : `<rect x="0" y="${y}" rx="10" ry="10" width="100%" height="${lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
+            : `<rect x="0" y="${y}" rx="${radius}" ry="${radius}" width="100%" height="${lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
       })
       .join("\n");
 
