@@ -3,6 +3,19 @@ import { distance } from "fastest-levenshtein";
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
 
+import {
+  headerIsMarkdown,
+  isMarkdownFile,
+  MarkdownBlockStateTracker,
+  collectAllLines,
+} from "../../../utils/markdownUtils";
+import {
+  shouldStopAtMarkdownBlock,
+  processBlockNesting as processBlockNestingUtil,
+} from "../../../utils/streamMarkdownUtils";
+
+export { filterCodeBlockLines } from "./filterCodeBlock";
+
 export type LineFilter = (args: {
   lines: LineStream;
   fullStop: () => void;
@@ -50,13 +63,47 @@ function shouldRemoveLineBeforeStart(line: string): boolean {
   );
 }
 
-function shouldChangeLineAndStop(line: string): string | undefined {
+export function shouldChangeLineAndStop(line: string): string | undefined {
   if (line.trimStart() === "```") {
     return line;
   }
 
+  // Check if [/CODE] appears in the line
   if (line.includes(CODE_STOP_BLOCK)) {
-    return line.split(CODE_STOP_BLOCK)[0].trimEnd();
+    const stopBlockIndex = line.indexOf(CODE_STOP_BLOCK);
+
+    // Check if [/CODE] is preceded by a non-whitespace character
+    // If so, it might be part of an identifier, so don't handle it
+    if (stopBlockIndex > 0) {
+      const charBefore = line[stopBlockIndex - 1];
+      if (charBefore && !charBefore.match(/\s/)) {
+        return undefined; // Don't handle [/CODE] that's part of an identifier
+      }
+    }
+
+    // Check if [/CODE] appears to be inside quotes
+    // Simple heuristic: count unmatched quotes before the stop block
+    const beforeStopBlock = line.substring(0, stopBlockIndex);
+    const singleQuotes = (beforeStopBlock.match(/'/g) || []).length;
+    const doubleQuotes = (beforeStopBlock.match(/"/g) || []).length;
+
+    // If there's an odd number of quotes before [/CODE], we're likely inside quotes
+    if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
+      return undefined; // Don't handle [/CODE] inside quotes
+    }
+
+    // Get the trimmed line to check if [/CODE] is at logical start
+    const trimmedLine = line.trimStart();
+
+    if (trimmedLine.startsWith(CODE_STOP_BLOCK)) {
+      // [/CODE] is at the logical start (after whitespace only)
+      if (trimmedLine === CODE_STOP_BLOCK) {
+        return line; // Return the whole line including leading whitespace
+      }
+    }
+
+    // [/CODE] appears after some content (separated by whitespace) - return part before
+    return beforeStopBlock.trimEnd();
   }
 
   return undefined;
@@ -69,6 +116,37 @@ function isUselessLine(line: string): boolean {
   );
 
   return hasUselessLine || trimmed.startsWith("// end");
+}
+
+/**
+ * Determines if the code block has nested markdown blocks.
+ */
+export function hasNestedMarkdownBlocks(
+  firstLine: string,
+  filepath?: string,
+): boolean {
+  return (
+    (firstLine.startsWith("```") &&
+      headerIsMarkdown(firstLine.replace(/`/g, ""))) ||
+    Boolean(filepath && isMarkdownFile(filepath))
+  );
+}
+
+// Re-export shared utilities
+export { collectAllLines, isMarkdownFile };
+export { MarkdownBlockStateTracker as MarkdownBlockState };
+export { shouldStopAtMarkdownBlock };
+
+// Wrapper for processBlockNesting with local shouldRemoveLineBeforeStart function
+export function processBlockNesting(
+  line: string,
+  seenFirstFence: boolean,
+): { newSeenFirstFence: boolean; shouldSkip: boolean } {
+  return processBlockNestingUtil(
+    line,
+    seenFirstFence,
+    shouldRemoveLineBeforeStart,
+  );
 }
 
 export const USELESS_LINES = [""];
@@ -138,7 +216,7 @@ export async function* avoidPathLine(
   // Sometimes the model with copy this pattern, which is unwanted
   for await (const line of stream) {
     if (line.startsWith(`${comment} Path: `)) {
-      continue;
+      continue; // continue in the Continue codebase! How meta!
     }
     yield line;
   }
@@ -261,7 +339,54 @@ export async function* stopAtLines(
   linesToStopAt: string[] = LINES_TO_STOP_AT,
 ): LineStream {
   for await (const line of stream) {
-    if (linesToStopAt.some((stopAt) => line.trim().includes(stopAt))) {
+    let shouldStop = false;
+
+    // Check each stop phrase
+    for (const stopAt of linesToStopAt) {
+      if (line.includes(stopAt)) {
+        const stopAtIndex = line.indexOf(stopAt);
+
+        // Check if stop phrase is preceded by a non-whitespace character
+        // If so, it might be part of an identifier, so don't handle it
+        if (stopAtIndex > 0) {
+          const charBefore = line[stopAtIndex - 1];
+          if (charBefore && !charBefore.match(/\s/)) {
+            continue; // Don't handle stop phrase that's part of an identifier
+          }
+        }
+
+        // Check if stop phrase appears to be inside quotes
+        // Simple heuristic: count unmatched quotes before the stop phrase
+        const beforeStopPhrase = line.substring(0, stopAtIndex);
+        const singleQuotes = (beforeStopPhrase.match(/'/g) || []).length;
+        const doubleQuotes = (beforeStopPhrase.match(/"/g) || []).length;
+
+        // If there's an odd number of quotes before stop phrase, we're likely inside quotes
+        if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
+          continue; // Don't handle stop phrase inside quotes
+        }
+
+        // Get the trimmed line to check if stop phrase is at logical start
+        const trimmedLine = line.trimStart();
+
+        if (trimmedLine.startsWith(stopAt)) {
+          // Stop phrase is at the logical start (after whitespace only) - should stop
+          shouldStop = true;
+          break;
+        } else {
+          // Stop phrase appears after some content - check if it's separated by whitespace
+          const contentBeforeStopPhrase = beforeStopPhrase.trimEnd();
+          if (contentBeforeStopPhrase.length < beforeStopPhrase.length) {
+            // There's whitespace before the stop phrase, so it's properly separated
+            shouldStop = true;
+            break;
+          }
+          // If no whitespace separation, it's part of larger text, so continue
+        }
+      }
+    }
+
+    if (shouldStop) {
       fullStop();
       break;
     }
@@ -326,64 +451,6 @@ export async function* removeTrailingWhitespace(
 ): LineStream {
   for await (const line of stream) {
     yield line.trimEnd();
-  }
-}
-
-/**
- * Filters and processes lines from a code block, removing unnecessary markers and handling edge cases.
- *
- * @param {LineStream} rawLines - The input stream of lines to filter.
- * @yields {string} Filtered and processed lines from the code block.
- *
- * @description
- * This generator function performs the following tasks:
- * 1. Removes initial lines that should be removed before the actual code starts.
- * 2. Filters out ending code block markers (```) unless they are the last line.
- * 3. Handles special cases where lines should be changed and the stream should stop.
- * 4. Yields processed lines that are part of the actual code block content.
- */
-export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
-  let seenFirstFence = false;
-  // nestCount is set to 1 when the entire code block is wrapped with ``` or START blocks. It's then incremented
-  // when an inner code block is discovered to avoid exiting the function prematurly. The function will exit early
-  // when all blocks are matched. When no outer fence is discovered the function will always continue to the end.
-  let nestCount = 0;
-
-  for await (const line of rawLines) {
-    if (!seenFirstFence) {
-      if (shouldRemoveLineBeforeStart(line)) {
-        // Filter out starting ``` or START block
-        continue;
-      }
-      // Regardless of a fence or START block start tracking the nesting level
-      seenFirstFence = true;
-      nestCount = 1;
-    }
-
-    if (nestCount > 0) {
-      // Inside a block including the outer block
-      const changedEndLine = shouldChangeLineAndStop(line);
-      if (typeof changedEndLine === "string") {
-        // Ending a block with just backticks (```) or STOP
-        nestCount--;
-        if (nestCount === 0) {
-          // if we are closing the outer block then exit early
-          // only exit early if the outer block was started with a block
-          // it it was text, we will never exit early
-          return;
-        } else {
-          // otherwise just yield the line
-          yield line;
-        }
-      } else if (line.startsWith("```")) {
-        // Going into a nested codeblock
-        nestCount++;
-        yield line;
-      } else {
-        // otherwise just yield the line
-        yield line;
-      }
-    }
   }
 }
 
