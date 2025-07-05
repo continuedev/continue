@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
 
 export const readFileTool: Tool = {
   type: "function",
@@ -26,4 +27,9 @@ export const readFileTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.ReadFile,
+    `To read a file with a known filepath, use the ${BuiltInToolNames.ReadFile} tool. For example, to read a file located at 'path/to/file.txt', you would respond with this:`,
+    `<filepath>path/to/the_file.txt</filepath>`,
+  ),
 };

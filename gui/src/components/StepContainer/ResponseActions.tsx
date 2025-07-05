@@ -4,7 +4,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
+import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { renderChatMessage } from "core/util/messageContent";
 import { useMemo } from "react";
 import { useDispatch } from "react-redux";
@@ -36,7 +36,7 @@ export default function ResponseActions({
   const dispatch = useDispatch();
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const ruleGenerationSupported = useMemo(() => {
-    return selectedModel && modelSupportsTools(selectedModel);
+    return selectedModel && modelSupportsNativeTools(selectedModel);
   }, [selectedModel]);
 
   const onGenerateRule = () => {

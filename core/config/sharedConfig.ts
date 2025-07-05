@@ -22,6 +22,7 @@ export const sharedConfigSchema = z
     logEditingData: z.boolean(),
     optInNextEditFeature: z.boolean(),
     enableExperimentalTools: z.boolean(),
+    onlyUseSystemMessageTools: z.boolean(),
     codebaseToolCallingOnly: z.boolean(),
 
     // `ui` in `ContinueConfig`
@@ -188,6 +189,11 @@ export function modifyAnyConfigWithSharedConfig<
     configCopy.experimental.optInNextEditFeature =
       sharedConfig.optInNextEditFeature;
   }
+  if (sharedConfig.onlyUseSystemMessageTools !== undefined) {
+    configCopy.experimental.onlyUseSystemMessageTools =
+      sharedConfig.onlyUseSystemMessageTools;
+  }
+
   if (sharedConfig.codebaseToolCallingOnly !== undefined) {
     configCopy.experimental.codebaseToolCallingOnly =
       sharedConfig.codebaseToolCallingOnly;

@@ -1,6 +1,7 @@
 import { Tool } from "../..";
 
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
 
 export const searchWebTool: Tool = {
   type: "function",
@@ -25,4 +26,9 @@ export const searchWebTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.SearchWeb,
+    `To search the web, use the ${BuiltInToolNames.SearchWeb} tool with a natural language query. For example, to search for the current weather, you would respond with:`,
+    `<query>What is the current weather in San Francisco?</query>`,
+  ),
 };

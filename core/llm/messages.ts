@@ -1,4 +1,5 @@
-import { ChatMessage } from "..";
+import { ChatMessage, MessagePart } from "..";
+import { normalizeToMessageParts } from "../util/messageContent";
 
 export function messageHasToolCalls(msg: ChatMessage): boolean {
   return msg.role === "assistant" && !!msg.toolCalls;
@@ -16,7 +17,17 @@ export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
       !messageHasToolCalls(msg) &&
       !messageHasToolCalls(flattened[flattened.length - 1])
     ) {
-      flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
+      const previousParts = normalizeToMessageParts(
+        flattened[flattened.length - 1],
+      );
+      const currentParts: MessagePart[] = normalizeToMessageParts(msg);
+      if (previousParts.length > 0 && currentParts[0]?.type === "text") {
+        currentParts[0].text = `\n\n${currentParts[0].text.trimStart()}`;
+      }
+      flattened[flattened.length - 1].content = [
+        ...previousParts,
+        ...currentParts,
+      ];
     } else {
       flattened.push(msg);
     }
