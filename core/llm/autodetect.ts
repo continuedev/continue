@@ -236,11 +236,6 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "none";
   }
 
-  // Nova Pro requests always sent through Messages API, so formatting not necessary
-  if (lower.includes("nova")) {
-    return "none";
-  }
-
   if (lower.includes("codestral")) {
     return "none";
   }
