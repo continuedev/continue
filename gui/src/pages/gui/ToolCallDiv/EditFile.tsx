@@ -6,7 +6,6 @@ type EditToolCallProps = {
   changes: string;
   historyIndex: number;
   toolCallId?: string;
-  expandCodeblocks?: boolean;
 };
 
 export function EditFile(props: EditToolCallProps) {
