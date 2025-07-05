@@ -542,7 +542,7 @@ export async function unrollBlocks(
     if (!unrolledAssistant[key]) {
       unrolledAssistant[key] = [];
     }
-    unrolledAssistant[key]?.push(...(resolvedBlock[blockType] as any));
+    unrolledAssistant[key]?.push(...((resolvedBlock[blockType] ?? []) as any));
   }
 
   const configResult: ConfigResult<AssistantUnrolled> = {
