@@ -1,3 +1,4 @@
+import { CompletionUsage } from "openai/resources/completions.mjs";
 import { BaseLlmApi, constructLlmApi } from "../index.js";
 import { LLMConfig } from "../types.js";
 import { TestConfigOptions } from "./main.test.js";
@@ -88,12 +89,27 @@ export function testChat(
       new AbortController().signal,
     );
     let completion = "";
+    let usage: CompletionUsage | undefined = undefined;
     for await (const result of stream) {
-      completion += result.choices[0].delta.content ?? "";
+      completion += result.choices[0]?.delta.content ?? "";
 
-      expect(result.choices.length).toBeGreaterThan(0);
+      if (result.usage) {
+        usage = result.usage;
+      } else {
+        // At the end we expect a final message without choices that shares usage
+        expect(result.choices.length).toBeGreaterThan(0);
+      }
     }
     expect(completion.length).toBeGreaterThan(0);
+
+    if (options?.expectUsage === true) {
+      expect(usage).toBeDefined();
+      expect(usage!.completion_tokens).toBeGreaterThan(0);
+      expect(usage!.prompt_tokens).toBeGreaterThan(0);
+      expect(usage!.total_tokens).toEqual(
+        usage!.prompt_tokens + usage!.completion_tokens,
+      );
+    }
   });
 
   test("should successfully stream multi-part chat with empty text", async () => {
