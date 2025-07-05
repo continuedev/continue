@@ -9,11 +9,11 @@ type EditToolCallProps = {
 };
 
 export function EditFile(props: EditToolCallProps) {
-  if (!props.relativeFilePath || !props.changes) {
+  if (!props.relativeFilePath) {
     return null;
   }
 
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes}\n\`\`\``;
+  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath)} ${props.relativeFilePath}\n${props.changes}\n\`\`\``;
 
   return (
     <StyledMarkdownPreview
