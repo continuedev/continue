@@ -52,9 +52,70 @@ function trimmedMatch(
 }
 
 /**
+ * Whitespace-ignored matching strategy
+ * Removes all whitespace from both content and search, then finds the match
+ */
+function whitespaceIgnoredMatch(
+  fileContent: string,
+  searchContent: string,
+): SearchMatchResult | null {
+  // Remove all whitespace (spaces, tabs, newlines, etc.)
+  const strippedFileContent = fileContent.replace(/\s/g, "");
+  const strippedSearchContent = searchContent.replace(/\s/g, "");
+
+  if (strippedSearchContent === "") {
+    return null; // Empty search after stripping whitespace
+  }
+
+  const strippedIndex = strippedFileContent.indexOf(strippedSearchContent);
+  if (strippedIndex === -1) {
+    return null;
+  }
+
+  // Map the stripped position back to the original file content
+  let originalStartIndex = 0;
+  let strippedCharCount = 0;
+
+  // Find the original position by counting non-whitespace characters
+  for (let i = 0; i < fileContent.length; i++) {
+    if (strippedCharCount === strippedIndex) {
+      originalStartIndex = i;
+      break;
+    }
+    if (!/\s/.test(fileContent[i])) {
+      strippedCharCount++;
+    }
+  }
+
+  // Find the end position by counting the length of the search content
+  let originalEndIndex = originalStartIndex;
+  let matchedChars = 0;
+
+  for (
+    let i = originalStartIndex;
+    i < fileContent.length && matchedChars < strippedSearchContent.length;
+    i++
+  ) {
+    if (!/\s/.test(fileContent[i])) {
+      matchedChars++;
+    }
+    originalEndIndex = i + 1;
+  }
+
+  return {
+    startIndex: originalStartIndex,
+    endIndex: originalEndIndex,
+  };
+}
+
+/**
  * Ordered list of matching strategies to try
  */
-const matchingStrategies: MatchStrategy[] = [exactMatch, trimmedMatch];
+const matchingStrategies: MatchStrategy[] = [
+  exactMatch,
+  trimmedMatch,
+  whitespaceIgnoredMatch,
+];
 
 /**
  * Find the exact match position for search content in file content.
