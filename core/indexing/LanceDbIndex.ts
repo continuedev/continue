@@ -234,6 +234,23 @@ export class LanceDbIndex implements CodebaseIndex {
     return results;
   }
 
+  /**
+   * Due to a bug in indexing, some indexes have vectors
+   * without the surrounding []. These would fail to parse
+   * but this allows such existing indexes to function properly
+   */
+  private parseVector(vector: string): number[] {
+    try {
+      return JSON.parse(vector);
+    } catch (err) {
+      try {
+        return JSON.parse(`[${vector}]`);
+      } catch (err2) {
+        throw new Error(`Failed to parse vector: ${vector}`, { cause: err2 });
+      }
+    }
+  }
+
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
@@ -297,7 +314,7 @@ export class LanceDbIndex implements CodebaseIndex {
       const lanceRows: LanceDbRow[] = [];
       for (const item of cachedItems) {
         try {
-          const vector = JSON.parse(item.vector);
+          const vector = this.parseVector(item.vector);
           const { uuid, startLine, endLine, contents } = item;
 
           lanceRows.push({
