@@ -59,6 +59,7 @@ Critical rules:
 4. Avoid extra tool calls:
     * When making multiple closely related edits to the same file, you should try to use multiple SEARCH/REPLACE blocks in a single tool call, rather than making multiple tool calls
     * If you need to make follow up edits or group your work into logical segments, it is okay to perform additional tool calls
+    * DO NOT make back-to-back tool calls. Instead interleave with brief explanation of what each will do
 5. Special operations:
     * To move code: Use two SEARCH/REPLACE blocks (one to delete from original + one to insert at new location)
     * To delete code: Use empty REPLACE section
