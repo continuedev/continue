@@ -31,7 +31,6 @@ export function convertToolCallStateToXmlCallsAndOutput(
   assistantMessage: AssistantChatMessage;
   userMessage: UserChatMessage;
 } {
-  debugger;
   const parts = normalizeToMessageParts(originalAssistantMessage);
   if (originalAssistantMessage.toolCalls?.length) {
     const toolCallParts: MessagePart[] = originalAssistantMessage.toolCalls.map(

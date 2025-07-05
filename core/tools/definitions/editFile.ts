@@ -44,6 +44,7 @@ export const editFileTool: Tool = {
     `To edit an EXISTING file, use the ${BuiltInToolNames.EditExistingFile} tool with
 - filepath: the relative filepath to the file.
 - changes: ${CHANGES_DESCRIPTION}
+Only use this tool if you already know the contents of the file. Otherwise, use the ${BuiltInToolNames.ReadFile} or ${BuiltInToolNames.ReadCurrentlyOpenFile} tool to read it first.
 For example:`,
     `<filepath>path/to/the_file.ts</filepath><changes>// ... existing code ...
     function subtract(a: number, b: number): number {

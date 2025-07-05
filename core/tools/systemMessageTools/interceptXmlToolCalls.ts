@@ -2,7 +2,7 @@ import { ChatMessage, PromptLog, ToolCallDelta } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { generateOpenAIToolCallId } from "./openAiToolCallId";
 import { parsePartialXml } from "./parsePartialXmlToolCall";
-import { getStringDelta, splitAtTagBoundaries } from "./xmlToolUtils";
+import { getStringDelta, splitAtTagsAndCodeblocks } from "./xmlToolUtils";
 
 /*
     Function to intercept tool calls in XML format from a chat message stream
@@ -23,13 +23,22 @@ export async function* interceptXMLToolCalls(
   let currentToolCallId: string | undefined = undefined;
   let currentToolCallArgs: string = "";
   let inToolCall = false;
-  debugger;
+
   let done = false;
   let buffer = "";
+  let boundaryTypeIndex = 0;
+  const acceptedBoundaries: [string, string][] = [
+    ["<tool_call>", "</tool_call>"],
+    ["```xml\n<tool_call/>", "</tool_call>\n```"],
+    ["```\n<tool_call/>", "</tool_call>\n```"],
+    ["```tool_call>", "</tool_call>"], //"</tool_call>\n```"
+  ];
+
   while (true) {
     if (abortController.signal.aborted) {
       done = true;
     }
+
     const result = await messageGenerator.next();
     if (result.done) {
       return result.value;
@@ -45,16 +54,32 @@ export async function* interceptXMLToolCalls(
         }
 
         const content = renderChatMessage(message);
-        const splitContent = splitAtTagBoundaries(content); // split at tag starts/ends e.g. < >
-
+        const splitContent = splitAtTagsAndCodeblocks(content); // split at tag starts/ends e.g. < >
         for (const chunk of splitContent) {
           buffer += chunk;
           if (!inToolCall) {
-            // Check for entry into tool call
-            if (buffer.toLowerCase().startsWith("<tool_call>")) {
-              inToolCall = true;
-            } else if ("<tool_call>".startsWith(buffer.toLowerCase())) {
-              // We have a partial start tag, continue
+            const lowerCaseBuffer = buffer.toLowerCase();
+            let partialStartTagMatch = false;
+            for (let i = 0; i < acceptedBoundaries.length; i++) {
+              const [startTag, _] = acceptedBoundaries[i];
+
+              if (lowerCaseBuffer.startsWith(startTag)) {
+                boundaryTypeIndex = i;
+                inToolCall = true;
+                // for e.g. ```tool_call case, replace before adding to buffer, case insensitive
+                if (boundaryTypeIndex !== 0) {
+                  buffer = buffer.replace(
+                    new RegExp(startTag, "i"),
+                    "<tool_call>",
+                  );
+                }
+                break;
+              } else if (startTag.startsWith(lowerCaseBuffer)) {
+                partialStartTagMatch = true;
+              }
+            }
+
+            if (partialStartTagMatch) {
               continue;
             }
           }
@@ -63,7 +88,6 @@ export async function* interceptXMLToolCalls(
             if (!currentToolCallId) {
               currentToolCallId = generateOpenAIToolCallId();
             }
-
             toolCallText += buffer;
 
             // Handle tool call
@@ -110,7 +134,9 @@ export async function* interceptXMLToolCalls(
             }
 
             // Check for exit from tool call
-            if (toolCallText.endsWith("</tool_call>")) {
+            if (
+              toolCallText.includes("</tool_call>") // parallel might need better handling for xml that comes in codeblocks
+            ) {
               inToolCall = false;
               toolCallText = "";
               currentToolCallId = undefined;
