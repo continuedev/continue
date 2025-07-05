@@ -13,6 +13,7 @@ import { getFontSize } from "../../../util";
 import Spinner from "../../gui/Spinner";
 import { isTerminalCodeBlock } from "../utils";
 import { ApplyActions } from "./ApplyActions";
+import { CollapsibleContainer } from "./CollapsibleContainer";
 import { CopyButton } from "./CopyButton";
 import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
@@ -299,9 +300,7 @@ export function StepContainerPreToolbar({
         </div>
       </div>
 
-      {isExpanded && (
-        <div className="overflow-hidden overflow-y-auto">{children}</div>
-      )}
+      {isExpanded && <CollapsibleContainer>{children}</CollapsibleContainer>}
     </div>
   );
 }
