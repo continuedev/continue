@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { varWithFallback } from "../styles/theme";
 
 export const defaultBorderRadius = "0.5rem";
@@ -198,22 +198,4 @@ export const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-`;
-
-const ellipsisAnimation = keyframes`
-  0% { width: 0; }
-  33% { width: 0.33em; }
-  66% { width: 0.66em; }
-  100% { width: 1em; }
-`;
-
-export const AnimatedEllipsis = styled.span`
-  &::after {
-    content: "...";
-    display: inline-block;
-    overflow: hidden;
-    vertical-align: bottom;
-    animation: ${ellipsisAnimation} 2s infinite;
-    width: 0;
-  }
 `;
