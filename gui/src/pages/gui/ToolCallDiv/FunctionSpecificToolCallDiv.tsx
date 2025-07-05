@@ -36,7 +36,6 @@ function FunctionSpecificToolCallDiv({
     case BuiltInToolNames.SearchAndReplaceInFile:
       return (
         <EditFile
-          expandCodeblocks
           relativeFilePath={args.filepath ?? ""}
           changes={args.diff ?? ""}
           toolCallId={toolCall.id}

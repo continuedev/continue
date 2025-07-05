@@ -219,7 +219,6 @@ export function StepContainerPreToolbar({
       if (isGeneratingCodeBlock) {
         return (
           <span className="text-lightgray inline-flex items-center gap-2 text-right">
-            {!isExpanded ? `${numLines} line${plural}` : "Generating"}{" "}
             <div>
               <Spinner />
             </div>

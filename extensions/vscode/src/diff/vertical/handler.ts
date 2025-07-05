@@ -174,9 +174,12 @@ export class VerticalDiffHandler implements vscode.Disposable {
       // Clear deletion buffer
       await this.insertDeletionBuffer();
 
-      await this.reapplyWithMyersDiff(diffLines);
+      const myersDiffs = await this.reapplyWithMyersDiff(diffLines);
 
-      const range = new vscode.Range(this.startLine, 0, this.startLine, 0);
+      // Scroll to the first diff
+      const scrollToLine =
+        this.getFirstChangedLine(myersDiffs) ?? this.startLine;
+      const range = new vscode.Range(scrollToLine, 0, scrollToLine, 0);
       this.editor.revealRange(range, vscode.TextEditorRevealType.Default);
 
       this.options.onStatusUpdate(
@@ -370,6 +373,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     this.editorToVerticalDiffCodeLens.set(this.fileUri, codeLensBlocks);
     this.refreshCodeLens();
+
+    return myersDiffs;
   }
 
   private async insertDeletionBuffer() {
@@ -549,5 +554,18 @@ export class VerticalDiffHandler implements vscode.Disposable {
     this.editorToVerticalDiffCodeLens.set(this.fileUri, blocks);
 
     this.refreshCodeLens();
+  }
+
+  /**
+   * Gets the first line number that was changed in a diff
+   */
+  private getFirstChangedLine(diff: DiffLine[]): number | null {
+    for (let i = 0; i < diff.length; i++) {
+      const item = diff[i];
+      if (item.type === "old" || item.type === "new") {
+        return this.startLine + i;
+      }
+    }
+    return null;
   }
 }
