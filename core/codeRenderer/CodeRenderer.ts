@@ -81,19 +81,11 @@ export class CodeRenderer {
       });
 
       const th = this.highlighter.getTheme(this.currentTheme);
-      // const customTheme = {
-      //   ...th,
-      //   colors: {
-      //     ...th.colors,
-      //     // "editor.lineHighlightBackground": "#ffffff1a", // VS Code's highlight color
-      //   },
-      // };
 
       this.editorBackground = th.bg;
       this.editorForeground = th.fg;
       this.editorLineHighlight =
         th.colors!["editor.lineHighlightBackground"] ?? "#000000";
-      // console.log(th.colors);
     } else {
       this.currentTheme = "dark-plus";
     }
@@ -196,13 +188,6 @@ export class CodeRenderer {
         transformerNotationDiff(),
         transformerNotationFocus(),
       ],
-      // decorations: [
-      //   {
-      //     start: { line: currLineOffsetFromTop, character: 0 },
-      //     end: { line: currLineOffsetFromTop, character: 0 },
-      //     properties: { class: "highlighted-line" },
-      //   },
-      // ],
     });
   }
 
