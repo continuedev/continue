@@ -40,12 +40,16 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools
     const activeTools = selectActiveTools(state);
     const toolsSupported = modelSupportsTools(selectedChatModel);
+    const readOnlyMode = state.session.readOnlyMode;
+    const filteredTools = readOnlyMode
+      ? activeTools.filter((t) => t.readonly)
+      : activeTools;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
-    if (toolsSupported && activeTools.length > 0) {
+    if (toolsSupported && filteredTools.length > 0) {
       completionOptions = {
-        tools: activeTools,
+        tools: filteredTools,
       };
     }
 
@@ -125,7 +129,7 @@ export const streamNormalInput = createAsyncThunk<
               modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
               ...(state.session.mode === "agent" && {
-                tools: activeTools.map((tool) => tool.function.name),
+                tools: filteredTools.map((tool) => tool.function.name),
               }),
             },
           });
