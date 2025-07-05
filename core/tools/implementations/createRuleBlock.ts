@@ -5,29 +5,18 @@ import { createRuleFilePath } from "../../config/markdown/utils";
 
 export type CreateRuleBlockArgs = Pick<
   Required<RuleWithSource>,
-  "rule" | "description" | "alwaysApply" | "name"
+  "rule" | "name"
 > &
-  Pick<RuleWithSource, "globs" | "regex">;
+  Pick<RuleWithSource, "globs" | "regex" | "description" | "alwaysApply">;
 
 export const createRuleBlockImpl: ToolImpl = async (
-  args: CreateRuleBlockArgs,
+  { name, rule, ...otherArgs }: CreateRuleBlockArgs,
   extras,
 ) => {
-  // Create options object with the fields that createRuleMarkdown expects
-  const options: any = {
-    description: args.description,
-    globs: args.globs,
-  };
-
-  // Add regex if provided
-  if (args.regex) {
-    options.regex = args.regex;
-  }
-
-  const fileContent = createRuleMarkdown(args.name, args.rule, options);
+  const fileContent = createRuleMarkdown(name, rule, otherArgs);
 
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();
-  const ruleFilePath = createRuleFilePath(localContinueDir, args.name);
+  const ruleFilePath = createRuleFilePath(localContinueDir, name);
 
   await extras.ide.writeFile(ruleFilePath, fileContent);
   await extras.ide.openFile(ruleFilePath);
@@ -35,7 +24,7 @@ export const createRuleBlockImpl: ToolImpl = async (
   return [
     {
       name: "New Rule Block",
-      description: args.description || "",
+      description: otherArgs.description || "",
       uri: {
         type: "file",
         value: ruleFilePath,

@@ -95,6 +95,8 @@ export function UserSettingsForm() {
     config.experimental?.enableExperimentalTools ?? false;
   const optInNextEditFeature =
     config.experimental?.optInNextEditFeature ?? false;
+  const codebaseToolCallingOnly =
+    config.experimental?.codebaseToolCallingOnly ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -420,6 +422,16 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Enable experimental tools"
+                />
+
+                <ToggleSwitch
+                  isToggled={codebaseToolCallingOnly}
+                  onToggle={() =>
+                    handleUpdate({
+                      codebaseToolCallingOnly: !codebaseToolCallingOnly,
+                    })
+                  }
+                  text="@Codebase: use tool calling only"
                 />
 
                 {hasContinueEmail && (

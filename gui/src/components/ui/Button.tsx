@@ -13,9 +13,9 @@ const buttonVariants = {
   primary:
     "px-3 py-1.5 border-none text-background bg-foreground hover:enabled:brightness-125",
   secondary:
-    "px-3 py-1.5 border border-input-border text-foreground bg-input hover:enabled:bg-background hover:enabled:opacity-90",
+    "px-3 py-1.5 border-none text-foreground bg-input hover:enabled:bg-gray-500/20",
   outline:
-    "px-3 py-1.5 border-[0.5px] border-foreground text-foreground bg-transparent hover:enabled:bg-foreground/10",
+    "px-3 py-1.5 border border-foreground text-foreground bg-transparent hover:enabled:bg-input",
   ghost:
     "px-2 py-1.5 border-none text-foreground bg-gray-500/40 hover:enabled:brightness-125",
 };

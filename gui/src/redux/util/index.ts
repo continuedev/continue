@@ -1,5 +1,4 @@
 import { ContextItem, ToolCallState } from "core";
-import { safeParseToolCallArgs } from "core/tools/parseArgs";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { ChatHistoryItemWithMessageId } from "../slices/sessionSlice";
 import { RootState } from "../store";
@@ -32,6 +31,7 @@ export function findToolOutput(
 
 export function logToolUsage(
   toolCallState: ToolCallState,
+  accepted: boolean,
   success: boolean,
   messenger: IIdeMessenger,
   finalOutput?: ContextItem[],
@@ -40,10 +40,15 @@ export function logToolUsage(
     name: "toolUsage",
     data: {
       toolCallId: toolCallState.toolCallId,
-      functionName: toolCallState.toolCall?.function?.name,
-      functionArgs: toolCallState.toolCall?.function?.arguments,
-      toolCallArgs: safeParseToolCallArgs(toolCallState.toolCall),
-      parsedArgs: toolCallState.parsedArgs,
+
+      functionName:
+        toolCallState.tool?.function?.name ||
+        toolCallState.toolCall.function.name,
+
+      functionParams: toolCallState.tool?.function.parameters,
+
+      toolCallArgs: toolCallState.toolCall.function.arguments,
+      accepted: accepted,
       output: finalOutput || toolCallState.output || [],
       succeeded: success,
     },

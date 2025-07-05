@@ -18,6 +18,7 @@ import {
   RuleWithSource,
   Session,
   SessionMetadata,
+  Tool,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -43,6 +44,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 
 type SessionState = {
   lastSessionId?: string;
+  isSessionMetadataLoading: boolean;
   allSessionMetadata: SessionMetadata[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
@@ -62,6 +64,7 @@ type SessionState = {
 };
 
 const initialState: SessionState = {
+  isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
   isStreaming: false,
@@ -229,6 +232,28 @@ export const sessionSlice = createSlice({
       }
 
       state.isStreaming = true;
+    },
+    truncateHistoryToMessage: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        index: number;
+      }>,
+    ) => {
+      const { index } = payload;
+
+      if (state.history.length && index < state.history.length) {
+        state.codeBlockApplyStates.curIndex = 0;
+        state.history = state.history.slice(0, index + 1).concat({
+          message: {
+            id: uuidv4(),
+            role: "assistant",
+            content: "", // IMPORTANT - this is subsequently updated by response streaming
+          },
+          contextItems: [],
+        });
+      }
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
@@ -423,6 +448,12 @@ export const sessionSlice = createSlice({
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
       state.title = payload;
     },
+    setIsSessionMetadataLoading: (
+      state,
+      { payload }: PayloadAction<boolean>,
+    ) => {
+      state.isSessionMetadataLoading = payload;
+    },
     setAllSessionMetadata: (
       state,
       { payload }: PayloadAction<SessionMetadata[]>,
@@ -535,6 +566,7 @@ export const sessionSlice = createSlice({
       state,
       action: PayloadAction<{
         toolCallId: string;
+        tools: Tool[];
       }>,
     ) => {
       const toolCallState = findToolCall(
@@ -543,6 +575,13 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "generated";
+
+        const tool = action.payload.tools.find(
+          (t) => t.function.name === toolCallState.toolCall.function.name,
+        );
+        if (tool) {
+          toolCallState.tool = tool;
+        }
       }
     },
     updateToolCallOutput: (
@@ -713,6 +752,7 @@ export const {
   addPromptCompletionPair,
   setActive,
   submitEditorAndInitAtIndex,
+  truncateHistoryToMessage,
   updateHistoryItemAtIndex,
   clearDanglingMessages,
   setMainEditorContentTrigger,
@@ -728,6 +768,7 @@ export const {
   setToolGenerated,
   updateToolCallOutput,
   setMode,
+  setIsSessionMetadataLoading,
   setAllSessionMetadata,
   addSessionMetadata,
   updateSessionMetadata,

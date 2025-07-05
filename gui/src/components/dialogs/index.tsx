@@ -1,5 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import React, { isValidElement, useEffect } from "react";
+import React, { isValidElement } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import {
@@ -8,7 +8,6 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
-import { varWithFallback } from "../../styles/theme";
 
 interface TextDialogProps {
   showDialog: boolean;
@@ -21,7 +20,8 @@ const ScreenCover = styled.div`
   position: fixed;
   width: 100%;
   height: 100%;
-  background-color: ${varWithFallback("background")}aa;
+  background-color: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(0.5px);
   z-index: 100000;
   flex-direction: column;
 `;
@@ -41,25 +41,23 @@ const DialogContainer = styled.div`
 `;
 
 const TextDialog = (props: TextDialogProps) => {
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        props.onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [props]);
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Escape") {
+      props.onClose();
+    }
+  };
 
   if (!isValidElement(props.message) && typeof props.message !== "string") {
     return null;
   }
 
   return (
-    <ScreenCover onClick={props.onClose} hidden={!props.showDialog}>
+    <ScreenCover
+      onClick={props.onClose}
+      hidden={!props.showDialog}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
+    >
       <DialogContainer
         className="xs:w-[90%] no-scrollbar max-h-[95%] w-[92%] max-w-[600px] overflow-auto sm:w-[88%] md:w-[80%]"
         onClick={(e) => {

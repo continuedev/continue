@@ -112,6 +112,7 @@ export default function StepContainer(props: StepContainerProps) {
               onContinueGeneration={onContinueGeneration}
               index={props.index}
               item={props.item}
+              isLast={props.isLast}
             />
           )}
         </div>

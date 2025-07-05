@@ -179,7 +179,11 @@ export function TipTapEditor(props: TipTapEditorProps) {
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
-      className={shouldHideToolbar ? "cursor-default" : "cursor-text"}
+      className={
+        !props.isMainInput && shouldHideToolbar
+          ? "cursor-pointer hover:brightness-105"
+          : "cursor-text"
+      }
       onClick={() => {
         editor?.commands.focus();
       }}
