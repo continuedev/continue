@@ -19,6 +19,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "claude-3-7",
         "claude-3.7",
         "claude-sonnet-4",
+        "claude-4-sonnet",
         "gpt-4",
         "o3",
         "gemini",
@@ -33,6 +34,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-3-7",
           "claude-3.7",
           "claude-sonnet-4",
+          "claude-4-sonnet",
           "claude-opus-4",
         ].some((part) => model.toLowerCase().startsWith(part))
       ) {
@@ -95,6 +97,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-3-7-sonnet",
           "claude-3.7-sonnet",
           "claude-sonnet-4",
+          "claude-4-sonnet",
           "claude-opus-4",
         ].some((part) => model.toLowerCase().includes(part))
       ) {
