@@ -573,16 +573,15 @@ export class NextEditWindowManager {
 
     const offsetFromTop =
       (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight;
-    // + SVG_CONFIG.strokeWidth * 2;
 
     // Set the margin-left so that it's never covering code inside the editable region.
     const marginLeft =
       SVG_CONFIG.getTipWidth(code) -
       SVG_CONFIG.getTipWidth(code.split("\n")[currLineOffsetFromTop]);
     return vscode.window.createTextEditorDecorationType({
-      after: {
+      before: {
         contentIconPath: uri,
-        border: `transparent; position: absolute; z-index: 1000;
+        border: `transparent; position: absolute; z-index: 2147483647;
                box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px;
                filter: ${SVG_CONFIG.filter};
                border-radius: ${SVG_CONFIG.radius}px;
@@ -591,7 +590,7 @@ export class NextEditWindowManager {
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
       },
-      rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+      rangeBehavior: vscode.DecorationRangeBehavior.OpenOpen,
     });
   }
 
