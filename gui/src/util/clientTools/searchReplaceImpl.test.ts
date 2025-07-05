@@ -36,7 +36,13 @@ describe("searchReplaceToolImpl", () => {
     // Create mock extras
     mockExtras = {
       ideMessenger: mockIdeMessenger,
-      getState: vi.fn(),
+      getState: vi.fn<any>(() => ({
+        config: {
+          config: {
+            allowAnonymousTelemetry: false,
+          },
+        },
+      })),
       dispatch: vi.fn(),
     };
   });
