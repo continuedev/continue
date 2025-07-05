@@ -420,6 +420,7 @@ export class ContinueCompletionProvider
             editor,
             currCursorPos,
             editableRegionStartLine,
+            oldEditRangeSlice,
             newEditRangeSlice,
             diffLines,
           );
