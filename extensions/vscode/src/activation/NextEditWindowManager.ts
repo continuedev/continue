@@ -23,10 +23,22 @@ export interface TextApplier {
 }
 
 const SVG_CONFIG = {
-  stroke: "#999998",
+  // stroke: "#999998",
+  stroke: "#666667",
   strokeWidth: 1,
   textColor: "#999998",
-  filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.2))",
+  purple: "rgba(112, 114, 209)",
+  blue: "rgba(107, 166, 205)",
+  green: "rgba(136 194 163)",
+  // filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.2))",
+  // filter: "drop-shadow(0 2px 2px rgba(255,255,255,0.2))",
+  // filter:
+  //   "drop-shadow(0 2px 4px rgb(112, 114, 209)) drop-shadow(0 4px 8px rgb(136, 194, 163)) drop-shadow(0 6px 12px rgb(107, 166, 205));",
+  // filter:
+  //   "drop-shadow(0 3px 6px rgba(112, 114, 209, 0.4)) drop-shadow(0 3px 6px rgba(136, 194, 163, 0.4)) drop-shadow(0 3px 6px rgba(107, 166, 205, 0.4));",
+  filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
+        drop-shadow(8px 8px 0px rgba(107, 166, 205, 0.3))
+        drop-shadow(12px 12px 0px rgba(136, 194, 163, 0.2));`,
   radius: 3,
   leftMargin: 40,
   defaultText: "",
@@ -591,12 +603,10 @@ export class NextEditWindowManager {
     return vscode.window.createTextEditorDecorationType({
       before: {
         contentIconPath: uri,
-        border: `transparent; position: absolute; z-index: 2147483647;
-               box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px;
-               filter: ${SVG_CONFIG.filter};
-               border-radius: ${SVG_CONFIG.radius}px;
-               margin-top: ${-1 * offsetFromTop}px;
-               margin-left: ${marginLeft}px;`,
+        border: `transparent; position: absolute; z-index: 2147483647;        
+              filter: ${SVG_CONFIG.filter};
+              margin-top: ${-1 * offsetFromTop}px;
+              margin-left: ${marginLeft}px;`,
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
       },
