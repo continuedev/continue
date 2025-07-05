@@ -58,9 +58,12 @@ const config = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
-        gtag: {
-          trackingID: "G-M3JWW8N2XQ",
-        },
+        ...(process.env.NODE_ENV === "production" && {
+          gtag: {
+            trackingID: "G-M3JWW8N2XQ",
+            anonymizeIP: true,
+          },
+        }),
       }),
     ],
   ],
@@ -96,29 +99,18 @@ const config = {
             type: "docSidebar",
             sidebarId: "docsSidebar",
             position: "left",
-            label: "User Guide",
+            label: "Documentation",
             href: "/",
           },
           {
-            type: "docSidebar",
-            sidebarId: "hubSidebar",
+            to: "/guides/overview",
+            label: "Guides",
             position: "left",
-            label: "Hub",
-            href: "/hub/introduction",
           },
           {
-            type: "docSidebar",
-            sidebarId: "customizingSidebar",
+            to: "https://hub.continue.dev",
+            label: "Explore",
             position: "left",
-            label: "Customize",
-            href: "/customize/overview",
-          },
-          {
-            type: "docSidebar",
-            sidebarId: "customizingSidebar",
-            position: "left",
-            label: "Reference",
-            href: "/reference",
           },
 
           {
@@ -204,12 +196,34 @@ const config = {
     }),
   plugins: [
     [
+      "posthog-docusaurus",
+      {
+        apiKey: process.env.POSTHOG_API_KEY || "DEV",
+        appUrl: "https://us.i.posthog.com",
+        enableInDevelopment: false,
+      },
+    ],
+    // Custom plugin for better structured llms.txt
+    require.resolve("./plugins/custom-llms-txt.js"),
+    // Keeping the original plugin commented out for now
+    // [
+    //   "docusaurus-plugin-llms-txt",
+    //   {
+    //     title: "Continue Documentation",
+    //     description: "Documentation for Continue - the open-source AI code assistant for developers",
+    //     // Optional configuration
+    //     outputPath: "static/llms.txt",
+    //     includePatterns: ["docs/**"],
+    //     excludePatterns: ["**/node_modules/**"],
+    //   },
+    // ],
+    [
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [
           {
             to: "/hub/introduction",
-            from: "/hub",
+            from: ["/hub"],
           },
           {
             to: "/hub/governance/org-permissions",
@@ -228,11 +242,11 @@ const config = {
             from: "/hub/blocks",
           },
           {
-            to: "/customize/overview",
+            to: "/customization/overview",
             from: ["/customize", "/customization"],
           },
           {
-            to: "/customize/deep-dives/mcp",
+            to: "/customization/mcp-tools",
             from: "/customize/tools",
           },
           {
@@ -240,27 +254,27 @@ const config = {
             from: ["/install/vscode", "/install/jetbrains"],
           },
           {
-            to: "/customize/deep-dives/settings",
+            to: "/advanced/deep-dives/settings",
             from: "/customize/settings",
           },
           {
-            to: "/customize/model-roles",
+            to: "/advanced/model-roles/intro",
             from: ["/customize/model-types", "/setup/overview"],
           },
           {
-            to: "/customize/model-roles/embeddings",
+            to: "/advanced/model-roles/embeddings",
             from: "/customize/model-types/embeddings",
           },
           {
-            to: "/customize/model-roles/autocomplete",
+            to: "/advanced/model-roles/autocomplete",
             from: "/customize/model-types/autocomplete",
           },
           {
-            to: "/customize/model-roles/chat",
+            to: "/advanced/model-roles/chat",
             from: "/customize/model-types/chat",
           },
           {
-            to: "/customize/model-roles/reranking",
+            to: "/advanced/model-roles/reranking",
             from: "/customize/model-types/reranking",
           },
           {
@@ -274,30 +288,31 @@ const config = {
             ],
           },
           {
-            to: "/customize/model-providers",
+            to: "/advanced/model-providers/anthropic",
             from: ["/setup/select-provider", "/setup/model-providers"],
           },
           {
-            to: "/customize/deep-dives/codebase",
+            to: "/advanced/context/codebase",
             from: [
               "/walkthroughs/codebase-embeddings",
               "/features/codebase-embeddings",
+              "/advanced/deep-dives/codebase",
             ],
           },
           {
-            to: "/customize/deep-dives/autocomplete",
+            to: "/advanced/deep-dives/autocomplete",
             from: [
               "/walkthroughs/tab-autocomplete",
               "/features/tab-autocomplete",
             ],
           },
           {
-            to: "/customize/deep-dives/prompts",
+            to: "/advanced/deep-dives/prompts",
             from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
           // TODO - actions redirects
           {
-            to: "/customize/deep-dives/slash-commands",
+            to: "/advanced/deep-dives/slash-commands",
             from: [
               "/actions/how-to-use-it",
               "/actions/how-to-customize",
@@ -311,11 +326,11 @@ const config = {
           },
 
           {
-            to: "/customize/deep-dives/vscode-actions",
+            to: "/advanced/deep-dives/vscode-actions",
             from: ["/walkthroughs/quick-actions"],
           },
           {
-            to: "/customize/changelog",
+            to: "/reference",
             from: "/changelog",
           },
           {
@@ -327,177 +342,202 @@ const config = {
             ],
           },
           {
-            to: "/customize/context-providers",
-            from: ["/customization/context-providers"],
+            to: "/advanced/custom-providers",
+            from: [
+              "/customization/context-providers",
+              "/advanced/context-integration/custom-providers",
+              "/advanced/context/custom-providers",
+            ],
           },
           {
-            to: "/customize/deep-dives/development-data",
+            to: "/advanced/deep-dives/development-data",
             from: ["/development-data", "/customize/development-data"],
           },
           {
-            to: "/customize/deep-dives/docs",
-            from: "/features/talk-to-your-docs",
+            to: "/advanced/context/documentation",
+            from: [
+              "/features/talk-to-your-docs",
+              "/advanced/context-integration/documentation",
+              "/advanced/deep-dives/docs",
+            ],
           },
           {
-            to: "/customize/model-providers/anthropic",
+            to: "/advanced/model-providers/anthropic",
             from: "/reference/Model Providers/anthropicllm",
           },
           {
-            to: "/customize/model-providers/azure",
+            to: "/advanced/model-providers/azure",
             from: "/reference/Model Providers/azure",
           },
           {
-            to: "/customize/model-providers/bedrock",
+            to: "/advanced/model-providers/bedrock",
             from: "/reference/Model Providers/bedrock",
           },
           {
-            to: "/customize/model-providers/deepseek",
+            to: "/advanced/model-providers/deepseek",
             from: "/reference/Model Providers/deepseek",
           },
           {
-            to: "/customize/model-providers",
+            to: "/advanced/model-providers/anthropic",
             from: "/reference/Model Providers/freetrial",
           },
           {
-            to: "/customize/model-providers/gemini",
+            to: "/advanced/model-providers/gemini",
             from: "/reference/Model Providers/geminiapi",
           },
           {
-            to: "/customize/model-providers/mistral",
+            to: "/advanced/model-providers/mistral",
             from: "/reference/Model Providers/mistral",
           },
           {
-            to: "/customize/model-providers/ollama",
+            to: "/advanced/model-providers/ollama",
             from: "/reference/Model Providers/ollama",
           },
           {
-            to: "/customize/model-providers/openai",
+            to: "/advanced/model-providers/openai",
             from: "/reference/Model Providers/openai",
-          },
-          {
-            to: "/customize/tutorials/custom-code-rag",
-            from: "/walkthroughs/custom-code-rag",
-          },
-          {
-            to: "/customize/tutorials/llama3.1",
-            from: "/walkthroughs/llama3.1",
-          },
-          {
-            to: "/customize/tutorials/running-continue-without-internet",
-            from: "/walkthroughs/running-continue-without-internet",
-          },
-          {
-            to: "/customize/tutorials/set-up-codestral",
-            from: "/walkthroughs/set-up-codestral",
           },
           {
             to: "/",
             from: "/intro",
           },
           {
-            to: "/customize/model-providers/more/cloudflare",
+            to: "/advanced/model-providers/more/cloudflare",
             from: "/reference/Model Providers/cloudflare",
           },
           {
-            to: "/customize/model-providers/more/cohere",
+            to: "/advanced/model-providers/more/cohere",
             from: "/reference/Model Providers/cohere",
           },
           {
-            to: "/customize/model-providers/more/deepinfra",
+            to: "/advanced/model-providers/more/deepinfra",
             from: "/reference/Model Providers/deepinfra",
           },
           {
-            to: "/customize/model-providers/more/flowise",
+            to: "/advanced/model-providers/more/flowise",
             from: "/reference/Model Providers/flowise",
           },
           {
-            to: "/customize/model-providers/more/huggingfaceinferenceapi",
+            to: "/advanced/model-providers/llamastack",
+            from: "/advanced/model-providers/more/llamastack",
+          },
+          {
+            to: "/advanced/model-providers/more/huggingfaceinferenceapi",
             from: "/reference/Model Providers/huggingfaceinferenceapi",
           },
           {
-            to: "/customize/model-providers/more/ipex_llm",
+            to: "/advanced/model-providers/more/ipex_llm",
             from: "/reference/Model Providers/ipex_llm",
           },
           {
-            to: "/customize/model-providers/more/kindo",
+            to: "/advanced/model-providers/more/kindo",
             from: "/reference/Model Providers/kindo",
           },
           {
-            to: "/customize/model-providers/more/llamacpp",
+            to: "/advanced/model-providers/more/llamacpp",
             from: "/reference/Model Providers/llamacpp",
           },
           {
-            to: "/customize/model-providers/more/llamafile",
+            to: "/advanced/model-providers/more/llamafile",
             from: "/reference/Model Providers/llamafile",
           },
           {
-            to: "/customize/model-providers/more/lmstudio",
+            to: "/advanced/model-providers/more/lmstudio",
             from: "/reference/Model Providers/lmstudio",
           },
           {
-            to: "/customize/model-providers/more/msty",
+            to: "/advanced/model-providers/more/msty",
             from: "/reference/Model Providers/msty",
           },
           {
-            to: "/customize/model-providers/more/openrouter",
+            to: "/advanced/model-providers/more/openrouter",
             from: "/reference/Model Providers/openrouter",
           },
           {
-            to: "/customize/model-providers/more/replicatellm",
+            to: "/advanced/model-providers/more/replicatellm",
             from: "/reference/Model Providers/replicatellm",
           },
           {
-            to: "/customize/model-providers/more/sagemaker",
+            to: "/advanced/model-providers/more/sagemaker",
             from: "/reference/Model Providers/sagemaker",
           },
           {
-            to: "/customize/model-providers/more/textgenwebui",
+            to: "/advanced/model-providers/more/textgenwebui",
             from: "/reference/Model Providers/textgenwebui",
           },
           {
-            to: "/customize/model-providers/more/together",
+            to: "/advanced/model-providers/more/together",
             from: "/reference/Model Providers/together",
           },
           {
-            to: "/customize/model-providers/more/novita",
+            to: "/advanced/model-providers/more/novita",
             from: "/reference/Model Providers/novita",
           },
           {
-            to: "/customize/model-providers/more/vllm",
+            to: "/advanced/model-providers/more/vllm",
             from: "/reference/Model Providers/vllm",
           },
           {
-            to: "/customize/model-providers/more/watsonx",
+            to: "/advanced/model-providers/more/watsonx",
             from: "/reference/Model Providers/watsonx",
           },
           {
-            to: "/customize/model-providers/more/nebius",
+            to: "/advanced/model-providers/more/nebius",
             from: "/reference/Model Providers/nebius",
           },
           // Sidebar items that should route directly to a subpage
           {
-            to: "/chat/how-to-use-it",
-            from: "/chat",
+            to: "/features/chat/quick-start",
+            from: ["/chat", "/chat/how-to-use-it"],
           },
           {
-            to: "/agent/how-to-use-it",
-            from: "/agent",
+            to: "/features/agent/quick-start",
+            from: ["/agent", "/agent/how-to-use-it"],
           },
           {
-            to: "/edit/how-to-use-it",
-            from: "/edit",
+            to: "/features/edit/quick-start",
+            from: ["/edit", "/edit/how-to-use-it"],
           },
           {
-            to: "/autocomplete/how-to-use-it",
-            from: "/autocomplete",
+            to: "/features/autocomplete/quick-start",
+            from: ["/autocomplete", "/autocomplete/how-to-use-it"],
           },
           {
             to: "/getting-started/install",
             from: "/getting-started",
           },
           {
-            to: "/customize/deep-dives/prompts",
+            to: "/advanced/deep-dives/prompts",
             from: "/customize/deep-dives/prompt-files",
+          },
+          // Migrated from netlify.toml
+          {
+            to: "/features/chat/how-it-works",
+            from: "/chat/how-it-works",
+          },
+          {
+            to: "/features/autocomplete/how-it-works",
+            from: "/autocomplete/how-it-works",
+          },
+          {
+            to: "/features/edit/how-it-works",
+            from: "/edit/how-it-works",
+          },
+          {
+            to: "/features/agent/how-it-works",
+            from: "/agent/how-it-works",
+          },
+          {
+            to: "/advanced/telemetry",
+            from: "/telemetry",
+          },
+          {
+            to: "/advanced/yaml-migration",
+            from: "/yaml-migration",
+          },
+          {
+            to: "/advanced/json-reference",
+            from: "/json-reference",
           },
         ],
       },

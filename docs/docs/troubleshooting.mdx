@@ -25,9 +25,8 @@ To solve many problems, the first step is reading the logs to find the relevant 
 In order to view debug logs, which contain extra information, click the dropdown at the top that says "Default levels" and select "Verbose".
 :::
 
-1. <kbd>cmd</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> for MacOS or <kbd>ctrl</kbd> + <kbd>
-     shift
-   </kbd> + <kbd>P</kbd> for Windows
+1. <kbd>cmd</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> for MacOS or <kbd>ctrl</kbd>
+   + <kbd>shift</kbd> + <kbd>P</kbd> for Windows
 2. Search for and then select "Developer: Toggle Developer Tools"
 3. This will open the [Chrome DevTools window](https://developer.chrome.com/docs/devtools/)
 4. Select the `Console` tab
@@ -42,7 +41,7 @@ To view prompt logs/analytics, you can enable the Continue Console.
 3. Reload the window
 4. Open the Continue Console by using the command palette (<kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd>) and searching for "Continue: Focus on Continue Console View"
 
-![Continue Console](../static/img/continue-console.png)
+![Continue Console](/img/continue-console.png)
 
 ### JetBrains
 
@@ -56,7 +55,7 @@ Some JetBrains-related logs may also be found by clicking "Help" > "Show Log in 
 
 We are constantly making fixes and improvements to Continue, but the latest changes remain in a "pre-release" version for roughly a week so that we can test their stability. If you are experiencing issues, you can try the pre-release by going to the Continue extension page in VS Code and selecting "Switch to Pre-Release" as shown below.
 
-![Pre-Release](../static/img/prerelease.png)
+![Pre-Release](/img/prerelease.png)
 
 ### JetBrains
 
@@ -120,7 +119,7 @@ If you're seeing a `fetch failed` error and your network requires custom certifi
 
 You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
 
-***Windows VS Code Users***: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension should also correct this issue.
+**_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension should also correct this issue.
 
 #### VS Code Proxy Settings
 
@@ -161,6 +160,12 @@ We use LanceDB as our vector database for codebase search features. On x64 Linux
 Most Continue features will work normally, including autocomplete and chat. However, commands that rely on codebase indexing, such as `@codebase`, `@files`, and `@folder`, will be disabled.
 
 For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
+
+### How do I reset the state of the extension?
+
+Continue stores it's data in the `~/.continue` directory (%USERPROFILE%\.continue` on Windows).
+
+If you'd like to perform a clean reset of the extension, including removing all configuration files, indices, etc, you can remove this directory, uninstall, and then reinstall.
 
 ## Still having trouble?
 

@@ -3,8 +3,10 @@ import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
+import { codebaseToolImpl } from "./implementations/codebaseTool";
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { createRuleBlockImpl } from "./implementations/createRuleBlock";
+import { fetchUrlContentImpl } from "./implementations/fetchUrlContent";
 import { fileGlobSearchImpl } from "./implementations/globSearch";
 import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
@@ -14,6 +16,8 @@ import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
+import { viewRepoMapImpl } from "./implementations/viewRepoMap";
+import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
 import { safeParseToolCallArgs } from "./parseArgs";
 
 async function callHttpTool(
@@ -133,7 +137,7 @@ async function callToolFromUri(
   }
 }
 
-async function callBuiltInTool(
+export async function callBuiltInTool(
   functionName: string,
   args: any,
   extras: ToolExtras,
@@ -151,6 +155,8 @@ async function callBuiltInTool(
       return await runTerminalCommandImpl(args, extras);
     case BuiltInToolNames.SearchWeb:
       return await searchWebImpl(args, extras);
+    case BuiltInToolNames.FetchUrlContent:
+      return await fetchUrlContentImpl(args, extras);
     case BuiltInToolNames.ViewDiff:
       return await viewDiffImpl(args, extras);
     case BuiltInToolNames.LSTool:
@@ -161,6 +167,12 @@ async function callBuiltInTool(
       return await createRuleBlockImpl(args, extras);
     case BuiltInToolNames.RequestRule:
       return await requestRuleImpl(args, extras);
+    case BuiltInToolNames.CodebaseTool:
+      return await codebaseToolImpl(args, extras);
+    case BuiltInToolNames.ViewRepoMap:
+      return await viewRepoMapImpl(args, extras);
+    case BuiltInToolNames.ViewSubdirectory:
+      return await viewSubdirectoryImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

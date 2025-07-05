@@ -3,8 +3,6 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -211,6 +209,10 @@ class VsCodeIde implements IDE {
         .getConfiguration(EXTENSION_NAME)
         .get("telemetryEnabled")) ?? true;
     return globalEnabled && continueEnabled;
+  }
+
+  isWorkspaceRemote(): Promise<boolean> {
+    return Promise.resolve(vscode.env.remoteName !== undefined);
   }
 
   getUniqueId(): Promise<string> {
@@ -446,8 +448,10 @@ class VsCodeIde implements IDE {
     });
   }
 
-  async getFileResults(pattern: string): Promise<string[]> {
-    const MAX_FILE_RESULTS = 200;
+  async getFileResults(
+    pattern: string,
+    maxResults?: number,
+  ): Promise<string[]> {
     if (vscode.env.remoteName) {
       // TODO better tests for this remote search implementation
       // throw new Error("Ripgrep not supported, this workspace is remote");
@@ -514,7 +518,7 @@ class VsCodeIde implements IDE {
       const results = await vscode.workspace.findFiles(
         pattern,
         ignoreGlobs.size ? `{${ignoreGlobsArray.join(",")}}` : null,
-        MAX_FILE_RESULTS,
+        maxResults,
       );
       return results.map((result) => vscode.workspace.asRelativePath(result));
     } else {
@@ -528,16 +532,24 @@ class VsCodeIde implements IDE {
           ".continueignore",
           "--ignore-file",
           ".gitignore",
+          ...(maxResults ? ["--max-count", String(maxResults)] : []),
         ]);
 
         results.push(dirResults);
       }
 
-      return results.join("\n").split("\n").slice(0, MAX_FILE_RESULTS);
+      const allResults = results.join("\n").split("\n");
+      if (maxResults) {
+        // In the case of multiple workspaces, maxResults will be applied to each workspace
+        // And then the combined results will also be truncated
+        return allResults.slice(0, maxResults);
+      } else {
+        return allResults;
+      }
     }
   }
 
-  async getSearchResults(query: string): Promise<string> {
+  async getSearchResults(query: string, maxResults?: number): Promise<string> {
     if (vscode.env.remoteName) {
       throw new Error("Ripgrep not supported, this workspace is remote");
     }
@@ -552,6 +564,7 @@ class VsCodeIde implements IDE {
         "-C",
         "2", // Show 2 lines of context
         "--heading", // Only show filepath once per result
+        ...(maxResults ? ["-m", maxResults.toString()] : []),
         "-e",
         query, // Pattern to search for
         ".", // Directory to search in
@@ -560,7 +573,20 @@ class VsCodeIde implements IDE {
       results.push(dirResults);
     }
 
-    return results.join("\n");
+    const allResults = results.join("\n");
+    if (maxResults) {
+      // In case of multiple workspaces, do max results per workspace and then truncate to maxResults
+      // Will prioritize first workspace results, fine for now
+      // Results are separated by either ./ or --
+      const matches = Array.from(allResults.matchAll(/(\n--|\n\.\/)/g));
+      if (matches.length > maxResults) {
+        return allResults.substring(0, matches[maxResults].index);
+      } else {
+        return allResults;
+      }
+    } else {
+      return allResults;
+    }
   }
 
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {

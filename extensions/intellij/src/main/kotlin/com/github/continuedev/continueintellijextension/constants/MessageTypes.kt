@@ -41,11 +41,12 @@ class MessageTypes {
             "getTerminalContents",
             "showToast",
             "openUrl",
-            
+            "isWorkspaceRemote",
+
             // These only come from the GUI for now but should be here to prevent confusion
             "toggleDevTools",
             "showTutorial",
-            
+
             // These are jetbrains only and only come from the GUI for now
             // But again including for consistency
             "copyText",
@@ -92,6 +93,7 @@ class MessageTypes {
             "config/updateSharedConfig",
             "config/updateSelectedModel",
             "mcp/reloadServer",
+            "mcp/getPrompt",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",

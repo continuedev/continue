@@ -10,6 +10,7 @@ import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.protocol.ApplyToFileParams
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -44,6 +45,12 @@ class ApplyToFileHandler(
             return
         }
 
+        // Handle search/replace mode
+        if (params.isSearchReplace == true) {
+            handleSearchReplace(editorUtils)
+            return
+        }
+
         // Get the LLM configuration for applying edits
         val llm = fetchApplyLLMConfig() ?: run {
             ide.showToast(ToastType.ERROR, "Failed to fetch model configuration")
@@ -54,6 +61,40 @@ class ApplyToFileHandler(
         setupAndStreamDiffs(editorUtils, llm)
     }
 
+    /**
+     * Handle search and replace operations
+     *
+     * For search/replace, we always get a full file rewrite of the contents.
+     * We just need to generate diff lines between the current content and new content,
+     * then stream them through the existing infrastructure.
+     */
+    private fun handleSearchReplace(editorUtils: EditorUtils) {
+        // Clear all diff blocks before running the diff stream
+        diffStreamService.reject(editorUtils.editor)
+
+        // Get current file content and the new content (full rewrite)
+        val currentContent = editorUtils.getDocumentText()
+        val newContent = params.text
+
+        // Work with the entire document
+        val startLine = 0
+        val endLine = editorUtils.getLineCount() - 1
+        // Create and register the diff stream handler
+        val diffStreamHandler = createDiffStreamHandler(editorUtils.editor, startLine, endLine)
+        diffStreamService.register(diffStreamHandler, editorUtils.editor)
+
+        // Stream the diffs between current and new content
+        // For search/replace, we pass the new content as "input" and current as "highlighted"
+        diffStreamHandler.streamDiffLinesToEditor(
+            input = newContent,           // The new content (full rewrite)
+            prefix = "",                  // No prefix since we're rewriting the whole file
+            highlighted = currentContent, // Current file content
+            suffix = "",                  // No suffix since we're rewriting the whole file
+            modelTitle = null,            // No model needed for search/replace instant apply
+            includeRulesInSystemMessage = false // No LLM involved, just diff generation
+        )
+    }
+
     private fun notifyStreamStarted() {
         sendApplyStateUpdate(ApplyStateStatus.STREAMING)
     }
@@ -61,10 +102,8 @@ class ApplyToFileHandler(
     private fun notifyStreamClosed(numDiffs: Int? = 0) {
         sendApplyStateUpdate(ApplyStateStatus.CLOSED, numDiffs)
     }
-
     private fun sendApplyStateUpdate(
-        status: ApplyStateStatus,
-        numDiffs: Int? = null
+        status: ApplyStateStatus, numDiffs: Int? = null
     ) {
         val payload = ApplyState(
             streamId = params.streamId,
@@ -82,16 +121,11 @@ class ApplyToFileHandler(
         return try {
             suspendCancellableCoroutine { continuation ->
                 continuePluginService.coreMessenger?.request(
-                    "config/getSerializedProfileInfo",
-                    null,
-                    null
+                    "config/getSerializedProfileInfo", null, null
                 ) { response ->
                     try {
                         val selectedModels = response.castNestedOrNull<Map<String, Any>>(
-                            "content",
-                            "result",
-                            "config",
-                            "selectedModelByRole"
+                            "content", "result", "config", "selectedModelByRole"
                         )
 
                         // If "apply" role model is not found, try "chat" role
@@ -143,9 +177,7 @@ class ApplyToFileHandler(
     }
 
     private fun createDiffStreamHandler(
-        editor: Editor,
-        startLine: Int,
-        endLine: Int
+        editor: Editor, startLine: Int, endLine: Int
     ): DiffStreamHandler {
         return DiffStreamHandler(
             project,
@@ -164,21 +196,16 @@ class ApplyToFileHandler(
          * Factory method to create and execute a new handler for a single apply-to-file operation
          */
         suspend fun apply(
-            project: Project,
-            continuePluginService: ContinuePluginService,
-            ide: IDE,
-            params: ApplyToFileParams
+            project: Project, continuePluginService: ContinuePluginService, ide: IDE, params: ApplyToFileParams
         ) {
-            val editorUtils = EditorUtils.getOrOpenEditor(project, params.filepath)
-            val diffStreamService = project.getService(DiffStreamService::class.java)
+            val editorUtils =
+                if (EditorUtils.editorFileExist(params.filepath)) EditorUtils.getOrOpenEditor(project, params.filepath)
+                else EditorUtils.getEditorByCreateFile(project, params.filepath)
+
+            val diffStreamService = project.service<DiffStreamService>()
 
             val handler = ApplyToFileHandler(
-                project,
-                continuePluginService,
-                ide,
-                params,
-                editorUtils,
-                diffStreamService
+                project, continuePluginService, ide, params, editorUtils, diffStreamService
             )
 
             handler.handleApplyToFile()

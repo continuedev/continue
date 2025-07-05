@@ -16,9 +16,9 @@ import {
   ILLMLogger,
   RuleWithSource,
   SerializedContinueConfig,
+  SlashCommandDescWithSource,
   Tool,
 } from "../../";
-import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import RulesContextProvider from "../../context/providers/RulesContextProvider";
@@ -36,6 +36,7 @@ import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
+import { loadCodebaseRules } from "../markdown/loadCodebaseRules";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
@@ -151,6 +152,12 @@ export default async function doLoadConfig(options: {
   newConfig.rules.unshift(...rules);
   newConfig.contextProviders.push(new RulesContextProvider({}));
 
+  // Add rules from colocated rules.md files in the codebase
+  const { rules: codebaseRules, errors: codebaseRulesErrors } =
+    await loadCodebaseRules(ide);
+  newConfig.rules.unshift(...codebaseRules);
+  errors.push(...codebaseRulesErrors);
+
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
 
@@ -183,14 +190,15 @@ export default async function doLoadConfig(options: {
       }));
       newConfig.tools.push(...serverTools);
 
-      const serverSlashCommands = server.prompts.map((prompt) =>
-        constructMcpSlashCommand(
-          server.client,
-          prompt.name,
-          prompt.description,
-          prompt.arguments?.map((a: any) => a.name),
-        ),
-      );
+      const serverSlashCommands: SlashCommandDescWithSource[] =
+        server.prompts.map((prompt) => ({
+          name: prompt.name,
+          description: prompt.description ?? "MCP Prompt",
+          source: "mcp-prompt",
+          isLegacy: false,
+          mcpServerName: server.name, // Used in client to retrieve prompt
+          mcpArgs: prompt.arguments,
+        }));
       newConfig.slashCommands.push(...serverSlashCommands);
 
       const submenuItems = server.resources
@@ -222,6 +230,8 @@ export default async function doLoadConfig(options: {
   newConfig.tools.push(
     ...getConfigDependentToolDefinitions({
       rules: newConfig.rules,
+      enableExperimentalTools:
+        newConfig.experimental?.enableExperimentalTools ?? false,
     }),
   );
 

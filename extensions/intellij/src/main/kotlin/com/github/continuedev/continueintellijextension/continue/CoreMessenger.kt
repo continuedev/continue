@@ -43,7 +43,9 @@ class CoreMessenger(
         val message =
             gson.toJson(mapOf("messageId" to id, "messageType" to messageType, "data" to data))
         responseListeners[id] = onResponse
-        write(message)
+        coroutineScope.launch(Dispatchers.IO) {
+            write(message)
+        }
     }
 
     private fun handleMessage(json: String) {

@@ -22,6 +22,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "gpt-4",
         "o3",
         "gemini",
+        "claude-opus-4",
       ].some((part) => model.toLowerCase().startsWith(part));
     },
     anthropic: (model) => {
@@ -32,6 +33,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-3-7",
           "claude-3.7",
           "claude-sonnet-4",
+          "claude-opus-4",
         ].some((part) => model.toLowerCase().startsWith(part))
       ) {
         return true;
@@ -71,6 +73,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    cohere: (model) => {
+      return model.toLowerCase().startsWith("command");
+    },
     gemini: (model) => {
       // All gemini models support function calling
       return model.toLowerCase().includes("gemini");
@@ -83,15 +88,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       );
     },
     bedrock: (model) => {
-      // For Bedrock, only support Claude Sonnet models with versions 3.5/3-5 and 3.7/3-7
       if (
-        model.toLowerCase().includes("sonnet") &&
         [
-          "claude-3-5",
-          "claude-3.5",
-          "claude-3-7",
-          "claude-3.7",
+          "claude-3-5-sonnet",
+          "claude-3.5-sonnet",
+          "claude-3-7-sonnet",
+          "claude-3.7-sonnet",
           "claude-sonnet-4",
+          "claude-opus-4",
         ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
@@ -144,6 +148,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "qwen3",
           "mixtral",
           "command-r",
+          "command-a",
           "smollm2",
           "hermes3",
           "athene-v2",
@@ -175,7 +180,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     deepseek: (model) => {
-      if (model !== "deepseek-reasoner") {
+      // https://api-docs.deepseek.com/quick_start/pricing
+      // https://api-docs.deepseek.com/guides/function_calling
+      if (model === "deepseek-reasoner" || model === "deepseek-chat") {
         return true;
       }
 
@@ -226,6 +233,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "qwen/qwen3",
         "qwen/qwen-",
         "cohere/command-r",
+        "cohere/command-a",
         "ai21/jamba-1.6",
         "mistralai/mistral",
         "mistralai/ministral",

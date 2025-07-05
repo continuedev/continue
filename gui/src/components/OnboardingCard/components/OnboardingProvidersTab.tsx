@@ -1,6 +1,6 @@
 import { OnboardingModes } from "core/protocol/core";
 import { FormProvider, useForm } from "react-hook-form";
-import { AddModelForm } from "../../../forms";
+import { AddModelForm } from "../../../forms/AddModelForm";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
@@ -109,7 +109,7 @@ export function OnboardingProvidersTab({
               </Button>
 
               <div className="w-full text-center">
-                <span className="text-description-muted">
+                <span className="text-description">
                   <span
                     className="cursor-pointer underline hover:brightness-125"
                     onClick={handleClickMoreProviders}

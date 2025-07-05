@@ -97,8 +97,8 @@ export class LanceDbIndex implements CodebaseIndex {
         contents TEXT NOT NULL
     )`);
 
-    await new Promise((resolve) =>
-      migrate(
+    await new Promise((resolve) => {
+      void migrate(
         "lancedb_sqlite_artifact_id_column",
         async () => {
           try {
@@ -118,8 +118,8 @@ export class LanceDbIndex implements CodebaseIndex {
           }
         },
         () => resolve(undefined),
-      ),
-    );
+      );
+    });
   }
 
   private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
@@ -300,7 +300,7 @@ export class LanceDbIndex implements CodebaseIndex {
           const vector = JSON.parse(item.vector);
           const { uuid, startLine, endLine, contents } = item;
 
-          cachedItems.push({
+          lanceRows.push({
             path,
             uuid,
             startLine,

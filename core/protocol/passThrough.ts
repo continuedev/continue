@@ -27,6 +27,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/updateSharedConfig",
     "config/updateSelectedModel",
     "mcp/reloadServer",
+    "mcp/getPrompt",
     "context/getContextItems",
     "context/getSymbolsForFiles",
     "context/loadSubmenuItems",
@@ -61,6 +62,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "didChangeSelectedOrg",
     "tools/call",
     "controlPlane/openUrl",
+    "controlPlane/getModelsAddOnUpgradeUrl",
     "isItemTooBig",
     "process/markAsBackgrounded",
     "process/isBackgrounded",
@@ -84,4 +86,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "sessionUpdate",
     "didCloseFiles",
     "toolCallPartialOutput",
+    "freeTrialExceeded",
   ];

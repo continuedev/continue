@@ -4,7 +4,10 @@ import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
 import { ComponentType, useContext, useMemo } from "react";
 import { AnimatedEllipsis } from "../..";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import {
+  IdeMessengerContext,
+  IIdeMessenger,
+} from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectIsGatheringContext } from "../../../redux/slices/sessionSlice";
 import FileIcon from "../../FileIcon";
@@ -24,38 +27,35 @@ interface ContextItemsPeekItemProps {
   contextItem: ContextItemWithId;
 }
 
+export function openContextItem(
+  contextItem: ContextItemWithId,
+  ideMessenger: IIdeMessenger,
+) {
+  const { uri, name, content } = contextItem;
+
+  if (uri && uri?.type === "file") {
+    const isRangeInFile = name.includes(" (") && name.endsWith(")");
+
+    if (isRangeInFile) {
+      const rif = ctxItemToRifWithContents(contextItem, true);
+      void ideMessenger.ide.showLines(
+        rif.filepath,
+        rif.range.start.line,
+        rif.range.end.line,
+      );
+    } else {
+      void ideMessenger.ide.openFile(uri.value);
+    }
+  } else {
+    void ideMessenger.ide.showVirtualFile(name, content);
+  }
+}
+
 export function ContextItemsPeekItem({
   contextItem,
 }: ContextItemsPeekItemProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const isUrl = contextItem.uri?.type === "url";
-
-  function openContextItem() {
-    const { uri, name, content } = contextItem;
-
-    if (isUrl) {
-      if (uri?.value) {
-        ideMessenger.post("openUrl", uri.value);
-      } else {
-        console.error("Couldn't open url", uri);
-      }
-    } else if (uri) {
-      const isRangeInFile = name.includes(" (") && name.endsWith(")");
-
-      if (isRangeInFile) {
-        const rif = ctxItemToRifWithContents(contextItem, true);
-        ideMessenger.ide.showLines(
-          rif.filepath,
-          rif.range.start.line,
-          rif.range.end.line,
-        );
-      } else {
-        ideMessenger.ide.openFile(uri.value);
-      }
-    } else {
-      ideMessenger.ide.showVirtualFile(name, content);
-    }
-  }
 
   function getContextItemIcon() {
     const dimensions = "18px";
@@ -122,29 +122,36 @@ export function ContextItemsPeekItem({
 
   return (
     <div
-      onClick={openContextItem}
-      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      onClick={() => openContextItem(contextItem, ideMessenger)}
+      className="mr-2 flex cursor-pointer flex-row items-center gap-1.5 whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
       data-testid="context-items-peek-item"
     >
-      <div className="flex w-full items-center">
-        {getContextItemIcon()}
-        <div className="flex min-w-0 flex-1 gap-2 text-xs">
-          <div
-            className={`max-w-[50%] flex-shrink-0 truncate ${isUrl ? "hover:underline" : ""}`}
-          >
-            {contextItem.name}
-          </div>
-          <div
-            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
-          >
-            {contextItem.uri?.type === "file"
-              ? getUriPathBasename(contextItem.description)
-              : contextItem.description}
-          </div>
-        </div>
-
+      {getContextItemIcon()}
+      <span className={`line-clamp-1 max-w-[130px] flex-shrink-0`}>
+        {contextItem.name}
+      </span>
+      <div
+        className={`text-description-muted group flex flex-row items-center gap-1.5 pr-1.5 text-xs ${isUrl ? "hover:underline" : ""}`}
+        onClick={
+          isUrl
+            ? (e) => {
+                if (contextItem.uri?.value) {
+                  e.stopPropagation();
+                  ideMessenger.post("openUrl", contextItem.uri.value);
+                } else {
+                  console.error("Couldn't open url", contextItem.uri);
+                }
+              }
+            : undefined
+        }
+      >
+        <span className={`line-clamp-1 flex-1 break-all`}>
+          {contextItem.uri?.type === "file"
+            ? getUriPathBasename(contextItem.description)
+            : contextItem.description}
+        </span>
         {isUrl && (
-          <ArrowTopRightOnSquareIcon className="mx-2 h-4 w-4 flex-shrink-0 text-gray-400 opacity-0 group-hover:opacity-100" />
+          <ArrowTopRightOnSquareIcon className="text-description-muted h-3 w-3 flex-shrink-0 opacity-80 group-hover:opacity-100" />
         )}
       </div>
     </div>
@@ -189,7 +196,9 @@ export function ContextItemsPeek({
           <ContextItemsPeekItem key={idx} contextItem={contextItem} />
         ))
       ) : (
-        <div className="pl-2 text-xs italic text-gray-400">No results</div>
+        <div className="text-description-muted pl-2 text-xs italic">
+          No results
+        </div>
       )}
     </ToggleDiv>
   );

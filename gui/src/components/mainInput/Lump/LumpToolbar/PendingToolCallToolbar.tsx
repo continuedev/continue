@@ -1,9 +1,8 @@
 import styled from "styled-components";
-import { useAppDispatch } from "../../../../redux/hooks";
-import {
-  callCurrentTool,
-  cancelCurrentToolCall,
-} from "../../../../redux/thunks";
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
+import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
+import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -29,6 +28,7 @@ const StopButton = styled.div`
 export function PendingToolCallToolbar() {
   const dispatch = useAppDispatch();
   const jetbrains = isJetBrains();
+  const currentToolCall = useAppSelector(selectCurrentToolCall);
 
   return (
     <Container>
@@ -39,7 +39,17 @@ export function PendingToolCallToolbar() {
       <div className="flex gap-2 pb-0.5">
         <StopButton
           className="text-description"
-          onClick={() => dispatch(cancelCurrentToolCall())}
+          onClick={
+            currentToolCall
+              ? () => {
+                  dispatch(
+                    cancelToolCall({
+                      toolCallId: currentToolCall.toolCallId,
+                    }),
+                  );
+                }
+              : undefined
+          }
           data-testid="reject-tool-call-button"
         >
           {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}

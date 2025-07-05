@@ -913,12 +913,68 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
-  commandR: {
-    title: "Command R",
+  c4aiAyaExpanse8B: {
+    title: "C4AI Aya Expanse 8B",
+    description:
+      "Aya Expanse is a massively multilingual large language model excelling in enterprise-scale tasks.",
+    params: {
+      model: "c4ai-aya-expanse-8b",
+      contextLength: 8_000,
+      title: "C4AI Aya Expanse 8B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  c4aiAyaExpanse32B: {
+    title: "C4AI Aya Expanse 32B",
+    description:
+      "Aya Expanse is a massively multilingual large language model excelling in enterprise-scale tasks.",
+    params: {
+      model: "c4ai-aya-expanse-32b",
+      contextLength: 128_000,
+      title: "C4AI Aya Expanse 32B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  c4aiAyaVision8B: {
+    title: "C4AI Aya Vision 8B",
+    description:
+      "Aya Vision is a state-of-the-art multimodal and massively multilingual large language model excelling at critical benchmarks for language, text, and image capabilities.",
+    params: {
+      model: "c4ai-aya-vision-8b",
+      contextLength: 16_000,
+      title: "C4AI Aya Vision 8B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  c4aiAyaVision32B: {
+    title: "C4AI Aya Vision 32B",
+    description:
+      "Aya Vision is a state-of-the-art multimodal and massively multilingual large language model excelling at critical benchmarks for language, text, and image capabilities.",
+    params: {
+      model: "c4ai-aya-vision-32b",
+      contextLength: 16_000,
+      title: "C4AI Aya Vision 32B",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR032024: {
+    title: "Command R 03-2024",
     description:
       "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
     params: {
-      model: "command-r",
+      model: "command-r-03-2024",
       contextLength: 128_000,
       title: "Command R",
       apiKey: "",
@@ -927,14 +983,84 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cohere.png",
     isOpenSource: false,
   },
-  commandRPlus: {
-    title: "Command R+",
+  commandRPlus042024: {
+    title: "Command R+ 04-2024",
     description:
-      "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads",
+      "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads.",
     params: {
-      model: "command-r-plus",
+      model: "command-r-plus-04-2024",
       contextLength: 128_000,
       title: "Command R+",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR082024: {
+    title: "Command R 08-2024",
+    description:
+      "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
+    params: {
+      model: "command-r-08-2024",
+      contextLength: 128_000,
+      title: "Command R 08-2024",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandRPlus082024: {
+    title: "Command R+ 08-2024",
+    description:
+      "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads.",
+    params: {
+      model: "command-r-plus-08-2024",
+      contextLength: 128_000,
+      title: "Command R+ 08-2024",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR7B122024: {
+    title: "Command R7B 12-2024",
+    description:
+      "The smallest model in our R series delivers top-tier speed, efficiency, and quality to build powerful AI applications on commodity GPUs and edge devices.",
+    params: {
+      model: "command-r7b-12-2024",
+      contextLength: 128_000,
+      title: "Command R7B 12-2024",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandR7BArabic022025: {
+    title: "Command R7B Arabic 02-2025",
+    description:
+      "Our state-of-the-art lightweight multilingual AI model has been optimized for advanced Arabic language capabilities to support enterprises in the MENA region.",
+    params: {
+      model: "command-r7b-arabic-02-2025",
+      contextLength: 128_000,
+      title: "Command R7B Arabic 02-2025",
+      apiKey: "",
+    },
+    providerOptions: ["cohere"],
+    icon: "cohere.png",
+    isOpenSource: false,
+  },
+  commandA032025: {
+    title: "Command A 03-2025",
+    description:
+      "Command A is Cohere’s most performant model to date, excelling at real world enterprise tasks including tool use, retrieval augmented generation (RAG), agents, and multilingual use cases.",
+    params: {
+      model: "command-a-03-2025",
+      contextLength: 256_000,
+      title: "Command A 03-2025",
       apiKey: "",
     },
     providerOptions: ["cohere"],

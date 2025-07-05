@@ -5,13 +5,13 @@ import {
   vscInputBackground,
 } from "../..";
 import { useLump } from "./LumpContext";
-import { LumpToolbar } from "./LumpToolbar";
+import { LumpToolbar } from "./LumpToolbar/LumpToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
 
 const LumpDiv = styled.div`
   background-color: ${vscInputBackground};
-  margin-left: 4px;
-  margin-right: 4px;
+  margin-left: 6px;
+  margin-right: 6px;
   border-radius: ${defaultBorderRadius} ${defaultBorderRadius} 0 0;
   border-top: 1px solid ${vscCommandCenterInactiveBorder};
   border-left: 1px solid ${vscCommandCenterInactiveBorder};

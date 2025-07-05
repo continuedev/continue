@@ -186,7 +186,9 @@ export default class DocsService {
   private async init(configHandler: ConfigHandler) {
     const result = await configHandler.loadConfig();
     await this.handleConfigUpdate(result);
-    configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
+    configHandler.onConfigUpdate(
+      this.handleConfigUpdate.bind(this) as (arg: any) => void,
+    );
   }
 
   readonly statuses: Map<string, IndexingStatus> = new Map();
@@ -979,16 +981,10 @@ export default class DocsService {
       // Otherwise sync the index based on config changes
       const oldConfigDocs = oldConfig?.docs || [];
       const newConfigDocs = newConfig.docs || [];
-      const newConfigStartUrls = newConfigDocs.map((doc) => doc.startUrl);
 
       // NOTE since listMetadata filters by embeddings provider id embedding model changes are accounted for here
       const currentlyIndexedDocs = await this.listMetadata();
       const currentStartUrls = currentlyIndexedDocs.map((doc) => doc.startUrl);
-
-      // Anything found in sqlite but not in new config should be deleted
-      const deletedDocs = currentlyIndexedDocs.filter(
-        (doc) => !newConfigStartUrls.includes(doc.startUrl),
-      );
 
       // Anything found in old config, new config, AND sqlite that doesn't match should be reindexed
       // TODO if only favicon and title change, only update, don't embed
@@ -1036,10 +1032,6 @@ export default class DocsService {
         ...changedDocs.map((doc) => this.indexAndAdd(doc, true)),
         ...addedDocs.map((doc) => this.indexAndAdd(doc)),
       ]);
-
-      for (const doc of deletedDocs) {
-        await this.deleteIndexes(doc.startUrl);
-      }
     } catch (e) {
       console.error("Error syncing docs index on config update", e);
     } finally {

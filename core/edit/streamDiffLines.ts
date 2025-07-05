@@ -20,7 +20,6 @@ import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRules";
 import { gptEditPrompt } from "../llm/templates/edit";
-import { StreamAbortManager } from "../util/abortManager";
 import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
 import { recursiveStream } from "./recursiveStream";
@@ -64,10 +63,9 @@ export async function* streamDiffLines({
   highlighted,
   suffix,
   llm,
-  abortControllerId,
+  abortController,
   input,
   language,
-  onlyOneInsertion,
   overridePrompt,
   rulesToInclude,
 }: {
@@ -75,15 +73,12 @@ export async function* streamDiffLines({
   highlighted: string;
   suffix: string;
   llm: ILLM;
-  abortControllerId: string;
+  abortController: AbortController;
   input: string;
   language: string | undefined;
-  onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
   rulesToInclude: RuleWithSource[] | undefined;
 }): AsyncGenerator<DiffLine> {
-  const abortManager = StreamAbortManager.getInstance();
-  const abortController = abortManager.get(abortControllerId);
   void Telemetry.capture(
     "inlineEdit",
     {
@@ -115,7 +110,7 @@ export async function* streamDiffLines({
   // If any rules are present this will result in using chat instead of legacy completion
   const systemMessage = rulesToInclude
     ? getSystemMessageWithRules({
-        rules: rulesToInclude,
+        availableRules: rulesToInclude,
         userMessage:
           typeof prompt === "string"
             ? ({
@@ -128,7 +123,7 @@ export async function* streamDiffLines({
               ) as UserChatMessage | ToolResultChatMessage | undefined),
         baseSystemMessage: undefined,
         contextItems: [],
-      })
+      }).systemMessage
     : undefined;
 
   if (systemMessage) {
@@ -185,13 +180,7 @@ export async function* streamDiffLines({
     diffLines = addIndentation(diffLines, indentation);
   }
 
-  let seenGreen = false;
   for await (const diffLine of diffLines) {
     yield diffLine;
-    if (diffLine.type === "new") {
-      seenGreen = true;
-    } else if (onlyOneInsertion && seenGreen && diffLine.type === "same") {
-      break;
-    }
   }
 }

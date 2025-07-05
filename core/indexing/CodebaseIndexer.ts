@@ -43,10 +43,20 @@ export class CodebaseIndexer {
    * - To limit memory usage for indexes that perform computations locally, e.g. FTS
    * - To make as few requests as possible to the embeddings providers
    */
-  filesPerBatch = 500;
+  filesPerBatch = 200;
   private indexingCancellationController: AbortController | undefined;
   private codebaseIndexingState: IndexingProgressUpdate;
   private readonly pauseToken: PauseToken;
+
+  private getUserFriendlyIndexName(artifactId: string): string {
+    if (artifactId === FullTextSearchCodebaseIndex.artifactId)
+      return "Full text search";
+    if (artifactId === CodeSnippetsCodebaseIndex.artifactId)
+      return "Code snippets";
+    if (artifactId === ChunkCodebaseIndex.artifactId) return "Chunking";
+    if (artifactId.startsWith("vectordb")) return "Embedding";
+    return artifactId; // fallback to original
+  }
 
   // Note that we exclude certain Sqlite errors that we do not want to clear the indexes on,
   // e.g. a `SQLITE_BUSY` error.
@@ -75,16 +85,10 @@ export class CodebaseIndexer {
     this.pauseToken = new PauseToken(initialPaused);
   }
 
-  /**
-   * Set the paused state of the indexer
-   */
   set paused(value: boolean) {
     this.pauseToken.paused = value;
   }
 
-  /**
-   * Get the current paused state of the indexer
-   */
   get paused(): boolean {
     return this.pauseToken.paused;
   }
@@ -235,7 +239,9 @@ export class CodebaseIndexer {
     }
   }
 
-  async *refreshFiles(files: string[]): AsyncGenerator<IndexingProgressUpdate> {
+  private async *refreshFiles(
+    files: string[],
+  ): AsyncGenerator<IndexingProgressUpdate> {
     let progress = 0;
     if (files.length === 0) {
       yield {
@@ -318,6 +324,7 @@ export class CodebaseIndexer {
       status: "loading",
     };
     const beginTime = Date.now();
+    let collectedWarnings: string[] = [];
 
     for (const directory of dirs) {
       const dirBasename = getUriPathBasename(directory);
@@ -348,45 +355,52 @@ export class CodebaseIndexer {
       const repoName = await this.ide.getRepoName(directory);
       let nextLogThreshold = 0;
 
-      try {
-        for await (const updateDesc of this.indexFiles(
-          directory,
-          directoryFiles,
-          branch,
-          repoName,
-        )) {
-          // Handle pausing in this loop because it's the only one really taking time
-          if (abortSignal.aborted) {
-            yield {
-              progress: 0,
-              desc: "Indexing cancelled",
-              status: "cancelled",
-            };
-            return;
-          }
-          if (this.pauseToken.paused) {
-            yield* this.yieldUpdateAndPause();
-          }
-          yield updateDesc;
-          if (updateDesc.progress >= nextLogThreshold) {
-            // log progress every 2.5%
-            nextLogThreshold += 0.025;
-            this.logProgress(
-              beginTime,
-              Math.floor(directoryFiles.length * updateDesc.progress),
-              updateDesc.progress,
-            );
-          }
+      for await (const updateDesc of this.indexFiles(
+        directory,
+        directoryFiles,
+        branch,
+        repoName,
+      )) {
+        // Handle pausing in this loop because it's the only one really taking time
+        if (abortSignal.aborted) {
+          yield {
+            progress: 0,
+            desc: "Indexing cancelled",
+            status: "cancelled",
+          };
+          return;
         }
-      } catch (err) {
-        yield this.handleErrorAndGetProgressUpdate(err);
-        return;
+        if (this.pauseToken.paused) {
+          yield* this.yieldUpdateAndPause();
+        }
+
+        // Collect warnings from indexFiles
+        if (updateDesc.warnings && updateDesc.warnings.length > 0) {
+          collectedWarnings = [...updateDesc.warnings];
+        }
+
+        yield updateDesc;
+        if (updateDesc.progress >= nextLogThreshold) {
+          // log progress every 2.5%
+          nextLogThreshold += 0.025;
+          this.logProgress(
+            beginTime,
+            Math.floor(directoryFiles.length * updateDesc.progress),
+            updateDesc.progress,
+          );
+        }
       }
     }
+
+    // Final completion message with preserved warnings
     yield {
       progress: 1,
-      desc: "Indexing Complete",
+      desc:
+        collectedWarnings.length > 0
+          ? `Indexing completed with ${collectedWarnings.length} warning(s)`
+          : "Indexing Complete",
       status: "done",
+      warnings: collectedWarnings.length > 0 ? collectedWarnings : undefined,
     };
     this.logProgress(beginTime, 0, 1);
   }
@@ -494,6 +508,8 @@ export class CodebaseIndexer {
     const indexesToBuild = await this.getIndexesToBuild();
     let completedIndexCount = 0;
     let progress = 0;
+    const warnings: string[] = [];
+
     for (const codebaseIndex of indexesToBuild) {
       const tag: IndexTag = {
         directory,
@@ -504,45 +520,101 @@ export class CodebaseIndexer {
         progress: progress,
         desc: `Planning changes for ${codebaseIndex.artifactId} index...`,
         status: "indexing",
+        warnings: warnings.length > 0 ? [...warnings] : undefined,
       };
-      const [results, lastUpdated, markComplete] =
-        await getComputeDeleteAddRemove(
-          tag,
-          { ...stats },
-          (filepath) => this.ide.readFile(filepath),
-          repoName,
-        );
-      const totalOps = this.totalIndexOps(results);
-      let completedOps = 0;
 
-      // Don't update if nothing to update. Some of the indices might do unnecessary setup work
-      if (totalOps > 0) {
-        for (const subResult of this.batchRefreshIndexResults(results)) {
-          for await (const { desc } of codebaseIndex.update(
+      try {
+        const [results, lastUpdated, markComplete] =
+          await getComputeDeleteAddRemove(
             tag,
-            subResult,
-            markComplete,
+            { ...stats },
+            (filepath) => this.ide.readFile(filepath),
             repoName,
-          )) {
-            yield {
-              progress: progress,
-              desc,
-              status: "indexing",
-            };
-          }
-          completedOps +=
-            subResult.compute.length +
-            subResult.del.length +
-            subResult.addTag.length +
-            subResult.removeTag.length;
-          progress =
-            (completedIndexCount + completedOps / totalOps) *
-            (1 / indexesToBuild.length);
-        }
-      }
+          );
+        const totalOps = this.totalIndexOps(results);
+        let completedOps = 0;
 
-      await markComplete(lastUpdated, IndexResultType.UpdateLastUpdated);
-      completedIndexCount += 1;
+        // Don't update if nothing to update. Some of the indices might do unnecessary setup work
+        if (totalOps > 0) {
+          for (const subResult of this.batchRefreshIndexResults(results)) {
+            try {
+              for await (const { desc } of codebaseIndex.update(
+                tag,
+                subResult,
+                markComplete,
+                repoName,
+              )) {
+                yield {
+                  progress,
+                  desc,
+                  status: "indexing",
+                  warnings: warnings.length > 0 ? [...warnings] : undefined,
+                };
+              }
+              completedOps +=
+                subResult.compute.length +
+                subResult.del.length +
+                subResult.addTag.length +
+                subResult.removeTag.length;
+              progress =
+                (completedIndexCount + completedOps / totalOps) *
+                (1 / indexesToBuild.length);
+            } catch (err) {
+              // Collect non-fatal errors as warnings and continue
+              const warningMsg =
+                err instanceof Error ? err.message : String(err);
+              const friendlyName = this.getUserFriendlyIndexName(
+                codebaseIndex.artifactId,
+              );
+              warnings.push(`${friendlyName}: ${warningMsg}`);
+              console.warn(`${friendlyName}: ${warningMsg}`, err);
+
+              // Complete this batch and continue with next
+              completedOps +=
+                subResult.compute.length +
+                subResult.del.length +
+                subResult.addTag.length +
+                subResult.removeTag.length;
+              progress =
+                (completedIndexCount + completedOps / totalOps) *
+                (1 / indexesToBuild.length);
+            }
+          }
+        }
+
+        await markComplete(lastUpdated, IndexResultType.UpdateLastUpdated);
+        completedIndexCount += 1;
+      } catch (err) {
+        // Handle errors during planning phase
+        const cause = getRootCause(err as Error);
+        if (cause instanceof LLMError) {
+          // LLM errors are critical, re-throw them
+          throw cause;
+        }
+
+        // Collect planning errors as warnings and continue to next index
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        const friendlyName = this.getUserFriendlyIndexName(
+          codebaseIndex.artifactId,
+        );
+        warnings.push(`${friendlyName}: ${errorMsg}`);
+        console.warn(
+          `Warning during ${codebaseIndex.artifactId} planning:`,
+          err,
+        );
+        completedIndexCount += 1;
+        progress = completedIndexCount * (1 / indexesToBuild.length);
+      }
+    }
+
+    // Final update with any collected warnings
+    if (warnings.length > 0) {
+      yield {
+        progress: 1,
+        desc: `Indexing completed with ${warnings.length} warning(s)`,
+        status: "done",
+        warnings: [...warnings],
+      };
     }
   }
 
