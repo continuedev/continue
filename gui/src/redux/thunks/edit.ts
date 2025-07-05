@@ -35,10 +35,11 @@ export const streamEditThunk = createAsyncThunk<
   ThunkApiType
 >(
   "edit/streamResponse",
-  async ({ editorState, codeToEdit }, { dispatch, extra }) => {
+  async ({ editorState, codeToEdit }, { dispatch, extra, getState }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         dispatch(setActive());
+
         const { selectedContextItems, content } = await resolveEditorContent({
           editorState,
           modifiers: {
@@ -49,6 +50,7 @@ export const streamEditThunk = createAsyncThunk<
           defaultContextProviders: [],
           availableSlashCommands: [],
           dispatch,
+          getState,
         });
 
         const prompt = [
