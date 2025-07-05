@@ -5,14 +5,21 @@ interface CollapsibleContainerProps {
   children: React.ReactNode;
   maxHeight?: string;
   className?: string;
+  collapsible?: boolean;
 }
 
 export function CollapsibleContainer({
   children,
   maxHeight = "max-h-40",
   className = "",
+  collapsible = false,
 }: CollapsibleContainerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // If not collapsible, just render children without any collapsible behavior
+  if (!collapsible) {
+    return <div className={className}>{children}</div>;
+  }
 
   return (
     <div className={`relative ${className}`}>

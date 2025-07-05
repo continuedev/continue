@@ -24,6 +24,7 @@ export function EditFile(props: EditToolCallProps) {
       source={src}
       toolCallId={props.toolCallId}
       itemIndex={props.historyIndex}
+      collapsible={true}
     />
   );
 }

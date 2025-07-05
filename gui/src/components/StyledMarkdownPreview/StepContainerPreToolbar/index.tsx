@@ -33,6 +33,7 @@ export interface StepContainerPreToolbarProps {
   children: any;
   expanded?: boolean;
   disableManualApply?: boolean;
+  collapsible?: boolean;
 }
 
 export function StepContainerPreToolbar({
@@ -48,6 +49,7 @@ export function StepContainerPreToolbar({
   children,
   expanded,
   disableManualApply,
+  collapsible,
 }: StepContainerPreToolbarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((state) => state.session.history);
@@ -299,8 +301,11 @@ export function StepContainerPreToolbar({
           {renderActionButtons()}
         </div>
       </div>
-
-      {isExpanded && <CollapsibleContainer>{children}</CollapsibleContainer>}
+      {isExpanded && (
+        <CollapsibleContainer collapsible={collapsible}>
+          {children}
+        </CollapsibleContainer>
+      )}
     </div>
   );
 }
