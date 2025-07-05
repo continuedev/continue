@@ -29,6 +29,14 @@ const MINISEARCH_OPTIONS = {
 
 const MAX_LENGTH = 70;
 
+// Enhanced search result interface for intelligent sorting
+interface EnhancedSearchResult
+  extends SearchResult,
+    ContextSubmenuItemWithProvider {
+  sortPriority: number;
+  matchQuality: number;
+}
+
 interface SubtextContextProvidersContextType {
   getSubmenuContextItems: (
     providerTitle: string | undefined,
@@ -42,6 +50,91 @@ const initialContextProviders: SubtextContextProvidersContextType = {
 
 const SubmenuContextProvidersContext =
   createContext<SubtextContextProvidersContextType>(initialContextProviders);
+
+// Helper functions for intelligent file sorting
+function hasExactWordMatch(text: string, query: string): boolean {
+  const words = text.split(/[^a-zA-Z0-9]+/);
+  return words.some((word) => word === query);
+}
+
+function isCommonDevFile(fileName: string): boolean {
+  const commonExtensions = [
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".py",
+    ".java",
+    ".cpp",
+    ".c",
+    ".h",
+    ".vue",
+    ".svelte",
+  ];
+  const commonNames = [
+    "index",
+    "main",
+    "app",
+    "component",
+    "service",
+    "util",
+    "helper",
+    "config",
+    "types",
+  ];
+
+  const extension = fileName.substring(fileName.lastIndexOf("."));
+  const baseName = fileName
+    .substring(0, fileName.lastIndexOf("."))
+    .toLowerCase();
+
+  return commonExtensions.includes(extension) || commonNames.includes(baseName);
+}
+
+function isInCommonDirectory(filePath: string): boolean {
+  const commonDirs = [
+    "src/",
+    "lib/",
+    "components/",
+    "utils/",
+    "helpers/",
+    "services/",
+    "pages/",
+    "views/",
+    "hooks/",
+    "store/",
+    "types/",
+    "interfaces/",
+    "models/",
+    "api/",
+  ];
+  return commonDirs.some((dir) => filePath.includes(dir));
+}
+
+function matchesCamelCaseOrAbbreviation(
+  fileName: string,
+  query: string,
+): boolean {
+  // Extract capital letters for camel case matching
+  const capitals = fileName.match(/[A-Z]/g)?.join("").toLowerCase() || "";
+
+  // Check if query matches the capital letters pattern
+  if (capitals.length > 0 && capitals.includes(query)) {
+    return true;
+  }
+
+  // Check for abbreviation matches (first letters of words)
+  const words = fileName.split(/[^a-zA-Z0-9]+/).filter((w) => w.length > 0);
+  if (words.length > 1) {
+    const abbreviation = words
+      .map((word) => word[0])
+      .join("")
+      .toLowerCase();
+    return abbreviation.includes(query);
+  }
+
+  return false;
+}
 
 export const SubmenuContextProvidersProvider = ({
   children,
@@ -128,6 +221,98 @@ export const SubmenuContextProvidersProvider = ({
     new Map<ContextProviderName, AbortController>(),
   ).current;
 
+  const calculateFileSortPriority = useCallback(
+    (
+      result: SearchResult & ContextSubmenuItemWithProvider,
+      query: string,
+      openFiles: ContextSubmenuItemWithProvider[],
+    ): number => {
+      const fileName = result.title.toLowerCase();
+      const filePath = result.description.toLowerCase();
+      const queryLower = query.toLowerCase();
+
+      // Priority 1: Exact filename match
+      if (fileName === queryLower) {
+        return 1;
+      }
+
+      // Priority 2: Recently opened files
+      if (openFiles.some((f) => f.id === result.id)) {
+        return 2;
+      }
+
+      // Priority 3: Filename starts with query
+      if (fileName.startsWith(queryLower)) {
+        return 3;
+      }
+
+      // Priority 4: Exact word match in filename
+      if (hasExactWordMatch(fileName, queryLower)) {
+        return 4;
+      }
+
+      // Priority 5: Common development files
+      if (isCommonDevFile(fileName)) {
+        return 5;
+      }
+
+      // Priority 6: Files in common directories
+      if (isInCommonDirectory(filePath)) {
+        return 6;
+      }
+
+      // Priority 7: CamelCase/abbreviation matches
+      if (matchesCamelCaseOrAbbreviation(fileName, queryLower)) {
+        return 7;
+      }
+
+      // Priority 8: Path starts with query
+      if (filePath.startsWith(queryLower)) {
+        return 8;
+      }
+
+      // Priority 9: Default
+      return 9;
+    },
+    [],
+  );
+
+  const calculateMatchQuality = useCallback(
+    (
+      result: SearchResult & ContextSubmenuItemWithProvider,
+      query: string,
+    ): number => {
+      const fileName = result.title.toLowerCase();
+      const queryLower = query.toLowerCase();
+      let quality = 0;
+
+      // Exact match bonus
+      if (fileName === queryLower) quality += 100;
+
+      // Prefix match bonus
+      if (fileName.startsWith(queryLower)) quality += 50;
+
+      // Contains match bonus
+      if (fileName.includes(queryLower)) quality += 25;
+
+      // Shorter filename bonus (prefer concise names)
+      quality += Math.max(0, 50 - fileName.length);
+
+      // Extension preference (common dev files)
+      if (
+        fileName.endsWith(".ts") ||
+        fileName.endsWith(".tsx") ||
+        fileName.endsWith(".js") ||
+        fileName.endsWith(".jsx")
+      ) {
+        quality += 10;
+      }
+
+      return quality;
+    },
+    [],
+  );
+
   const getSubmenuContextItems = useCallback(
     (
       providerTitle: string | undefined,
@@ -168,9 +353,57 @@ export const SubmenuContextProvidersProvider = ({
               });
           }
         }
-        searchResults.sort((a, b) => b.score - a.score);
 
-        // 2. Add fallback results if no search results
+        // 2. Enhanced sorting for file provider
+        if (
+          providerTitle === "file" ||
+          (!providerTitle &&
+            searchResults.some((r) => r.providerTitle === "file"))
+        ) {
+          const enhancedResults: EnhancedSearchResult[] = searchResults.map(
+            (result): EnhancedSearchResult => ({
+              ...result,
+              id: result.id,
+              title: result.title,
+              description: result.description,
+              providerTitle: result.providerTitle,
+              sortPriority: calculateFileSortPriority(
+                result,
+                query,
+                lastOpenFilesRef.current,
+              ),
+              matchQuality: calculateMatchQuality(result, query),
+            }),
+          );
+
+          // Sort by multiple criteria
+          enhancedResults.sort((a, b) => {
+            // Primary: Sort priority (lower = better)
+            if (a.sortPriority !== b.sortPriority) {
+              return a.sortPriority - b.sortPriority;
+            }
+
+            // Secondary: Match quality (higher = better)
+            if (a.matchQuality !== b.matchQuality) {
+              return b.matchQuality - a.matchQuality;
+            }
+
+            // Tertiary: MiniSearch relevance score (higher = better)
+            if (a.score !== b.score) {
+              return b.score - a.score;
+            }
+
+            // Quaternary: Path length (shorter = better)
+            return a.description.length - b.description.length;
+          });
+
+          searchResults = enhancedResults;
+        } else {
+          // Default sorting for non-file providers
+          searchResults.sort((a, b) => b.score - a.score);
+        }
+
+        // 3. Add fallback results if no search results
         if (searchResults.length === 0) {
           const fallbackItems = (
             providerTitle ? (fallbackResults[providerTitle] ?? []) : []
@@ -223,7 +456,12 @@ export const SubmenuContextProvidersProvider = ({
         return [];
       }
     },
-    [fallbackResults, minisearches],
+    [
+      fallbackResults,
+      minisearches,
+      calculateFileSortPriority,
+      calculateMatchQuality,
+    ],
   );
 
   const loadSubmenuItems = useCallback(
