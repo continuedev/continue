@@ -115,7 +115,7 @@ export const SubmenuContextProvidersProvider = ({
 
     const interval = setInterval(refreshOpenFiles, 2000);
 
-    refreshOpenFiles(); // Initial call
+    void refreshOpenFiles(); // Initial call
 
     return () => {
       isMounted = false;
@@ -237,7 +237,8 @@ export const SubmenuContextProvidersProvider = ({
                 providers === "all"
                   ? true
                   : providers === "dependsOnIndexing"
-                    ? description.dependsOnIndexing
+                    ? description.dependsOnIndexing &&
+                      description.dependsOnIndexing?.length > 0
                     : providers.includes(description.title);
 
               if (!refreshProvider) {
@@ -351,7 +352,7 @@ export const SubmenuContextProvidersProvider = ({
   useWebviewListener(
     "refreshSubmenuItems",
     async (data) => {
-      loadSubmenuItems(data.providers);
+      void loadSubmenuItems(data.providers);
     },
     [loadSubmenuItems],
   );
@@ -360,7 +361,7 @@ export const SubmenuContextProvidersProvider = ({
     "indexProgress",
     async (data) => {
       if (data.status === "done") {
-        loadSubmenuItems("dependsOnIndexing");
+        void loadSubmenuItems("dependsOnIndexing");
       }
     },
     [loadSubmenuItems],
@@ -379,7 +380,7 @@ export const SubmenuContextProvidersProvider = ({
       )
       .map((provider) => provider.title);
     if (newTitles.length > 0) {
-      loadSubmenuItems(newTitles);
+      void loadSubmenuItems(newTitles);
     }
     lastProviders.current = submenuContextProviders;
   }, [loadSubmenuItems, submenuContextProviders]);
