@@ -218,8 +218,15 @@ export class CodeRenderer {
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}" shape-rendering="crispEdges">
+  <style>
+    :root {
+      --purple: rgb(112, 114, 209);
+      --green: rgb(136, 194, 163);
+      --blue: rgb(107, 166, 205);
+    }
+  </style>
   <g>
-  <rect x="0" y="0" width="${dimensions.width}" height="${dimensions.height}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
+  <rect x="0" y="0" rx="10" ry="10" width="${dimensions.width}" height="${dimensions.height}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
     ${lineBackgrounds}
     ${guts}
   </g>
@@ -273,18 +280,22 @@ export class CodeRenderer {
       return `<text x="0" y="${y}" font-family="${fontFamily}" font-size="${fontSize.toString()}" xml:space="preserve" dominant-baseline="central" shape-rendering="crispEdges">${spans}</text>`;
     });
 
-    const lineBackgrounds = [...lines, null]
+    const lineBackgrounds = lines
       .map((line, index) => {
         const classes = line?.getAttribute("class") || "";
         const bgColor = classes.includes("highlighted")
           ? this.editorLineHighlight
           : this.editorBackground;
         const y = index * lineHeight;
+        const isFirst = index === 0;
+        const isLast = index === lines.length - 1;
+        const topRadius = isFirst ? "10" : "0";
+        const bottomRadius = isLast ? "10" : "0";
         // SVG notes:
         // By default SVGs have anti-aliasing on.
         // This is undesirable in our case because pixel-perfect alignment of these rectangles will introduce thin gaps.
         // Turning it off with 'shape-rendering="crispEdges"' solves the issue.
-        return `<rect x="0" y="${y}" width="100%" height="${lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
+        return `<rect x="0" y="${y}" rx="${topRadius} ${topRadius} ${bottomRadius} ${bottomRadius}" width="100%" height="${lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
       })
       .join("\n");
 
