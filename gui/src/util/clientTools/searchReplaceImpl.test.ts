@@ -99,6 +99,7 @@ describe("searchReplaceToolImpl", () => {
       mockFindSearchMatch.mockReturnValue({
         startIndex,
         endIndex,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
@@ -173,10 +174,12 @@ const c = 3;`;
         .mockReturnValueOnce({
           startIndex: firstStartIndex,
           endIndex: firstEndIndex,
+          strategyName: "exactMatch",
         })
         .mockReturnValueOnce({
           startIndex: secondStartIndex,
           endIndex: secondEndIndex,
+          strategyName: "exactMatch",
         });
 
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
@@ -239,6 +242,7 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 10, // Position of "remove this line"
         endIndex: 26, // End of "remove this line"
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
@@ -278,6 +282,7 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 6,
         endIndex: 11,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
@@ -344,6 +349,7 @@ keep this too`;
         .mockReturnValueOnce({
           startIndex: 0,
           endIndex: 13,
+          strategyName: "exactMatch",
         })
         .mockReturnValueOnce(null); // Second search fails
 
@@ -393,6 +399,7 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0,
         endIndex: 7,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockRejectedValue(new Error("Apply failed"));
 
@@ -423,6 +430,7 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0, // Empty search matches at beginning
         endIndex: 0,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
@@ -457,6 +465,7 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0,
         endIndex: originalContent.length,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
@@ -492,6 +501,7 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0,
         endIndex: 4,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 

@@ -14,6 +14,7 @@ describe("Exact matches", () => {
     expect(result).toEqual({
       startIndex: 0,
       endIndex: fileContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -32,6 +33,7 @@ const b = 2;`;
     expect(result).toEqual({
       startIndex: 13, // After "const a = 1;\n"
       endIndex: 13 + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -49,6 +51,7 @@ function hello() {
     expect(result).toEqual({
       startIndex: 13, // After "const a = 1;\n"
       endIndex: fileContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -63,6 +66,7 @@ const c = 3;`;
     expect(result).toEqual({
       startIndex: 13, // After "const a = 1;\n"
       endIndex: 13 + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -80,6 +84,7 @@ const c = 3;`;
     expect(result).toEqual({
       startIndex: 18,
       endIndex: 18 + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 });
@@ -98,6 +103,7 @@ describe("Trimmed matches", () => {
     expect(result).toEqual({
       startIndex: 0,
       endIndex: fileContent.length, // Uses trimmed length
+      strategyName: "trimmedMatch",
     });
   });
 
@@ -117,6 +123,7 @@ const b = 2;`;
     expect(result).toEqual({
       startIndex: 12,
       endIndex: 12 + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -134,6 +141,7 @@ const c = 3;`;
     expect(result).toEqual({
       startIndex: expectedStart,
       endIndex: expectedStart + trimmedSearchContent.length,
+      strategyName: "trimmedMatch",
     });
   });
 });
@@ -150,6 +158,7 @@ describe("Empty search content", () => {
     expect(result).toEqual({
       startIndex: 0,
       endIndex: 0,
+      strategyName: "emptySearch",
     });
   });
 
@@ -164,6 +173,7 @@ describe("Empty search content", () => {
     expect(result).toEqual({
       startIndex: 0,
       endIndex: 0,
+      strategyName: "emptySearch",
     });
   });
 
@@ -176,6 +186,7 @@ describe("Empty search content", () => {
     expect(result).toEqual({
       startIndex: 0,
       endIndex: 0,
+      strategyName: "emptySearch",
     });
   });
 });
@@ -256,6 +267,7 @@ describe("Edge cases", () => {
     expect(result).toEqual({
       startIndex: expectedStart,
       endIndex: expectedStart + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -271,6 +283,7 @@ const unicode = "🚀 Hello 世界";`;
     expect(result).toEqual({
       startIndex: expectedStart,
       endIndex: expectedStart + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -292,6 +305,7 @@ function test() {
     expect(result).toEqual({
       startIndex: 0,
       endIndex: searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -306,6 +320,7 @@ const a = 1;`;
     expect(result).toEqual({
       startIndex: 0,
       endIndex: searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 });
@@ -326,6 +341,7 @@ return x+y;`;
     expect(result).not.toBeNull();
     expect(result!.startIndex).toBe(20); // After "function example() {\n"
     expect(result!.endIndex).toBe(72); // End of "    return x + y;"
+    expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
 
     // Verify the matched content contains the original whitespace
     const matchedContent = fileContent.substring(
@@ -349,6 +365,7 @@ const c = 3;`;
     expect(result).not.toBeNull();
     expect(result!.startIndex).toBe(12); // After "const a = 1;"
     expect(result!.endIndex).toBe(32); // End of "const   b    =   2;"
+    expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
 
     // Verify the matched content preserves original spacing
     const matchedContent = fileContent.substring(
@@ -374,6 +391,7 @@ const   b    =   2;`);
     expect(result).not.toBeNull();
     expect(result!.startIndex).toBe(17); // After "function test() {"
     expect(result!.endIndex).toBe(53); // End of "\t}"
+    expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
 
     // Verify the matched content preserves original tabs
     const matchedContent = fileContent.substring(
@@ -401,6 +419,7 @@ key3:'value3'`;
     expect(result).not.toBeNull();
     expect(result!.startIndex).toBe(13); // After "const obj = {"
     expect(result!.endIndex).toBe(83); // End of "    key3 : 'value3'"
+    expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
 
     // Verify the matched content preserves original formatting
     const matchedContent = fileContent.substring(
@@ -431,6 +450,7 @@ key3:'value3'`;
     expect(result).not.toBeNull();
     expect(result!.startIndex).toBe(17); // After "function calc() {\n\n"
     expect(result!.endIndex).toBe(78); // End of "    return result;"
+    expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
 
     // Verify the matched content includes all original whitespace
     const matchedContent = fileContent.substring(
@@ -459,6 +479,7 @@ const x = 1;`;
     expect(result).toEqual({
       startIndex: 0,
       endIndex: 10,
+      strategyName: "exactMatch",
     });
   });
 
@@ -474,6 +495,7 @@ const x = 1;`;
     expect(result).toEqual({
       startIndex: 0,
       endIndex: 0,
+      strategyName: "emptySearch",
     });
   });
 
@@ -498,6 +520,7 @@ this.value=0;
     expect(result).not.toBeNull();
     expect(result!.startIndex).toBe(15); // After "class Example {"
     expect(result!.endIndex).toBe(95); // End of "    }"
+    expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
 
     // Verify the matched content preserves original formatting
     const matchedContent = fileContent.substring(
@@ -536,6 +559,7 @@ const a = 1;`;
     expect(result).toEqual({
       startIndex: 0,
       endIndex: 10,
+      strategyName: "exactMatch",
     });
   });
 });
@@ -568,6 +592,7 @@ describe("Real-world scenarios", () => {
     expect(result).toEqual({
       startIndex: expectedStart,
       endIndex: expectedStart + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -587,6 +612,7 @@ function App() {
     expect(result).toEqual({
       startIndex: expectedStart,
       endIndex: expectedStart + searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 
@@ -609,6 +635,7 @@ function test() {
     expect(result).toEqual({
       startIndex: 0,
       endIndex: searchContent.length,
+      strategyName: "exactMatch",
     });
   });
 });

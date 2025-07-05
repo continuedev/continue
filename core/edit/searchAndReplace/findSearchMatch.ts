@@ -1,11 +1,19 @@
 /**
- * Represents a match result with start and end character positions
+ * Represents a basic match result with start and end character positions
  */
-export interface SearchMatchResult {
+interface BasicMatchResult {
   /** The starting character index of the match in the file content */
   startIndex: number;
   /** The ending character index of the match in the file content */
   endIndex: number;
+}
+
+/**
+ * Represents a match result with start and end character positions
+ */
+export interface SearchMatchResult extends BasicMatchResult {
+  /** The name of the strategy that successfully matched */
+  strategyName: string;
 }
 
 /**
@@ -14,7 +22,7 @@ export interface SearchMatchResult {
 type MatchStrategy = (
   fileContent: string,
   searchContent: string,
-) => SearchMatchResult | null;
+) => BasicMatchResult | null;
 
 /**
  * Exact string matching strategy
@@ -22,7 +30,7 @@ type MatchStrategy = (
 function exactMatch(
   fileContent: string,
   searchContent: string,
-): SearchMatchResult | null {
+): BasicMatchResult | null {
   const exactIndex = fileContent.indexOf(searchContent);
   if (exactIndex !== -1) {
     return {
@@ -39,7 +47,7 @@ function exactMatch(
 function trimmedMatch(
   fileContent: string,
   searchContent: string,
-): SearchMatchResult | null {
+): BasicMatchResult | null {
   const trimmedSearchContent = searchContent.trim();
   const trimmedIndex = fileContent.indexOf(trimmedSearchContent);
   if (trimmedIndex !== -1) {
@@ -58,7 +66,7 @@ function trimmedMatch(
 function whitespaceIgnoredMatch(
   fileContent: string,
   searchContent: string,
-): SearchMatchResult | null {
+): BasicMatchResult | null {
   // Remove all whitespace (spaces, tabs, newlines, etc.)
   const strippedFileContent = fileContent.replace(/\s/g, "");
   const strippedSearchContent = searchContent.replace(/\s/g, "");
@@ -109,12 +117,12 @@ function whitespaceIgnoredMatch(
 }
 
 /**
- * Ordered list of matching strategies to try
+ * Ordered list of matching strategies to try with their names
  */
-const matchingStrategies: MatchStrategy[] = [
-  exactMatch,
-  trimmedMatch,
-  whitespaceIgnoredMatch,
+const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
+  { strategy: exactMatch, name: "exactMatch" },
+  { strategy: trimmedMatch, name: "trimmedMatch" },
+  { strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" },
 ];
 
 /**
@@ -137,14 +145,14 @@ export function findSearchMatch(
 
   if (trimmedSearchContent === "") {
     // Empty search content matches the beginning of the file
-    return { startIndex: 0, endIndex: 0 };
+    return { startIndex: 0, endIndex: 0, strategyName: "emptySearch" };
   }
 
   // Try each matching strategy in order
-  for (const strategy of matchingStrategies) {
+  for (const { strategy, name } of matchingStrategies) {
     const result = strategy(fileContent, searchContent);
     if (result !== null) {
-      return result;
+      return { ...result, strategyName: name };
     }
   }
 
