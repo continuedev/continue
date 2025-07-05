@@ -244,6 +244,7 @@ export class NextEditWindowManager {
     editor: vscode.TextEditor,
     currCursorPos: vscode.Position,
     editableRegionStartLine: number,
+    oldEditRangeSlice: string,
     newEditRangeSlice: string,
     diffLines: DiffLine[],
   ) {
@@ -281,6 +282,7 @@ export class NextEditWindowManager {
     await this.renderTooltip(
       editor,
       currCursorPos,
+      oldEditRangeSlice,
       newEditRangeSlice,
       editableRegionStartLine,
     );
@@ -554,13 +556,14 @@ export class NextEditWindowManager {
    * @returns The decoration.
    */
   private async createCodeRenderDecoration(
-    code: string,
+    originalCode: string,
+    predictedCode: string,
     position: vscode.Position,
     editableRegionStartLine: number,
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     const currLineOffsetFromTop = position.line - editableRegionStartLine;
     const uriAndDimensions = await this.createCodeRender(
-      code,
+      predictedCode,
       currLineOffsetFromTop,
     );
     if (!uriAndDimensions) {
@@ -576,8 +579,15 @@ export class NextEditWindowManager {
 
     // Set the margin-left so that it's never covering code inside the editable region.
     const marginLeft =
-      SVG_CONFIG.getTipWidth(code) -
-      SVG_CONFIG.getTipWidth(code.split("\n")[currLineOffsetFromTop]);
+      SVG_CONFIG.getTipWidth(originalCode) -
+      SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]);
+
+    console.log(marginLeft);
+    console.log(SVG_CONFIG.getTipWidth(originalCode));
+    console.log(
+      SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]),
+    );
+    console.log(originalCode.split("\n")[currLineOffsetFromTop]);
     return vscode.window.createTextEditorDecorationType({
       before: {
         contentIconPath: uri,
@@ -590,7 +600,7 @@ export class NextEditWindowManager {
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
       },
-      rangeBehavior: vscode.DecorationRangeBehavior.OpenOpen,
+      rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     });
   }
 
@@ -684,7 +694,8 @@ export class NextEditWindowManager {
   private async renderTooltip(
     editor: vscode.TextEditor,
     position: vscode.Position,
-    text: string,
+    originalCode: string,
+    predictedCode: string,
     editableRegionStartLine: number,
   ) {
     console.log("renderTooltip");
@@ -693,12 +704,13 @@ export class NextEditWindowManager {
 
     // Create a new decoration with the text.
     const decoration = await this.createCodeRenderDecoration(
-      text,
+      originalCode,
+      predictedCode,
       position,
       editableRegionStartLine,
     );
     if (!decoration) {
-      console.error("Failed to create decoration for text:", text);
+      console.error("Failed to create decoration for text:", predictedCode);
       return;
     }
 
