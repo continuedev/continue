@@ -13,6 +13,7 @@ import { getFontSize } from "../../../util";
 import Spinner from "../../gui/Spinner";
 import { isTerminalCodeBlock } from "../utils";
 import { ApplyActions } from "./ApplyActions";
+import { CollapsibleContainer } from "./CollapsibleContainer";
 import { CopyButton } from "./CopyButton";
 import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
@@ -32,6 +33,7 @@ export interface StepContainerPreToolbarProps {
   children: any;
   expanded?: boolean;
   disableManualApply?: boolean;
+  collapsible?: boolean;
 }
 
 export function StepContainerPreToolbar({
@@ -47,6 +49,7 @@ export function StepContainerPreToolbar({
   children,
   expanded,
   disableManualApply,
+  collapsible,
 }: StepContainerPreToolbarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((state) => state.session.history);
@@ -298,9 +301,10 @@ export function StepContainerPreToolbar({
           {renderActionButtons()}
         </div>
       </div>
-
       {isExpanded && (
-        <div className="overflow-hidden overflow-y-auto">{children}</div>
+        <CollapsibleContainer collapsible={collapsible}>
+          {children}
+        </CollapsibleContainer>
       )}
     </div>
   );
