@@ -93,7 +93,7 @@ export class CodeRenderer {
       this.editorForeground = th.fg;
       this.editorLineHighlight =
         th.colors!["editor.lineHighlightBackground"] ?? "#000000";
-      console.log(th.colors);
+      // console.log(th.colors);
     } else {
       this.currentTheme = "dark-plus";
     }
@@ -222,7 +222,7 @@ export class CodeRenderer {
       language,
       currLineOffsetFromTop,
     );
-    console.log(highlightedCodeHtml);
+    // console.log(highlightedCodeHtml);
 
     const { guts, lineBackgrounds } = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
@@ -239,7 +239,7 @@ export class CodeRenderer {
     ${guts}
   </g>
 </svg>`;
-    console.log(svg);
+    // console.log(svg);
 
     return Buffer.from(svg, "utf8");
   }
