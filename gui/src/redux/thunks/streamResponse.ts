@@ -64,6 +64,7 @@ export const streamResponseThunk = createAsyncThunk<
           defaultContextProviders,
           availableSlashCommands: state.config.config.slashCommands,
           dispatch,
+          getState,
         });
 
         // symbols for both context items AND selected codeblocks

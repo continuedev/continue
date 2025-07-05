@@ -101,7 +101,7 @@ export const streamNormalInput = createAsyncThunk<
       streamAborter.signal,
     );
     if (!useNativeTools && !!activeTools.length) {
-      gen = interceptXMLToolCalls(gen);
+      gen = interceptXMLToolCalls(gen, streamAborter);
     }
 
     let next = await gen.next();

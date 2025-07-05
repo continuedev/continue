@@ -187,6 +187,7 @@ export interface ContextProviderExtras {
   ide: IDE;
   selectedCode: RangeInFile[];
   fetch: FetchFunction;
+  isInAgentMode: boolean;
 }
 
 export interface LoadSubmenuItemsArgs {

@@ -405,7 +405,6 @@ export const sessionSlice = createSlice({
               }
             } else if (message.role === "thinking" && message.signature) {
               if (lastMessage.role === "thinking") {
-                console.log("add signature", message.signature);
                 lastMessage.signature = message.signature;
               }
             } else if (
