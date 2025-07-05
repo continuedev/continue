@@ -29,41 +29,86 @@ describe("Edit Test", () => {
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
-    await GUIActions.toggleGui();
+    try {
+      // Clear previous editor content
+      await editor.clearText();
+      
+      // Toggle GUI with increased timeout
+      await TestUtils.waitForSuccess(async () => {
+        await GUIActions.toggleGui();
+      }, DEFAULT_TIMEOUT.MD);
 
-    await editor.typeTextAt(1, 1, originalEditorText);
-    await editor.selectText(originalEditorText);
+      // Type and select text
+      await editor.typeTextAt(1, 1, originalEditorText);
+      await editor.selectText(originalEditorText);
 
-    await EditActions.invokeEditShortcut(editor);
+      // Invoke edit shortcut with retry
+      await TestUtils.waitForSuccess(async () => {
+        await EditActions.invokeEditShortcut(editor);
+      }, DEFAULT_TIMEOUT.MD);
 
-    ({ view } = await GUIActions.switchToReactIframe());
+      // Switch to React iframe with increased reliability
+      await TestUtils.waitForSuccess(async () => {
+        ({ view } = await GUIActions.switchToReactIframe());
+        expect(view).to.not.be.undefined;
+      }, DEFAULT_TIMEOUT.MD);
 
-    await GUIActions.sendMessage({
-      view,
-      message: userMessage,
-      inputFieldIndex: 0,
-    });
+      // Send message
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage,
+        inputFieldIndex: 0,
+      });
 
-    await view.switchBack();
+      // Switch back to main editor
+      await view.switchBack();
 
-    await TestUtils.waitForSuccess(async () => {
-      const editorText = await editor.getText();
-      return editorText.includes(llmResponse);
-    });
+      // Wait for LLM response
+      await TestUtils.waitForSuccess(async () => {
+        const editorText = await editor.getText();
+        return editorText.includes(llmResponse);
+      }, DEFAULT_TIMEOUT.MD);
+    } catch (error) {
+      console.error("Error in beforeEach:", error);
+      throw error;
+    }
   });
 
   afterEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
-
-    await editor.clearText();
-
-    ({ view } = await GUIActions.switchToReactIframe());
-
-    const tipTapEditor = await GUISelectors.getMessageInputFieldAtIndex(
-      view,
-      0,
-    );
-    await tipTapEditor.clear();
+    
+    try {
+      // First switch to React iframe to ensure we can access it
+      try {
+        ({ view } = await GUIActions.switchToReactIframe());
+        
+        // Try to clear the message input field
+        try {
+          const tipTapEditor = await GUISelectors.getMessageInputFieldAtIndex(
+            view,
+            0,
+          );
+          if (tipTapEditor) {
+            await tipTapEditor.clear();
+          }
+        } catch (e) {
+          console.log("Could not clear input field, continuing anyway:", e);
+        }
+        
+        // Switch back to main context
+        await view.switchBack();
+      } catch (e) {
+        console.log("Could not switch to iframe, continuing anyway:", e);
+      }
+      
+      // Clear editor text with retry
+      await TestUtils.waitForSuccess(async () => {
+        await editor.clearText();
+      }, DEFAULT_TIMEOUT.SM);
+    } catch (error) {
+      console.error("Error in afterEach:", error);
+      // Don't rethrow, let the test continue
+    }
   });
 
   async function getCodeLensWithRetry(editor: TextEditor, text: string) {
@@ -93,7 +138,10 @@ describe("Edit Test", () => {
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Rejects an Edit in the GUI", async () => {
-    ({ view } = await GUIActions.switchToReactIframe());
+    // Get a fresh view reference to avoid stale element errors
+    await TestUtils.waitForSuccess(async () => {
+      ({ view } = await GUIActions.switchToReactIframe());
+    }, DEFAULT_TIMEOUT.MD);
 
     await EditActions.rejectEditInGUI(view);
 
@@ -110,7 +158,7 @@ describe("Edit Test", () => {
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Accepts an Edit using CodeLens buttons", async () => {
-    const acceptCodeLens = await editor.getCodeLens("Accept");
+    const acceptCodeLens = await getCodeLensWithRetry(editor, "Accept");
     await acceptCodeLens?.click();
 
     await TestUtils.waitForSuccess(async () => {
