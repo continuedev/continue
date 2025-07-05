@@ -96,6 +96,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-3.7-sonnet",
           "claude-sonnet-4",
           "claude-opus-4",
+          "nova-lite",
+          "nova-pro",
+          "nova-micro",
+          "nova-premier",
         ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
