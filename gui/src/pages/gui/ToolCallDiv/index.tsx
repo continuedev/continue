@@ -85,6 +85,22 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     );
   }
 
+  // Trying this out while it's an experimental feature
+  // Obviously missing the truncate and args buttons
+  // All the info from args is displayed here
+  // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
+  if (
+    props.toolCall.function?.name === BuiltInToolNames.SearchAndReplaceInFile
+  ) {
+    return (
+      <FunctionSpecificToolCallDiv
+        toolCall={props.toolCall}
+        toolCallState={props.toolCallState}
+        historyIndex={props.historyIndex}
+      />
+    );
+  }
+
   return (
     <ToolCallDisplay
       icon={getStatusIcon(props.toolCallState.status)}
