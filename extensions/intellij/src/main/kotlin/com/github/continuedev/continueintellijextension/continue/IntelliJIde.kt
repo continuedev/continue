@@ -592,6 +592,14 @@ class IntelliJIDE(
         throw NotImplementedError("gotoDefinition not implemented yet")
     }
 
+    override suspend fun gotoTypeDefinition(location: Location): List<RangeInFile> {
+        throw NotImplementedError("gotoTypeDefinition not implemented yet")
+    }
+
+    override suspend fun getSignatureHelp(location: Location): SignatureHelp? {
+        throw NotImplementedError("getSignatureHelp not implemented yet")
+    }
+
     override fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit) {
         throw NotImplementedError("onDidChangeActiveTextEditor not implemented yet")
     }
