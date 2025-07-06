@@ -21,7 +21,7 @@
 (function_type
   return_type: (type_identifier) @return.type)
 
-;; Capture any parse errors (e.g., the `??`)
+;; Capture any parse errors (e.g., the `@`)
 (ERROR) @error.node
 
 ;; Capture the entire function declaration line
@@ -34,3 +34,26 @@
       (import_specifier
         name: (identifier) @import.name)))
   source: (string) @import.source)
+
+;; Capture standalone function declarations
+(function_declaration
+  name: (identifier) @function.name) @function.decl
+
+;; Capture the function signature including parameters and return type
+(function_declaration
+  parameters: (formal_parameters) @function.params
+  return_type: (type_annotation)? @function.type)
+
+;; For function expressions or arrow functions
+(function_type
+  parameters: (formal_parameters) @function.params) @function.decl
+
+;; For arrow functions
+(arrow_function
+  parameters: (formal_parameters) @function.params) @function.decl
+
+;; For function signatures without a body (like in your example)
+(function_signature
+  name: (identifier) @function.name
+  parameters: (formal_parameters) @function.params
+  return_type: (type_annotation)? @function.type) @function.decl
