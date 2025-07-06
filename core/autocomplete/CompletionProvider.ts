@@ -123,8 +123,9 @@ export class CompletionProvider {
     };
 
     // Enable static contextualization if defined.
-    options.experimental_enableStaticContextualization =
-      config?.experimental?.enableStaticContextualization ?? false;
+    if (config?.experimental?.enableStaticContextualization) {
+      options.experimental_enableStaticContextualization = true;
+    }
 
     return options;
   }
@@ -262,6 +263,10 @@ export class CompletionProvider {
         timestamp: Date.now(),
         ...helper.options,
       };
+
+      if (options.experimental_enableStaticContextualization) {
+        outcome.enabledStaticContextualization = true;
+      }
 
       //////////
 

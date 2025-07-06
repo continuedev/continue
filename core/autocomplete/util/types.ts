@@ -42,4 +42,5 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   completionId: string;
   uniqueId: string;
   timestamp: number;
+  enabledStaticContextualization?: boolean;
 }
