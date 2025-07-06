@@ -108,7 +108,6 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
-  const toolCallState = useAppSelector(selectCurrentToolCall);
   const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
@@ -147,6 +146,7 @@ export function Chat() {
     isStreaming,
   );
 
+  const currentToolCallState = useAppSelector(selectCurrentToolCall);
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
   );
@@ -158,7 +158,7 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (toolCallState?.status === "generated") {
+      if (currentToolCallState?.status === "generated") {
         return console.error(
           "Cannot submit message while awaiting tool confirmation",
         );
@@ -167,9 +167,7 @@ export function Chat() {
         currentToolCallApplyState &&
         currentToolCallApplyState.status !== "closed"
       ) {
-        return console.error(
-          "Cannot submit message while awaiting tool call apply",
-        );
+        ideMessenger.post("rejectDiff", currentToolCallApplyState);
       }
 
       const model = isInEdit
@@ -241,7 +239,7 @@ export function Chat() {
       mode,
       isInEdit,
       codeToEdit,
-      toolCallState,
+      currentToolCallState,
       currentToolCallApplyState,
     ],
   );

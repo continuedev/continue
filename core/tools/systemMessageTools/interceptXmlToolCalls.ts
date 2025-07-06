@@ -1,5 +1,6 @@
 import { ChatMessage, PromptLog, ToolCallDelta } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
+import { detectToolCallStart } from "./detectToolCallStart";
 import { generateOpenAIToolCallId } from "./openAiToolCallId";
 import { parsePartialXml } from "./parsePartialXmlToolCall";
 import { getStringDelta, splitAtTagsAndCodeblocks } from "./xmlToolUtils";
@@ -26,13 +27,6 @@ export async function* interceptXMLToolCalls(
 
   let done = false;
   let buffer = "";
-  let boundaryTypeIndex = 0;
-  const acceptedBoundaries: [string, string][] = [
-    ["<tool_call>", "</tool_call>"],
-    ["```xml\n<tool_call/>", "</tool_call>\n```"],
-    ["```\n<tool_call/>", "</tool_call>\n```"],
-    ["```tool_call>", "</tool_call>"], //"</tool_call>\n```"
-  ];
 
   while (true) {
     if (abortController.signal.aborted) {
@@ -58,29 +52,15 @@ export async function* interceptXMLToolCalls(
         for (const chunk of splitContent) {
           buffer += chunk;
           if (!inToolCall) {
-            const lowerCaseBuffer = buffer.toLowerCase();
-            let partialStartTagMatch = false;
-            for (let i = 0; i < acceptedBoundaries.length; i++) {
-              const [startTag, _] = acceptedBoundaries[i];
+            const { isInPartialStart, isInToolCall, modifiedBuffer } =
+              detectToolCallStart(buffer);
 
-              if (lowerCaseBuffer.startsWith(startTag)) {
-                boundaryTypeIndex = i;
-                inToolCall = true;
-                // for e.g. ```tool_call case, replace before adding to buffer, case insensitive
-                if (boundaryTypeIndex !== 0) {
-                  buffer = buffer.replace(
-                    new RegExp(startTag, "i"),
-                    "<tool_call>",
-                  );
-                }
-                break;
-              } else if (startTag.startsWith(lowerCaseBuffer)) {
-                partialStartTagMatch = true;
-              }
-            }
-
-            if (partialStartTagMatch) {
+            if (isInPartialStart) {
               continue;
+            }
+            if (isInToolCall) {
+              inToolCall = true;
+              buffer = modifiedBuffer;
             }
           }
 
@@ -93,15 +73,7 @@ export async function* interceptXMLToolCalls(
             // Handle tool call
             const parsed = parsePartialXml(toolCallText);
 
-            if (parsed?.tool_call) {
-              const name = parsed.tool_call.name;
-
-              if (!name) {
-                // Prevent dispatching with empty name
-                buffer = "";
-                continue;
-              }
-
+            if (parsed?.tool_call?.name) {
               const args = parsed.tool_call.args
                 ? JSON.stringify(parsed.tool_call.args)
                 : "";
@@ -112,7 +84,7 @@ export async function* interceptXMLToolCalls(
                 id: currentToolCallId,
                 type: "function",
                 function: {
-                  name: name,
+                  name: parsed.tool_call.name,
                   arguments: argsDelta,
                 },
               };
@@ -127,10 +99,9 @@ export async function* interceptXMLToolCalls(
                 },
               ];
             } else {
-              // console.warn(
-              //   "Partial parsing failed, continuing to accumulate tool call:\n",
-              //   toolCallText,
-              // );
+              // Prevent dispatching with empty name
+              buffer = "";
+              continue;
             }
 
             // Check for exit from tool call
