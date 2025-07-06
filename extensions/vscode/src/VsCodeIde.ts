@@ -6,7 +6,10 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import { executeGotoProvider } from "./autocomplete/lsp";
+import {
+  executeGotoProvider,
+  executeSignatureHelpProvider,
+} from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
@@ -24,6 +27,7 @@ import type {
   Location,
   Problem,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "core";
@@ -92,6 +96,17 @@ class VsCodeIde implements IDE {
       line: location.position.line,
       character: location.position.character,
       name: "vscode.executeTypeDefinitionProvider",
+    });
+
+    return result;
+  }
+
+  async getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    const result = await executeSignatureHelpProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeSignatureHelpProvider",
     });
 
     return result;
