@@ -97,6 +97,8 @@ export function UserSettingsForm() {
     config.experimental?.optInNextEditFeature ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
+  const enableStaticContextualization =
+    config.experimental?.enableStaticContextualization ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -432,6 +434,17 @@ export function UserSettingsForm() {
                     })
                   }
                   text="@Codebase: use tool calling only"
+                />
+
+                <ToggleSwitch
+                  isToggled={enableStaticContextualization}
+                  onToggle={() =>
+                    handleUpdate({
+                      enableStaticContextualization:
+                        !enableStaticContextualization,
+                    })
+                  }
+                  text="Use Static Contextualization"
                 />
 
                 {hasContinueEmail && (

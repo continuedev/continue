@@ -24,6 +24,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   experimental_includeRecentlyVisitedRanges: true,
   experimental_includeRecentlyEditedRanges: true,
   experimental_includeDiff: true,
+  experimental_enableStaticContextualization: false,
 };
 
 export const COUNT_COMPLETION_REJECTED_AFTER = 10_000;
