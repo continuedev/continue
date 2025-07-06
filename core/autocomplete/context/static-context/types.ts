@@ -14,6 +14,7 @@ export interface HoleContext {
   fullHoverResult: string;
   functionName: string;
   functionTypeSpan: string;
+  returnTypeIsAny: boolean;
   range: Range;
   source: string;
 }
