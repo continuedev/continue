@@ -1,0 +1,105 @@
+class UserRepository {
+  async createUser(userData) {
+    const user = new User(userData);
+    await user.validate();
+    await this.db.save(user);
+    this.logger.info('User created');
+    return user;
+  }
+
+  async updateUser(id, userData) {
+    const user = await this.db.findById(id);
+    user.update(userData);
+    await user.validate();
+    await this.db.save(user);
+    this.logger.info('User updated');
+    return user;
+  }
+
+  async deleteUser(id) {
+    const user = await this.db.findById(id);
+    await this.db.delete(user);
+    this.logger.info('User deleted');
+    return true;
+  }
+
+  async findUser(id) {
+    const user = await this.db.findById(id);
+    this.logger.info('User found');
+    return user;
+  }
+}
+
+---
+
+class UserRepository {
+  async createUser(userData) {
+    const user = new User(userData);
+    await user.validate();
+    await this.db.save(user);
+    this.logger.info('User created');
+    return user;
+  }
+
+  async updateUser(id, userData) {
+    const user = await this.db.findById(id);
+    if (!user) {
+      throw new Error(`User with id ${id} not found`);
+    }
+    user.update(userData);
+    await user.validate();
+    await this.db.save(user);
+    this.logger.info('User updated');
+    return user;
+  }
+
+  async deleteUser(id) {
+    const user = await this.db.findById(id);
+    await this.db.delete(user);
+    this.logger.info('User deleted');
+    return true;
+  }
+
+  async findUser(id) {
+    const user = await this.db.findById(id);
+    this.logger.info('User found');
+    return user;
+  }
+}
+
+---
+
+class UserRepository {
+  async createUser(userData) {
+    const user = new User(userData);
+    await user.validate();
+    await this.db.save(user);
+    this.logger.info('User created');
+    return user;
+  }
+
+  async updateUser(id, userData) {
+    const user = await this.db.findById(id);
++     if (!user) {
++       throw new Error(`User with id ${id} not found`);
++     }
+    user.update(userData);
+    await user.validate();
+    await this.db.save(user);
+    this.logger.info('User updated');
+    return user;
+  }
+
+  async deleteUser(id) {
+    const user = await this.db.findById(id);
+    await this.db.delete(user);
+    this.logger.info('User deleted');
+    return true;
+  }
+
+  async findUser(id) {
+    const user = await this.db.findById(id);
+    this.logger.info('User found');
+    return user;
+  }
+}

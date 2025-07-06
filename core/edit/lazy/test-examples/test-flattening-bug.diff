@@ -1,0 +1,100 @@
+import { describe, test, expect, beforeEach } from 'vitest'
+import Calculator from './test.js'
+
+describe('Calculator', () => {
+  let calc
+
+  beforeEach(() => {
+    calc = new Calculator()
+  })
+
+  describe('Basic Arithmetic Operations', () => {
+    test('add should add numbers correctly', () => {
+      expect(calc.add(5).getResult()).toBe(5)
+      expect(calc.add(3).getResult()).toBe(8)
+    })
+
+    test('divide should divide numbers correctly', () => {
+      calc.add(20)
+      expect(calc.divide(4).getResult()).toBe(5)
+    })
+  })
+
+  describe('Constructor', () => {
+    test('should initialize with result 0', () => {
+      expect(calc.getResult()).toBe(0)
+    })
+  })
+})
+
+---
+
+import { describe, test, expect, beforeEach } from 'vitest'
+import Calculator from './test.js'
+
+describe('Calculator', () => {
+  let calc
+
+  beforeEach(() => {
+    calc = new Calculator()
+  })
+
+  test('add should add numbers correctly', () => {
+    expect(calc.add(5).getResult()).toBe(5)
+    expect(calc.add(3).getResult()).toBe(8)
+  })
+
+  test('constructor should initialize with result 0', () => {
+    expect(calc.getResult()).toBe(0)
+  })
+
+  test('divide should divide numbers correctly', () => {
+    calc.add(20)
+    expect(calc.divide(4).getResult()).toBe(5)
+  })
+})
+
+---
+
+import { describe, test, expect, beforeEach } from 'vitest'
+import Calculator from './test.js'
+
+describe('Calculator', () => {
+  let calc
+
+  beforeEach(() => {
+    calc = new Calculator()
+  })
+
++   test('add should add numbers correctly', () => {
++     expect(calc.add(5).getResult()).toBe(5)
++     expect(calc.add(3).getResult()).toBe(8)
++   })
++ 
++   test('constructor should initialize with result 0', () => {
++     expect(calc.getResult()).toBe(0)
++   })
++ 
++   test('divide should divide numbers correctly', () => {
++     calc.add(20)
++     expect(calc.divide(4).getResult()).toBe(5)
++   })
+-
+-   describe('Basic Arithmetic Operations', () => {
+-     test('add should add numbers correctly', () => {
+-       expect(calc.add(5).getResult()).toBe(5)
+-       expect(calc.add(3).getResult()).toBe(8)
+-     })
+-
+-     test('divide should divide numbers correctly', () => {
+-       calc.add(20)
+-       expect(calc.divide(4).getResult()).toBe(5)
+-     })
+-   })
+-
+-   describe('Constructor', () => {
+-     test('should initialize with result 0', () => {
+-       expect(calc.getResult()).toBe(0)
+-     })
+-   })
+})

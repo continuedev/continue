@@ -1,0 +1,154 @@
+---
+title: "User Guide"
+version: "1.0"
+---
+
+# User Guide
+
+## Getting Started
+
+### Installation
+Download and install the application.
+
+### First Steps
+Create your first project.
+
+## Advanced Features
+
+### Customization
+Customize the application to your needs.
+
+### Integrations
+Connect with third-party services.
+
+## Troubleshooting
+
+### Common Issues
+Solutions to frequently encountered problems.
+
+---
+
+---
+title: "User Guide"
+version: "2.0"
+---
+
+# User Guide
+
+## Getting Started
+
+Welcome to the comprehensive user guide for our application.
+
+### Prerequisites
+
+Before you begin, ensure you have:
+- Operating system requirements
+- Required permissions
+- Internet connection
+
+### Installation
+
+Download and install the application from our official website.
+
+#### Windows Installation
+
+1. Download the installer
+2. Run as administrator
+3. Follow the setup wizard
+
+#### macOS Installation
+
+1. Download the DMG file
+2. Drag to Applications folder
+3. Grant necessary permissions
+
+### First Steps
+
+Create your first project and explore the interface.
+
+## Advanced Features
+
+<!-- ... existing sections ... -->
+
+### Integrations
+
+Connect with third-party services to enhance functionality.
+
+## Troubleshooting
+
+### Common Issues
+
+Solutions to frequently encountered problems.
+
+### Getting Help
+
+If you need additional assistance:
+- Check our FAQ
+- Contact support
+- Visit community forums
+
+---
+
+---
+title: "User Guide"
+- version: "1.0"
++ version: "2.0"
+---
+
+# User Guide
+
+## Getting Started
+
++ Welcome to the comprehensive user guide for our application.
++ 
++ ### Prerequisites
++ 
++ Before you begin, ensure you have:
++ - Operating system requirements
++ - Required permissions
++ - Internet connection
+
+### Installation
+
+- Download and install the application.
++ Download and install the application from our official website.
++ 
++ #### Windows Installation
++ 
++ 1. Download the installer
++ 2. Run as administrator
++ 3. Follow the setup wizard
++ 
++ #### macOS Installation
++ 
++ 1. Download the DMG file
++ 2. Drag to Applications folder
++ 3. Grant necessary permissions
+
+### First Steps
+
+- Create your first project.
++ Create your first project and explore the interface.
+
+## Advanced Features
+
+- ### Customization
+- Customize the application to your needs.
+
+### Integrations
+
+- Connect with third-party services.
++ Connect with third-party services to enhance functionality.
+
+## Troubleshooting
+
+### Common Issues
+
+Solutions to frequently encountered problems.
+
++ ### Getting Help
++ 
++ If you need additional assistance:
++ - Check our FAQ
++ - Contact support
++ - Visit community forums

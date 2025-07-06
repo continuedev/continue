@@ -1,0 +1,96 @@
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Button } from './Button';
+
+describe('Button Component', () => {
+  test('renders with correct text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button')).toHaveTextContent('Click me');
+  });
+
+  test('handles click events', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  test('applies custom className', () => {
+    render(<Button className="custom-class">Click me</Button>);
+    expect(screen.getByRole('button')).toHaveClass('custom-class');
+  });
+}
+
+---
+
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Button } from './Button';
+
+describe('Button Component', () => {
+  test('renders with correct text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button')).toHaveTextContent('Click me');
+  });
+
+  test('handles click events', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  test('applies custom className', () => {
+    render(<Button className="custom-class">Click me</Button>);
+    expect(screen.getByRole('button')).toHaveClass('custom-class');
+  });
+
+  // ... existing tests ...
+
+  test('disables button when disabled prop is true', () => {
+    render(<Button disabled>Click me</Button>);
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
+
+  test('shows loading state', () => {
+    render(<Button loading>Click me</Button>);
+    expect(screen.getByRole('button')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+  });
+}
+
+---
+
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Button } from './Button';
+
+describe('Button Component', () => {
+  test('renders with correct text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button')).toHaveTextContent('Click me');
+  });
+
+  test('handles click events', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  test('applies custom className', () => {
+    render(<Button className="custom-class">Click me</Button>);
+    expect(screen.getByRole('button')).toHaveClass('custom-class');
+  });
+
++   test('disables button when disabled prop is true', () => {
++     render(<Button disabled>Click me</Button>);
++     expect(screen.getByRole('button')).toBeDisabled();
++   });
++ 
++   test('shows loading state', () => {
++     render(<Button loading>Click me</Button>);
++     expect(screen.getByRole('button')).toHaveAttribute('aria-busy', 'true');
++     expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
++   });
+}

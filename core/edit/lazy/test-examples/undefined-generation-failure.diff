@@ -1,0 +1,296 @@
+import { describe, test, expect, beforeEach } from 'vitest'
+import Calculator from './test.js'
+
+describe('Calculator', () => {
+  let calc
+
+  beforeEach(() => {
+    calc = new Calculator()
+  })
+
+  describe('Basic Arithmetic Operations', () => {
+    test('add should add numbers correctly', () => {
+      expect(calc.add(5).getResult()).toBe(5)
+      expect(calc.add(3).getResult()).toBe(8)
+      expect(calc.add(-2).getResult()).toBe(6)
+    })
+
+    test('divide should divide numbers correctly', () => {
+      calc.add(20)
+      expect(calc.divide(4).getResult()).toBe(5)
+      expect(calc.divide(2).getResult()).toBe(2.5)
+    })
+
+    test('divide should throw error when dividing by zero', () => {
+      calc.add(10)
+      expect(() => calc.divide(0)).toThrow('Cannot divide by zero')
+    })
+
+    test('multiply should multiply numbers correctly', () => {
+      calc.add(5)
+      expect(calc.multiply(3).getResult()).toBe(15)
+      expect(calc.multiply(2).getResult()).toBe(30)
+      expect(calc.multiply(0).getResult()).toBe(0)
+    })
+
+    test('power should calculate powers correctly', () => {
+      calc.add(2)
+      expect(calc.power(3).getResult()).toBe(8)
+      calc.reset().add(5)
+      expect(calc.power(2).getResult()).toBe(25)
+      calc.reset().add(9)
+      expect(calc.power(0.5).getResult()).toBe(3)
+    })
+
+    test('subtract should subtract numbers correctly', () => {
+      calc.add(10)
+      expect(calc.subtract(3).getResult()).toBe(7)
+      expect(calc.subtract(2).getResult()).toBe(5)
+      expect(calc.subtract(-1).getResult()).toBe(6)
+    })
+  })
+
+  describe('Constructor', () => {
+    test('constructor should initialize with result 0', () => {
+      expect(calc.getResult()).toBe(0)
+    })
+  })
+
+  describe('Edge Cases', () => {
+    test('edge cases should handle decimal numbers correctly', () => {
+      calc.add(3.14159)
+      expect(calc.getResult()).toBeCloseTo(3.14159, 5)
+      expect(calc.multiply(2).getResult()).toBeCloseTo(6.28318, 5)
+    })
+
+    test('edge cases should handle negative numbers correctly', () => {
+      calc.add(-5)
+      expect(calc.getResult()).toBe(-5)
+      expect(calc.multiply(-2).getResult()).toBe(10)
+    })
+
+    test('edge cases should handle very large numbers', () => {
+      calc.add(1e15)
+      expect(calc.getResult()).toBe(1e15)
+    })
+
+    test('edge cases should handle very small numbers', () => {
+      calc.add(1e-10)
+      expect(calc.getResult()).toBe(1e-10)
+      expect(calc.multiply(1e10).getResult()).toBeCloseTo(1, 5)
+    })
+  })
+
+  describe('Hyperbolic Functions', () => {
+    test('cosh should calculate hyperbolic cosine correctly', () => {
+      calc.add(0)
+      expect(calc.cosh().getResult()).toBeCloseTo(1, 5)
+      
+      calc.reset().add(1)
+      expect(calc.cosh().getResult()).toBeCloseTo(Math.cosh(1), 5)
+    })
+
+    test('sinh should calculate hyperbolic sine correctly', () => {
+      calc.add(0)
+      expect(calc.sinh().getResult()).toBeCloseTo(0, 5)
+      
+      calc.reset().add(1)
+      expect(calc.sinh().getResult()).toBeCloseTo(Math.sinh(1), 5)
+    })
+
+    test('tanh should calculate hyperbolic tangent correctly', () => {
+      calc.add(0)
+      expect(calc.tanh().getResult()).toBeCloseTo(0, 5)
+      
+      calc.reset().add(1)
+      expect(calc.tanh().getResult()).toBeCloseTo(Math.tanh(1), 5)
+    })
+  })
+
+  describe('Inverse Hyperbolic Functions', () => {
+    test('acosh should calculate inverse hyperbolic cosine correctly', () => {
+      calc.add(1)
+      expect(calc.acosh().getResult()).toBeCloseTo(0, 5)
+      
+      calc.reset().add(2)
+      expect(calc.acosh().getResult()).toBeCloseTo(Math.acosh(2), 5)
+    })
+
+    test('acosh should throw error for invalid input', () => {
+      calc.add(0.5)
+      expect(() => calc.acosh()).toThrow('Input must be >= 1 for inverse hyperbolic cosine')
+    })
+
+    test('asinh should calculate inverse hyperbolic sine correctly', () => {
+      calc.add(0)
+      expect(calc.asinh().getResult()).toBeCloseTo(0, 5)
+      
+      calc.reset().add(1)
+      expect(calc.asinh().getResult()).toBeCloseTo(Math.asinh(1), 5)
+    })
+
+    test('atanh should calculate inverse hyperbolic tangent correctly', () => {
+      calc.add(0)
+      expect(calc.atanh().getResult()).toBeCloseTo(0, 5)
+      
+      calc.reset().add(0.5)
+      expect(calc.atanh().getResult()).toBeCloseTo(Math.atanh(0.5), 5)
+    })
+
+    test('atanh should throw error for invalid input', () => {
+      calc.add(1)
+      expect(() => calc.atanh()).toThrow('Input must be between -1 and 1 (exclusive) for inverse hyperbolic tangent')
+      
+      calc.reset().add(-1)
+      expect(() => calc.atanh()).toThrow('Input must be between -1 and 1 (exclusive) for inverse hyperbolic tangent')
+      
+      calc.reset().add(2)
+      expect(() => calc.atanh()).toThrow('Input must be between -1 and 1 (exclusive) for inverse hyperbolic tangent')
+    })
+  })
+
+  describe('Inverse Trigonometric Functions', () => {
+    test('acos should calculate arccosine correctly', () => {
+      calc.add(1)
+      expect(calc.acos().getResult()).toBeCloseTo(0, 5)
+      
+      calc.reset().add(0)
+      expect(calc.acos().getResult()).toBeCloseTo(Math.PI / 2, 5)
+    })
+
+    test('acos should throw error for invalid input', () => {
+      calc.add(2)
+      expect(() => calc.acos()).toThrow('Input must be between -1 and 1 for arccos')
+      
+      calc.reset().add(-2)
+      expect(() => calc.acos()).toThrow('Input must be between -1 and 1 for arccos')
+    })
+
+    test('asin should calculate arcsine correctly', () => {
+      calc.add(1)
+      expect(calc.asin().getResult()).toBeCloseTo(Math.PI / 2, 5)
+      
+      calc.reset().add(0)
+      expect(calc.asin().getResult()).toBeCloseTo(0, 5)
+    })
+
+    test('asin should throw error for invalid input', () => {
+      calc.add(2)
+      expect(() => calc.asin()).toThrow('Input must be between -1 and 1 for arcsin')
+      
+      calc.reset().add(-2)
+      expect(() => calc.asin()).toThrow('Input must be between -1 and 1 for arcsin')
+    })
+
+    test('atan should calculate arctangent correctly', () => {
+      calc.add(1)
+      expect(calc.atan().getResult()).toBeCloseTo(Math.PI / 4, 5)
+      
+      calc.reset().add(0)
+      expect(calc.atan().getResult()).toBeCloseTo(0, 5)
+    })
+  })
+
+  describe('Method Chaining', () => {
+    test('method chaining should support complex chaining with various function types', () => {
+      const result = calc
+        .add(90)
+        .toRadians()
+        .sin()
+        .asin()
+        .toDegrees()
+        .getResult()
+      expect(result).toBeCloseTo(90, 5)
+    })
+
+    test('method chaining should support method chaining for basic operations', () => {
+      const result = calc.add(10).multiply(2).subtract(5).divide(3).getResult()
+      expect(result).toBeCloseTo(5, 5)
+    })
+
+    test('method chaining should support method chaining with trigonometric functions', () => {
+      const result = calc.add(45).toRadians().sin().getResult()
+      expect(result).toBeCloseTo(Math.sin(Math.PI / 4), 5)
+    })
+  })
+
+  describe('Return Values', () => {
+    test('return values all methods should return the calculator instance for chaining', () => {
+      expect(calc.add(5)).toBe(calc)
+      expect(calc.subtract(2)).toBe(calc)
+      expect(calc.multiply(3)).toBe(calc)
+      expect(calc.divide(2)).toBe(calc)
+      expect(calc.power(2)).toBe(calc)
+      expect(calc.sin()).toBe(calc)
+      expect(calc.cos()).toBe(calc)
+      expect(calc.tan()).toBe(calc)
+      expect(calc.toRadians()).toBe(calc)
+      expect(calc.toDegrees()).toBe(calc)
+      expect(calc.reset()).toBe(calc)
+    })
+  })
+
+  describe('Trigonometric Functions', () => {
+    test('cos should calculate cosine correctly', () => {
+      calc.add(0)
+      expect(calc.cos().getResult()).toBeCloseTo(1, 5)
+      
+      calc.reset().add(Math.PI)
+      expect(calc.cos().getResult()).toBeCloseTo(-1, 5)
+    })
+
+    test('sin should calculate sine correctly', () => {
+      calc.add(Math.PI / 2)
+      expect(calc.sin().getResult()).toBeCloseTo(1, 5)
+      
+      calc.reset().add(0)
+      expect(calc.sin().getResult()).toBeCloseTo(0, 5)
+    })
+
+    test('tan should calculate tangent correctly', () => {
+      calc.add(Math.PI / 4)
+      expect(calc.tan().getResult()).toBeCloseTo(1, 5)
+      
+      calc.reset().add(0)
+      expect(calc.tan().getResult()).toBeCloseTo(0, 5)
+    })
+  })
+
+  describe('Utility Functions', () => {
+    test('reset should reset result to 0', () => {
+      calc.add(100).multiply(5).subtract(20)
+      expect(calc.getResult()).not.toBe(0)
+      expect(calc.reset().getResult()).toBe(0)
+    })
+
+    test('toDegrees should convert radians to degrees', () => {
+      calc.add(Math.PI)
+      expect(calc.toDegrees().getResult()).toBeCloseTo(180, 5)
+      
+      calc.reset().add(Math.PI / 2)
+      expect(calc.toDegrees().getResult()).toBeCloseTo(90, 5)
+      
+      calc.reset().add(Math.PI / 4)
+      expect(calc.toDegrees().getResult()).toBeCloseTo(45, 5)
+    })
+
+    test('toRadians should convert degrees to radians', () => {
+      calc.add(180)
+      expect(calc.toRadians().getResult()).toBeCloseTo(Math.PI, 5)
+      
+      calc.reset().add(90)
+      expect(calc.toRadians().getResult()).toBeCloseTo(Math.PI / 2, 5)
+      
+      calc.reset().add(45)
+      expect(calc.toRadians().getResult()).toBeCloseTo(Math.PI / 4, 5)
+    })
+  })
+})
+
+---
+
+undefined
+
+---
+
+Error: Argument must be a string or a function

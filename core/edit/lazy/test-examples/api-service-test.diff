@@ -1,0 +1,127 @@
+import { ApiService } from './api-service';
+import { jest } from '@jest/globals';
+
+describe('ApiService', () => {
+  let apiService;
+
+  beforeEach(() => {
+    apiService = new ApiService('https://api.example.com');
+  });
+
+  test('should fetch user data successfully', async () => {
+    const mockUser = { id: 1, name: 'John Doe', email: 'john@example.com' };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(mockUser),
+    });
+
+    const result = await apiService.getUser(1);
+    
+    expect(result).toEqual(mockUser);
+    expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1');
+  });
+}
+
+---
+
+import { ApiService } from './api-service';
+import { jest } from '@jest/globals';
+
+describe('ApiService', () => {
+  let apiService;
+
+  beforeEach(() => {
+    apiService = new ApiService('https://api.example.com');
+    // Clear all mocks before each test
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Cleanup after each test  
+    jest.restoreAllMocks();
+  });
+
+  test('should fetch user data successfully', async () => {
+    const mockUser = { id: 1, name: 'John Doe', email: 'john@example.com' };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(mockUser),
+    });
+
+    const result = await apiService.getUser(1);
+    
+    expect(result).toEqual(mockUser);
+    expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1');
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  // ... existing tests ...
+
+  test('should handle network errors gracefully', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
+    await expect(apiService.getUser(1)).rejects.toThrow('Network error');
+    expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1');
+  });
+
+  test('should handle HTTP 404 errors', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+    });
+
+    await expect(apiService.getUser(999)).rejects.toThrow('User not found');
+  });
+}
+
+---
+
+import { ApiService } from './api-service';
+import { jest } from '@jest/globals';
+
+describe('ApiService', () => {
+  let apiService;
+
+  beforeEach(() => {
+    apiService = new ApiService('https://api.example.com');
++     // Clear all mocks before each test
++     jest.clearAllMocks();
+  });
+
++   afterEach(() => {
++     // Cleanup after each test  
++     jest.restoreAllMocks();
++   });
+
+  test('should fetch user data successfully', async () => {
+    const mockUser = { id: 1, name: 'John Doe', email: 'john@example.com' };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(mockUser),
+    });
+
+    const result = await apiService.getUser(1);
+    
+    expect(result).toEqual(mockUser);
+    expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1');
++     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
++   test('should handle network errors gracefully', async () => {
++     global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
++ 
++     await expect(apiService.getUser(1)).rejects.toThrow('Network error');
++     expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1');
++   });
++ 
++   test('should handle HTTP 404 errors', async () => {
++     global.fetch = jest.fn().mockResolvedValue({
++       ok: false,
++       status: 404,
++       statusText: 'Not Found',
++     });
++ 
++     await expect(apiService.getUser(999)).rejects.toThrow('User not found');
++   });
+}

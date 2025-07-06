@@ -1,0 +1,91 @@
+// Original file with function in class
+class UserService {
+  constructor() {
+    this.users = [];
+  }
+
+  validateUser(user) {
+    if (!user.name) return false;
+    if (!user.email) return false;
+    if (!user.age || user.age < 0) return false;
+    return true;
+  }
+
+  createUser(userData) {
+    if (!this.validateUser(userData)) {
+      throw new Error('Invalid user data');
+    }
+    const user = { id: Date.now(), ...userData };
+    this.users.push(user);
+    return user;
+  }
+
+  findUser(id) {
+    return this.users.find(u => u.id === id);
+  }
+}
+
+---
+
+// Refactored: extracted validation to separate utility
+function validateUser(user) {
+  if (!user.name) return false;
+  if (!user.email) return false;
+  if (!user.age || user.age < 0) return false;
+  return true;
+}
+
+class UserService {
+  constructor() {
+    this.users = [];
+  }
+
+  createUser(userData) {
+    if (!validateUser(userData)) {
+      throw new Error('Invalid user data');
+    }
+    const user = { id: Date.now(), ...userData };
+    this.users.push(user);
+    return user;
+  }
+
+  findUser(id) {
+    return this.users.find(u => u.id === id);
+  }
+}
+
+---
+
++ function validateUser(user) {
++   if (!user.name) return false;
++   if (!user.email) return false;
++   if (!user.age || user.age < 0) return false;
++   return true;
++ }
++ 
+  class UserService {
+    constructor() {
+      this.users = [];
+    }
+  
+-   validateUser(user) {
+-     if (!user.name) return false;
+-     if (!user.email) return false;
+-     if (!user.age || user.age < 0) return false;
+-     return true;
+-   }
+- 
+    createUser(userData) {
+-     if (!this.validateUser(userData)) {
++     if (!validateUser(userData)) {
+        throw new Error('Invalid user data');
+      }
+      const user = { id: Date.now(), ...userData };
+      this.users.push(user);
+      return user;
+    }
+  
+    findUser(id) {
+      return this.users.find(u => u.id === id);
+    }
+  }

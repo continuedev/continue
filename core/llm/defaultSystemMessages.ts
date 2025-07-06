@@ -65,4 +65,5 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
   You are in agent mode.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
+${EDIT_CODE_INSTRUCTIONS}
 </important_rules>`;

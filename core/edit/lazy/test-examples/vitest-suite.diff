@@ -1,0 +1,232 @@
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { UserService } from './user-service';
+import { DatabaseService } from './database-service';
+
+// Mock the database service
+vi.mock('./database-service');
+
+describe('UserService', () => {
+  let userService;
+  let mockDb;
+
+  beforeEach(() => {
+    mockDb = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      delete: vi.fn(),
+    };
+    (DatabaseService as any).mockImplementation(() => mockDb);
+    userService = new UserService();
+  });
+
+  test('should create a new user', () => {
+    const userData = { name: 'John', email: 'john@example.com' };
+    mockDb.save.mockReturnValue({ id: 1, ...userData });
+
+    const result = userService.createUser(userData);
+
+    expect(result).toEqual({ id: 1, name: 'John', email: 'john@example.com' });
+    expect(mockDb.save).toHaveBeenCalledWith(userData);
+  });
+});
+
+---
+
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { UserService } from './user-service';
+import { DatabaseService } from './database-service';
+import { EmailService } from './email-service';
+
+// Mock the services
+vi.mock('./database-service');
+vi.mock('./email-service');
+
+describe('UserService', () => {
+  let userService;
+  let mockDb;
+  let mockEmailService;
+
+  beforeEach(() => {
+    mockDb = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      delete: vi.fn(),
+    };
+    
+    mockEmailService = {
+      sendWelcomeEmail: vi.fn(),
+      validateEmail: vi.fn(),
+    };
+    
+    (DatabaseService as any).mockImplementation(() => mockDb);
+    (EmailService as any).mockImplementation(() => mockEmailService);
+    userService = new UserService();
+  });
+
+  test('should create a new user', () => {
+    const userData = { name: 'John', email: 'john@example.com' };
+    mockDb.save.mockReturnValue({ id: 1, ...userData });
+    mockEmailService.validateEmail.mockReturnValue(true);
+
+    const result = userService.createUser(userData);
+
+    expect(result).toEqual({ id: 1, name: 'John', email: 'john@example.com' });
+    expect(mockDb.save).toHaveBeenCalledWith(userData);
+    expect(mockEmailService.validateEmail).toHaveBeenCalledWith(userData.email);
+  });
+
+  // ... existing tests ...
+
+  test('should send welcome email after user creation', () => {
+    const userData = { name: 'Jane', email: 'jane@example.com' };
+    const savedUser = { id: 2, ...userData };
+    mockDb.save.mockReturnValue(savedUser);
+    mockEmailService.validateEmail.mockReturnValue(true);
+
+    userService.createUser(userData);
+
+    expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(savedUser);
+  });
+
+  test('should throw error for invalid email', () => {
+    const userData = { name: 'Invalid', email: 'not-an-email' };
+    mockEmailService.validateEmail.mockReturnValue(false);
+
+    expect(() => userService.createUser(userData)).toThrow('Invalid email address');
+    expect(mockDb.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('UserService - Database Operations', () => {
+  let userService;
+  let mockDb;
+
+  beforeEach(() => {
+    mockDb = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      delete: vi.fn(),
+    };
+    (DatabaseService as any).mockImplementation(() => mockDb);
+    userService = new UserService();
+  });
+
+  test('should find user by id', () => {
+    const user = { id: 1, name: 'John', email: 'john@example.com' };
+    mockDb.findById.mockReturnValue(user);
+
+    const result = userService.getUserById(1);
+
+    expect(result).toEqual(user);
+    expect(mockDb.findById).toHaveBeenCalledWith(1);
+  });
+
+  test('should delete user', () => {
+    mockDb.delete.mockReturnValue(true);
+
+    const result = userService.deleteUser(1);
+
+    expect(result).toBe(true);
+    expect(mockDb.delete).toHaveBeenCalledWith(1);
+  });
+});
+
+---
+
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { UserService } from './user-service';
+import { DatabaseService } from './database-service';
++ import { EmailService } from './email-service';
+
+- // Mock the database service
++ // Mock the services
+vi.mock('./database-service');
++ vi.mock('./email-service');
+
+describe('UserService', () => {
+  let userService;
+  let mockDb;
++   let mockEmailService;
+
+  beforeEach(() => {
+    mockDb = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      delete: vi.fn(),
+    };
++     
++     mockEmailService = {
++       sendWelcomeEmail: vi.fn(),
++       validateEmail: vi.fn(),
++     };
++     
+    (DatabaseService as any).mockImplementation(() => mockDb);
++     (EmailService as any).mockImplementation(() => mockEmailService);
+    userService = new UserService();
+  });
+
+  test('should create a new user', () => {
+    const userData = { name: 'John', email: 'john@example.com' };
+    mockDb.save.mockReturnValue({ id: 1, ...userData });
++     mockEmailService.validateEmail.mockReturnValue(true);
+
+    const result = userService.createUser(userData);
+
+    expect(result).toEqual({ id: 1, name: 'John', email: 'john@example.com' });
+    expect(mockDb.save).toHaveBeenCalledWith(userData);
++     expect(mockEmailService.validateEmail).toHaveBeenCalledWith(userData.email);
+  });
+
++   test('should send welcome email after user creation', () => {
++     const userData = { name: 'Jane', email: 'jane@example.com' };
++     const savedUser = { id: 2, ...userData };
++     mockDb.save.mockReturnValue(savedUser);
++     mockEmailService.validateEmail.mockReturnValue(true);
++ 
++     userService.createUser(userData);
++ 
++     expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(savedUser);
++   });
++ 
++   test('should throw error for invalid email', () => {
++     const userData = { name: 'Invalid', email: 'not-an-email' };
++     mockEmailService.validateEmail.mockReturnValue(false);
++ 
++     expect(() => userService.createUser(userData)).toThrow('Invalid email address');
++     expect(mockDb.save).not.toHaveBeenCalled();
++   });
+});
+
++ describe('UserService - Database Operations', () => {
++   let userService;
++   let mockDb;
++ 
++   beforeEach(() => {
++     mockDb = {
++       save: vi.fn(),
++       findById: vi.fn(),
++       delete: vi.fn(),
++     };
++     (DatabaseService as any).mockImplementation(() => mockDb);
++     userService = new UserService();
++   });
++ 
++   test('should find user by id', () => {
++     const user = { id: 1, name: 'John', email: 'john@example.com' };
++     mockDb.findById.mockReturnValue(user);
++ 
++     const result = userService.getUserById(1);
++ 
++     expect(result).toEqual(user);
++     expect(mockDb.findById).toHaveBeenCalledWith(1);
++   });
++ 
++   test('should delete user', () => {
++     mockDb.delete.mockReturnValue(true);
++ 
++     const result = userService.deleteUser(1);
++ 
++     expect(result).toBe(true);
++     expect(mockDb.delete).toHaveBeenCalledWith(1);
++   });
++ });

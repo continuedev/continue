@@ -1,0 +1,126 @@
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(a, b) {
+    this.result = a + b;
+    return this;
+  }
+
+  subtract(a, b) {
+    this.result = a - b;
+    return this;
+  }
+
+  multiply(a, b) {
+    this.result = a * b;
+    return this;
+  }
+
+  divide(a, b) {
+    if (b === 0) throw new Error('Division by zero');
+    this.result = a / b;
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+}
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  // Functions reordered alphabetically
+  add(a, b) {
+    this.result = a + b;
+    return this;
+  }
+
+  divide(a, b) {
+    if (b === 0) throw new Error('Division by zero');
+    this.result = a / b;
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+
+  multiply(a, b) {
+    this.result = a * b;
+    // Added logging for debugging
+    console.log(`Result: ${this.result}`);
+    return this;
+  }
+
+  subtract(a, b) {
+    this.result = a - b;
+    return this;
+  }
+}
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+- add(a, b) {
+-   this.result = a + b;
+-   return this;
+- }
+-
+- subtract(a, b) {
+-   this.result = a - b;
+-   return this;
+- }
+-
+- multiply(a, b) {
+-   this.result = a * b;
+-   return this;
+- }
+-
+- divide(a, b) {
+-   if (b === 0) throw new Error('Division by zero');
+-   this.result = a / b;
+-   return this;
+- }
+-
+- getResult() {
+-   return this.result;
+- }
++ // Functions reordered alphabetically
++ add(a, b) {
++   this.result = a + b;
++   return this;
++ }
++
++ divide(a, b) {
++   if (b === 0) throw new Error('Division by zero');
++   this.result = a / b;
++   return this;
++ }
++
++ getResult() {
++   return this.result;
++ }
++
++ multiply(a, b) {
++   this.result = a * b;
++   // Added logging for debugging
++   console.log(`Result: ${this.result}`);
++   return this;
++ }
++
++ subtract(a, b) {
++   this.result = a - b;
++   return this;
++ }
+}

@@ -1,0 +1,59 @@
+// Original with method calls
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+  
+  add(value) {
+    this.result = this.validateAndAdd(value);
+    return this;
+  }
+  
+  validateAndAdd(value) {
+    if (typeof value !== 'number') {
+      throw new Error('Invalid input');
+    }
+    return this.result + value;
+  }
+}
+
+---
+
+// Refactored with inlined method
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+  
+  add(value) {
+    if (typeof value !== 'number') {
+      throw new Error('Invalid input');
+    }
+    this.result = this.result + value;
+    return this;
+  }
+}
+
+---
+
+  class Calculator {
+    constructor() {
+      this.result = 0;
+    }
+    
+    add(value) {
+-     this.result = this.validateAndAdd(value);
++     if (typeof value !== 'number') {
++       throw new Error('Invalid input');
++     }
++     this.result = this.result + value;
+      return this;
+    }
+-   
+-   validateAndAdd(value) {
+-     if (typeof value !== 'number') {
+-       throw new Error('Invalid input');
+-     }
+-     return this.result + value;
+-   }
+  }

@@ -1,0 +1,60 @@
+// Original code with old variable names
+function processUserData(userData) {
+  const userName = userData.name;
+  const userEmail = userData.email;
+  const userAge = userData.age;
+  
+  if (userName && userEmail && userAge > 0) {
+    return {
+      fullName: userName,
+      emailAddress: userEmail,
+      years: userAge
+    };
+  }
+  
+  return null;
+}
+
+---
+
+// Refactored with systematic renaming
+function processUserData(userData) {
+  const clientName = userData.name;
+  const clientEmail = userData.email;
+  const clientAge = userData.age;
+  
+  if (clientName && clientEmail && clientAge > 0) {
+    return {
+      fullName: clientName,
+      emailAddress: clientEmail,
+      years: clientAge
+    };
+  }
+  
+  return null;
+}
+
+---
+
+  function processUserData(userData) {
+-   const userName = userData.name;
+-   const userEmail = userData.email;
+-   const userAge = userData.age;
++   const clientName = userData.name;
++   const clientEmail = userData.email;
++   const clientAge = userData.age;
+    
+-   if (userName && userEmail && userAge > 0) {
++   if (clientName && clientEmail && clientAge > 0) {
+      return {
+-       fullName: userName,
+-       emailAddress: userEmail,
+-       years: userAge
++       fullName: clientName,
++       emailAddress: clientEmail,
++       years: clientAge
+      };
+    }
+    
+    return null;
+  }

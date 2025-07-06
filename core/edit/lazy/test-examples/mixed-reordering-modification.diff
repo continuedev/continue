@@ -1,0 +1,158 @@
+import { EventEmitter } from 'events';
+import { Logger } from './logger';
+
+class UserService extends EventEmitter {
+  constructor() {
+    super();
+    this.users = new Map();
+  }
+
+  createUser(userData) {
+    const user = { id: Date.now(), ...userData };
+    this.users.set(user.id, user);
+    this.emit('userCreated', user);
+    return user;
+  }
+
+  updateUser(id, updates) {
+    const user = this.users.get(id);
+    if (!user) throw new Error('User not found');
+    Object.assign(user, updates);
+    this.emit('userUpdated', user);
+    return user;
+  }
+
+  deleteUser(id) {
+    const user = this.users.get(id);
+    if (!user) throw new Error('User not found');
+    this.users.delete(id);
+    this.emit('userDeleted', user);
+    return true;
+  }
+
+  getUser(id) {
+    return this.users.get(id);
+  }
+
+  getAllUsers() {
+    return Array.from(this.users.values());
+  }
+}
+
+export default UserService;
+
+---
+
+import { EventEmitter } from 'events';
+import { Logger } from './logger';
+import { Validator } from './validator';
+
+class UserService extends EventEmitter {
+  constructor() {
+    super();
+    this.users = new Map();
+    this.validator = new Validator();
+  }
+
+  // Reordered and grouped by functionality
+  // Read operations first
+  getUser(id) {
+    return this.users.get(id);
+  }
+
+  getAllUsers() {
+    return Array.from(this.users.values());
+  }
+
+  // Write operations
+  createUser(userData) {
+    // Added validation
+    this.validator.validateUserData(userData);
+    const user = { id: Date.now(), ...userData };
+    this.users.set(user.id, user);
+    this.emit('userCreated', user);
+    return user;
+  }
+
+  updateUser(id, updates) {
+    const user = this.users.get(id);
+    if (!user) throw new Error('User not found');
+    // Added validation for updates
+    this.validator.validateUserUpdates(updates);
+    Object.assign(user, updates);
+    this.emit('userUpdated', user);
+    return user;
+  }
+
+  deleteUser(id) {
+    const user = this.users.get(id);
+    if (!user) throw new Error('User not found');
+    this.users.delete(id);
+    this.emit('userDeleted', user);
+    return true;
+  }
+}
+
+export default UserService;
+
+---
+
+import { EventEmitter } from 'events';
+import { Logger } from './logger';
++ import { Validator } from './validator';
+
+class UserService extends EventEmitter {
+  constructor() {
+    super();
+    this.users = new Map();
++   this.validator = new Validator();
+  }
+
++ // Reordered and grouped by functionality
++ // Read operations first
++ getUser(id) {
++   return this.users.get(id);
++ }
++
++ getAllUsers() {
++   return Array.from(this.users.values());
++ }
++
++ // Write operations
+  createUser(userData) {
++   // Added validation
++   this.validator.validateUserData(userData);
+    const user = { id: Date.now(), ...userData };
+    this.users.set(user.id, user);
+    this.emit('userCreated', user);
+    return user;
+  }
+
+  updateUser(id, updates) {
+    const user = this.users.get(id);
+    if (!user) throw new Error('User not found');
++   // Added validation for updates
++   this.validator.validateUserUpdates(updates);
+    Object.assign(user, updates);
+    this.emit('userUpdated', user);
+    return user;
+  }
+
+  deleteUser(id) {
+    const user = this.users.get(id);
+    if (!user) throw new Error('User not found');
+    this.users.delete(id);
+    this.emit('userDeleted', user);
+    return true;
+  }
+-
+- getUser(id) {
+-   return this.users.get(id);
+- }
+-
+- getAllUsers() {
+-   return Array.from(this.users.values());
+- }
+}
+
+export default UserService;

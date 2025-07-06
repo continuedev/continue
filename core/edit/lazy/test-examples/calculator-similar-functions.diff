@@ -1,0 +1,115 @@
+class Calculator {
+  constructor() {
+    this.result = 0;
+    this.lastOperation = '';
+  }
+
+  add(a, b) {
+    const result = a + b;
+    this.lastOperation = 'add';
+    return this;
+  }
+
+  subtract(a, b) {
+    const result = a - b;
+    this.lastOperation = 'subtract';
+    return this;
+  }
+
+  multiply(a, b) {
+    const result = a * b;
+    this.lastOperation = 'multiply';
+    return this;
+  }
+
+  divide(a, b) {
+    if (b === 0) throw new Error('Division by zero');
+    const result = a / b;
+    this.lastOperation = 'divide';
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+}
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+    this.lastOperation = '';
+  }
+
+  add(a, b) {
+    const result = a + b;
+    this.lastOperation = 'add';
+    return this;
+  }
+
+  subtract(a, b) {
+    const result = a - b;
+    this.lastOperation = 'subtract';
+    return this;
+  }
+
+  multiply(a, b) {
+    const result = a * b;
+    this.lastOperation = 'multiply';
+    // Log the multiplication operation for debugging
+    console.log(`Multiplying ${a} * ${b} = ${result}`);
+    return this;
+  }
+
+  divide(a, b) {
+    if (b === 0) throw new Error('Division by zero');
+    const result = a / b;
+    this.lastOperation = 'divide';
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+}
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+    this.lastOperation = '';
+  }
+
+  add(a, b) {
+    const result = a + b;
+    this.lastOperation = 'add';
+    return this;
+  }
+
+  subtract(a, b) {
+    const result = a - b;
+    this.lastOperation = 'subtract';
+    return this;
+  }
+
+  multiply(a, b) {
+    const result = a * b;
+    this.lastOperation = 'multiply';
++     // Log the multiplication operation for debugging
++     console.log(`Multiplying ${a} * ${b} = ${result}`);
+    return this;
+  }
+
+  divide(a, b) {
+    if (b === 0) throw new Error('Division by zero');
+    const result = a / b;
+    this.lastOperation = 'divide';
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+}

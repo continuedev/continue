@@ -1,0 +1,127 @@
+# API Documentation
+
+## Authentication
+
+All API endpoints require authentication using Bearer tokens.
+
+## Endpoints
+
+### Users
+
+Manage user accounts and profiles.
+
+### Posts
+
+Create and manage blog posts.
+
+### Comments
+
+Handle user comments on posts.
+
+## Error Handling
+
+The API returns standard HTTP status codes.
+
+## Rate Limiting
+
+API calls are limited to 1000 requests per hour.
+
+---
+
+# API Documentation
+
+## Table of Contents
+
+- [Authentication](#authentication)
+- [Rate Limiting](#rate-limiting)  
+- [Error Handling](#error-handling)
+- [Endpoints](#endpoints)
+  - [Users](#users)
+  - [Posts](#posts)
+  - [Comments](#comments)
+
+## Authentication
+
+All API endpoints require authentication using Bearer tokens.
+You can obtain a token by calling the `/auth/login` endpoint.
+
+## Rate Limiting
+
+API calls are limited to 1000 requests per hour.
+
+## Error Handling
+
+The API returns standard HTTP status codes.
+
+<!-- ... existing sections ... -->
+
+### Users
+
+Manage user accounts and profiles.
+
+### Posts
+
+Create and manage blog posts.
+
+### Comments
+
+Handle user comments on posts.
+
+---
+
+# API Documentation
+
++ ## Table of Contents
++ 
++ - [Authentication](#authentication)
++ - [Rate Limiting](#rate-limiting)  
++ - [Error Handling](#error-handling)
++ - [Endpoints](#endpoints)
++   - [Users](#users)
++   - [Posts](#posts)
++   - [Comments](#comments)
+
+## Authentication
+
+All API endpoints require authentication using Bearer tokens.
++ You can obtain a token by calling the `/auth/login` endpoint.
+
+- ## Endpoints
+-
+- ### Users
+-
+- Manage user accounts and profiles.
+-
+- ### Posts
+-
+- Create and manage blog posts.
+-
+- ### Comments
+-
+- Handle user comments on posts.
+-
+- ## Error Handling
+-
+- The API returns standard HTTP status codes.
+
+## Rate Limiting
+
+API calls are limited to 1000 requests per hour.
+
++ ## Error Handling
++ 
++ The API returns standard HTTP status codes.
++ 
++ ## Endpoints
++ 
++ ### Users
++ 
++ Manage user accounts and profiles.
++ 
++ ### Posts
++ 
++ Create and manage blog posts.
++ 
++ ### Comments
++ 
++ Handle user comments on posts.

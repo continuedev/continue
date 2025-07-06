@@ -1,0 +1,56 @@
+// Original with many imports
+import React from 'react';
+import { useState } from 'react';
+import { useEffect } from 'react';
+import { Component } from 'react';
+import axios from 'axios';
+import { get } from 'axios';
+import { post } from 'axios';
+
+function MyComponent() {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    get('/api/data').then(setData);
+  }, []);
+  
+  return <div>{data}</div>;
+}
+
+---
+
+// Refactored with consolidated imports
+import React, { useState, useEffect, Component } from 'react';
+import axios, { get, post } from 'axios';
+
+function MyComponent() {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    get('/api/data').then(setData);
+  }, []);
+  
+  return <div>{data}</div>;
+}
+
+---
+
+- import React from 'react';
+- import { useState } from 'react';
+- import { useEffect } from 'react';
+- import { Component } from 'react';
+- import axios from 'axios';
+- import { get } from 'axios';
+- import { post } from 'axios';
++ import React, { useState, useEffect, Component } from 'react';
++ import axios, { get, post } from 'axios';
+  
+  function MyComponent() {
+    const [data, setData] = useState(null);
+    
+    useEffect(() => {
+      get('/api/data').then(setData);
+    }, []);
+    
+    return <div>{data}</div>;
+  }

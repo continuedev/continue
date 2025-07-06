@@ -1,0 +1,78 @@
+class DataProcessor {
+  validateInput(data) {
+    if (!data) throw new Error('No data provided');
+    return true;
+  }
+
+  processData(data) {
+    this.validateInput(data);
+    const processed = data.map(item => item.value);
+    return processed;
+  }
+
+  formatOutput(processedData) {
+    return processedData.join(', ');
+  }
+
+  generateReport(data) {
+    const processed = this.processData(data);
+    const formatted = this.formatOutput(processed);
+    return `Report: ${formatted}`;
+  }
+}
+
+---
+
+class DataProcessor {
+  // Reordered by dependency chain
+  validateInput(data) {
+    if (!data) throw new Error('No data provided');
+    // Enhanced validation
+    if (!Array.isArray(data)) throw new Error('Data must be an array');
+    return true;
+  }
+
+  processData(data) {
+    this.validateInput(data);
+    const processed = data.map(item => item.value);
+    return processed;
+  }
+
+  formatOutput(processedData) {
+    return processedData.join(', ');
+  }
+
+  generateReport(data) {
+    const processed = this.processData(data);
+    const formatted = this.formatOutput(processed);
+    return `Report: ${formatted}`;
+  }
+}
+
+---
+
+class DataProcessor {
++ // Reordered by dependency chain
+  validateInput(data) {
+    if (!data) throw new Error('No data provided');
++   // Enhanced validation
++   if (!Array.isArray(data)) throw new Error('Data must be an array');
+    return true;
+  }
+
+  processData(data) {
+    this.validateInput(data);
+    const processed = data.map(item => item.value);
+    return processed;
+  }
+
+  formatOutput(processedData) {
+    return processedData.join(', ');
+  }
+
+  generateReport(data) {
+    const processed = this.processData(data);
+    const formatted = this.formatOutput(processed);
+    return `Report: ${formatted}`;
+  }
+}
