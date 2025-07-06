@@ -36,6 +36,9 @@ export const autocompleteEventAllSchema = baseDevDataAllSchema.extend({
   uniqueId: z.string(),
   timestamp: z.number(),
 
+  // For static contextualization.
+  enabledStaticContextualization: z.boolean().optional(),
+
   // DEPRECATED - no more nested objects after v0.1.0, all flat values
   completionOptions: completionOptionsSchema.optional(),
   disableInFiles: z.array(z.string()).optional(),
