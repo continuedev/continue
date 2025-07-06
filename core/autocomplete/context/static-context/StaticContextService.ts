@@ -85,7 +85,11 @@ export class StaticContextService {
       helper.workspaceUris,
     );
     // Get the three contexts holeContext, relevantTypes, relevantHeaders.
-    const holeContext = await this.getHoleContext(helper.filepath, helper.pos);
+    const holeContext = await this.getHoleContext(
+      helper.fileContents,
+      helper.filepath,
+      helper.pos,
+    );
 
     const relevantTypes = await this.extractRelevantTypes(
       holeContext.fullHoverResult,
@@ -106,6 +110,8 @@ export class StaticContextService {
       tsFiles,
       relevantTypes,
       holeContext.functionTypeSpan,
+      helper.pos,
+      holeContext.returnTypeIsAny,
     );
 
     const relevantTypesToReturn: Map<string, string[]> = new Map<
@@ -158,12 +164,13 @@ export class StaticContextService {
   }
 
   private async getHoleContext(
+    sketchFileContent: string,
     sketchFilePath: string,
     cursorPosition: Position,
   ): Promise<HoleContext> {
     // We need to inject the hole @ to trigger a treesitter error node.
     sketchFilePath = localPathOrUriToPath(sketchFilePath);
-    const sketchFileContent = await fs.readFile(sketchFilePath, "utf8");
+    // const sketchFileContent = await fs.readFile(sketchFilePath, "utf8");
     const injectedContent = this.insertAtPosition(
       sketchFileContent,
       cursorPosition,
@@ -193,12 +200,14 @@ export class StaticContextService {
       fullHoverResult: "",
       functionName: "",
       functionTypeSpan: "",
+      returnTypeIsAny: false,
       range: {
         start: { line: 0, character: 0 },
-        end: { line: 0, character: 52 },
+        end: { line: 0, character: 0 },
       },
       source: `file://${sketchFilePath}`,
     };
+    let paramsTypes = "";
     for (const c of captures) {
       const { name, node } = c;
       // console.log(`${name} →`, node.text, node.startPosition, node.endPosition);
@@ -206,9 +215,25 @@ export class StaticContextService {
       switch (name) {
         case "function.decl": {
           res.fullHoverResult = node.text;
+          break;
         }
         case "function.name": {
           res.functionName = node.text;
+          break;
+        }
+        case "function.params": {
+          paramsTypes = node.text;
+          res.range = {
+            start: {
+              line: node.startPosition.row,
+              character: node.startPosition.column,
+            },
+            end: {
+              line: node.endPosition.row,
+              character: node.endPosition.column,
+            },
+          };
+          break;
         }
         case "function.type": {
           res.functionTypeSpan = node.text;
@@ -222,8 +247,14 @@ export class StaticContextService {
               character: node.endPosition.column,
             },
           };
+          break;
         }
       }
+    }
+
+    if (res.functionTypeSpan === "") {
+      res.functionTypeSpan = `${paramsTypes} => any`;
+      res.returnTypeIsAny = true;
     }
 
     return res;
@@ -354,8 +385,11 @@ export class StaticContextService {
     sources: string[],
     relevantTypes: Map<string, TypeSpanAndSourceFileAndAst>,
     holeType: string,
+    cursorPosition: Position,
+    returnTypeIsAny: boolean,
   ): Promise<RelevantHeaders> {
     const relevantContext = new Set<TypeSpanAndSourceFile>();
+    if (returnTypeIsAny) return relevantContext;
     // NOTE: This is necessary because TypeScript sucks.
     // There is no way to compare objects by value,
     // so sets of objects starts to accumulate tons of duplicates.
@@ -378,7 +412,43 @@ export class StaticContextService {
           // build a type span
           // TODO: this fails sometimes with Cannot read properties of undefined (reading 'text')
           // most likely due to my scm query and how I'm not attaching param name along with param type
-          const funcType = extractFunctionTypeFromDecl(tld);
+          let funcType = "";
+          try {
+            funcType = extractFunctionTypeFromDecl(tld);
+          } catch (err) {
+            // Most likely is the case that there is no explicit return type annotation.
+            const sigHelp = await this.ide.getSignatureHelp({
+              filepath: source,
+              position: cursorPosition,
+            });
+            if (!sigHelp) continue;
+            funcType = sigHelp.signatures[0].label;
+
+            // TODO: This only works for TypeScript.
+            function convertToArrowType(signature: string): string {
+              // Handle various function declaration formats.
+              const patterns = [
+                // Standard: functionName(params): returnType.
+                /^(\w+)\s*\((.*?)\)\s*:\s*(.+)$/,
+                // With generics: functionName<T>(params): returnType.
+                /^(\w+)\s*<[^>]*>\s*\((.*?)\)\s*:\s*(.+)$/,
+                // With modifiers: export function functionName(params): returnType.
+                /^(?:export\s+)?(?:function\s+)?(\w+)\s*\((.*?)\)\s*:\s*(.+)$/,
+              ];
+
+              for (const pattern of patterns) {
+                const match = signature.match(pattern);
+                if (match) {
+                  const [, , parameters, returnType] = match;
+                  return `(${parameters}) => ${returnType}`;
+                }
+              }
+
+              return signature;
+            }
+
+            funcType = convertToArrowType(funcType);
+          }
           const wrapped = `type __TMP = ${funcType};`;
 
           const ast = await getAst("file.ts", wrapped);
@@ -386,9 +456,9 @@ export class StaticContextService {
             throw new Error(`failed to generate ast for ${wrapped}`);
           }
 
-          console.log(ast.rootNode);
+          // console.log(ast.rootNode);
           const alias = ast.rootNode.namedChild(0);
-          console.log(alias);
+          // console.log(alias);
           if (!alias || alias.type !== "type_alias_declaration") {
             throw new Error(
               "extractRelevantHeaders: Failed to parse type alias",
@@ -564,9 +634,11 @@ export class StaticContextService {
 
       const alias = ast.rootNode.namedChild(0);
       if (!alias || alias.type !== "type_alias_declaration") {
-        throw new Error(
-          "generateTargetTypesHelper: Failed to parse type alias",
-        );
+        console.error("generateTargetTypesHelper: Failed to parse type alias");
+        return;
+        // throw new Error(
+        //   "generateTargetTypesHelper: Failed to parse type alias",
+        // );
       }
 
       const valueNode = alias.childForFieldName("value");
