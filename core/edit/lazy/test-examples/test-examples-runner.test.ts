@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
-import { deterministicApplyLazyEdit } from "../deterministic";
+import { deterministicApplyLazyEdit } from "../deterministicLazyEdit";
 import { importAwareLazyEdit } from "../optimizations/importOptimizations";
 import { markdownAwareLazyEdit } from "../optimizations/markdownOptimizations";
 import { reorderAwareLazyEdit } from "../optimizations/reorderAwareOptimizations";
 import { similarFunctionAwareLazyEdit } from "../optimizations/similarFunctionOptimizations";
 import { testAwareLazyEdit } from "../optimizations/testFileOptimizations";
-import { unifiedLazyEdit } from "../unified-lazy-edit";
+import { unifiedLazyEdit } from "../unifiedLazyEdit";
 
 interface TestExample {
   name: string;

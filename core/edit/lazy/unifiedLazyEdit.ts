@@ -1,5 +1,5 @@
 import { DiffLine } from "../..";
-import { deterministicApplyLazyEdit as originalDeterministicApplyLazyEdit } from "./deterministic";
+import { deterministicApplyLazyEdit } from "./deterministicLazyEdit";
 import { markdownAwareLazyEdit } from "./optimizations/markdownOptimizations";
 import { reorderAwareLazyEdit } from "./optimizations/reorderAwareOptimizations";
 import { similarFunctionAwareLazyEdit } from "./optimizations/similarFunctionOptimizations";
@@ -42,7 +42,7 @@ export async function unifiedLazyEdit({
   const fullConfig = { ...DEFAULT_CONFIG, ...config };
 
   if (!fullConfig.enableAllOptimizations) {
-    return originalDeterministicApplyLazyEdit({
+    return deterministicApplyLazyEdit({
       oldFile,
       newLazyFile,
       filename,
@@ -107,7 +107,7 @@ export async function unifiedLazyEdit({
 
   // Fallback to original
   if (fullConfig.fallbackToOriginal) {
-    return originalDeterministicApplyLazyEdit({
+    return deterministicApplyLazyEdit({
       oldFile,
       newLazyFile,
       filename,
@@ -121,7 +121,7 @@ export async function unifiedLazyEdit({
  * Export strategies for direct access
  */
 export const strategies = {
-  original: originalDeterministicApplyLazyEdit,
+  original: deterministicApplyLazyEdit,
   similarFunction: similarFunctionAwareLazyEdit,
   reorderAware: reorderAwareLazyEdit,
   testAware: testAwareLazyEdit,

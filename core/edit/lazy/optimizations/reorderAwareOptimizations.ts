@@ -1,7 +1,7 @@
 import { distance } from "fastest-levenshtein";
 import Parser from "web-tree-sitter";
 import { DiffLine } from "../../..";
-import { deterministicApplyLazyEdit } from "../deterministic";
+import { deterministicApplyLazyEdit } from "../deterministicLazyEdit";
 
 /**
  * Optimizations for handling out-of-order edits where functions/blocks

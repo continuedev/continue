@@ -1,5 +1,5 @@
 import { DiffLine } from "../../..";
-import { deterministicApplyLazyEdit } from "../deterministic";
+import { deterministicApplyLazyEdit } from "../deterministicLazyEdit";
 
 /**
  * Optimizations for TypeScript/JavaScript import statements

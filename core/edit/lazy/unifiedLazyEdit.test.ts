@@ -1,9 +1,5 @@
-import {
-  unifiedLazyEdit,
-  analyzeLazyEditFile,
-  strategies,
-} from "./unified-lazy-edit";
 import { dedent } from "../../util";
+import { analyzeLazyEditFile, unifiedLazyEdit } from "./unifiedLazyEdit";
 
 // Test strategy selection for different file types
 test("should select markdown strategy for markdown files", async () => {

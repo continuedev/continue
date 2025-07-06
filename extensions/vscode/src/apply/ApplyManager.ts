@@ -1,5 +1,5 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
+import { applyCodeBlock } from "core/edit/applyCodeBlock";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 

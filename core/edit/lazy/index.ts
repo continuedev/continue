@@ -11,10 +11,7 @@ export {
   analyzeLazyEditFile,
   strategies,
   unifiedLazyEdit,
-} from "./unified-lazy-edit";
-
-// For backward compatibility, export the unified system as the main function
-export { unifiedLazyEdit as deterministicApplyLazyEdit } from "./unified-lazy-edit";
+} from "./unifiedLazyEdit";
 
 // Configuration system
 
@@ -34,7 +31,7 @@ export {
 } from "./config";
 
 // Individual optimization strategies (for direct access if needed)
-export { deterministicApplyLazyEdit as originalDeterministicApplyLazyEdit } from "./deterministic";
+export { deterministicApplyLazyEdit as originalDeterministicApplyLazyEdit } from "./deterministicLazyEdit";
 
 export { similarFunctionAwareLazyEdit } from "./optimizations/similarFunctionOptimizations";
 
@@ -57,7 +54,7 @@ export { findInAst } from "./findInAst";
 
 // Import necessary dependencies for setup functions
 import { CONFIG_PRESETS, globalConfigManager } from "./config";
-import { unifiedLazyEdit } from "./unified-lazy-edit";
+import { unifiedLazyEdit } from "./unifiedLazyEdit";
 
 /**
  * Quick setup functions for common use cases

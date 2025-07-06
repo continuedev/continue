@@ -6,7 +6,7 @@ import { diff as myersDiff } from "myers-diff";
 import { DiffLine } from "../..";
 import { myersDiff as continueMyersDiff } from "../../diff/myers";
 import { dedent } from "../../util";
-import { deterministicApplyLazyEdit } from "./deterministic";
+import { deterministicApplyLazyEdit } from "./deterministicLazyEdit";
 
 const UNIFIED_DIFF_SYMBOLS = {
   same: "",

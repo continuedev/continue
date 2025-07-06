@@ -1,6 +1,6 @@
 import { distance } from "fastest-levenshtein";
 import { DiffLine } from "../../..";
-import { deterministicApplyLazyEdit } from "../deterministic";
+import { deterministicApplyLazyEdit } from "../deterministicLazyEdit";
 
 /**
  * Optimizations for markdown files with hierarchical sections, headers, and content blocks

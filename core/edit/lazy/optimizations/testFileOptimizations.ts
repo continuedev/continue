@@ -1,7 +1,8 @@
 import { distance } from "fastest-levenshtein";
 import Parser from "web-tree-sitter";
 import { DiffLine } from "../../..";
-import { deterministicApplyLazyEdit } from "../deterministic";
+import { deterministicApplyLazyEdit } from "../deterministicLazyEdit";
+import { myersDiff } from "../../../diff/myers";
 
 // Test-specific patterns and structures
 interface TestBlock {
@@ -618,7 +619,6 @@ function handleSetupTeardownPattern(
   // Handle setup/teardown changes with special care
   // These often affect multiple tests and should be treated carefully
 
-  const { myersDiff } = require("../../diff/myers");
   return Promise.resolve(myersDiff(oldFile, newLazyFile));
 }
 

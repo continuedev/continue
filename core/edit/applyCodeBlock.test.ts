@@ -1,4 +1,4 @@
-import { ILLM } from "../..";
+import { ILLM } from "..";
 import { applyCodeBlock } from "./applyCodeBlock";
 
 describe("applyCodeBlock", () => {

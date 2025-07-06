@@ -1,10 +1,13 @@
-import { DiffLine, ILLM } from "../..";
-import { generateLines } from "../../diff/util";
-import { supportedLanguages } from "../../util/treeSitter";
-import { getUriFileExtension } from "../../util/uri";
-import { deterministicApplyLazyEdit } from "./deterministic";
-import { streamLazyApply } from "./streamLazyApply";
-import { applyUnifiedDiff, isUnifiedDiffFormat } from "./unifiedDiffApply";
+import { DiffLine, ILLM } from "..";
+import { generateLines } from "../diff/util";
+import { supportedLanguages } from "../util/treeSitter";
+import { getUriFileExtension } from "../util/uri";
+import { unifiedLazyEdit } from "./lazy/index";
+import { streamLazyApply } from "./streamLazyApply/streamLazyApply";
+import {
+  applyUnifiedDiff,
+  isUnifiedDiffFormat,
+} from "./unifiedDiff/unifiedDiffApply";
 
 import {
   formatDeterministicFailureMessage,
@@ -28,11 +31,10 @@ export async function applyCodeBlock(
 }> {
   if (canUseInstantApply(filename)) {
     try {
-      const diffLines = await deterministicApplyLazyEdit({
+      const diffLines = await unifiedLazyEdit({
         oldFile,
         newLazyFile,
         filename,
-        onlyFullFileRewrite: true,
       });
 
       if (diffLines !== undefined) {

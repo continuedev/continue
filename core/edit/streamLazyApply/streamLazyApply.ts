@@ -8,8 +8,8 @@ import { streamDiff } from "../../diff/streamDiff.js";
 import { LineStream, streamLines } from "../../diff/util.js";
 import { DiffLine, ILLM } from "../../index.js";
 
-import { lazyApplyPromptForModel, UNCHANGED_CODE } from "./prompts.js";
-import { BUFFER_LINES_BELOW, getReplacementWithLlm } from "./replace.js";
+import { lazyApplyPromptForModel, UNCHANGED_CODE } from "../lazy/prompts.js";
+import { BUFFER_LINES_BELOW, getReplacementWithLlm } from "../lazy/replace.js";
 
 export async function* streamLazyApply(
   oldCode: string,
