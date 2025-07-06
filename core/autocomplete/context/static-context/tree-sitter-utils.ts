@@ -1,8 +1,7 @@
 import * as fs from "fs/promises";
 import Parser from "web-tree-sitter";
-import { getAst } from "../../util/ast";
 import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
-import path from "path";
+import { getAst } from "../../util/ast";
 
 export interface TypeDeclarationResult {
   name: string;
@@ -18,7 +17,7 @@ export function findEnclosingTypeDeclaration(
   sourceCode: string,
   cursorLine: number,
   cursorColumn: number,
-  ast: Parser.Tree
+  ast: Parser.Tree,
 ): TypeDeclarationResult | null {
   const point = { row: cursorLine, column: cursorColumn };
   let node = ast.rootNode.descendantForPosition(point);
@@ -52,7 +51,10 @@ export function findEnclosingTypeDeclaration(
   };
 }
 
-export async function extractTopLevelDecls(currentFile: string, givenParser?: Parser) {
+export async function extractTopLevelDecls(
+  currentFile: string,
+  givenParser?: Parser,
+) {
   const ast = await getAst(currentFile, await fs.readFile(currentFile, "utf8"));
   if (!ast) {
     throw new Error(`failed to get ast for file ${currentFile}`);
@@ -66,17 +68,20 @@ export async function extractTopLevelDecls(currentFile: string, givenParser?: Pa
 
   const query = await getQueryForFile(
     currentFile,
-    `static-context-queries/relevant-headers-queries/${language}-get-toplevel-headers.scm`
+    `static-context-queries/relevant-headers-queries/${language}-get-toplevel-headers.scm`,
   );
   if (!query) {
     throw new Error(
-      `failed to get query for file ${currentFile} and language ${language}`
+      `failed to get query for file ${currentFile} and language ${language}`,
     );
   }
   return query.matches(ast.rootNode);
 }
 
-export async function extractTopLevelDeclsWithFormatting(currentFile: string, givenParser?: Parser) {
+export async function extractTopLevelDeclsWithFormatting(
+  currentFile: string,
+  givenParser?: Parser,
+) {
   const ast = await getAst(currentFile, await fs.readFile(currentFile, "utf8"));
   if (!ast) {
     throw new Error(`failed to get ast for file ${currentFile}`);
@@ -90,11 +95,11 @@ export async function extractTopLevelDeclsWithFormatting(currentFile: string, gi
 
   const query = await getQueryForFile(
     currentFile,
-    `static-context-queries/relevant-headers-queries/${language}-get-toplevel-headers.scm`
+    `static-context-queries/relevant-headers-queries/${language}-get-toplevel-headers.scm`,
   );
   if (!query) {
     throw new Error(
-      `failed to get query for file ${currentFile} and language ${language}`
+      `failed to get query for file ${currentFile} and language ${language}`,
     );
   }
   const matches = query.matches(ast.rootNode);
@@ -166,13 +171,21 @@ export function extractFunctionTypeFromDecl(match: Parser.QueryMatch): string {
   }
 
   if (!paramsNode) {
-    console.error(`extractFunctionTypeFromDecl: ${paramsNode} not found`);
-    throw new Error(`extractFunctionTypeFromDecl: ${paramsNode} not found`);
+    console.error(
+      `extractFunctionTypeFromDecl: paramsNode ${paramsNode} not found`,
+    );
+    throw new Error(
+      `extractFunctionTypeFromDecl: paramsNode ${paramsNode} not found`,
+    );
   }
 
   if (!returnNode) {
-    console.error(`extractFunctionTypeFromDecl: ${returnNode} not found`);
-    throw new Error(`extractFunctionTypeFromDecl: ${returnNode} not found`);
+    console.error(
+      `extractFunctionTypeFromDecl: returnNode ${returnNode} not found`,
+    );
+    throw new Error(
+      `extractFunctionTypeFromDecl: returnNode ${returnNode} not found`,
+    );
   }
 
   return `(${paramsNode!.text}) => ${returnNode!.text}`;
