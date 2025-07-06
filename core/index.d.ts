@@ -49,13 +49,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-  | "loading"
-  | "indexing"
-  | "done"
-  | "failed"
-  | "paused"
-  | "disabled"
-  | "cancelled";
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
   warnings?: string[];
 }
@@ -92,7 +92,7 @@ type RequiredLLMOptions =
 
 export interface ILLM
   extends Omit<LLMOptions, RequiredLLMOptions>,
-  Required<Pick<LLMOptions, RequiredLLMOptions>> {
+    Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
   get underlyingProviderName(): string;
 
@@ -778,10 +778,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-      isUntitled: boolean;
-      path: string;
-      contents: string;
-    }
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
   >;
 
   getPinnedFiles(): Promise<string[]>;
@@ -819,7 +819,8 @@ export interface IDE {
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
-  gotoTypeDefinition(location: Location): Promise<RangeInFile[]>;
+  gotoTypeDefinition(location: Location): Promise<RangeInFile[]>; // TODO: add to jetbrains
+  getSignatureHelp(location: Location): Promise<SignatureHelp | null>; // TODO: add to jetbrains
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
@@ -989,11 +990,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-  | string
-  | {
-    type: "text";
-    text: string;
-  }[];
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 export interface ToolExtras {
@@ -1156,6 +1157,7 @@ export interface TabAutocompleteOptions {
   experimental_includeRecentlyVisitedRanges: boolean | number;
   experimental_includeRecentlyEditedRanges: boolean | number;
   experimental_includeDiff: boolean | number;
+  experimental_enableStaticContextualization: boolean;
 }
 
 export interface StdioOptions {
@@ -1356,6 +1358,68 @@ export interface RangeInFileWithNextEditInfo {
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
+ * Signature help represents the signature of something
+ * callable. There can be multiple signatures but only one
+ * active and only one active parameter.
+ */
+export class SignatureHelp {
+  /**
+   * One or more signatures.
+   */
+  signatures: SignatureInformation[];
+
+  /**
+   * The active signature.
+   */
+  activeSignature: number;
+
+  /**
+   * The active parameter of the active signature.
+   */
+  activeParameter: number;
+}
+
+/**
+ * Represents the signature of something callable. A signature
+ * can have a label, like a function-name, a doc-comment, and
+ * a set of parameters.
+ */
+export class SignatureInformation {
+  /**
+   * The label of this signature. Will be shown in
+   * the UI.
+   */
+  label: string;
+
+  /**
+   * The parameters of this signature.
+   */
+  parameters: ParameterInformation[];
+
+  /**
+   * The index of the active parameter.
+   *
+   * If provided, this is used in place of {@linkcode SignatureHelp.activeParameter}.
+   */
+  activeParameter?: number;
+}
+
+/**
+ * Represents a parameter of a callable-signature. A parameter can
+ * have a label and a doc-comment.
+ */
+export class ParameterInformation {
+  /**
+   * The label of this signature.
+   *
+   * Either a string or inclusive start and exclusive end offsets within its containing
+   * {@link SignatureInformation.label signature label}. *Note*: A label of type string must be
+   * a substring of its containing signature information's {@link SignatureInformation.label label}.
+   */
+  label: string | [number, number];
+}
+
+/**
  * Represents the configuration for a quick action in the Code Lens.
  * Quick actions are custom commands that can be added to function and class declarations.
  */
@@ -1430,6 +1494,12 @@ export interface ExperimentalConfig {
    * instead of embeddings, FTS, recently edited files, etc.
    */
   codebaseToolCallingOnly?: boolean;
+
+  /**
+   * If enabled, static contextualization will be used to
+   * gather context for the model where necessary.
+   */
+  enableStaticContextualization?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1529,9 +1599,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | JSONModelDescription
-  | (CustomLLM | JSONModelDescription)[];
+    | CustomLLM
+    | JSONModelDescription
+    | (CustomLLM | JSONModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1625,9 +1695,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-    | { error: string; details?: never }
-    | { details: PackageDetailsSuccess; error?: never }
-  );
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;
