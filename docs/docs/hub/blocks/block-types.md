@@ -11,7 +11,7 @@ sidebar_label: Types
 
 Models are blocks that let you specify Large Language Models (LLMs) and other deep learning models to be used for various roles in the open-source IDE extension like Chat, Autocomplete, Edit, Embed, Rerank, etc. You can explore available models on [the hub](https://hub.continue.dev/explore/models).
 
-Continue supports [many model providers](../../advanced/model-providers/top-level/openai.mdx), including Anthropic, OpenAI, Gemini, Ollama, Amazon Bedrock, Azure, xAI, DeepSeek, and more. Models can have one or more of the following roles depending on its capabilities, including `chat`, `edit`, `apply`, `autocomplete`, `embed`, and `rerank`. Read more about roles [here](../../advanced/model-roles/00-intro.mdx). View [`models`](/reference#models) in the YAML Reference for more details.
+Continue supports [many model providers](../../customize/model-providers/top-level/openai.mdx), including Anthropic, OpenAI, Gemini, Ollama, Amazon Bedrock, Azure, xAI, DeepSeek, and more. Models can have one or more of the following roles depending on its capabilities, including `chat`, `edit`, `apply`, `autocomplete`, `embed`, and `rerank`. Read more about roles [here](../../customize/model-roles/00-intro.mdx). View [`models`](/reference#models) in the YAML Reference for more details.
 
 ## Context
 
@@ -23,28 +23,28 @@ Learn more about context providers [here](/reference#context), and check out [th
 
 Docs are blocks that point to documentation sites, which will be indexed locally and then can be referenced as context using @Docs in Chat. [Explore docs](https://hub.continue.dev/explore/docs) on the hub.
 
-Learn more in the [@Docs deep dive](../../advanced/context/documentation.mdx), and view [`docs`](/reference#docs) in the YAML Reference for more details.
+Learn more in the [@Docs deep dive](../../customize/context/documentation.mdx), and view [`docs`](/reference#docs) in the YAML Reference for more details.
 
 ## MCP Servers
 
 Model Context Protocol (MCP) is a standard way of building and sharing tools for language models. MCP Servers can be defined in `mcpServers` blocks. [Explore MCP Servers](https://hub.continue.dev/explore/mcp) on the hub.
 
-Learn more in the [MCP deep dive](../../advanced/deep-dives/mcp.mdx), and view [`mcpServers`](/reference#mcpservers) in the YAML Reference for more details.
+Learn more in the [MCP deep dive](../../customize/deep-dives/mcp.mdx), and view [`mcpServers`](/reference#mcpservers) in the YAML Reference for more details.
 
 ## Rules
 
 Rules blocks are instructions that your custom AI code assistant will always keep in mind - the contents of rules are inserted into the system message for all Chat requests. [Explore rules](https://hub.continue.dev/explore/rules) on the hub.
 
-Learn more in the [rules deep dive](../../advanced/deep-dives/rules.mdx), and view [`rules`](/reference#rules) in the YAML Reference for more details.
+Learn more in the [rules deep dive](../../customize/deep-dives/rules.mdx), and view [`rules`](/reference#rules) in the YAML Reference for more details.
 
 ## Prompts
 
 Prompts blocks are pre-written, reusable prompts that can be referenced at any time during chat. They are especially useful as context for repetitive and/or complex tasks. [Explore prompts](https://hub.continue.dev/explore/prompts) on the hub.
 
-Prompt blocks have the same syntax as [prompt files](../../advanced/deep-dives/prompts.md). The `config.yaml` spec for `prompts` can be found [here](/reference#prompts).
+Prompt blocks have the same syntax as [prompt files](../../customize/deep-dives/prompts.md). The `config.yaml` spec for `prompts` can be found [here](/reference#prompts).
 
 ## Data
 
-Data blocks allow you send your development data to custom destinations of your choice. Development data can be used for a variety of purposes, including analyzing usage, gathering insights, or fine-tuning models. You can read more about development data [here](../../advanced/deep-dives/development-data.md). Explore data block examples [here](https://hub.continue.dev/explore/data).
+Data blocks allow you send your development data to custom destinations of your choice. Development data can be used for a variety of purposes, including analyzing usage, gathering insights, or fine-tuning models. You can read more about development data [here](../../customize/deep-dives/development-data.md). Explore data block examples [here](https://hub.continue.dev/explore/data).
 
 Data destinations are configured in the [`data`](/reference#data) section of `config.yaml`.
