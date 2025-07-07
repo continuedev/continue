@@ -26,7 +26,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
     (state) => state.ui.toolSettings[props.tool.function.name],
   );
   const [isExpanded, setIsExpanded] = useState(false);
-  const readOnlyMode = useAppSelector((state) => state.session.readOnlyMode);
+  const mode = useAppSelector((state) => state.session.mode);
 
   useEffect(() => {
     if (!policy) {
@@ -48,7 +48,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
 
   const disabled =
     !props.isGroupEnabled ||
-    (readOnlyMode &&
+    (mode === "plan" &&
       props.tool.group === BUILT_IN_GROUP_NAME &&
       !props.tool.readonly);
 
