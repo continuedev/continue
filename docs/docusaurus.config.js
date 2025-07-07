@@ -255,7 +255,10 @@ const config = {
           },
           {
             to: "/customize/settings",
-            from: ["/advanced/deep-dives/settings", "/customize/deep-dives/settings"],
+            from: [
+              "/advanced/deep-dives/settings",
+              "/customize/deep-dives/settings",
+            ],
           },
           {
             to: "/customize/model-roles/intro",
@@ -457,19 +460,31 @@ const config = {
           },
           {
             to: "/customize/model-providers/more/cloudflare",
-            from: "/reference/Model Providers/cloudflare",
+            from: [
+              "/reference/Model Providers/cloudflare",
+              "/advanced/model-providers/more/cloudflare",
+            ],
           },
           {
             to: "/customize/model-providers/more/cohere",
-            from: "/reference/Model Providers/cohere",
+            from: [
+              "/reference/Model Providers/cohere",
+              "/advanced/model-providers/more/cohere",
+            ],
           },
           {
             to: "/customize/model-providers/more/deepinfra",
-            from: "/reference/Model Providers/deepinfra",
+            from: [
+              "/reference/Model Providers/deepinfra",
+              "/advanced/model-providers/more/deepinfra",
+            ],
           },
           {
             to: "/customize/model-providers/more/flowise",
-            from: "/reference/Model Providers/flowise",
+            from: [
+              "/reference/Model Providers/flowise",
+              "/advanced/model-providers/more/flowise",
+            ],
           },
           {
             to: "/customize/model-providers/llamastack",
@@ -477,67 +492,115 @@ const config = {
           },
           {
             to: "/customize/model-providers/more/huggingfaceinferenceapi",
-            from: "/reference/Model Providers/huggingfaceinferenceapi",
+            from: [
+              "/reference/Model Providers/huggingfaceinferenceapi",
+              "/advanced/model-providers/more/huggingfaceinferenceapi",
+            ],
           },
           {
             to: "/customize/model-providers/more/ipex_llm",
-            from: "/reference/Model Providers/ipex_llm",
+            from: [
+              "/reference/Model Providers/ipex_llm",
+              "/advanced/model-providers/more/ipex_llm",
+            ],
           },
           {
             to: "/customize/model-providers/more/kindo",
-            from: "/reference/Model Providers/kindo",
+            from: [
+              "/reference/Model Providers/kindo",
+              "/advanced/model-providers/more/kindo",
+            ],
           },
           {
             to: "/customize/model-providers/more/llamacpp",
-            from: "/reference/Model Providers/llamacpp",
+            from: [
+              "/reference/Model Providers/llamacpp",
+              "/advanced/model-providers/more/llamacpp",
+            ],
           },
           {
             to: "/customize/model-providers/more/llamafile",
-            from: "/reference/Model Providers/llamafile",
+            from: [
+              "/reference/Model Providers/llamafile",
+              "/advanced/model-providers/more/llamafile",
+            ],
           },
           {
             to: "/customize/model-providers/more/lmstudio",
-            from: "/reference/Model Providers/lmstudio",
+            from: [
+              "/reference/Model Providers/lmstudio",
+              "/advanced/model-providers/more/lmstudio",
+            ],
           },
           {
             to: "/customize/model-providers/more/msty",
-            from: "/reference/Model Providers/msty",
+            from: [
+              "/reference/Model Providers/msty",
+              "/advanced/model-providers/more/msty",
+            ],
           },
           {
             to: "/customize/model-providers/more/openrouter",
-            from: "/reference/Model Providers/openrouter",
+            from: [
+              "/reference/Model Providers/openrouter",
+              "/advanced/model-providers/more/openrouter",
+            ],
           },
           {
             to: "/customize/model-providers/more/replicatellm",
-            from: "/reference/Model Providers/replicatellm",
+            from: [
+              "/reference/Model Providers/replicatellm",
+              "/advanced/model-providers/more/replicatellm",
+            ],
           },
           {
             to: "/customize/model-providers/more/sagemaker",
-            from: "/reference/Model Providers/sagemaker",
+            from: [
+              "/reference/Model Providers/sagemaker",
+              "/advanced/model-providers/more/sagemaker",
+            ],
           },
           {
             to: "/customize/model-providers/more/textgenwebui",
-            from: "/reference/Model Providers/textgenwebui",
+            from: [
+              "/reference/Model Providers/textgenwebui",
+              "/advanced/model-providers/more/textgenwebui",
+            ],
           },
           {
             to: "/customize/model-providers/more/together",
-            from: "/reference/Model Providers/together",
+            from: [
+              "/reference/Model Providers/together",
+              "/advanced/model-providers/more/together",
+            ],
           },
           {
             to: "/customize/model-providers/more/novita",
-            from: "/reference/Model Providers/novita",
+            from: [
+              "/reference/Model Providers/novita",
+              "/advanced/model-providers/more/novita",
+            ],
           },
           {
             to: "/customize/model-providers/more/vllm",
-            from: "/reference/Model Providers/vllm",
+            from: [
+              "/reference/Model Providers/vllm",
+              "/advanced/model-providers/more/vllm",
+            ],
           },
           {
             to: "/customize/model-providers/more/watsonx",
-            from: "/reference/Model Providers/watsonx",
+            from: [
+              "/reference/Model Providers/watsonx",
+              "/advanced/model-providers/more/watsonx",
+            ],
           },
           {
             to: "/customize/model-providers/more/nebius",
-            from: "/reference/Model Providers/nebius",
+            from: [
+              "/reference/Model Providers/nebius",
+              "/advanced/model-providers/more/nebius",
+            ],
           },
           // Sidebar items that should route directly to a subpage
           {
