@@ -123,7 +123,7 @@ export function ModeSelect() {
                   zIndex: 200001,
                 }}
               >
-                In Plan mode, only use read-only and MCP tools are enabled
+                In Plan mode, only read-only and MCP tools are enabled
               </ToolTip>
             </div>
             {agentModeSupported ? (
