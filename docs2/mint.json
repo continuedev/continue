@@ -29,6 +29,11 @@
     "owner": "continuedev",
     "repo": "continue"
   },
+  "analytics": {
+    "gtag": {
+      "measurementId": "G-M3JWW8N2XQ"
+    }
+  },
   "contextual": {
     "options": [
       "copy",
