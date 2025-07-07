@@ -1,283 +1,316 @@
 {
-  "$schema": "https://mintlify.com/schema.json",
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
   "name": "Continue",
-  "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg",
-    "href": "https://continue.dev"
-  },
-  "favicon": "/favicon.png",
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
-    "dark": "#000000",
-    "background": {
+    "dark": "#000000"
+  },
+  "favicon": "/favicon.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": [
+              "index",
+              "getting-started/overview",
+              "getting-started/install"
+            ]
+          },
+          {
+            "group": "Features",
+            "icon": "star",
+            "pages": [
+              {
+                "group": "Chat",
+                "icon": "messages",
+                "pages": [
+                  "features/chat/quick-start",
+                  "features/chat/how-it-works"
+                ]
+              },
+              {
+                "group": "Autocomplete",
+                "icon": "sparkles",
+                "pages": [
+                  "features/autocomplete/quick-start",
+                  "features/autocomplete/how-it-works"
+                ]
+              },
+              {
+                "group": "Edit",
+                "icon": "pen-to-square",
+                "pages": [
+                  "features/edit/quick-start",
+                  "features/edit/how-it-works"
+                ]
+              },
+              {
+                "group": "Agent",
+                "icon": "robot",
+                "pages": [
+                  "features/agent/quick-start",
+                  "features/agent/how-it-works"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Customization",
+            "icon": "sliders",
+            "pages": [
+              "customization/overview",
+              "customization/models",
+              "customization/prompts",
+              "customization/rules",
+              "customization/mcp-tools"
+            ]
+          },
+          {
+            "group": "Help",
+            "icon": "book-open",
+            "pages": [
+              "troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Customize",
+        "groups": [
+          {
+            "group": "Customize",
+            "pages": [
+              "customize/overview",
+              {
+                "group": "Model Providers",
+                "icon": "server",
+                "pages": [
+                  {
+                    "group": "Popular Providers",
+                    "pages": [
+                      "customize/model-providers/top-level/anthropic",
+                      "customize/model-providers/top-level/openai",
+                      "customize/model-providers/top-level/azure",
+                      "customize/model-providers/top-level/bedrock",
+                      "customize/model-providers/top-level/ollama",
+                      "customize/model-providers/top-level/gemini",
+                      "customize/model-providers/top-level/deepseek",
+                      "customize/model-providers/top-level/mistral",
+                      "customize/model-providers/top-level/xAI",
+                      "customize/model-providers/top-level/vertexai",
+                      "customize/model-providers/top-level/inception"
+                    ]
+                  },
+                  {
+                    "group": "More Providers",
+                    "pages": [
+                      "customize/model-providers/more/groq",
+                      "customize/model-providers/more/together",
+                      "customize/model-providers/more/lmstudio",
+                      "customize/model-providers/more/llamacpp",
+                      "customize/model-providers/more/openrouter",
+                      "customize/model-providers/more/huggingfaceinferenceapi",
+                      "customize/model-providers/more/cohere",
+                      "customize/model-providers/more/nvidia",
+                      "customize/model-providers/more/cloudflare",
+                      "customize/model-providers/more/deepinfra"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Model Roles",
+                "icon": "robot",
+                "pages": [
+                  "customize/model-roles/00-intro",
+                  "customize/model-roles/chat",
+                  "customize/model-roles/autocomplete",
+                  "customize/model-roles/edit",
+                  "customize/model-roles/apply",
+                  "customize/model-roles/embeddings",
+                  "customize/model-roles/reranking"
+                ]
+              },
+              {
+                "group": "Context Providers",
+                "icon": "code",
+                "pages": [
+                  "customize/context/codebase",
+                  "customize/context/documentation"
+                ]
+              },
+              {
+                "group": "Deep Dives",
+                "icon": "microscope",
+                "pages": [
+                  "customize/deep-dives/configuration",
+                  "customize/settings",
+                  "customize/deep-dives/slash-commands",
+                  "customize/deep-dives/rules",
+                  "customize/deep-dives/prompts",
+                  "customize/deep-dives/autocomplete",
+                  "customize/deep-dives/development-data",
+                  "customize/deep-dives/vscode-actions",
+                  "customize/deep-dives/mcp"
+                ]
+              },
+              {
+                "group": "Telemetry",
+                "icon": "chart-line",
+                "pages": [
+                  "customize/telemetry"
+                ]
+              },
+              "customize/custom-providers",
+              "customize/json-reference",
+              "customize/yaml-migration"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Hub",
+        "groups": [
+          {
+            "group": "Hub",
+            "pages": [
+              "hub/introduction",
+              {
+                "group": "Assistants",
+                "icon": "robot",
+                "pages": [
+                  "hub/assistants/intro",
+                  "hub/assistants/use-an-assistant",
+                  "hub/assistants/create-an-assistant",
+                  "hub/assistants/edit-an-assistant"
+                ]
+              },
+              {
+                "group": "Blocks",
+                "icon": "cube",
+                "pages": [
+                  "hub/blocks/intro",
+                  "hub/blocks/use-a-block",
+                  "hub/blocks/block-types",
+                  "hub/blocks/create-a-block",
+                  "hub/blocks/bundles"
+                ]
+              },
+              {
+                "group": "Governance",
+                "icon": "building-office",
+                "pages": [
+                  "hub/governance/creating-an-org",
+                  "hub/governance/org-permissions",
+                  "hub/governance/pricing"
+                ]
+              },
+              {
+                "group": "Secrets",
+                "icon": "key",
+                "pages": [
+                  "hub/secrets/secret-types",
+                  "hub/secrets/secret-resolution"
+                ]
+              },
+              "hub/sharing",
+              "hub/source-control"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/overview",
+              "guides/ollama-guide",
+              "guides/llama3.1",
+              "guides/set-up-codestral",
+              "guides/running-continue-without-internet",
+              "guides/custom-code-rag",
+              "guides/build-your-own-context-provider",
+              "guides/how-to-self-host-a-model"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Reference",
+            "icon": "code",
+            "pages": [
+              "reference"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "About Us",
+          "href": "https://continue.dev/about",
+          "icon": "book-open"
+        },
+        {
+          "anchor": "Community",
+          "href": "https://discord.gg/NWtdYexhMs",
+          "icon": "discord"
+        },
+        {
+          "anchor": "Blog",
+          "href": "https://continue.dev/blog",
+          "icon": "newspaper"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://continue.dev"
+  },
+  "background": {
+    "color": {
       "dark": "#1a1a1a"
     }
   },
-  "topbarLinks": [
-    {
-      "name": "Sign In",
-      "url": "https://hub.continue.dev/login"
+  "navbar": {
+    "links": [
+      {
+        "label": "Sign In",
+        "href": "https://hub.continue.dev/login"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Explore Hub",
+      "href": "https://hub.continue.dev/"
     }
-  ],
-  "topbarCtaButton": {
-    "name": "Explore Hub",
-    "url": "https://hub.continue.dev/"
   },
-  "github": {
-    "owner": "continuedev",
-    "repo": "continue"
+  "footer": {
+    "socials": {
+      "x": "https://twitter.com/continuedev",
+      "github": "https://github.com/continuedev/continue",
+      "linkedin": "https://linkedin.com/company/continuedev",
+      "discord": "https://discord.gg/vapESyrFmJ"
+    }
   },
-  "suggestEdit": true,
-  "analytics": {
+  "integrations": {
     "ga4": {
       "measurementId": "G-M3JWW8N2XQ"
     }
-  },
-  "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
-  },
-  "tabs": [
-    {
-      "name": "Customize",
-      "url": "customize"
-    },
-    {
-      "name": "Hub",
-      "url": "hub"
-    },
-    {
-      "name": "Guides",
-      "url": "guides"
-    },
-    {
-      "name": "Reference",
-      "url": "reference"
-    }
-  ],
-  "anchors": [
-    {
-      "name": "About Us",
-      "icon": "book-open",
-      "url": "https://continue.dev/about"
-    },
-    {
-      "name": "Community",
-      "icon": "discord",
-      "url": "https://discord.gg/NWtdYexhMs"
-    },
-    {
-      "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://continue.dev/blog"
-    }
-  ],
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "icon": "rocket-launch",
-      "pages": ["index", "getting-started/overview", "getting-started/install"]
-    },
-    {
-      "group": "Features",
-      "icon": "star",
-      "pages": [
-        {
-          "group": "Chat",
-          "icon": "messages",
-          "pages": ["features/chat/quick-start", "features/chat/how-it-works"]
-        },
-        {
-          "group": "Autocomplete",
-          "icon": "sparkles",
-          "pages": [
-            "features/autocomplete/quick-start",
-            "features/autocomplete/how-it-works"
-          ]
-        },
-        {
-          "group": "Edit",
-          "icon": "pen-to-square",
-          "pages": ["features/edit/quick-start", "features/edit/how-it-works"]
-        },
-        {
-          "group": "Agent",
-          "icon": "robot",
-          "pages": ["features/agent/quick-start", "features/agent/how-it-works"]
-        }
-      ]
-    },
-    {
-      "group": "Customization",
-      "icon": "sliders",
-      "pages": [
-        "customization/overview",
-        "customization/models",
-        "customization/prompts",
-        "customization/rules",
-        "customization/mcp-tools"
-      ]
-    },
-    {
-      "group": "Help",
-      "icon": "book-open",
-      "pages": ["troubleshooting"]
-    },
-    {
-      "group": "Customize",
-      "pages": [
-        "customize/overview",
-        {
-          "group": "Model Providers",
-          "icon": "server",
-          "pages": [
-            {
-              "group": "Popular Providers",
-              "pages": [
-                "customize/model-providers/top-level/anthropic",
-                "customize/model-providers/top-level/openai",
-                "customize/model-providers/top-level/azure",
-                "customize/model-providers/top-level/bedrock",
-                "customize/model-providers/top-level/ollama",
-                "customize/model-providers/top-level/gemini",
-                "customize/model-providers/top-level/deepseek",
-                "customize/model-providers/top-level/mistral",
-                "customize/model-providers/top-level/xAI",
-                "customize/model-providers/top-level/vertexai",
-                "customize/model-providers/top-level/inception"
-              ]
-            },
-            {
-              "group": "More Providers",
-              "pages": [
-                "customize/model-providers/more/groq",
-                "customize/model-providers/more/together",
-                "customize/model-providers/more/lmstudio",
-                "customize/model-providers/more/llamacpp",
-                "customize/model-providers/more/openrouter",
-                "customize/model-providers/more/huggingfaceinferenceapi",
-                "customize/model-providers/more/cohere",
-                "customize/model-providers/more/nvidia",
-                "customize/model-providers/more/cloudflare",
-                "customize/model-providers/more/deepinfra"
-              ]
-            }
-          ]
-        },
-        {
-          "group": "Model Roles",
-          "icon": "robot",
-          "pages": [
-            "customize/model-roles/00-intro",
-            "customize/model-roles/chat",
-            "customize/model-roles/autocomplete",
-            "customize/model-roles/edit",
-            "customize/model-roles/apply",
-            "customize/model-roles/embeddings",
-            "customize/model-roles/reranking"
-          ]
-        },
-        {
-          "group": "Context Providers",
-          "icon": "code",
-          "pages": [
-            "customize/context/codebase",
-            "customize/context/documentation"
-          ]
-        },
-        {
-          "group": "Deep Dives",
-          "icon": "microscope",
-          "pages": [
-            "customize/deep-dives/configuration",
-            "customize/settings",
-            "customize/deep-dives/slash-commands",
-            "customize/deep-dives/rules",
-            "customize/deep-dives/prompts",
-            "customize/deep-dives/autocomplete",
-            "customize/deep-dives/development-data",
-            "customize/deep-dives/vscode-actions",
-            "customize/deep-dives/mcp"
-          ]
-        },
-        {
-          "group": "Telemetry",
-          "icon": "chart-line",
-          "pages": ["customize/telemetry"]
-        },
-        "customize/custom-providers",
-        "customize/json-reference",
-        "customize/yaml-migration"
-      ]
-    },
-    {
-      "group": "Hub",
-      "pages": [
-        "hub/introduction",
-        {
-          "group": "Assistants",
-          "icon": "robot",
-          "pages": [
-            "hub/assistants/intro",
-            "hub/assistants/use-an-assistant",
-            "hub/assistants/create-an-assistant",
-            "hub/assistants/edit-an-assistant"
-          ]
-        },
-        {
-          "group": "Blocks",
-          "icon": "cube",
-          "pages": [
-            "hub/blocks/intro",
-            "hub/blocks/use-a-block",
-            "hub/blocks/block-types",
-            "hub/blocks/create-a-block",
-            "hub/blocks/bundles"
-          ]
-        },
-        {
-          "group": "Governance",
-          "icon": "building-office",
-          "pages": [
-            "hub/governance/creating-an-org",
-            "hub/governance/org-permissions",
-            "hub/governance/pricing"
-          ]
-        },
-        {
-          "group": "Secrets",
-          "icon": "key",
-          "pages": ["hub/secrets/secret-types", "hub/secrets/secret-resolution"]
-        },
-        "hub/sharing",
-        "hub/source-control"
-      ]
-    },
-    {
-      "group": "Guides",
-      "pages": [
-        "guides/overview",
-        "guides/ollama-guide",
-        "guides/llama3.1",
-        "guides/set-up-codestral",
-        "guides/running-continue-without-internet",
-        "guides/custom-code-rag",
-        "guides/build-your-own-context-provider",
-        "guides/how-to-self-host-a-model"
-      ]
-    },
-    {
-      "group": "Reference",
-      "icon": "code",
-      "pages": ["reference"]
-    }
-  ],
-  "footerSocials": {
-    "x": "https://twitter.com/continuedev",
-    "github": "https://github.com/continuedev/continue",
-    "linkedin": "https://linkedin.com/company/continuedev",
-    "discord": "https://discord.gg/vapESyrFmJ"
   },
   "redirects": [
     {
