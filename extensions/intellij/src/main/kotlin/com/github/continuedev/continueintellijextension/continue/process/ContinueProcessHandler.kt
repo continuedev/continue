@@ -52,9 +52,10 @@ class ContinueProcessHandler(
 
     fun close() {
         innerJob.cancel()
-        reader.close()
-        writer.close()
-        process.close()
+        scope.launch(Dispatchers.IO) {
+            reader.close()
+            writer.close()
+            process.close()
+        }
     }
-
 }
