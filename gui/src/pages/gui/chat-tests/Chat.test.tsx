@@ -39,7 +39,7 @@ test("should be able to toggle modes", async () => {
     );
   });
 
-  // Check that it switched to Plan mode
+  // Check that it switched to Agent mode
   await getElementByText("Agent");
 
   act(() => {

@@ -118,11 +118,15 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         <div
           className={`flex w-8 flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:bg-list-active hover:text-list-active-foreground cursor-pointer"}`}
           data-testid={`tool-policy-item-${props.tool.function.name}`}
-          onClick={(e) => {
-            dispatch(toggleToolSetting(props.tool.function.name));
-            e.stopPropagation();
-            e.preventDefault();
-          }}
+          onClick={
+            disabled
+              ? undefined
+              : (e) => {
+                  dispatch(toggleToolSetting(props.tool.function.name));
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+          }
         >
           {disabled || policy === "disabled" ? (
             <>
