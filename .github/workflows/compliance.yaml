@@ -57,7 +57,7 @@ jobs:
                 body: [
                   "## ⚠️ Conventional Commit Format",
                   "",
-                  "Your commit messages don't follow the conventional commit format, but **this won't block your PR from being merged**.",
+                  "Your commit messages don't follow the conventional commit format, but **this won't block your PR from being merged**. We recommend downloading [this extension](https://marketplace.visualstudio.com/items?itemName=vivaxy.vscode-conventional-commits) if you are using VS Code.",
                   "",
                   "### Expected Format:",
                   "```",
