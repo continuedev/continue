@@ -38,6 +38,7 @@ import { TTS } from "./util/tts";
 
 import {
   CompleteOnboardingPayload,
+  ContextItemId,
   ContextItemWithId,
   IdeSettings,
   ModelDescription,
@@ -45,7 +46,6 @@ import {
   RangeInFile,
   ToolCall,
   type ContextItem,
-  type ContextItemId,
   type IDE,
 } from ".";
 
@@ -558,7 +558,6 @@ export class Core {
           : undefined,
         input: data.input,
         language: data.language,
-        onlyOneInsertion: false,
         overridePrompt: undefined,
         abortController,
       });
@@ -723,8 +722,8 @@ export class Core {
       const EDIT_AGGREGATION_OPTIONS = {
         deltaT: 1.0,
         deltaL: 5,
-        maxEdits: 250,
-        maxDuration: 100.0,
+        maxEdits: 500,
+        maxDuration: 120.0,
         contextSize: 5,
       };
 
@@ -1072,6 +1071,7 @@ export class Core {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
+      isInAgentMode: boolean;
     }>,
   ) => {
     const { config } = await this.configHandler.loadConfig();
@@ -1102,10 +1102,9 @@ export class Core {
     }
 
     try {
-      const id: ContextItemId = {
-        providerTitle: provider.description.title,
-        itemId: uuidv4(),
-      };
+      void Telemetry.capture("context_provider_get_context_items", {
+        name: provider.description.title,
+      });
 
       const items = await provider.getContextItems(query, {
         config,
@@ -1117,6 +1116,7 @@ export class Core {
         reranker: config.selectedModelByRole.rerank,
         fetch: (url, init) =>
           fetchwithRequestOptions(url, init, config.requestOptions),
+        isInAgentMode: msg.data.isInAgentMode,
       });
 
       void Telemetry.capture(
@@ -1127,10 +1127,14 @@ export class Core {
         true,
       );
 
-      return items.map((item) => ({
-        ...item,
-        id,
-      }));
+      return items.map((item) => {
+        const id: ContextItemId = {
+          providerTitle: provider.description.title,
+          itemId: uuidv4(),
+        };
+
+        return { ...item, id };
+      });
     } catch (e) {
       let knownError = false;
 

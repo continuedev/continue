@@ -1,6 +1,6 @@
 import { ContextItem, ToolCallState } from "core";
-import { safeParseToolCallArgs } from "core/tools/parseArgs";
 import { IIdeMessenger } from "../../context/IdeMessenger";
+import { ChatHistoryItemWithMessageId } from "../slices/sessionSlice";
 import { RootState } from "../store";
 
 export function findCurrentToolCall(
@@ -9,6 +9,7 @@ export function findCurrentToolCall(
   return chatHistory[chatHistory.length - 1]?.toolCallState;
 }
 
+// TODO parallel tool calls - find tool call must search within arrays
 export function findToolCall(
   chatHistory: RootState["session"]["history"],
   toolCallId: string,
@@ -18,8 +19,19 @@ export function findToolCall(
   )?.toolCallState;
 }
 
+export function findToolOutput(
+  chatHistory: RootState["session"]["history"],
+  toolCallId: string,
+): ChatHistoryItemWithMessageId | undefined {
+  return chatHistory.find(
+    (item) =>
+      item.message.role === "tool" && item.message.toolCallId === toolCallId,
+  );
+}
+
 export function logToolUsage(
   toolCallState: ToolCallState,
+  accepted: boolean,
   success: boolean,
   messenger: IIdeMessenger,
   finalOutput?: ContextItem[],
@@ -28,10 +40,15 @@ export function logToolUsage(
     name: "toolUsage",
     data: {
       toolCallId: toolCallState.toolCallId,
-      functionName: toolCallState.toolCall?.function?.name,
-      functionArgs: toolCallState.toolCall?.function?.arguments,
-      toolCallArgs: safeParseToolCallArgs(toolCallState.toolCall),
-      parsedArgs: toolCallState.parsedArgs,
+
+      functionName:
+        toolCallState.tool?.function?.name ||
+        toolCallState.toolCall.function.name,
+
+      functionParams: toolCallState.tool?.function.parameters,
+
+      toolCallArgs: toolCallState.toolCall.function.arguments,
+      accepted: accepted,
       output: finalOutput || toolCallState.output || [],
       succeeded: success,
     },

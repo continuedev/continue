@@ -6,11 +6,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscCommandCenterInactiveBorder,
-} from "..";
+import { lightGray } from "..";
+import { cn } from "../../util/cn";
 import { ToolTip } from "../gui/Tooltip";
 
 export const OptionDiv = styled.div<{
@@ -47,11 +44,6 @@ export const OptionDiv = styled.div<{
 
 export const MAX_HEIGHT_PX = 300;
 
-export const Divider = styled.div`
-  height: 0.5px;
-  background-color: ${vscCommandCenterInactiveBorder};
-`;
-
 interface ModelOptionProps {
   children: React.ReactNode;
   idx: number;
@@ -64,28 +56,81 @@ interface ModelOptionProps {
   onClickError?: (e: any) => void;
 }
 
-const IconBase = styled.div<{ $hovered: boolean }>`
-  width: 1.2em;
-  height: 1.2em;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: ${defaultBorderRadius};
-  opacity: ${(props) => (props.$hovered ? 0.75 : 0)};
-  visibility: ${(props) => (props.$hovered ? "visible" : "hidden")};
+interface IconBaseProps {
+  $hovered: boolean;
+  onClick?: (e: any) => void;
+  className?: string;
+  children?: React.ReactNode;
+  [key: string]: any;
+}
 
-  &:hover {
-    opacity: 1;
-    background-color: ${lightGray}33;
-  }
-`;
+function IconBase({
+  $hovered,
+  onClick,
+  className,
+  children,
+  ...props
+}: IconBaseProps) {
+  return (
+    <div
+      className={cn(
+        "rounded-default h-[1.2em] w-[1.2em] cursor-pointer p-1",
+        $hovered ? "visible opacity-75" : "invisible opacity-0",
+        "hover:bg-lightgray/20 hover:opacity-100",
+        className,
+      )}
+      onClick={onClick}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
 
-const StyledCog6ToothIcon = styled(IconBase).attrs({ as: Cog6ToothIcon })``;
-const StyledArrowTopRightOnSquareIcon = styled(IconBase).attrs({
-  as: ArrowTopRightOnSquareIcon,
-})``;
-const StyledExclamationTriangleIcon = styled(IconBase).attrs({
-  as: ExclamationTriangleIcon,
-})``;
+const StyledCog6ToothIcon = ({
+  $hovered,
+  onClick,
+}: {
+  $hovered: boolean;
+  onClick?: (e: any) => void;
+}) => (
+  <IconBase $hovered={$hovered} onClick={onClick}>
+    <Cog6ToothIcon />
+  </IconBase>
+);
+
+const StyledArrowTopRightOnSquareIcon = ({
+  $hovered,
+  onClick,
+}: {
+  $hovered: boolean;
+  onClick?: (e: any) => void;
+}) => (
+  <IconBase $hovered={$hovered} onClick={onClick}>
+    <ArrowTopRightOnSquareIcon />
+  </IconBase>
+);
+
+const StyledExclamationTriangleIcon = ({
+  $hovered,
+  onClick,
+  className,
+  ...props
+}: {
+  $hovered: boolean;
+  onClick?: (e: any) => void;
+  className?: string;
+  [key: string]: any;
+}) => (
+  <IconBase
+    $hovered={$hovered}
+    onClick={onClick}
+    className={className}
+    {...props}
+  >
+    <ExclamationTriangleIcon />
+  </IconBase>
+);
 
 export function Option({
   children,

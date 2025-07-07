@@ -18,15 +18,21 @@ import {
   RuleWithSource,
   Session,
   SessionMetadata,
+  Tool,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
-import { renderChatMessage } from "core/util/messageContent";
+import {
+  renderChatMessage,
+  renderContextItems,
+} from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
+import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
+import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
-import { findCurrentToolCall, findToolCall } from "../util";
+import { findCurrentToolCall, findToolCall, findToolOutput } from "../util";
 
 const getIdeMessenger = () => (window as any).ideMessenger;
 
@@ -38,6 +44,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 
 type SessionState = {
   lastSessionId?: string;
+  isSessionMetadataLoading: boolean;
   allSessionMetadata: SessionMetadata[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
@@ -57,6 +64,7 @@ type SessionState = {
 };
 
 const initialState: SessionState = {
+  isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
   isStreaming: false,
@@ -107,19 +115,39 @@ export const sessionSlice = createSlice({
         curMessage.isGatheringContext = payload;
       }
     },
-    clearLastEmptyResponse: (state) => {
+    clearDanglingMessages: (state) => {
+      // This is used during cancellation
+      // After the last user or tool message, we can have thinking and or valid assitant message (content or generated tool calls) OR nothing.
+      // The only thing allowed after the last assistant message that has either content or generated tool calls
+      // is a user or tool message
       if (state.history.length < 2) {
         return;
       }
-      const lastMessage = state.history[state.history.length - 1];
+      const lastUserOrToolIdx = findLastIndex(
+        state.history,
+        (item) => item.message.role === "tool" || item.message.role === "user",
+      );
 
-      // Only clear in the case of an empty message
-      if (!lastMessage.message.content.length) {
-        state.mainEditorContentTrigger =
-          state.history[state.history.length - 2].editorState;
-        state.history = state.history.slice(0, -2);
-        // TODO is this logic correct for tool use conversations?
-        // Maybe slice at last index of "user" role message?
+      let validAssistantMessageIdx = -1;
+      for (let i = state.history.length - 1; i > lastUserOrToolIdx; i--) {
+        const message = state.history[i];
+        if (
+          message.message.content ||
+          message.toolCallState?.status !== "generating"
+        ) {
+          validAssistantMessageIdx = i;
+          // Cancel any tool calls that are dangling and generated
+          if (message.toolCallState?.status === "generated") {
+            message.toolCallState.status = "canceled";
+          }
+          break;
+        }
+      }
+
+      if (validAssistantMessageIdx === -1) {
+        state.history = state.history.slice(0, lastUserOrToolIdx + 1);
+      } else {
+        state.history = state.history.slice(0, validAssistantMessageIdx + 1);
       }
     },
     // Trigger value picked up by editor with isMainInput to set its content
@@ -204,6 +232,28 @@ export const sessionSlice = createSlice({
       }
 
       state.isStreaming = true;
+    },
+    truncateHistoryToMessage: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        index: number;
+      }>,
+    ) => {
+      const { index } = payload;
+
+      if (state.history.length && index < state.history.length) {
+        state.codeBlockApplyStates.curIndex = 0;
+        state.history = state.history.slice(0, index + 1).concat({
+          message: {
+            id: uuidv4(),
+            role: "assistant",
+            content: "", // IMPORTANT - this is subsequently updated by response streaming
+          },
+          contextItems: [],
+        });
+      }
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
@@ -355,7 +405,6 @@ export const sessionSlice = createSlice({
               }
             } else if (message.role === "thinking" && message.signature) {
               if (lastMessage.role === "thinking") {
-                console.log("add signature", message.signature);
                 lastMessage.signature = message.signature;
               }
             } else if (
@@ -397,6 +446,12 @@ export const sessionSlice = createSlice({
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
       state.title = payload;
+    },
+    setIsSessionMetadataLoading: (
+      state,
+      { payload }: PayloadAction<boolean>,
+    ) => {
+      state.isSessionMetadataLoading = payload;
     },
     setAllSessionMetadata: (
       state,
@@ -510,6 +565,7 @@ export const sessionSlice = createSlice({
       state,
       action: PayloadAction<{
         toolCallId: string;
+        tools: Tool[];
       }>,
     ) => {
       const toolCallState = findToolCall(
@@ -518,6 +574,13 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "generated";
+
+        const tool = action.payload.tools.find(
+          (t) => t.function.name === toolCallState.toolCall.function.name,
+        );
+        if (tool) {
+          toolCallState.tool = tool;
+        }
       }
     },
     updateToolCallOutput: (
@@ -527,12 +590,22 @@ export const sessionSlice = createSlice({
         contextItems: ContextItem[];
       }>,
     ) => {
+      // Update tool call state and corresponding tool output message
       const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
       );
       if (toolCallState) {
         toolCallState.output = action.payload.contextItems;
+      }
+      const toolItem = findToolOutput(state.history, action.payload.toolCallId);
+      if (toolItem) {
+        toolItem.message.content = renderContextItems(
+          action.payload.contextItems,
+        );
+        toolItem.contextItems = action.payload.contextItems.map((item) =>
+          toolCallCtxItemToCtxItemWithId(item, action.payload.toolCallId),
+        );
       }
     },
     cancelToolCall: (
@@ -678,8 +751,9 @@ export const {
   addPromptCompletionPair,
   setActive,
   submitEditorAndInitAtIndex,
+  truncateHistoryToMessage,
   updateHistoryItemAtIndex,
-  clearLastEmptyResponse,
+  clearDanglingMessages,
   setMainEditorContentTrigger,
   deleteMessage,
   setIsGatheringContext,
@@ -693,6 +767,7 @@ export const {
   setToolGenerated,
   updateToolCallOutput,
   setMode,
+  setIsSessionMetadataLoading,
   setAllSessionMetadata,
   addSessionMetadata,
   updateSessionMetadata,

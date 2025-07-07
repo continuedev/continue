@@ -46,7 +46,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    implementation("com.automation-remarks:video-recorder-junit5:2.0")
+    testImplementation("com.automation-remarks:video-recorder-junit5:2.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
 
@@ -192,11 +192,8 @@ tasks {
     }
 
     runIde {
-        // Open the `manual-testing-sandbox` directory and the specific file on start
-        args = listOf(
-            "${rootProject.projectDir.parentFile.parentFile}/manual-testing-sandbox",
-            "${rootProject.projectDir.parentFile.parentFile}/manual-testing-sandbox/test.kt"
-        ).map { file(it).absolutePath }
+        val dir = "${rootProject.projectDir.parentFile.parentFile.absolutePath}/manual-testing-sandbox"
+        args = listOf(dir, "$dir/test.kt")
     }
 
     test {

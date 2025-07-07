@@ -57,6 +57,7 @@ export interface IndexingProgressUpdate {
     | "disabled"
     | "cancelled";
   debugInfo?: string;
+  warnings?: string[];
 }
 
 // This is more or less a V2 of IndexingProgressUpdate for docs etc.
@@ -186,6 +187,7 @@ export interface ContextProviderExtras {
   ide: IDE;
   selectedCode: RangeInFile[];
   fetch: FetchFunction;
+  isInAgentMode: boolean;
 }
 
 export interface LoadSubmenuItemsArgs {
@@ -443,6 +445,7 @@ interface ToolCallState {
   status: ToolStatus;
   parsedArgs: any;
   output?: ContextItem[];
+  tool?: Tool;
 }
 
 interface Reasoning {
@@ -1421,6 +1424,12 @@ export interface ExperimentalConfig {
    * If enabled, will enable next edit in place of autocomplete
    */
   optInNextEditFeature?: boolean;
+
+  /**
+   * If enabled, @codebase will only use tool calling
+   * instead of embeddings, FTS, recently edited files, etc.
+   */
+  codebaseToolCallingOnly?: boolean;
 }
 
 export interface AnalyticsConfig {

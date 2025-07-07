@@ -33,11 +33,16 @@ import {
   editOutcomeEventSchema_0_2_0,
   editOutcomeEventSchema_0_2_0_noCode,
 } from "./editOutcome/v0.2.0.js";
-import { nextEditEventAllSchema } from "./nextEdit/index.js";
+import { nextEditOutcomeEventAllSchema } from "./nextEditOutcome/index.js";
+import {
+  nextEditOutcomeEventSchema_0_2_0,
+  nextEditOutcomeEventSchema_0_2_0_noCode,
+} from "./nextEditOutcome/v0.2.0.js";
+import { nextEditEventAllSchema } from "./nextEditWithHistory/index.js";
 import {
   nextEditEventSchema_0_2_0,
   nextEditEventSchema_0_2_0_noCode,
-} from "./nextEdit/v0.2.0.js";
+} from "./nextEditWithHistory/v0.2.0.js";
 import { quickEditEventAllSchema } from "./quickEdit/index.js";
 import {
   quickEditEventSchema_0_1_0,
@@ -88,7 +93,8 @@ const devEventAllVersionDataSchemas = z.object({
   chatInteraction: chatInteractionEventAllSchema,
   editInteraction: editInteractionEventAllSchema,
   editOutcome: editOutcomeEventAllSchema,
-  nextEdit: nextEditEventAllSchema,
+  nextEditOutcome: nextEditOutcomeEventAllSchema,
+  nextEditWithHistory: nextEditEventAllSchema,
   toolUsage: toolUsageEventAllSchema,
 });
 
@@ -116,7 +122,8 @@ export const devDataVersionedSchemas = {
       chatInteraction: chatInteractionEventSchema_0_2_0,
       editInteraction: editInteractionEventSchema_0_2_0,
       editOutcome: editOutcomeEventSchema_0_2_0,
-      nextEdit: nextEditEventSchema_0_2_0,
+      nextEditOutcome: nextEditOutcomeEventSchema_0_2_0,
+      nextEditWithHistory: nextEditEventSchema_0_2_0,
       toolUsage: toolUsageEventSchema_0_2_0,
     },
     noCode: {
@@ -126,7 +133,8 @@ export const devDataVersionedSchemas = {
       chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
       editInteraction: editInteractionEventSchema_0_2_0_noCode,
       editOutcome: editOutcomeEventSchema_0_2_0_noCode,
-      nextEdit: nextEditEventSchema_0_2_0_noCode,
+      nextEditOutcome: nextEditOutcomeEventSchema_0_2_0_noCode,
+      nextEditWithHistory: nextEditEventSchema_0_2_0_noCode,
       toolUsage: toolUsageEventSchema_0_2_0_noCode,
     },
   },
