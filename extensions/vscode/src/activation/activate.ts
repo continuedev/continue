@@ -6,12 +6,40 @@ import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
-import { getExtensionVersion } from "../util/util";
+import {
+  getArchitecture,
+  getExtensionVersion,
+  getPlatform,
+  isUnsupportedPlatform,
+} from "../util/util";
 
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  const platformCheck = isUnsupportedPlatform();
+  if (platformCheck.isUnsupported) {
+    const platformTarget = `${getPlatform()}-${getArchitecture()}`;
+    void vscode.window.showErrorMessage(
+      `Continue extension cannot activate on ${platformTarget}: ${platformCheck.reason}`,
+    );
+    const error = new Error(
+      `Continue extension cannot activate on ${platformTarget}: ${platformCheck.reason}`,
+    );
+
+    void Telemetry.capture(
+      "unsupported_platform_activation_attempt",
+      {
+        platform: platformTarget,
+        extensionVersion: getExtensionVersion(),
+        reason: platformCheck.reason,
+      },
+      true,
+    );
+
+    throw error;
+  }
+
   // Add necessary files
   getTsConfigPath();
   getContinueRcPath();
