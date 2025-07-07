@@ -65,8 +65,8 @@ export const ToolPoliciesSection = () => {
     mode === "chat"
       ? "All tools are disabled in Chat mode"
       : mode === "plan"
-        ? "Plan mode: only MCP and read-only tools"
-        : "Act mode: all tool policies apply";
+        ? "Plan mode: only read-only and MCP tools"
+        : "Agent mode: all tool policies apply";
 
   return (
     <>
