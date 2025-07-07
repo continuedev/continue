@@ -74,9 +74,7 @@
           {
             "group": "Help",
             "icon": "book-open",
-            "pages": [
-              "troubleshooting"
-            ]
+            "pages": ["troubleshooting"]
           }
         ]
       },
@@ -163,9 +161,7 @@
               {
                 "group": "Telemetry",
                 "icon": "chart-line",
-                "pages": [
-                  "customize/telemetry"
-                ]
+                "pages": ["customize/telemetry"]
               },
               "customize/custom-providers",
               "customize/json-reference",
@@ -249,9 +245,7 @@
           {
             "group": "Reference",
             "icon": "code",
-            "pages": [
-              "reference"
-            ]
+            "pages": ["reference"]
           }
         ]
       }
