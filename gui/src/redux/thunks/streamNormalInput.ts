@@ -115,21 +115,19 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(addPromptCompletionPair([next.value]));
 
       try {
-        if (state.session.mode === "chat" || state.session.mode === "agent") {
-          extra.ideMessenger.post("devdata/log", {
-            name: "chatInteraction",
-            data: {
-              prompt: next.value.prompt,
-              completion: next.value.completion,
-              modelProvider: selectedChatModel.underlyingProviderName,
-              modelTitle: selectedChatModel.title,
-              sessionId: state.session.id,
-              ...(state.session.mode === "agent" && {
-                tools: activeTools.map((tool) => tool.function.name),
-              }),
-            },
-          });
-        }
+        extra.ideMessenger.post("devdata/log", {
+          name: "chatInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: selectedChatModel.underlyingProviderName,
+            modelTitle: selectedChatModel.title,
+            sessionId: state.session.id,
+            ...(!!activeTools.length && {
+              tools: activeTools.map((tool) => tool.function.name),
+            }),
+          },
+        });
         // else if (state.session.mode === "edit") {
         //   extra.ideMessenger.post("devdata/log", {
         //     name: "editInteraction",
