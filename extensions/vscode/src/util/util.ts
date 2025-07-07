@@ -103,7 +103,7 @@ export function isUnsupportedPlatform(): {
   const platform = getPlatform();
   const arch = getArchitecture();
 
-  if (platform === "mac" && arch === "arm64") {
+  if (platform === "windows" && arch === "arm64") {
     return {
       isUnsupported: true,
       reason:
