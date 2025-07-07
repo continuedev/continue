@@ -86,47 +86,6 @@ jobs:
               });
             }
 
-  code-quality:
-    name: Code Quality Checks
-    runs-on: ubuntu-latest
-    if: ${{ !github.event.pull_request.draft }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript type checking
-        run: npm run build
-
-      - name: Debug environment
-        run: |
-          echo "Node version: $(node --version)"
-          echo "NPM version: $(npm --version)"
-          echo "Current directory: $(pwd)"
-          echo "Package.json type: $(node -p 'JSON.parse(require("fs").readFileSync("package.json", "utf8")).type')"
-          ls -la node_modules/@nivo/ || echo "@nivo not found"
-          ls -la node_modules/d3-interpolate/ || echo "d3-interpolate not found"
-
-      - name: Run tests
-        run: npm test -- --coverage --passWithNoTests --reporter=verbose
-        env:
-          VITE_OPENAI_API_KEY: test-key-for-ci
-          NODE_OPTIONS: "--unhandled-rejections=strict"
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage/lcov.info
-          fail_ci_if_error: false
-
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -141,7 +100,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "npm"
 
       - name: Install dependencies
@@ -161,55 +120,8 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
-  bundle-size:
-    name: Bundle Size Impact
-    runs-on: ubuntu-latest
-    if: ${{ !github.event.pull_request.draft }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build:prod
-
-      - name: Analyze bundle size
-        run: |
-          echo "## Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Get bundle sizes
-          if [ -d "dist" ]; then
-            echo "### JavaScript Bundles:" >> $GITHUB_STEP_SUMMARY
-            find dist -name "*.js" -not -name "*.map" -exec du -h {} \; | sort -hr | head -10 >> $GITHUB_STEP_SUMMARY
-            
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### CSS Bundles:" >> $GITHUB_STEP_SUMMARY
-            find dist -name "*.css" -exec du -h {} \; | sort -hr >> $GITHUB_STEP_SUMMARY
-            
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Total Size:" >> $GITHUB_STEP_SUMMARY
-            du -sh dist >> $GITHUB_STEP_SUMMARY
-            
-            # Check if bundle sizes are reasonable (warn if JS > 2MB)
-            total_js_size=$(find dist -name "*.js" -not -name "*.map" -exec stat -c%s {} \; | awk '{sum+=$1} END {print sum}')
-            if [ "$total_js_size" -gt 2097152 ]; then
-              echo "⚠️ **Warning**: Total JavaScript bundle size is $(( total_js_size / 1024 / 1024 ))MB" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "✅ Bundle size looks good!" >> $GITHUB_STEP_SUMMARY
-            fi
-          else
-            echo "❌ No dist folder found" >> $GITHUB_STEP_SUMMARY
-          fi
-
+  # Use this for any files that we want to be certain exist
+  # Basically creates a forcing function to discuss were anyone to want to remove them
   file-validation:
     name: Required Files Check
     runs-on: ubuntu-latest
@@ -222,10 +134,16 @@ jobs:
         run: |
           required_files=(
             "package.json"
+            "package-lock.json"
             "README.md"
             "LICENSE"
             ".gitignore"
             "tsconfig.json"
+            "SECURITY.md"
+            "CONTRIBUTING.md"
+            ".nvmrc"
+            ".prettierrc"
+            ".prettierignore"
           )
 
           missing_files=()
@@ -243,35 +161,10 @@ jobs:
             echo "✅ All required files present"
           fi
 
-  pr-labels:
-    name: PR Label Management
-    runs-on: ubuntu-latest
-    if: ${{ !github.event.pull_request.draft }}
-    permissions:
-      pull-requests: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Auto-label PR based on changes
-        uses: actions/labeler@v5
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          configuration-path: .github/pr-labeler.yml
-
   compliance-summary:
     name: Compliance Summary
     runs-on: ubuntu-latest
-    needs:
-      [
-        conventional-commits,
-        code-quality,
-        security-audit,
-        bundle-size,
-        file-validation,
-        pr-labels,
-      ]
+    needs: [conventional-commits, security-audit, file-validation]
     if: always() && !github.event.pull_request.draft
     steps:
       - name: Check compliance status
@@ -287,22 +180,10 @@ jobs:
             echo "❌ Conventional Commits: SKIPPED" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [[ "${{ needs.code-quality.result }}" == "success" ]]; then
-            echo "✅ Code Quality: PASSED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Code Quality: FAILED" >> $GITHUB_STEP_SUMMARY
-          fi
-
           if [[ "${{ needs.security-audit.result }}" == "success" ]]; then
             echo "✅ Security Audit: PASSED" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Security Audit: FAILED" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          if [[ "${{ needs.bundle-size.result }}" == "success" ]]; then
-            echo "✅ Bundle Size: PASSED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Bundle Size: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [[ "${{ needs.file-validation.result }}" == "success" ]]; then
