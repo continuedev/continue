@@ -254,8 +254,8 @@ const config = {
             from: ["/install/vscode", "/install/jetbrains"],
           },
           {
-            to: "/customize/deep-dives/settings",
-            from: "/advanced/deep-dives/settings",
+            to: "/customize/settings",
+            from: ["/advanced/deep-dives/settings", "/customize/deep-dives/settings"],
           },
           {
             to: "/customize/model-roles/intro",
