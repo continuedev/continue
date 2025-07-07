@@ -20,7 +20,8 @@ Deploy keys allow the GitHub Action to authenticate with hub.continue.dev. [Obta
 ### 3. Configure the GitHub Action[​](#3-configure-the-github-action "Direct link to 3. Configure the GitHub Action")
 
 <Check>
-  This step assumes you have already created an organization on hub.continue.dev. If not, learn more [here](/hub/governance/creating-an-org).
+  This step assumes you have already created an organization on
+  hub.continue.dev. If not, learn more [here](/hub/governance/creating-an-org).
 </Check>
 
 In the repository you created, navigate to `.github/workflows/main.yaml` and update the lines below to match your organization:
@@ -35,10 +36,9 @@ This is the only configuration necessary, but you can view the full list of opti
 
 Add the [YAML for your assistants and blocks](/reference) to the appropriate directories:
 
-* `assistants/public` for public assistants
-* `assistants/private` for private (visible only within your organization) assistants
-* `blocks/public` for public blocks
-* `blocks/private` for private blocks
+- `assistants/public` for public assistants
+- `assistants/private` for private (visible only within your organization) assistants
+- `blocks/public` for public blocks
+- `blocks/private` for private blocks
 
 Then, commit and push your changes. Once the GitHub Action has completed running, you should be able to view the assistants within your organization on hub.continue.dev.
-

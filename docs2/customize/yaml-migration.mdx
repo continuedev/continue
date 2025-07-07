@@ -5,9 +5,9 @@ description: "Continue's YAML configuration format provides more readable, maint
 
 See also
 
-* [Intro to YAML](https://yaml.org/)
-* [JSON Continue Config Reference](/reference)
-* [YAML Continue Config Reference](/reference)
+- [Intro to YAML](https://yaml.org/)
+- [JSON Continue Config Reference](/reference)
+- [YAML Continue Config Reference](/reference)
 
 ## Create YAML file[​](#create-yaml-file "Direct link to Create YAML file")
 
@@ -25,18 +25,17 @@ name: my-configurationversion: 0.0.1schema: v1
 
 Add all model configurations in `config.json`, including models in `models`, `tabAutocompleteModel`, `embeddingsProvider`, and `reranker`, to the `models` section of your new YAML config file. A new `roles` YAML field specifies which roles a model can be used for, with possible values `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`.
 
-* `models` in config should have `roles: [chat]`
+- `models` in config should have `roles: [chat]`
 
-* `tabAutocompleteModel`(s) in config should have `roles: [autocomplete]`
+- `tabAutocompleteModel`(s) in config should have `roles: [autocomplete]`
 
-* `embeddingsProvider` in config should have `roles: [embed]`
+- `embeddingsProvider` in config should have `roles: [embed]`
 
-* `reranker` in config should have `roles: [rerank]`
+- `reranker` in config should have `roles: [rerank]`
 
-* `experimental.modelRoles` is replaced by simply adding roles to the model
-
-  * `inlineEdit` -> e.g. `roles: [chat, edit]`
-  * `applyCodeBlock` -> e.g. `roles: [chat, apply]`
+- `experimental.modelRoles` is replaced by simply adding roles to the model
+  - `inlineEdit` -> e.g. `roles: [chat, edit]`
+  - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
 
 Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/reference#models)
 
@@ -47,7 +46,41 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
 config.json
 
 ```json
-{  "models": [    {      "title": "GPT-4",      "provider": "openai",      "model": "gpt-4",      "apiKey": "<YOUR_OPENAI_API_KEY>",      "completionOptions": {        "temperature": 0.5,        "maxTokens": 2000      }    },    {      "title": "Ollama",      "provider": "ollama",      "model": "AUTODETECT"    },    {      "title": "My Open AI Compatible Model",      "provider": "openai",      "apiBase": "http://3.3.3.3/v1",      "model": "my-openai-compatible-model",      "requestOptions": {        "headers": { "X-Auth-Token": "<API_KEY>" }      }    }  ],  "tabAutocompleteModel": {    "title": "My Starcoder",    "provider": "ollama",    "model": "starcoder2:3b"  },  "embeddingsProvider": {    "provider": "openai",    "model": "text-embedding-ada-002",    "apiKey": "<YOUR_OPENAI_API_KEY>",    "maxEmbeddingChunkSize": 256,    "maxEmbeddingBatchSize": 5  },  "reranker": {    "name": "voyage",    "params": {      "model": "rerank-2",      "apiKey": "<YOUR_VOYAGE_API_KEY>"    }  }}
+{
+  "models": [
+    {
+      "title": "GPT-4",
+      "provider": "openai",
+      "model": "gpt-4",
+      "apiKey": "<YOUR_OPENAI_API_KEY>",
+      "completionOptions": { "temperature": 0.5, "maxTokens": 2000 }
+    },
+    { "title": "Ollama", "provider": "ollama", "model": "AUTODETECT" },
+    {
+      "title": "My Open AI Compatible Model",
+      "provider": "openai",
+      "apiBase": "http://3.3.3.3/v1",
+      "model": "my-openai-compatible-model",
+      "requestOptions": { "headers": { "X-Auth-Token": "<API_KEY>" } }
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "My Starcoder",
+    "provider": "ollama",
+    "model": "starcoder2:3b"
+  },
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-ada-002",
+    "apiKey": "<YOUR_OPENAI_API_KEY>",
+    "maxEmbeddingChunkSize": 256,
+    "maxEmbeddingBatchSize": 5
+  },
+  "reranker": {
+    "name": "voyage",
+    "params": { "model": "rerank-2", "apiKey": "<YOUR_VOYAGE_API_KEY>" }
+  }
+}
 ```
 
 **After**
@@ -64,15 +97,21 @@ Note that the `repoMapFileSelection` experimental model role has been deprecated
 
 The JSON `contextProviders` field is replaced by the YAML `context` array.
 
-* JSON `name` maps to `provider`
-* JSON `params` map to `params`
+- JSON `name` maps to `provider`
+- JSON `params` map to `params`
 
 **Before**
 
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "docs"    },    {      "name": "codebase",      "params": {        "nRetrieve": 30,        "nFinal": 3      }    },    {      "name": "diff",      "params": {}    }  ]}
+{
+  "contextProviders": [
+    { "name": "docs" },
+    { "name": "codebase", "params": { "nRetrieve": 30, "nFinal": 3 } },
+    { "name": "diff", "params": {} }
+  ]
+}
 ```
 
 **After**
@@ -92,7 +131,7 @@ The `systemMessage` property has been replaced with a `rules` property that take
 config.json
 
 ```json
-{  "systemMessage": "Always give concise responses"}
+{ "systemMessage": "Always give concise responses" }
 ```
 
 **After**
@@ -112,7 +151,15 @@ Rather than with `customCommands`, you can now use the `prompts` field to define
 config.json
 
 ```json
-{  "customCommands": [    {      "name": "check",      "description": "Check for mistakes in my code",      "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."    }  ]}
+{
+  "customCommands": [
+    {
+      "name": "check",
+      "description": "Check for mistakes in my code",
+      "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
+    }
+  ]
+}
 ```
 
 **After**
@@ -132,7 +179,12 @@ Documentation is largely the same, but the `title` property has been replaced wi
 config.json
 
 ```json
-{  "docs": [    {      "startUrl": "https://docs.nestjs.com/",      "title": "nest.js"    },    {      "startUrl": "https://mysite.com/docs/",      "title": "My site"    }  ]}
+{
+  "docs": [
+    { "startUrl": "https://docs.nestjs.com/", "title": "nest.js" },
+    { "startUrl": "https://mysite.com/docs/", "title": "My site" }
+  ]
+}
 ```
 
 **After**
@@ -147,18 +199,31 @@ docs:  - name: nest.js    startUrl: https://docs.nestjs.com/  - name: My site   
 
 **Properties:**
 
-* `name` (**required**): The name of the MCP server.
-* `command` (**required**): The command used to start the server.
-* `args`: An optional array of arguments for the command.
-* `env`: An optional map of environment variables for the server process.
-* `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
+- `name` (**required**): The name of the MCP server.
+- `command` (**required**): The command used to start the server.
+- `args`: An optional array of arguments for the command.
+- `env`: An optional map of environment variables for the server process.
+- `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 
 **Before**
 
 config.json
 
 ```json
-{  "experimental": {    "modelContextProtocolServers": [      {        "transport": {          "type": "stdio",          "command": "uvx",          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"],          "env": {            "KEY": "<VALUE>"          }        }      }    ]  }}
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"],
+          "env": { "KEY": "<VALUE>" }
+        }
+      }
+    ]
+  }
+}
 ```
 
 **After**
@@ -169,7 +234,7 @@ config.yaml
 mcpServers:  - name: My MCP Server    command: uvx    args:      - mcp-server-sqlite      - --db-path      - /Users/NAME/test.db    env:      KEY: <VALUE>
 ```
 
-***
+---
 
 ## Deprecated configuration options[​](#deprecated-configuration-options "Direct link to Deprecated configuration options")
 
@@ -179,31 +244,29 @@ See the [JSON Config Reference](/reference) for more information on fully deprec
 
 The following top-level fields from `config.json` still work when using `config.json` but have been deprecated and don't have a YAML equivalent:
 
-* Slash commands (JSON `slashCommands`)
+- Slash commands (JSON `slashCommands`)
 
-* top-level `requestOptions`
+- top-level `requestOptions`
 
-* top-level `completionOptions`
+- top-level `completionOptions`
 
-* `tabAutocompleteOptions`
+- `tabAutocompleteOptions`
+  - `disable`
+  - `maxPromptTokens`
+  - `debounceDelay`
+  - `maxSuffixPercentage`
+  - `prefixPercentage`
+  - `template`
+  - `onlyMyCode`
 
-  * `disable`
-  * `maxPromptTokens`
-  * `debounceDelay`
-  * `maxSuffixPercentage`
-  * `prefixPercentage`
-  * `template`
-  * `onlyMyCode`
-
-* `analytics`
+- `analytics`
 
 The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
 
-* `customCommands`
-* `experimental`
-* `userToken`
+- `customCommands`
+- `experimental`
+- `userToken`
 
 ## New Configuration options[​](#new-configuration-options "Direct link to New Configuration options")
 
 The YAML configuration format offers new configuration options not available in the JSON format. See the [YAML Config Reference](/reference) for more information.
-

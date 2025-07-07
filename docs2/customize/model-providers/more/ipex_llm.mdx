@@ -2,10 +2,10 @@
 title: "Intel Extension for PyTorch"
 ---
 
-
-
 <Info>
-[**IPEX-LLM**](https://github.com/intel-analytics/ipex-llm) is a PyTorch library for running LLM on Intel CPU and GPU (e.g., local PC with iGPU, discrete GPU such as Arc A-Series, Flex and Max) with very low latency.
+  [**IPEX-LLM**](https://github.com/intel-analytics/ipex-llm) is a PyTorch
+  library for running LLM on Intel CPU and GPU (e.g., local PC with iGPU,
+  discrete GPU such as Arc A-Series, Flex and Max) with very low latency.
 </Info>
 
 IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to [this guide](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/ollama_quickstart.html) from IPEX-LLM official documentation about how to install and run Ollama serve accelerated by IPEX-LLM on Intel GPU. You can then configure Continue to use the IPEX-LLM accelerated `"ollama"` provider as follows:
@@ -63,5 +63,8 @@ If you would like to reach the Ollama service from another machine, make sure yo
 </Tabs>
 
 <Tip>
-If you would like to preload the model before your first conversation with that model in Continue, you could refer to [here](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/continue_quickstart.html#pull-and-prepare-the-model) for more information.
+  If you would like to preload the model before your first conversation with
+  that model in Continue, you could refer to
+  [here](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/continue_quickstart.html#pull-and-prepare-the-model)
+  for more information.
 </Tip>

@@ -15,8 +15,8 @@ Ollama is the fastest way to get up and running with local language models. We r
 2. Open a terminal and run `ollama run llama3.1:8b`
 3. Change your Continue config file like this:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -27,13 +27,19 @@ models:  - name: Llama 3.1 8b    provider: ollama    model: llama3.1-8b
 config.json
 
 ```json
-{   "models": [     {       "title": "Llama 3.1 8b",       "provider": "ollama",       "model": "llama3.1-8b"     }   ] }
+{
+  "models": [
+    { "title": "Llama 3.1 8b", "provider": "ollama", "model": "llama3.1-8b" }
+  ]
+}
 ```
 
 ## Groq[​](#groq "Direct link to Groq")
 
 <Info>
-  Check if your chosen model is still supported by referring to the [model documentation](https://console.groq.com/docs/models). If a model has been deprecated, you may encounter a 404 error when attempting to use it.
+  Check if your chosen model is still supported by referring to the [model
+  documentation](https://console.groq.com/docs/models). If a model has been
+  deprecated, you may encounter a 404 error when attempting to use it.
 </Info>
 
 Groq provides the fastest available inference for open-source language models, including the entire Llama 3.1 family.
@@ -41,8 +47,8 @@ Groq provides the fastest available inference for open-source language models, i
 1. Obtain an API key [here](https://console.groq.com/keys)
 2. Update your Continue config file like this:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -53,7 +59,16 @@ models:  - name: Llama 3.3 70b Versatile    provider: groq    model: llama-3.3-7
 config.json
 
 ```json
-{  "models": [    {      "title": "Llama 3.3 70b Versatile",      "provider": "groq",      "model": "llama-3.3-70b-versatile",      "apiKey": "<YOUR_GROQ_API_KEY>"    }  ]}
+{
+  "models": [
+    {
+      "title": "Llama 3.3 70b Versatile",
+      "provider": "groq",
+      "model": "llama-3.3-70b-versatile",
+      "apiKey": "<YOUR_GROQ_API_KEY>"
+    }
+  ]
+}
 ```
 
 ## Together AI[​](#together-ai "Direct link to Together AI")
@@ -64,8 +79,8 @@ Together AI provides fast and reliable inference of open-source models. You'll b
 2. Copy your API key that appears on the welcome screen
 3. Update your Continue config file like this:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -76,7 +91,16 @@ models:  - name: Llama 3.1 405b    provider: together    model: llama3.1-405b   
 config.json
 
 ```json
-{   "models": [     {       "title": "Llama 3.1 405b",       "provider": "together",       "model": "llama3.1-405b",       "apiKey": "<YOUR_TOGETHER_API_KEY>"     }   ]}
+{
+  "models": [
+    {
+      "title": "Llama 3.1 405b",
+      "provider": "together",
+      "model": "llama3.1-405b",
+      "apiKey": "<YOUR_TOGETHER_API_KEY>"
+    }
+  ]
+}
 ```
 
 ## Replicate[​](#replicate "Direct link to Replicate")
@@ -86,8 +110,8 @@ Replicate makes it easy to host and run open-source AI with an API.
 1. Get your Replicate API key [here](https://replicate.ai/)
 2. Change your Continue config file like this:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -98,19 +122,28 @@ models:  - name: Llama 3.1 405b    provider: replicate    model: llama3.1-405b  
 config.json
 
 ```json
-{   "models": [     {       "title": "Llama 3.1 405b",       "provider": "replicate",       "model": "llama3.1-405b",       "apiKey": "<YOUR_REPLICATE_API_KEY>"     }   ]}
+{
+  "models": [
+    {
+      "title": "Llama 3.1 405b",
+      "provider": "replicate",
+      "model": "llama3.1-405b",
+      "apiKey": "<YOUR_REPLICATE_API_KEY>"
+    }
+  ]
+}
 ```
 
 ## SambaNova[​](#sambanova "Direct link to SambaNova")
 
 SambaNova Cloud provides world record Llama3.1 70B/405B serving.
 
-1. Create an account [here](http://cloud.sambanova.ai?utm_source=continue\&utm_medium=external\&utm_campaign=cloud_signup)
+1. Create an account [here](http://cloud.sambanova.ai?utm_source=continue&utm_medium=external&utm_campaign=cloud_signup)
 2. Copy your API key
 3. Update your Continue config file like this:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -121,7 +154,16 @@ models:  - name: SambaNova Llama 3.1 405B    provider: sambanova    model: llama
 config.json
 
 ```json
-{  "models": [    {      "title": "SambaNova Llama 3.1 405B",      "provider": "sambanova",      "model": "llama3.1-405b",      "apiKey": "<YOUR_SAMBA_API_KEY>"    }  ]}
+{
+  "models": [
+    {
+      "title": "SambaNova Llama 3.1 405B",
+      "provider": "sambanova",
+      "model": "llama3.1-405b",
+      "apiKey": "<YOUR_SAMBA_API_KEY>"
+    }
+  ]
+}
 ```
 
 ## Cerebras Inference[​](#cerebras-inference "Direct link to Cerebras Inference")
@@ -132,8 +174,8 @@ Cerebras Inference uses specialized silicon to provides fast inference for the L
 2. Create and copy the API key for use in Continue.
 3. Update your Continue config file:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -144,6 +186,14 @@ models:  - name: Cerebras Llama 3.1 70B    provider: cerebras    model: llama3.1
 config.json
 
 ```json
-{  "models": [   {      "title": "Cerebras Llama 3.1 70B",      "provider": "cerebras",      "model": "llama3.1-70b",      "apiKey": "<YOUR_CEREBRAS_API_KEY>"    }  ]}
+{
+  "models": [
+    {
+      "title": "Cerebras Llama 3.1 70B",
+      "provider": "cerebras",
+      "model": "llama3.1-70b",
+      "apiKey": "<YOUR_CEREBRAS_API_KEY>"
+    }
+  ]
+}
 ```
-

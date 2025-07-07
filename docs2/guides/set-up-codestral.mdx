@@ -12,8 +12,8 @@ title: "How to Set Up Codestral"
 
 4. To use Codestral as your model for both `autocomplete` and `chat`, insert your Mistral API key below and add it to your configuration file:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -24,8 +24,26 @@ models:  - name: Codestral    provider: mistral    model: codestral-latest    ap
 config.json
 
 ```json
-{  "models": [    {      "title": "Codestral",      "provider": "mistral",      "model": "codestral-latest",      "apiKey": "<YOUR_CODESTRAL_API_KEY>",      "apiBase": "https://codestral.mistral.ai/v1"    }  ],  "tabAutocompleteModel": [    {      "title": "Codestral",      "provider": "mistral",      "model": "codestral-latest",      "apiKey": "<YOUR_CODESTRAL_API_KEY>",      "apiBase": "https://codestral.mistral.ai/v1"    }  ]}
+{
+  "models": [
+    {
+      "title": "Codestral",
+      "provider": "mistral",
+      "model": "codestral-latest",
+      "apiKey": "<YOUR_CODESTRAL_API_KEY>",
+      "apiBase": "https://codestral.mistral.ai/v1"
+    }
+  ],
+  "tabAutocompleteModel": [
+    {
+      "title": "Codestral",
+      "provider": "mistral",
+      "model": "codestral-latest",
+      "apiKey": "<YOUR_CODESTRAL_API_KEY>",
+      "apiBase": "https://codestral.mistral.ai/v1"
+    }
+  ]
+}
 ```
 
 5. If you run into any issues or have any questions, please join our Discord and post in the `#help` channel [here](https://discord.gg/EfJEfdFnDQ)
-

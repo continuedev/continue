@@ -3,8 +3,8 @@
 // Script to convert Docusaurus redirects to Mintlify format
 // Run: node migrate-redirects.js
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Extract redirects from Docusaurus config
 const docusaurusRedirects = [
@@ -42,10 +42,7 @@ const docusaurusRedirects = [
   },
   {
     to: "/customize/settings",
-    from: [
-      "/advanced/deep-dives/settings",
-      "/customize/deep-dives/settings",
-    ],
+    from: ["/advanced/deep-dives/settings", "/customize/deep-dives/settings"],
   },
   {
     to: "/customize/model-roles/intro",
@@ -444,19 +441,21 @@ const docusaurusRedirects = [
 // Convert to Mintlify format
 function convertToMintlifyRedirects(docusaurusRedirects) {
   const mintlifyRedirects = [];
-  
-  docusaurusRedirects.forEach(redirect => {
+
+  docusaurusRedirects.forEach((redirect) => {
     const destination = redirect.to;
-    const sources = Array.isArray(redirect.from) ? redirect.from : [redirect.from];
-    
-    sources.forEach(source => {
+    const sources = Array.isArray(redirect.from)
+      ? redirect.from
+      : [redirect.from];
+
+    sources.forEach((source) => {
       mintlifyRedirects.push({
         source: source,
-        destination: destination
+        destination: destination,
       });
     });
   });
-  
+
   return mintlifyRedirects;
 }
 
@@ -464,8 +463,8 @@ function convertToMintlifyRedirects(docusaurusRedirects) {
 const mintlifyRedirects = convertToMintlifyRedirects(docusaurusRedirects);
 
 // Read current mint.json
-const mintJsonPath = path.join(__dirname, 'mint.json');
-const mintJson = JSON.parse(fs.readFileSync(mintJsonPath, 'utf8'));
+const mintJsonPath = path.join(__dirname, "mint.json");
+const mintJson = JSON.parse(fs.readFileSync(mintJsonPath, "utf8"));
 
 // Add redirects to mint.json
 mintJson.redirects = mintlifyRedirects;
@@ -473,12 +472,14 @@ mintJson.redirects = mintlifyRedirects;
 // Write back to mint.json
 fs.writeFileSync(mintJsonPath, JSON.stringify(mintJson, null, 2));
 
-console.log(`✅ Successfully migrated ${mintlifyRedirects.length} redirects to mint.json`);
+console.log(
+  `✅ Successfully migrated ${mintlifyRedirects.length} redirects to mint.json`,
+);
 console.log(`📝 Redirects added to mint.json`);
 
 // Also output the redirects for review
-console.log('\n📋 Sample redirects:');
-mintlifyRedirects.slice(0, 10).forEach(redirect => {
+console.log("\n📋 Sample redirects:");
+mintlifyRedirects.slice(0, 10).forEach((redirect) => {
   console.log(`  ${redirect.source} → ${redirect.destination}`);
 });
 console.log(`  ... and ${mintlifyRedirects.length - 10} more`);

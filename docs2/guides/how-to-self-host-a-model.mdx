@@ -3,11 +3,11 @@ title: "How to Self-Host a Model"
 description: "You can deploy a model in your , , , , or  using:"
 ---
 
-* [HuggingFace TGI](https://github.com/continuedev/deploy-os-code-llm#tgi)
-* [vLLM](https://github.com/continuedev/deploy-os-code-llm#vllm)
-* [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
-* [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
-* [Lambda](https://github.com/continuedev/deploy-os-code-llm#lambda)
+- [HuggingFace TGI](https://github.com/continuedev/deploy-os-code-llm#tgi)
+- [vLLM](https://github.com/continuedev/deploy-os-code-llm#vllm)
+- [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
+- [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
+- [Lambda](https://github.com/continuedev/deploy-os-code-llm#lambda)
 
 ## Self-hosting an open-source model[​](#self-hosting-an-open-source-model "Direct link to Self-hosting an open-source model")
 
@@ -19,8 +19,8 @@ However, if neither of these are the case, you will need to wire up a new LLM ob
 
 Basic authentication can be done with any provider using the `apiKey` field:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -31,15 +31,24 @@ models:  - name: Ollama    provider: ollama    model: llama2-7b    apiKey: <YOUR
 config.json
 
 ```json
-{  "models": [    {      "title": "Ollama",      "provider": "ollama",      "model": "llama2-7b",      "apiKey": "<YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>"    }  ]}
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "llama2-7b",
+      "apiKey": "<YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>"
+    }
+  ]
+}
 ```
 
 This translates to the header `"Authorization": "Bearer xxx"`.
 
 If you need to send custom headers for authentication, you may use the `requestOptions.headers` property like in this example with Ollama:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -50,13 +59,22 @@ models:  - name: Ollama    provider: ollama    model: llama2-7b    requestOption
 config.json
 
 ```json
-{  "models": [    {      "title": "Ollama",      "provider": "ollama",      "model": "llama2-7b",      "requestOptions": {        "headers": {          "X-Auth-Token": "xxx"        }      }    }  ]}
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "llama2-7b",
+      "requestOptions": { "headers": { "X-Auth-Token": "xxx" } }
+    }
+  ]
+}
 ```
 
 Similarly if your model requires a Certificate for authentication, you may use the `requestOptions.clientCertificate` property like in the example below:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -67,6 +85,20 @@ models:  - name: Ollama    provider: ollama    model: llama2-7b    requestOption
 config.json
 
 ```json
-{  "models": [    {      "title": "Ollama",      "provider": "ollama",      "model": "llama2-7b",      "requestOptions": {        "clientCertificate": {          "cert": "C:\\tempollama.pem",          "key": "C:\\tempollama.key",          "passphrase": "c0nt!nu3"        }      }    }  ]}
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "llama2-7b",
+      "requestOptions": {
+        "clientCertificate": {
+          "cert": "C:\\tempollama.pem",
+          "key": "C:\\tempollama.key",
+          "passphrase": "c0nt!nu3"
+        }
+      }
+    }
+  ]
+}
 ```
-

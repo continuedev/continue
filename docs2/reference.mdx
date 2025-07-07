@@ -6,15 +6,15 @@ title: "config.yaml Reference"
 
 Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from [the Hub](https://hub.continue.dev/explore/assistants) or locally
 
-* [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to the extension
+- [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to the extension
 
-* Locally
-
-  * in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
-  * in your workspace in a `/.continue/assistants` folder, with the same naming convention
+- Locally
+  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
+  - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 <Info>
-  Config YAML replaces `config.json`, which is deprecated. View the **[Migration Guide](/customize/yaml-migration)**.
+  Config YAML replaces `config.json`, which is deprecated. View the **[Migration
+  Guide](/customize/yaml-migration)**.
 </Info>
 
 An assistant is made up of:
@@ -50,26 +50,26 @@ Place your YAML files in the following folders:
 
 Assistants:
 
-* `.continue/assistants` - for assistants
+- `.continue/assistants` - for assistants
 
 Blocks:
 
-* `.continue/rules` - for rules
-* `.continue/models` - for models
-* `.continue/prompts` - for prompts
-* `.continue/context` - for context providers
-* `.continue/docs` - for docs
-* `.continue/data` - for data
-* `.continue/mcpServers` - for MCP Servers
+- `.continue/rules` - for rules
+- `.continue/models` - for models
+- `.continue/prompts` - for prompts
+- `.continue/context` - for context providers
+- `.continue/docs` - for docs
+- `.continue/data` - for data
+- `.continue/mcpServers` - for MCP Servers
 
 You can find many examples of each of these block types on the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
 <Info>
   Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) can read secret values:
 
-  * globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
-  * per-workspace, from a `.env` file located at the root of the current workspace.
-</Info>
+- globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
+- per-workspace, from a `.env` file located at the root of the current workspace.
+  </Info>
 
 ### Inputs[​](#inputs "Direct link to Inputs")
 
@@ -109,18 +109,18 @@ Below are details for each property that can be set in `config.yaml`.
 
 The top-level properties in the `config.yaml` configuration file are:
 
-* [`name`](#name) (**required**)
-* [`version`](#version) (**required**)
-* [`schema`](#schema) (**required**)
-* [`models`](#models)
-* [`context`](#context)
-* [`rules`](#rules)
-* [`prompts`](#prompts)
-* [`docs`](#docs)
-* [`mcpServers`](#mcpservers)
-* [`data`](#data)
+- [`name`](#name) (**required**)
+- [`version`](#version) (**required**)
+- [`schema`](#schema) (**required**)
+- [`models`](#models)
+- [`context`](#context)
+- [`rules`](#rules)
+- [`prompts`](#prompts)
+- [`docs`](#docs)
+- [`mcpServers`](#mcpservers)
+- [`data`](#data)
 
-***
+---
 
 ### `name`[​](#name "Direct link to name")
 
@@ -132,7 +132,7 @@ config.yaml
 name: MyProject
 ```
 
-***
+---
 
 ### `version`[​](#version "Direct link to version")
 
@@ -142,7 +142,7 @@ The `version` property specifies the version of your project or configuration.
 
 The `schema` property specifies the schema version used for the `config.yaml`, e.g. `v1`
 
-***
+---
 
 ### `models`[​](#models "Direct link to models")
 
@@ -150,62 +150,58 @@ The `models` section defines the language models used in your configuration. Mod
 
 **Properties:**
 
-* `name` (**required**): A unique name to identify the model within your configuration.
+- `name` (**required**): A unique name to identify the model within your configuration.
 
-* `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
+- `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 
-* `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
+- `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
 
-* `apiBase`: Can be used to override the default API base that is specified per model
+- `apiBase`: Can be used to override the default API base that is specified per model
 
-* `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
+- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 
-* `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
 
-* `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
+- `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 
-* `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chat`, [`edit`](/customize/model-roles#edit-prompt-templating), [`apply`](/customize/model-roles#apply-prompt-templating) and [`autocomplete`](/customize/model-roles#autocomplete-prompt-templating). The `chat` property must be a valid template name, such as `llama3` or `anthropic`.
+- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chat`, [`edit`](/customize/model-roles#edit-prompt-templating), [`apply`](/customize/model-roles#apply-prompt-templating) and [`autocomplete`](/customize/model-roles#autocomplete-prompt-templating). The `chat` property must be a valid template name, such as `llama3` or `anthropic`.
 
-* `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
-  * `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
+- `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
+  - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
 
-* `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
+- `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
+  - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+  - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
 
-  * `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
-  * `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+- `defaultCompletionOptions`: Default completion options for model settings.
+  - `contextLength`: Maximum context length of the model, typically in tokens.
+  - `maxTokens`: Maximum number of tokens to generate in a completion.
+  - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
+  - `topP`: The cumulative probability for nucleus sampling.
+  - `topK`: Maximum number of tokens considered at each step.
+  - `stop`: An array of stop tokens that will terminate the completion.
+  - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
+  - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 
-* `defaultCompletionOptions`: Default completion options for model settings.
+- `requestOptions`: HTTP request options specific to the model.
+  - `timeout`: Timeout for each request to the language model.
 
-  * `contextLength`: Maximum context length of the model, typically in tokens.
-  * `maxTokens`: Maximum number of tokens to generate in a completion.
-  * `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
-  * `topP`: The cumulative probability for nucleus sampling.
-  * `topK`: Maximum number of tokens considered at each step.
-  * `stop`: An array of stop tokens that will terminate the completion.
-  * `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
-  * `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
+  - `verifySsl`: Whether to verify SSL certificates for requests.
 
-* `requestOptions`: HTTP request options specific to the model.
+  - `caBundlePath`: Path to a custom CA bundle for HTTP requests.
 
-  * `timeout`: Timeout for each request to the language model.
+  - `proxy`: Proxy URL for HTTP requests.
 
-  * `verifySsl`: Whether to verify SSL certificates for requests.
+  - `headers`: Custom headers for HTTP requests.
 
-  * `caBundlePath`: Path to a custom CA bundle for HTTP requests.
+  - `extraBodyProperties`: Additional properties to merge with the HTTP request body.
 
-  * `proxy`: Proxy URL for HTTP requests.
+  - `noProxy`: List of hostnames that should bypass the specified proxy.
 
-  * `headers`: Custom headers for HTTP requests.
-
-  * `extraBodyProperties`: Additional properties to merge with the HTTP request body.
-
-  * `noProxy`: List of hostnames that should bypass the specified proxy.
-
-  * `clientCertificate`: Client certificate for HTTP requests.
-
-    * `cert`: Path to the client certificate file.
-    * `key`: Path to the client certificate key file.
-    * `passphrase`: Optional passphrase for the client certificate key file.
+  - `clientCertificate`: Client certificate for HTTP requests.
+    - `cert`: Path to the client certificate file.
+    - `key`: Path to the client certificate key file.
+    - `passphrase`: Optional passphrase for the client certificate key file.
 
 #### Example[​](#example "Direct link to Example")
 
@@ -215,7 +211,7 @@ config.yaml
 models:  - name: GPT-4o    provider: openai    model: gpt-4o    roles:      - chat      - edit      - apply    defaultCompletionOptions:      temperature: 0.7      maxTokens: 1500  - name: Codestral    provider: mistral    model: codestral-latest    roles:      - autocomplete  - name: My Model - OpenAI-Compatible    provider: openai    apiBase: http://my-endpoint/v1    model: my-custom-model    capabilities:      - tool_use      - image_input    roles:      - chat      - edit
 ```
 
-***
+---
 
 ### `context`[​](#context "Direct link to context")
 
@@ -225,9 +221,9 @@ More information about usage/params for each context provider can be found [here
 
 **Properties:**
 
-* `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`)
-* `name`: Optional name for the provider
-* `params`: Optional parameters to configure the context provider's behavior.
+- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`)
+- `name`: Optional name for the provider
+- `params`: Optional parameters to configure the context provider's behavior.
 
 **Example:**
 
@@ -237,7 +233,7 @@ config.yaml
 context:  - provider: file  - provider: code  - provider: codebase    params:      nFinal: 10  - provider: docs  - provider: diff  - provider: http    name: Context Server 1    params:      url: "https://api.example.com/server1"  - provider: folder  - provider: terminal
 ```
 
-***
+---
 
 ### `rules`[​](#rules "Direct link to rules")
 
@@ -245,9 +241,9 @@ List of rules that the LLM should follow. These are concatenated into the system
 
 Explicit rules can either be simple text or an object with the following properties:
 
-* `name` (**required**): A display name/title for the rule
-* `rule` (**required**): The text content of the rule
-* `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
+- `name` (**required**): A display name/title for the rule
+- `rule` (**required**): The text content of the rule
+- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
 config.yaml
 
@@ -255,7 +251,7 @@ config.yaml
 rules:  - Always annotate Python functions with their parameter and return types  - name: TypeScript best practices    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.    globs: "**/*.{ts,tsx}"  - name: TypeScript test patterns    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.    globs:      - "src/**/*.test.ts"      - "tests/**/*.ts"  - uses: myprofile/my-mood-setter    with:      TONE: concise
 ```
 
-***
+---
 
 ### `prompts`[​](#prompts "Direct link to prompts")
 
@@ -267,7 +263,7 @@ config.yaml
 prompts:  - name: check    description: Check for mistakes in my code    prompt: |      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:        - Syntax errors        - Logic errors        - Security vulnerabilities
 ```
 
-***
+---
 
 ### `docs`[​](#docs "Direct link to docs")
 
@@ -275,12 +271,12 @@ List of documentation sites to index.
 
 **Properties:**
 
-* `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
-* `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
+- `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
+- `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
 
-* `maxDepth`: Maximum link depth for crawling. Default `4`
-* `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
-* `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
+- `maxDepth`: Maximum link depth for crawling. Default `4`
+- `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
 Example
 
@@ -290,7 +286,7 @@ config.yaml
 docs:  - name: Continue    startUrl: https://docs.continue.dev/intro    favicon: https://docs.continue.dev/favicon.ico
 ```
 
-***
+---
 
 ### `mcpServers`[​](#mcpservers "Direct link to mcpservers")
 
@@ -298,12 +294,12 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 
 **Properties:**
 
-* `name` (**required**): The name of the MCP server.
-* `command` (**required**): The command used to start the server.
-* `args`: An optional array of arguments for the command.
-* `env`: An optional map of environment variables for the server process.
-* `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
-* `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
+- `name` (**required**): The name of the MCP server.
+- `command` (**required**): The command used to start the server.
+- `args`: An optional array of arguments for the command.
+- `env`: An optional map of environment variables for the server process.
+- `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
+- `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
 **Example:**
 
@@ -319,22 +315,21 @@ Destinations to which [development data](/customize/overview#development-data) w
 
 **Properties:**
 
-* `name` (**required**): The display name of the data destination
+- `name` (**required**): The display name of the data destination
 
-* `destination` (**required**): The destination/endpoint that will receive the data. Can be:
+- `destination` (**required**): The destination/endpoint that will receive the data. Can be:
+  - an HTTP endpoint that will receive a POST request with a JSON blob
+  - a file URL to a directory in which events will be dumpted to `.jsonl` files
 
-  * an HTTP endpoint that will receive a POST request with a JSON blob
-  * a file URL to a directory in which events will be dumpted to `.jsonl` files
+- `schema` (**required**): the schema version of the JSON blobs to be sent. Options include `0.1.0` and `0.2.0`
 
-* `schema` (**required**): the schema version of the JSON blobs to be sent. Options include `0.1.0` and `0.2.0`
+- `events`: an array of event names to include. Defaults to all events if not specified.
 
-* `events`: an array of event names to include. Defaults to all events if not specified.
+- `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file contents, prompts, and completions. Defaults to `all`
 
-* `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file contents, prompts, and completions. Defaults to `all`
+- `apiKey`: api key to be sent with request (Bearer header)
 
-* `apiKey`: api key to be sent with request (Bearer header)
-
-* `requestOptions`: Options for event POST requests. Same format as [model requestOptions](#models).
+- `requestOptions`: Options for event POST requests. Same format as [model requestOptions](#models).
 
   **Example:**
 
@@ -344,7 +339,7 @@ config.yaml
 data:  - name: Local Data Bank    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data    schema: 0.2.0    level: all  - name: My Private Company    destination: https://mycompany.com/ingest    schema: 0.2.0    level: noCode    events:      - autocomplete      - chatInteraction
 ```
 
-***
+---
 
 ## Complete YAML Config Example[​](#complete-yaml-config-example "Direct link to Complete YAML Config Example")
 
@@ -365,4 +360,3 @@ config.yaml
 ```
 %YAML 1.1---name: MyProjectversion: 0.0.1schema: v1model_defaults: &model_defaults  provider: openai  apiKey: my-api-key  apiBase: https://api.example.com/llmmodels:  - name: mistral    <<: *model_defaults    model: mistral-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b-instruct    <<: *model_defaults    model: qwen2.5-coder-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b    <<: *model_defaults    model: qwen2.5-coder-7b    useLegacyCompletionsEndpoint: false    roles:      - autocomplete
 ```
-

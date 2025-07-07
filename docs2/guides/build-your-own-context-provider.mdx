@@ -7,8 +7,8 @@ description: "Continue offers several way to provide your custom context to the 
 
 Continue can retrieve context from a custom HTTP server that you create and serve. Add the `@HTTP` context provider to your configuration like this:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -19,10 +19,19 @@ context:  provider: http  params:    url: https://myserver.com/context-provider 
 config.json
 
 ```json
-{  "name": "http",  "params": {    "url": "https://myserver.com/context-provider",    "title": "http",    "description": "Custom HTTP Context Provider",    "displayTitle": "My Custom Context",    "options": {      "maxItems": 20    }  }}
+{
+  "name": "http",
+  "params": {
+    "url": "https://myserver.com/context-provider",
+    "title": "http",
+    "description": "Custom HTTP Context Provider",
+    "displayTitle": "My Custom Context",
+    "options": { "maxItems": 20 }
+  }
+}
 ```
 
-Then, create a server that responds to requests as are made from [HttpContextProvider.ts](https://github.com/continuedev/continue/blob/main/core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context\_provider\_server.py](https://github.com/continuedev/continue/blob/main/core/context/providers/context_provider_server.py) for an example that uses FastAPI.
+Then, create a server that responds to requests as are made from [HttpContextProvider.ts](https://github.com/continuedev/continue/blob/main/core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](https://github.com/continuedev/continue/blob/main/core/context/providers/context_provider_server.py) for an example that uses FastAPI.
 
 The `"options"` property can be used to send additional parameters to your endpoint. The full request body has the following shape:
 
@@ -31,7 +40,10 @@ The `"options"` property can be used to send additional parameters to your endpo
 ```
 
 <Info>
-  The following methods for creating custom context providers are deprecated. We recommend using HTTP context providers, [MCP Servers](/customization/mcp-tools), and [Prompts](/customization/prompts) where possible.
+  The following methods for creating custom context providers are deprecated. We
+  recommend using HTTP context providers, [MCP
+  Servers](/customization/mcp-tools), and [Prompts](/customization/prompts)
+  where possible.
 </Info>
 
 ## Using CustomContextProvider[​](#using-customcontextprovider "Direct link to Using CustomContextProvider")
@@ -42,11 +54,11 @@ Custom context providers can be implemented in a `config.ts` placed in your Cont
 interface CustomContextProvider {  title: string;  displayTitle?: string;  description?: string;  renderInlineAs?: string;  type?: ContextProviderType;  getContextItems(    query: string,    extras: ContextProviderExtras,  ): Promise<ContextItem[]>;  loadSubmenuItems?: (    args: LoadSubmenuItemsArgs,  ) => Promise<ContextSubmenuItem[]>;}
 ```
 
-As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database. The return type of `getContextItems` *must* be an array of objects that have all of the following properties:
+As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database. The return type of `getContextItems` _must_ be an array of objects that have all of the following properties:
 
-* `name`: The name of the context item, which will be displayed as a title
-* `description`: A longer description of the context item
-* `content`: The actual content of the context item, which will be fed to the LLM as context
+- `name`: The name of the context item, which will be displayed as a title
+- `description`: A longer description of the context item
+- `content`: The actual content of the context item, which will be fed to the LLM as context
 
 \~/.continue/config.ts
 
@@ -93,25 +105,24 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
 
 ### `CustomContextProvider` Reference[​](#customcontextprovider-reference "Direct link to customcontextprovider-reference")
 
-* `title`: An identifier for the context provider
+- `title`: An identifier for the context provider
 
-* `displayTitle` (optional): The title displayed in the dropdown
+- `displayTitle` (optional): The title displayed in the dropdown
 
-* `description` (optional): The longer description displayed in the dropdown when hovered
+- `description` (optional): The longer description displayed in the dropdown when hovered
 
-* `type` (optional): The type of context provider. Options are "normal", "query", and "submenu". Defaults to "normal".
+- `type` (optional): The type of context provider. Options are "normal", "query", and "submenu". Defaults to "normal".
 
-* `renderInlineAs` (optional): The string that will be rendered inline at the top of the prompt. If no value is provided, the `displayTitle` will be used. An empty string can be provided to prevent rendering the default `displayTitle`.
+- `renderInlineAs` (optional): The string that will be rendered inline at the top of the prompt. If no value is provided, the `displayTitle` will be used. An empty string can be provided to prevent rendering the default `displayTitle`.
 
-* `getContextItems`: A function that returns the documents to include in the prompt. It should return a list of `ContextItem`s, and is given access to the following arguments:
+- `getContextItems`: A function that returns the documents to include in the prompt. It should return a list of `ContextItem`s, and is given access to the following arguments:
+  - `extras.fullInput`: A string representing the user's full input to the text box. This can be used for example to generate an embedding to compare against a set of other embedded documents
+  - `extras.embeddingsProvider`: The embeddings provider has an `embed` function that will convert text (such as `fullInput`) to an embedding
+  - `extras.llm`: The current default LLM, which you can use to make completion requests
+  - `extras.ide`: An instance of the `IDE` class, which lets you gather various sources of information from the IDE, including the contents of the terminal, the list of open files, or any warnings in the currently open file.
+  - `query`: (not currently used) A string representing the query
 
-  * `extras.fullInput`: A string representing the user's full input to the text box. This can be used for example to generate an embedding to compare against a set of other embedded documents
-  * `extras.embeddingsProvider`: The embeddings provider has an `embed` function that will convert text (such as `fullInput`) to an embedding
-  * `extras.llm`: The current default LLM, which you can use to make completion requests
-  * `extras.ide`: An instance of the `IDE` class, which lets you gather various sources of information from the IDE, including the contents of the terminal, the list of open files, or any warnings in the currently open file.
-  * `query`: (not currently used) A string representing the query
-
-* `loadSubmenuItems` (optional): A function that returns a list of `ContextSubmenuItem`s to display in a submenu. It is given access to an `IDE`, the same that is passed to `getContextItems`. .
+- `loadSubmenuItems` (optional): A function that returns a list of `ContextSubmenuItem`s to display in a submenu. It is given access to an `IDE`, the same that is passed to `getContextItems`. .
 
 ## Extension API for VSCode[​](#extension-api-for-vscode "Direct link to Extension API for VSCode")
 
@@ -120,7 +131,7 @@ Continue exposes an API for registering context providers from a 3rd party VSCod
 package.json
 
 ```json
-{  "extensionDependencies": ["continue.continue"]}
+{ "extensionDependencies": ["continue.continue"] }
 ```
 
 Or install the Continue Core module from npm:
@@ -134,7 +145,7 @@ You can add the Continue core module as a dev dependency in your `package.json`:
 package.json
 
 ```json
-{  "devDependencies": {    "@continuedev/core": "^0.0.1"  }}
+{ "devDependencies": { "@continuedev/core": "^0.0.1" } }
 ```
 
 Then, you can use the `registerCustomContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface. Here is an example:
@@ -148,4 +159,3 @@ import * as vscode from "vscode";import {  IContextProvider,  ContextProviderDes
 This will register `MyCustomProvider` with Continue!
 
 ![alt text](/images/guides/images/image-8befb5162b7779402f70ff42bb589edb.png)
-

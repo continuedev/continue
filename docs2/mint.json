@@ -36,12 +36,7 @@
     }
   },
   "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude"
-    ]
+    "options": ["copy", "view", "chatgpt", "claude"]
   },
   "tabs": [
     {
@@ -82,11 +77,7 @@
     {
       "group": "Getting Started",
       "icon": "rocket-launch",
-      "pages": [
-        "index",
-        "getting-started/overview",
-        "getting-started/install"
-      ]
+      "pages": ["index", "getting-started/overview", "getting-started/install"]
     },
     {
       "group": "Features",
@@ -95,10 +86,7 @@
         {
           "group": "Chat",
           "icon": "messages",
-          "pages": [
-            "features/chat/quick-start",
-            "features/chat/how-it-works"
-          ]
+          "pages": ["features/chat/quick-start", "features/chat/how-it-works"]
         },
         {
           "group": "Autocomplete",
@@ -111,18 +99,12 @@
         {
           "group": "Edit",
           "icon": "pen-to-square",
-          "pages": [
-            "features/edit/quick-start",
-            "features/edit/how-it-works"
-          ]
+          "pages": ["features/edit/quick-start", "features/edit/how-it-works"]
         },
         {
           "group": "Agent",
           "icon": "robot",
-          "pages": [
-            "features/agent/quick-start",
-            "features/agent/how-it-works"
-          ]
+          "pages": ["features/agent/quick-start", "features/agent/how-it-works"]
         }
       ]
     },
@@ -140,9 +122,7 @@
     {
       "group": "Help",
       "icon": "book-open",
-      "pages": [
-        "troubleshooting"
-      ]
+      "pages": ["troubleshooting"]
     },
     {
       "group": "Customize",
@@ -224,9 +204,7 @@
         {
           "group": "Telemetry",
           "icon": "chart-line",
-          "pages": [
-            "customize/telemetry"
-          ]
+          "pages": ["customize/telemetry"]
         },
         "customize/custom-providers",
         "customize/json-reference",
@@ -270,10 +248,7 @@
         {
           "group": "Secrets",
           "icon": "key",
-          "pages": [
-            "hub/secrets/secret-types",
-            "hub/secrets/secret-resolution"
-          ]
+          "pages": ["hub/secrets/secret-types", "hub/secrets/secret-resolution"]
         },
         "hub/sharing",
         "hub/source-control"
@@ -295,9 +270,7 @@
     {
       "group": "Reference",
       "icon": "code",
-      "pages": [
-        "reference"
-      ]
+      "pages": ["reference"]
     }
   ],
   "footerSocials": {

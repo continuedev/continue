@@ -1,12 +1,15 @@
 # Content Mapping: Docusaurus to Mintlify
 
 ## Overview
+
 This document maps the current Docusaurus content structure to the new Mintlify 4-tab organization while preserving all existing URLs.
 
 ## Tab 1: User Guide
+
 **Purpose**: Getting started, core features, and practical guides
 
 ### Mapped Content:
+
 - **Introduction** → `/index` (homepage)
 - **Getting Started**
   - `/getting-started/overview`
@@ -29,9 +32,11 @@ This document maps the current Docusaurus content structure to the new Mintlify 
 - **Troubleshooting** → `/troubleshooting`
 
 ## Tab 2: Customize
+
 **Purpose**: Configuration, customization, and advanced setup
 
 ### Mapped Content:
+
 - **Customization**
   - `/customization/overview`
   - `/customization/models`
@@ -56,9 +61,11 @@ This document maps the current Docusaurus content structure to the new Mintlify 
   - `/advanced/yaml-migration`
 
 ## Tab 3: Hub
+
 **Purpose**: Continue Hub features and team collaboration
 
 ### Mapped Content:
+
 - **Hub Introduction** → `/hub/introduction`
 - **Assistants**
   - `/hub/assistants/intro`
@@ -83,12 +90,15 @@ This document maps the current Docusaurus content structure to the new Mintlify 
   - `/hub/source-control`
 
 ## Tab 4: Reference
+
 **Purpose**: API reference and technical documentation
 
 ### Mapped Content:
+
 - **Reference Documentation** → `/reference`
 
 ## URL Preservation Strategy
+
 1. All URLs remain exactly as they are in Docusaurus
 2. No content moves to different paths
 3. The 4-tab structure is purely navigational
@@ -96,6 +106,7 @@ This document maps the current Docusaurus content structure to the new Mintlify 
 5. Internal links don't need to be updated
 
 ## Benefits
+
 - Zero broken links
 - SEO preservation
 - Smooth user transition

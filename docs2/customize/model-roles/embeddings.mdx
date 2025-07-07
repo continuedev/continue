@@ -5,15 +5,16 @@ keywords: [embedding, model, role, embeddings]
 sidebar_position: 5
 ---
 
-
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
 In Continue, embeddings are generated during indexing and then used by [@Codebase](../context/codebase.mdx) to perform similarity search over your codebase.
 
 You can add `embed` to a model's `roles` to specify that it can be used to embed.
 
-<Info>[Built-in model (VS Code only)]
-`transformers.js` is used as a built-in embeddings model in VS Code. In JetBrains, there currently is no built-in embedder.
+<Info>
+  [Built-in model (VS Code only)] `transformers.js` is used as a built-in
+  embeddings model in VS Code. In JetBrains, there currently is no built-in
+  embedder.
 </Info>
 
 ## Recommended embedding models

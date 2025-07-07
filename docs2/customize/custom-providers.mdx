@@ -19,8 +19,8 @@ You can add any built-in context-providers in your config file as shown below:
 
 Reference any file in your current workspace.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -31,15 +31,15 @@ context:  - provider: file
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "file"    }  ]}
+{ "contextProviders": [{ "name": "file" }] }
 ```
 
 ### `@Code`[​](#code "Direct link to code")
 
 Reference specific functions or classes from throughout your project.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -50,15 +50,15 @@ context:  - provider: code
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "code"    }  ]}
+{ "contextProviders": [{ "name": "code" }] }
 ```
 
 ### `@Git Diff`[​](#git-diff "Direct link to git-diff")
 
 Reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -69,15 +69,15 @@ context:  - provider: diff
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "diff"    }  ]}
+{ "contextProviders": [{ "name": "diff" }] }
 ```
 
 ### `@Current File`[​](#current-file "Direct link to current-file")
 
 Reference the currently open file.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -88,15 +88,15 @@ context:  - provider: currentFile
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "currentFile"    }  ]}
+{ "contextProviders": [{ "name": "currentFile" }] }
 ```
 
 ### `@Terminal`[​](#terminal "Direct link to terminal")
 
 Reference the last command you ran in your IDE's terminal and its output.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -107,15 +107,15 @@ context:  - provider: terminal
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "terminal"    }  ]}
+{ "contextProviders": [{ "name": "terminal" }] }
 ```
 
 ### `@Docs`[​](#docs "Direct link to docs")
 
 Reference the contents from any documentation site.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -126,7 +126,7 @@ context:  - provider: docs
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "docs"    }  ]}
+{ "contextProviders": [{ "name": "docs" }] }
 ```
 
 Note that this will only enable the `@Docs` context provider.
@@ -137,8 +137,8 @@ To use it, you need to add a documentation site to your config file. See the [do
 
 Reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -149,7 +149,7 @@ context:  - provider: open    params:      onlyPinned: true
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "open",      "params": {        "onlyPinned": true      }    }  ]}
+{ "contextProviders": [{ "name": "open", "params": { "onlyPinned": true } }] }
 ```
 
 ### `@Web`[​](#web "Direct link to web")
@@ -158,8 +158,8 @@ Reference relevant pages from across the web, automatically determined from your
 
 Optionally, set `n` to limit the number of results returned (default 6).
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -170,15 +170,15 @@ context:  - provider: web    params:      n: 5
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "web",      "params": {        "n": 5      }    }  ]}
+{ "contextProviders": [{ "name": "web", "params": { "n": 5 } }] }
 ```
 
 ### `@Codebase`[​](#codebase "Direct link to codebase")
 
 Reference the most relevant snippets from your codebase.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -189,7 +189,7 @@ context:  - provider: codebase
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "codebase"    }  ]}
+{ "contextProviders": [{ "name": "codebase" }] }
 ```
 
 Read more about indexing and retrieval [here](/customization/overview#codebase-context).
@@ -198,8 +198,8 @@ Read more about indexing and retrieval [here](/customization/overview#codebase-c
 
 Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -210,15 +210,15 @@ context:  - provider: folder
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "folder"    }  ]}
+{ "contextProviders": [{ "name": "folder" }] }
 ```
 
 ### `@Search`[​](#search "Direct link to search")
 
 Reference the results of codebase search, just like the results you would get from VS Code search.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -238,8 +238,8 @@ This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripg
 
 Reference the markdown converted contents of a given URL.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -250,15 +250,15 @@ context:  - provider: url
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "url"    }  ]}
+{ "contextProviders": [{ "name": "url" }] }
 ```
 
 ### `@Clipboard`[​](#clipboard "Direct link to clipboard")
 
 Reference recent clipboard items
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -269,15 +269,15 @@ context:  - provider: clipboard
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "clipboard"    }  ]}
+{ "contextProviders": [{ "name": "clipboard" }] }
 ```
 
 ### `@Tree`[​](#tree "Direct link to tree")
 
 Reference the structure of your current workspace.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -288,15 +288,15 @@ context:  - provider: tree
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "tree"    }  ]}
+{ "contextProviders": [{ "name": "tree" }] }
 ```
 
 ### `@Problems`[​](#problems "Direct link to problems")
 
 Get Problems from the current file.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -307,15 +307,15 @@ context:  - provider: problems
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "problems"    }  ]}
+{ "contextProviders": [{ "name": "problems" }] }
 ```
 
 ### `@Debugger`[​](#debugger "Direct link to debugger")
 
 Reference the contents of the local variables in the debugger. Currently only available in VS Code.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -326,10 +326,10 @@ context:  - provider: debugger    params:      stackDepth: 3
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "debugger",      "params": {        "stackDepth": 3      }    }  ]}
+{ "contextProviders": [{ "name": "debugger", "params": { "stackDepth": 3 } }] }
 ```
 
-Uses the top *n* levels (defaulting to 3) of the call stack for that thread.
+Uses the top _n_ levels (defaulting to 3) of the call stack for that thread.
 
 ### `@Repository Map`[​](#repository-map "Direct link to repository-map")
 
@@ -337,8 +337,8 @@ Reference the outline of your codebase. By default, signatures are included alon
 
 `includeSignatures` params can be set to false to exclude signatures. This could be necessary for large codebases and/or to reduce context size significantly. Signatures will not be included if indexing is disabled.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -362,8 +362,8 @@ This context provider is inpsired by [Aider's repository map](https://aider.chat
 
 Reference the architecture and platform of your current operating system.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -374,15 +374,15 @@ context:  - provider: os
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "os"    }  ]}
+{ "contextProviders": [{ "name": "os" }] }
 ```
 
 ### Model Context Protocol[​](#model-context-protocol "Direct link to Model Context Protocol")
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -393,7 +393,19 @@ mcpServers:  - name: My MCP Server    command: uvx    args:      - mcp-server-sq
 config.json
 
 ```json
-{  "experimental": {    "modelContextProtocolServers": [      {        "transport": {          "type": "stdio",          "command": "uvx",          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]        }        }    ]  }}
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
+  }
+}
 ```
 
 You'll then be able to type "@" and see "MCP" in the context providers dropdown.
@@ -402,8 +414,8 @@ You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
 Reference the conversation in a GitHub issue.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -414,7 +426,17 @@ context:  - provider: issue    params:      repos:        - owner: continuedev  
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "issue",      "params": {        "repos": [          {            "owner": "continuedev",            "repo": "continue"          }        ],        "githubToken": "ghp_xxx"      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "issue",
+      "params": {
+        "repos": [{ "owner": "continuedev", "repo": "continue" }],
+        "githubToken": "ghp_xxx"
+      }
+    }
+  ]
+}
 ```
 
 Make sure to include your own [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) to avoid being rate-limited.
@@ -423,8 +445,8 @@ Make sure to include your own [GitHub personal access token](https://docs.github
 
 Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -435,23 +457,59 @@ context:  - provider: database    params:      connections:        - name: examp
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "database",      "params": {        "connections": [          {            "name": "examplePostgres",            "connection_type": "postgres",             "connection": {              "user": "username",              "host": "localhost",              "database": "exampleDB",              "password": "yourPassword",              "port": 5432            }          },          {            "name": "exampleMssql",            "connection_type": "mssql",            "connection": {              "user": "username",              "server": "localhost",              "database": "exampleDB",              "password": "yourPassword"            }          },          {            "name": "exampleSqlite",            "connection_type": "sqlite",            "connection": {              "filename": "/path/to/your/sqlite/database.db"            }          }        ]      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "database",
+      "params": {
+        "connections": [
+          {
+            "name": "examplePostgres",
+            "connection_type": "postgres",
+            "connection": {
+              "user": "username",
+              "host": "localhost",
+              "database": "exampleDB",
+              "password": "yourPassword",
+              "port": 5432
+            }
+          },
+          {
+            "name": "exampleMssql",
+            "connection_type": "mssql",
+            "connection": {
+              "user": "username",
+              "server": "localhost",
+              "database": "exampleDB",
+              "password": "yourPassword"
+            }
+          },
+          {
+            "name": "exampleSqlite",
+            "connection_type": "sqlite",
+            "connection": { "filename": "/path/to/your/sqlite/database.db" }
+          }
+        ]
+      }
+    }
+  ]
+}
 ```
 
 Each connection should include a unique name, the `connection_type`, and the necessary connection parameters specific to each database type.
 
 Available connection types:
 
-* `postgres`
-* `mysql`
-* `sqlite`
+- `postgres`
+- `mysql`
+- `sqlite`
 
 ### `@Postgres`[​](#postgres "Direct link to postgres")
 
 Reference the schema of a table, and some sample rows
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -462,7 +520,22 @@ context:  - provider: postgres    params:      host: localhost      port: 5436  
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "postgres",      "params": {        "host": "localhost",        "port": 5436,        "user": "myuser",        "password": "catsarecool",        "database": "animals",        "schema": "public",        "sampleRows": 3      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "postgres",
+      "params": {
+        "host": "localhost",
+        "port": 5436,
+        "user": "myuser",
+        "password": "catsarecool",
+        "database": "animals",
+        "schema": "public",
+        "sampleRows": 3
+      }
+    }
+  ]
+}
 ```
 
 The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
@@ -475,8 +548,8 @@ By default, the `schema` filter is set to `public`, and the `sampleRows` is set 
 
 Reference the results of a Google search.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -487,7 +560,14 @@ context:  - provider: google    params:      serperApiKey: <YOUR_SERPER.DEV_API_
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "google",      "params": {        "serperApiKey": "<YOUR_SERPER.DEV_API_KEY>"      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "google",
+      "params": { "serperApiKey": "<YOUR_SERPER.DEV_API_KEY>" }
+    }
+  ]
+}
 ```
 
 For example, type "@Google python tutorial" if you want to search and discuss ways of learning Python.
@@ -498,8 +578,8 @@ Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
 Reference an open MR for this branch on GitLab.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -510,7 +590,7 @@ context:  - provider: gitlab-mr    params:      token: "..."
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "gitlab-mr",       "params": {        "token": "..."      }    }  ]}
+{ "contextProviders": [{ "name": "gitlab-mr", "params": { "token": "..." } }] }
 ```
 
 You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope.
@@ -519,8 +599,8 @@ You will need to create a [personal access token](https://docs.gitlab.com/ee/use
 
 You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -531,7 +611,14 @@ context:  - provider: gitlab-mr    params:      token: "..."      domain: "gitla
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "gitlab-mr",      "params": {        "token": "...",        "domain": "gitlab.example.com"       }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "gitlab-mr",
+      "params": { "token": "...", "domain": "gitlab.example.com" }
+    }
+  ]
+}
 ```
 
 #### Filtering Comments[​](#filtering-comments "Direct link to Filtering Comments")
@@ -542,8 +629,8 @@ If you select some code to be edited, you can have the context provider filter o
 
 Reference the conversation in a Jira issue.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -554,7 +641,14 @@ context:  - provider: jira    params:      domain: company.atlassian.net      to
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "jira",       "params": {        "domain": "company.atlassian.net",        "token": "ATATT..."      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "jira",
+      "params": { "domain": "company.atlassian.net", "token": "ATATT..." }
+    }
+  ]
+}
 ```
 
 Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens), or use your `email` and `token`, with token set to your password for basic authentication. If you use your own Atlassian API Token, don't configure your email.
@@ -563,8 +657,8 @@ Make sure to include your own [Atlassian API Token](https://id.atlassian.com/man
 
 This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -575,7 +669,7 @@ context:  - provider: jira    params:      apiVersion: "2"
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "jira",      "params": {        "apiVersion": "2"      }    }  ]}
+{ "contextProviders": [{ "name": "jira", "params": { "apiVersion": "2" } }] }
 ```
 
 #### Issue Query[​](#issue-query "Direct link to Issue Query")
@@ -596,8 +690,8 @@ You can set the `maxResults` parameter to limit the number of results returned. 
 
 Reference the messages in a Discord channel.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -608,7 +702,21 @@ context:  - provider: discord    params:      discordKey: "bot token"      guild
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "discord",      "params": {        "discordKey": "bot token",        "guildId": "1234567890",        "channels": [          {            "id": "123456",            "name": "example-channel"          },          {            "id": "678901",            "name": "example-channel-2"           }        ]      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "discord",
+      "params": {
+        "discordKey": "bot token",
+        "guildId": "1234567890",
+        "channels": [
+          { "id": "123456", "name": "example-channel" },
+          { "id": "678901", "name": "example-channel-2" }
+        ]
+      }
+    }
+  ]
+}
 ```
 
 Make sure to include your own [Bot Token](https://discord.com/developers/applications), and join it to your related server . If you want more granular control over which channels are searched, you can specify a list of channel IDs to search in. If you don't want to specify any channels, just include the guild id(Server ID) and all channels will be included. The provider only reads text channels.
@@ -617,8 +725,8 @@ Make sure to include your own [Bot Token](https://discord.com/developers/applica
 
 The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -629,7 +737,11 @@ context:  - provider: http    params:      url: "https://api.example.com/v1/user
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "http",       "params": {        "url": "https://api.example.com/v1/users"      }    }  ]}
+{
+  "contextProviders": [
+    { "name": "http", "params": { "url": "https://api.example.com/v1/users" } }
+  ]
+}
 ```
 
 The receiving URL should expect to receive the following parameters:
@@ -652,8 +764,8 @@ Response
 
 Reference specific git commit metadata and diff or all of the recent commits.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -664,7 +776,11 @@ context:  - provider: commit    params:      Depth: 50      LastXCommitsDepth: 1
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "commit",       "params": {        "Depth": 50,        "LastXCommitsDepth": 10      }    }  ]}
+{
+  "contextProviders": [
+    { "name": "commit", "params": { "Depth": 50, "LastXCommitsDepth": 10 } }
+  ]
+}
 ```
 
 The depth is how many commits will be loaded into the submenu, defaults to 50. The LastXCommitsDepth is how many recent commits will be included, defaults to 10.
@@ -673,8 +789,8 @@ The depth is how many commits will be loaded into the submenu, defaults to 50. T
 
 Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -685,10 +801,16 @@ context:  - provider: greptile     params:      greptileToken: "..."      github
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "greptile",      "params": {        "GreptileToken": "...",        "GithubToken": "..."      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "greptile",
+      "params": { "GreptileToken": "...", "GithubToken": "..." }
+    }
+  ]
+}
 ```
 
 ### Requesting Context Providers[​](#requesting-context-providers "Direct link to Requesting Context Providers")
 
-Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn\&labels=enhancement\&projects=\&template=feature-request-%F0%9F%92%AA.md\&title=) to request a new Context Provider.
-
+Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.

@@ -13,7 +13,7 @@ There are a number of available vector databases, but because most vector databa
 
 [LanceDB](https://lancedb.github.io/lancedb/basic/) is a good choice for this because it can run in-memory with libraries for both Python and Node.js. This means that in the beginning you can focus on writing code rather than setting up infrastructure. If you have already chosen a vector database, then using this instead of LanceDB is also a fine choice.
 
-## Step 3: Choose a "chunking" strategy[​](#step-3-choose-a-chunking-strategy "Direct link to Step 3: Choose a \"chunking\" strategy")
+## Step 3: Choose a "chunking" strategy[​](#step-3-choose-a-chunking-strategy 'Direct link to Step 3: Choose a "chunking" strategy')
 
 Most embeddings models can only handle a limited amount of text at once. To get around this, we "chunk" our code into smaller pieces.
 
@@ -40,7 +40,10 @@ from lancedb.pydantic import LanceModel, Vectorfrom lancedb.embeddings import ge
 ```
 
 <Check>
-  If you are indexing more than one repository, it is best to store these in separate "tables" (terminology used by LanceDB) or "collections" (terminology used by some other vector DBs). The alternative of adding a "repository" field and then filtering by this is less performant.
+  If you are indexing more than one repository, it is best to store these in
+  separate "tables" (terminology used by LanceDB) or "collections" (terminology
+  used by some other vector DBs). The alternative of adding a "repository" field
+  and then filtering by this is less performant.
 </Check>
 
 Regardless of which database or model you have chosen, your script should iterate over all of the files that you wish to index, chunk them, generate embeddings for each chunk, and then insert all of the chunks into your vector database.
@@ -50,7 +53,8 @@ Regardless of which database or model you have chosen, your script should iterat
 <Check>
   In a perfect production version, you would want to build "automatic, incremental indexing", so that you whenever a file changes, that file and nothing else is automatically re-indexed. This has the benefits of perfectly up-to-date embeddings and lower cost.
 
-  That said, we highly recommend first building and testing the pipeline before attempting this. Unless your codebase is being entirely rewritten frequently, an incremental refresh of the index is likely to be sufficient and reasonably cheap.
+That said, we highly recommend first building and testing the pipeline before attempting this. Unless your codebase is being entirely rewritten frequently, an incremental refresh of the index is likely to be sufficient and reasonably cheap.
+
 </Check>
 
 At this point, you've written your indexing script and tested that you can make queries from your vector database. Now, you'll want a plan for when to run the indexing script.
@@ -69,8 +73,8 @@ Here is a reference implementation using FastAPI that is capable of handling req
 
 After you've set up your server, you can configure Continue to use it by adding the "http" context provider to your `contextProviders` array in your configuration:
 
-* YAML
-* JSON
+- YAML
+- JSON
 
 config.yaml
 
@@ -81,7 +85,19 @@ context:  - provider: http    params:      url: https://myserver.com/retrieve   
 config.json
 
 ```json
-{  "contextProviders": [    {      "name": "http",      "params": {        "url": "https://myserver.com/retrieve",        "title": "http",        "description": "Custom HTTP Context Provider",        "displayTitle": "My Custom Context"      }    }  ]}
+{
+  "contextProviders": [
+    {
+      "name": "http",
+      "params": {
+        "url": "https://myserver.com/retrieve",
+        "title": "http",
+        "description": "Custom HTTP Context Provider",
+        "displayTitle": "My Custom Context"
+      }
+    }
+  ]
+}
 ```
 
 ## Step 7 (Bonus): Set up reranking[​](#step-7-bonus-set-up-reranking "Direct link to Step 7 (Bonus): Set up reranking")
@@ -95,4 +111,3 @@ If you wish to return 10 total results for each query for example, then you woul
 3. Sort the results by relevancy score and return the top 10
 
 We recommend using the `rerank-2` model from Voyage AI, which has examples of usage [here](https://docs.voyageai.com/docs/reranker).
-

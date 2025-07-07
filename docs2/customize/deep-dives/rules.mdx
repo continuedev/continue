@@ -7,7 +7,8 @@ keywords: [rules, .continuerules, system, prompt, message]
 Rules provide instructions to the model for [Chat](../../features/chat/quick-start), [Edit](../../features/edit/quick-start), and [Agent](../../features/agent/quick-start) requests.
 
 <Info>
-Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
+  Rules are not included in [autocomplete](./autocomplete.mdx) or
+  [apply](../model-roles/apply.mdx).
 </Info>
 
 ## How it works
@@ -48,6 +49,7 @@ Rules can be added locally using the "Add Rules" button while viewing the Local 
 **Automatically create local rule blocks**: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
+
 </Info>
 
 Rules can also be added to an Assistant on the Continue Hub.
@@ -57,7 +59,9 @@ Explore available rules [here](https://hub.continue.dev), or [create your own](h
 ### Syntax
 
 <Info>
-Rules were originally defined in YAML format (demonstrated below), but we introduced Markdown for easier editing. While both are still supported, we recommend Markdown.
+  Rules were originally defined in YAML format (demonstrated below), but we
+  introduced Markdown for easier editing. While both are still supported, we
+  recommend Markdown.
 </Info>
 
 Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
@@ -92,7 +96,8 @@ description: Standards for writing and maintaining Continue Docs
 - Reference other docs with relative paths
 - Keep paragraphs concise and scannable
 - Use code blocks with appropriate language tags
-```
+
+````
 </Tab>
 
 <Tab title="YAML">
@@ -115,7 +120,8 @@ rules:
       - Reference other docs with relative paths
       - Keep paragraphs concise and scannable
       - Use code blocks with appropriate language tags
-```
+````
+
 </Tab>
 </Tabs>
 
@@ -154,7 +160,8 @@ Advanced users can override this system message for a specific model if needed b
 ### `.continuerules`
 
 <Warning>
-`.continuerules` will be deprecated in a future release. Please use the `.continue/rules` folder instead.
+  `.continuerules` will be deprecated in a future release. Please use the
+  `.continue/rules` folder instead.
 </Warning>
 
 You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
