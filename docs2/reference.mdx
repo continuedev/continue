@@ -366,4 +366,3 @@ config.yaml
 %YAML 1.1---name: MyProjectversion: 0.0.1schema: v1model_defaults: &model_defaults  provider: openai  apiKey: my-api-key  apiBase: https://api.example.com/llmmodels:  - name: mistral    <<: *model_defaults    model: mistral-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b-instruct    <<: *model_defaults    model: qwen2.5-coder-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b    <<: *model_defaults    model: qwen2.5-coder-7b    useLegacyCompletionsEndpoint: false    roles:      - autocomplete
 ```
 
-[Edit this page](https://github.com/continuedev/continue/tree/main/docs/docs/reference.mdx)

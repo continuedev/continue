@@ -29,8 +29,9 @@
     "owner": "continuedev",
     "repo": "continue"
   },
+  "suggestEdit": true,
   "analytics": {
-    "gtag": {
+    "ga4": {
       "measurementId": "G-M3JWW8N2XQ"
     }
   },

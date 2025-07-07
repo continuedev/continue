@@ -77,10 +77,11 @@ This document tracks the migration of Continue's documentation from Docusaurus (
   - [x] Search functionality (built-in Mintlify search)
 - [x] _Note: PostHog analytics can be added later if needed_
 
-### Phase 5: Quality Assurance (Hour 6)
+### Phase 5: Quality Assurance (Hour 6) 🔄 IN PROGRESS
 
-- [ ] Content review for formatting issues
+- [🔄] Content review for formatting issues
 - [ ] Link validation
+- [ ] Replace custom "Edit this page" links with Mintlify built-in feature
 - [ ] Image optimization
 - [ ] Performance testing
 - [ ] Cross-browser testing
