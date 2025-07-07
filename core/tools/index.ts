@@ -39,14 +39,13 @@ export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => [
   requestRuleTool(params),
+  // Search and replace is now generally available
+  searchAndReplaceInFileTool,
+  // Keep edit file tool available for models that need it
+  editFileTool,
   ...(params.enableExperimentalTools
-    ? [
-        searchAndReplaceInFileTool,
-        viewRepoMapTool,
-        viewSubdirectoryTool,
-        codebaseTool,
-      ]
-    : [editFileTool]),
+    ? [viewRepoMapTool, viewSubdirectoryTool, codebaseTool]
+    : []),
 ];
 
 export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>
