@@ -1,0 +1,705 @@
+import {
+  BedrockRuntimeClient,
+  ContentBlock,
+  ConversationRole,
+  ConverseStreamCommand,
+  ConverseStreamCommandInput,
+  ImageFormat,
+  Message,
+  ToolConfiguration,
+} from "@aws-sdk/client-bedrock-runtime";
+import { OpenAI } from "openai/index";
+import { v4 as uuidv4 } from "uuid";
+
+import {
+  ChatCompletion,
+  ChatCompletionChunk,
+  ChatCompletionCreateParams,
+  ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionCreateParamsStreaming,
+  ChatCompletionMessageToolCall,
+  Completion,
+  CompletionCreateParamsNonStreaming,
+  CompletionCreateParamsStreaming,
+  CreateEmbeddingResponse,
+  EmbeddingCreateParams,
+  Model,
+} from "openai/resources/index";
+
+import { BedrockConfig } from "../types.js";
+import { chatChunk, chatChunkFromDelta } from "../util.js";
+import { safeParseArgs } from "../util/parseArgs.js";
+import {
+  BaseLlmApi,
+  CreateRerankResponse,
+  FimCreateParamsStreaming,
+  RerankCreateParams,
+} from "./base.js";
+
+// Utility function to get or generate UUID for prompt caching
+function getSecureID(): string {
+  // Adding a type declaration for the static property
+  if (!(getSecureID as any).uuid) {
+    (getSecureID as any).uuid = crypto.randomUUID();
+  }
+  return `<!-- SID: ${(getSecureID as any).uuid} -->`;
+}
+
+/**
+ * Interface for tool use state tracking
+ */
+interface ToolUseState {
+  toolUseId: string;
+  name: string;
+  input: string;
+}
+
+export class BedrockApi implements BaseLlmApi {
+  private client: BedrockRuntimeClient;
+  private _currentToolResponse: Partial<ToolUseState> | null = null;
+
+  constructor(protected config: BedrockConfig) {
+    if (!config.env?.region) {
+      throw new Error("region is required for Bedrock API");
+    }
+    if (!config.apiKey) {
+      throw new Error(
+        "apiKey in the format accessKeyId:secretAccessKey is required for Bedrock API",
+      );
+    }
+
+    const [accessKeyId, secretAccessKey] = config.apiKey.split(":");
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error(
+        "Bedrock apiKey must be in the format accessKeyId:secretAccessKey",
+      );
+    }
+
+    this.client = new BedrockRuntimeClient({
+      region: config.env.region,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
+  }
+
+  private _oaiPartToBedrockPart(
+    part:
+      | OpenAI.Chat.Completions.ChatCompletionContentPart
+      | OpenAI.Chat.Completions.ChatCompletionContentPartRefusal,
+  ): ContentBlock {
+    switch (part.type) {
+      case "refusal":
+        return {
+          text: part.refusal,
+        };
+      case "text":
+        return {
+          text: part.text,
+        };
+      case "input_audio":
+        throw new Error("Unsupported part type: input_audio");
+      case "image_url":
+      default:
+        try {
+          const [mimeType, base64Data] = part.image_url.url.split(",");
+          const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
+          if (
+            format === ImageFormat.JPEG ||
+            format === ImageFormat.PNG ||
+            format === ImageFormat.WEBP ||
+            format === ImageFormat.GIF
+          ) {
+            return {
+              image: {
+                format,
+                source: {
+                  bytes: Uint8Array.from(Buffer.from(base64Data, "base64")),
+                },
+              },
+            };
+          } else {
+            console.warn(
+              `Bedrock: skipping unsupported image part format: ${format}`,
+            );
+            return { text: "[Unsupported image format]" };
+          }
+        } catch (error) {
+          console.warn("Bedrock: failed to process image part", error);
+          return { text: "[Failed to process image]" };
+        }
+    }
+  }
+
+  private _convertMessages(
+    oaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+    availableTools: Set<string>,
+  ): Message[] {
+    let currentRole: "user" | "assistant" = "user";
+    let currentBlocks: ContentBlock[] = [];
+    const converted: Message[] = [];
+    const hasAddedToolCallIds = new Set<string>();
+
+    const pushCurrentMessage = () => {
+      if (currentBlocks.length > 0) {
+        converted.push({
+          role: currentRole,
+          content: currentBlocks,
+        });
+        currentBlocks = [];
+      }
+    };
+
+    const nonSystemMessages = oaiMessages.filter((m) => m.role !== "system");
+
+    for (let idx = 0; idx < nonSystemMessages.length; idx++) {
+      const message = nonSystemMessages[idx];
+
+      if (message.role === "user" || message.role === "tool") {
+        // Detect conversational turn change
+        if (currentRole !== ConversationRole.USER) {
+          pushCurrentMessage();
+          currentRole = ConversationRole.USER;
+        }
+
+        // USER messages
+        if (message.role === "user") {
+          const content = message.content;
+          if (content) {
+            if (typeof content === "string") {
+              currentBlocks.push({ text: content });
+            } else {
+              content.forEach((part) => {
+                currentBlocks.push(this._oaiPartToBedrockPart(part));
+              });
+            }
+          }
+        }
+        // TOOL messages
+        else if (message.role === "tool") {
+          const trimmedContent =
+            typeof message.content === "string"
+              ? message.content.trim()
+              : JSON.stringify(message.content);
+
+          if (hasAddedToolCallIds.has(message.tool_call_id)) {
+            currentBlocks.push({
+              toolResult: {
+                toolUseId: message.tool_call_id,
+                content: [
+                  {
+                    text: trimmedContent || "No tool output",
+                  },
+                ],
+              },
+            });
+          } else {
+            currentBlocks.push({
+              text: `Tool call output for Tool Call ID ${message.tool_call_id}:\n\n${trimmedContent || "No tool output"}`,
+            });
+          }
+        }
+      } else if (message.role === "assistant") {
+        // Detect conversational turn change
+        if (currentRole !== ConversationRole.ASSISTANT) {
+          pushCurrentMessage();
+          currentRole = ConversationRole.ASSISTANT;
+        }
+
+        // ASSISTANT messages
+        const content = message.content;
+        if (content) {
+          if (typeof content === "string") {
+            currentBlocks.push({ text: content });
+          } else {
+            content.forEach((part) => {
+              currentBlocks.push(this._oaiPartToBedrockPart(part));
+            });
+          }
+        }
+
+        // TOOL CALLS
+        if (message.tool_calls) {
+          for (const toolCall of message.tool_calls) {
+            if (toolCall.id && toolCall.function?.name) {
+              if (availableTools.has(toolCall.function.name)) {
+                currentBlocks.push({
+                  toolUse: {
+                    toolUseId: toolCall.id,
+                    name: toolCall.function.name,
+                    input: safeParseArgs(
+                      toolCall.function.arguments,
+                      `Call: ${toolCall.function.name} ${toolCall.id}`,
+                    ),
+                  },
+                });
+                hasAddedToolCallIds.add(toolCall.id);
+              } else {
+                const toolCallText = `Assistant tool call:\nTool name: ${toolCall.function.name}\nTool Call ID: ${toolCall.id}\nArguments: ${toolCall.function?.arguments ?? "{}"}`;
+                currentBlocks.push({
+                  text: toolCallText,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (currentBlocks.length > 0) {
+      pushCurrentMessage();
+    }
+
+    // If caching is enabled, add cache points
+    // if (this.config.cacheBehavior?.cacheConversation) {
+    //   this._addCachingToLastTwoUserMessages(converted);
+    // }
+
+    return converted;
+  }
+
+  private _addCachingToLastTwoUserMessages(converted: Message[]) {
+    let numCached = 0;
+    for (let i = converted.length - 1; i >= 0; i--) {
+      const message = converted[i];
+      if (message.role === "user") {
+        message.content?.forEach((block) => {
+          if (block.text) {
+            block.text += getSecureID();
+          }
+        });
+        message.content?.push({ cachePoint: { type: "default" } });
+        numCached++;
+      }
+      if (numCached === 2) {
+        break;
+      }
+    }
+  }
+
+  private _convertBody(
+    oaiBody: ChatCompletionCreateParams,
+  ): ConverseStreamCommandInput {
+    // Extract system message
+    const systemMessage =
+      oaiBody.messages.find((msg) => msg.role === "system")?.content || "";
+
+    const systemMessageText =
+      typeof systemMessage === "string"
+        ? systemMessage
+        : systemMessage
+            .map((part) =>
+              part.type === "text" ? part.text : "[Non-text content]",
+            )
+            .join(" ");
+
+    // Check for tools
+    const availableTools = new Set<string>();
+    let toolConfig: ToolConfiguration | undefined = undefined;
+
+    if (oaiBody.tools && oaiBody.tools.length > 0) {
+      toolConfig = {
+        tools: oaiBody.tools.map((tool) => ({
+          toolSpec: {
+            name: tool.function.name,
+            description: tool.function.description,
+            inputSchema: {
+              json: tool.function.parameters,
+            },
+          },
+        })),
+      } as ToolConfiguration;
+
+      // Add cache point if needed
+      // if (this.config.cacheBehavior?.cacheSystemMessage) {
+      //   toolConfig!.tools!.push({ cachePoint: { type: "default" } });
+      // }
+
+      oaiBody.tools.forEach((tool) => {
+        availableTools.add(tool.function.name);
+      });
+    }
+
+    // Convert messages
+    const convertedMessages = this._convertMessages(
+      oaiBody.messages,
+      availableTools,
+    );
+
+    // Build final request body
+    const body: any = {
+      modelId: oaiBody.model,
+      messages: convertedMessages,
+      inferenceConfig: {
+        temperature: oaiBody.temperature,
+        topP: oaiBody.top_p,
+        maxTokens: oaiBody.max_tokens,
+        stopSequences: Array.isArray(oaiBody.stop)
+          ? oaiBody.stop.filter((s) => s.trim() !== "").slice(0, 4)
+          : oaiBody.stop
+            ? [oaiBody.stop].filter((s) => s.trim() !== "")
+            : undefined,
+      },
+    };
+
+    // Add system message if present
+    if (systemMessageText) {
+      body.system = false // this.config.cacheBehavior?.cacheSystemMessage // TODO
+        ? [{ text: systemMessageText }, { cachePoint: { type: "default" } }]
+        : [{ text: systemMessageText }];
+    }
+
+    // Add tool config if present
+    if (toolConfig) {
+      body.toolConfig = toolConfig;
+    }
+
+    // Add reasoning if needed
+    // TODO REASONING
+    // if (this.c) {
+    //   body.additionalModelRequestFields = {
+    //     thinking: {
+    //       type: "enabled",
+    //       budget_tokens:
+    //         oaiBody.additionalModelRequestFields.reasoningBudgetTokens,
+    //     },
+    //   };
+    // }
+
+    return body;
+  }
+
+  async chatCompletionNonStream(
+    body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
+  ): Promise<ChatCompletion> {
+    let completion = "";
+    const toolCalls: ChatCompletionMessageToolCall[] = [];
+
+    for await (const chunk of this.chatCompletionStream(
+      {
+        ...body,
+        stream: true,
+      },
+      signal,
+    )) {
+      if (chunk.choices[0].delta.content) {
+        completion += chunk.choices[0].delta.content;
+      }
+      // TODO tool calls not supported
+    }
+
+    return {
+      id: uuidv4(),
+      object: "chat.completion",
+      model: body.model,
+      created: Date.now(),
+      choices: [
+        {
+          index: 0,
+          logprobs: null,
+          finish_reason: "stop",
+          message: {
+            role: "assistant",
+            content: completion,
+            tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+            refusal: null,
+          },
+        },
+      ],
+      usage: undefined,
+    };
+  }
+
+  async *chatCompletionStream(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    const requestBody = this._convertBody(body);
+
+    try {
+      const command = new ConverseStreamCommand({
+        ...requestBody,
+      });
+
+      const response = await this.client.send(command, { abortSignal: signal });
+
+      if (!response?.stream) {
+        throw new Error("No stream received from Bedrock API");
+      }
+
+      this._currentToolResponse = null;
+
+      for await (const chunk of response.stream) {
+        if (chunk.contentBlockDelta?.delta) {
+          const delta: any = chunk.contentBlockDelta.delta;
+
+          // Handle text content
+          if (delta.text) {
+            yield chatChunk({
+              content: delta.text,
+              model: body.model,
+            });
+            continue;
+          }
+
+          // Handle thinking content (if reasoning enabled)
+          if (delta.reasoningContent?.text) {
+            // TODO reasoning
+            // Reasoning is not directly supported in OpenAI format,
+            // but we could add it as a special message
+            continue;
+          }
+
+          // Handle tool use
+          if (delta.toolUse?.input && this._currentToolResponse) {
+            if (this._currentToolResponse.input === undefined) {
+              this._currentToolResponse.input = "";
+            }
+            this._currentToolResponse.input += delta.toolUse.input;
+            continue;
+          }
+        }
+
+        if (chunk.contentBlockStart?.start) {
+          const start: any = chunk.contentBlockStart.start;
+
+          // Handle tool start
+          const toolUse = start.toolUse;
+          if (toolUse?.toolUseId && toolUse?.name) {
+            this._currentToolResponse = {
+              toolUseId: toolUse.toolUseId,
+              name: toolUse.name,
+              input: "",
+            };
+          }
+          continue;
+        }
+
+        if (chunk.contentBlockStop) {
+          // End of a content block
+          if (this._currentToolResponse) {
+            yield chatChunkFromDelta({
+              model: body.model,
+              delta: {
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: this._currentToolResponse.toolUseId,
+                    type: "function",
+                    function: {
+                      name: this._currentToolResponse.name,
+                      arguments: this._currentToolResponse.input,
+                    },
+                  },
+                ],
+              },
+            });
+            this._currentToolResponse = null;
+          }
+          continue;
+        }
+      }
+    } catch (error) {
+      this._currentToolResponse = null;
+      if (error instanceof Error) {
+        if ("code" in error) {
+          throw new Error(
+            `AWS Bedrock stream error (${(error as any).code}): ${error.message}`,
+          );
+        }
+        throw new Error(`Error processing Bedrock stream: ${error.message}`);
+      }
+      throw new Error(
+        "Error processing Bedrock stream: Unknown error occurred",
+      );
+    }
+  }
+
+  completionNonStream(
+    body: CompletionCreateParamsNonStreaming,
+  ): Promise<Completion> {
+    throw new Error("Bedrock does not support completions API");
+  }
+
+  completionStream(
+    body: CompletionCreateParamsStreaming,
+  ): AsyncGenerator<Completion> {
+    throw new Error("Bedrock does not support completions API");
+  }
+
+  fimStream(
+    body: FimCreateParamsStreaming,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    throw new Error("Bedrock does not support FIM directly");
+  }
+
+  async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
+    throw new Error("Not implemented");
+    // // Determine which embedding model is being used based on the model prefix
+    // const modelPrefix = this._getEmbeddingModelPrefix(body.model);
+
+    // if (!modelPrefix) {
+    //   throw new Error(`Unsupported embedding model: ${body.model}`);
+    // }
+
+    // const inputs = Array.isArray(body.input) ? body.input : [body.input];
+
+    // try {
+    //   const embeddings = await Promise.all(
+    //     inputs.map(async (input) => {
+    //       const payload = this._formatEmbeddingPayload(input, modelPrefix);
+
+    //       const response = await customFetch(this.config.requestOptions)(
+    //         `https://bedrock-runtime.${this.config.region}.amazonaws.com/model/${body.model}/invoke`,
+    //         {
+    //           method: "POST",
+    //           body: JSON.stringify(payload),
+    //           headers: {
+    //             "Content-Type": "application/json",
+    //             "X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
+    //             "X-Amz-Date": new Date()
+    //               .toISOString()
+    //               .replace(/[:-]|\.\d{3}/g, ""),
+    //           },
+    //           aws: {
+    //             region: this.config.region,
+    //             service: "bedrock",
+    //             credentials: {
+    //               accessKeyId: this.config.accessKeyId,
+    //               secretAccessKey: this.config.secretAccessKey,
+    //             },
+    //           },
+    //         },
+    //       );
+
+    //       const data = await response.json();
+    //       return this._extractEmbedding(data, modelPrefix);
+    //     }),
+    //   );
+
+    //   return embedding({
+    //     model: body.model,
+    //     usage: {
+    //       total_tokens: inputs.reduce((sum, input) => sum + input.length, 0),
+    //       prompt_tokens: inputs.reduce((sum, input) => sum + input.length, 0),
+    //     },
+    //     data: embeddings,
+    //   });
+    // } catch (error) {
+    //   if (error instanceof Error) {
+    //     throw new Error(`Bedrock embedding error: ${error.message}`);
+    //   }
+    //   throw new Error("Unknown error in Bedrock embedding");
+    // }
+  }
+
+  private _getEmbeddingModelPrefix(model: string): string | undefined {
+    if (model.startsWith("cohere")) {
+      return "cohere";
+    }
+    if (model.startsWith("amazon.titan-embed")) {
+      return "amazon.titan-embed";
+    }
+    return undefined;
+  }
+
+  private _formatEmbeddingPayload(text: string, modelPrefix: string): any {
+    if (modelPrefix === "cohere") {
+      return {
+        texts: [text],
+        input_type: "search_document",
+        truncate: "END",
+      };
+    }
+    if (modelPrefix === "amazon.titan-embed") {
+      return {
+        inputText: text,
+      };
+    }
+    throw new Error(`Unsupported model prefix: ${modelPrefix}`);
+  }
+
+  private _extractEmbedding(data: any, modelPrefix: string): number[] {
+    if (modelPrefix === "cohere") {
+      return data.embeddings?.[0] || [];
+    }
+    if (modelPrefix === "amazon.titan-embed") {
+      return data.embedding || [];
+    }
+    return [];
+  }
+
+  async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
+    throw new Error("Not implemented");
+    // if (!body.query || !body.documents.length) {
+    //   throw new Error("Query and documents must not be empty");
+    // }
+
+    // try {
+    //   // Build the payload
+    //   const payload: any = {
+    //     query: body.query,
+    //     documents: body.documents,
+    //     top_n: body.documents.length,
+    //   };
+
+    //   // Add api_version for Cohere model
+    //   if (body.model.startsWith("cohere.rerank")) {
+    //     payload.api_version = 2;
+    //   }
+
+    //   const response = await customFetch(this.config.requestOptions)(
+    //     `https://bedrock-runtime.${this.config.region}.amazonaws.com/model/${body.model}/invoke`,
+    //     {
+    //       method: "POST",
+    //       body: JSON.stringify(payload),
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //         "X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
+    //         "X-Amz-Date": new Date().toISOString().replace(/[:-]|\.\d{3}/g, ""),
+    //       },
+    //       aws: {
+    //         region: this.config.region,
+    //         service: "bedrock",
+    //         credentials: {
+    //           accessKeyId: this.config.accessKeyId,
+    //           secretAccessKey: this.config.secretAccessKey,
+    //         },
+    //       },
+    //     },
+    //   );
+
+    //   const data = await response.json();
+
+    //   // Process the response
+    //   if (!data.results) {
+    //     throw new Error("Invalid response format from Bedrock reranker");
+    //   }
+
+    //   // Return the results in a format compatible with OpenAI's reranker
+    //   return {
+    //     object: "list",
+    //     model: body.model,
+    //     data: data.results.map((result: any, index: number) => ({
+    //       document_index: result.index || index,
+    //       relevance_score: result.relevance_score,
+    //       text: body.documents[result.index || index],
+    //     })),
+    //     usage: {
+    //       total_tokens: 0, // TODO
+    //     },
+    //   };
+    // } catch (error) {
+    //   if (error instanceof Error) {
+    //     throw new Error(`Bedrock rerank error: ${error.message}`);
+    //   }
+    //   throw new Error("Unknown error in Bedrock reranker");
+    // }
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
+  }
+}

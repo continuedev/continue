@@ -21,6 +21,7 @@ import {
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
 
@@ -47,6 +48,7 @@ interface PromptCachingMetrics {
 }
 
 class Bedrock extends BaseLLM {
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
   static providerName = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
@@ -76,6 +78,7 @@ class Bedrock extends BaseLLM {
     } else {
       this.profile = "bedrock";
     }
+
     this.requestOptions = {
       region: options.region,
       headers: {},
@@ -609,17 +612,32 @@ class Bedrock extends BaseLLM {
   }
 
   private async _getCredentials() {
-    try {
-      return await fromNodeProviderChain({
-        profile: this.profile,
-        ignoreCache: true,
-      })();
-    } catch (e) {
-      console.warn(
-        `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
-      );
-      return await fromNodeProviderChain()();
+    if (this.apiKey) {
+      const [accessKeyId, secretAccessKey] = this.apiKey.split(":");
+      if (!accessKeyId || !secretAccessKey) {
+        throw new Error(
+          "Invalid Bedrock API key format. Expected format: accessKeyId:secretAccessKey",
+        );
+      }
+      return {
+        accessKeyId,
+        secretAccessKey,
+      };
     }
+
+    if (this.profile) {
+      try {
+        return await fromNodeProviderChain({
+          profile: this.profile,
+          ignoreCache: true,
+        })();
+      } catch (e) {
+        console.warn(
+          `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
+        );
+      }
+    }
+    return await fromNodeProviderChain()();
   }
 
   // EMBED //
