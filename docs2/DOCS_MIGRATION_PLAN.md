@@ -55,7 +55,7 @@ This document tracks the migration of Continue's documentation from Docusaurus (
 - [x] Initial content validation
 - [x] Remove auto-generated docs.json (using mint.json instead)
 - [x] Verify development server works (http://localhost:3001)
-- [x] Copy all images from /docs/static/img/* to /docs2/images/
+- [x] Copy all images from /docs/static/img/\* to /docs2/images/
 - [x] Fix basic image path references from /assets/images/ to /images/
 
 ### Phase 3: Component & Feature Migration (Hour 3-4) ✅ COMPLETE
@@ -70,7 +70,7 @@ This document tracks the migration of Continue's documentation from Docusaurus (
 ### Phase 4: Advanced Features (Hour 5)
 
 - [ ] Migrate 100+ redirects to Mintlify format
-- [ ] Handle internationalization (if supported)
+- [ ] Handle internationalization (chinese only today)
 - [ ] Replace custom plugins functionality
 - [ ] _Defer: Search functionality (Algolia) - implement after go-live_
 - [ ] _Defer: Analytics (PostHog) - implement after go-live_
@@ -149,7 +149,7 @@ This document tracks the migration of Continue's documentation from Docusaurus (
 - Started: 2025-01-07
 - Completed: 2025-01-07
 - Blockers: None
-- Notes: 
+- Notes:
   - ✅ Created mint.json with 4-tab structure (User Guide, Customize, Hub, Reference)
   - ✅ Mapped all content categories to preserve existing URLs
   - ✅ Set up branding matching Docusaurus theme with Mintlify colors

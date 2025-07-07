@@ -39,16 +39,16 @@
   },
   "tabs": [
     {
-      "name": "User Guide",
-      "url": "getting-started"
-    },
-    {
       "name": "Customize", 
       "url": "customize"
     },
     {
       "name": "Hub",
       "url": "hub"
+    },
+    {
+      "name": "Guides",
+      "url": "guides"
     },
     {
       "name": "Reference",
@@ -74,153 +74,157 @@
   ],
   "navigation": [
     {
-      "group": "User Guide",
+      "group": "Getting Started",
+      "icon": "rocket-launch",
       "pages": [
         "index",
+        "getting-started/overview",
+        "getting-started/install"
+      ]
+    },
+    {
+      "group": "Features",
+      "icon": "star",
+      "pages": [
         {
-          "group": "Getting Started",
+          "group": "Chat",
+          "icon": "messages",
           "pages": [
-            "getting-started/overview",
-            "getting-started/install"
+            "features/chat/quick-start",
+            "features/chat/how-it-works"
           ]
         },
         {
-          "group": "Features",
+          "group": "Autocomplete",
+          "icon": "sparkles",
           "pages": [
-            "features/overview",
-            {
-              "group": "Chat",
-              "pages": [
-                "features/chat/quick-start",
-                "features/chat/how-it-works"
-              ]
-            },
-            {
-              "group": "Autocomplete",
-              "pages": [
-                "features/autocomplete/quick-start",
-                "features/autocomplete/how-it-works"
-              ]
-            },
-            {
-              "group": "Edit",
-              "pages": [
-                "features/edit/quick-start",
-                "features/edit/how-it-works"
-              ]
-            },
-            {
-              "group": "Agent",
-              "pages": [
-                "features/agent/quick-start",
-                "features/agent/how-it-works"
-              ]
-            }
+            "features/autocomplete/quick-start",
+            "features/autocomplete/how-it-works"
           ]
         },
         {
-          "group": "Guides",
+          "group": "Edit",
+          "icon": "pen-to-square",
           "pages": [
-            "guides/overview",
-            "guides/ollama-guide",
-            "guides/llama3.1",
-            "guides/set-up-codestral",
-            "guides/running-continue-without-internet",
-            "guides/custom-code-rag",
-            "guides/build-your-own-context-provider",
-            "guides/how-to-self-host-a-model"
+            "features/edit/quick-start",
+            "features/edit/how-it-works"
           ]
         },
+        {
+          "group": "Agent",
+          "icon": "robot",
+          "pages": [
+            "features/agent/quick-start",
+            "features/agent/how-it-works"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Customization",
+      "icon": "sliders",
+      "pages": [
+        "customization/overview",
+        "customization/models",
+        "customization/prompts",
+        "customization/rules",
+        "customization/mcp-tools"
+      ]
+    },
+    {
+      "group": "Help",
+      "icon": "book-open",
+      "pages": [
         "troubleshooting"
       ]
     },
     {
       "group": "Customize",
       "pages": [
-        "customization/overview",
-        "customization/models",
-        "customization/prompts",
-        "customization/rules",
-        "customization/mcp-tools",
+        "customize/overview",
         {
-          "group": "Advanced",
+          "group": "Model Providers",
+          "icon": "server",
           "pages": [
-            "customize/overview",
             {
-              "group": "Model Providers",
+              "group": "Popular Providers",
               "pages": [
-                {
-                  "group": "Top Providers",
-                  "pages": [
-                    "customize/model-providers/top-level/anthropic",
-                    "customize/model-providers/top-level/openai",
-                    "customize/model-providers/top-level/azure",
-                    "customize/model-providers/top-level/bedrock",
-                    "customize/model-providers/top-level/ollama",
-                    "customize/model-providers/top-level/gemini",
-                    "customize/model-providers/top-level/deepseek",
-                    "customize/model-providers/top-level/mistral",
-                    "customize/model-providers/top-level/xAI",
-                    "customize/model-providers/top-level/vertexai",
-                    "customize/model-providers/top-level/inception"
-                  ]
-                },
-                {
-                  "group": "More Providers",
-                  "pages": [
-                    "customize/model-providers/more/groq",
-                    "customize/model-providers/more/together",
-                    "customize/model-providers/more/lmstudio",
-                    "customize/model-providers/more/llamacpp",
-                    "customize/model-providers/more/openrouter",
-                    "customize/model-providers/more/huggingfaceinferenceapi",
-                    "customize/model-providers/more/cohere",
-                    "customize/model-providers/more/nvidia",
-                    "customize/model-providers/more/cloudflare",
-                    "customize/model-providers/more/deepinfra"
-                  ]
-                }
+                "customize/model-providers/top-level/anthropic",
+                "customize/model-providers/top-level/openai",
+                "customize/model-providers/top-level/azure",
+                "customize/model-providers/top-level/bedrock",
+                "customize/model-providers/top-level/ollama",
+                "customize/model-providers/top-level/gemini",
+                "customize/model-providers/top-level/deepseek",
+                "customize/model-providers/top-level/mistral",
+                "customize/model-providers/top-level/xAI",
+                "customize/model-providers/top-level/vertexai",
+                "customize/model-providers/top-level/inception"
               ]
             },
             {
-              "group": "Model Roles",
+              "group": "More Providers",
               "pages": [
-                "customize/model-roles/00-intro",
-                "customize/model-roles/chat",
-                "customize/model-roles/autocomplete",
-                "customize/model-roles/edit",
-                "customize/model-roles/apply",
-                "customize/model-roles/embeddings",
-                "customize/model-roles/reranking"
+                "customize/model-providers/more/groq",
+                "customize/model-providers/more/together",
+                "customize/model-providers/more/lmstudio",
+                "customize/model-providers/more/llamacpp",
+                "customize/model-providers/more/openrouter",
+                "customize/model-providers/more/huggingfaceinferenceapi",
+                "customize/model-providers/more/cohere",
+                "customize/model-providers/more/nvidia",
+                "customize/model-providers/more/cloudflare",
+                "customize/model-providers/more/deepinfra"
               ]
-            },
-            {
-              "group": "Context Providers",
-              "pages": [
-                "customize/context/codebase",
-                "customize/context/documentation"
-              ]
-            },
-            {
-              "group": "Deep Dives",
-              "pages": [
-                "customize/deep-dives/configuration",
-                "customize/settings",
-                "customize/deep-dives/slash-commands",
-                "customize/deep-dives/rules",
-                "customize/deep-dives/prompts",
-                "customize/deep-dives/autocomplete",
-                "customize/deep-dives/development-data",
-                "customize/deep-dives/vscode-actions",
-                "customize/deep-dives/mcp"
-              ]
-            },
-            "customize/telemetry",
-            "customize/custom-providers",
-            "customize/json-reference",
-            "customize/yaml-migration"
+            }
           ]
-        }
+        },
+        {
+          "group": "Model Roles",
+          "icon": "robot",
+          "pages": [
+            "customize/model-roles/00-intro",
+            "customize/model-roles/chat",
+            "customize/model-roles/autocomplete",
+            "customize/model-roles/edit",
+            "customize/model-roles/apply",
+            "customize/model-roles/embeddings",
+            "customize/model-roles/reranking"
+          ]
+        },
+        {
+          "group": "Context Providers",
+          "icon": "code",
+          "pages": [
+            "customize/context/codebase",
+            "customize/context/documentation"
+          ]
+        },
+        {
+          "group": "Deep Dives",
+          "icon": "microscope",
+          "pages": [
+            "customize/deep-dives/configuration",
+            "customize/settings",
+            "customize/deep-dives/slash-commands",
+            "customize/deep-dives/rules",
+            "customize/deep-dives/prompts",
+            "customize/deep-dives/autocomplete",
+            "customize/deep-dives/development-data",
+            "customize/deep-dives/vscode-actions",
+            "customize/deep-dives/mcp"
+          ]
+        },
+        {
+          "group": "Telemetry",
+          "icon": "chart-line",
+          "pages": [
+            "customize/telemetry"
+          ]
+        },
+        "customize/custom-providers",
+        "customize/json-reference",
+        "customize/yaml-migration"
       ]
     },
     {
@@ -229,6 +233,7 @@
         "hub/introduction",
         {
           "group": "Assistants",
+          "icon": "robot",
           "pages": [
             "hub/assistants/intro",
             "hub/assistants/use-an-assistant",
@@ -238,6 +243,7 @@
         },
         {
           "group": "Blocks",
+          "icon": "cube",
           "pages": [
             "hub/blocks/intro",
             "hub/blocks/use-a-block",
@@ -248,6 +254,7 @@
         },
         {
           "group": "Governance",
+          "icon": "building-office",
           "pages": [
             "hub/governance/creating-an-org",
             "hub/governance/org-permissions",
@@ -256,6 +263,7 @@
         },
         {
           "group": "Secrets",
+          "icon": "key",
           "pages": [
             "hub/secrets/secret-types",
             "hub/secrets/secret-resolution"
@@ -266,10 +274,23 @@
       ]
     },
     {
-      "group": "Reference",
+      "group": "Guides",
       "pages": [
-        "reference",
-        "troubleshooting"
+        "guides/overview",
+        "guides/ollama-guide",
+        "guides/llama3.1",
+        "guides/set-up-codestral",
+        "guides/running-continue-without-internet",
+        "guides/custom-code-rag",
+        "guides/build-your-own-context-provider",
+        "guides/how-to-self-host-a-model"
+      ]
+    },
+    {
+      "group": "Reference",
+      "icon": "code",
+      "pages": [
+        "reference"
       ]
     }
   ],
