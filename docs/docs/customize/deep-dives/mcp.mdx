@@ -110,6 +110,7 @@ MCP blocks follow the established syntax for blocks, with a few additional prope
 - `type` (optional): The type of the MCP server: `sse`, `stdio`, `streamable-http`
 - `args` (optional): Arguments to pass to the command.
 - `env` (optional): Secrets to be injected into the command as environment variables.
+- `cwd` (optional): Working directory to run the command in. Can be absolute or relative path.
 
 ### Transport Types
 
@@ -132,12 +133,22 @@ For local MCP servers that communicate via standard input and output:
 
 ```yaml
 mcpServers:
-  - name: Name
+  - name: SQLite Server
     type: stdio
     command: npx
     args:
       - "@modelcontextprotocol/server-sqlite"
-      - "/path/to/your/database.db"
+      - "./database.db"
+    cwd: "/path/to/project"
+  
+  - name: Local Project Server
+    command: npm
+    args:
+      - "run"
+      - "mcp-server"
+    cwd: "./my-project"
+    env:
+      NODE_ENV: "production"
 ```
 
 #### Streamable HTTP Transport

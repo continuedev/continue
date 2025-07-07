@@ -288,6 +288,7 @@ docs:
 - `command` (**required**): The command used to start the server.
 - `args`: An optional array of arguments for the command.
 - `env`: An optional map of environment variables for the server process.
+- `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 
 **Before**
 
@@ -328,7 +329,7 @@ mcpServers:
 
 ## Deprecated configuration options
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./deep-dives/settings.md) (Gear Icon). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./settings.md) (Gear Icon). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
 
 See the [JSON Config Reference](/reference) for more information on fully deprecated options.
 
