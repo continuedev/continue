@@ -7,9 +7,8 @@ import {
 import { RuleWithSource } from "core";
 import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
-  DEFAULT_AGENT_SYSTEM_MESSAGE_URL,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
-  DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
+  DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
 import { useContext, useMemo } from "react";
 import { useAuth } from "../../../../context/Auth";
@@ -52,12 +51,12 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       ideMessenger.post("openFile", {
         path: rule.ruleFile,
       });
-    } else if (rule.source === "default-chat" && mode === "chat") {
-      ideMessenger.post("openUrl", DEFAULT_CHAT_SYSTEM_MESSAGE_URL);
-    } else if (rule.source === "default-plan" && mode === "plan") {
-      ideMessenger.post("openUrl", DEFAULT_AGENT_SYSTEM_MESSAGE_URL);
-    } else if (rule.source === "default-agent" && mode === "agent") {
-      ideMessenger.post("openUrl", DEFAULT_AGENT_SYSTEM_MESSAGE_URL);
+    } else if (
+      rule.source === "default-chat" ||
+      rule.source === "default-plan" ||
+      rule.source === "default-agent"
+    ) {
+      ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
     } else {
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
