@@ -1,9 +1,10 @@
 let boundaryTypeIndex = 0;
 const acceptedBoundaries: [string, string][] = [
-  ["<tool_call>", "</tool_call>"],
+  ["<tool_call>", "<tool_call>"],
   ["```xml\n<tool_call/>", "</tool_call>\n```"],
   ["```\n<tool_call/>", "</tool_call>\n```"],
-  ["```tool_call>", "</tool_call>\n```"],
+  ["```tool_call>\n", "</tool_call>"],
+  ["```tool_call\n", "</tool_call>"],
 ]; // end tag not currently used, just checks for </tool_call>, but should be used for multiple tool call support
 
 export function detectToolCallStart(buffer: string) {
@@ -11,7 +12,7 @@ export function detectToolCallStart(buffer: string) {
   const lowerCaseBuffer = buffer.toLowerCase();
   for (let i = 0; i < acceptedBoundaries.length; i++) {
     const [startTag, _] = acceptedBoundaries[i];
-
+    debugger;
     if (lowerCaseBuffer.startsWith(startTag)) {
       boundaryTypeIndex = i;
       // for e.g. ```tool_call case, replace before adding to buffer, case insensitive

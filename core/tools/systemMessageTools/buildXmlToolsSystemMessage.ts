@@ -35,6 +35,24 @@ ${TOOL_CALL_TAG}
 ${closeTag(TOOL_CALL_TAG)}
 `.trim();
 
+export function createSystemMessageExampleCall(
+  name: string,
+  instructions: string,
+  argsExample: string = "",
+) {
+  return `${instructions}
+${TOOL_CALL_TAG}
+${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}${
+    argsExample
+      ? `\n  ${TOOL_ARGS_TAG}
+    ${argsExample}
+  ${closeTag(TOOL_ARGS_TAG)}
+`.trim()
+      : ""
+  }
+${closeTag(TOOL_CALL_TAG)}`;
+}
+
 function toolToXmlDefinition(tool: Tool): string {
   const builder = new XMLBuilder({
     ignoreAttributes: true,
@@ -84,7 +102,7 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
 
   let prompt = TOOL_INSTRUCTIONS_TAG;
   prompt += `You have access to several "tools" that you can use at any time to perform tasks for the User and interact with the IDE.`;
-  prompt += `\nTo use a tool, respond with a ${TOOL_CALL_TAG} (NOT in a codeblock!!!), specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG} (if required) as shown in the relevant examples below.`;
+  prompt += `\nTo use a tool, respond with a ${TOOL_CALL_TAG} (NOT in a codeblock!!!), specifying ${TOOL_NAME_TAG} and ${TOOL_ARGS_TAG} (if applicable) as shown in the relevant examples below. Do NOT use JSON, use only string and number values within the XML tags.`;
 
   if (withPredefinedMessage.length > 0) {
     prompt += `\n\nThe following tools are available to you:`;
@@ -122,21 +140,3 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
 
   return prompt;
 };
-
-export function createSystemMessageExampleCall(
-  name: string,
-  instructions: string,
-  argsExample: string = "",
-) {
-  return `${instructions}
-${TOOL_CALL_TAG}
-${TOOL_NAME_TAG}${name}${closeTag(TOOL_NAME_TAG)}${
-    argsExample
-      ? `\n  ${TOOL_ARGS_TAG}
-    ${argsExample}
-  ${closeTag(TOOL_ARGS_TAG)}
-`.trim()
-      : ""
-  }
-${closeTag(TOOL_CALL_TAG)}`;
-}
