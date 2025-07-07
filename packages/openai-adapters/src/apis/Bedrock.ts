@@ -181,7 +181,10 @@ export class BedrockApi implements BaseLlmApi {
           const trimmedContent =
             typeof message.content === "string"
               ? message.content.trim()
-              : JSON.stringify(message.content);
+              : message.content
+                  .map((c) => c.text)
+                  .join("\n")
+                  .trim();
 
           if (hasAddedToolCallIds.has(message.tool_call_id)) {
             currentBlocks.push({
@@ -208,15 +211,19 @@ export class BedrockApi implements BaseLlmApi {
         }
 
         // ASSISTANT messages
-        const content = message.content;
-        if (content) {
-          if (typeof content === "string") {
-            currentBlocks.push({ text: content });
-          } else {
-            content.forEach((part) => {
-              currentBlocks.push(this._oaiPartToBedrockPart(part));
-            });
+        if (typeof message.content === "string") {
+          const trimmedText = message.content.trim();
+          if (trimmedText) {
+            currentBlocks.push({ text: trimmedText });
           }
+        } else {
+          message.content?.forEach((part) => {
+            const text = part.type === "text" ? part.text : part.refusal;
+            const trimmedText = text.trim();
+            if (trimmedText) {
+              currentBlocks.push({ text: trimmedText });
+            }
+          });
         }
 
         // TOOL CALLS
