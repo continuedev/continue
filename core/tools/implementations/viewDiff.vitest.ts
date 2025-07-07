@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { viewDiffImpl } from "./viewDiff";
+import { DEFAULT_GIT_DIFF_LINE_LIMIT, viewDiffImpl } from "./viewDiff";
 
 // Mock the getDiffsFromCache function
 vi.mock("../../autocomplete/snippets/gitDiffCache", () => ({
@@ -37,8 +37,6 @@ test("viewDiff should not truncate diffs under line limit", async () => {
 });
 
 test("viewDiff should truncate diffs exceeding line limit", async () => {
-  const DEFAULT_GIT_DIFF_LINE_LIMIT = 5000;
-
   // Create a large diff that exceeds the line limit
   const largeDiffLines = Array(DEFAULT_GIT_DIFF_LINE_LIMIT + 1000).fill(
     "line content",

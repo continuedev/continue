@@ -2,7 +2,7 @@ import { ToolImpl } from ".";
 import { ContextItem } from "../..";
 import { getDiffsFromCache } from "../../autocomplete/snippets/gitDiffCache";
 
-const DEFAULT_GIT_DIFF_LINE_LIMIT = 5000;
+export const DEFAULT_GIT_DIFF_LINE_LIMIT = 5000;
 
 export const viewDiffImpl: ToolImpl = async (args, extras) => {
   const diffs = await getDiffsFromCache(extras.ide); // const diffs = await extras.ide.getDiff(true);
