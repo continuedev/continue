@@ -6,14 +6,17 @@
 
 const fs = require("fs");
 const path = require("path");
+
 const { rimrafSync } = require("rimraf");
+
 const {
   validateFilesPresent,
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
+
+const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
+const { npmInstall } = require("./npm-install");
 const {
-  copyConfigSchema,
-  installNodeModules,
   buildGui,
   copyOnnxRuntimeFromNodeModules,
   copyTreeSitterWasms,
@@ -48,10 +51,10 @@ if (args[2] === "--target") {
 
 let os;
 let arch;
-if (!target) {
-  [os, arch] = autodetectPlatformAndArch();
-} else {
+if (target) {
   [os, arch] = target.split("-");
+} else {
+  [os, arch] = autodetectPlatformAndArch();
 }
 
 if (os === "alpine") {
@@ -71,26 +74,14 @@ function ghAction() {
   return !!process.env.GITHUB_ACTIONS;
 }
 
-function isArm() {
-  return (
-    target === "darwin-arm64" ||
-    target === "linux-arm64" ||
-    target === "win32-arm64"
-  );
-}
-
-function isWin() {
-  return target?.startsWith("win");
-}
-
 async function package(target, os, arch, exe) {
   console.log("[info] Packaging extension for target ", target);
 
   // Copy config_schema to intellij
-  copyConfigSchema();
+  await generateAndCopyConfigYamlSchema();
 
   // Install node_modules
-  installNodeModules();
+  await npmInstall();
 
   // Build gui and copy to extensions
   await buildGui(ghAction());
@@ -214,4 +205,5 @@ async function package(target, os, arch, exe) {
 
 void (async () => {
   await package(target, os, arch, exe);
+  process.exit(0);
 })();

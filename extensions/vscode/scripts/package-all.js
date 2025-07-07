@@ -11,7 +11,7 @@ const PLATFORMS = [
 const args = process.argv.slice(2);
 const isPreRelease = args.includes("--pre-release");
 
-(async () => {
+void (async () => {
   for (const i in PLATFORMS) {
     const platform = PLATFORMS[i];
     const pkgCommand = isPreRelease
@@ -23,4 +23,5 @@ const isPreRelease = args.includes("--pre-release");
     });
     execSync(pkgCommand, { stdio: "inherit" });
   }
+  process.exit(0);
 })();
