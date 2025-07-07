@@ -40,16 +40,12 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools
     const activeTools = selectActiveTools(state);
     const toolsSupported = modelSupportsTools(selectedChatModel);
-    const readOnlyMode = state.session.readOnlyMode;
-    const filteredTools = readOnlyMode
-      ? activeTools.filter((t) => t.readonly)
-      : activeTools;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
-    if (toolsSupported && filteredTools.length > 0) {
+    if (toolsSupported && activeTools.length > 0) {
       completionOptions = {
-        tools: filteredTools,
+        tools: activeTools,
       };
     }
 
@@ -119,21 +115,19 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(addPromptCompletionPair([next.value]));
 
       try {
-        if (state.session.mode === "chat" || state.session.mode === "agent") {
-          extra.ideMessenger.post("devdata/log", {
-            name: "chatInteraction",
-            data: {
-              prompt: next.value.prompt,
-              completion: next.value.completion,
-              modelProvider: selectedChatModel.underlyingProviderName,
-              modelTitle: selectedChatModel.title,
-              sessionId: state.session.id,
-              ...(state.session.mode === "agent" && {
-                tools: filteredTools.map((tool) => tool.function.name),
-              }),
-            },
-          });
-        }
+        extra.ideMessenger.post("devdata/log", {
+          name: "chatInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: selectedChatModel.underlyingProviderName,
+            modelTitle: selectedChatModel.title,
+            sessionId: state.session.id,
+            ...(!!activeTools.length && {
+              tools: activeTools.map((tool) => tool.function.name),
+            }),
+          },
+        });
         // else if (state.session.mode === "edit") {
         //   extra.ideMessenger.post("devdata/log", {
         //     name: "editInteraction",

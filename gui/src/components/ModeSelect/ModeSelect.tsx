@@ -8,7 +8,7 @@ import { modelSupportsTools } from "core/llm/autodetect";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { setMode, setReadOnly } from "../../redux/slices/sessionSlice";
+import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
@@ -32,30 +32,24 @@ export function ModeSelect() {
     if (!selectedModel) {
       return;
     }
-    if (mode === "agent" && !agentModeSupported) {
+    if (mode !== "chat" && !agentModeSupported) {
       dispatch(setMode("chat"));
     }
   }, [mode, agentModeSupported, dispatch, selectedModel]);
 
-  const readOnlyMode = useAppSelector((store) => store.session.readOnlyMode);
-  const pseudoMode = useMemo(() => {
-    return mode === "chat" ? "chat" : readOnlyMode ? "plan" : "agent";
-  }, [mode, readOnlyMode]);
   const cycleMode = useCallback(() => {
-    if (pseudoMode === "chat") {
+    if (mode === "chat") {
+      dispatch(setMode("plan"));
+    } else if (mode === "plan") {
       dispatch(setMode("agent"));
-      dispatch(setReadOnly(true));
-    } else if (pseudoMode === "plan") {
-      dispatch(setReadOnly(false));
     } else {
-      dispatch(setReadOnly(true));
       dispatch(setMode("chat"));
     }
     // Only focus main editor if another one doesn't already have focus
     if (!document.activeElement?.classList?.contains("ProseMirror")) {
       mainEditor?.commands.focus();
     }
-  }, [pseudoMode, mainEditor]);
+  }, [mode, mainEditor]);
 
   const selectMode = useCallback(
     (newMode: MessageModes) => {
@@ -89,13 +83,9 @@ export function ModeSelect() {
           data-testid="mode-select-button"
           className="xs:px-2 text-description bg-lightgray/20 gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
         >
-          <ModeIcon mode={pseudoMode} />
+          <ModeIcon mode={mode} />
           <span className="hidden sm:block">
-            {pseudoMode === "chat"
-              ? "Chat"
-              : pseudoMode === "agent"
-                ? "Agent"
-                : "Plan"}
+            {mode === "chat" ? "Chat" : mode === "agent" ? "Agent" : "Plan"}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
@@ -113,19 +103,16 @@ export function ModeSelect() {
                 {getMetaKeyLabel()}L
               </span>
             </div>
-            {pseudoMode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
+            {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
           <ListboxOption
-            value="agent"
+            value="plan"
             disabled={!agentModeSupported}
             className={"gap-1"}
-            onClick={() => {
-              dispatch(setReadOnly(true));
-            }}
           >
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="plan" />
-              <span className="">Agent (Plan)</span>
+              <span className="">Plan</span>
               <InformationCircleIcon
                 data-tooltip-id="plan-tip"
                 className="h-2.5 w-2.5 flex-shrink-0"
@@ -136,12 +123,12 @@ export function ModeSelect() {
                   zIndex: 200001,
                 }}
               >
-                In Plan mode, the Agent can only use read-only tools
+                In Plan mode, only use read-only and MCP tools are enabled
               </ToolTip>
             </div>
             {agentModeSupported ? (
               <CheckIcon
-                className={`ml-auto h-3 w-3 ${pseudoMode === "plan" ? "" : "opacity-0"}`}
+                className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
               />
             ) : (
               <span>(Not supported)</span>
@@ -151,29 +138,26 @@ export function ModeSelect() {
             value="agent"
             disabled={!agentModeSupported}
             className={"gap-1"}
-            onClick={() => {
-              dispatch(setReadOnly(false));
-            }}
           >
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="agent" />
-              <span className="">Agent (Act)</span>
+              <span className="">Agent</span>
               <InformationCircleIcon
-                data-tooltip-id="act-tip"
+                data-tooltip-id="agent-tip"
                 className="h-2.5 w-2.5 flex-shrink-0"
               />
               <ToolTip
-                id="act-tip"
+                id="agent-tip"
                 style={{
                   zIndex: 200001,
                 }}
               >
-                In Act mode, the Agent can use create/edit tools
+                All tools are enabled based on policies
               </ToolTip>
             </div>
             {agentModeSupported ? (
               <CheckIcon
-                className={`ml-auto h-3 w-3 ${pseudoMode === "agent" ? "" : "opacity-0"}`}
+                className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
               />
             ) : (
               <span>(Not supported)</span>

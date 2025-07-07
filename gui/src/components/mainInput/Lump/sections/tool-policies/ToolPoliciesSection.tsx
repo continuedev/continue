@@ -27,7 +27,6 @@ const ModeBadge = ({ text, onClick, isSelected, icon }: ModeBadgeProps) => {
 
 export const ToolPoliciesSection = () => {
   const mode = useAppSelector((state) => state.session.mode);
-  const readOnlyMode = useAppSelector((state) => state.session.readOnlyMode);
   const availableTools = useAppSelector((state) => state.config.config.tools);
   const toolGroupSettings = useAppSelector(
     (store) => store.ui.toolGroupSettings,
@@ -62,11 +61,10 @@ export const ToolPoliciesSection = () => {
 
   const allToolsOff = mode === "chat";
 
-  const pseudoMode = mode === "chat" ? "chat" : readOnlyMode ? "plan" : "act";
   const message =
-    pseudoMode === "chat"
+    mode === "chat"
       ? "All tools are disabled in Chat mode"
-      : pseudoMode === "plan"
+      : mode === "plan"
         ? "Plan mode: only MCP and read-only tools"
         : "Act mode: all tool policies apply";
 

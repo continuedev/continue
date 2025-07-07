@@ -6,7 +6,7 @@ import {
 import { MessageModes } from "core";
 
 interface ModeIconProps {
-  mode: MessageModes | "plan";
+  mode: MessageModes;
   className?: string;
 }
 

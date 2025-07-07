@@ -643,6 +643,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     template: llm.template,
     completionOptions: llm.completionOptions,
     baseAgentSystemMessage: llm.baseAgentSystemMessage,
+    basePlanSystemMessage: llm.basePlanSystemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),

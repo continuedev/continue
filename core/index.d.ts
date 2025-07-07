@@ -427,7 +427,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "agent";
+export type MessageModes = "chat" | "agent" | "plan";
 
 export type ToolStatus =
   | "generating"
@@ -567,6 +567,7 @@ export interface LLMOptions {
   title?: string;
   uniqueId?: string;
   baseAgentSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseChatSystemMessage?: string;
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
   contextLength?: number;
@@ -1090,6 +1091,7 @@ export interface ModelDescription {
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   baseAgentSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
@@ -1629,9 +1631,11 @@ export interface TerminalOptions {
 
 export type RuleSource =
   | "default-chat"
+  | "default-plan"
   | "default-agent"
-  | "model-chat-options"
-  | "model-agent-options"
+  | "model-options-chat"
+  | "model-options-plan"
+  | "model-options-agent"
   | "rules-block"
   | "json-systemMessage"
   | ".continuerules";
