@@ -1162,6 +1162,7 @@ export interface StdioOptions {
   command: string;
   args: string[];
   env?: Record<string, string>;
+  cwd?: string;
   requestOptions?: RequestOptions;
 }
 
