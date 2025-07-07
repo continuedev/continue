@@ -1,8 +1,10 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
+import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getContinueBinaryPath
 import com.github.continuedev.continueintellijextension.utils.getOS
+import com.intellij.openapi.components.service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -28,7 +30,25 @@ class ContinueBinaryProcess(private val onExit: () -> Unit) : ContinueProcess {
         }
         return ProcessBuilder(path).directory(File(path).parentFile)
             .start()
-            .apply { onExit().thenRun(onExit) }
+            .apply { onExit().thenRun(onExit).thenRun { reportErrorTelemetry() } }
+    }
+
+
+    private fun reportErrorTelemetry() {
+        var err = process.errorStream?.bufferedReader()?.readText()?.trim()
+        if (err != null) {
+            // There are often "⚡️Done in Xms" messages, and we want everything after the last one
+            val delimiter = "⚡ Done in"
+            val doneIndex = err.lastIndexOf(delimiter)
+            if (doneIndex != -1) {
+                err = err.substring(doneIndex + delimiter.length)
+            }
+        }
+
+        println("Core process exited with output: $err")
+
+        val telemetryService = service<TelemetryService>()
+        telemetryService.capture("jetbrains_core_exit", mapOf("error" to err))
     }
 
     private companion object {
