@@ -27,7 +27,10 @@ module.exports = {
         "spin-slow": "spin 6s linear infinite",
       },
       borderRadius: {
-        default: "5px",
+        default: "0.5rem",
+      },
+      outlineOffset: {
+        0.5: "0.5px",
       },
       colors: {
         background: varWithFallback("background"),

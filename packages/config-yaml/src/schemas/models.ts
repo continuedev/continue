@@ -45,6 +45,9 @@ export const completionOptionsSchema = z.object({
   temperature: z.number().optional(),
   topP: z.number().optional(),
   topK: z.number().optional(),
+  minP: z.number().optional(),
+  presencePenalty: z.number().optional(),
+  frequencyPenalty: z.number().optional(),
   stop: z.array(z.string()).optional(),
   n: z.number().optional(),
   reasoning: z.boolean().optional(),
@@ -82,6 +85,7 @@ export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 export const chatOptionsSchema = z.object({
   baseSystemMessage: z.string().optional(),
   baseAgentSystemMessage: z.string().optional(),
+  basePlanSystemMessage: z.string().optional(),
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 

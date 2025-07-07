@@ -3,17 +3,13 @@ import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
+import { ApplyToFilePayload } from "core";
+import { myersDiff } from "core/diff/myers";
+import { generateLines } from "core/diff/util";
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-
-export interface ApplyToFileOptions {
-  streamId: string;
-  filepath?: string;
-  text: string;
-  toolCallId?: string;
-}
 
 /**
  * Handles applying text/code to files including diff generation and streaming
@@ -31,7 +27,8 @@ export class ApplyManager {
     filepath,
     text,
     toolCallId,
-  }: ApplyToFileOptions) {
+    isSearchAndReplace,
+  }: ApplyToFilePayload) {
     await this.webviewProtocol.request("updateApplyState", {
       streamId,
       status: "streaming",
@@ -45,19 +42,34 @@ export class ApplyManager {
 
     const { activeTextEditor } = vscode.window;
     if (!activeTextEditor) {
-      vscode.window.showErrorMessage("No active editor to apply edits to");
+      void vscode.window.showErrorMessage("No active editor to apply edits to");
       return;
     }
 
     const hasExistingDocument = !!activeTextEditor.document.getText().trim();
 
     if (hasExistingDocument) {
-      await this.handleExistingDocument(
-        activeTextEditor,
-        text,
-        streamId,
-        toolCallId,
-      );
+      // Currently `isSearchAndReplace` will always provide a full file rewrite
+      // as the contents of `text`, so we can just instantly apply
+      if (isSearchAndReplace) {
+        const diffLinesGenerator = generateLines(
+          myersDiff(activeTextEditor.document.getText(), text),
+        );
+
+        await this.verticalDiffManager.streamDiffLines(
+          diffLinesGenerator,
+          true,
+          streamId,
+          toolCallId,
+        );
+      } else {
+        await this.handleExistingDocument(
+          activeTextEditor,
+          text,
+          streamId,
+          toolCallId,
+        );
+      }
     } else {
       await this.handleEmptyDocument(
         activeTextEditor,
@@ -104,14 +116,14 @@ export class ApplyManager {
   ) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
-      vscode.window.showErrorMessage("Config not loaded");
+      void vscode.window.showErrorMessage("Config not loaded");
       return;
     }
 
     const llm =
       config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
     if (!llm) {
-      vscode.window.showErrorMessage(
+      void vscode.window.showErrorMessage(
         `No model with roles "apply" or "chat" found in config.`,
       );
       return;
@@ -165,7 +177,7 @@ export class ApplyManager {
   ) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
-      vscode.window.showErrorMessage("Config not loaded");
+      void vscode.window.showErrorMessage("Config not loaded");
       return;
     }
 

@@ -19,7 +19,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <editorFactoryListener
                 implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteEditorListener"/>
-        <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.svg"
+        <toolWindow id="Continue" anchor="right" icon="com.github.continuedev.continueintellijextension.Icons.Continue"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
@@ -36,11 +36,7 @@
                            displayType="BALLOON"/>
         <actionPromoter order="last"
                         implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
-    </extensions>
-
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
-    <extensions defaultExtensionNs="com.intellij">
+        <errorHandler implementation="com.github.continuedev.continueintellijextension.error.ContinueErrorSubmitter"/>
         <postStartupActivity
                 implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
         <applicationConfigurable

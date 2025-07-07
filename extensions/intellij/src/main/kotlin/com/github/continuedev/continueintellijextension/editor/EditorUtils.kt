@@ -47,6 +47,13 @@ class EditorUtils(val editor: Editor) {
     }
 
     /**
+     * Gets the full text content of the document
+     */
+    fun getDocumentText(): String {
+        return editor.document.text
+    }
+    
+    /**
      * Inserts text at the specified position in the document
      */
     fun insertTextAtPos(pos: Int, text: String) {
@@ -61,7 +68,6 @@ class EditorUtils(val editor: Editor) {
     fun insertTextIntoEmptyDocument(text: String) {
         insertTextAtPos(0, text)
     }
-
 
     /**
      * Scrolls the editor to make the specified line visible
@@ -165,7 +171,6 @@ class EditorUtils(val editor: Editor) {
                     }
                 }
             }
-
             val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
             return EditorUtils(editor)
         }

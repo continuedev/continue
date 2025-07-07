@@ -10,7 +10,6 @@ import {
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
-import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -21,6 +20,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
+import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
@@ -38,13 +38,14 @@ import { TTS } from "./util/tts";
 
 import {
   CompleteOnboardingPayload,
+  ContextItemId,
   ContextItemWithId,
   IdeSettings,
   ModelDescription,
+  Position,
   RangeInFile,
   ToolCall,
   type ContextItem,
-  type ContextItemId,
   type IDE,
 } from ".";
 
@@ -67,6 +68,8 @@ import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
 import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
+import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
+import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -555,7 +558,6 @@ export class Core {
           : undefined,
         input: data.input,
         language: data.language,
-        onlyOneInsertion: false,
         overridePrompt: undefined,
         abortController,
       });
@@ -716,6 +718,52 @@ export class Core {
       }
     });
 
+    on("files/smallEdit", async ({ data }) => {
+      const EDIT_AGGREGATION_OPTIONS = {
+        deltaT: 1.0,
+        deltaL: 5,
+        maxEdits: 500,
+        maxDuration: 120.0,
+        contextSize: 5,
+      };
+
+      EditAggregator.getInstance(
+        EDIT_AGGREGATION_OPTIONS,
+        (
+          beforeAfterdiff: BeforeAfterDiff,
+          cursorPosBeforeEdit: Position,
+          cursorPosAfterPrevEdit: Position,
+        ) => {
+          void processSmallEdit(
+            beforeAfterdiff,
+            cursorPosBeforeEdit,
+            cursorPosAfterPrevEdit,
+            data.configHandler,
+            data.getDefsFromLspFunction,
+            this.ide,
+          );
+        },
+      );
+
+      const workspaceDir =
+        data.actions.length > 0 ? data.actions[0].workspaceDir : undefined;
+
+      // Store the latest context data
+      const instance = EditAggregator.getInstance();
+      (instance as any).latestContextData = {
+        configHandler: data.configHandler,
+        getDefsFromLspFunction: data.getDefsFromLspFunction,
+        recentlyEditedRanges: data.recentlyEditedRanges,
+        recentlyVisitedRanges: data.recentlyVisitedRanges,
+        workspaceDir: workspaceDir,
+      };
+
+      // queueMicrotask prevents blocking the UI thread during typing
+      queueMicrotask(() => {
+        void EditAggregator.getInstance().processEdits(data.actions);
+      });
+    });
+
     // Docs, etc. indexing
     on("indexing/reindex", async (msg) => {
       if (msg.data.type === "docs") {
@@ -823,7 +871,7 @@ export class Core {
       this.messenger.send("toolCallPartialOutput", params);
     };
 
-    return await callTool(tool, toolCall, {
+    const result = await callTool(tool, toolCall, {
       config,
       ide: this.ide,
       llm: config.selectedModelByRole.chat,
@@ -834,6 +882,8 @@ export class Core {
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
     });
+
+    return result;
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -1021,6 +1071,7 @@ export class Core {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
+      isInAgentMode: boolean;
     }>,
   ) => {
     const { config } = await this.configHandler.loadConfig();
@@ -1045,18 +1096,15 @@ export class Core {
         // user doesn't need these in their config.json for the shortcuts to work
         // option+enter
         new CurrentFileContextProvider({}),
-        // cmd+enter
-        new CodebaseContextProvider({}),
       ].find((provider) => provider.description.title === name);
     if (!provider) {
       return [];
     }
 
     try {
-      const id: ContextItemId = {
-        providerTitle: provider.description.title,
-        itemId: uuidv4(),
-      };
+      void Telemetry.capture("context_provider_get_context_items", {
+        name: provider.description.title,
+      });
 
       const items = await provider.getContextItems(query, {
         config,
@@ -1068,6 +1116,7 @@ export class Core {
         reranker: config.selectedModelByRole.rerank,
         fetch: (url, init) =>
           fetchwithRequestOptions(url, init, config.requestOptions),
+        isInAgentMode: msg.data.isInAgentMode,
       });
 
       void Telemetry.capture(
@@ -1078,10 +1127,14 @@ export class Core {
         true,
       );
 
-      return items.map((item) => ({
-        ...item,
-        id,
-      }));
+      return items.map((item) => {
+        const id: ContextItemId = {
+          providerTitle: provider.description.title,
+          itemId: uuidv4(),
+        };
+
+        return { ...item, id };
+      });
     } catch (e) {
       let knownError = false;
 

@@ -36,7 +36,7 @@
                     "id": "test_id",
                     "type": "function",
                     "function": {
-                      "name": "builtin_view_diff"
+                      "name": "view_diff"
                     }
                   }
                 ]
