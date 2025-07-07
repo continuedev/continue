@@ -3,6 +3,10 @@ import { AutocompleteCodeSnippet } from "core/autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "core/autocomplete/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { RecentlyEditedRange } from "core/nextEdit/types";
+import { getContinueGlobalPath } from "core/util/paths";
+import { findUriInDirs } from "core/util/uri";
+import fs from "fs";
+import { resolve } from "path";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 
@@ -18,23 +22,53 @@ export const getBeforeCursorPos = (range: Range, activePos: Position) => {
   }
 };
 
-const getWorkspaceDirInfo = async (
-  event: vscode.TextDocumentChangeEvent,
-  ide: IDE,
-) => {
-  // gets the workspace dir uri and checks if it's the open-source continue repo
+const isFileWithinFolder = (fileUri: string, folderPath: string): boolean => {
+  try {
+    const uriMatch = fileUri.match(/^([a-zA-Z]+:\/\/)/);
+    const scheme = uriMatch ? uriMatch[1] : "file://";
+
+    const folderUri = folderPath.match(/^[a-zA-Z]+:\/\//)
+      ? folderPath
+      : `${scheme}${folderPath}`;
+
+    const normalizedFolderUri = folderUri.endsWith("/")
+      ? folderUri
+      : `${folderUri}/`;
+
+    const { foundInDir } = findUriInDirs(fileUri, [normalizedFolderUri]);
+    return foundInDir !== null;
+  } catch (error) {
+    return false;
+  }
+};
+
+const isEditLoggingAllowed = async (editedFileURI: string) => {
+  const globalContinuePath = getContinueGlobalPath();
+  const editLogDirsPath = resolve(globalContinuePath, ".editlogdirs");
+
+  try {
+    const fileContent = await fs.promises.readFile(editLogDirsPath, "utf-8");
+    const stringItems = fileContent
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    return stringItems.some((dir) => isFileWithinFolder(editedFileURI, dir));
+  } catch (error) {
+    return false;
+  }
+};
+
+const getWorkspaceDirUri = async (event: vscode.TextDocumentChangeEvent) => {
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(
     event.document.uri,
   );
   if (!workspaceFolder) {
     return false;
   }
+
   const workspaceDirUri = workspaceFolder.uri.toString();
-  const repoName = await ide.getRepoName(workspaceDirUri);
-  return {
-    workspaceDirUri: workspaceDirUri,
-    isContinueRepo: repoName === "continuedev/continue",
-  };
+  return workspaceDirUri;
 };
 
 export const handleTextDocumentChange = async (
@@ -52,10 +86,10 @@ export const handleTextDocumentChange = async (
   if (!editor) return;
   if (event.contentChanges.length === 0) return;
 
-  // Ensure that loggin will only happen in the open-source continue repo
-  const workspaceDirInfo = await getWorkspaceDirInfo(event, ide);
-  if (!workspaceDirInfo) return;
-  // if (!workspaceDirInfo.isContinueRepo) return;
+  // Ensure that logging will only happen in the open-source continue repo
+  const workspaceDirUri = await getWorkspaceDirUri(event);
+  if (!workspaceDirUri) return;
+  if (!(await isEditLoggingAllowed(event.document.uri.toString()))) return;
 
   const activeCursorPos = editor.selection.active;
   const editActions: RangeInFileWithNextEditInfo[] = changes.map((change) => ({
@@ -68,7 +102,7 @@ export const handleTextDocumentChange = async (
     editText: change.text,
     beforeCursorPos: getBeforeCursorPos(change.range, activeCursorPos),
     afterCursorPos: activeCursorPos as Position,
-    workspaceDir: workspaceDirInfo.workspaceDirUri,
+    workspaceDir: workspaceDirUri,
   }));
 
   let recentlyEditedRanges: RecentlyEditedRange[] = [];

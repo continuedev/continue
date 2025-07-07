@@ -2,7 +2,7 @@ import { IDE, Position } from "../..";
 import { AutocompleteCodeSnippet } from "../../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../../autocomplete/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
-// import { DataLogger } from "../../data/log";
+import { DataLogger } from "../../data/log";
 import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
 import { createDiff, DiffFormatType } from "./diffFormatting";
@@ -108,22 +108,22 @@ export const processNextEditData = async ({
     );
   }
 
-  // if (filenamesAndDiffs.length > 0) {
-  //   // if there are previous edits, log
-  //   void DataLogger.getInstance().logDevData({
-  //     name: "nextEditWithHistory",
-  //     data: {
-  //       previousEdits: filenamesAndDiffs,
-  //       fileURI: filePath,
-  //       workspaceDirURI: workspaceDir,
-  //       beforeContent,
-  //       afterContent,
-  //       beforeCursorPos: cursorPosBeforeEdit,
-  //       afterCursorPos: cursorPosAfterPrevEdit,
-  //       context: autocompleteContext,
-  //     },
-  //   });
-  // }
+  if (filenamesAndDiffs.length > 0) {
+    // if there are previous edits, log
+    void DataLogger.getInstance().logDevData({
+      name: "nextEditWithHistory",
+      data: {
+        previousEdits: filenamesAndDiffs,
+        fileURI: filePath,
+        workspaceDirURI: workspaceDir,
+        beforeContent,
+        afterContent,
+        beforeCursorPos: cursorPosBeforeEdit,
+        afterCursorPos: cursorPosAfterPrevEdit,
+        context: autocompleteContext,
+      },
+    });
+  }
 
   // add current edit to history
   const thisEdit: prevEdit = {
