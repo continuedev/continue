@@ -27,13 +27,14 @@ jobs:
           fetch-depth: 0
 
       - name: Validate conventional commits
+        id: commitlint
         uses: wagoid/commitlint-github-action@v6
         with:
           configFile: .commitlintrc.warning.json
         continue-on-error: true
 
       - name: Add commit message guidance comment
-        if: failure()
+        if: steps.commitlint.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
