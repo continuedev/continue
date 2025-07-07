@@ -28,9 +28,11 @@ export function EditToolbar() {
         Back to {mode.charAt(0).toUpperCase() + mode.slice(1)}
       </span>
       <span className="truncate">
-        Editing{" "}
+        Editing:{" "}
         <span className="italic">
-          {getEditFilenameAndRangeText(codeToEdit)}
+          {codeToEdit
+            ? getEditFilenameAndRangeText(codeToEdit)
+            : "⚠️ No file selected"}
         </span>
       </span>
     </div>
