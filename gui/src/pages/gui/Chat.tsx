@@ -33,6 +33,7 @@ import {
   selectCurrentToolCallApplyState,
 } from "../../redux/selectors/selectCurrentToolCall";
 import {
+  cancelToolCall,
   newSession,
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
@@ -158,9 +159,11 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (currentToolCallState?.status === "generated") {
-        return console.error(
-          "Cannot submit message while awaiting tool confirmation",
+      if (currentToolCallState) {
+        dispatch(
+          cancelToolCall({
+            toolCallId: currentToolCallState.toolCallId,
+          }),
         );
       }
       if (
@@ -169,7 +172,6 @@ export function Chat() {
       ) {
         ideMessenger.post("rejectDiff", currentToolCallApplyState);
       }
-
       const model = isInEdit
         ? (selectedModels?.edit ?? selectedModels?.chat)
         : selectedModels?.chat;
