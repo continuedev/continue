@@ -1,0 +1,45 @@
+---
+title: "Quick Start"
+---
+
+## How to use it[​](#how-to-use-it "Direct link to How to use it")
+
+Agent equips the Chat model with the tools needed to handle a wide range of coding tasks, allowing the model to make decisions and save you the work of manually finding context and performing actions.
+
+### Use Agent[​](#use-agent "Direct link to Use Agent")
+
+You can switch to `Agent` in the mode selector below the chat input box.
+
+![How to select agent mode](/images/mode-select-agent.png)
+
+<Info>
+  If Agent is disabled with a `Not Supported` message, the selected model or provider doesn't support tools, or Continue doesn't yet support tools with it. See [Model Blocks](/customization/models) for more information.
+</Info>
+
+### Chat with Agent[​](#chat-with-agent "Direct link to Chat with Agent")
+
+Agent lives within the same interface as [Chat](/features/chat/how-it-works), so the same [input](/features/chat/quick-start#1-start-a-conversation) is used to send messages and you can still use the same manual methods of providing context, such as [`@` context providers](/features/chat/quick-start#3-use--for-additional-context) or adding [highlighted code from the editor](/features/chat/quick-start#2-include-code-context).
+
+#### Use natural language[​](#use-natural-language "Direct link to Use natural language")
+
+With Agent, you can provide natural language instruction and let the model do the work. As an example, you might say
+
+> Set the @typescript-eslint/naming-convention rule to "off" for all eslint configurations in this project
+
+Agent will then decide which tools to use to get the job done.
+
+## Give Agent permission[​](#give-agent-permission "Direct link to Give Agent permission")
+
+By default, Agent will ask permission when it wants to use a tool. Click `Continue` to allow Agent mode to proceed with the tool call or `Cancel` to reject it.
+
+![agent requesting permission](/images/features/agent/images/agent-permission-c150919a5c43eb4f55d9d4a46ef8b2d6.png)
+
+You can use tool policies to exclude or make usage automatic for specific tools. See [MCP Tools](/customization/mcp-tools) for more background.
+
+## View Tool Responses[​](#view-tool-responses "Direct link to View Tool Responses")
+
+Any data returned from a tool call is automatically fed back into the model as a context item. Most errors are also caught and returned, so that Agent mode can decide how to proceed.
+
+![agent response](/images/features/agent/images/agent-response-c7287c82aac93fb4376f9d85b352b2d7.png)
+
+[Edit this page](https://github.com/continuedev/continue/tree/main/docs/docs/features/agent/quick-start.mdx)

@@ -40,19 +40,19 @@
   "tabs": [
     {
       "name": "User Guide",
-      "url": "/"
+      "url": "getting-started"
     },
     {
-      "name": "Customize",
-      "url": "/customization/overview"
+      "name": "Customize", 
+      "url": "customize"
     },
     {
       "name": "Hub",
-      "url": "/hub/introduction"
+      "url": "hub"
     },
     {
       "name": "Reference",
-      "url": "/reference"
+      "url": "reference"
     }
   ],
   "anchors": [
@@ -268,7 +268,8 @@
     {
       "group": "Reference",
       "pages": [
-        "reference"
+        "reference",
+        "troubleshooting"
       ]
     }
   ],

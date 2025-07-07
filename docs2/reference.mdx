@@ -1,10 +1,8 @@
 ---
 title: "config.yaml Reference"
-sidebarTitle: "Reference"
-icon: "code"
 ---
 
-## Introduction
+## Introduction[​](#introduction "Direct link to Introduction")
 
 Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from [the Hub](https://hub.continue.dev/explore/assistants) or locally
 
@@ -15,11 +13,9 @@ Continue hub assistants are defined using the `config.yaml` specification. Assis
   * in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
   * in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
-<Note>
-  ### INFO
-
-  Config YAML replaces [`config.json`](https://docs.continue.dev/json-reference), which is deprecated. View the **[Migration Guide](https://docs.continue.dev/yaml-migration)**.
-</Note>
+<Info>
+  Config YAML replaces `config.json`, which is deprecated. View the **[Migration Guide](/customize/yaml-migration)**.
+</Info>
 
 An assistant is made up of:
 
@@ -32,7 +28,7 @@ Examples of blocks and assistants can be found on the [Continue hub](https://hub
 
 Assistants can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
 
-### Using Blocks
+### Using Blocks[​](#using-blocks "Direct link to Using Blocks")
 
 Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 
@@ -40,15 +36,13 @@ Blocks can be imported into an assistant by adding a `uses` clause under the blo
 
 For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
 
+Assistant models section
 
-```yaml Assistant models section
-models:
-  - uses: anthropic/claude-3.5-sonnet # an imported model block
-  - model: deepseek-reasoner # an explicit model block
-    provider: ollama
+```
+models:  - uses: anthropic/claude-3.5-sonnet # an imported model block  - model: deepseek-reasoner # an explicit model block    provider: ollama
 ```
 
-### Local Blocks
+### Local Blocks[​](#local-blocks "Direct link to Local Blocks")
 
 It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
 
@@ -70,60 +64,44 @@ Blocks:
 
 You can find many examples of each of these block types on the [Continue Explore Page](https://hub.continue.dev/explore/models)
 
-<Note>
-  ### INFO
-
+<Info>
   Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }}`) can read secret values:
 
   * globally, from a `.env` located in the global `.continue` folder (`~/.continue/.env`)
   * per-workspace, from a `.env` file located at the root of the current workspace.
-</Note>
+</Info>
 
-### Inputs
+### Inputs[​](#inputs "Direct link to Inputs")
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
 
-```yaml Block config.yaml
-name: myprofile/custom-model
-models:
-  - name: My Favorite Model
-    provider: anthropic
-    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}
-    defaultCompletionOptions:
-      temperature: ${{ inputs.TEMP }}
+Block config.yaml
+
+```
+name: myprofile/custom-modelmodels:  - name: My Favorite Model    provider: anthropic    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}    defaultCompletionOptions:      temperature: ${{ inputs.TEMP }}
 ```
 
 Which can then be imported like
 
+Assistant config.yaml
 
-```yaml Assistant config.yaml
-name: myprofile/custom-assistant
-models:
-  - uses: myprofile/custom-model
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
-      TEMP: 0.9
+```
+name: myprofile/custom-assistantmodels:  - uses: myprofile/custom-model    with:      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}      TEMP: 0.9
 ```
 
 Note that hub secrets can be passed as inputs, using a similar mustache format: `secrets.SECRET_NAME`.
 
-### Overrides
+### Overrides[​](#overrides "Direct link to Overrides")
 
 Block properties can be also be directly overriden using `override`. For example:
 
-```yaml Assistant config.yaml
-name: myprofile/custom-assistant
-models:
-  - uses: myprofile/custom-model
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
-      TEMP: 0.9
-    override:
-      roles:
-        - chat
+Assistant config.yaml
+
+```
+name: myprofile/custom-assistantmodels:  - uses: myprofile/custom-model    with:      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}      TEMP: 0.9    override:      roles:        - chat
 ```
 
-## Properties
+## Properties[​](#properties "Direct link to Properties")
 
 Below are details for each property that can be set in `config.yaml`.
 
@@ -131,37 +109,42 @@ Below are details for each property that can be set in `config.yaml`.
 
 The top-level properties in the `config.yaml` configuration file are:
 
-<CardGroup>
-  <Card title="name" icon="square-check" horizontal href="#name"/>
-  <Card title="version" icon="square-check" horizontal href="#version"/>
-  <Card title="schema" icon="square-check" horizontal href="#schema"/>
-  <Card title="models" icon="square-check" horizontal href="#models"/>
-  <Card title="context" icon="square-check" horizontal href="#context"/>
-  <Card title="rules" icon="square-check" horizontal href="#rules"/>
-  <Card title="prompts" icon="square-check" horizontal href="#prompts"/>
-  <Card title="docs" icon="square-check" horizontal href="#docs"/>
-  <Card title="mcpServers" icon="square-check" horizontal href="#mcpservers"/>
-  <Card title="data" icon="square-check" horizontal href="#data"/>
-</CardGroup>
+* [`name`](#name) (**required**)
+* [`version`](#version) (**required**)
+* [`schema`](#schema) (**required**)
+* [`models`](#models)
+* [`context`](#context)
+* [`rules`](#rules)
+* [`prompts`](#prompts)
+* [`docs`](#docs)
+* [`mcpServers`](#mcpservers)
+* [`data`](#data)
 
+***
 
-### `name`
+### `name`[​](#name "Direct link to name")
 
 The `name` property specifies the name of your project or configuration.
 
-```yaml config.yaml
+config.yaml
+
+```
 name: MyProject
 ```
 
-### `version`
+***
+
+### `version`[​](#version "Direct link to version")
 
 The `version` property specifies the version of your project or configuration.
 
-### `schema`
+### `schema`[​](#schema "Direct link to schema")
 
 The `schema` property specifies the schema version used for the `config.yaml`, e.g. `v1`
 
-### `models`
+***
+
+### `models`[​](#models "Direct link to models")
 
 The `models` section defines the language models used in your configuration. Models are used for functionalities such as chat, editing, and summarizing.
 
@@ -181,7 +164,7 @@ The `models` section defines the language models used in your configuration. Mod
 
 * `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 
-* `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chat`, [`edit`](https://docs.continue.dev/customize/model-roles/edit#prompt-templating), [`apply`](https://docs.continue.dev/customize/model-roles/apply#prompt-templating) and [`autocomplete`](https://docs.continue.dev/customize/model-roles/autocomplete#prompt-templating). The `chat` property must be a valid template name, such as `llama3` or `anthropic`.
+* `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chat`, [`edit`](/customize/model-roles/edit#prompt-templating), [`apply`](/customize/model-roles/apply#prompt-templating) and [`autocomplete`](/customize/model-roles/autocomplete#prompt-templating). The `chat` property must be a valid template name, such as `llama3` or `anthropic`.
 
 * `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   * `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
@@ -224,44 +207,21 @@ The `models` section defines the language models used in your configuration. Mod
     * `key`: Path to the client certificate key file.
     * `passphrase`: Optional passphrase for the client certificate key file.
 
-#### Example
+#### Example[​](#example "Direct link to Example")
 
-```yaml config.yaml
-models:
-  - name: GPT-4o
-    provider: openai
-    model: gpt-4o
-    roles:
-      - chat
-      - edit
-      - apply
-    defaultCompletionOptions:
-      temperature: 0.7
-      maxTokens: 1500
+config.yaml
 
-  - name: Codestral
-    provider: mistral
-    model: codestral-latest
-    roles:
-      - autocomplete
-
-  - name: My Model - OpenAI-Compatible
-    provider: openai
-    apiBase: http://my-endpoint/v1
-    model: my-custom-model
-    capabilities:
-      - tool_use
-      - image_input
-    roles:
-      - chat
-      - edit
+```
+models:  - name: GPT-4o    provider: openai    model: gpt-4o    roles:      - chat      - edit      - apply    defaultCompletionOptions:      temperature: 0.7      maxTokens: 1500  - name: Codestral    provider: mistral    model: codestral-latest    roles:      - autocomplete  - name: My Model - OpenAI-Compatible    provider: openai    apiBase: http://my-endpoint/v1    model: my-custom-model    capabilities:      - tool_use      - image_input    roles:      - chat      - edit
 ```
 
-### `context`
+***
+
+### `context`[​](#context "Direct link to context")
 
 The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
 
-More information about usage/params for each context provider can be found [here](https://docs.continue.dev/customize/context-providers)
+More information about usage/params for each context provider can be found [here](/customize/custom-providers)
 
 **Properties:**
 
@@ -271,26 +231,17 @@ More information about usage/params for each context provider can be found [here
 
 **Example:**
 
-```yaml config.yaml
-context:
-  - provider: file
-  - provider: code
-  - provider: codebase
-    params:
-      nFinal: 10
-  - provider: docs
-  - provider: diff
-  - provider: http
-    name: Context Server 1
-    params:
-      url: "https://api.example.com/server1"
-  - provider: folder
-  - provider: terminal
+config.yaml
+
+```
+context:  - provider: file  - provider: code  - provider: codebase    params:      nFinal: 10  - provider: docs  - provider: diff  - provider: http    name: Context Server 1    params:      url: "https://api.example.com/server1"  - provider: folder  - provider: terminal
 ```
 
-### `rules`
+***
 
-List of rules that the LLM should follow. These are concatenated into the system message for all [Chat](/chat/how-to-use-it), [Edit](https://docs.continue.dev/edit/how-to-use-it), and [Agent](https://docs.continue.dev/agent/how-to-use-it) requests. See the [rules deep dive](https://docs.continue.dev/customize/deep-dives/rules) for details.
+### `rules`[​](#rules "Direct link to rules")
+
+List of rules that the LLM should follow. These are concatenated into the system message for all [Chat](/features/chat/quick-start), [Edit](/features/edit/quick-start), and [Agent](/features/agent/quick-start) requests. See the [rules deep dive](/customization/rules) for details.
 
 Explicit rules can either be simple text or an object with the following properties:
 
@@ -298,41 +249,27 @@ Explicit rules can either be simple text or an object with the following propert
 * `rule` (**required**): The text content of the rule
 * `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
 
-```yaml config.yaml
-rules:
-  - Always annotate Python functions with their parameter and return types
+config.yaml
 
-  - name: TypeScript best practices
-    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
-    globs: "**/*.{ts,tsx}"
-
-  - name: TypeScript test patterns
-    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
-    globs:
-      - "src/**/*.test.ts"
-      - "tests/**/*.ts"
-
-  - uses: myprofile/my-mood-setter
-    with:
-      TONE: concise
+```
+rules:  - Always annotate Python functions with their parameter and return types  - name: TypeScript best practices    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.    globs: "**/*.{ts,tsx}"  - name: TypeScript test patterns    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.    globs:      - "src/**/*.test.ts"      - "tests/**/*.ts"  - uses: myprofile/my-mood-setter    with:      TONE: concise
 ```
 
-### `prompts`
+***
+
+### `prompts`[​](#prompts "Direct link to prompts")
 
 A list of custom prompts that can be invoked from the chat window. Each prompt has a name, description, and the actual prompt text.
 
-```yaml config.yaml
-prompts:
-  - name: check
-    description: Check for mistakes in my code
-    prompt: |
-      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
-        - Syntax errors
-        - Logic errors
-        - Security vulnerabilities
+config.yaml
+
+```
+prompts:  - name: check    description: Check for mistakes in my code    prompt: |      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:        - Syntax errors        - Logic errors        - Security vulnerabilities
 ```
 
-### `docs`
+***
+
+### `docs`[​](#docs "Direct link to docs")
 
 List of documentation sites to index.
 
@@ -347,14 +284,15 @@ List of documentation sites to index.
 
 Example
 
-```yaml config.yaml
-docs:
-  - name: Continue
-    startUrl: https://docs.continue.dev/intro
-    favicon: https://docs.continue.dev/favicon.ico
+config.yaml
+
+```
+docs:  - name: Continue    startUrl: https://docs.continue.dev/intro    favicon: https://docs.continue.dev/favicon.ico
 ```
 
-### `mcpServers`
+***
+
+### `mcpServers`[​](#mcpservers "Direct link to mcpservers")
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider.
 
@@ -364,23 +302,20 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 * `command` (**required**): The command used to start the server.
 * `args`: An optional array of arguments for the command.
 * `env`: An optional map of environment variables for the server process.
+* `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 * `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
 **Example:**
 
-```yaml config.yaml
-mcpServers:
-  - name: My MCP Server
-    command: uvx
-    args:
-      - mcp-server-sqlite
-      - --db-path
-      - /Users/NAME/test.db
+config.yaml
+
+```
+mcpServers:  - name: My MCP Server    command: uvx    args:      - mcp-server-sqlite      - --db-path      - ./test.db    cwd: /Users/NAME/project    env:      NODE_ENV: production
 ```
 
-### `data`
+### `data`[​](#data "Direct link to data")
 
-Destinations to which [development data](https://docs.continue.dev/customize/deep-dives/development-data) will be sent.
+Destinations to which [development data](/customize/deep-dives/development-data) will be sent.
 
 **Properties:**
 
@@ -403,136 +338,32 @@ Destinations to which [development data](https://docs.continue.dev/customize/dee
 
   **Example:**
 
-```yaml config.yaml
-data:
-  - name: Local Data Bank
-    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data
-    schema: 0.2.0
-    level: all
-  - name: My Private Company
-    destination: https://mycompany.com/ingest
-    schema: 0.2.0
-    level: noCode
-    events:
-      - autocomplete
-      - chatInteraction
+config.yaml
+
+```
+data:  - name: Local Data Bank    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data    schema: 0.2.0    level: all  - name: My Private Company    destination: https://mycompany.com/ingest    schema: 0.2.0    level: noCode    events:      - autocomplete      - chatInteraction
 ```
 
-## Complete YAML Config Example
+***
+
+## Complete YAML Config Example[​](#complete-yaml-config-example "Direct link to Complete YAML Config Example")
 
 Putting it all together, here's a complete example of a `config.yaml` configuration file:
 
-```yaml config.yaml
-name: MyProject
-version: 0.0.1
-schema: v1
+config.yaml
 
-models:
-  - uses: anthropic/claude-3.5-sonnet
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-    override:
-      defaultCompletionOptions:
-        temperature: 0.8
-  - name: GPT-4
-    provider: openai
-    model: gpt-4
-    roles:
-      - chat
-      - edit
-    defaultCompletionOptions:
-      temperature: 0.5
-      maxTokens: 2000
-    requestOptions:
-      headers:
-        Authorization: Bearer YOUR_OPENAI_API_KEY
-
-  - name: Ollama Starcoder
-    provider: ollama
-    model: starcoder
-    roles:
-      - autocomplete
-    defaultCompletionOptions:
-      temperature: 0.3
-      stop:
-        - "\n"
-
-rules:
-  - Give concise responses
-  - Always assume TypeScript rather than JavaScript
-
-prompts:
-  - name: test
-    description: Unit test a function
-    prompt: |
-      Please write a complete suite of unit tests for this function. You should use the Jest testing framework.  The tests should cover all possible edge cases and should be as thorough as possible.  You should also include a description of each test case.
-  - uses: myprofile/my-favorite-prompt
-
-context:
-  - provider: diff
-  - provider: file
-  - provider: codebase
-  - provider: code
-  - provider: docs
-    params:
-      startUrl: https://docs.example.com/introduction
-      rootUrl: https://docs.example.com
-      maxDepth: 3
-
-mcpServers:
-  - name: DevServer
-    command: npm
-    args:
-      - run
-      - dev
-    env:
-      PORT: "3000"
-
-data:
-  - name: My Private Company
-    destination: https://mycompany.com/ingest
-    schema: 0.2.0
-    level: noCode
-    events:
-      - autocomplete
-      - chatInteraction
+```
+name: MyProjectversion: 0.0.1schema: v1models:  - uses: anthropic/claude-3.5-sonnet    with:      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}    override:      defaultCompletionOptions:        temperature: 0.8  - name: GPT-4    provider: openai    model: gpt-4    roles:      - chat      - edit    defaultCompletionOptions:      temperature: 0.5      maxTokens: 2000    requestOptions:      headers:        Authorization: Bearer YOUR_OPENAI_API_KEY  - name: Ollama Starcoder    provider: ollama    model: starcoder    roles:      - autocomplete    defaultCompletionOptions:      temperature: 0.3      stop:        - "\n"rules:  - Give concise responses  - Always assume TypeScript rather than JavaScriptprompts:  - name: test    description: Unit test a function    prompt: |      Please write a complete suite of unit tests for this function. You should use the Jest testing framework.  The tests should cover all possible edge cases and should be as thorough as possible.  You should also include a description of each test case.  - uses: myprofile/my-favorite-promptcontext:  - provider: diff  - provider: file  - provider: codebase  - provider: code  - provider: docs    params:      startUrl: https://docs.example.com/introduction      rootUrl: https://docs.example.com      maxDepth: 3mcpServers:  - name: DevServer    command: npm    args:      - run      - dev    env:      PORT: "3000"data:  - name: My Private Company    destination: https://mycompany.com/ingest    schema: 0.2.0    level: noCode    events:      - autocomplete      - chatInteraction
 ```
 
-## Using YAML anchors to avoid config duplication
+## Using YAML anchors to avoid config duplication[​](#using-yaml-anchors-to-avoid-config-duplication "Direct link to Using YAML anchors to avoid config duplication")
 
 You can also use node anchors to avoid duplication of properties. To do so, adding the YAML version header `%YAML 1.1` is needed, here's an example of a `config.yaml` configuration file using anchors:
 
-```yaml config.yaml
-%YAML 1.1
----
-name: MyProject
-version: 0.0.1
-schema: v1
+config.yaml
 
-model_defaults: &model_defaults
-  provider: openai
-  apiKey: my-api-key
-  apiBase: https://api.example.com/llm
-
-models:
-  - name: mistral
-    <<: *model_defaults
-    model: mistral-7b-instruct
-    roles:
-      - chat
-      - edit
-
-  - name: qwen2.5-coder-7b-instruct
-    <<: *model_defaults
-    model: qwen2.5-coder-7b-instruct
-    roles:
-      - chat
-      - edit
-
-  - name: qwen2.5-coder-7b
-    <<: *model_defaults
-    model: qwen2.5-coder-7b
-    useLegacyCompletionsEndpoint: false
-    roles:
-      - autocomplete
 ```
+%YAML 1.1---name: MyProjectversion: 0.0.1schema: v1model_defaults: &model_defaults  provider: openai  apiKey: my-api-key  apiBase: https://api.example.com/llmmodels:  - name: mistral    <<: *model_defaults    model: mistral-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b-instruct    <<: *model_defaults    model: qwen2.5-coder-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b    <<: *model_defaults    model: qwen2.5-coder-7b    useLegacyCompletionsEndpoint: false    roles:      - autocomplete
+```
+
+[Edit this page](https://github.com/continuedev/continue/tree/main/docs/docs/reference.mdx)
