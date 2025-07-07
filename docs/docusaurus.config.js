@@ -368,7 +368,7 @@ const config = {
           },
           {
             to: "/customize/model-providers/anthropic",
-            from: ["/reference/Model Providers/anthropicllm", "/advanced/model-providers/anthropic"],
+            from: ["/reference/Model Providers/anthropicllm"],
           },
           {
             to: "/customize/model-providers/azure",
