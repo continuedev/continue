@@ -1,6 +1,7 @@
 import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
 import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
+import posthog from "posthog-js";
 import { v4 as uuid } from "uuid";
 import { ClientToolImpl } from "./callClientTool";
 
@@ -10,6 +11,9 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   extras,
 ) => {
   const { filepath, diff } = args;
+
+  const state = extras.getState();
+  const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
 
   const streamId = uuid();
 
@@ -42,6 +46,16 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
 
       // Find the search content in the current state of the file
       const match = findSearchMatch(currentContent, searchContent || "");
+
+      // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
+      // directly rather than using `CustomPostHogProvider`
+      if (allowAnonymousTelemetry) {
+        // Capture telemetry for tool calls
+        posthog.capture("find_replace_match_result", {
+          matchStrategy: match?.strategyName ?? "noMatch",
+        });
+      }
+
       if (!match) {
         throw new Error(
           `Search content not found in block ${i + 1}:\n${searchContent}`,

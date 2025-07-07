@@ -128,6 +128,7 @@ interface StyledMarkdownPreviewProps {
   disableManualApply?: boolean;
   toolCallId?: string;
   expandCodeblocks?: boolean;
+  collapsible?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -306,6 +307,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               forceToolCallId={props.toolCallId}
               expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
+              collapsible={props.collapsible}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>
