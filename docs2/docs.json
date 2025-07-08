@@ -288,7 +288,11 @@
         "label": "Explore the   Hub",
         "href": "https://hub.continue.dev/"
       }
-    ]
+    ],
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/continuedev/continue"
+    }
   },
   "topbarCtaButton": {
     "type": "github",
