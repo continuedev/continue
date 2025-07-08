@@ -44,6 +44,7 @@ describe("LLMLogFormatter", () => {
           content: "You are a helpful assistant",
         },
       ],
+      provider: "watsonx",
     });
     logger._logItem({
       interactionId: "1",
@@ -79,6 +80,7 @@ describe("LLMLogFormatter", () => {
       promptTokens: 10,
       generatedTokens: 20,
       thinkingTokens: 0,
+      usage: undefined,
     });
 
     expect(output.getText()).toBe(
@@ -113,6 +115,7 @@ describe("LLMLogFormatter", () => {
         model: "granite3.2-dense:8b",
       },
       prompt: "A horse is a horse",
+      provider: "watsonx",
     });
     logger._logItem({
       interactionId: "1",
@@ -149,6 +152,7 @@ describe("LLMLogFormatter", () => {
       },
       prefix: "A\nB",
       suffix: "D\nE",
+      provider: "watsonx",
     });
     logger._logItem({
       interactionId: "1",
@@ -225,6 +229,7 @@ describe("LLMLogFormatter", () => {
       promptTokens: 10,
       generatedTokens: 20,
       thinkingTokens: 0,
+      usage: undefined,
     });
     logger._logItem({
       interactionId: "3",
