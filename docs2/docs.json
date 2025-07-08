@@ -902,6 +902,10 @@
     {
       "source": "/customize/yaml-migration",
       "destination": "/reference/yaml-migration"
+    },
+    {
+      "source": "/about",
+      "destination": "/about-us"
     }
   ]
 }
