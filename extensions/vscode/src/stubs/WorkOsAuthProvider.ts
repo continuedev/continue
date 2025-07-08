@@ -77,6 +77,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
   private _refreshInterval: NodeJS.Timeout | null = null;
+  private _isRefreshing = false;
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
   private static REFRESH_INTERVAL_MS = 1000 * 60 * 10; // 10 minutes
@@ -182,10 +183,18 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   async refreshSessions() {
+    // Prevent concurrent refresh operations
+    if (this._isRefreshing) {
+      return;
+    }
+
     try {
+      this._isRefreshing = true;
       await this._refreshSessions();
     } catch (e) {
       console.error(`Error refreshing sessions: ${e}`);
+    } finally {
+      this._isRefreshing = false;
     }
   }
 
@@ -238,7 +247,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
-      // Don't retry for auth errors (401 Unauthorized) or if we've reached max attempts
+      // Don't retry for auth errors
       if (
         error.message?.includes("401") ||
         error.message?.includes("Invalid refresh token") ||
@@ -251,10 +260,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       // Calculate exponential backoff delay with jitter
       const delay = Math.min(
         baseDelay * Math.pow(2, attempt - 1) * (0.5 + Math.random() * 0.5),
-        60 * 60 * 1000, // 1 hour in milliseconds
+        2 * 60 * 1000, // 2 minutes
       );
 
-      // Schedule retry after delay
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           this._refreshSessionWithRetry(refreshToken, attempt + 1, baseDelay)
