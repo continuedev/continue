@@ -54,6 +54,49 @@ function renderStringTemplate(
   });
 }
 
+/** Consolidates shared setup between renderPrompt and renderPromptWithTokenLimit. */
+function preparePromptContext({
+  snippetPayload,
+  workspaceDirs,
+  helper,
+}: {
+  snippetPayload: SnippetPayload;
+  workspaceDirs: string[];
+  helper: HelperVars;
+}): {
+  prefix: string;
+  suffix: string;
+  reponame: string;
+  template: AutocompleteTemplate["template"];
+  compilePrefixSuffix: AutocompleteTemplate["compilePrefixSuffix"] | undefined;
+  completionOptions: Partial<CompletionOptions> | undefined;
+  snippets: AutocompleteSnippet[];
+} {
+  // Determine base prefix/suffix, accounting for any manually supplied prefix.
+  let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
+  let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
+  if (suffix === "") {
+    suffix = "\n";
+  }
+
+  const reponame = getUriPathBasename(workspaceDirs[0] ?? "myproject");
+
+  const { template, compilePrefixSuffix, completionOptions } =
+    getTemplate(helper);
+
+  const snippets = getSnippets(helper, snippetPayload);
+
+  return {
+    prefix,
+    suffix,
+    reponame,
+    template,
+    compilePrefixSuffix,
+    completionOptions,
+    snippets,
+  };
+}
+
 export function renderPrompt({
   snippetPayload,
   workspaceDirs,
@@ -68,56 +111,31 @@ export function renderPrompt({
   suffix: string;
   completionOptions: Partial<CompletionOptions> | undefined;
 } {
-  // If prefix is manually passed
-  let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
-  let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
-  if (suffix === "") {
-    suffix = "\n";
-  }
+  const {
+    prefix,
+    suffix,
+    reponame,
+    template,
+    compilePrefixSuffix,
+    completionOptions,
+    snippets,
+  } = preparePromptContext({ snippetPayload, workspaceDirs, helper });
 
-  const reponame = getUriPathBasename(workspaceDirs[0] ?? "myproject");
-
-  const { template, compilePrefixSuffix, completionOptions } =
-    getTemplate(helper);
-
-  const snippets = getSnippets(helper, snippetPayload);
-
-  // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
-  // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
-  if (compilePrefixSuffix) {
-    [prefix, suffix] = compilePrefixSuffix(
-      prefix,
-      suffix,
-      helper.filepath,
-      reponame,
-      snippets,
-      helper.workspaceUris,
-    );
-  } else {
-    const formattedSnippets = formatSnippets(helper, snippets, workspaceDirs);
-    prefix = [formattedSnippets, prefix].join("\n");
-  }
-
-  const prompt =
-    // Templates can be passed as a Handlebars template string or a function
-    typeof template === "string"
-      ? renderStringTemplate(
-          template,
-          prefix,
-          suffix,
-          helper.lang,
-          helper.filepath,
-          reponame,
-        )
-      : template(
-          prefix,
-          suffix,
-          helper.filepath,
-          reponame,
-          helper.lang.name,
-          snippets,
-          helper.workspaceUris,
-        );
+  // Delegate prompt construction to buildPrompt to avoid duplication.
+  const {
+    prompt,
+    prefix: compiledPrefix,
+    suffix: compiledSuffix,
+  } = buildPrompt(
+    template,
+    compilePrefixSuffix,
+    prefix,
+    suffix,
+    helper,
+    snippets,
+    workspaceDirs,
+    reponame,
+  );
 
   const stopTokens = getStopTokens(
     completionOptions,
@@ -127,8 +145,8 @@ export function renderPrompt({
 
   return {
     prompt,
-    prefix,
-    suffix,
+    prefix: compiledPrefix,
+    suffix: compiledSuffix,
     completionOptions: {
       ...completionOptions,
       stop: stopTokens,
@@ -207,19 +225,19 @@ export function renderPromptWithTokenLimit({
   suffix: string;
   completionOptions: Partial<CompletionOptions> | undefined;
 } {
-  // If prefix is manually passed
-  let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
-  let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
-  if (suffix === "") {
-    suffix = "\n";
-  }
+  const {
+    prefix: initialPrefix,
+    suffix: initialSuffix,
+    reponame,
+    template,
+    compilePrefixSuffix,
+    completionOptions,
+    snippets,
+  } = preparePromptContext({ snippetPayload, workspaceDirs, helper });
 
-  const reponame = getUriPathBasename(workspaceDirs[0] ?? "myproject");
-
-  const { template, compilePrefixSuffix, completionOptions } =
-    getTemplate(helper);
-
-  const snippets = getSnippets(helper, snippetPayload);
+  // We'll mutate prefix/suffix during pruning, so copy them.
+  let prefix = initialPrefix;
+  let suffix = initialSuffix;
 
   let {
     prompt,
