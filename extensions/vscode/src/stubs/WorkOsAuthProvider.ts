@@ -229,7 +229,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   private async _refreshSessionWithRetry(
     refreshToken: string,
     attempt = 1,
-    maxAttempts = 3,
     baseDelay = 1000,
   ): Promise<{
     accessToken: string;
@@ -243,26 +242,22 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       if (
         error.message?.includes("401") ||
         error.message?.includes("Invalid refresh token") ||
-        error.message?.includes("Unauthorized") ||
-        attempt >= maxAttempts
+        error.message?.includes("Unauthorized")
       ) {
         throw error;
       }
 
       // For network errors or transient server issues, retry with backoff
       // Calculate exponential backoff delay with jitter
-      const delay =
-        baseDelay * Math.pow(2, attempt - 1) * (0.5 + Math.random() * 0.5);
+      const delay = Math.min(
+        baseDelay * Math.pow(2, attempt - 1) * (0.5 + Math.random() * 0.5),
+        60 * 60 * 1000, // 1 hour in milliseconds
+      );
 
       // Schedule retry after delay
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          this._refreshSessionWithRetry(
-            refreshToken,
-            attempt + 1,
-            maxAttempts,
-            baseDelay,
-          )
+          this._refreshSessionWithRetry(refreshToken, attempt + 1, baseDelay)
             .then(resolve)
             .catch(reject);
         }, delay);
@@ -357,7 +352,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
       return session;
     } catch (e) {
-      window.showErrorMessage(`Sign in failed: ${e}`);
+      void window.showErrorMessage(`Sign in failed: ${e}`);
       throw e;
     }
   }
