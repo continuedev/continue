@@ -283,15 +283,15 @@
     }
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Explore the   Hub",
-        "href": "https://hub.continue.dev/"
-      }
-    ],
+    "links": [],
     "primary": {
       "type": "github",
       "href": "https://github.com/continuedev/continue"
+    },
+    "secondary": {
+      "type": "button",
+      "label": "Explore",
+      "url": "https://hub.continue.dev/"
     }
   },
   "topbarCtaButton": {
@@ -312,6 +312,9 @@
   "integrations": {
     "ga4": {
       "measurementId": "G-M3JWW8N2XQ"
+    },
+    "posthog": {
+      "apiKey": "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
     }
   },
   "redirects": [
