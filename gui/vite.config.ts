@@ -38,10 +38,19 @@ export default defineConfig({
           [
             "contentEditable",
             "An update to Chat inside a test was not wrapped in act",
+            "target.getClientRects is not a function",
+            "prosemirror",
           ].some((text) => log.includes(text))
         ) {
           return false;
         }
+      }
+      return true;
+    },
+    onUnhandledRejection(err) {
+      // Suppress ProseMirror DOM errors in test environment
+      if (err.message?.includes("getClientRects") || err.message?.includes("prosemirror")) {
+        return false;
       }
       return true;
     },

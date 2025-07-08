@@ -133,14 +133,10 @@ export const sessionSlice = createSlice({
         const message = state.history[i];
         if (
           message.message.content ||
-          message.toolCallState?.status !== "generating"
+          message.toolCallStates?.some(toolCallState => toolCallState.status !== "generating")
         ) {
           validAssistantMessageIdx = i;
           // Cancel any tool calls that are dangling and generated
-          if (message.toolCallState?.status === "generated") {
-            message.toolCallState.status = "canceled";
-          }
-          // Also cancel any tool calls in the toolCallStates array
           if (message.toolCallStates) {
             message.toolCallStates.forEach(toolCallState => {
               if (toolCallState.status === "generated") {
@@ -356,14 +352,13 @@ export const sessionSlice = createSlice({
             continue;
           }
 
+          
           if (
             lastMessage.role !== message.role ||
             // This is for when a tool call comes immediately before/after tool call
             (lastMessage.role === "assistant" &&
               message.role === "assistant" &&
-              // Last message isn't completely new
-              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
-              // And there's a difference in tool call presence
+              // There's a difference in tool call presence - create new message
               (lastMessage.toolCalls?.length ?? 0) !==
                 (message.toolCalls?.length ?? 0))
           ) {
@@ -381,8 +376,6 @@ export const sessionSlice = createSlice({
               historyItem.toolCallStates = message.toolCalls.map(toolCallDelta => 
                 addToolCallDeltaToState(toolCallDelta, undefined)
               );
-              // Maintain backward compatibility with single toolCallState
-              historyItem.toolCallState = historyItem.toolCallStates[0];
             }
             state.history.push(historyItem);
           } else {
@@ -429,8 +422,6 @@ export const sessionSlice = createSlice({
               });
               
               lastItem.toolCallStates = updatedToolCallStates;
-              // Maintain backward compatibility
-              lastItem.toolCallState = updatedToolCallStates[0];
               lastMessage.toolCalls = updatedToolCallStates.map(state => state.toolCall);
             }
           }
