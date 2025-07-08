@@ -98,7 +98,7 @@ export function constructMessages(
           // Find the corresponding tool call state for this specific tool call
           const toolCallState = item.toolCallStates?.find(
             state => state.toolCallId === toolCall.id
-          ) || (item.toolCallState?.toolCallId === toolCall.id ? item.toolCallState : undefined);
+          );
           
           if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;

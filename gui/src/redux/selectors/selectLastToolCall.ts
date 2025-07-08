@@ -13,6 +13,7 @@ export const selectLastToolCall = createSelector(
         break;
       }
     }
-    return lastToolCallHistoryItem?.toolCallState ?? null;
+    // Return the first tool call state from the states array
+    return lastToolCallHistoryItem?.toolCallStates?.[0] ?? null;
   },
 );

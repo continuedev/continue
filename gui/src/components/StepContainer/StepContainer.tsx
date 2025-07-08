@@ -7,6 +7,7 @@ import { vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
+import { selectCurrentToolCallsByStatus } from "../../redux/selectors/selectCurrentToolCall";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import Reasoning from "./Reasoning";
@@ -38,10 +39,15 @@ export default function StepContainer(props: StepContainerProps) {
   );
   const uiConfig = useAppSelector(selectUIConfig);
 
+  const pendingToolCalls = useAppSelector((state) => 
+    selectCurrentToolCallsByStatus(state, "generated")
+  );
+  const hasPendingToolCalls = pendingToolCalls.length > 0;
+
   const hideActionSpace =
     historyItemAfterThis?.message.role === "assistant" ||
     historyItemAfterThis?.message.role === "thinking";
-  const hideActions = hideActionSpace || (isStreaming && props.isLast);
+  const hideActions = hideActionSpace || (isStreaming && props.isLast) || hasPendingToolCalls;
 
   useEffect(() => {
     if (!isStreaming) {

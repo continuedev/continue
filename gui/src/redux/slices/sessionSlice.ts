@@ -19,6 +19,7 @@ import {
   Session,
   SessionMetadata,
   Tool,
+  ToolCallState,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -414,15 +415,21 @@ export const sessionSlice = createSlice({
               message.toolCalls?.length &&
               lastMessage.role === "assistant"
             ) {
-              // Handle multiple tool calls in streaming updates
+              // Handle multiple tool calls in streaming updates - simplified index-based approach
               const existingToolCallStates = lastItem.toolCallStates || [];
-              const updatedToolCallStates = message.toolCalls.map((toolCallDelta, index) => {
-                const existingState = existingToolCallStates[index];
-                return addToolCallDeltaToState(toolCallDelta, existingState);
-              });
+              const newToolCallStates: ToolCallState[] = [];
               
-              lastItem.toolCallStates = updatedToolCallStates;
-              lastMessage.toolCalls = updatedToolCallStates.map(state => state.toolCall);
+              // Process each incoming tool call delta by index
+              for (let i = 0; i < message.toolCalls.length; i++) {
+                const toolCallDelta = message.toolCalls[i];
+                const existingState = existingToolCallStates[i];
+                const updatedState = addToolCallDeltaToState(toolCallDelta, existingState);
+                newToolCallStates.push(updatedState);
+              }
+              
+              lastItem.toolCallStates = newToolCallStates;
+              lastMessage.toolCalls = newToolCallStates.map(state => state.toolCall);
+              
             }
           }
         }
@@ -575,6 +582,7 @@ export const sessionSlice = createSlice({
         state.history,
         action.payload.toolCallId,
       );
+      
       if (toolCallState) {
         toolCallState.status = "generated";
 

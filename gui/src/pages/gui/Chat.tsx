@@ -321,13 +321,20 @@ export function Chat() {
               ) : item.message.role === "tool" ? null : item.message.role ===
                   "assistant" &&
                 item.message.toolCalls &&
-                item.toolCallState ? (
+                item.toolCallStates ? (
                 <div className="">
                   {item.message.toolCalls?.map((toolCall, i) => {
+                    // Find the corresponding tool call state for this tool call
+                    const toolCallState = item.toolCallStates?.find(
+                      state => state.toolCallId === toolCall.id
+                    );
+                    
+                    if (!toolCallState) return null;
+                    
                     return (
                       <ToolCallDiv
-                        key={i}
-                        toolCallState={item.toolCallState!}
+                        key={toolCall.id}
+                        toolCallState={toolCallState}
                         toolCall={toolCall}
                         historyIndex={index}
                       />
