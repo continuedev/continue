@@ -1,52 +1,35 @@
 import { ConfigDependentToolParams, IDE, Tool } from "..";
-import { codebaseTool } from "./definitions/codebaseTool";
-import { createNewFileTool } from "./definitions/createNewFile";
-import { createRuleBlock } from "./definitions/createRuleBlock";
-import { editFileTool } from "./definitions/editFile";
-import { fetchUrlContentTool } from "./definitions/fetchUrlContent";
-import { globSearchTool } from "./definitions/globSearch";
-import { grepSearchTool } from "./definitions/grepSearch";
-import { lsTool } from "./definitions/lsTool";
-import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
-import { readFileTool } from "./definitions/readFile";
-import { requestRuleTool } from "./definitions/requestRule";
-import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
-import { searchAndReplaceInFileTool } from "./definitions/searchAndReplaceInFile";
-import { searchWebTool } from "./definitions/searchWeb";
-import { viewDiffTool } from "./definitions/viewDiff";
-import { viewRepoMapTool } from "./definitions/viewRepoMap";
-import { viewSubdirectoryTool } from "./definitions/viewSubdirectory";
 
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 
 // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
-const getLocalOnlyToolDefinitions = () => [grepSearchTool];
+const getLocalOnlyToolDefinitions = () => [toolDefinitions.grepSearchTool];
 
 const getBaseToolDefinitions = () => [
-  readFileTool,
-  createNewFileTool,
-  runTerminalCommandTool,
-  globSearchTool,
-  searchWebTool,
-  viewDiffTool,
-  readCurrentlyOpenFileTool,
-  lsTool,
-  createRuleBlock,
-  fetchUrlContentTool,
+  toolDefinitions.readFileTool,
+  toolDefinitions.createNewFileTool,
+  toolDefinitions.runTerminalCommandTool,
+  toolDefinitions.globSearchTool,
+  toolDefinitions.searchWebTool,
+  toolDefinitions.viewDiffTool,
+  toolDefinitions.readCurrentlyOpenFileTool,
+  toolDefinitions.lsTool,
+  toolDefinitions.createRuleBlock,
+  toolDefinitions.fetchUrlContentTool,
 ];
 
 export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => [
-  requestRuleTool(params),
+  toolDefinitions.requestRuleTool(params),
   ...(params.enableExperimentalTools
     ? [
-        searchAndReplaceInFileTool,
-        viewRepoMapTool,
-        viewSubdirectoryTool,
-        codebaseTool,
+        toolDefinitions.searchAndReplaceInFileTool,
+        toolDefinitions.viewRepoMapTool,
+        toolDefinitions.viewSubdirectoryTool,
+        toolDefinitions.codebaseTool,
       ]
-    : [editFileTool]),
+    : [toolDefinitions.editFileTool]),
 ];
 
 export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>
