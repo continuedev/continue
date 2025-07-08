@@ -198,7 +198,7 @@
               },
               {
                 "group": "Governance",
-                "icon": "building-office",
+                "icon": "building",
                 "pages": [
                   "hub/governance/creating-an-org",
                   "hub/governance/org-permissions",
