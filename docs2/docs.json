@@ -163,9 +163,7 @@
                 "icon": "chart-line",
                 "pages": ["customize/telemetry"]
               },
-              "customize/custom-providers",
-              "customize/json-reference",
-              "customize/yaml-migration"
+              "customize/custom-providers"
             ]
           }
         ]
@@ -245,7 +243,11 @@
           {
             "group": "Reference",
             "icon": "code",
-            "pages": ["reference"]
+            "pages": [
+              "reference",
+              "reference/json-reference",
+              "reference/yaml-migration"
+            ]
           }
         ]
       }
@@ -283,15 +285,14 @@
   "navbar": {
     "links": [
       {
-        "label": "Sign In",
-        "href": "https://hub.continue.dev/login"
+        "label": "Explore the   Hub",
+        "href": "https://hub.continue.dev/"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Explore Hub",
-      "href": "https://hub.continue.dev/"
-    }
+    ]
+  },
+  "topbarCtaButton": {
+    "type": "github",
+    "url": "https://github.com/continuedev/continue"
   },
   "footer": {
     "socials": {
@@ -300,6 +301,9 @@
       "linkedin": "https://linkedin.com/company/continuedev",
       "discord": "https://discord.gg/vapESyrFmJ"
     }
+  },
+  "contextual": {
+    "options": ["copy"]
   },
   "integrations": {
     "ga4": {
@@ -873,19 +877,27 @@
     },
     {
       "source": "/yaml-migration",
-      "destination": "/customize/yaml-migration"
+      "destination": "/reference/yaml-migration"
     },
     {
       "source": "/advanced/yaml-migration",
-      "destination": "/customize/yaml-migration"
+      "destination": "/reference/yaml-migration"
     },
     {
       "source": "/json-reference",
-      "destination": "/customize/json-reference"
+      "destination": "/reference/json-reference"
     },
     {
       "source": "/advanced/json-reference",
-      "destination": "/customize/json-reference"
+      "destination": "/reference/json-reference"
+    },
+    {
+      "source": "/customize/json-reference",
+      "destination": "/reference/json-reference"
+    },
+    {
+      "source": "/customize/yaml-migration",
+      "destination": "/reference/yaml-migration"
     }
   ]
 }

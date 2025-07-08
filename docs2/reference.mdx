@@ -38,8 +38,11 @@ For example, the following assistant imports an Anthropic model and defines an O
 
 Assistant models section
 
-```
-models:  - uses: anthropic/claude-3.5-sonnet # an imported model block  - model: deepseek-reasoner # an explicit model block    provider: ollama
+```yaml
+models:
+  - uses: anthropic/claude-3.5-sonnet # an imported model block
+  - model: deepseek-reasoner # an explicit model block
+    provider: ollama
 ```
 
 ### Local Blocks[​](#local-blocks "Direct link to Local Blocks")
@@ -77,16 +80,27 @@ Blocks can be passed user inputs, including hub secrets and raw text values. To 
 
 Block config.yaml
 
-```
-name: myprofile/custom-modelmodels:  - name: My Favorite Model    provider: anthropic    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}    defaultCompletionOptions:      temperature: ${{ inputs.TEMP }}
+```yaml
+name: myprofile/custom-model
+models:
+  - name: My Favorite Model
+    provider: anthropic
+    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}
+    defaultCompletionOptions:
+      temperature: ${{ inputs.TEMP }}
 ```
 
 Which can then be imported like
 
 Assistant config.yaml
 
-```
-name: myprofile/custom-assistantmodels:  - uses: myprofile/custom-model    with:      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}      TEMP: 0.9
+```yaml
+name: myprofile/custom-assistant
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
 ```
 
 Note that hub secrets can be passed as inputs, using a similar mustache format: `secrets.SECRET_NAME`.
@@ -97,8 +111,16 @@ Block properties can be also be directly overriden using `override`. For example
 
 Assistant config.yaml
 
-```
-name: myprofile/custom-assistantmodels:  - uses: myprofile/custom-model    with:      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}      TEMP: 0.9    override:      roles:        - chat
+```yaml
+name: myprofile/custom-assistant
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+    override:
+      roles:
+        - chat
 ```
 
 ## Properties[​](#properties "Direct link to Properties")
@@ -128,7 +150,7 @@ The `name` property specifies the name of your project or configuration.
 
 config.yaml
 
-```
+```yaml
 name: MyProject
 ```
 
@@ -207,8 +229,33 @@ The `models` section defines the language models used in your configuration. Mod
 
 config.yaml
 
-```
-models:  - name: GPT-4o    provider: openai    model: gpt-4o    roles:      - chat      - edit      - apply    defaultCompletionOptions:      temperature: 0.7      maxTokens: 1500  - name: Codestral    provider: mistral    model: codestral-latest    roles:      - autocomplete  - name: My Model - OpenAI-Compatible    provider: openai    apiBase: http://my-endpoint/v1    model: my-custom-model    capabilities:      - tool_use      - image_input    roles:      - chat      - edit
+```yaml
+models:
+  - name: GPT-4o
+    provider: openai
+    model: gpt-4o
+    roles:
+      - chat
+      - edit
+      - apply
+    defaultCompletionOptions:
+      temperature: 0.7
+      maxTokens: 1500
+  - name: Codestral
+    provider: mistral
+    model: codestral-latest
+    roles:
+      - autocomplete
+  - name: My Model - OpenAI-Compatible
+    provider: openai
+    apiBase: http://my-endpoint/v1
+    model: my-custom-model
+    capabilities:
+      - tool_use
+      - image_input
+    roles:
+      - chat
+      - edit
 ```
 
 ---
@@ -229,8 +276,21 @@ More information about usage/params for each context provider can be found [here
 
 config.yaml
 
-```
-context:  - provider: file  - provider: code  - provider: codebase    params:      nFinal: 10  - provider: docs  - provider: diff  - provider: http    name: Context Server 1    params:      url: "https://api.example.com/server1"  - provider: folder  - provider: terminal
+```yaml
+context:
+  - provider: file
+  - provider: code
+  - provider: codebase
+    params:
+      nFinal: 10
+  - provider: docs
+  - provider: diff
+  - provider: http
+    name: Context Server 1
+    params:
+      url: "https://api.example.com/server1"
+  - provider: folder
+  - provider: terminal
 ```
 
 ---
@@ -247,8 +307,20 @@ Explicit rules can either be simple text or an object with the following propert
 
 config.yaml
 
-```
-rules:  - Always annotate Python functions with their parameter and return types  - name: TypeScript best practices    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.    globs: "**/*.{ts,tsx}"  - name: TypeScript test patterns    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.    globs:      - "src/**/*.test.ts"      - "tests/**/*.ts"  - uses: myprofile/my-mood-setter    with:      TONE: concise
+```yaml
+rules:
+  - Always annotate Python functions with their parameter and return types
+  - name: TypeScript best practices
+    rule: Always use TypeScript interfaces to define shape of objects. Use type aliases sparingly.
+    globs: "**/*.{ts,tsx}"
+  - name: TypeScript test patterns
+    rule: In TypeScript tests, use Jest's describe/it pattern and follow best practices for mocking.
+    globs:
+      - "src/**/*.test.ts"
+      - "tests/**/*.ts"
+  - uses: myprofile/my-mood-setter
+    with:
+      TONE: concise
 ```
 
 ---
@@ -259,8 +331,15 @@ A list of custom prompts that can be invoked from the chat window. Each prompt h
 
 config.yaml
 
-```
-prompts:  - name: check    description: Check for mistakes in my code    prompt: |      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:        - Syntax errors        - Logic errors        - Security vulnerabilities
+```yaml
+prompts:
+  - name: check
+    description: Check for mistakes in my code
+    prompt: |
+      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
+        - Syntax errors
+        - Logic errors
+        - Security vulnerabilities
 ```
 
 ---
@@ -282,8 +361,11 @@ Example
 
 config.yaml
 
-```
-docs:  - name: Continue    startUrl: https://docs.continue.dev/intro    favicon: https://docs.continue.dev/favicon.ico
+```yaml
+docs:
+  - name: Continue
+    startUrl: https://docs.continue.dev/intro
+    favicon: https://docs.continue.dev/favicon.ico
 ```
 
 ---
@@ -305,8 +387,17 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 
 config.yaml
 
-```
-mcpServers:  - name: My MCP Server    command: uvx    args:      - mcp-server-sqlite      - --db-path      - ./test.db    cwd: /Users/NAME/project    env:      NODE_ENV: production
+```yaml
+mcpServers:
+  - name: My MCP Server
+    command: uvx
+    args:
+      - mcp-server-sqlite
+      - --db-path
+      - ./test.db
+    cwd: /Users/NAME/project
+    env:
+      NODE_ENV: production
 ```
 
 ### `data`[​](#data "Direct link to data")
@@ -335,8 +426,19 @@ Destinations to which [development data](/customize/overview#development-data) w
 
 config.yaml
 
-```
-data:  - name: Local Data Bank    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data    schema: 0.2.0    level: all  - name: My Private Company    destination: https://mycompany.com/ingest    schema: 0.2.0    level: noCode    events:      - autocomplete      - chatInteraction
+```yaml
+data:
+  - name: Local Data Bank
+    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data
+    schema: 0.2.0
+    level: all
+  - name: My Private Company
+    destination: https://mycompany.com/ingest
+    schema: 0.2.0
+    level: noCode
+    events:
+      - autocomplete
+      - chatInteraction
 ```
 
 ---
@@ -347,8 +449,75 @@ Putting it all together, here's a complete example of a `config.yaml` configurat
 
 config.yaml
 
-```
-name: MyProjectversion: 0.0.1schema: v1models:  - uses: anthropic/claude-3.5-sonnet    with:      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}    override:      defaultCompletionOptions:        temperature: 0.8  - name: GPT-4    provider: openai    model: gpt-4    roles:      - chat      - edit    defaultCompletionOptions:      temperature: 0.5      maxTokens: 2000    requestOptions:      headers:        Authorization: Bearer YOUR_OPENAI_API_KEY  - name: Ollama Starcoder    provider: ollama    model: starcoder    roles:      - autocomplete    defaultCompletionOptions:      temperature: 0.3      stop:        - "\n"rules:  - Give concise responses  - Always assume TypeScript rather than JavaScriptprompts:  - name: test    description: Unit test a function    prompt: |      Please write a complete suite of unit tests for this function. You should use the Jest testing framework.  The tests should cover all possible edge cases and should be as thorough as possible.  You should also include a description of each test case.  - uses: myprofile/my-favorite-promptcontext:  - provider: diff  - provider: file  - provider: codebase  - provider: code  - provider: docs    params:      startUrl: https://docs.example.com/introduction      rootUrl: https://docs.example.com      maxDepth: 3mcpServers:  - name: DevServer    command: npm    args:      - run      - dev    env:      PORT: "3000"data:  - name: My Private Company    destination: https://mycompany.com/ingest    schema: 0.2.0    level: noCode    events:      - autocomplete      - chatInteraction
+```yaml
+name: MyProject
+version: 0.0.1
+schema: v1
+models:
+  - uses: anthropic/claude-3.5-sonnet
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    override:
+      defaultCompletionOptions:
+        temperature: 0.8
+  - name: GPT-4
+    provider: openai
+    model: gpt-4
+    roles:
+      - chat
+      - edit
+    defaultCompletionOptions:
+      temperature: 0.5
+      maxTokens: 2000
+    requestOptions:
+      headers:
+        Authorization: Bearer YOUR_OPENAI_API_KEY
+  - name: Ollama Starcoder
+    provider: ollama
+    model: starcoder
+    roles:
+      - autocomplete
+    defaultCompletionOptions:
+      temperature: 0.3
+      stop:
+        - "\n"
+rules:
+  - Give concise responses
+  - Always assume TypeScript rather than JavaScript
+prompts:
+  - name: test
+    description: Unit test a function
+    prompt: |
+      Please write a complete suite of unit tests for this function. You should use the Jest testing framework.
+      The tests should cover all possible edge cases and should be as thorough as possible.
+      You should also include a description of each test case.
+  - uses: myprofile/my-favorite-prompt
+context:
+  - provider: diff
+  - provider: file
+  - provider: codebase
+  - provider: code
+  - provider: docs
+    params:
+      startUrl: https://docs.example.com/introduction
+      rootUrl: https://docs.example.com
+      maxDepth: 3
+mcpServers:
+  - name: DevServer
+    command: npm
+    args:
+      - run
+      - dev
+    env:
+      PORT: "3000"
+data:
+  - name: My Private Company
+    destination: https://mycompany.com/ingest
+    schema: 0.2.0
+    level: noCode
+    events:
+      - autocomplete
+      - chatInteraction
 ```
 
 ## Using YAML anchors to avoid config duplication[​](#using-yaml-anchors-to-avoid-config-duplication "Direct link to Using YAML anchors to avoid config duplication")
@@ -357,6 +526,33 @@ You can also use node anchors to avoid duplication of properties. To do so, addi
 
 config.yaml
 
-```
-%YAML 1.1---name: MyProjectversion: 0.0.1schema: v1model_defaults: &model_defaults  provider: openai  apiKey: my-api-key  apiBase: https://api.example.com/llmmodels:  - name: mistral    <<: *model_defaults    model: mistral-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b-instruct    <<: *model_defaults    model: qwen2.5-coder-7b-instruct    roles:      - chat      - edit  - name: qwen2.5-coder-7b    <<: *model_defaults    model: qwen2.5-coder-7b    useLegacyCompletionsEndpoint: false    roles:      - autocomplete
+```yaml
+%YAML 1.1
+---
+name: MyProject
+version: 0.0.1
+schema: v1
+model_defaults: &model_defaults
+  provider: openai
+  apiKey: my-api-key
+  apiBase: https://api.example.com/llm
+models:
+  - name: mistral
+    <<: *model_defaults
+    model: mistral-7b-instruct
+    roles:
+      - chat
+      - edit
+  - name: qwen2.5-coder-7b-instruct
+    <<: *model_defaults
+    model: qwen2.5-coder-7b-instruct
+    roles:
+      - chat
+      - edit
+  - name: qwen2.5-coder-7b
+    <<: *model_defaults
+    model: qwen2.5-coder-7b
+    useLegacyCompletionsEndpoint: false
+    roles:
+      - autocomplete
 ```
