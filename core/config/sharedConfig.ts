@@ -4,8 +4,10 @@ import {
   BrowserSerializedContinueConfig,
   Config,
   ContinueConfig,
+  IContextProvider,
   SerializedContinueConfig,
 } from "..";
+import CurrentFileContextProvider from "../context/providers/CurrentFileContextProvider";
 
 export const sharedConfigSchema = z
   .object({
@@ -180,6 +182,12 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.useCurrentFileAsContext !== undefined) {
     configCopy.experimental.useCurrentFileAsContext =
       sharedConfig.useCurrentFileAsContext;
+    if (sharedConfig.useCurrentFileAsContext === true) {
+      configCopy.contextProviders = [
+        ...((configCopy.contextProviders ?? []) as IContextProvider[]),
+        new CurrentFileContextProvider({}),
+      ];
+    }
   }
   if (sharedConfig.logEditingData !== undefined) {
     configCopy.experimental.logEditingData = sharedConfig.logEditingData;
