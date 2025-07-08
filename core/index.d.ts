@@ -462,6 +462,7 @@ export interface ChatHistoryItem {
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;
+  toolCallStates?: ToolCallState[]; // Support for multiple parallel tool calls
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
   appliedRules?: RuleWithSource[];
