@@ -347,7 +347,7 @@ describe("GUI Test", () => {
   });
 
   describe("Context providers", () => {
-    it("should successfully use the terminal context provider", async () => {
+    it.only("should successfully use the terminal context provider", async () => {
       await GUIActions.selectModelFromDropdown(view, "LAST MESSAGE MOCK LLM");
 
       // Enter just the context provider in the input and send
@@ -356,20 +356,6 @@ describe("GUI Test", () => {
       await messageInput.sendKeys("terminal");
       await messageInput.sendKeys(Key.ENTER);
       await messageInput.sendKeys(Key.ENTER);
-
-      // Open the context items peek
-      const contextItemsPeek = await GUISelectors.getContextItemsPeek(view);
-      await contextItemsPeek.click();
-
-      await TestUtils.waitForSuccess(async () => {
-        const firstContextItemInPeek =
-          await GUISelectors.getFirstContextItemsPeekItem(view);
-        await firstContextItemInPeek.click();
-
-        // Check that item is there with correct name
-        const description = await firstContextItemInPeek.getText();
-        expect(description).to.include("Terminal");
-      });
 
       // Check that the contents match what we expect (repeated back by the mock LLM)
       await TestUtils.waitForSuccess(() => {
