@@ -100,11 +100,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     this.secretStorage = new SecretStorage(context);
 
     // Immediately refresh any existing sessions
-    this.refreshSessions();
+    void this.refreshSessions();
 
     // Set up a regular interval to refresh tokens
     this._refreshInterval = setInterval(() => {
-      this.refreshSessions();
+      void this.refreshSessions();
     }, WorkOsAuthProvider.REFRESH_INTERVAL_MS);
   }
 
