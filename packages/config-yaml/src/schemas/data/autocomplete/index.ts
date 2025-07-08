@@ -34,7 +34,7 @@ export const autocompleteEventAllSchema = baseDevDataAllSchema.extend({
   gitRepo: z.string().optional(),
   completionId: z.string(),
   uniqueId: z.string(),
-  timestamp: z.number(),
+  timestamp: z.string(),
 
   // DEPRECATED - no more nested objects after v0.1.0, all flat values
   completionOptions: completionOptionsSchema.optional(),
