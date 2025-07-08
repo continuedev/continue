@@ -1,7 +1,11 @@
 import {
   CheckIcon,
   ChevronDownIcon,
+<<<<<<< HEAD
   ExclamationCircleIcon,
+=======
+  InformationCircleIcon,
+>>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
@@ -30,8 +34,27 @@ export function ModeSelect() {
     return getMetaKeyLabel();
   }, []);
 
+<<<<<<< HEAD
+=======
+  // Switch to chat mode if agent mode is selected but not supported
+  useEffect(() => {
+    if (!selectedModel) {
+      return;
+    }
+    if (mode !== "chat" && !agentModeSupported) {
+      dispatch(setMode("chat"));
+    }
+  }, [mode, agentModeSupported, dispatch, selectedModel]);
+
+>>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
   const cycleMode = useCallback(() => {
-    dispatch(setMode(mode === "chat" ? "agent" : "chat"));
+    if (mode === "chat") {
+      dispatch(setMode("plan"));
+    } else if (mode === "plan") {
+      dispatch(setMode("agent"));
+    } else {
+      dispatch(setMode("chat"));
+    }
     // Only focus main editor if another one doesn't already have focus
     if (!document.activeElement?.classList?.contains("ProseMirror")) {
       mainEditor?.commands.focus();
@@ -72,7 +95,7 @@ export function ModeSelect() {
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
-            {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            {mode === "chat" ? "Chat" : mode === "agent" ? "Agent" : "Plan"}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
@@ -92,12 +115,62 @@ export function ModeSelect() {
             </div>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
+<<<<<<< HEAD
 
           <ListboxOption value="agent" className={"gap-1"}>
+=======
+          <ListboxOption
+            value="plan"
+            disabled={!agentModeSupported}
+            className={"gap-1"}
+          >
+            <div className="flex flex-row items-center gap-1.5">
+              <ModeIcon mode="plan" />
+              <span className="">Plan</span>
+              <InformationCircleIcon
+                data-tooltip-id="plan-tip"
+                className="h-2.5 w-2.5 flex-shrink-0"
+              />
+              <ToolTip
+                id="plan-tip"
+                style={{
+                  zIndex: 200001,
+                }}
+              >
+                In Plan mode, only read-only and MCP tools are enabled
+              </ToolTip>
+            </div>
+            {agentModeSupported ? (
+              <CheckIcon
+                className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
+              />
+            ) : (
+              <span>(Not supported)</span>
+            )}
+          </ListboxOption>
+          <ListboxOption
+            value="agent"
+            disabled={!agentModeSupported}
+            className={"gap-1"}
+          >
+>>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="agent" />
               <span className="">Agent</span>
+              <InformationCircleIcon
+                data-tooltip-id="agent-tip"
+                className="h-2.5 w-2.5 flex-shrink-0"
+              />
+              <ToolTip
+                id="agent-tip"
+                style={{
+                  zIndex: 200001,
+                }}
+              >
+                All tools are enabled based on policies
+              </ToolTip>
             </div>
+<<<<<<< HEAD
             {showAgentModeWarning && (
               <>
                 <ExclamationCircleIcon
@@ -130,6 +203,12 @@ export function ModeSelect() {
             )}
             {mode === "agent" ? (
               <CheckIcon className="ml-auto h-3 w-3" />
+=======
+            {agentModeSupported ? (
+              <CheckIcon
+                className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
+              />
+>>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
             ) : (
               <div className="ml-auto"></div>
             )}

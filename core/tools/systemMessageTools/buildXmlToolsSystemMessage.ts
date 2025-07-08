@@ -140,3 +140,16 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
 
   return prompt;
 };
+
+export function addSystemMessageToolsToSystemMessage(
+  baseSystemMessage: string,
+  systemMessageTools: Tool[],
+): string {
+  let systemMessage = baseSystemMessage;
+  if (systemMessageTools.length > 0) {
+    const toolsSystemMessage = generateToolsSystemMessage(systemMessageTools);
+    systemMessage += `\n\n${toolsSystemMessage}`;
+  }
+
+  return systemMessage;
+}

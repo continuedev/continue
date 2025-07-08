@@ -2,6 +2,7 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions } from "core";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { ToCoreProtocol } from "core/protocol";
+import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildXmlToolsSystemMessage";
 import { interceptXMLToolCalls } from "core/tools/systemMessageTools/interceptXmlToolCalls";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
@@ -63,8 +64,11 @@ export const streamNormalInput = createAsyncThunk<
     const baseSystemMessage = getBaseSystemMessage(
       state.session.mode,
       selectedChatModel,
-      useNativeTools ? [] : activeTools,
     );
+
+    const systemMessage = useNativeTools
+      ? baseSystemMessage
+      : addSystemMessageToolsToSystemMessage(baseSystemMessage, activeTools);
 
     const withoutMessageIds = state.session.history.map((item) => {
       const { id, ...messageWithoutId } = item.message;
@@ -72,7 +76,7 @@ export const streamNormalInput = createAsyncThunk<
     });
     const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
-      baseSystemMessage,
+      systemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
       !useNativeTools,
@@ -122,21 +126,19 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(addPromptCompletionPair([next.value]));
 
       try {
-        if (state.session.mode === "chat" || state.session.mode === "agent") {
-          extra.ideMessenger.post("devdata/log", {
-            name: "chatInteraction",
-            data: {
-              prompt: next.value.prompt,
-              completion: next.value.completion,
-              modelProvider: selectedChatModel.underlyingProviderName,
-              modelTitle: selectedChatModel.title,
-              sessionId: state.session.id,
-              ...(state.session.mode === "agent" && {
-                tools: activeTools.map((tool) => tool.function.name),
-              }),
-            },
-          });
-        }
+        extra.ideMessenger.post("devdata/log", {
+          name: "chatInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: selectedChatModel.underlyingProviderName,
+            modelTitle: selectedChatModel.title,
+            sessionId: state.session.id,
+            ...(!!activeTools.length && {
+              tools: activeTools.map((tool) => tool.function.name),
+            }),
+          },
+        });
         // else if (state.session.mode === "edit") {
         //   extra.ideMessenger.post("devdata/log", {
         //     name: "editInteraction",

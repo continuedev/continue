@@ -8,7 +8,6 @@ import {
   LLMOptions,
 } from "../..";
 import { renderTemplatedString } from "../../util/handlebars/renderTemplatedString";
-import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../defaultSystemMessages";
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
@@ -141,9 +140,9 @@ export async function llmFromDescription(
 
   let baseChatSystemMessage: string | undefined = undefined;
   if (desc.systemMessage !== undefined) {
-    baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
-    baseChatSystemMessage += "\n\n";
-    baseChatSystemMessage += await renderTemplatedString(
+    // baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
+    // baseChatSystemMessage += "\n\n";
+    baseChatSystemMessage = await renderTemplatedString(
       Handlebars,
       desc.systemMessage,
       {},
@@ -163,6 +162,7 @@ export async function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
     baseChatSystemMessage,
+    basePlanSystemMessage: baseChatSystemMessage,
     baseAgentSystemMessage: baseChatSystemMessage,
     logger: llmLogger,
     uniqueId,
