@@ -20,11 +20,11 @@ import {
 import {
   acceptToolCall,
   addContextItemsAtIndex,
-  selectCurrentToolCall,
   setHasReasoningEnabled,
   setIsSessionMetadataLoading,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
+import { selectCurrentToolCall } from "../redux/selectors/selectCurrentToolCall";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { exitEdit } from "../redux/thunks/edit";
 import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
