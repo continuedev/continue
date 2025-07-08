@@ -149,6 +149,7 @@ export const streamNormalInput = createAsyncThunk<
     const toolSettings = newState.ui.toolSettings;
     const toolCallStates = selectCurrentToolCalls(newState);
     
+    
     for (const toolCallState of toolCallStates) {
       dispatch(
         setToolGenerated({

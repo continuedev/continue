@@ -8,19 +8,6 @@ export function addToolCallDeltaToState(
   toolCallDelta: ToolCallDelta,
   currentState: ToolCallState | undefined,
 ): ToolCallState {
-  // For parallel tool calls, we no longer ignore new tool call IDs
-  // Each tool call delta should be processed separately
-  // This preserves backward compatibility for single tool calls
-  if (
-    toolCallDelta.id &&
-    currentState?.toolCallId &&
-    toolCallDelta.id !== currentState?.toolCallId
-  ) {
-    // For parallel tool calls, we should create a new state for the new tool call
-    // instead of ignoring it, but for now we'll return the current state to maintain
-    // backward compatibility. The parallel logic will be handled at a higher level.
-    return currentState;
-  }
 
   const currentCall = currentState?.toolCall;
 
