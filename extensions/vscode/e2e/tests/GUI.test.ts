@@ -347,7 +347,7 @@ describe("GUI Test", () => {
   });
 
   describe("Context providers", () => {
-    it.only("should successfully use the terminal context provider", async () => {
+    it("should successfully use the terminal context provider", async () => {
       await GUIActions.selectModelFromDropdown(view, "LAST MESSAGE MOCK LLM");
 
       // Enter just the context provider in the input and send
