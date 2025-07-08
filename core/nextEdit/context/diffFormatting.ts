@@ -17,10 +17,16 @@ export const createDiff = (
   afterContent: string,
   filePath: string,
   diffType: DiffFormatType,
+  contextLines: number = 3,
 ) => {
   switch (diffType) {
     case DiffFormatType.Unified:
-      return createUnifiedDiff(beforeContent, afterContent, filePath);
+      return createUnifiedDiff(
+        beforeContent,
+        afterContent,
+        filePath,
+        contextLines,
+      );
     case DiffFormatType.TokenLineDiff:
       return createTokenLineDiff(beforeContent, afterContent, filePath);
   }
@@ -31,6 +37,7 @@ const createUnifiedDiff = (
   beforeContent: string,
   afterContent: string,
   filePath: string,
+  contextLines: number,
 ) => {
   const normalizedBefore = beforeContent.endsWith("\n")
     ? beforeContent
@@ -45,7 +52,7 @@ const createUnifiedDiff = (
     normalizedAfter,
     "before",
     "after",
-    { context: 3 },
+    { context: contextLines },
   );
 
   return patch;

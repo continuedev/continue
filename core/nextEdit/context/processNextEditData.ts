@@ -132,6 +132,7 @@ export const processNextEditData = async ({
       afterContent,
       filePath,
       DiffFormatType.Unified,
+      25, // 25 context lines; store a large number for trimming later on
     ),
     fileUri: filePath,
     workspaceUri: workspaceDir,
