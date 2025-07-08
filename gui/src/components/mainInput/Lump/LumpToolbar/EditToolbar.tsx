@@ -30,9 +30,7 @@ export function EditToolbar() {
       <span className="truncate">
         Editing:{" "}
         <span className="italic">
-          {codeToEdit
-            ? getEditFilenameAndRangeText(codeToEdit)
-            : "⚠️ No file selected"}
+          {getEditFilenameAndRangeText(codeToEdit)}
         </span>
       </span>
     </div>
