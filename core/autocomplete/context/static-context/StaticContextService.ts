@@ -1,5 +1,6 @@
 import * as fs from "fs/promises";
 import path from "path";
+import { pathToFileURL } from "url";
 import Parser from "web-tree-sitter";
 import { IDE, Position } from "../../..";
 import { localPathOrUriToPath } from "../../../util/pathToUri";
@@ -153,14 +154,33 @@ export class StaticContextService {
 
     this.logAutocompleteStaticSnippet(ctx);
 
-    console.log(end - start);
+    // console.log(end - start);
 
-    return [
-      {
+    const snippets: AutocompleteStaticSnippet[] = [];
+
+    snippets.push({
+      type: AutocompleteSnippetType.Static,
+      filepath: pathToFileURL(path.resolve(holeContext.source)).toString(),
+      content: holeContext.fullHoverResult,
+    });
+
+    for (const [filepath, typs] of ctx.relevantTypes.entries()) {
+      snippets.push({
         type: AutocompleteSnippetType.Static,
-        content: StaticContextService.formatAutocompleteStaticSnippet(ctx),
-      },
-    ];
+        filepath: pathToFileURL(path.resolve(filepath)).toString(),
+        content: typs.join("\n"),
+      });
+    }
+
+    for (const [filepath, headers] of ctx.relevantHeaders.entries()) {
+      snippets.push({
+        type: AutocompleteSnippetType.Static,
+        filepath: pathToFileURL(path.resolve(filepath)).toString(),
+        content: headers.join("\n"),
+      });
+    }
+
+    return snippets;
   }
 
   private async getHoleContext(

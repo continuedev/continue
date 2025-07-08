@@ -26,6 +26,7 @@ export interface AutocompleteClipboardSnippet extends BaseAutocompleteSnippet {
 
 export interface AutocompleteStaticSnippet extends BaseAutocompleteSnippet {
   type: AutocompleteSnippetType.Static;
+  filepath: string;
 }
 
 export type AutocompleteSnippet =
