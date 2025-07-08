@@ -37,7 +37,7 @@ class NextEditService(private val project: Project) {
     // we need to keep track of whether the last change was a partial accept
     var lastChangeWasPartialAccept = false
 
-    fun triggerCompletion(editor: Editor) {
+    fun triggerNextEdit(editor: Editor) {
         val settings = service<ContinueExtensionSettings>()
         if (!settings.continueState.enableTabAutocomplete) {
             return
@@ -105,6 +105,14 @@ class NextEditService(private val project: Project) {
                         }
                         is FimResult.NotFimEdit -> {
                             // TODO: Else, render a window.
+                            // val nextEditWindowService = project.service<NextEditWindowService>()
+                            val nextEditWindowService = NextEditWindowService.getInstance(project)
+//                            val codeViewer = nextEditWindowService.createCodeViewer(prediction, "ts")
+                            nextEditWindowService.showCodePreview(prediction, "ts", editor)
+//                            editor.contentComponent.removeAll()
+//                            editor.contentComponent.add(codeViewer)
+//                            editor.contentComponent.revalidate()
+//                            editor.contentComponent.repaint()
                         }
                     }
 //                    val finalTextToInsert = deduplicateCompletion(editor, offset, completion)

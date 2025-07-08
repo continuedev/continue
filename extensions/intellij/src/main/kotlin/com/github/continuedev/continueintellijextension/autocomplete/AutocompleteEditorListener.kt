@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.nextEdit.NextEditService
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.application.invokeLater
@@ -48,7 +49,7 @@ class AutocompleteDocumentListener(private val editorManager: FileEditorManager,
             return
         }
 
-        val nextEditService = editor.project?.serivce<NextEditService>() ?: return
+        val nextEditService = editor.project?.service<NextEditService>() ?: return
 
         // Check settings to see if next edit is enabled, and then trigger either autocomplete or next exit.
         val continuePluginService = editor.project?.service<ContinuePluginService>()
@@ -60,7 +61,7 @@ class AutocompleteDocumentListener(private val editorManager: FileEditorManager,
             "config/getSerializedProfileInfo",
             null,
             null,
-            ({ response ->
+            (request@ { response ->
                 val optInNextEditFeature = response.castNestedOrNull<Boolean>(
                     "content",
                     "result",
