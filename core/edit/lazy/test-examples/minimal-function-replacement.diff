@@ -1,0 +1,100 @@
+function processData(data) {
+  if (!data) {
+    return null;
+  }
+  
+  return data.map(item => item.toLowerCase());
+}
+
+function validateInput(input) {
+  return input && typeof input === 'string';
+}
+
+function formatOutput(output) {
+  return output.join(', ');
+}
+
+function main() {
+  const input = getUserInput();
+  const processed = processData(input);
+  const formatted = formatOutput(processed);
+  console.log(formatted);
+}
+
+---
+
+// ... existing code ...
+
+function validateInput(input) {
+  // Enhanced validation with type checking and length limits
+  if (!input) {
+    return false;
+  }
+  
+  if (typeof input !== 'string') {
+    return false;
+  }
+  
+  if (input.length > 1000) {
+    throw new Error('Input too long');
+  }
+  
+  // Check for malicious content
+  const dangerousPatterns = ['<script>', 'javascript:', 'data:'];
+  for (const pattern of dangerousPatterns) {
+    if (input.toLowerCase().includes(pattern)) {
+      throw new Error('Potentially dangerous content detected');
+    }
+  }
+  
+  return true;
+}
+
+// ... existing code ...
+
+---
+
+function processData(data) {
+  if (!data) {
+    return null;
+  }
+  
+  return data.map(item => item.toLowerCase());
+}
+
+function validateInput(input) {
+-   return input && typeof input === 'string';
++   // Enhanced validation with type checking and length limits
++   if (!input) {
++     return false;
++   }
++   
++   if (typeof input !== 'string') {
++     return false;
++   }
++   
++   if (input.length > 1000) {
++     throw new Error('Input too long');
++   }
++   
++   // Check for malicious content
++   const dangerousPatterns = ['<script>', 'javascript:', 'data:'];
++   for (const pattern of dangerousPatterns) {
++     if (input.toLowerCase().includes(pattern)) {
++       throw new Error('Potentially dangerous content detected');
++     }
++   }
++   
++   return true;
+}
+
+function formatOutput(output) {
+  return output.join(', ');
+}
+
+function main() {
+  const input = getUserInput();
+  const processed = processData(input);
+  const formatted = formatOutput(processed);
+  console.log(formatted);
+}

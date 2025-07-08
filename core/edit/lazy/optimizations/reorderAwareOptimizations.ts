@@ -126,18 +126,37 @@ function extractCodeBlocks(tree: Parser.Tree): CodeBlock[] {
 }
 
 function getBlockType(node: Parser.SyntaxNode): CodeBlock["type"] | null {
+  // Enhanced with comprehensive node type support
   const typeMap: Record<string, CodeBlock["type"]> = {
+    // Function types
     function_declaration: "function",
+    function_definition: "function",
     method_definition: "function",
+    method_declaration: "function",
     arrow_function: "function",
+    function_item: "function",
+    function_expression: "function",
+    generator_function_declaration: "function",
+
+    // Class and interface types
     class_declaration: "class",
+    class_definition: "class",
     interface_declaration: "interface",
+    interface_definition: "interface",
+
+    // Variable and constant types
     variable_declaration: "const",
     lexical_declaration: "const",
+    const_declaration: "const",
+    let_declaration: "const",
+
+    // Import and export types
     import_statement: "import",
     import_declaration: "import",
     export_statement: "export",
     export_declaration: "export",
+    named_imports: "import",
+    namespace_import: "import",
   };
 
   return typeMap[node.type] || null;

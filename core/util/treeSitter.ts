@@ -216,12 +216,13 @@ const GET_SYMBOLS_FOR_NODE_TYPES: Parser.SyntaxNode["type"][] = [
   "class_definition",
   "function_item", // function name = first "identifier" child
   "function_definition",
+  "function_declaration", // TypeScript/JavaScript standalone functions
   "method_declaration", // method name = first "identifier" child
   "method_definition",
   "generator_function_declaration",
+  "arrow_function", // Object property arrow functions and standalone arrow functions
   // property_identifier
   // field_declaration
-  // "arrow_function",
 ];
 
 export async function getSymbolsForFile(
@@ -252,25 +253,53 @@ export async function getSymbolsForFile(
       //   console.log(`child: ${child.type}, ${child.text}`);
       // });
 
-      // Empirically, the actual name is the last identifier in the node
-      // Especially with languages where return type is declared before the name
-      // TODO use findLast in newer version of node target
-      let identifier: Parser.SyntaxNode | undefined = undefined;
-      for (let i = node.children.length - 1; i >= 0; i--) {
-        if (
-          node.children[i].type === "identifier" ||
-          node.children[i].type === "property_identifier"
-        ) {
-          identifier = node.children[i];
-          break;
+      // Extract function name - different logic for different node types
+      let functionName: string | undefined;
+
+      if (node.type === "arrow_function") {
+        // For arrow functions, look for the name in the parent context
+        // Arrow functions in object properties: the name is in the parent "pair" node
+        let parentNode = node.parent;
+        while (parentNode) {
+          if (parentNode.type === "pair") {
+            // Find property_identifier in the pair
+            for (const child of parentNode.children) {
+              if (child.type === "property_identifier") {
+                functionName = child.text;
+                break;
+              }
+            }
+            break;
+          } else if (parentNode.type === "variable_declarator") {
+            // For const name = () => ... patterns
+            for (const child of parentNode.children) {
+              if (child.type === "identifier") {
+                functionName = child.text;
+                break;
+              }
+            }
+            break;
+          }
+          parentNode = parentNode.parent;
+        }
+      } else {
+        // For regular functions, methods, etc. - find identifier in children
+        for (let i = node.children.length - 1; i >= 0; i--) {
+          if (
+            node.children[i].type === "identifier" ||
+            node.children[i].type === "property_identifier"
+          ) {
+            functionName = node.children[i].text;
+            break;
+          }
         }
       }
 
-      if (identifier?.text) {
+      if (functionName) {
         symbols.push({
           filepath,
           type: node.type,
-          name: identifier.text,
+          name: functionName,
           range: {
             start: {
               character: node.startPosition.column,

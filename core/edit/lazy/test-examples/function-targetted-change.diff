@@ -1,0 +1,60 @@
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
+  double() {
+    this.result *= 2;
+    return this;
+  }
+
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+}
+
+---
+
+// ... existing code ...
+double() {
+  return this.multiply(2);
+}
+// ... existing code ...
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
+  double() {
+-     this.result *= 2;
++     return this.multiply(2);
+    return this;
+  }
+
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+}

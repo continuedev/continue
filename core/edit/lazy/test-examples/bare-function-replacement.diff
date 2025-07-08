@@ -1,0 +1,130 @@
+class ApiService {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+    this.headers = { 'Content-Type': 'application/json' };
+  }
+
+  async get(endpoint) {
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: 'GET',
+      headers: this.headers
+    });
+    return response.json();
+  }
+
+  async post(endpoint, data) {
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  }
+
+  async delete(endpoint) {
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: 'DELETE',
+      headers: this.headers
+    });
+    return response.ok;
+  }
+}
+
+---
+
+async post(endpoint, data) {
+  // Enhanced POST method with validation and error handling
+  if (!endpoint) {
+    throw new Error('Endpoint is required');
+  }
+
+  if (!data) {
+    throw new Error('Data is required for POST request');
+  }
+
+  try {
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        ...this.headers,
+        'X-Request-ID': Math.random().toString(36).substr(2, 9)
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log(`POST ${endpoint} completed successfully`);
+    return result;
+  } catch (error) {
+    console.error(`POST ${endpoint} failed:`, error);
+    throw error;
+  }
+}
+
+---
+
+class ApiService {
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+    this.headers = { 'Content-Type': 'application/json' };
+  }
+
+  async get(endpoint) {
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: 'GET',
+      headers: this.headers
+    });
+    return response.json();
+  }
+
+  async post(endpoint, data) {
+-     const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+-       method: 'POST',
+-       headers: this.headers,
+-       body: JSON.stringify(data)
+-     });
+-     return response.json();
++     // Enhanced POST method with validation and error handling
++     if (!endpoint) {
++       throw new Error('Endpoint is required');
++     }
++ 
++     if (!data) {
++       throw new Error('Data is required for POST request');
++     }
++ 
++     try {
++       const response = await fetch(`${this.baseUrl}/${endpoint}`, {
++         method: 'POST',
++         headers: {
++           ...this.headers,
++           'X-Request-ID': Math.random().toString(36).substr(2, 9)
++         },
++         body: JSON.stringify(data)
++       });
++ 
++       if (!response.ok) {
++         throw new Error(`HTTP error! status: ${response.status}`);
++       }
++ 
++       const result = await response.json();
++       console.log(`POST ${endpoint} completed successfully`);
++       return result;
++     } catch (error) {
++       console.error(`POST ${endpoint} failed:`, error);
++       throw error;
++     }
+  }
+
+  async delete(endpoint) {
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: 'DELETE',
+      headers: this.headers
+    });
+    return response.ok;
+  }
+}

@@ -1,0 +1,151 @@
+class UserService {
+  constructor(database) {
+    this.db = database;
+    this.cache = new Map();
+  }
+
+  async getUser(id) {
+    if (this.cache.has(id)) {
+      return this.cache.get(id);
+    }
+    
+    const user = await this.db.users.findById(id);
+    this.cache.set(id, user);
+    return user;
+  }
+
+  async createUser(userData) {
+    const user = await this.db.users.create(userData);
+    this.cache.set(user.id, user);
+    return user;
+  }
+
+  async updateUser(id, updates) {
+    const user = await this.db.users.update(id, updates);
+    this.cache.set(id, user);
+    return user;
+  }
+
+  async deleteUser(id) {
+    await this.db.users.delete(id);
+    this.cache.delete(id);
+    return true;
+  }
+
+  clearCache() {
+    this.cache.clear();
+  }
+}
+
+---
+
+class UserService {
+  constructor(database) {
+    this.db = database;
+    this.cache = new Map();
+  }
+
+  // ... existing code ...
+
+  async updateUser(id, updates) {
+    // Validate updates before processing
+    if (!updates || Object.keys(updates).length === 0) {
+      throw new Error('Updates cannot be empty');
+    }
+
+    // Check if user exists first
+    const existingUser = await this.getUser(id);
+    if (!existingUser) {
+      throw new Error(`User with id ${id} not found`);
+    }
+
+    // Apply updates with validation
+    const sanitizedUpdates = this.sanitizeUpdates(updates);
+    const user = await this.db.users.update(id, sanitizedUpdates);
+    
+    // Update cache with new user data
+    this.cache.set(id, user);
+    
+    // Log the update for audit purposes
+    console.log(`User ${id} updated:`, sanitizedUpdates);
+    
+    return user;
+  }
+
+  sanitizeUpdates(updates) {
+    // Remove any dangerous fields
+    const { password, ...safeUpdates } = updates;
+    return safeUpdates;
+  }
+
+  // ... existing code ...
+}
+
+---
+
+class UserService {
+  constructor(database) {
+    this.db = database;
+    this.cache = new Map();
+  }
+
+  async getUser(id) {
+    if (this.cache.has(id)) {
+      return this.cache.get(id);
+    }
+    
+    const user = await this.db.users.findById(id);
+    this.cache.set(id, user);
+    return user;
+  }
+
+  async createUser(userData) {
+    const user = await this.db.users.create(userData);
+    this.cache.set(user.id, user);
+    return user;
+  }
+
+  async updateUser(id, updates) {
+-     const user = await this.db.users.update(id, updates);
+-     this.cache.set(id, user);
+-     return user;
++     // Validate updates before processing
++     if (!updates || Object.keys(updates).length === 0) {
++       throw new Error('Updates cannot be empty');
++     }
++ 
++     // Check if user exists first
++     const existingUser = await this.getUser(id);
++     if (!existingUser) {
++       throw new Error(`User with id ${id} not found`);
++     }
++ 
++     // Apply updates with validation
++     const sanitizedUpdates = this.sanitizeUpdates(updates);
++     const user = await this.db.users.update(id, sanitizedUpdates);
++     
++     // Update cache with new user data
++     this.cache.set(id, user);
++     
++     // Log the update for audit purposes
++     console.log(`User ${id} updated:`, sanitizedUpdates);
++     
++     return user;
+  }
+
+  async deleteUser(id) {
+    await this.db.users.delete(id);
+    this.cache.delete(id);
+    return true;
+  }
+
+  clearCache() {
+    this.cache.clear();
+  }
++ 
++   sanitizeUpdates(updates) {
++     // Remove any dangerous fields
++     const { password, ...safeUpdates } = updates;
++     return safeUpdates;
++   }
+}

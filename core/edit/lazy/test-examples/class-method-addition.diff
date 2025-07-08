@@ -1,0 +1,82 @@
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
+  subtract(number) {
+    this.result -= number;
+    return this;
+  }
+
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
+  divide(number) {
+    this.result /= number;
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+}
+
+---
+
+// ... existing code ...
+
+divide(number) {
+  this.result /= number;
+  return this;
+}
+
+power(exponent) {
+  this.result = Math.pow(this.result, exponent);
+  return this;
+}
+
+// ... rest of code ...
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
+  subtract(number) {
+    this.result -= number;
+    return this;
+  }
+
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
+  divide(number) {
+    this.result /= number;
+    return this;
+  }
++
++  power(exponent) {
++    this.result = Math.pow(this.result, exponent);
++    return this;
++  }
+
+  getResult() {
+    return this.result;
+  }
+}

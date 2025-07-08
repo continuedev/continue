@@ -96,9 +96,214 @@ const IMPORT_PATTERNS = {
 };
 
 /**
- * Parse import statements from TypeScript/JavaScript code
+ * Parse import statements from TypeScript/JavaScript code - Enhanced with AST parsing
  */
-function parseImportStructure(
+async function parseImportStructure(
+  content: string,
+  filename: string,
+): Promise<ImportStructure> {
+  // Try AST parsing first for better accuracy
+  const astImports = await parseImportsWithAST(content, filename);
+  if (astImports.length > 0) {
+    const groups = categorizeImports(astImports, filename);
+    const importRegion = calculateImportRegion(astImports);
+
+    return {
+      groups,
+      allImports: astImports,
+      hasTypeImports: astImports.some((imp) => imp.typeOnly),
+      importRegion,
+    };
+  }
+
+  // Fallback to regex parsing for edge cases
+  console.debug("AST import parsing failed, falling back to regex");
+  return parseImportsWithRegex(content, filename);
+}
+
+/**
+ * Enhanced AST-based import parsing
+ */
+async function parseImportsWithAST(
+  content: string,
+  filename: string,
+): Promise<ImportStatement[]> {
+  try {
+    const { getParserForFile } = await import("../../../util/treeSitter");
+    const parser = await getParserForFile(filename);
+    if (!parser) {
+      return [];
+    }
+
+    const tree = parser.parse(content);
+    const imports: ImportStatement[] = [];
+    const lines = content.split("\n");
+
+    // Find all import_statement nodes
+    function traverseForImports(node: any) {
+      if (node.type === "import_statement") {
+        const importStatement = parseImportNode(node, lines);
+        if (importStatement) {
+          imports.push(importStatement);
+        }
+      }
+
+      for (const child of node.children) {
+        traverseForImports(child);
+      }
+    }
+
+    traverseForImports(tree.rootNode);
+    return imports.sort((a, b) => a.startLine - b.startLine);
+  } catch (error) {
+    console.debug("AST import parsing error:", error);
+    return [];
+  }
+}
+
+/**
+ * Parse individual import node from AST
+ */
+function parseImportNode(node: any, lines: string[]): ImportStatement | null {
+  try {
+    const startLine = node.startPosition?.row || 0;
+    const endLine = node.endPosition?.row || 0;
+    const originalText = lines.slice(startLine, endLine + 1).join("\n");
+
+    // Extract import details from AST node
+    let type: ImportStatement["type"] = "named";
+    let source = "";
+    let defaultImport: string | undefined;
+    let namedImports: string[] = [];
+    let namespaceImport: string | undefined;
+    let typeOnly = false;
+
+    // Look for type modifier
+    if (originalText.includes("import type")) {
+      typeOnly = true;
+      type = "type_only";
+    }
+
+    // Find source (from clause)
+    const sourceNode = node.children?.find(
+      (child: any) =>
+        child.type === "string" || child.type === "template_string",
+    );
+    if (sourceNode?.text) {
+      source = sourceNode.text.replace(/['"]/g, "");
+    }
+
+    // Parse import specifiers
+    const importClause = node.children?.find(
+      (child: any) => child.type === "import_clause",
+    );
+
+    if (importClause?.children) {
+      // Check for default import
+      const defaultNode = importClause.children.find(
+        (child: any) =>
+          child.type === "identifier" && !child.parent?.type?.includes("named"),
+      );
+      if (defaultNode?.text) {
+        defaultImport = defaultNode.text;
+        type = "default";
+      }
+
+      // Check for namespace import (* as name)
+      const namespaceNode = importClause.children.find(
+        (child: any) => child.type === "namespace_import",
+      );
+      if (namespaceNode?.children) {
+        const nameNode = namespaceNode.children.find(
+          (child: any) => child.type === "identifier",
+        );
+        if (nameNode?.text) {
+          namespaceImport = nameNode.text;
+          type = "namespace";
+        }
+      }
+
+      // Check for named imports
+      const namedImportNode = importClause.children.find(
+        (child: any) => child.type === "named_imports",
+      );
+      if (namedImportNode) {
+        namedImports = extractNamedImports(namedImportNode);
+        if (!defaultImport && !namespaceImport) {
+          type = typeOnly ? "type_only" : "named";
+        }
+      }
+    } else if (source && !importClause) {
+      // Side-effect import
+      type = "side_effect";
+    }
+
+    return {
+      type,
+      source,
+      defaultImport,
+      namedImports,
+      namespaceImport,
+      typeOnly,
+      startLine,
+      endLine,
+      originalText: originalText.trim(),
+    };
+  } catch (error) {
+    console.debug("Error parsing import node:", error);
+    return null;
+  }
+}
+
+/**
+ * Extract named imports from AST node
+ */
+function extractNamedImports(namedImportNode: any): string[] {
+  const imports: string[] = [];
+
+  function traverse(node: any) {
+    if (node?.type === "import_specifier") {
+      // Handle both "name" and "name as alias" patterns
+      const nameNode = node.children?.find(
+        (child: any) => child.type === "identifier",
+      );
+      if (nameNode?.text) {
+        imports.push(nameNode.text);
+      }
+    }
+
+    if (node?.children) {
+      for (const child of node.children) {
+        traverse(child);
+      }
+    }
+  }
+
+  traverse(namedImportNode);
+  return imports;
+}
+
+/**
+ * Calculate import region boundaries from parsed imports
+ */
+function calculateImportRegion(imports: ImportStatement[]): {
+  start: number;
+  end: number;
+} {
+  if (imports.length === 0) {
+    return { start: -1, end: -1 };
+  }
+
+  const start = Math.min(...imports.map((imp) => imp.startLine));
+  const end = Math.max(...imports.map((imp) => imp.endLine));
+
+  return { start, end };
+}
+
+/**
+ * Fallback regex-based import parsing
+ */
+function parseImportsWithRegex(
   content: string,
   filename: string,
 ): ImportStructure {
@@ -589,8 +794,8 @@ export async function importAwareLazyEdit({
     console.debug(`Processing import optimizations for: ${filename}`);
 
     // Parse import structures
-    const oldStructure = parseImportStructure(oldFile, filename);
-    const newStructure = parseImportStructure(newLazyFile, filename);
+    const oldStructure = await parseImportStructure(oldFile, filename);
+    const newStructure = await parseImportStructure(newLazyFile, filename);
 
     console.debug(
       `Old imports: ${oldStructure.allImports.length}, New imports: ${newStructure.allImports.length}`,

@@ -43,16 +43,24 @@ const DEFAULT_SIMILAR_FUNCTION_CONFIG: SimilarFunctionConfig = {
 };
 
 /**
- * Extract function signature from AST node
+ * Extract function signature from AST node - Enhanced with missing node types
  */
 function extractFunctionSignature(
   node: Parser.SyntaxNode,
 ): FunctionSignature | null {
-  if (
-    !["function_declaration", "method_definition", "arrow_function"].includes(
-      node.type,
-    )
-  ) {
+  // Enhanced node types list including the missing ones we discovered
+  const validNodeTypes = [
+    "function_declaration",
+    "function_definition",
+    "method_definition",
+    "method_declaration",
+    "arrow_function",
+    "function_item",
+    "function_expression",
+    "generator_function_declaration",
+  ];
+
+  if (!validNodeTypes.includes(node.type)) {
     return null;
   }
 
@@ -61,11 +69,38 @@ function extractFunctionSignature(
   let returnType = "";
   let modifiers: string[] = [];
 
-  // Extract function name
-  const nameNode =
+  // Enhanced function name extraction with arrow function support
+  let nameNode =
     node.childForFieldName("name") ||
     node.children.find((child) => child.type === "identifier") ||
     node.children.find((child) => child.type === "property_identifier");
+
+  // Special handling for arrow functions in object properties
+  if (!nameNode && node.type === "arrow_function") {
+    let parentNode = node.parent;
+    while (parentNode) {
+      if (parentNode.type === "pair") {
+        // Find property_identifier in the pair
+        for (const child of parentNode.children) {
+          if (child.type === "property_identifier") {
+            nameNode = child;
+            break;
+          }
+        }
+        break;
+      } else if (parentNode.type === "variable_declarator") {
+        // For const name = () => ... patterns
+        for (const child of parentNode.children) {
+          if (child.type === "identifier") {
+            nameNode = child;
+            break;
+          }
+        }
+        break;
+      }
+      parentNode = parentNode.parent;
+    }
+  }
 
   if (nameNode) {
     name = nameNode.text;
@@ -500,12 +535,39 @@ function detectSimilarFunctionPattern(functions: Parser.SyntaxNode[]): {
     similarityScore += 0.4;
   }
 
-  // Check for arithmetic operation patterns (calculator-like)
-  const hasArithmetic = functionTexts.some(
-    (text) => /[+\-*/]/.test(text) || /Math\.\w+/.test(text),
+  // Check for operation patterns (mathematical, logical, string manipulation, etc.)
+  const hasOperations = functionTexts.some(
+    (text) =>
+      /[+\-*/%&|^<>=!]/.test(text) || // Mathematical, logical, comparison operators
+      /Math\.\w+/.test(text) || // Math functions
+      /String\.\w+/.test(text) || // String functions
+      /Array\.\w+/.test(text) || // Array functions
+      /Object\.\w+/.test(text) || // Object functions
+      /JSON\.\w+/.test(text) || // JSON functions
+      /\.map\(/.test(text) || // Array methods
+      /\.filter\(/.test(text) ||
+      /\.reduce\(/.test(text) ||
+      /\.forEach\(/.test(text) ||
+      /\.find\(/.test(text) ||
+      /\.sort\(/.test(text) ||
+      /\.slice\(/.test(text) ||
+      /\.splice\(/.test(text) ||
+      /\.push\(/.test(text) ||
+      /\.pop\(/.test(text) ||
+      /\.join\(/.test(text) ||
+      /\.split\(/.test(text) ||
+      /\.replace\(/.test(text) ||
+      /\.match\(/.test(text) ||
+      /\.test\(/.test(text) ||
+      /\.includes\(/.test(text) ||
+      /\.indexOf\(/.test(text) ||
+      /\.substring\(/.test(text) ||
+      /\.trim\(/.test(text) ||
+      /\.toLowerCase\(/.test(text) ||
+      /\.toUpperCase\(/.test(text),
   );
-  if (hasArithmetic) {
-    patterns.push("arithmetic_operations");
+  if (hasOperations) {
+    patterns.push("common_operations");
     similarityScore += 0.2;
   }
 
@@ -521,6 +583,43 @@ function detectSimilarFunctionPattern(functions: Parser.SyntaxNode[]): {
     confidence: similarityScore,
     patterns,
   };
+}
+
+/**
+ * Clean lazy file content by removing comments and extracting function definitions
+ */
+function cleanLazyFileContent(lazyFile: string): string {
+  // Remove common lazy edit comment patterns
+  let cleaned = lazyFile
+    .replace(/\/\/\s*\.\.\.\s*existing\s+code\s*\.\.\./gi, "")
+    .replace(/\/\*\s*\.\.\.\s*existing\s+code\s*\.\.\.\s*\*\//gi, "")
+    .replace(/<!--\s*\.\.\.\s*existing\s+code\s*\.\.\.\s*-->/gi, "")
+    .trim();
+
+  // If the cleaned content looks like it might be just function definitions,
+  // wrap it in a minimal class structure for parsing
+  const lines = cleaned.split("\n").filter((line) => line.trim());
+
+  // Check if all non-empty lines look like method definitions
+  const methodPattern = /^\s*(async\s+)?(\w+)\s*\([^)]*\)\s*\{/;
+  const allLooksLikeMethods =
+    lines.length > 0 &&
+    lines.every((line) => {
+      const trimmed = line.trim();
+      return (
+        trimmed === "" ||
+        trimmed === "}" ||
+        methodPattern.test(trimmed) ||
+        !trimmed.startsWith("//")
+      );
+    });
+
+  if (allLooksLikeMethods && lines.some((line) => methodPattern.test(line))) {
+    // Wrap in a minimal class for parsing
+    return `class TempClass {\n${cleaned}\n}`;
+  }
+
+  return cleaned;
 }
 
 /**
@@ -559,11 +658,18 @@ export async function similarFunctionAwareLazyEdit({
     }
 
     const oldTree = parser.parse(oldFile);
-    const newTree = parser.parse(newLazyFile);
+
+    // Handle partial/lazy content in newLazyFile
+    const cleanedNewFile = cleanLazyFileContent(newLazyFile);
+    const newTree = parser.parse(cleanedNewFile);
 
     // Extract all functions from both files
     const oldFunctions = extractAllFunctions(oldTree.rootNode);
     const newFunctions = extractAllFunctions(newTree.rootNode);
+
+    console.debug(
+      `Found ${oldFunctions.length} old functions, ${newFunctions.length} new functions`,
+    );
 
     // Check if this file has the similar function pattern
     const oldPattern = detectSimilarFunctionPattern(oldFunctions);
@@ -619,10 +725,22 @@ export async function similarFunctionAwareLazyEdit({
           reconstructedFile,
           functionMatches,
         );
+
+        console.debug(
+          `Diff validation: acceptable=${quality.isAcceptable}, confidence=${quality.confidence.toFixed(2)}`,
+        );
+
         if (quality.isAcceptable) {
+          console.debug("Similar function optimization succeeded");
           return diff;
+        } else {
+          console.debug("Diff validation failed, will fallback");
         }
+      } else {
+        console.debug("reconstructedFile is null, cannot create diff");
       }
+    } else {
+      console.debug("No function matches found");
     }
 
     // Fallback to standard approach
@@ -647,12 +765,20 @@ export async function similarFunctionAwareLazyEdit({
 function extractAllFunctions(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
   const functions: Parser.SyntaxNode[] = [];
 
+  // Enhanced node types to match our improved signature extraction
+  const functionNodeTypes = [
+    "function_declaration",
+    "function_definition",
+    "method_definition",
+    "method_declaration",
+    "arrow_function",
+    "function_item",
+    "function_expression",
+    "generator_function_declaration",
+  ];
+
   function traverse(node: Parser.SyntaxNode) {
-    if (
-      ["function_declaration", "method_definition", "arrow_function"].includes(
-        node.type,
-      )
-    ) {
+    if (functionNodeTypes.includes(node.type)) {
       functions.push(node);
     }
 
@@ -754,30 +880,453 @@ function applyFunctionMatches(
   newTree: Parser.Tree,
 ): string | null {
   try {
-    // For CRUD operations test, we need to be more precise about what changes
-    // The test expects only changes related to "User with id" updates
+    console.debug(`Applying ${matches.length} function matches`);
 
-    const oldLines = oldFile.split("\n");
-    const newLines = newLazyFile.split("\n");
-
-    // Find high-confidence exact name matches
-    const exactMatches = matches.filter(
-      (m) =>
-        m.confidence === "high" &&
-        m.oldFingerprint.signature.name === m.newFingerprint.signature.name,
+    // If we have high-confidence matches, apply targeted replacements
+    const highConfidenceMatches = matches.filter(
+      (m) => m.confidence === "high",
     );
 
-    if (exactMatches.length > 0) {
-      // For exact matches, we can be more conservative and preserve more of the old content
-      // while only applying specific targeted changes
-      return newLazyFile;
+    console.debug(`High confidence matches: ${highConfidenceMatches.length}`);
+
+    if (highConfidenceMatches.length > 0) {
+      // Log the match details
+      for (const match of highConfidenceMatches) {
+        console.debug(
+          `Match: ${match.oldFingerprint.signature.name} → ${match.newFingerprint.signature.name} (similarity: ${match.similarity.toFixed(2)})`,
+        );
+      }
+
+      // For similar function scenarios, we need to be more intelligent about replacement
+      // Instead of returning the entire new file, let's do targeted function replacement
+      return applyTargetedFunctionReplacements(
+        oldFile,
+        newLazyFile,
+        highConfidenceMatches,
+        oldTree,
+        newTree,
+      );
     }
 
-    return newLazyFile;
+    // If we have any matches at all, try to apply them
+    if (matches.length > 0) {
+      console.debug("Applying medium/low confidence matches");
+      return applyTargetedFunctionReplacements(
+        oldFile,
+        newLazyFile,
+        matches,
+        oldTree,
+        newTree,
+      );
+    }
+
+    console.debug("No matches found, returning null");
+    return null;
   } catch (error) {
     console.debug("Function match application failed:", error);
     return null;
   }
+}
+
+function applyTargetedFunctionReplacements(
+  oldFile: string,
+  newLazyFile: string,
+  matches: FunctionMatch[],
+  oldTree: Parser.Tree,
+  newTree: Parser.Tree,
+): string {
+  // For simple cases where we're just replacing function bodies,
+  // and the matches are exact name matches, we can do a more targeted approach
+  const exactNameMatches = matches.filter(
+    (match) =>
+      match.oldFingerprint.signature.name ===
+      match.newFingerprint.signature.name,
+  );
+
+  if (
+    exactNameMatches.length === matches.length &&
+    exactNameMatches.length <= 5
+  ) {
+    console.debug(
+      `All matches are exact name matches (${exactNameMatches.length}), attempting targeted replacement`,
+    );
+
+    // Try targeted replacement for exact name matches
+    try {
+      const result = performTargetedReplacement(
+        oldFile,
+        newLazyFile,
+        exactNameMatches,
+        oldTree,
+        newTree,
+      );
+      if (result) {
+        console.debug("Targeted replacement successful");
+        return result;
+      }
+    } catch (error) {
+      console.debug("Targeted replacement failed:", error);
+    }
+  }
+
+  // Fallback: return the new file content for complex scenarios
+  console.debug("Using fallback approach: returning new file content");
+  return newLazyFile;
+}
+
+function performTargetedReplacement(
+  oldFile: string,
+  newLazyFile: string,
+  matches: FunctionMatch[],
+  oldTree: Parser.Tree,
+  newTree: Parser.Tree,
+): string | null {
+  const oldLines = oldFile.split("\n");
+
+  // Find the function nodes in both trees
+  const oldFunctions = extractAllFunctions(oldTree.rootNode);
+  const newFunctions = extractAllFunctions(newTree.rootNode);
+
+  // Create a mapping of function names to their AST nodes with better class method support
+  const oldFunctionMap = new Map<string, Parser.SyntaxNode>();
+  const newFunctionMap = new Map<string, Parser.SyntaxNode>();
+
+  // Enhanced mapping that considers class context
+  for (const func of oldFunctions) {
+    const sig = extractFunctionSignature(func);
+    if (sig) {
+      // Create a unique key that includes class context for methods
+      const key = createFunctionKey(func, sig);
+      oldFunctionMap.set(key, func);
+      // Also store with simple name for backward compatibility
+      oldFunctionMap.set(sig.name, func);
+    }
+  }
+
+  for (const func of newFunctions) {
+    const sig = extractFunctionSignature(func);
+    if (sig) {
+      // Create a unique key that includes class context for methods
+      const key = createFunctionKey(func, sig);
+      newFunctionMap.set(key, func);
+      // Also store with simple name for backward compatibility
+      newFunctionMap.set(sig.name, func);
+    }
+  }
+
+  // Apply replacements in reverse order (from end to start) to maintain line numbers
+  const replacements: Array<{
+    startLine: number;
+    endLine: number;
+    newContent: string;
+    functionName: string;
+  }> = [];
+
+  for (const match of matches) {
+    const functionName = match.oldFingerprint.signature.name;
+
+    // Try to find nodes using enhanced matching
+    let oldNode = oldFunctionMap.get(functionName);
+    let newNode = newFunctionMap.get(functionName);
+
+    // If not found, try to find by signature matching
+    if (!oldNode || !newNode) {
+      console.debug(
+        `Standard lookup failed for ${functionName}, trying enhanced matching`,
+      );
+
+      // Find the best matching nodes by signature
+      for (const [key, node] of oldFunctionMap.entries()) {
+        const sig = extractFunctionSignature(node);
+        if (sig && sig.name === functionName) {
+          oldNode = node;
+          break;
+        }
+      }
+
+      for (const [key, node] of newFunctionMap.entries()) {
+        const sig = extractFunctionSignature(node);
+        if (sig && sig.name === functionName) {
+          newNode = node;
+          break;
+        }
+      }
+    }
+
+    if (!oldNode || !newNode) {
+      console.debug(`Could not find nodes for function: ${functionName}`);
+      console.debug(
+        `Available old functions: ${Array.from(oldFunctionMap.keys()).join(", ")}`,
+      );
+      console.debug(
+        `Available new functions: ${Array.from(newFunctionMap.keys()).join(", ")}`,
+      );
+      continue;
+    }
+
+    console.debug(
+      `Found replacement for ${functionName}: lines ${oldNode.startPosition.row}-${oldNode.endPosition.row}`,
+    );
+
+    // Get the new function content, handling indentation properly
+    let newContent = newNode.text;
+
+    console.debug(`Raw newContent for ${functionName}:\n${newContent}`);
+
+    // Debug: Check what's actually on those lines in the old file
+    const startLine = oldNode.startPosition.row;
+    const endLine = oldNode.endPosition.row;
+    console.debug(`Lines ${startLine}-${endLine} in old file:`);
+    for (let i = startLine; i <= endLine; i++) {
+      console.debug(`  ${i}: "${oldLines[i]}"`);
+    }
+
+    // Determine the indentation level from the original old function
+    const oldIndent =
+      oldLines[oldNode.startPosition.row].match(/^\s*/)?.[0] || "";
+
+    console.debug(
+      `Does newContent include 'class TempClass'? ${newContent.includes("class TempClass")}`,
+    );
+
+    // If the new content appears to be from a temporary class wrapper,
+    // we need to extract just the function content with proper indentation
+    if (newContent.includes("class TempClass")) {
+      console.debug(
+        `Extracting function ${functionName} from TempClass wrapper`,
+      );
+
+      // The newNode.text will be the entire TempClass content
+      // We need to find the specific function within it
+      const functionLines = newContent.split("\n");
+
+      // Find the actual function content (skip class wrapper)
+      let functionStart = -1;
+      for (let i = 0; i < functionLines.length; i++) {
+        const line = functionLines[i].trim();
+        if (line.startsWith(`${functionName}(`)) {
+          functionStart = i;
+          break;
+        }
+      }
+
+      if (functionStart >= 0) {
+        console.debug(
+          `Found function ${functionName} at line ${functionStart} in wrapper`,
+        );
+
+        // Find the end of the function by matching braces
+        let braceCount = 0;
+        let functionEnd = functionStart;
+        let foundOpenBrace = false;
+
+        for (let i = functionStart; i < functionLines.length; i++) {
+          const line = functionLines[i];
+          for (const char of line) {
+            if (char === "{") {
+              braceCount++;
+              foundOpenBrace = true;
+            }
+            if (char === "}") {
+              braceCount--;
+            }
+          }
+          if (foundOpenBrace && braceCount === 0) {
+            functionEnd = i;
+            break;
+          }
+        }
+
+        // Extract the function content with proper indentation
+        const extractedLines = functionLines.slice(
+          functionStart,
+          functionEnd + 1,
+        );
+
+        console.debug(
+          `Extracted ${extractedLines.length} lines for function ${functionName}`,
+        );
+
+        // Determine the indentation level from the original old function
+        const oldIndent =
+          oldLines[oldNode.startPosition.row].match(/^\s*/)?.[0] || "";
+
+        // Apply the correct indentation to extracted lines
+        newContent = extractedLines
+          .map((line, index) => {
+            if (index === 0) {
+              // First line: use the old function's indentation
+              return oldIndent + line.trim();
+            } else {
+              // Other lines: preserve relative indentation but adjust base
+              const lineIndent = line.match(/^\s*/)?.[0] || "";
+              const relativeLine = line.trim();
+
+              if (relativeLine === "") {
+                // Empty lines stay empty
+                return "";
+              } else {
+                // Since we're extracting from a wrapped class, remove one level of indentation
+                // But ensure we preserve the relative structure
+                let relativeIndent = "";
+                if (lineIndent.length >= 2) {
+                  // Remove the class wrapper indentation (2 spaces) and keep the rest
+                  relativeIndent = lineIndent.substring(2);
+                } else if (relativeLine !== "}") {
+                  // If it's not a closing brace and has no indentation, add default function body indent
+                  relativeIndent = "  ";
+                }
+
+                return oldIndent + relativeIndent + relativeLine;
+              }
+            }
+          })
+          .join("\n");
+
+        console.debug(
+          `Final extracted content for ${functionName}:\n${newContent}`,
+        );
+      } else {
+        console.debug(
+          `Could not find function ${functionName} in TempClass wrapper`,
+        );
+        // Fallback: use the node text as-is but still apply proper indentation
+        newContent = applyIndentationToContent(newContent, oldIndent);
+      }
+    } else {
+      // Normal case: apply proper indentation to the new content
+      console.debug(
+        `Applying indentation to non-TempClass content for ${functionName}`,
+      );
+      newContent = applyIndentationToContent(newContent, oldIndent);
+    }
+
+    replacements.push({
+      startLine: oldNode.startPosition.row,
+      endLine: oldNode.endPosition.row,
+      newContent,
+      functionName,
+    });
+  }
+
+  if (replacements.length === 0) {
+    console.debug("No replacements to apply");
+    return null;
+  }
+
+  console.debug(`Applying ${replacements.length} replacements`);
+
+  // Sort replacements by start line in descending order
+  replacements.sort((a, b) => b.startLine - a.startLine);
+
+  // Apply replacements
+  let result = [...oldLines];
+  for (const replacement of replacements) {
+    console.debug(
+      `Replacing ${replacement.functionName} at lines ${replacement.startLine}-${replacement.endLine}`,
+    );
+
+    const newFunctionLines = replacement.newContent.split("\n");
+    const deleteCount = replacement.endLine - replacement.startLine + 1;
+
+    console.debug(
+      `About to splice: start=${replacement.startLine}, deleteCount=${deleteCount}, insertCount=${newFunctionLines.length}`,
+    );
+    console.debug(`New function lines: ${JSON.stringify(newFunctionLines)}`);
+    console.debug(`Current result length: ${result.length}`);
+
+    // Show what we're about to replace
+    console.debug(`Lines being replaced:`);
+    for (let i = replacement.startLine; i <= replacement.endLine; i++) {
+      console.debug(`  ${i}: "${result[i]}"`);
+    }
+
+    // Debug: show what we're actually inserting
+    console.debug(
+      `Inserting these lines at position ${replacement.startLine}:`,
+    );
+    newFunctionLines.forEach((line, idx) => {
+      console.debug(`  insert[${idx}]: "${line}"`);
+    });
+
+    result.splice(replacement.startLine, deleteCount, ...newFunctionLines);
+
+    console.debug(`Result length after splice: ${result.length}`);
+
+    // Debug: show the result around the replacement area
+    console.debug(
+      `Result after replacement (lines ${Math.max(0, replacement.startLine - 2)}-${Math.min(result.length - 1, replacement.startLine + newFunctionLines.length + 2)}):`,
+    );
+    for (
+      let i = Math.max(0, replacement.startLine - 2);
+      i <=
+      Math.min(
+        result.length - 1,
+        replacement.startLine + newFunctionLines.length + 2,
+      );
+      i++
+    ) {
+      console.debug(`  result[${i}]: "${result[i]}"`);
+    }
+  }
+
+  return result.join("\n");
+}
+
+// Helper function to apply proper indentation to function content
+function applyIndentationToContent(
+  content: string,
+  targetIndent: string,
+): string {
+  const lines = content.split("\n");
+
+  // First, normalize the content by removing all indentation
+  const normalizedLines = lines.map((line) => line.trim());
+
+  return normalizedLines
+    .map((line, index) => {
+      if (line === "") {
+        // Empty lines stay empty
+        return "";
+      } else if (index === 0) {
+        // First line: use the target indentation
+        return targetIndent + line;
+      } else if (line === "}") {
+        // Closing braces get the same indentation as the opening line
+        return targetIndent + line;
+      } else {
+        // Function body lines get target indent + 2 spaces
+        return targetIndent + "  " + line;
+      }
+    })
+    .join("\n");
+}
+
+// Helper function to create a unique key for functions that considers class context
+function createFunctionKey(
+  node: Parser.SyntaxNode,
+  signature: FunctionSignature,
+): string {
+  // Check if this is a class method
+  let currentNode = node.parent;
+  while (currentNode) {
+    if (
+      currentNode.type === "class_declaration" ||
+      currentNode.type === "class_definition"
+    ) {
+      // Find the class name
+      const classNameNode =
+        currentNode.childForFieldName("name") ||
+        currentNode.children.find((child) => child.type === "identifier");
+      if (classNameNode) {
+        return `${classNameNode.text}::${signature.name}`;
+      }
+    }
+    currentNode = currentNode.parent;
+  }
+
+  // If not a class method, just use the function name
+  return signature.name;
 }
 
 function validateSimilarFunctionDiff(
@@ -795,9 +1344,40 @@ function validateSimilarFunctionDiff(
   const confidence =
     totalMatches > 0 ? highConfidenceMatches / totalMatches : 0;
 
-  // Be more lenient to allow the optimizations to work
+  // Check if we have any high-confidence matches - if so, accept it
+  if (highConfidenceMatches > 0) {
+    console.debug(
+      `Accepting diff with ${highConfidenceMatches} high-confidence matches`,
+    );
+    return {
+      isAcceptable: true,
+      confidence: 1.0,
+    };
+  }
+
+  // Check if diff looks reasonable (has both old and new lines)
+  const oldLines = diff.filter((line) => line.type === "old").length;
+  const newLines = diff.filter((line) => line.type === "new").length;
+  const sameLines = diff.filter((line) => line.type === "same").length;
+
+  console.debug(
+    `Diff composition: ${oldLines} old, ${newLines} new, ${sameLines} same lines`,
+  );
+
+  // If we have any matches and the diff has reasonable changes, accept it
+  if (totalMatches > 0 && (oldLines > 0 || newLines > 0)) {
+    console.debug(
+      `Accepting diff with ${totalMatches} matches and reasonable changes`,
+    );
+    return {
+      isAcceptable: true,
+      confidence: Math.max(0.5, confidence),
+    };
+  }
+
+  console.debug(`Rejecting diff: insufficient matches or changes`);
   return {
-    isAcceptable: confidence >= 0.3 || totalMatches > 0,
+    isAcceptable: false,
     confidence,
   };
 }

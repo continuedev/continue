@@ -9,7 +9,7 @@ const {
 } = importUtils;
 
 // Test import parsing
-test("should parse various import statement types", () => {
+test("should parse various import statement types", async () => {
   const code = dedent`
     import React from 'react';
     import { useState, useEffect } from 'react';
@@ -18,7 +18,7 @@ test("should parse various import statement types", () => {
     import type { User, ApiResponse } from './types';
   `;
 
-  const structure = parseImportStructure(code, "test.ts");
+  const structure = await parseImportStructure(code, "test.ts");
 
   expect(structure.allImports).toHaveLength(5);
   expect(structure.allImports[0].type).toBe("default");
@@ -412,7 +412,7 @@ test("should fallback to standard approach for non-TypeScript files", async () =
 // Test complex import scenarios
 test("should handle complex mixed import scenarios", async () => {
   const oldFile = dedent`
-    import React, { Component } from 'react';
+    import React from 'react';
     import * as fs from 'fs';
     import { User } from './types';
     import axios from 'axios';
@@ -420,7 +420,8 @@ test("should handle complex mixed import scenarios", async () => {
   `;
 
   const newFile = dedent`
-    import React, { Component, useState } from 'react';
+    import React from 'react';
+    import { useState } from 'react';
     import * as fs from 'fs';
     import type { User, ApiResponse } from './types';
     import axios from 'axios';

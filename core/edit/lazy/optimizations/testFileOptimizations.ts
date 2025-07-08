@@ -1,8 +1,8 @@
 import { distance } from "fastest-levenshtein";
 import Parser from "web-tree-sitter";
 import { DiffLine } from "../../..";
-import { deterministicApplyLazyEdit } from "../deterministicLazyEdit";
 import { myersDiff } from "../../../diff/myers";
+import { deterministicApplyLazyEdit } from "../deterministicLazyEdit";
 
 // Test-specific patterns and structures
 interface TestBlock {
@@ -90,19 +90,22 @@ function extractTestStructure(tree: Parser.Tree): TestFileStructure {
   };
 
   function traverseNode(node: Parser.SyntaxNode) {
-    // Handle imports
+    // Enhanced import handling
     if (
       node.type === "import_statement" ||
-      node.type === "import_declaration"
+      node.type === "import_declaration" ||
+      node.type === "named_imports" ||
+      node.type === "namespace_import"
     ) {
       structure.imports.push(node);
       return;
     }
 
-    // Handle exports
+    // Enhanced export handling
     if (
       node.type === "export_statement" ||
-      node.type === "export_declaration"
+      node.type === "export_declaration" ||
+      node.type === "export_default_declaration"
     ) {
       structure.exports.push(node);
       return;
@@ -120,11 +123,19 @@ function extractTestStructure(tree: Parser.Tree): TestFileStructure {
       }
     }
 
-    // Handle helper functions
+    // Enhanced helper function handling with comprehensive node types
     if (
       node.type === "function_declaration" ||
+      node.type === "function_definition" ||
+      node.type === "method_definition" ||
+      node.type === "method_declaration" ||
       node.type === "arrow_function" ||
-      node.type === "variable_declarator"
+      node.type === "function_item" ||
+      node.type === "function_expression" ||
+      node.type === "generator_function_declaration" ||
+      node.type === "variable_declarator" ||
+      node.type === "lexical_declaration" ||
+      node.type === "const_declaration"
     ) {
       // Check if it's not inside a test block
       if (!isInsideTestBlock(node)) {
