@@ -88,9 +88,10 @@ class NextEditService(private val project: Project) {
 
                 if (predictions.isNotEmpty()) {
                     val prediction = predictions[0].toString()
+                    val oldEditRange = predictions[1].toString()
                     // TODO: Check if the prediction is purely additive.
                     val result = checkFim(
-                        editor.document.text,
+                        oldEditRange,
                         prediction,
                         Pair(line, column)
                     )
