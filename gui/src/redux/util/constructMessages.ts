@@ -94,17 +94,20 @@ export function constructMessages(
         // If the assistant message has tool calls, we need to insert tool messages
         for (const toolCall of item.message.toolCalls) {
           let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
-          // TODO parallel tool calls: toolCallState only supports one tool call per message for now
-          if (item.toolCallState?.status === "canceled") {
+          
+          // Find the corresponding tool call state for this specific tool call
+          const toolCallState = item.toolCallStates?.find(
+            state => state.toolCallId === toolCall.id
+          ) || (item.toolCallState?.toolCallId === toolCall.id ? item.toolCallState : undefined);
+          
+          if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (
-            item.toolCallState?.toolCallId === toolCall.id &&
-            item.toolCallState?.output
-          ) {
-            content = renderContextItems(item.toolCallState.output);
+          } else if (toolCallState?.output) {
+            content = renderContextItems(toolCallState.output);
           }
+          
           msgs.push({
-            ctxItems: toolCallStateToContextItems(item.toolCallState),
+            ctxItems: toolCallStateToContextItems(toolCallState),
             message: {
               role: "tool",
               content,
