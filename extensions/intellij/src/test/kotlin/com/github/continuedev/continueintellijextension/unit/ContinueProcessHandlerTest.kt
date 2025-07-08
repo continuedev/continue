@@ -23,7 +23,7 @@ class ContinueProcessHandlerTest {
 
         handler.close()
 
-        // assert all message lines are present (order not important)
+        // assert all message lines are present (order is not important)
         val lines = process.string.split("\r\n").filter { it.isNotBlank() }
         for (i in 0..100)
             Assertions.assertTrue(lines.contains("message number $i"))

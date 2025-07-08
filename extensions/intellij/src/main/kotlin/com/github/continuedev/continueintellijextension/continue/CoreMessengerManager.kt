@@ -7,6 +7,8 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class CoreMessengerManager(
     private val project: Project,
@@ -22,14 +24,16 @@ class CoreMessengerManager(
     }
 
     fun restart() {
-        try {
-            coreMessenger.killSubProcess()
-            lastBackoffInterval *= 2
-            log.warn("Continue process exited, retrying in $lastBackoffInterval seconds")
-            Thread.sleep((lastBackoffInterval * 1000).toLong())
-            coreMessenger = createCoreMessenger()
-        } catch (e: Exception) {
-            service<TelemetryService>().capture("jetbrains_core_start_error", mapOf("error" to e))
+        coroutineScope.launch {
+            try {
+                coreMessenger.killSubProcess()
+                lastBackoffInterval *= 2
+                log.warn("Continue process exited, retrying in $lastBackoffInterval seconds")
+                delay((lastBackoffInterval * 1000).toLong())
+                coreMessenger = createCoreMessenger()
+            } catch (e: Exception) {
+                service<TelemetryService>().capture("jetbrains_core_start_error", mapOf("error" to e))
+            }
         }
     }
 
