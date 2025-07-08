@@ -60,10 +60,6 @@ export class BedrockApi implements BaseLlmApi {
   private _currentToolResponse: Partial<ToolUseState> | null = null;
 
   constructor(protected config: BedrockConfig) {
-    if (!config.env?.region) {
-      throw new Error("region is required for Bedrock API");
-    }
-
     if (config.env?.accessKeyId || config?.env?.secretAccessKey) {
       if (!config.env?.accessKeyId) {
         throw new Error(
@@ -75,10 +71,6 @@ export class BedrockApi implements BaseLlmApi {
           "secretAccessKey is required for Bedrock API. Only found accessKeyId",
         );
       }
-    } else if (!config.env?.profile) {
-      throw new Error(
-        "AWS credentials profile not found. Please provide accessKeyId and secretAccessKey or profile",
-      );
     }
   }
 

@@ -21,7 +21,6 @@ import {
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
 
@@ -48,7 +47,6 @@ interface PromptCachingMetrics {
 }
 
 class Bedrock extends BaseLLM {
-  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
   static providerName = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
