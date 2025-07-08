@@ -308,6 +308,10 @@
   "integrations": {
     "ga4": {
       "measurementId": "G-M3JWW8N2XQ"
+    },
+    "posthog": {
+      "apiKey": "$POSTHOG_API_KEY",
+      "host": "https://us.i.posthog.com"
     }
   },
   "redirects": [
