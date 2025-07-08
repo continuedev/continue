@@ -1,4 +1,5 @@
 import { ConfigDependentToolParams, IDE, Tool } from "..";
+import { codebaseTool } from "./definitions/codebaseTool";
 import { createNewFileTool } from "./definitions/createNewFile";
 import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
@@ -10,15 +11,19 @@ import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
 import { readFileTool } from "./definitions/readFile";
 import { requestRuleTool } from "./definitions/requestRule";
 import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
+import { searchAndReplaceInFileTool } from "./definitions/searchAndReplaceInFile";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
+import { viewRepoMapTool } from "./definitions/viewRepoMap";
+import { viewSubdirectoryTool } from "./definitions/viewSubdirectory";
+
+// I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 
 // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
-export const localOnlyToolDefinitions = [grepSearchTool];
+const getLocalOnlyToolDefinitions = () => [grepSearchTool];
 
-export const baseToolDefinitions = [
+const getBaseToolDefinitions = () => [
   readFileTool,
-  editFileTool,
   createNewFileTool,
   runTerminalCommandTool,
   globSearchTool,
@@ -28,16 +33,23 @@ export const baseToolDefinitions = [
   lsTool,
   createRuleBlock,
   fetchUrlContentTool,
-  // replacing with ls tool for now
-  // viewSubdirectoryTool,
-  // viewRepoMapTool,
 ];
 
 export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
-): Tool[] => [requestRuleTool(params)];
+): Tool[] => [
+  requestRuleTool(params),
+  ...(params.enableExperimentalTools
+    ? [
+        searchAndReplaceInFileTool,
+        viewRepoMapTool,
+        viewSubdirectoryTool,
+        codebaseTool,
+      ]
+    : [editFileTool]),
+];
 
-export const getToolsForIde = async (ide: IDE) =>
+export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>
   (await ide.isWorkspaceRemote())
-    ? baseToolDefinitions
-    : [...baseToolDefinitions, ...localOnlyToolDefinitions];
+    ? getBaseToolDefinitions()
+    : [...getBaseToolDefinitions(), ...getLocalOnlyToolDefinitions()];

@@ -18,6 +18,7 @@ import {
   PlusIcon,
   SparklesIcon,
   TrashIcon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { DiscordIcon } from "../svg/DiscordIcon";
 import { GithubIcon } from "../svg/GithubIcon";
@@ -55,4 +56,5 @@ export const NAMED_ICONS: { [key: string]: any } = {
   "gitlab-mr": GitlabIcon,
   http: GlobeAltIcon,
   trash: TrashIcon,
+  toolCall: WrenchScrewdriverIcon,
 };

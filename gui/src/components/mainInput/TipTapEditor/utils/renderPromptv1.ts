@@ -26,6 +26,7 @@ export async function getRenderedV1Prompt(
           name,
           query: "",
           selectedCode,
+          isInAgentMode: false,
         });
         if (response.status === "success") {
           return response.content.map((item) => item.content).join("\n\n");

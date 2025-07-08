@@ -63,6 +63,7 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
       [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
       [BuiltInToolNames.RequestRule]: "disabled",
+      [BuiltInToolNames.SearchAndReplaceInFile]: "allowedWithPermission",
     },
     toolGroupSettings: {
       [BUILT_IN_GROUP_NAME]: "include",
@@ -104,6 +105,18 @@ export const uiSlice = createSlice({
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
         "allowedWithPermission";
+    },
+    setToolPolicy: (
+      state,
+      action: PayloadAction<{
+        toolName: string;
+        policy: ToolPolicy;
+      }>,
+    ) => {
+      state.toolSettings[action.payload.toolName] = action.payload.policy;
+    },
+    clearToolPolicy: (state, action: PayloadAction<string>) => {
+      delete state.toolSettings[action.payload];
     },
     toggleToolSetting: (state, action: PayloadAction<string>) => {
       const setting = state.toolSettings[action.payload];
@@ -165,6 +178,8 @@ export const {
   setIsExploreDialogOpen,
   setHasDismissedExploreDialog,
   toggleToolSetting,
+  setToolPolicy,
+  clearToolPolicy,
   toggleToolGroupSetting,
   addTool,
   addRule,

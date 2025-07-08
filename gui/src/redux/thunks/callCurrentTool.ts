@@ -12,6 +12,7 @@ import {
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
@@ -122,12 +123,14 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     if (streamResponse) {
       if (errorMessage) {
+        logToolUsage(toolCallState, false, false, extra.ideMessenger, output);
         dispatch(
           errorToolCall({
             toolCallId,
           }),
         );
       } else {
+        logToolUsage(toolCallState, true, true, extra.ideMessenger, output);
         dispatch(
           acceptToolCall({
             toolCallId,

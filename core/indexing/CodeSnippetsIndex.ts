@@ -37,7 +37,8 @@ type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
-  artifactId = "codeSnippets";
+  static artifactId = "codeSnippets";
+  artifactId: string = CodeSnippetsCodebaseIndex.artifactId;
 
   constructor(private readonly ide: IDE) {}
 
@@ -222,7 +223,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     // Compute
     for (let i = 0; i < results.compute.length; i++) {
       const compute = results.compute[i];
-
       let snippets: SnippetChunk[] = [];
       try {
         snippets = await this.getSnippetsInFile(
