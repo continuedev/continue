@@ -117,11 +117,11 @@ export default function Details({ interaction }: DetailsProps) {
             format={(v: number) => v.toFixed(1)}
           ></Cell>
         </div>
-        {/**summary.costBreakdown && (
+        {summary.costBreakdown && (
           <pre className="whitespace-pre-wrap px-2 text-sm">
             {summary.costBreakdown.breakdown}
           </pre>
-        )*/}
+        )}
       </div>
       <div
         ref={scrollTop}
