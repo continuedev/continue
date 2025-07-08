@@ -206,7 +206,10 @@ describe("Parallel Tool Calls", () => {
 
     // Verify we have pending tool calls
     const { findCurrentToolCallsByStatus } = await import("../../../redux/util");
+    const allToolCalls = findCurrentToolCallsByStatus(state.session.history, "generating");
     const pendingToolCalls = findCurrentToolCallsByStatus(state.session.history, "generated");
+    
+    
     expect(pendingToolCalls).toHaveLength(2);
 
     // Note: ResponseActions should be hidden by the hasPendingToolCalls condition in StepContainer

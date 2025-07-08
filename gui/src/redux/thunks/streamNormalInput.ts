@@ -3,7 +3,7 @@ import { LLMFullCompletionOptions } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
-import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
+import { selectCurrentToolCalls } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,

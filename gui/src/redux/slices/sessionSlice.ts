@@ -583,6 +583,7 @@ export const sessionSlice = createSlice({
         action.payload.toolCallId,
       );
       
+      
       if (toolCallState) {
         toolCallState.status = "generated";
 
