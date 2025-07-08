@@ -198,12 +198,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     const finalSessions = [];
     for (const session of sessions) {
       try {
-        // For expired tokens, don't use retries - if refresh fails, we drop the session
-        const refreshMethod = this.jwtIsExpiredOrInvalid(session.accessToken)
-          ? this._refreshSession.bind(this) // Direct refresh for expired tokens
-          : this._refreshSessionWithRetry.bind(this); // Retry for valid tokens
-
-        const newSession = await refreshMethod(session.refreshToken);
+        const newSession = await this._refreshSessionWithRetry(
+          session.refreshToken,
+        );
         finalSessions.push({
           ...session,
           accessToken: newSession.accessToken,
