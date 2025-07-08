@@ -103,6 +103,7 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
+            "nextEdit/predict",
             "tts/kill",
             "llm/complete",
             "llm/streamChat",

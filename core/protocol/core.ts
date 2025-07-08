@@ -145,6 +145,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
+  "nextEdit/predict": [AutocompleteInput, string[]];
   "llm/complete": [
     {
       prompt: string;
