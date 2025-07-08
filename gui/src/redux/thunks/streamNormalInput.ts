@@ -19,7 +19,7 @@ import {
   constructMessages,
   getBaseSystemMessage,
 } from "../util/constructMessages";
-import { callCurrentTool } from "./callCurrentTool";
+import { callToolById } from "./callToolById";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -160,7 +160,9 @@ export const streamNormalInput = createAsyncThunk<
         toolSettings[toolCallState.toolCall.function.name] ===
         "allowedWithoutPermission"
       ) {
-        const response = await dispatch(callCurrentTool());
+        const response = await dispatch(
+          callToolById({ toolCallId: toolCallState.toolCallId })
+        );
         unwrapResult(response);
       }
     }

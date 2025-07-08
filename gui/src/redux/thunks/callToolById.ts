@@ -3,7 +3,7 @@ import { ContextItem } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
 import posthog from "posthog-js";
 import { callClientTool } from "../../util/clientTools/callClientTool";
-import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
+import { findToolCall } from "../util";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
@@ -15,12 +15,17 @@ import { ThunkApiType } from "../store";
 import { logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
-export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
+export const callToolById = createAsyncThunk<
+  void,
+  { toolCallId: string },
+  ThunkApiType
+>(
   "chat/callTool",
-  async (_, { dispatch, extra, getState }) => {
+  async ({ toolCallId }, { dispatch, extra, getState }) => {
     const state = getState();
-    const toolCallState = selectCurrentToolCall(state);
+    const toolCallState = findToolCall(state.session.history, toolCallId);
     if (!toolCallState) {
+      console.warn(`Tool call with ID ${toolCallId} not found`);
       return;
     }
 
@@ -33,8 +38,6 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
     if (!selectedChatModel) {
       throw new Error("No model selected");
     }
-
-    const { toolCallId } = toolCallState;
 
     dispatch(
       setToolCallCalling({

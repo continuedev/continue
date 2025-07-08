@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
-import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
+import { callToolById } from "../../../../redux/thunks/callToolById";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -58,7 +58,11 @@ export function PendingToolCallToolbar() {
         <EnterButton
           isPrimary={true}
           className="text-description"
-          onClick={() => dispatch(callCurrentTool())}
+          onClick={() => 
+            currentToolCall && dispatch(
+              callToolById({ toolCallId: currentToolCall.toolCallId })
+            )
+          }
           data-testid="accept-tool-call-button"
         >
           {getMetaKeyLabel()} ⏎ Continue

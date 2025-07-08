@@ -4,7 +4,7 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
-import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
+import { callToolById } from "../../../../redux/thunks/callToolById";
 import { logToolUsage } from "../../../../redux/util";
 import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
@@ -48,7 +48,9 @@ export function LumpToolbar() {
       if (metaKey && event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
-        void dispatch(callCurrentTool());
+        void dispatch(
+          callToolById({ toolCallId: toolCallState.toolCallId })
+        );
       } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
