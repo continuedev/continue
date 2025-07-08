@@ -15,6 +15,7 @@ const DEFAULT_MAX_BATCH_SIZE = 64;
 export enum LLMConfigurationStatuses {
   VALID = "valid",
   MISSING_API_KEY = "missing-api-key",
+  MISSING_ENV_SECRET = "missing-env-secret",
 }
 
 export {

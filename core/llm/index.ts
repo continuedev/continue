@@ -155,6 +155,7 @@ export abstract class BaseLLM implements ILLM {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -248,6 +249,7 @@ export abstract class BaseLLM implements ILLM {
 
     // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
+    this.envSecretLocations = options.envSecretLocations;
     this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
 

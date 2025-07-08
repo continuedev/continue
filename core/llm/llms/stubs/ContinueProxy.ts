@@ -40,6 +40,7 @@ class ContinueProxy extends OpenAI {
     this.apiType = undefined;
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
+    this.envSecretLocations = options.envSecretLocations;
     this.orgScopeId = options.orgScopeId;
     this.onPremProxyUrl = options.onPremProxyUrl;
     if (this.onPremProxyUrl) {
@@ -60,6 +61,7 @@ class ContinueProxy extends OpenAI {
   protected extraBodyProperties(): Record<string, any> {
     const continueProperties: ContinueProperties = {
       apiKeyLocation: this.apiKeyLocation,
+      envSecretLocations: this.envSecretLocations,
       apiBase: this.actualApiBase,
       orgScopeId: this.orgScopeId ?? null,
       env: this.configEnv,
@@ -70,13 +72,24 @@ class ContinueProxy extends OpenAI {
   }
 
   getConfigurationStatus() {
-    if (!this.apiKeyLocation) {
+    if (!this.apiKeyLocation && !this.envSecretLocations) {
       return LLMConfigurationStatuses.VALID;
     }
 
-    const secretLocation = decodeSecretLocation(this.apiKeyLocation);
-    if (secretLocation.secretType === SecretType.NotFound) {
-      return LLMConfigurationStatuses.MISSING_API_KEY;
+    if (this.apiKeyLocation) {
+      const secretLocation = decodeSecretLocation(this.apiKeyLocation);
+      if (secretLocation.secretType === SecretType.NotFound) {
+        return LLMConfigurationStatuses.MISSING_API_KEY;
+      }
+    }
+
+    if (this.envSecretLocations) {
+      for (const secretLocation of Object.values(this.envSecretLocations)) {
+        const decoded = decodeSecretLocation(secretLocation);
+        if (decoded.secretType === SecretType.NotFound) {
+          return LLMConfigurationStatuses.MISSING_ENV_SECRET;
+        }
+      }
     }
 
     return LLMConfigurationStatuses.VALID;

@@ -133,7 +133,27 @@ export function useProxyForUnrenderedSecrets(
       const apiKeyLocation = getUnrenderedSecretLocation(
         config.models[i]?.apiKey,
       );
-      if (apiKeyLocation) {
+      const encodedApiKeyLocation = apiKeyLocation
+        ? encodeSecretLocation(apiKeyLocation)
+        : undefined;
+
+      let encodedEnvSecretLocations: Record<string, string> | undefined =
+        undefined;
+      if (config.models[i]?.env) {
+        Object.entries(config.models[i]?.env!).forEach(([key, value]) => {
+          if (typeof value === "string") {
+            const secretLocation = getUnrenderedSecretLocation(value);
+            if (secretLocation) {
+              encodedEnvSecretLocations = {
+                ...encodedEnvSecretLocations,
+                [key]: encodeSecretLocation(secretLocation),
+              };
+            }
+          }
+        });
+      }
+
+      if (encodedApiKeyLocation || encodedEnvSecretLocations) {
         config.models[i] = {
           ...config.models[i],
           name: config.models[i]?.name ?? "",
@@ -143,7 +163,8 @@ export function useProxyForUnrenderedSecrets(
             config.models[i]?.provider ?? "",
             config.models[i]?.model ?? "",
           ),
-          apiKeyLocation: encodeSecretLocation(apiKeyLocation),
+          apiKeyLocation: encodedApiKeyLocation,
+          envSecretLocations: encodedEnvSecretLocations,
           orgScopeId,
           onPremProxyUrl,
           apiKey: undefined,
@@ -158,6 +179,7 @@ export function useProxyForUnrenderedSecrets(
 /** The additional properties that are added to the otherwise OpenAI-compatible body when requesting a Continue proxy */
 export const continuePropertiesSchema = z.object({
   apiKeyLocation: z.string().optional(),
+  envSecretLocations: z.record(z.string(), z.string()).optional(),
   apiBase: z.string().optional(),
   orgScopeId: z.string().nullable(),
   env: z.record(z.string(), z.any()).optional(),

@@ -79,6 +79,7 @@ export function createOpenAIClient({
 
           const continueProperties: ContinueProperties = {
             apiKeyLocation: modelConfig.apiKeyLocation,
+            envSecretLocations: modelConfig.envSecretLocations,
             orgScopeId: organizationId ?? null,
           };
 
