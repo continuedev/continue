@@ -27,6 +27,7 @@ import {
   Model,
 } from "openai/resources/index";
 
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
@@ -56,32 +57,56 @@ interface ToolUseState {
 }
 
 export class BedrockApi implements BaseLlmApi {
-  private client: BedrockRuntimeClient;
   private _currentToolResponse: Partial<ToolUseState> | null = null;
 
   constructor(protected config: BedrockConfig) {
     if (!config.env?.region) {
       throw new Error("region is required for Bedrock API");
     }
-    if (!config.apiKey) {
+
+    if (config.env?.accessKeyId || config?.env?.secretAccessKey) {
+      if (!config.env?.accessKeyId) {
+        throw new Error(
+          "accessKeyId is required for Bedrock API. Only found secretAccessKey",
+        );
+      }
+      if (!config.env?.secretAccessKey) {
+        throw new Error(
+          "secretAccessKey is required for Bedrock API. Only found accessKeyId",
+        );
+      }
+    } else if (!config.env?.profile) {
       throw new Error(
-        "apiKey in the format accessKeyId:secretAccessKey is required for Bedrock API",
+        "AWS credentials profile not found. Please provide accessKeyId and secretAccessKey or profile",
       );
     }
+  }
 
-    const [accessKeyId, secretAccessKey] = config.apiKey.split(":");
-    if (!accessKeyId || !secretAccessKey) {
-      throw new Error(
-        "Bedrock apiKey must be in the format accessKeyId:secretAccessKey",
+  async getCreds() {
+    if (this.config?.env?.accessKeyId && this.config?.env?.secretAccessKey) {
+      return {
+        accessKeyId: this.config.env.accessKeyId,
+        secretAccessKey: this.config.env.secretAccessKey,
+      };
+    }
+    const profile = this.config.env.profile ?? "bedrock";
+    try {
+      return await fromNodeProviderChain({
+        profile: profile,
+        ignoreCache: true,
+      })();
+    } catch (e) {
+      console.warn(
+        `AWS profile with name ${profile} not found in ~/.aws/credentials, using default profile`,
       );
     }
-
-    this.client = new BedrockRuntimeClient({
-      region: config.env.region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
+    return await fromNodeProviderChain()();
+  }
+  async getClient(): Promise<BedrockRuntimeClient> {
+    const creds = await this.getCreds();
+    return new BedrockRuntimeClient({
+      region: this.config.env.region,
+      credentials: creds,
     });
   }
 
@@ -431,7 +456,8 @@ export class BedrockApi implements BaseLlmApi {
         ...requestBody,
       });
 
-      const response = await this.client.send(command, { abortSignal: signal });
+      const client = await this.getClient();
+      const response = await client.send(command, { abortSignal: signal });
 
       if (!response?.stream) {
         throw new Error("No stream received from Bedrock API");
@@ -551,7 +577,8 @@ export class BedrockApi implements BaseLlmApi {
       contentType: "application/json",
     };
     const command = new InvokeModelCommand(payload);
-    const response = await this.client.send(command);
+    const client = await this.getClient();
+    const response = await client.send(command);
     if (!response.body) {
       throw new Error("No response body");
     }

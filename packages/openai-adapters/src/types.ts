@@ -79,6 +79,9 @@ export const BedrockConfigSchema = OpenAIConfigSchema.extend({
   // }).optional(),
   env: z.object({
     region: z.string().optional(),
+    accessKeyId: z.string().optional(),
+    secretAccessKey: z.string().optional(),
+    profile: z.string().optional(),
   }),
 });
 export type BedrockConfig = z.infer<typeof BedrockConfigSchema>;

@@ -13,6 +13,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.842.0",
+    "@aws-sdk/credential-providers": "^3.840.0",
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/config-yaml": "^1.0.51",
     "@continuedev/fetch": "^1.0.15",

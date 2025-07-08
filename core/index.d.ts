@@ -611,6 +611,8 @@ export interface LLMOptions {
   // AWS options
   profile?: string;
   modelArn?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // AWS and VertexAI Options
   region?: string;

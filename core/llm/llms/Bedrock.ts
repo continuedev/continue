@@ -73,11 +73,6 @@ class Bedrock extends BaseLLM {
     if (!options.apiBase) {
       this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
     }
-    if (options.profile) {
-      this.profile = options.profile;
-    } else {
-      this.profile = "bedrock";
-    }
 
     this.requestOptions = {
       region: options.region,
@@ -612,30 +607,22 @@ class Bedrock extends BaseLLM {
   }
 
   private async _getCredentials() {
-    if (this.apiKey) {
-      const [accessKeyId, secretAccessKey] = this.apiKey.split(":");
-      if (!accessKeyId || !secretAccessKey) {
-        throw new Error(
-          "Invalid Bedrock API key format. Expected format: accessKeyId:secretAccessKey",
-        );
-      }
+    if (this.accessKeyId && this.secretAccessKey) {
       return {
-        accessKeyId,
-        secretAccessKey,
+        accessKeyId: this.accessKeyId,
+        secretAccessKey: this.secretAccessKey,
       };
     }
-
-    if (this.profile) {
-      try {
-        return await fromNodeProviderChain({
-          profile: this.profile,
-          ignoreCache: true,
-        })();
-      } catch (e) {
-        console.warn(
-          `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
-        );
-      }
+    const profile = this.profile ?? "bedrock";
+    try {
+      return await fromNodeProviderChain({
+        profile: profile,
+        ignoreCache: true,
+      })();
+    } catch (e) {
+      console.warn(
+        `AWS profile with name ${profile} not found in ~/.aws/credentials, using default profile`,
+      );
     }
     return await fromNodeProviderChain()();
   }

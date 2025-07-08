@@ -172,6 +172,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
   profile?: string | undefined;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -270,6 +272,8 @@ export abstract class BaseLLM implements ILLM {
     this.region = options.region;
     this.projectId = options.projectId;
     this.profile = options.profile;
+    this.accessKeyId = options.accessKeyId;
+    this.secretAccessKey = options.secretAccessKey;
 
     this.openaiAdapter = this.createOpenAiAdapter();
 
