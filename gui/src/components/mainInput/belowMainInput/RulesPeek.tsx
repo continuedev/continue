@@ -19,9 +19,11 @@ const getSourceLabel = (source: RuleSource): string => {
       return "Default Chat";
     case "default-agent":
       return "Default Agent";
-    case "model-chat-options":
+    case "model-options-chat":
       return "Model Chat Options";
-    case "model-agent-options":
+    case "model-options-plan":
+      return "Model Plan Options";
+    case "model-options-agent":
       return "Model Agent Options";
     case "rules-block":
       return "Rules Block";

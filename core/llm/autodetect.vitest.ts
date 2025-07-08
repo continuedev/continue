@@ -106,6 +106,19 @@ test("autodetectTemplateType returns 'none' for Codestral models", () => {
   expect(autodetectTemplateType("codestral-22b")).toBe("none");
 });
 
+test("autodetectTemplateType returns 'none' for Nova models", () => {
+  expect(autodetectTemplateType("nova")).toBe("none");
+  expect(autodetectTemplateType("Nova")).toBe("none");
+  expect(autodetectTemplateType("nova-pro")).toBe("none");
+  expect(autodetectTemplateType("nova-lite")).toBe("none");
+  expect(autodetectTemplateType("nova-micro")).toBe("none");
+  expect(autodetectTemplateType("nova-premier")).toBe("none");
+  expect(autodetectTemplateType("amazon-nova-pro")).toBe("none");
+  expect(autodetectTemplateType("amazon-nova-lite")).toBe("none");
+  expect(autodetectTemplateType("amazon-nova-micro")).toBe("none");
+  expect(autodetectTemplateType("amazon-nova-premier")).toBe("none");
+});
+
 test("autodetectTemplateType returns 'alpaca' for Alpaca and Wizard models", () => {
   expect(autodetectTemplateType("alpaca")).toBe("alpaca");
   expect(autodetectTemplateType("Alpaca")).toBe("alpaca");

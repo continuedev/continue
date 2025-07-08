@@ -14,7 +14,7 @@ Below are details for each property that can be set in `config.json`. The config
 
 ### `models`
 
-Your **chat** models are defined here, which are used for [Chat](/features/chat/how-it-works), [Edit](/features/edit/how-it-works) and [VS Code actions](/advanced/deep-dives/vscode-actions).
+Your **chat** models are defined here, which are used for [Chat](/features/chat/how-it-works), [Edit](/features/edit/how-it-works) and [VS Code actions](/customize/deep-dives/vscode-actions).
 
 Each model has specific configuration options tailored to its provider and functionality, which can be seen as suggestions while editing the json.
 
@@ -506,7 +506,7 @@ Example
 
 ### Fully deprecated settings
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](/advanced/deep-dives/settings). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](/customize/settings). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
 
 - `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
 - `promptPath`: This value will override during migration.
@@ -527,4 +527,4 @@ Some deprecated `config.json` settings are no longer stored in config and have b
   - `displayRawMarkdown`
   - `showChatScrollbar`
 
-  See [User Settings Page](/advanced/deep-dives/settings) for more information about each option.
+  See [User Settings Page](/customize/settings) for more information about each option.

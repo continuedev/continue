@@ -63,6 +63,7 @@ async function modelConfigToBaseLLM({
     template: model.promptTemplates?.chat,
     promptTemplates: model.promptTemplates,
     baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage,
+    basePlanSystemMessage: model.chatOptions?.basePlanSystemMessage,
     baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
@@ -125,6 +126,12 @@ async function modelConfigToBaseLLM({
   }
   if ("profile" in env && typeof env.profile === "string") {
     options.profile = env.profile;
+  }
+  if ("accessKeyId" in env && typeof env.accessKeyId === "string") {
+    options.accessKeyId = env.accessKeyId;
+  }
+  if ("secretAccessKey" in env && typeof env.secretAccessKey === "string") {
+    options.secretAccessKey = env.secretAccessKey;
   }
   if ("modelArn" in env && typeof env.modelArn === "string") {
     options.modelArn = env.modelArn;

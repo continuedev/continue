@@ -27,6 +27,18 @@ test("should be able to toggle modes", async () => {
     );
   });
 
+  // Check that it switched to Plan mode
+  await getElementByText("Plan");
+
+  act(() => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: ".",
+        metaKey: true, // cmd key on Mac
+      }),
+    );
+  });
+
   // Check that it switched to Agent mode
   await getElementByText("Agent");
 
