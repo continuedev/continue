@@ -93,35 +93,33 @@ export default function MermaidDiagram({ code }: { code: string }) {
         mermaidRenderContainerRef.current.innerHTML = "";
       }
       const diagramId = `mermaid-id-${Math.random().toString(36).substring(2)}`;
-      mermaid
-        .parse(code)
-        .then(() => mermaid.render(diagramId, code))
-        .then(({ svg }) => {
-          if (mermaidRenderContainerRef.current) {
-            mermaidRenderContainerRef.current.innerHTML = svg;
-            setError("");
-            const panzoom = Panzoom(mermaidRenderContainerRef.current, {
-              step: MINIMUM_ZOOM_STEP,
-            });
-            zoomInButtonRef.current?.addEventListener("click", () =>
-              panzoom.zoomIn({ step: MINIMUM_ZOOM_STEP * 4 }),
-            );
-            zoomOutButtonRef.current?.addEventListener("click", () =>
-              panzoom.zoomOut({ step: MINIMUM_ZOOM_STEP * 4 }),
-            );
-            resetZoomButtonRef.current?.addEventListener("click", () =>
-              panzoom.reset(),
-            );
-            mermaidRenderContainerRef.current.parentElement?.addEventListener(
-              "wheel",
-              (event) => {
-                if (!event.shiftKey) return;
-                panzoom.zoomWithWheel(event);
-              },
-            );
-          }
-        })
-        .catch((err) => {
+      void (async () => {
+        if (!mermaidRenderContainerRef.current) return;
+        try {
+          await mermaid.parse(code);
+          const renderedSVG = await mermaid.render(diagramId, code);
+          mermaidRenderContainerRef.current.innerHTML = renderedSVG.svg;
+          setError("");
+          const panzoom = Panzoom(mermaidRenderContainerRef.current, {
+            step: MINIMUM_ZOOM_STEP,
+          });
+          zoomInButtonRef.current?.addEventListener("click", () =>
+            panzoom.zoomIn({ step: MINIMUM_ZOOM_STEP * 4 }),
+          );
+          zoomOutButtonRef.current?.addEventListener("click", () =>
+            panzoom.zoomOut({ step: MINIMUM_ZOOM_STEP * 4 }),
+          );
+          resetZoomButtonRef.current?.addEventListener("click", () =>
+            panzoom.reset(),
+          );
+          mermaidRenderContainerRef.current.parentElement?.addEventListener(
+            "wheel",
+            (event) => {
+              if (!event.shiftKey) return;
+              panzoom.zoomWithWheel(event);
+            },
+          );
+        } catch (err: any) {
           if (err.message) {
             setError(err.message);
           } else {
@@ -129,10 +127,9 @@ export default function MermaidDiagram({ code }: { code: string }) {
               "Unknown error when parsing or rendering the Mermaid diagram.",
             );
           }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+        }
+        setIsLoading(false);
+      })();
     },
     500,
     [code],
@@ -141,7 +138,7 @@ export default function MermaidDiagram({ code }: { code: string }) {
   return (
     <>
       {isLoading && (
-        <div className="text-vsc-foreground text-sm">Generating diagram...</div>
+        <div className="text-vsc-foreground text-xs">Generating diagram...</div>
       )}
       {!!error ? (
         <div className="text-error whitespace-pre text-sm">{error}</div>
