@@ -75,6 +75,10 @@ export function UserSettingsForm() {
     handleUpdate({ optInNextEditFeature: value });
   };
 
+  const handleEnableStaticContextualizationToggle = (value: boolean) => {
+    handleUpdate({ enableStaticContextualization: value });
+  };
+
   useEffect(() => {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
@@ -436,23 +440,18 @@ export function UserSettingsForm() {
                   text="@Codebase: use tool calling only"
                 />
 
-                <ToggleSwitch
-                  isToggled={enableStaticContextualization}
-                  onToggle={() =>
-                    handleUpdate({
-                      enableStaticContextualization:
-                        !enableStaticContextualization,
-                    })
-                  }
-                  text="Use Static Contextualization"
-                />
-
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
                     logEditingData={logEditingData}
                     handleLogEditingDataToggle={handleLogEditingDataToggle}
                     optInNextEditFeature={optInNextEditFeature}
                     handleOptInNextEditToggle={handleOptInNextEditToggle}
+                    enableStaticContextualization={
+                      enableStaticContextualization
+                    }
+                    handleEnableStaticContextualizationToggle={
+                      handleEnableStaticContextualizationToggle
+                    }
                   />
                 )}
               </div>
