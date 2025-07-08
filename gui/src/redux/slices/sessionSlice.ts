@@ -140,6 +140,14 @@ export const sessionSlice = createSlice({
           if (message.toolCallState?.status === "generated") {
             message.toolCallState.status = "canceled";
           }
+          // Also cancel any tool calls in the toolCallStates array
+          if (message.toolCallStates) {
+            message.toolCallStates.forEach(toolCallState => {
+              if (toolCallState.status === "generated") {
+                toolCallState.status = "canceled";
+              }
+            });
+          }
           break;
         }
       }
@@ -368,12 +376,13 @@ export const sessionSlice = createSlice({
               },
               contextItems: [],
             };
-            if (message.role === "assistant" && message.toolCalls?.[0]) {
-              const toolCallDelta = message.toolCalls[0];
-              historyItem.toolCallState = addToolCallDeltaToState(
-                toolCallDelta,
-                undefined,
+            if (message.role === "assistant" && message.toolCalls?.length) {
+              // Handle multiple tool calls
+              historyItem.toolCallStates = message.toolCalls.map(toolCallDelta => 
+                addToolCallDeltaToState(toolCallDelta, undefined)
               );
+              // Maintain backward compatibility with single toolCallState
+              historyItem.toolCallState = historyItem.toolCallStates[0];
             }
             state.history.push(historyItem);
           } else {
@@ -409,17 +418,20 @@ export const sessionSlice = createSlice({
               }
             } else if (
               message.role === "assistant" &&
-              message.toolCalls?.[0] &&
+              message.toolCalls?.length &&
               lastMessage.role === "assistant"
             ) {
-              // Intentionally only supporting one tool call for now.
-              const toolCallDelta = message.toolCalls[0];
-              const newToolCallState = addToolCallDeltaToState(
-                toolCallDelta,
-                lastItem.toolCallState,
-              );
-              lastItem.toolCallState = newToolCallState;
-              lastMessage.toolCalls = [newToolCallState.toolCall];
+              // Handle multiple tool calls in streaming updates
+              const existingToolCallStates = lastItem.toolCallStates || [];
+              const updatedToolCallStates = message.toolCalls.map((toolCallDelta, index) => {
+                const existingState = existingToolCallStates[index];
+                return addToolCallDeltaToState(toolCallDelta, existingState);
+              });
+              
+              lastItem.toolCallStates = updatedToolCallStates;
+              // Maintain backward compatibility
+              lastItem.toolCallState = updatedToolCallStates[0];
+              lastMessage.toolCalls = updatedToolCallStates.map(state => state.toolCall);
             }
           }
         }
