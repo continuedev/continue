@@ -108,7 +108,7 @@ class NextEditService(private val project: Project) {
                             // val nextEditWindowService = project.service<NextEditWindowService>()
                             val nextEditWindowService = NextEditWindowService.getInstance(project)
 //                            val codeViewer = nextEditWindowService.createCodeViewer(prediction, "ts")
-                            nextEditWindowService.showCodePreview(prediction, "ts", editor)
+                            nextEditWindowService.showCodePreview(prediction, editor)
 //                            editor.contentComponent.removeAll()
 //                            editor.contentComponent.add(codeViewer)
 //                            editor.contentComponent.revalidate()
