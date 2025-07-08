@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { z } from "zod";
 import { AnthropicApi } from "./apis/Anthropic.js";
 import { AzureApi } from "./apis/Azure.js";
+import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
@@ -34,6 +35,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new OpenAIApi(config);
     case "azure":
       return new AzureApi(config);
+    case "bedrock":
+      return new BedrockApi(config);
     case "cohere":
       return new CohereApi(config);
     case "anthropic":

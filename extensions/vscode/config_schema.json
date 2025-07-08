@@ -359,8 +359,18 @@
           "description": "The AWS security profile to use",
           "type": "string"
         },
+        "accessKeyId": {
+          "title": "Access Key ID",
+          "description": "AWS access key id (can be used together with secretAccessKey in place of profile)",
+          "type": "string"
+        },
+        "secretAccessKey": {
+          "title": "Secret Access Key",
+          "description": "AWS secret access key (can be used together with secretAccessKey in place of profile)",
+          "type": "string"
+        },
         "modelArn": {
-          "title": "Profile",
+          "title": "Model ARN",
           "description": "The AWS arn for the imported model",
           "type": "string"
         },
@@ -2902,6 +2912,16 @@
             "profile": {
               "title": "Profile",
               "description": "The AWS security profile to use",
+              "type": "string"
+            },
+            "accessKeyId": {
+              "title": "Access Key ID",
+              "description": "AWS access key id (can be used together with secretAccessKey in place of profile)",
+              "type": "string"
+            },
+            "secretAccessKey": {
+              "title": "Secret Access Key",
+              "description": "AWS secret access key (can be used together with secretAccessKey in place of profile)",
               "type": "string"
             }
           },
