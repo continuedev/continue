@@ -1,5 +1,7 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -46,12 +48,39 @@ class AutocompleteDocumentListener(private val editorManager: FileEditorManager,
             return
         }
 
-        // Invoke later is important, otherwise the completion will be triggered before the document is updated
-        // causing the old caret offset to be used
-        // TODO: concurrency
-        invokeLater {
-            service.triggerCompletion(editor)
+        val nextEditService = editor.project?.serivce<NextEditService>() ?: return
+
+        // Check settings to see if next edit is enabled, and then trigger either autocomplete or next exit.
+        val continuePluginService = editor.project?.service<ContinuePluginService>()
+        if (continuePluginService == null) {
+            return
         }
+
+        continuePluginService.coreMessenger?.request(
+            "config/getSerializedProfileInfo",
+            null,
+            null,
+            ({ response ->
+                val optInNextEditFeature = response.castNestedOrNull<Boolean>(
+                    "content",
+                    "result",
+                    "config",
+                    "experimental",
+                    "optInNextEditFeature"
+                ) ?: return@request
+
+                invokeLater {
+                    if (optInNextEditFeature) {
+                        nextEditService.triggerNextEdit(editor)
+                    } else {
+                        // Invoke later is important, otherwise the completion will be triggered before the document is updated
+                        // causing the old caret offset to be used
+                        // TODO: concurrency
+                        service.triggerCompletion(editor)
+                    }
+                }
+            })
+        )
     }
 }
 
