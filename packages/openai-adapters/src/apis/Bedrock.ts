@@ -5,6 +5,7 @@ import {
   ConverseStreamCommand,
   ConverseStreamCommandInput,
   ImageFormat,
+  InvokeModelCommand,
   Message,
   ToolConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
@@ -27,7 +28,7 @@ import {
 } from "openai/resources/index";
 
 import { BedrockConfig } from "../types.js";
-import { chatChunk, chatChunkFromDelta } from "../util.js";
+import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
 import {
   BaseLlmApi,
@@ -542,168 +543,127 @@ export class BedrockApi implements BaseLlmApi {
     throw new Error("Bedrock does not support FIM directly");
   }
 
+  private async getInvokeModelResponseBody(model: string, jsonBody: object) {
+    const payload = {
+      body: JSON.stringify(jsonBody),
+      modelId: model,
+      accept: "*/*",
+      contentType: "application/json",
+    };
+    const command = new InvokeModelCommand(payload);
+    const response = await this.client.send(command);
+    if (!response.body) {
+      throw new Error("No response body");
+    }
+    const decoder = new TextDecoder();
+    const decoded = decoder.decode(response.body);
+    return JSON.parse(decoded);
+  }
+
+  private getEmbedTexts(body: EmbeddingCreateParams): string[] {
+    const texts: string[] = [];
+    if (typeof body.input === "string") {
+      texts.push(body.input);
+    } else if (body.input.length > 0) {
+      const firstVal = body.input[0];
+      if (Array.isArray(firstVal)) {
+        throw new Error("Unsupported embeddings type received: number[][]");
+      }
+      if (typeof firstVal === "string") {
+        texts.push(...(body.input as string[]));
+      } else {
+        throw new Error("Unsupported embeddings type received: number[]");
+      }
+    }
+    return texts;
+  }
+
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
-    throw new Error("Not implemented");
-    // // Determine which embedding model is being used based on the model prefix
-    // const modelPrefix = this._getEmbeddingModelPrefix(body.model);
+    const texts = this.getEmbedTexts(body);
 
-    // if (!modelPrefix) {
-    //   throw new Error(`Unsupported embedding model: ${body.model}`);
-    // }
-
-    // const inputs = Array.isArray(body.input) ? body.input : [body.input];
-
-    // try {
-    //   const embeddings = await Promise.all(
-    //     inputs.map(async (input) => {
-    //       const payload = this._formatEmbeddingPayload(input, modelPrefix);
-
-    //       const response = await customFetch(this.config.requestOptions)(
-    //         `https://bedrock-runtime.${this.config.region}.amazonaws.com/model/${body.model}/invoke`,
-    //         {
-    //           method: "POST",
-    //           body: JSON.stringify(payload),
-    //           headers: {
-    //             "Content-Type": "application/json",
-    //             "X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
-    //             "X-Amz-Date": new Date()
-    //               .toISOString()
-    //               .replace(/[:-]|\.\d{3}/g, ""),
-    //           },
-    //           aws: {
-    //             region: this.config.region,
-    //             service: "bedrock",
-    //             credentials: {
-    //               accessKeyId: this.config.accessKeyId,
-    //               secretAccessKey: this.config.secretAccessKey,
-    //             },
-    //           },
-    //         },
-    //       );
-
-    //       const data = await response.json();
-    //       return this._extractEmbedding(data, modelPrefix);
-    //     }),
-    //   );
-
-    //   return embedding({
-    //     model: body.model,
-    //     usage: {
-    //       total_tokens: inputs.reduce((sum, input) => sum + input.length, 0),
-    //       prompt_tokens: inputs.reduce((sum, input) => sum + input.length, 0),
-    //     },
-    //     data: embeddings,
-    //   });
-    // } catch (error) {
-    //   if (error instanceof Error) {
-    //     throw new Error(`Bedrock embedding error: ${error.message}`);
-    //   }
-    //   throw new Error("Unknown error in Bedrock embedding");
-    // }
-  }
-
-  private _getEmbeddingModelPrefix(model: string): string | undefined {
-    if (model.startsWith("cohere")) {
-      return "cohere";
-    }
-    if (model.startsWith("amazon.titan-embed")) {
-      return "amazon.titan-embed";
-    }
-    return undefined;
-  }
-
-  private _formatEmbeddingPayload(text: string, modelPrefix: string): any {
-    if (modelPrefix === "cohere") {
-      return {
-        texts: [text],
+    let embeddings: number[][];
+    if (body.model.startsWith("cohere")) {
+      const payload = {
+        texts,
         input_type: "search_document",
         truncate: "END",
       };
+      const output = await this.getInvokeModelResponseBody(body.model, payload);
+      embeddings = [output.embedding];
+    } else if (body.model.startsWith("amazon.titan-embed")) {
+      embeddings = await Promise.all(
+        texts.map(async (text) => {
+          const payload = {
+            inputText: text,
+          };
+          const output = await this.getInvokeModelResponseBody(
+            body.model,
+            payload,
+          );
+          return output.embeddings || [];
+        }),
+      );
+    } else {
+      throw new Error(`Unsupported model: ${body.model}`);
     }
-    if (modelPrefix === "amazon.titan-embed") {
-      return {
-        inputText: text,
-      };
-    }
-    throw new Error(`Unsupported model prefix: ${modelPrefix}`);
-  }
 
-  private _extractEmbedding(data: any, modelPrefix: string): number[] {
-    if (modelPrefix === "cohere") {
-      return data.embeddings?.[0] || [];
-    }
-    if (modelPrefix === "amazon.titan-embed") {
-      return data.embedding || [];
-    }
-    return [];
+    return embedding({
+      data: embeddings,
+      model: body.model,
+      usage: {
+        prompt_tokens: 0,
+        total_tokens: 0,
+      },
+    });
   }
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
-    throw new Error("Not implemented");
-    // if (!body.query || !body.documents.length) {
-    //   throw new Error("Query and documents must not be empty");
-    // }
+    if (!body.query || !body.documents.length) {
+      throw new Error("Query and chunks must not be empty");
+    }
 
-    // try {
-    //   // Build the payload
-    //   const payload: any = {
-    //     query: body.query,
-    //     documents: body.documents,
-    //     top_n: body.documents.length,
-    //   };
+    // Base payload for both models
+    const payload: any = {
+      query: body.query,
+      documents: body.documents,
+      top_n: body.top_k ?? body.documents.length,
+    };
 
-    //   // Add api_version for Cohere model
-    //   if (body.model.startsWith("cohere.rerank")) {
-    //     payload.api_version = 2;
-    //   }
+    // Add api_version for Cohere model
+    if (body.model.startsWith("cohere.rerank")) {
+      payload.api_version = 2;
+    }
 
-    //   const response = await customFetch(this.config.requestOptions)(
-    //     `https://bedrock-runtime.${this.config.region}.amazonaws.com/model/${body.model}/invoke`,
-    //     {
-    //       method: "POST",
-    //       body: JSON.stringify(payload),
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //         "X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
-    //         "X-Amz-Date": new Date().toISOString().replace(/[:-]|\.\d{3}/g, ""),
-    //       },
-    //       aws: {
-    //         region: this.config.region,
-    //         service: "bedrock",
-    //         credentials: {
-    //           accessKeyId: this.config.accessKeyId,
-    //           secretAccessKey: this.config.secretAccessKey,
-    //         },
-    //       },
-    //     },
-    //   );
+    try {
+      const responseBody = await this.getInvokeModelResponseBody(
+        body.model,
+        payload,
+      );
+      const scores = responseBody.results
+        .sort((a: any, b: any) => a.index - b.index)
+        .map((result: any) => result.relevance_score);
 
-    //   const data = await response.json();
-
-    //   // Process the response
-    //   if (!data.results) {
-    //     throw new Error("Invalid response format from Bedrock reranker");
-    //   }
-
-    //   // Return the results in a format compatible with OpenAI's reranker
-    //   return {
-    //     object: "list",
-    //     model: body.model,
-    //     data: data.results.map((result: any, index: number) => ({
-    //       document_index: result.index || index,
-    //       relevance_score: result.relevance_score,
-    //       text: body.documents[result.index || index],
-    //     })),
-    //     usage: {
-    //       total_tokens: 0, // TODO
-    //     },
-    //   };
-    // } catch (error) {
-    //   if (error instanceof Error) {
-    //     throw new Error(`Bedrock rerank error: ${error.message}`);
-    //   }
-    //   throw new Error("Unknown error in Bedrock reranker");
-    // }
+      return rerank({
+        model: body.model,
+        usage: {
+          total_tokens: 0,
+        },
+        data: scores,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if ("code" in error) {
+          // AWS SDK specific errors
+          throw new Error(
+            `AWS Bedrock rerank error (${(error as any).code}): ${error.message}`,
+          );
+        }
+        throw new Error(`Error in BedrockReranker.rerank: ${error.message}`);
+      }
+      throw new Error(
+        "Error in BedrockReranker.rerank: Unknown error occurred",
+      );
+    }
   }
 
   list(): Promise<Model[]> {
