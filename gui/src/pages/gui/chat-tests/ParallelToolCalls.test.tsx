@@ -13,25 +13,26 @@ describe("Parallel Tool Calls", () => {
   const PARALLEL_TOOL_CALL_RESPONSE: ChatMessage[] = [
     {
       role: "assistant",
-      content: [
+      content: "I'll call the get_weather function in parallel for both San Francisco and Monterey, California.",
+      toolCalls: [
         {
-          type: "text",
-          text: "I'll call the get_weather function in parallel for both San Francisco and Monterey, California.",
-        },
-        {
-          type: "tool_use",
           id: "toolu_0112JmA95qW6WhAsvkKb7Avp",
-          name: "get_weather",
-          input: {
-            location: "San Francisco, CA",
+          type: "function",
+          function: {
+            name: "get_weather",
+            arguments: JSON.stringify({
+              location: "San Francisco, CA",
+            }),
           },
         },
         {
-          type: "tool_use",
           id: "toolu_01UFK4ZUmbpkeFJGg7mdoT6T",
-          name: "get_weather",
-          input: {
-            location: "Monterey, CA",
+          type: "function",
+          function: {
+            name: "get_weather",
+            arguments: JSON.stringify({
+              location: "Monterey, CA",
+            }),
           },
         },
       ],
