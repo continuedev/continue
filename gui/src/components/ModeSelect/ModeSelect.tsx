@@ -1,14 +1,12 @@
 import {
   CheckIcon,
   ChevronDownIcon,
-<<<<<<< HEAD
   ExclamationCircleIcon,
-=======
   InformationCircleIcon,
->>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
+import { capitalize } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
@@ -34,19 +32,6 @@ export function ModeSelect() {
     return getMetaKeyLabel();
   }, []);
 
-<<<<<<< HEAD
-=======
-  // Switch to chat mode if agent mode is selected but not supported
-  useEffect(() => {
-    if (!selectedModel) {
-      return;
-    }
-    if (mode !== "chat" && !agentModeSupported) {
-      dispatch(setMode("chat"));
-    }
-  }, [mode, agentModeSupported, dispatch, selectedModel]);
-
->>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
   const cycleMode = useCallback(() => {
     if (mode === "chat") {
       dispatch(setMode("plan"));
@@ -86,6 +71,37 @@ export function ModeSelect() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [cycleMode]);
 
+  const agentWarning = (
+    <>
+      <ExclamationCircleIcon
+        data-tooltip-id="bad-at-agent-mode-tooltip"
+        className="text-warning h-3 w-3"
+      />
+      <ToolTip
+        id="bad-at-agent-mode-tooltip"
+        style={{
+          zIndex: 200001, // in front of listbox
+        }}
+        className="flex items-center gap-1"
+      >
+        {`${capitalize(mode)} might not work well with this model.`}
+        {/* can't seem to make link in tooltip clickable. globalCloseEvents or closeEvents? */}
+        {/* <a
+                    href=""
+                    onClick={() => {
+                      ideMessenger.post(
+                        "openUrl",
+                        "https://docs.continue.dev/agent/model-setup",
+                      );
+                    }}
+                    className="text-link cursor-pointer"
+                  >
+                    See docs
+                  </a> */}
+      </ToolTip>
+    </>
+  );
+
   return (
     <Listbox value={mode} onChange={selectMode}>
       <div className="relative">
@@ -115,15 +131,7 @@ export function ModeSelect() {
             </div>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
-<<<<<<< HEAD
-
-          <ListboxOption value="agent" className={"gap-1"}>
-=======
-          <ListboxOption
-            value="plan"
-            disabled={!agentModeSupported}
-            className={"gap-1"}
-          >
+          <ListboxOption value="plan" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="plan" />
               <span className="">Plan</span>
@@ -140,20 +148,13 @@ export function ModeSelect() {
                 In Plan mode, only read-only and MCP tools are enabled
               </ToolTip>
             </div>
-            {agentModeSupported ? (
-              <CheckIcon
-                className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
-              />
-            ) : (
-              <span>(Not supported)</span>
-            )}
+            {showAgentModeWarning && agentWarning}
+            <CheckIcon
+              className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
+            />
           </ListboxOption>
-          <ListboxOption
-            value="agent"
-            disabled={!agentModeSupported}
-            className={"gap-1"}
-          >
->>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
+
+          <ListboxOption value="agent" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="agent" />
               <span className="">Agent</span>
@@ -170,48 +171,10 @@ export function ModeSelect() {
                 All tools are enabled based on policies
               </ToolTip>
             </div>
-<<<<<<< HEAD
-            {showAgentModeWarning && (
-              <>
-                <ExclamationCircleIcon
-                  data-tooltip-id="bad-at-agent-mode-tooltip"
-                  className="text-warning h-3 w-3"
-                />
-                <ToolTip
-                  id="bad-at-agent-mode-tooltip"
-                  style={{
-                    zIndex: 200001, // in front of listbox
-                  }}
-                  className="flex items-center gap-1"
-                >
-                  Agent might not work well with this model.{" "}
-                  {/* can't seem to make link in tooltip clickable. globalCloseEvents or closeEvents? */}
-                  {/* <a
-                    href=""
-                    onClick={() => {
-                      ideMessenger.post(
-                        "openUrl",
-                        "https://docs.continue.dev/agent/model-setup",
-                      );
-                    }}
-                    className="text-link cursor-pointer"
-                  >
-                    See docs
-                  </a> */}
-                </ToolTip>
-              </>
-            )}
-            {mode === "agent" ? (
-              <CheckIcon className="ml-auto h-3 w-3" />
-=======
-            {agentModeSupported ? (
-              <CheckIcon
-                className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
-              />
->>>>>>> fbcc5a46b9ee05ab3474af803235a3a0c7787c69
-            ) : (
-              <div className="ml-auto"></div>
-            )}
+            {showAgentModeWarning && agentWarning}
+            <CheckIcon
+              className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
+            />
           </ListboxOption>
 
           <div className="text-description-muted px-2 py-1">
