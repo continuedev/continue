@@ -35,18 +35,6 @@ import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findToolCallById, findToolOutputById } from "../util";
 
-const getIdeMessenger = () => (window as any).ideMessenger;
-
-// Helper function to ensure message.toolCalls stays synchronized with toolCallStates
-function syncMessageToolCallsWithStates(state: SessionState) {
-  // Find all assistant messages with toolCallStates and sync their message.toolCalls
-  state.history.forEach(item => {
-    if (item.message.role === "assistant" && item.toolCallStates && item.toolCallStates.length > 0) {
-      (item.message as any).toolCalls = item.toolCallStates.map(state => state.toolCall);
-    }
-  });
-}
-
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
@@ -367,7 +355,6 @@ export const sessionSlice = createSlice({
             lastMessage.role !== message.role ||
             message.role === "tool" // Tool messages should always create new messages
           ) {
-            
             // Create a new message
             const renderedContent = renderChatMessage(message);
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -388,20 +375,29 @@ export const sessionSlice = createSlice({
             state.history.push(historyItem);
           } else {
             // Add to the existing message
-            
+
             // Handle tool calls being added to existing assistant message
-            if (message.role === "assistant" && (message as any).toolCalls?.length && !lastItem.toolCallStates) {
+            if (
+              message.role === "assistant" &&
+              (message as any).toolCalls?.length &&
+              !lastItem.toolCallStates
+            ) {
               lastItem.toolCallStates = (message as any).toolCalls.map(
-                (toolCallDelta: any) => addToolCallDeltaToState(toolCallDelta, undefined)
+                (toolCallDelta: any) =>
+                  addToolCallDeltaToState(toolCallDelta, undefined),
               );
-              (lastMessage as any).toolCalls = lastItem.toolCallStates?.map(state => state.toolCall);
+              (lastMessage as any).toolCalls = lastItem.toolCallStates?.map(
+                (state) => state.toolCall,
+              );
             }
-            
+
             // CRITICAL: Always ensure message.toolCalls is synchronized with toolCallStates
             if (lastItem.toolCallStates && lastItem.toolCallStates.length > 0) {
-              (lastMessage as any).toolCalls = lastItem.toolCallStates.map(state => state.toolCall);
+              (lastMessage as any).toolCalls = lastItem.toolCallStates.map(
+                (state) => state.toolCall,
+              );
             }
-            
+
             if (message.content) {
               const messageContent = renderChatMessage(message);
               if (messageContent.includes("<think>")) {
@@ -438,23 +434,27 @@ export const sessionSlice = createSlice({
             ) {
               // Handle multiple tool calls in streaming updates - ID-based approach
               const existingToolCallStates = lastItem.toolCallStates || [];
-              const updatedToolCallStates: ToolCallState[] = [...existingToolCallStates];
-              
-              
+              const updatedToolCallStates: ToolCallState[] = [
+                ...existingToolCallStates,
+              ];
+
               // Process each incoming tool call delta by ID
               for (const toolCallDelta of message.toolCalls) {
                 // Find existing state by toolCallId
                 const existingStateIndex = updatedToolCallStates.findIndex(
-                  (state) => state.toolCallId === toolCallDelta.id
+                  (state) => state.toolCallId === toolCallDelta.id,
                 );
-                
-                const existingState = existingStateIndex >= 0 ? updatedToolCallStates[existingStateIndex] : undefined;
-                
+
+                const existingState =
+                  existingStateIndex >= 0
+                    ? updatedToolCallStates[existingStateIndex]
+                    : undefined;
+
                 const updatedState = addToolCallDeltaToState(
                   toolCallDelta,
                   existingState,
                 );
-                
+
                 if (existingStateIndex >= 0) {
                   // Update existing state
                   updatedToolCallStates[existingStateIndex] = updatedState;
@@ -630,9 +630,6 @@ export const sessionSlice = createSlice({
         if (tool) {
           toolCallState.tool = tool;
         }
-        
-        // Ensure message.toolCalls stays synchronized
-        syncMessageToolCallsWithStates(state);
       }
     },
     updateToolCallOutput: (
@@ -649,9 +646,6 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.output = action.payload.contextItems;
-        
-        // Ensure message.toolCalls stays synchronized
-        syncMessageToolCallsWithStates(state);
       }
       const toolItem = findToolOutputById(
         state.history,
@@ -678,9 +672,6 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "canceled";
-        
-        // Ensure message.toolCalls stays synchronized
-        syncMessageToolCallsWithStates(state);
       }
     },
     errorToolCall: (
@@ -695,9 +686,6 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "errored";
-        
-        // Ensure message.toolCalls stays synchronized
-        syncMessageToolCallsWithStates(state);
       }
     },
     acceptToolCall: (
@@ -712,9 +700,6 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "done";
-        
-        // Ensure message.toolCalls stays synchronized
-        syncMessageToolCallsWithStates(state);
       }
     },
     setToolCallCalling: (
@@ -729,9 +714,6 @@ export const sessionSlice = createSlice({
       );
       if (toolCallState) {
         toolCallState.status = "calling";
-        
-        // Ensure message.toolCalls stays synchronized
-        syncMessageToolCallsWithStates(state);
       }
     },
     setMode: (state, action: PayloadAction<MessageModes>) => {
