@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { selectCurrentToolCallsByStatus } from "../../../../redux/selectors/selectCurrentToolCall";
+import { selectAllCurToolCallsByStatus } from "../../../../redux/selectors/selectCurrentToolCall";
+import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callToolById } from "../../../../redux/thunks/callToolById";
-import { cancelToolCallById } from "../../../../redux/thunks/cancelToolCallById";
 import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
 import { EnterButton } from "../../InputToolbar/EnterButton";
 
@@ -9,7 +9,7 @@ export function PendingToolCallToolbar() {
   const dispatch = useAppDispatch();
   const jetbrains = isJetBrains();
   const pendingToolCalls = useAppSelector((state) =>
-    selectCurrentToolCallsByStatus(state, "generated"),
+    selectAllCurToolCallsByStatus(state, "generated"),
   );
 
   if (pendingToolCalls.length === 0) {
@@ -21,7 +21,7 @@ export function PendingToolCallToolbar() {
   };
 
   const handleReject = (toolCallId: string) => {
-    void dispatch(cancelToolCallById({ toolCallId }));
+    void dispatch(cancelToolCall({ toolCallId }));
   };
 
   return (

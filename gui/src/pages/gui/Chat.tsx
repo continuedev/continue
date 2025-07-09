@@ -25,6 +25,7 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import { TabBar } from "../../components/TabBar/TabBar";
+import { ToolCallsGroup } from "./ToolCallsGroup";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -34,6 +35,7 @@ import {
 } from "../../redux/selectors/selectCurrentToolCall";
 import {
   cancelToolCall,
+  ChatHistoryItemWithMessageId,
   newSession,
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
@@ -279,6 +281,104 @@ export function Chat() {
     [history],
   );
 
+  const renderChatHistoryItem = useCallback(
+    (item: ChatHistoryItemWithMessageId, index: number) => {
+      const {
+        message,
+        editorState,
+        contextItems,
+        appliedRules,
+        toolCallStates,
+      } = item;
+
+      if (message.role === "user") {
+        return (
+          <ContinueInputBox
+            onEnter={(editorState, modifiers) =>
+              sendInput(editorState, modifiers, index)
+            }
+            isLastUserInput={isLastUserInput(index)}
+            isMainInput={false}
+            editorState={editorState}
+            contextItems={contextItems}
+            appliedRules={appliedRules}
+            inputId={message.id}
+          />
+        );
+      }
+
+      if (message.role === "tool") {
+        return null;
+      }
+
+      if (message.role === "assistant") {
+        return (
+          <>
+            {/* Always render assistant content through normal path */}
+            <div className="thread-message">
+              <TimelineItem
+                item={item}
+                iconElement={<ChatBubbleOvalLeftIcon width="16px" height="16px" />}
+                open={
+                  typeof stepsOpen[index] === "undefined" ? true : stepsOpen[index]!
+                }
+                onToggle={() => {}}
+              >
+                <StepContainer
+                  index={index}
+                  isLast={index === history.length - 1}
+                  item={item}
+                />
+              </TimelineItem>
+            </div>
+            
+            {/* Additionally render tool calls if they exist */}
+            {toolCallStates && (
+              <ToolCallsGroup
+                toolCallStates={toolCallStates}
+                historyIndex={index}
+              />
+            )}
+          </>
+        );
+      }
+
+      if (message.role === "thinking") {
+        return (
+          <ThinkingBlockPeek
+            content={renderChatMessage(message)}
+            redactedThinking={message.redactedThinking}
+            index={index}
+            prevItem={index > 0 ? history[index - 1] : null}
+            inProgress={index === history.length - 1}
+            signature={message.signature}
+          />
+        );
+      }
+
+      // Default case - regular assistant message
+      return (
+        <div className="thread-message">
+          <TimelineItem
+            item={item}
+            iconElement={<ChatBubbleOvalLeftIcon width="16px" height="16px" />}
+            open={
+              typeof stepsOpen[index] === "undefined" ? true : stepsOpen[index]!
+            }
+            onToggle={() => {}}
+          >
+            <StepContainer
+              index={index}
+              isLast={index === history.length - 1}
+              item={item}
+            />
+          </TimelineItem>
+        </div>
+      );
+    },
+    [sendInput, isLastUserInput, history, stepsOpen],
+  );
+
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
   return (
@@ -304,74 +404,7 @@ export function Chat() {
                 dispatch(newSession());
               }}
             >
-              {item.message.role === "user" ? (
-                <>
-                  <ContinueInputBox
-                    onEnter={(editorState, modifiers) =>
-                      sendInput(editorState, modifiers, index)
-                    }
-                    isLastUserInput={isLastUserInput(index)}
-                    isMainInput={false}
-                    editorState={item.editorState}
-                    contextItems={item.contextItems}
-                    appliedRules={item.appliedRules}
-                    inputId={item.message.id}
-                  />
-                </>
-              ) : item.message.role === "tool" ? null : item.message.role ===
-                  "assistant" &&
-                item.message.toolCalls &&
-                item.toolCallStates ? (
-                <div className="">
-                  {item.message.toolCalls?.map((toolCall, i) => {
-                    // Find the corresponding tool call state for this tool call
-                    const toolCallState = item.toolCallStates?.find(
-                      state => state.toolCallId === toolCall.id
-                    );
-                    
-                    if (!toolCallState) return null;
-                    
-                    return (
-                      <ToolCallDiv
-                        key={toolCall.id}
-                        toolCallState={toolCallState}
-                        toolCall={toolCall}
-                        historyIndex={index}
-                      />
-                    );
-                  })}
-                </div>
-              ) : item.message.role === "thinking" ? (
-                <ThinkingBlockPeek
-                  content={renderChatMessage(item.message)}
-                  redactedThinking={item.message.redactedThinking}
-                  index={index}
-                  prevItem={index > 0 ? history[index - 1] : null}
-                  inProgress={index === history.length - 1}
-                  signature={item.message.signature}
-                />
-              ) : (
-                <div className="thread-message">
-                  <TimelineItem
-                    item={item}
-                    iconElement={
-                      <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                    }
-                    open={
-                      typeof stepsOpen[index] === "undefined"
-                        ? true
-                        : stepsOpen[index]!
-                    }
-                    onToggle={() => {}}
-                  >
-                    <StepContainer
-                      index={index}
-                      isLast={index === history.length - 1}
-                      item={item}
-                    />
-                  </TimelineItem>
-                </div>
-              )}
+              {renderChatHistoryItem(item, index)}
             </ErrorBoundary>
           </div>
         ))}

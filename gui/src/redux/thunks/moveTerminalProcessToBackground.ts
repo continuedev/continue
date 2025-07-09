@@ -6,7 +6,7 @@ import {
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { findToolCall } from "../util";
+import { findToolCallById } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 /**
@@ -25,8 +25,8 @@ export const moveTerminalProcessToBackground = createAsyncThunk<
   async ({ toolCallId }, { dispatch, getState, extra }) => {
     // Find the current tool call using utility function
     const state = getState();
-    const toolCall = findToolCall(state.session.history, toolCallId);
-    
+    const toolCall = findToolCallById(state.session.history, toolCallId);
+
     if (!toolCall) {
       console.error("Could not find tool call with ID:", toolCallId);
       return;

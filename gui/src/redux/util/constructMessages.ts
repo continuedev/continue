@@ -106,6 +106,7 @@ export function constructMessages(
             content = renderContextItems(toolCallState.output);
           }
           
+          
           msgs.push({
             ctxItems: toolCallStateToContextItems(toolCallState),
             message: {
@@ -114,7 +115,15 @@ export function constructMessages(
               toolCallId: toolCall.id!,
             },
           });
+          
         }
+      } else if (item.toolCallStates && item.toolCallStates.length > 0) {
+        // This case indicates a potential mismatch - we have tool call states but no message.toolCalls
+        console.error("ERROR constructMessages: Assistant message has toolCallStates but no message.toolCalls:", {
+          toolCallStates: item.toolCallStates.length,
+          toolCallIds: item.toolCallStates.map(s => s.toolCallId),
+          messageContent: typeof item.message.content === 'string' ? item.message.content?.substring(0, 50) + "..." : 'Non-string content',
+        });
       }
     }
   }

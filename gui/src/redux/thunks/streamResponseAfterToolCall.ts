@@ -3,7 +3,7 @@ import { ChatMessage } from "core";
 import { renderContextItems } from "core/util/messageContent";
 import { streamUpdate } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { findToolCall } from "../util";
+import { findToolCallById } from "../util";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
@@ -19,7 +19,10 @@ export const streamResponseAfterToolCall = createAsyncThunk<
       streamThunkWrapper(async () => {
         const state = getState();
 
-        const toolCallState = findToolCall(state.session.history, toolCallId);
+        const toolCallState = findToolCallById(
+          state.session.history,
+          toolCallId,
+        );
         if (!toolCallState) {
           return; // in cases where edit tool is cancelled mid apply, this will be triggered
         }
@@ -38,7 +41,25 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         };
         dispatch(streamUpdate([newMessage]));
 
-        unwrapResult(await dispatch(streamNormalInput({})));
+        // Check if all parallel tool calls are complete before continuing (original logic adaptation)
+        const history = getState().session.history;
+        const assistantMessage = history.find(item => 
+          item.message.role === "assistant" && 
+          item.toolCallStates?.some(tc => tc.toolCallId === toolCallId)
+        );
+        
+        if (assistantMessage && assistantMessage.toolCallStates) {
+          const totalToolCalls = assistantMessage.toolCallStates.length;
+          const completedToolCalls = assistantMessage.toolCallStates.filter(tc => tc.status === "done");
+          
+          // Only continue streaming if ALL parallel tool calls are complete (like original logic)
+          if (completedToolCalls.length === totalToolCalls) {
+            unwrapResult(await dispatch(streamNormalInput({})));
+          }
+        } else {
+          // Fallback: use original logic for single tool call
+          unwrapResult(await dispatch(streamNormalInput({})));
+        }
       }),
     );
   },

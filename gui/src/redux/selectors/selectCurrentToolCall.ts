@@ -1,12 +1,17 @@
 import { createSelector } from "@reduxjs/toolkit";
+import { ToolStatus } from "core";
 import { RootState } from "../store";
-import { findCurrentToolCalls, hasCurrentToolCalls, findCurrentToolCallsByStatus } from "../util";
+import {
+  findAllCurToolCalls,
+  findAllCurToolCallsByStatus,
+  hasCurrentToolCalls,
+} from "../util";
 
 // New selectors for parallel tool call support
 export const selectCurrentToolCalls = createSelector(
   (store: RootState) => store.session.history,
   (history) => {
-    return findCurrentToolCalls(history);
+    return findAllCurToolCalls(history);
   },
 );
 
@@ -17,13 +22,13 @@ export const selectHasCurrentToolCalls = createSelector(
   },
 );
 
-export const selectCurrentToolCallsByStatus = createSelector(
+export const selectAllCurToolCallsByStatus = createSelector(
   [
     (store: RootState) => store.session.history,
-    (store: RootState, status: string) => status,
+    (store: RootState, status: ToolStatus) => status,
   ],
   (history, status) => {
-    return findCurrentToolCallsByStatus(history, status);
+    return findAllCurToolCallsByStatus(history, status);
   },
 );
 
@@ -32,7 +37,7 @@ export const selectCurrentToolCallsByStatus = createSelector(
 export const selectCurrentToolCall = createSelector(
   (store: RootState) => store.session.history,
   (history) => {
-    const toolCalls = findCurrentToolCalls(history);
+    const toolCalls = findAllCurToolCalls(history);
     return toolCalls.length > 0 ? toolCalls[0] : undefined;
   },
 );
@@ -43,7 +48,7 @@ export const selectCurrentToolCallApplyState = createSelector(
     (store: RootState) => store.session.codeBlockApplyStates,
   ],
   (history, applyStates) => {
-    const toolCalls = findCurrentToolCalls(history);
+    const toolCalls = findAllCurToolCalls(history);
     if (toolCalls.length === 0) {
       return undefined;
     }

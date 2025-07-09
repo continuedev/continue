@@ -1,6 +1,11 @@
 import { ToolCallState, ToolStatus } from "core";
 import { ChatHistoryItemWithMessageId } from "../slices/sessionSlice";
-import { findCurrentToolCalls, findToolCall, hasCurrentToolCalls, findCurrentToolCallsByStatus } from "./index";
+import {
+  findAllCurToolCalls,
+  findAllCurToolCallsByStatus,
+  findToolCallById,
+  hasCurrentToolCalls,
+} from "./index";
 
 // Helper function to create a tool call state
 function createToolCallState(
@@ -97,7 +102,7 @@ describe("hasCurrentToolCalls", () => {
 
 describe("findCurrentToolCallsByStatus", () => {
   it("should return empty array for empty chat history", () => {
-    const result = findCurrentToolCallsByStatus([], "generated");
+    const result = findAllCurToolCallsByStatus([], "generated");
     expect(result).toEqual([]);
   });
 
@@ -111,20 +116,28 @@ describe("findCurrentToolCallsByStatus", () => {
         toolCallStates,
       }),
     ];
-    const result = findCurrentToolCallsByStatus(chatHistory, "generated");
+    const result = findAllCurToolCallsByStatus(chatHistory, "generated");
     expect(result).toEqual([]);
   });
 
   it("should return tool calls matching the specified status", () => {
-    const generatedToolCall = createToolCallState("tool-1", "get_weather", "generated");
-    const callingToolCall = createToolCallState("tool-2", "get_time", "calling");
+    const generatedToolCall = createToolCallState(
+      "tool-1",
+      "get_weather",
+      "generated",
+    );
+    const callingToolCall = createToolCallState(
+      "tool-2",
+      "get_time",
+      "calling",
+    );
     const toolCallStates = [generatedToolCall, callingToolCall];
     const chatHistory = [
       createChatHistoryItem("assistant", "I'll check the weather", {
         toolCallStates,
       }),
     ];
-    const result = findCurrentToolCallsByStatus(chatHistory, "generated");
+    const result = findAllCurToolCallsByStatus(chatHistory, "generated");
     expect(result).toEqual([generatedToolCall]);
   });
 
@@ -139,7 +152,7 @@ describe("findCurrentToolCallsByStatus", () => {
         toolCallStates,
       }),
     ];
-    const result = findCurrentToolCallsByStatus(chatHistory, "generated");
+    const result = findAllCurToolCallsByStatus(chatHistory, "generated");
     expect(result).toHaveLength(2);
     expect(result[0].toolCallId).toBe("tool-1");
     expect(result[1].toolCallId).toBe("tool-2");
@@ -148,7 +161,7 @@ describe("findCurrentToolCallsByStatus", () => {
 
 describe("findCurrentToolCalls", () => {
   it("should return empty array for empty chat history", () => {
-    const result = findCurrentToolCalls([]);
+    const result = findAllCurToolCalls([]);
     expect(result).toEqual([]);
   });
 
@@ -157,7 +170,7 @@ describe("findCurrentToolCalls", () => {
       createChatHistoryItem("user", "Hello"),
       createChatHistoryItem("assistant", "Hi there!"),
     ];
-    const result = findCurrentToolCalls(chatHistory);
+    const result = findAllCurToolCalls(chatHistory);
     expect(result).toEqual([]);
   });
 
@@ -171,14 +184,14 @@ describe("findCurrentToolCalls", () => {
         toolCallStates,
       }),
     ];
-    const result = findCurrentToolCalls(chatHistory);
+    const result = findAllCurToolCalls(chatHistory);
     expect(result).toEqual(toolCallStates);
   });
 });
 
 describe("findToolCall", () => {
   it("should return undefined for empty chat history", () => {
-    const result = findToolCall([], "non-existent-id");
+    const result = findToolCallById([], "non-existent-id");
     expect(result).toBeUndefined();
   });
 
@@ -189,7 +202,7 @@ describe("findToolCall", () => {
         toolCallStates,
       }),
     ];
-    const result = findToolCall(chatHistory, "non-existent-id");
+    const result = findToolCallById(chatHistory, "non-existent-id");
     expect(result).toBeUndefined();
   });
 
@@ -201,7 +214,7 @@ describe("findToolCall", () => {
         toolCallStates,
       }),
     ];
-    const result = findToolCall(chatHistory, "tool-1");
+    const result = findToolCallById(chatHistory, "tool-1");
     expect(result).toBe(toolCallState);
   });
 
@@ -214,9 +227,9 @@ describe("findToolCall", () => {
         toolCallStates,
       }),
     ];
-    
-    expect(findToolCall(chatHistory, "tool-1")).toBe(toolCallState1);
-    expect(findToolCall(chatHistory, "tool-2")).toBe(toolCallState2);
+
+    expect(findToolCallById(chatHistory, "tool-1")).toBe(toolCallState1);
+    expect(findToolCallById(chatHistory, "tool-2")).toBe(toolCallState2);
   });
 
   it("should search across multiple messages", () => {
@@ -234,10 +247,10 @@ describe("findToolCall", () => {
         toolCallStates: toolCallStates2,
       }),
     ];
-    
-    expect(findToolCall(chatHistory, "tool-1")).toBe(toolCallStates1[0]);
-    expect(findToolCall(chatHistory, "tool-2")).toBe(toolCallStates2[0]);
-    expect(findToolCall(chatHistory, "tool-3")).toBe(toolCallStates2[1]);
+
+    expect(findToolCallById(chatHistory, "tool-1")).toBe(toolCallStates1[0]);
+    expect(findToolCallById(chatHistory, "tool-2")).toBe(toolCallStates2[0]);
+    expect(findToolCallById(chatHistory, "tool-3")).toBe(toolCallStates2[1]);
   });
 });
 
@@ -253,16 +266,16 @@ describe("Edge cases and integration", () => {
         toolCallStates,
       }),
     ];
-    
+
     // hasCurrentToolCalls should return true
     expect(hasCurrentToolCalls(chatHistory)).toBe(true);
-    
+
     // findCurrentToolCalls should return all tool calls
-    expect(findCurrentToolCalls(chatHistory)).toEqual(toolCallStates);
-    
+    expect(findAllCurToolCalls(chatHistory)).toEqual(toolCallStates);
+
     // findToolCall should find all tool calls
-    expect(findToolCall(chatHistory, "multi-1")).toBe(toolCallStates[0]);
-    expect(findToolCall(chatHistory, "multi-2")).toBe(toolCallStates[1]);
+    expect(findToolCallById(chatHistory, "multi-1")).toBe(toolCallStates[0]);
+    expect(findToolCallById(chatHistory, "multi-2")).toBe(toolCallStates[1]);
   });
 
   it("should work correctly when only some messages have tool calls", () => {
@@ -275,9 +288,9 @@ describe("Edge cases and integration", () => {
         toolCallStates,
       }),
     ];
-    
+
     expect(hasCurrentToolCalls(chatHistory)).toBe(true);
-    expect(findCurrentToolCalls(chatHistory)).toEqual(toolCallStates);
-    expect(findToolCall(chatHistory, "tool-1")).toBe(toolCallStates[0]);
+    expect(findAllCurToolCalls(chatHistory)).toEqual(toolCallStates);
+    expect(findToolCallById(chatHistory, "tool-1")).toBe(toolCallStates[0]);
   });
 });

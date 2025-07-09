@@ -4,7 +4,10 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
+import {
+  selectCurrentToolCall,
+  selectCurrentToolCallApplyState,
+} from "../redux/selectors/selectCurrentToolCall";
 import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
@@ -24,7 +27,6 @@ import {
   setIsSessionMetadataLoading,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
-import { selectCurrentToolCall } from "../redux/selectors/selectCurrentToolCall";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { exitEdit } from "../redux/thunks/edit";
 import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
@@ -34,7 +36,7 @@ import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
-import { findToolCall, logToolUsage } from "../redux/util";
+import { findToolCallById, logToolUsage } from "../redux/util";
 import {
   setDocumentStylesFromLocalStorage,
   setDocumentStylesFromTheme,
@@ -49,15 +51,19 @@ function ParallelListeners() {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
-
   const hasDoneInitialConfigLoad = useRef(false);
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
   );
+  const autoAcceptEditToolDiffs = useAppSelector(
+    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
+  );
+  const currentToolCall = useAppSelector(selectCurrentToolCall);
+  // Load symbols for chat on any session change
+  const sessionId = useAppSelector((state) => state.session.id);
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -150,8 +156,6 @@ function ParallelListeners() {
     [handleConfigUpdate],
   );
 
-  // Load symbols for chat on any session change
-  const sessionId = useAppSelector((state) => state.session.id);
   useEffect(() => {
     if (sessionId) {
       void dispatch(updateFileSymbolsFromHistory());
@@ -250,10 +254,6 @@ function ParallelListeners() {
     dispatch(updateIndexingStatus(data));
   });
 
-  const autoAcceptEditToolDiffs = useAppSelector(
-    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
-  );
-  const currentToolCall = useAppSelector(selectCurrentToolCall);
   useWebviewListener(
     "updateApplyState",
     async (state) => {
@@ -261,7 +261,7 @@ function ParallelListeners() {
         dispatch(updateEditStateApplyState(state));
 
         if (state.status === "closed") {
-          const toolCallState = findToolCall(
+          const toolCallState = findToolCallById(
             store.getState().session.history,
             state.toolCallId!,
           );
