@@ -28,11 +28,49 @@ class VertexAI extends BaseLLM {
       console.warn(`Failed to load credentials for Vertex AI: ${e.message}`);
     });
 
-  private static getDefaultApiBaseFrom(options: LLMOptions) {
-    const { region, projectId } = options;
+  /*
+      Vertex Supports 3 different URL formats 
+      1. Express mode:      e.g. https://aiplatform.googleapis.com/v1/publishers/google/models/{model}:streamGenerateContent?key={API_KEY} // see https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview
+      2. Standard VertexAI: e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:streamGenerateContent
+      3. Tuned model:       e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/endpoints/{endpoint}:streamGenerateContent
+
+      Authentication can be done using the following
+      1. API Key (express mode), region and projectId will be ignored
+      2. project id and region with Google Auth client
+
+      In all cases we have defined apiBase to be up to everything including the location.
+      Express api base: https://aiplatform.googleapis.com/v1/
+      Standard api base: https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/
+      TODO endpoints is not currently supported (api base is same as standard but we don't have a way to add endpoint name yet
+
+      Note that VertexAI uses the term "service endpoint" and "model", like:
+      {service-endpoint}/v1/{model}:streamGenerateContent
+      So "model" includes the project, location, publisher, etc
+
+      Express mode has limited support
+      https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models
+      supported methods: countTokens, generateContent, and streamGenerateContent
+      supported models: gemini for now (updating quickly)
+
+    */
+  private getDefaultApiBaseFrom(options: LLMOptions) {
+    const { region, projectId, apiKey } = options;
+    if (apiKey) {
+      if (this.vertexProvider !== "gemini") {
+        throw new Error(
+          "VertexAI: only gemini models are supported in express (apiKey) mode. See       https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models",
+        );
+      }
+      if (region || projectId) {
+        console.warn(
+          "Region and projectId are ignored when using apiKey. See VertexAI Express Mode docs https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview",
+        );
+      }
+      return `https://aiplatform.googleapis.com/v1/`;
+    }
     if (!region || !projectId) {
       throw new Error(
-        "region and projectId must be defined if apiBase is not provided",
+        "To authenticate VertexAI, either add your region and projectId, which will Google Cloud credientials, or add an apiKey (express mode)",
       );
     }
     return `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
@@ -47,7 +85,7 @@ class VertexAI extends BaseLLM {
       );
     }
     super(_options);
-    this.apiBase ??= VertexAI.getDefaultApiBaseFrom(_options);
+    this.apiBase ??= this.getDefaultApiBaseFrom(_options);
     this.vertexProvider =
       _options.model.includes("mistral") ||
       _options.model.includes("codestral") ||
@@ -62,20 +100,27 @@ class VertexAI extends BaseLLM {
     this.geminiInstance = new Gemini(_options);
   }
 
-  async fetch(url: RequestInfo | URL, init?: RequestInit) {
-    const client = await this.clientPromise;
-    const result = await client?.getAccessToken();
-    if (!result?.token) {
-      throw new Error(
-        "Could not get an access token. Set up your Google Application Default Credentials.",
-      );
+  async fetch(url: URL, init?: RequestInit) {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (this.apiKey) {
+      url.searchParams.set("key", this.apiKey);
+    } else {
+      const client = await this.clientPromise;
+      const result = await client?.getAccessToken();
+      if (!result?.token) {
+        throw new Error(
+          "Could not get an access token. Set up your Google Application Default Credentials.",
+        );
+      }
+      headers.Authorization = `Bearer ${result.token}`;
     }
     return await super.fetch(url, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${result.token}`,
         ...init?.headers,
+        ...headers,
       },
     });
   }
@@ -85,6 +130,10 @@ class VertexAI extends BaseLLM {
     const convertedArgs = this.anthropicInstance.convertArgs(options);
 
     // Remove the `model` property and add `anthropic_version`
+    // For claude 4 models
+    // anthropic_version is a required parameter and must be set to "vertex-2024-10-22".
+
+    // const
     const { model, ...finalOptions } = convertedArgs;
     return {
       ...finalOptions,
@@ -103,6 +152,8 @@ class VertexAI extends BaseLLM {
     const shouldCacheSystemMessage = !!(
       this.cacheBehavior?.cacheSystemMessage && systemMessage
     );
+
+    //  <code>/v1/publishers/anthropic/models/claude-3-5-sonnet-20240620:streamRawPredict
 
     const apiURL = new URL(
       `publishers/anthropic/models/${options.model}:streamRawPredict`,
