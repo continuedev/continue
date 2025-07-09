@@ -1,15 +1,7 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
 import { ChatMessage, MessageContent, MessagePart, Tool } from "../index.js";
-
-import { renderChatMessage } from "../util/messageContent.js";
-import {
-  AsyncEncoder,
-  GPTAsyncEncoder,
-  LlamaAsyncEncoder,
-} from "./asyncEncoder.js";
 import { autodetectTemplateType } from "./autodetect.js";
-import llamaTokenizer from "./llamaTokenizer.js";
 import {
   addSpaceToAnyEmptyMessages,
   chatMessageIsEmpty,
@@ -17,6 +9,10 @@ import {
   isUserOrToolMsg,
   messageHasToolCallId,
 } from "./messages.js";
+
+import { renderChatMessage } from "../util/messageContent.js";
+import { AsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
+import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -47,7 +43,6 @@ class NonWorkerAsyncEncoder implements AsyncEncoder {
 }
 
 let gptEncoding: Encoding | null = null;
-const gptAsyncEncoder = new GPTAsyncEncoder();
 const llamaEncoding = new LlamaEncoding();
 const llamaAsyncEncoder = new LlamaAsyncEncoder();
 
@@ -213,6 +208,61 @@ function countChatMessageTokens(
   return tokens;
 }
 
+/**
+ * Extracts and validates the tool call sequence from the end of a message array.
+ * Tool sequences consist of: [assistant_with_tool_calls, tool_response_1, tool_response_2, ...]
+ * or just a single user message.
+ *
+ * @param messages - Array of chat messages (will be modified by popping messages)
+ * @returns Array of messages that form the tool sequence
+ */
+function extractToolSequence(messages: ChatMessage[]): ChatMessage[] {
+  const lastMsg = messages.pop();
+  if (!lastMsg || !isUserOrToolMsg(lastMsg)) {
+    throw new Error("Error parsing chat history: no user/tool message found");
+  }
+
+  const toolSequence: ChatMessage[] = [];
+
+  if (lastMsg.role === "tool") {
+    toolSequence.push(lastMsg);
+
+    // Collect all consecutive tool messages from the end
+    while (
+      messages.length > 0 &&
+      messages[messages.length - 1].role === "tool"
+    ) {
+      toolSequence.unshift(messages.pop()!);
+    }
+
+    // Get the assistant message with tool calls
+    const assistantMsg = messages.pop();
+    if (assistantMsg) {
+      toolSequence.unshift(assistantMsg);
+
+      // Validate that all tool messages have matching tool call IDs
+      for (const toolMsg of toolSequence.slice(1)) {
+        // Skip assistant message
+        if (
+          toolMsg.role === "tool" &&
+          !messageHasToolCallId(assistantMsg, toolMsg.toolCallId)
+        ) {
+          throw new Error(
+            `Error parsing chat history: no tool call found to match tool output for id "${toolMsg.toolCallId}"`,
+          );
+        }
+      }
+    }
+  } else {
+    // Single user message
+    toolSequence.push(lastMsg);
+  }
+
+  return toolSequence;
+}
+
+// Remove the duplicate gptAsyncEncoder declaration
+
 function pruneLinesFromTop(
   prompt: string,
   maxTokens: number,
@@ -376,46 +426,8 @@ function compileChatMessages({
     msgsCopy.pop();
   }
 
-  const lastUserOrToolMsg = msgsCopy.pop();
-  if (!lastUserOrToolMsg || !isUserOrToolMsg(lastUserOrToolMsg)) {
-    throw new Error("Error parsing chat history: no user/tool message found"); // should never happen
-  }
-
-  // Collect all consecutive tool messages from the end and their corresponding assistant message
-  const toolSequence: ChatMessage[] = [];
-
-  if (lastUserOrToolMsg.role === "tool") {
-    toolSequence.push(lastUserOrToolMsg);
-
-    // Collect all consecutive tool messages
-    while (
-      msgsCopy.length > 0 &&
-      msgsCopy[msgsCopy.length - 1].role === "tool"
-    ) {
-      toolSequence.unshift(msgsCopy.pop()!);
-    }
-
-    // Get the assistant message with tool calls
-    const assistantMsg = msgsCopy.pop();
-    if (assistantMsg) {
-      toolSequence.unshift(assistantMsg);
-
-      // Validate tool call IDs match
-      for (const toolMsg of toolSequence.slice(1)) {
-        // Skip assistant message
-        if (
-          toolMsg.role === "tool" &&
-          !messageHasToolCallId(assistantMsg, toolMsg.toolCallId)
-        ) {
-          throw new Error(
-            `Error parsing chat history: no tool call found to match tool output for id "${toolMsg.toolCallId}"`,
-          );
-        }
-      }
-    }
-  } else {
-    toolSequence.push(lastUserOrToolMsg);
-  }
+  // Extract the tool sequence from the end of the message array
+  const toolSequence = extractToolSequence(msgsCopy);
 
   // Count tokens for all messages in the tool sequence
   let lastMessagesTokens = 0;
@@ -484,7 +496,9 @@ function compileChatMessages({
       const message = historyWithTokens.shift()!;
       currentTotal -= message.tokens;
     }
-  } // Now reassemble
+  }
+
+  // Now reassemble
   const reassembled: ChatMessage[] = [];
   if (systemMsg) {
     reassembled.push(systemMsg);
@@ -501,6 +515,7 @@ export {
   compileChatMessages,
   countTokens,
   countTokensAsync,
+  extractToolSequence,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,
