@@ -384,6 +384,7 @@ prompts, context, and tool use. Continue supports any MCP server with the MCP co
 - `command` (**required**): The command used to start the server.
 - `args`: An optional array of arguments for the command.
 - `env`: An optional map of environment variables for the server process.
+- `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 - `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
 **Example:**
@@ -395,7 +396,10 @@ mcpServers:
     args:
       - mcp-server-sqlite
       - --db-path
-      - /Users/NAME/test.db
+      - ./test.db
+    cwd: /Users/NAME/project
+    env:
+      NODE_ENV: production
 ```
 
 ### `data`
