@@ -910,6 +910,10 @@
     {
       "source": "/about",
       "destination": "/about-us"
+    },
+    {
+      "source": "/autocomplete/model-setup",
+      "destination": "/customize/deep-dives/autocomplete#im-not-seeing-any-completions"
     }
   ]
 }
