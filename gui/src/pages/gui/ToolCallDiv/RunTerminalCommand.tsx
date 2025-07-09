@@ -1,4 +1,5 @@
 import { ToolCallState } from "core";
+import { useEffect, useRef } from "react";
 import styled from "styled-components";
 import { vscForeground } from "../../../components";
 import Ansi from "../../../components/ansiTerminal/Ansi";
@@ -73,6 +74,8 @@ const TerminalContainer = styled.div`
 
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const dispatch = useAppDispatch();
+  const ansiWrapperRef = useRef<HTMLDivElement>(null);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
 
   // Find the terminal output from context items if available
   const terminalItem = props.toolCallState.output?.find(
@@ -83,6 +86,19 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const statusMessage = terminalItem?.status || "";
   const isRunning = props.toolCallState.status === "calling";
   const hasOutput = terminalContent.length > 0;
+
+  // Add data attributes to help with autoscroll detection
+  useEffect(() => {
+    if (ansiWrapperRef.current) {
+      ansiWrapperRef.current.setAttribute("data-terminal-output", "true");
+    }
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.setAttribute(
+        "data-terminal-container",
+        "true",
+      );
+    }
+  }, []);
 
   // Determine status type
   let statusType: "running" | "completed" | "failed" | "background" =
@@ -96,7 +112,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   }
 
   return (
-    <TerminalContainer>
+    <TerminalContainer ref={terminalContainerRef}>
       {/* Command */}
       <StyledMarkdownPreview
         isRenderingInStepContainer
@@ -108,7 +124,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
         <WaitingMessage>Waiting for output...</WaitingMessage>
       )}
       {hasOutput && (
-        <AnsiWrapper>
+        <AnsiWrapper ref={ansiWrapperRef}>
           <Ansi>{terminalContent}</Ansi>
         </AnsiWrapper>
       )}
