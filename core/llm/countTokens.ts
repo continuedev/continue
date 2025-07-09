@@ -381,39 +381,46 @@ function compileChatMessages({
     throw new Error("Error parsing chat history: no user/tool message found"); // should never happen
   }
 
-  let lastToolCallsMsg: ChatMessage | undefined = undefined;
-  let toolMessages: ChatMessage[] = [];
-  
+  // Collect all consecutive tool messages from the end and their corresponding assistant message
+  const toolSequence: ChatMessage[] = [];
+
   if (lastUserOrToolMsg.role === "tool") {
-    // Collect all consecutive tool messages from the end
-    toolMessages.push(lastUserOrToolMsg);
-    
-    // Check if there are more tool messages before the last one
-    while (msgsCopy.length > 0 && msgsCopy[msgsCopy.length - 1].role === "tool") {
-      toolMessages.unshift(msgsCopy.pop()!);
+    toolSequence.push(lastUserOrToolMsg);
+
+    // Collect all consecutive tool messages
+    while (
+      msgsCopy.length > 0 &&
+      msgsCopy[msgsCopy.length - 1].role === "tool"
+    ) {
+      toolSequence.unshift(msgsCopy.pop()!);
     }
-    
-    // Now find the assistant message that should contain all the tool calls
-    lastToolCallsMsg = msgsCopy.pop();
-    
-    // Validate that the assistant message has all the required tool call IDs
-    for (const toolMsg of toolMessages) {
-      if (toolMsg.role === "tool" && !messageHasToolCallId(lastToolCallsMsg, toolMsg.toolCallId)) {
-        throw new Error(
-          `Error parsing chat history: no tool call found to match tool output for id "${toolMsg.toolCallId}"`,
-        );
+
+    // Get the assistant message with tool calls
+    const assistantMsg = msgsCopy.pop();
+    if (assistantMsg) {
+      toolSequence.unshift(assistantMsg);
+
+      // Validate tool call IDs match
+      for (const toolMsg of toolSequence.slice(1)) {
+        // Skip assistant message
+        if (
+          toolMsg.role === "tool" &&
+          !messageHasToolCallId(assistantMsg, toolMsg.toolCallId)
+        ) {
+          throw new Error(
+            `Error parsing chat history: no tool call found to match tool output for id "${toolMsg.toolCallId}"`,
+          );
+        }
       }
     }
+  } else {
+    toolSequence.push(lastUserOrToolMsg);
   }
 
-  let lastMessagesTokens = countChatMessageTokens(modelName, lastUserOrToolMsg);
-  if (lastToolCallsMsg) {
-    lastMessagesTokens += countChatMessageTokens(modelName, lastToolCallsMsg);
-  }
-  
-  // Count tokens for all tool messages (in case of parallel tool calls)
-  for (const toolMsg of toolMessages.slice(0, -1)) { // Skip the last one since it's already counted as lastUserOrToolMsg
-    lastMessagesTokens += countChatMessageTokens(modelName, toolMsg);
+  // Count tokens for all messages in the tool sequence
+  let lastMessagesTokens = 0;
+  for (const msg of toolSequence) {
+    lastMessagesTokens += countChatMessageTokens(modelName, msg);
   }
 
   // System message
@@ -477,24 +484,13 @@ function compileChatMessages({
       const message = historyWithTokens.shift()!;
       currentTotal -= message.tokens;
     }
-  }
-
-  // Now reassemble
+  } // Now reassemble
   const reassembled: ChatMessage[] = [];
   if (systemMsg) {
     reassembled.push(systemMsg);
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
-  if (lastToolCallsMsg) {
-    reassembled.push(lastToolCallsMsg);
-  }
-  
-  // Push all tool messages, not just the last one
-  if (toolMessages.length > 0) {
-    reassembled.push(...toolMessages);
-  } else {
-    reassembled.push(lastUserOrToolMsg);
-  }
+  reassembled.push(...toolSequence);
 
   // Flatten the messages (combines adjacent similar messages)
   const flattenedHistory = flattenMessages(reassembled);
