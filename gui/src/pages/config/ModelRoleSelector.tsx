@@ -119,19 +119,32 @@ const ModelRoleSelector = ({
                   {[...models]
                     .sort((a, b) => a.title.localeCompare(b.title))
                     .map((option, idx) => {
-                      const showMissingApiKeyMsg =
+                      const isConfigInvalid =
+                        option.configurationStatus !==
+                        LLMConfigurationStatuses.VALID;
+                      let invalidMessage = "(Invalid config)";
+                      if (
                         option.configurationStatus ===
-                        LLMConfigurationStatuses.MISSING_API_KEY;
+                        LLMConfigurationStatuses.MISSING_ENV_SECRET
+                      ) {
+                        invalidMessage = "(Missing env secret)";
+                      }
+                      if (
+                        option.configurationStatus ===
+                        LLMConfigurationStatuses.MISSING_API_KEY
+                      ) {
+                        invalidMessage = "(Missing API Key)";
+                      }
 
                       return (
                         <ListboxOption
                           key={idx}
                           value={option.title}
-                          disabled={showMissingApiKeyMsg}
+                          disabled={isConfigInvalid}
                           onMouseEnter={() => setHoveredIdx(idx)}
                           onMouseLeave={() => setHoveredIdx(null)}
                           onClick={(e: any) =>
-                            handleOptionClick(showMissingApiKeyMsg, e)
+                            handleOptionClick(isConfigInvalid, e)
                           }
                           className=""
                         >
@@ -144,9 +157,9 @@ const ModelRoleSelector = ({
                                   style={{ fontSize: fontSize(-3) }}
                                 >
                                   {option.title}
-                                  {showMissingApiKeyMsg && (
+                                  {isConfigInvalid && (
                                     <span className="ml-2 text-[10px] italic">
-                                      (Missing API key)
+                                      {invalidMessage}
                                     </span>
                                   )}
                                 </span>
