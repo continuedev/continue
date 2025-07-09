@@ -9,28 +9,13 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
   USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
-
-export type Prompt = SystemPrompt | UserPrompt;
-
-interface SystemPrompt {
-  role: "system";
-  content: string;
-}
-
-interface UserPrompt {
-  role: "user";
-  content: string;
-}
-
-export interface NextEditTemplate {
-  template: string;
-}
-
-export interface TemplateVars {
-  userEdits: string;
-  languageShorthand: string;
-  userExcerpts: string;
-}
+import {
+  NextEditTemplate,
+  PromptMetadata,
+  SystemPrompt,
+  TemplateVars,
+  UserPrompt,
+} from "../types";
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
@@ -64,13 +49,17 @@ function templateRendererOfModel(
 export function renderPrompt(
   helper: HelperVars,
   userEdits: string,
-): UserPrompt {
+): PromptMetadata {
   let modelName = helper.modelName as NextEditModelName;
 
   if (modelName === "this field is not used") {
     return {
-      role: "user",
-      content: "NEXT_EDIT",
+      prompt: {
+        role: "user",
+        content: "NEXT_EDIT",
+      },
+      userEdits,
+      userExcerpts: helper.fileContents,
     };
   }
 
@@ -103,8 +92,12 @@ export function renderPrompt(
   };
 
   return {
-    role: "user",
-    content: renderer(tv),
+    prompt: {
+      role: "user",
+      content: renderer(tv),
+    },
+    userEdits,
+    userExcerpts: editedCodeWithTokens,
   };
 }
 

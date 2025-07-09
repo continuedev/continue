@@ -141,6 +141,7 @@ export abstract class BaseLLM implements ILLM {
 
   title?: string;
   baseChatSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseAgentSystemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
@@ -155,6 +156,7 @@ export abstract class BaseLLM implements ILLM {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -172,6 +174,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
   profile?: string | undefined;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -209,6 +213,7 @@ export abstract class BaseLLM implements ILLM {
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.baseAgentSystemMessage = options.baseAgentSystemMessage;
+    this.basePlanSystemMessage = options.basePlanSystemMessage;
     this.baseChatSystemMessage = options.baseChatSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
@@ -246,6 +251,7 @@ export abstract class BaseLLM implements ILLM {
 
     // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
+    this.envSecretLocations = options.envSecretLocations;
     this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
 
@@ -270,6 +276,8 @@ export abstract class BaseLLM implements ILLM {
     this.region = options.region;
     this.projectId = options.projectId;
     this.profile = options.profile;
+    this.accessKeyId = options.accessKeyId;
+    this.secretAccessKey = options.secretAccessKey;
 
     this.openaiAdapter = this.createOpenAiAdapter();
 
@@ -384,6 +392,50 @@ export abstract class BaseLLM implements ILLM {
     }
   }
 
+  private async parseError(resp: any): Promise<Error> {
+    let text = await resp.text();
+
+    if (resp.status === 404 && !resp.url.includes("/v1")) {
+      const parsedError = JSON.parse(text);
+      const errorMessageRaw = parsedError?.error ?? parsedError?.message;
+      const error =
+        typeof errorMessageRaw === "string"
+          ? errorMessageRaw.replace(/"/g, "'")
+          : undefined;
+      let model = error?.match(/model '(.*)' not found/)?.[1];
+      if (model && resp.url.match("127.0.0.1:11434")) {
+        text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+        return new LLMError(text, this); // No need to add HTTP status details
+      } else if (text.includes("/api/chat")) {
+        text =
+          "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
+      } else {
+        text =
+          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+      }
+    } else if (resp.status === 404 && resp.url.includes("api.openai.com")) {
+      text =
+        "You may need to add pre-paid credits before using the OpenAI API.";
+    } else if (
+      resp.status === 401 &&
+      (resp.url.includes("api.mistral.ai") ||
+        resp.url.includes("codestral.mistral.ai"))
+    ) {
+      if (resp.url.includes("codestral.mistral.ai")) {
+        return new Error(
+          "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
+        );
+      } else {
+        return new Error(
+          "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
+        );
+      }
+    }
+    return new Error(
+      `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
+    );
+  }
+
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
@@ -399,44 +451,9 @@ export abstract class BaseLLM implements ILLM {
           if (resp.status === 499) {
             return resp; // client side cancellation
           }
-          let text = await resp.text();
-          if (resp.status === 404 && !resp.url.includes("/v1")) {
-            const error = JSON.parse(text)?.error?.replace(/"/g, "'");
-            let model = error?.match(/model '(.*)' not found/)?.[1];
-            if (model && resp.url.match("127.0.0.1:11434")) {
-              text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-              throw new LLMError(text, this); // No need to add HTTP status details
-            } else if (text.includes("/api/chat")) {
-              text =
-                "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
-            } else {
-              text =
-                "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
-            }
-          } else if (
-            resp.status === 404 &&
-            resp.url.includes("api.openai.com")
-          ) {
-            text =
-              "You may need to add pre-paid credits before using the OpenAI API.";
-          } else if (
-            resp.status === 401 &&
-            (resp.url.includes("api.mistral.ai") ||
-              resp.url.includes("codestral.mistral.ai"))
-          ) {
-            if (resp.url.includes("codestral.mistral.ai")) {
-              throw new Error(
-                "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
-              );
-            } else {
-              throw new Error(
-                "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
-              );
-            }
-          }
-          throw new Error(
-            `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
-          );
+
+          const error = await this.parseError(resp);
+          throw error;
         }
 
         return resp;

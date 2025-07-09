@@ -21,6 +21,7 @@ import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
+import MermaidBlock from "./MermaidBlock";
 import { rehypeHighlightPlugin } from "./rehypeHighlightPlugin";
 import { StepContainerPreToolbar } from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
@@ -76,7 +77,7 @@ const StyledMarkdown = styled.div<{
       display: none;
     }
     word-wrap: break-word;
-    border-radius: ${defaultBorderRadius};
+    border-radius: 0.3125rem;
     background-color: ${vscEditorBackground};
     font-size: ${getFontSize() - 2}px;
     font-family: var(--vscode-editor-font-family);
@@ -84,7 +85,6 @@ const StyledMarkdown = styled.div<{
 
   code:not(pre > code) {
     font-family: var(--vscode-editor-font-family);
-    color: var(--vscode-input-placeholderForeground);
   }
 
   background-color: ${(props) => props.bgColor};
@@ -128,6 +128,7 @@ interface StyledMarkdownPreviewProps {
   disableManualApply?: boolean;
   toolCallId?: string;
   expandCodeblocks?: boolean;
+  collapsible?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -306,6 +307,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               forceToolCallId={props.toolCallId}
               expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
+              collapsible={props.collapsible}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>
@@ -331,6 +333,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
                 return <FilenameLink rif={matchedSymbolOrFile} />;
               }
             }
+          }
+          if (codeProps.className?.includes("language-mermaid")) {
+            const codeText = String(codeProps.children || "");
+            return <MermaidBlock code={codeText} />;
           }
           return <code {...codeProps}>{codeProps.children}</code>;
         },

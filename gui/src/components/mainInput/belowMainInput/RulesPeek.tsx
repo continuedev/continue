@@ -19,9 +19,11 @@ const getSourceLabel = (source: RuleSource): string => {
       return "Default Chat";
     case "default-agent":
       return "Default Agent";
-    case "model-chat-options":
+    case "model-options-chat":
       return "Model Chat Options";
-    case "model-agent-options":
+    case "model-options-plan":
+      return "Model Plan Options";
+    case "model-options-agent":
       return "Model Agent Options";
     case "rules-block":
       return "Rules Block";
@@ -62,9 +64,9 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
-          <GlobeAltIcon className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+          <GlobeAltIcon className="text-description-muted mr-2 h-4 w-4 flex-shrink-0" />
         ) : (
-          <DocumentTextIcon className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+          <DocumentTextIcon className="text-description-muted mr-2 h-4 w-4 flex-shrink-0" />
         )}
 
         <div className="flex min-w-0 flex-1 gap-2 text-xs">
@@ -87,7 +89,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
       >
         {displayedRule}
         {isRuleLong && (
-          <span className="ml-1 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="text-description-muted ml-1 opacity-0 transition-opacity group-hover:opacity-100">
             {expanded ? "(collapse)" : "(expand)"}
           </span>
         )}

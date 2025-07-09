@@ -1,24 +1,5 @@
 import { ReactNode, useMemo } from "react";
-import { Tooltip } from "react-tooltip";
-import styled from "styled-components";
-import { lightGray, vscForeground } from "../..";
-import { getFontSize } from "../../../util";
-
-export const ToolbarButton = styled.button`
-  display: flex;
-  align-items: center;
-  border: none;
-  outline: none;
-  background: transparent;
-
-  color: ${vscForeground};
-  font-size: ${getFontSize() - 2}px;
-
-  &:hover {
-    cursor: pointer;
-    filter: brightness(1.25);
-  }
-`;
+import { ToolTip } from "../../gui/Tooltip";
 
 interface ToolbarButtonWithTooltipProps {
   onClick: () => void;
@@ -40,18 +21,20 @@ export function ToolbarButtonWithTooltip({
 
   return (
     <>
-      <ToolbarButton
-        onClick={onClick}
-        style={{ color: lightGray }}
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
         data-tooltip-id={tooltipId}
         data-testid={testId}
-        className="px-0.5"
+        className="hover:description-muted/30 cursor-pointer select-none rounded bg-transparent px-1 py-0.5 hover:opacity-80"
       >
         {children}
-      </ToolbarButton>
-      <Tooltip id={tooltipId} place="top">
+      </div>
+      <ToolTip id={tooltipId} place="top">
         {tooltipContent}
-      </Tooltip>
+      </ToolTip>
     </>
   );
 }

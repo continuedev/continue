@@ -55,7 +55,11 @@ export async function* addIndentation(
 }
 
 function modelIsInept(model: string): boolean {
-  return !(model.includes("gpt") || model.includes("claude"));
+  return !(
+    model.includes("gpt") ||
+    model.includes("claude") ||
+    model.includes("nova")
+  );
 }
 
 export async function* streamDiffLines({

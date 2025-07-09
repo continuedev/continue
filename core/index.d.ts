@@ -187,6 +187,7 @@ export interface ContextProviderExtras {
   ide: IDE;
   selectedCode: RangeInFile[];
   fetch: FetchFunction;
+  isInAgentMode: boolean;
 }
 
 export interface LoadSubmenuItemsArgs {
@@ -427,7 +428,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "agent";
+export type MessageModes = "chat" | "agent" | "plan";
 
 export type ToolStatus =
   | "generating"
@@ -567,6 +568,7 @@ export interface LLMOptions {
   title?: string;
   uniqueId?: string;
   baseAgentSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseChatSystemMessage?: string;
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
   contextLength?: number;
@@ -582,6 +584,7 @@ export interface LLMOptions {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -610,6 +613,8 @@ export interface LLMOptions {
   // AWS options
   profile?: string;
   modelArn?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // AWS and VertexAI Options
   region?: string;
@@ -1081,6 +1086,7 @@ export interface ModelDescription {
 
   apiBase?: string;
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   orgScopeId?: string | null;
 
   onPremProxyUrl?: string | null;
@@ -1090,6 +1096,7 @@ export interface ModelDescription {
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   baseAgentSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
@@ -1161,6 +1168,7 @@ export interface StdioOptions {
   command: string;
   args: string[];
   env?: Record<string, string>;
+  cwd?: string;
   requestOptions?: RequestOptions;
 }
 
@@ -1422,6 +1430,12 @@ export interface ExperimentalConfig {
    * If enabled, will enable next edit in place of autocomplete
    */
   optInNextEditFeature?: boolean;
+
+  /**
+   * If enabled, @codebase will only use tool calling
+   * instead of embeddings, FTS, recently edited files, etc.
+   */
+  codebaseToolCallingOnly?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1629,9 +1643,11 @@ export interface TerminalOptions {
 
 export type RuleSource =
   | "default-chat"
+  | "default-plan"
   | "default-agent"
-  | "model-chat-options"
-  | "model-agent-options"
+  | "model-options-chat"
+  | "model-options-plan"
+  | "model-options-agent"
   | "rules-block"
   | "json-systemMessage"
   | ".continuerules";

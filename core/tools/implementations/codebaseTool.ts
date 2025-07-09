@@ -23,6 +23,7 @@ export const codebaseToolImpl: ToolImpl = async (args, extras) => {
       ide: extras.ide,
       selectedCode: [] as RangeInFile[],
       fetch: extras.fetch,
+      isInAgentMode: true, // always true in tool call
     };
 
     // Use the existing retrieval function to get context items

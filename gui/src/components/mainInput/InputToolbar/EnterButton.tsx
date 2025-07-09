@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import {
-  defaultBorderRadius,
   lightGray,
   vscButtonBackground,
   vscButtonForeground,
@@ -18,7 +17,7 @@ export const EnterButton = styled.button<{ isPrimary?: boolean }>`
     !props.disabled && props.isPrimary
       ? vscButtonBackground
       : lightGray + "33"};
-  border-radius: ${defaultBorderRadius};
+  border-radius: 0.3125rem;
   color: ${(props) =>
     !props.disabled && props.isPrimary ? vscButtonForeground : vscForeground};
   cursor: pointer;
