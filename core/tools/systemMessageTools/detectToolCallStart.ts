@@ -1,11 +1,17 @@
 let boundaryTypeIndex = 0;
+
+// Poor models are really bad at following instructions
+// Here are some examples of what they often start the tool call with
 const acceptedBoundaries: [string, string][] = [
   ["<tool_call>", "<tool_call>"],
-  ["```xml\n<tool_call/>", "</tool_call>\n```"],
-  ["```\n<tool_call/>", "</tool_call>\n```"],
-  ["```tool_call>\n", "</tool_call>"],
-  ["```tool_call\n", "</tool_call>"],
-]; // end tag not currently used, just checks for </tool_call>, but should be used for multiple tool call support
+  ["```xml\n<tool_call/>", "<tool_call>"],
+  ["```\n<tool_call/>", "<tool_call>"],
+  ["```tool_call>\n", "<tool_call>"],
+  ["```tool_call\n", "<tool_call>"],
+  ["```xml\n<tool_name>", "<tool_call>\n<tool_name>"],
+  ["\n\n<tool_name>", "<tool_call>\n<tool_name>"],
+  // ["```xml\n<name>", "<tool_call>\n<name>"],
+];
 
 export function detectToolCallStart(buffer: string) {
   let modifiedBuffer = buffer;
@@ -19,7 +25,7 @@ export function detectToolCallStart(buffer: string) {
       if (boundaryTypeIndex !== 0) {
         modifiedBuffer = modifiedBuffer.replace(
           new RegExp(startTag, "i"),
-          "<tool_call>",
+          acceptedBoundaries[boundaryTypeIndex][1],
         );
       }
       return {

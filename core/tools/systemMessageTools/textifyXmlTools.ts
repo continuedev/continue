@@ -18,7 +18,7 @@ function toolCallsToXml(toolCall: ToolCallDelta): string {
   });
   return builder.build({
     tool_call: {
-      name: toolCall.function?.name,
+      tool_name: toolCall.function?.name,
       id: toolCall.id,
       args: toolCall.function?.arguments,
     },

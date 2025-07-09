@@ -73,7 +73,7 @@ export async function* interceptXMLToolCalls(
             // Handle tool call
             const parsed = parsePartialXml(toolCallText);
 
-            if (parsed?.tool_call?.name) {
+            if (parsed?.tool_call?.tool_name) {
               const args = parsed.tool_call.args
                 ? JSON.stringify(parsed.tool_call.args)
                 : "";
@@ -84,7 +84,7 @@ export async function* interceptXMLToolCalls(
                 id: currentToolCallId,
                 type: "function",
                 function: {
-                  name: parsed.tool_call.name,
+                  name: parsed.tool_call.tool_name,
                   arguments: argsDelta,
                 },
               };

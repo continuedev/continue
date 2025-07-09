@@ -6,7 +6,7 @@ export const TOOL_INSTRUCTIONS_TAG = "<tool_use_instructions>";
 export const TOOL_DEFINITION_TAG = "<tool_definition>";
 export const TOOL_DESCRIPTION_TAG = "<description>";
 export const TOOL_CALL_TAG = "<tool_call>";
-export const TOOL_NAME_TAG = "<name>";
+export const TOOL_NAME_TAG = "<tool_name>";
 export const TOOL_ARGS_TAG = "<args>";
 
 const EXAMPLE_DYNAMIC_TOOL = `
