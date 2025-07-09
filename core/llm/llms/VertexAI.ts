@@ -1,4 +1,4 @@
-import { GoogleAuth } from "google-auth-library";
+import { AuthClient, GoogleAuth, auth } from "google-auth-library";
 
 import { streamResponse, streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
@@ -20,62 +20,33 @@ class VertexAI extends BaseLLM {
     region: "us-central1",
   };
 
-  private clientPromise = new GoogleAuth({
-    scopes: "https://www.googleapis.com/auth/cloud-platform",
-  })
-    .getClient()
-    .catch((e) => {
-      console.warn(`Failed to load credentials for Vertex AI: ${e.message}`);
-    });
+  private clientPromise: Promise<AuthClient | void>;
 
   /*
       Vertex Supports 3 different URL formats 
-      1. Express mode:      e.g. https://aiplatform.googleapis.com/v1/publishers/google/models/{model}:streamGenerateContent?key={API_KEY} // see https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview
-      2. Standard VertexAI: e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:streamGenerateContent
-      3. Tuned model:       e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/endpoints/{endpoint}:streamGenerateContent
+      1. Standard VertexAI: e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:streamGenerateContent
+      2. Tuned model:       e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/endpoints/{endpoint}:streamGenerateContent
+      3. Express mode:      e.g. https://aiplatform.googleapis.com/v1/publishers/google/models/{model}:streamGenerateContent?key={API_KEY} // see https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview
 
       Authentication can be done using the following
+      2. Access token obtained using Google Auth client, passed to endpoint that includes full model path with project id and region
       1. API Key (express mode), region and projectId will be ignored
-      2. project id and region with Google Auth client
 
       In all cases we have defined apiBase to be up to everything including the location.
-      Express api base: https://aiplatform.googleapis.com/v1/
       Standard api base: https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/
+      Express api base: https://aiplatform.googleapis.com/v1/
       TODO endpoints is not currently supported (api base is same as standard but we don't have a way to add endpoint name yet
 
       Note that VertexAI uses the term "service endpoint" and "model", like:
       {service-endpoint}/v1/{model}:streamGenerateContent
       So "model" includes the project, location, publisher, etc
 
-      Express mode has limited support
+      Express mode has limited support 
+      and CRITICALLY is only available to NEW users who had NOT used cloud services before.
+      However it is pretty common as gemini becomes more popular.
+      Only Gemini models are supported for now
       https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models
-      supported methods: countTokens, generateContent, and streamGenerateContent
-      supported models: gemini for now (updating quickly)
-
-    */
-  private getDefaultApiBaseFrom(options: LLMOptions) {
-    const { region, projectId, apiKey } = options;
-    if (apiKey) {
-      if (this.vertexProvider !== "gemini") {
-        throw new Error(
-          "VertexAI: only gemini models are supported in express (apiKey) mode. See https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models",
-        );
-      }
-      if (region || projectId) {
-        console.warn(
-          "Region and projectId are ignored when using apiKey. See VertexAI Express Mode docs https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview",
-        );
-      }
-      return `https://aiplatform.googleapis.com/v1/`;
-    }
-    if (!region || !projectId) {
-      throw new Error(
-        "To authenticate VertexAI, either add your region and projectId, which will Google Cloud credientials, or add an apiKey (express mode)",
-      );
-    }
-    return `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
-  }
-
+  */
   constructor(_options: LLMOptions) {
     if (_options.region !== "us-central1") {
       // Any region outside of us-central1 has a max batch size of 5.
@@ -85,7 +56,7 @@ class VertexAI extends BaseLLM {
       );
     }
     super(_options);
-    this.apiBase ??= this.getDefaultApiBaseFrom(_options);
+
     this.vertexProvider =
       _options.model.includes("mistral") ||
       _options.model.includes("codestral") ||
@@ -96,6 +67,93 @@ class VertexAI extends BaseLLM {
           : _options.model.includes("gemini")
             ? "gemini"
             : "unknown";
+
+    // Validate inputs
+    const { apiKey, region, projectId, env } = _options;
+    const keyFile = env?.keyFile;
+    const keyJson = env?.keyJson;
+
+    // Acceptable setup:
+    // apiKey only
+    // region and projectId AND (keyFile OR keyJson OR nothing)
+
+    if (apiKey) {
+      // Consider warning here instead of throwing error
+      if (region || projectId || keyFile || keyJson) {
+        throw new Error(
+          "Vertex in express mode (api key only) cannot be configured with region, projectId, keyFile, or keyJson",
+        );
+        // console.warn(
+        //   "Region, projectId, and key path/file are ignored when apiKey is set. See VertexAI Express Mode docs https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview",
+        // );
+      }
+      if (this.vertexProvider !== "gemini") {
+        throw new Error(
+          "VertexAI: only gemini models are supported in express (apiKey) mode. See https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models",
+        );
+      }
+    } else {
+      if (region && projectId) {
+        throw new Error(
+          "region and projectId are required for VertexAI (when not using express/apiKey mode)",
+        );
+      }
+      if (keyFile && keyJson) {
+        throw new Error(
+          "VertexAI credentials can be configured with either keyFile or keyJson but not both",
+        );
+      }
+    }
+
+    if (!this.apiBase) {
+      if (apiKey) {
+        this.apiBase = `https://aiplatform.googleapis.com/v1/`;
+      } else {
+        this.apiBase = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
+      }
+    }
+
+    const scopes = "https://www.googleapis.com/auth/cloud-platform";
+    if (keyJson) {
+      // Loading keys from manually set JSON
+      if (typeof keyJson !== "string") {
+        throw new Error("VertexAI: keyJson must be a JSON string");
+      }
+      try {
+        const parsed = JSON.parse(keyJson);
+        this.clientPromise = Promise.resolve(auth.fromJSON(parsed));
+      } catch (e) {
+        throw new Error("VertexAI: Failed to parse keyJson");
+      }
+    } else if (keyFile) {
+      // Loading keys from manually set file path
+      if (typeof keyFile !== "string") {
+        throw new Error("VertexAI: keyFile must be a string");
+      }
+      this.clientPromise = new GoogleAuth({
+        scopes,
+        keyFile,
+      })
+        .getClient()
+        .catch((e) => {
+          console.warn(
+            `Failed to load credentials for Vertex AI: ${e.message}`,
+          );
+        });
+    } else {
+      // Loading keys from local credentials or environment variable
+      this.clientPromise = new GoogleAuth({
+        scopes,
+      })
+        .getClient()
+        .catch((e) => {
+          console.warn(
+            `Failed to load credentials for Vertex AI: ${e.message}`,
+          );
+        });
+    }
+
+    // Uses instances of other LLMs since underlying functionality is the same
     this.anthropicInstance = new Anthropic(_options);
     this.geminiInstance = new Gemini(_options);
   }
@@ -116,6 +174,7 @@ class VertexAI extends BaseLLM {
       }
       headers.Authorization = `Bearer ${result.token}`;
     }
+
     return await super.fetch(url, {
       ...init,
       headers: {
