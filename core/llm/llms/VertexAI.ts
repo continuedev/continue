@@ -58,7 +58,7 @@ class VertexAI extends BaseLLM {
     if (apiKey) {
       if (this.vertexProvider !== "gemini") {
         throw new Error(
-          "VertexAI: only gemini models are supported in express (apiKey) mode. See       https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models",
+          "VertexAI: only gemini models are supported in express (apiKey) mode. See https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models",
         );
       }
       if (region || projectId) {
