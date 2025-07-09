@@ -70,6 +70,13 @@
             <override-text place="GoToAction" text="Continue: Accept Diff"/>
         </action>
 
+        <action id="continue.restartProcess"
+                class="com.github.continuedev.continueintellijextension.actions.RestartContinueProcess"
+                text="Restart Process"
+                description="Restart Process">
+            <override-text place="GoToAction" text="Continue: Restart Process"/>
+        </action>
+
         <action id="continue.rejectDiff"
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Diff">
