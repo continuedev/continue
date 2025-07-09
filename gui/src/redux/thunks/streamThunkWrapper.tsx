@@ -17,7 +17,7 @@ export const streamThunkWrapper = createAsyncThunk<
   try {
     await runStream();
     const state = getState();
-    if (state.session.mode === "chat" || state.session.mode === "agent") {
+    if (!state.session.isInEdit) {
       await dispatch(
         saveCurrentSession({
           openNewSession: false,

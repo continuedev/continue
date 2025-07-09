@@ -75,52 +75,49 @@ export const streamEditThunk = createAsyncThunk<
 
 export const exitEdit = createAsyncThunk<
   void,
-  { goToMode?: MessageModes; openNewSession?: boolean },
+  { openNewSession?: boolean },
   ThunkApiType
->(
-  "edit/exit",
-  async ({ goToMode, openNewSession }, { dispatch, extra, getState }) => {
-    const state = getState();
-    const codeToEdit = state.editModeState.codeToEdit;
-    const isInEdit = state.session.isInEdit;
-    const previousModeEditorContent =
-      state.editModeState.previousModeEditorContent;
+>("edit/exit", async ({ openNewSession }, { dispatch, extra, getState }) => {
+  const state = getState();
+  const codeToEdit = state.editModeState.codeToEdit;
+  const isInEdit = state.session.isInEdit;
+  const previousModeEditorContent =
+    state.editModeState.previousModeEditorContent;
 
-    if (!isInEdit) {
-      return;
-    }
+  if (!isInEdit) {
+    return;
+  }
 
-    if (codeToEdit[0] && state.editModeState.applyState.numDiffs) {
-      extra.ideMessenger.post("rejectDiff", {
-        filepath: codeToEdit[0].filepath,
-      });
-    }
+  if (codeToEdit[0] && state.editModeState.applyState.numDiffs) {
+    extra.ideMessenger.post("rejectDiff", {
+      filepath: codeToEdit[0].filepath,
+    });
+  }
 
-    extra.ideMessenger.post("edit/clearDecorations", undefined);
+  extra.ideMessenger.post("edit/clearDecorations", undefined);
 
-    dispatch(clearCodeToEdit());
-    dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
-    dispatch(setIsInEdit(false));
+  dispatch(clearCodeToEdit());
+  dispatch(updateEditStateApplyState(INITIAL_EDIT_APPLY_STATE));
+  dispatch(setIsInEdit(false));
 
-    // Restore the previous editor content if available
-    if (previousModeEditorContent) {
-      dispatch(setMainEditorContentTrigger(previousModeEditorContent));
-      dispatch(setPreviousModeEditorContent(undefined));
-    }
+  // Restore the previous editor content if available
+  if (previousModeEditorContent) {
+    dispatch(setMainEditorContentTrigger(previousModeEditorContent));
+    dispatch(setPreviousModeEditorContent(undefined));
+  }
 
-    if (openNewSession || state.editModeState.lastNonEditSessionWasEmpty) {
-      dispatch(newSession());
-    } else {
-      await dispatch(
-        loadLastSession({
-          saveCurrentSession: false,
-        }),
-      );
-    }
+  if (openNewSession || state.editModeState.lastNonEditSessionWasEmpty) {
+    dispatch(newSession());
+  } else {
+    await dispatch(
+      loadLastSession({
+        saveCurrentSession: false,
+      }),
+    );
+  }
 
-    dispatch(setMode(goToMode ?? state.editModeState.returnToMode));
-  },
-);
+  dispatch(setMode(state.editModeState.returnToMode));
+});
 
 export const enterEdit = createAsyncThunk<
   void,
