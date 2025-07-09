@@ -47,7 +47,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
   "openai",
   "nvidia",
-  "ollama", 
+  "ollama",
   "together",
   "novita",
   "msty",
