@@ -28,10 +28,19 @@ describe("flattenMessages", () => {
       { role: "assistant", content: "How can I help you?" },
     ];
     const expected: ChatMessage[] = [
-      { role: "user", content: "Hello\n\nHow are you?" },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Hello" },
+          { type: "text", text: "\n\nHow are you?" },
+        ],
+      },
       {
         role: "assistant",
-        content: "I am an AI assistant.\n\nHow can I help you?",
+        content: [
+          { type: "text", text: "I am an AI assistant." },
+          { type: "text", text: "\n\nHow can I help you?" },
+        ],
       },
     ];
     expect(flattenMessages(messages)).toEqual(expected);
@@ -45,8 +54,11 @@ describe("flattenMessages", () => {
       { role: "assistant", content: "Sure, I can help with that." },
     ];
     const expected: ChatMessage[] = [
-      { role: "user", content: "Hello\n\n" },
-      { role: "assistant", content: "\n\nSure, I can help with that." },
+      { role: "user", content: [{ type: "text", text: "Hello" }] },
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "Sure, I can help with that." }],
+      },
     ];
     expect(flattenMessages(messages)).toEqual(expected);
   });
@@ -70,9 +82,21 @@ describe("flattenMessages", () => {
       { role: "assistant", content: "Reply two" },
     ];
     const expected: ChatMessage[] = [
-      { role: "user", content: "Message one\n\nMessage two" },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Message one" },
+          { type: "text", text: "\n\nMessage two" },
+        ],
+      },
       { role: "assistant", content: "Reply one" },
-      { role: "user", content: "Message three\n\nMessage four" },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Message three" },
+          { type: "text", text: "\n\nMessage four" },
+        ],
+      },
       { role: "assistant", content: "Reply two" },
     ];
     expect(flattenMessages(messages)).toEqual(expected);

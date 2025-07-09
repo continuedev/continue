@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
 
 export const viewSubdirectoryTool: Tool = {
   type: "function",
@@ -25,4 +26,9 @@ export const viewSubdirectoryTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.ViewSubdirectory,
+    `To view a map of a specific folder within the project, you can use the ${BuiltInToolNames.ViewSubdirectory} tool. This will provide a visual representation of the folder's structure and organization.`,
+    `<directory_path>path/to/subdirectory</directory_path>`,
+  ),
 };
