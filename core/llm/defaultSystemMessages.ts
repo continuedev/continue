@@ -51,7 +51,7 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
   You are in chat mode.
 
   If the user asks to make changes to files offer that they can use the Apply Button on the code block, or switch to Agent Mode to make the suggested updates automatically.
-  If needed consisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
+  If needed concisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 ${EDIT_CODE_INSTRUCTIONS}
