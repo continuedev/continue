@@ -641,7 +641,7 @@ it("should preserve valid tokens during network errors by retrying", async () =>
   }
 });
 
-it("should remove expired tokens when refresh fails", async () => {
+it("should remove expired tokens when refresh fails with a 401 error", async () => {
   // Mock Date.now to return a time that makes tokens appear expired
   const originalDateNow = Date.now;
   const futureTime = Date.now() + 7200000; // 2 hours in the future
@@ -675,7 +675,7 @@ it("should remove expired tokens when refresh fails", async () => {
   global.setInterval = vi.fn().mockReturnValue(123 as any);
 
   // Refresh will fail with network error
-  fetchMock.mockRejectedValueOnce(new Error("Network error"));
+  fetchMock.mockRejectedValueOnce(new Error("401"));
 
   // Setup storage
   mockSecretStorageGet.mockResolvedValue(JSON.stringify([expiredSession]));

@@ -1,6 +1,5 @@
 import { ReactNode, useMemo } from "react";
-import { Tooltip } from "react-tooltip";
-import { getFontSize } from "../../../util";
+import { ToolTip } from "../../gui/Tooltip";
 
 interface ToolbarButtonWithTooltipProps {
   onClick: () => void;
@@ -22,20 +21,20 @@ export function ToolbarButtonWithTooltip({
 
   return (
     <>
-      <button
-        onClick={onClick}
-        style={{
-          fontSize: `${getFontSize() - 2}px`,
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
         }}
         data-tooltip-id={tooltipId}
         data-testid={testId}
-        className="text-foreground flex items-center border-none bg-transparent px-0.5 outline-none hover:cursor-pointer hover:brightness-125"
+        className="hover:description-muted/30 cursor-pointer select-none rounded bg-transparent px-1 py-0.5 hover:opacity-80"
       >
         {children}
-      </button>
-      <Tooltip id={tooltipId} place="top">
+      </div>
+      <ToolTip id={tooltipId} place="top">
         {tooltipContent}
-      </Tooltip>
+      </ToolTip>
     </>
   );
 }

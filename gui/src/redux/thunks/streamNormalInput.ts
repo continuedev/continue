@@ -1,7 +1,8 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions } from "core";
+import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { ToCoreProtocol } from "core/protocol";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildXmlToolsSystemMessage";
 import { interceptXMLToolCalls } from "core/tools/systemMessageTools/interceptXmlToolCalls";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -21,6 +22,49 @@ import { constructMessages } from "../util/constructMessages";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callCurrentTool } from "./callCurrentTool";
 
+/**
+ * Filters tools based on the selected model's capabilities.
+ * Returns either the edit file tool or search and replace tool, but not both.
+ */
+function filterToolsForModel(
+  tools: Tool[],
+  selectedModel: ModelDescription,
+): Tool[] {
+  const editFileTool = tools.find(
+    (tool) => tool.function.name === BuiltInToolNames.EditExistingFile,
+  );
+  const searchAndReplaceTool = tools.find(
+    (tool) => tool.function.name === BuiltInToolNames.SearchAndReplaceInFile,
+  );
+
+  // If we don't have both tools, return tools as-is
+  if (!editFileTool || !searchAndReplaceTool) {
+    return tools;
+  }
+
+  // Determine which tool to use based on the model
+  const shouldUseFindReplace = shouldUseFindReplaceEdits(selectedModel);
+
+  // Filter out the unwanted tool
+  return tools.filter((tool) => {
+    if (tool.function.name === BuiltInToolNames.EditExistingFile) {
+      return !shouldUseFindReplace;
+    }
+    if (tool.function.name === BuiltInToolNames.SearchAndReplaceInFile) {
+      return shouldUseFindReplace;
+    }
+    return true;
+  });
+}
+
+/**
+ * Determines whether to use search and replace tool instead of edit file
+ * Right now we only know that this is reliable with Claude models
+ */
+function shouldUseFindReplaceEdits(model: ModelDescription): boolean {
+  return model.model.includes("claude");
+}
+
 export const streamNormalInput = createAsyncThunk<
   void,
   {
@@ -38,7 +82,8 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // Get tools
-    const activeTools = selectActiveTools(state);
+    const allActiveTools = selectActiveTools(state);
+    const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
     // TODO only use native tools for the best models
     const useNativeTools =
       !state.config.config.experimental?.onlyUseSystemMessageTools &&
