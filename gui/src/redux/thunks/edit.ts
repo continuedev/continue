@@ -133,6 +133,14 @@ export const enterEdit = createAsyncThunk<
       return;
     }
 
+    if (!state.editModeState.codeToEdit[0]) {
+      extra.ideMessenger.post("showToast", [
+        "info",
+        "Please open a file to use Edit mode",
+      ]);
+      return;
+    }
+
     dispatch(setMainEditorContentTrigger({}));
     dispatch(setPreviousModeEditorContent(editorContent));
 
@@ -148,9 +156,5 @@ export const enterEdit = createAsyncThunk<
     );
 
     dispatch(setIsInEdit(true));
-
-    if (!state.editModeState.codeToEdit[0]) {
-      extra.ideMessenger.post("edit/addCurrentSelection", undefined);
-    }
   },
 );
