@@ -122,6 +122,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         if (state.remoteConfigServerUrl != null && state.remoteConfigServerUrl!!.isNotEmpty()) {
             // download remote config as json file
 
+            // todo: use httprequests here
             val client = OkHttpClient()
             val baseUrl = state.remoteConfigServerUrl?.removeSuffix("/")
 
@@ -174,7 +175,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
 
         instance.remoteSyncFuture = AppExecutorUtil.getAppScheduledExecutorService()
             .scheduleWithFixedDelay(
-                { syncRemoteConfig() },
+                ::syncRemoteConfig,
                 0,
                 continueState.remoteConfigSyncPeriod.toLong(),
                 TimeUnit.MINUTES
