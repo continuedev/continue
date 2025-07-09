@@ -306,9 +306,9 @@
     "options": ["copy", "view"]
   },
   "feedback": {
-    "thumbs": false,
-    "edits": true,
-    "issues": false
+    "thumbsRating": true,
+    "suggestEdit": true,
+    "raiseIssue": false
   },
   "integrations": {
     "ga4": {
