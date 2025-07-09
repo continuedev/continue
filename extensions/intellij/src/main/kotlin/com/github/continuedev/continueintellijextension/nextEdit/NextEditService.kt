@@ -34,7 +34,7 @@ class NextEditService(private val project: Project) {
     }
 
     // To avoid triggering another completion on partial acceptance,
-    // we need to keep track of whether the last change was a partial accept
+    // we need to keep track of whether the last change was a partial accept.
     var lastChangeWasPartialAccept = false
 
     fun triggerNextEdit(editor: Editor) {
@@ -47,12 +47,12 @@ class NextEditService(private val project: Project) {
             clearCompletions(pendingCompletion!!.editor)
         }
 
-        // Set pending completion
+        // Set pending completion.
         val completionId = uuid()
         val offset = editor.caretModel.primaryCaret.offset
         pendingCompletion = PendingCompletion(editor, offset, completionId, null)
 
-        // Request a completion from the core
+        // Request a completion from the core.
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
 
         val uri = virtualFile?.toUriOrNull() ?: return
@@ -89,7 +89,7 @@ class NextEditService(private val project: Project) {
                 if (predictions.isNotEmpty()) {
                     val prediction = predictions[0].toString()
                     val oldEditRange = predictions[1].toString()
-                    // TODO: Check if the prediction is purely additive.
+                    // Check if the prediction is purely additive.
                     val result = checkFim(
                         oldEditRange,
                         prediction,
@@ -97,7 +97,7 @@ class NextEditService(private val project: Project) {
                     )
                     when (result) {
                         is FimResult.FimEdit -> {
-                            // TODO: If so, render ghost text.
+                            // If so, render ghost text.
                             val finalTextToInsert = deduplicateCompletion(editor, offset, result.fimText)
                             if (shouldRenderCompletion(finalTextToInsert, offset, line, editor)) {
                                 renderCompletion(editor, offset, finalTextToInsert)
@@ -105,23 +105,13 @@ class NextEditService(private val project: Project) {
                             }
                         }
                         is FimResult.NotFimEdit -> {
-                            // TODO: Else, render a window.
-                            // val nextEditWindowService = project.service<NextEditWindowService>()
-                            val nextEditWindowService = NextEditWindowService.getInstance(project)
-//                            val codeViewer = nextEditWindowService.createCodeViewer(prediction, "ts")
-                            nextEditWindowService.showCodePreview(prediction, editor, completionId)
-//                            editor.contentComponent.removeAll()
-//                            editor.contentComponent.add(codeViewer)
-//                            editor.contentComponent.revalidate()
-//                            editor.contentComponent.repaint()
+                            // Else, render a window.
+                            if (shouldRenderCompletion(prediction, offset, line, editor)) {
+                                val nextEditWindowService = NextEditWindowService.getInstance(project)
+                                nextEditWindowService.showCodePreview(prediction, editor, completionId)
+                            }
                         }
                     }
-//                    val finalTextToInsert = deduplicateCompletion(editor, offset, completion)
-//
-//                    if (shouldRenderCompletion(finalTextToInsert, offset, line, editor)) {
-//                        renderCompletion(editor, offset, finalTextToInsert)
-//                        pendingCompletion = PendingCompletion(editor, offset, completionId, finalTextToInsert)
-//                    }
                 }
             })
         )

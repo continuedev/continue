@@ -40,6 +40,16 @@ class AutocompleteCaretListener : CaretListener {
 class AutocompleteDocumentListener(private val editorManager: FileEditorManager, private val editor: Editor) :
     DocumentListener {
     override fun documentChanged(event: DocumentEvent) {
+        // Ignore empty changes or changes where content didn't actually change.
+        if (event.newFragment.isEmpty() && event.oldFragment.isEmpty()) {
+            return
+        }
+
+        // Make sure this is an actual text modification event.
+        if (!event.isWholeTextReplaced && event.offset == 0 && event.oldLength == 0 && event.newLength == 0) {
+            return
+        }
+
         if (editor != editorManager.selectedTextEditor) {
             return
         }
