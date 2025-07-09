@@ -271,6 +271,14 @@ export class NextEditProvider {
             cursorPosition: helper.pos,
             ...helper.options,
           };
+
+          // When using the JetBrains extension, mark as displayed.
+          // This helps us not need to make additional network calls just to mark as displayed.
+          const ideType = (await this.ide.getIdeInfo()).ideType;
+          if (ideType === "jetbrains") {
+            this.markDisplayed(input.completionId, outcomeNext);
+          }
+
           return outcomeNext;
         } else {
           return undefined;
@@ -323,6 +331,14 @@ export class NextEditProvider {
             cursorPosition: helper.pos,
             ...helper.options,
           };
+
+          // When using the JetBrains extension, mark as displayed.
+          // This helps us not need to make additional network calls just to mark as displayed.
+          const ideType = (await this.ide.getIdeInfo()).ideType;
+          if (ideType === "jetbrains") {
+            this.markDisplayed(input.completionId, outcomeNext);
+          }
+
           return outcomeNext;
         } else {
           return undefined;
