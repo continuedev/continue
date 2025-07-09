@@ -637,6 +637,18 @@ const config = {
             from: "/autocomplete/how-it-works",
           },
           {
+            to: "/features/autocomplete/model-setup",
+            from: "/autocomplete/model-setup",
+          },
+          {
+            to: "/features/autocomplete/how-to-customize",
+            from: "/autocomplete/how-to-customize",
+          },
+          {
+            to: "/features/autocomplete/context-selection",
+            from: "/autocomplete/context-selection",
+          },
+          {
             to: "/features/edit/how-it-works",
             from: "/edit/how-it-works",
           },
