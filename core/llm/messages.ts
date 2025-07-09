@@ -14,7 +14,8 @@ export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
       flattened.length > 0 &&
       flattened[flattened.length - 1].role === msg.role &&
       !messageHasToolCalls(msg) &&
-      !messageHasToolCalls(flattened[flattened.length - 1])
+      !messageHasToolCalls(flattened[flattened.length - 1]) &&
+      msg.role !== "tool" // Don't merge tool messages - each has a unique toolCallId
     ) {
       flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
     } else {

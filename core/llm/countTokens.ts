@@ -382,18 +382,38 @@ function compileChatMessages({
   }
 
   let lastToolCallsMsg: ChatMessage | undefined = undefined;
+  let toolMessages: ChatMessage[] = [];
+  
   if (lastUserOrToolMsg.role === "tool") {
+    // Collect all consecutive tool messages from the end
+    toolMessages.push(lastUserOrToolMsg);
+    
+    // Check if there are more tool messages before the last one
+    while (msgsCopy.length > 0 && msgsCopy[msgsCopy.length - 1].role === "tool") {
+      toolMessages.unshift(msgsCopy.pop()!);
+    }
+    
+    // Now find the assistant message that should contain all the tool calls
     lastToolCallsMsg = msgsCopy.pop();
-    if (!messageHasToolCallId(lastToolCallsMsg, lastUserOrToolMsg.toolCallId)) {
-      throw new Error(
-        `Error parsing chat history: no tool call found to match tool output for id "${lastUserOrToolMsg.toolCallId}"`,
-      );
+    
+    // Validate that the assistant message has all the required tool call IDs
+    for (const toolMsg of toolMessages) {
+      if (toolMsg.role === "tool" && !messageHasToolCallId(lastToolCallsMsg, toolMsg.toolCallId)) {
+        throw new Error(
+          `Error parsing chat history: no tool call found to match tool output for id "${toolMsg.toolCallId}"`,
+        );
+      }
     }
   }
 
   let lastMessagesTokens = countChatMessageTokens(modelName, lastUserOrToolMsg);
   if (lastToolCallsMsg) {
     lastMessagesTokens += countChatMessageTokens(modelName, lastToolCallsMsg);
+  }
+  
+  // Count tokens for all tool messages (in case of parallel tool calls)
+  for (const toolMsg of toolMessages.slice(0, -1)) { // Skip the last one since it's already counted as lastUserOrToolMsg
+    lastMessagesTokens += countChatMessageTokens(modelName, toolMsg);
   }
 
   // System message
@@ -468,7 +488,13 @@ function compileChatMessages({
   if (lastToolCallsMsg) {
     reassembled.push(lastToolCallsMsg);
   }
-  reassembled.push(lastUserOrToolMsg);
+  
+  // Push all tool messages, not just the last one
+  if (toolMessages.length > 0) {
+    reassembled.push(...toolMessages);
+  } else {
+    reassembled.push(lastUserOrToolMsg);
+  }
 
   // Flatten the messages (combines adjacent similar messages)
   const flattenedHistory = flattenMessages(reassembled);
