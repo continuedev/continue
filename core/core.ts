@@ -541,6 +541,12 @@ export class Core {
       );
       return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
     });
+    on("nextEdit/accept", async (msg) => {
+      this.nextEditProvider.accept(msg.data.completionId);
+    });
+    on("nextEdit/reject", async (msg) => {
+      this.nextEditProvider.reject(msg.data.completionId);
+    });
 
     on("streamDiffLines", async (msg) => {
       const { config } = await this.configHandler.loadConfig();
