@@ -94,7 +94,7 @@ data:
     schema: "0.2.0"
     level: "all"
     events: ["autocomplete", "chatInteraction", "editOutcome"]
-  
+
   - name: "Team Analytics"
     destination: "https://analytics.yourcompany.com/api/events"
     schema: "0.2.0"
@@ -179,7 +179,7 @@ Most dev data logging follows a service pattern:
 ```typescript
 export class FeatureLoggingService {
   private dataLogger = DataLogger.getInstance();
-  
+
   logFeatureUsage(data: FeatureUsageData) {
     this.dataLogger.logDevData("featureUsage", data);
   }
