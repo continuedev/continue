@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CustomShortcutSet
@@ -18,6 +19,8 @@ import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.ui.popup.JBPopupListener
+import com.intellij.openapi.ui.popup.LightweightWindowEvent
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.EditorTextField
 import com.intellij.ui.components.JBScrollPane
@@ -128,7 +131,7 @@ class NextEditWindowService(private val project: Project) {
     /**
      * Shows a popup dialog with the code preview.
      */
-    fun showCodePreview(code: String, parentEditor: Editor) {
+    fun showCodePreview(code: String, parentEditor: Editor, completionId: String) {
         // Use invokeAndWait or invokeLater to ensure we're on the EDT.
         com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
             val codeViewer = createCodeViewer(code, getFileLanguage(parentEditor.document), parentEditor.document)
@@ -155,6 +158,19 @@ class NextEditWindowService(private val project: Project) {
                 .setCancelOnClickOutside(true)
                 .setCancelOnOtherWindowOpen(true)
                 .setFocusable(true)
+                .addListener(object : JBPopupListener {
+                    override fun onClosed(event: LightweightWindowEvent) {
+                        if (!event.isOk) {
+                            // This only triggers when dismissed, not when accepted.
+                            println("Dismissing code preview popup")
+                            project.service<ContinuePluginService>().coreMessenger?.request(
+                                "nextEdit/reject",
+                                hashMapOf("completionId" to completionId),
+                                null, ({})
+                            )
+                        }
+                    }
+                })
                 .createPopup()
 
             // Helper function to accept the code and apply it to the editor.
@@ -177,6 +193,12 @@ class NextEditWindowService(private val project: Project) {
                 WriteCommandAction.runWriteCommandAction(project) {
                     document.replaceString(startOffset, endOffset, code)
                 }
+
+                project.service<ContinuePluginService>().coreMessenger?.request(
+                    "nextEdit/accept",
+                    hashMapOf("completionId" to completionId),
+                    null, ({})
+                )
             }
 
             // Use ActionManager to handle Tab key globally during popup display.
