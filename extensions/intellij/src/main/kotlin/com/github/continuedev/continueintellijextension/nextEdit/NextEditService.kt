@@ -109,7 +109,7 @@ class NextEditService(private val project: Project) {
                             // val nextEditWindowService = project.service<NextEditWindowService>()
                             val nextEditWindowService = NextEditWindowService.getInstance(project)
 //                            val codeViewer = nextEditWindowService.createCodeViewer(prediction, "ts")
-                            nextEditWindowService.showCodePreview(prediction, editor)
+                            nextEditWindowService.showCodePreview(prediction, editor, completionId)
 //                            editor.contentComponent.removeAll()
 //                            editor.contentComponent.add(codeViewer)
 //                            editor.contentComponent.revalidate()
@@ -293,7 +293,7 @@ class NextEditService(private val project: Project) {
         editor.caretModel.moveToOffset(offset + text.length)
 
         project.service<ContinuePluginService>().coreMessenger?.request(
-            "autocomplete/accept",
+            "nextEdit/accept",
             hashMapOf("completionId" to completion.completionId),
             null,
             ({})
@@ -357,17 +357,17 @@ class NextEditService(private val project: Project) {
         renderCompletion(editor, completion.offset, completion.text!!)
     }
 
-    private fun cancelCompletion(completion: PendingCompletion) {
-        // Send cancellation message to core
+    private fun rejectCompletion(completion: PendingCompletion) {
+        // Send rejection message to core
         widget?.setLoading(false)
-        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/cancel", null, null, ({}))
+        project.service<ContinuePluginService>().coreMessenger?.request("nextEdit/reject", null, null, ({}))
     }
 
     fun clearCompletions(editor: Editor, completion: PendingCompletion? = pendingCompletion) {
         if (isInjectedFile(editor)) return
 
         if (completion != null) {
-            cancelCompletion(completion)
+//            cancelCompletion(completion)
             if (completion.completionId == pendingCompletion?.completionId) pendingCompletion = null
         }
         disposeInlayRenderer(editor)

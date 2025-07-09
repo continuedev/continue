@@ -169,6 +169,13 @@
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
         </action>
 
+        <action id="com.github.continuedev.continueintellijextension.nextEdit.AcceptNextEditAction"
+                class="com.github.continuedev.continueintellijextension.nextEdit.AcceptNextEditAction"
+                text="Accept Autocomplete Suggestion" description="Accept Next Edit Prediction">
+            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
+        </action>
+
         <action id="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
                 class="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
                 text="Cancel Autocomplete Suggestion" description="Cancel Autocomplete Suggestion">

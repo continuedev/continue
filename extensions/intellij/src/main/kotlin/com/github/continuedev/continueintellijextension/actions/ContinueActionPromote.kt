@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.actions
 
 import com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction
+import com.github.continuedev.continueintellijextension.nextEdit.AcceptNextEditAction
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.intellij.openapi.actionSystem.ActionPromoter
 import com.intellij.openapi.actionSystem.AnAction
@@ -16,6 +17,13 @@ class ContinueActionPromote : ActionPromoter {
             val settings = service<ContinueExtensionSettings>()
             if (settings.continueState.showIDECompletionSideBySide) {
                 return actions.filterIsInstance<AcceptAutocompleteAction>()
+            }
+        }
+
+        if (actions.any { it is AcceptNextEditAction }) {
+            val settings = service<ContinueExtensionSettings>()
+            if (settings.continueState.showIDECompletionSideBySide) {
+                return actions.filterIsInstance<AcceptNextEditAction>()
             }
         }
 
