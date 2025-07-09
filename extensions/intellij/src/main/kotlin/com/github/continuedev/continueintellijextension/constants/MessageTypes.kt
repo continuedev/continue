@@ -104,6 +104,8 @@ class MessageTypes {
             "autocomplete/cancel",
             "autocomplete/accept",
             "nextEdit/predict",
+            "nextEdit/reject",
+            "nextEdit/accept",
             "tts/kill",
             "llm/complete",
             "llm/streamChat",

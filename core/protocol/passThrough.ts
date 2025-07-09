@@ -38,6 +38,8 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "autocomplete/cancel",
     "autocomplete/accept",
     "nextEdit/predict",
+    "nextEdit/reject",
+    "nextEdit/accept",
     "tts/kill",
     "llm/complete",
     "llm/streamChat",
