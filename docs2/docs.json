@@ -31,7 +31,10 @@
                 "icon": "messages",
                 "pages": [
                   "features/chat/quick-start",
-                  "features/chat/how-it-works"
+                  "features/chat/how-it-works",
+                  "features/chat/model-setup",
+                  "features/chat/how-to-customize",
+                  "features/chat/context-selection"
                 ]
               },
               {
@@ -50,7 +53,10 @@
                 "icon": "pen-to-square",
                 "pages": [
                   "features/edit/quick-start",
-                  "features/edit/how-it-works"
+                  "features/edit/how-it-works",
+                  "features/edit/model-setup",
+                  "features/edit/how-to-customize",
+                  "features/edit/context-selection"
                 ]
               },
               {
@@ -58,7 +64,10 @@
                 "icon": "robot",
                 "pages": [
                   "features/agent/quick-start",
-                  "features/agent/how-it-works"
+                  "features/agent/how-it-works",
+                  "features/agent/model-setup",
+                  "features/agent/how-to-customize",
+                  "features/agent/context-selection"
                 ]
               }
             ]
@@ -839,6 +848,10 @@
       "destination": "/features/agent/quick-start"
     },
     {
+      "source": "/features/agent/how-to-use-it",
+      "destination": "/features/agent/quick-start"
+    },
+    {
       "source": "/edit",
       "destination": "/features/edit/quick-start"
     },
@@ -847,11 +860,19 @@
       "destination": "/features/edit/quick-start"
     },
     {
+      "source": "/features/edit/how-to-use-it",
+      "destination": "/features/edit/quick-start"
+    },
+    {
       "source": "/autocomplete",
       "destination": "/features/autocomplete/quick-start"
     },
     {
       "source": "/autocomplete/how-to-use-it",
+      "destination": "/features/autocomplete/quick-start"
+    },
+    {
+      "source": "/features/autocomplete/how-to-use-it",
       "destination": "/features/autocomplete/quick-start"
     },
     {
@@ -925,6 +946,46 @@
     {
       "source": "/autocomplete/context-selection",
       "destination": "/features/autocomplete/context-selection"
+    },
+    {
+      "source": "/chat/model-setup",
+      "destination": "/features/chat/model-setup"
+    },
+    {
+      "source": "/chat/how-to-customize",
+      "destination": "/features/chat/how-to-customize"
+    },
+    {
+      "source": "/chat/context-selection",
+      "destination": "/features/chat/context-selection"
+    },
+    {
+      "source": "/features/chat/how-to-use-it",
+      "destination": "/features/chat/quick-start"
+    },
+    {
+      "source": "/edit/model-setup",
+      "destination": "/features/edit/model-setup"
+    },
+    {
+      "source": "/edit/how-to-customize",
+      "destination": "/features/edit/how-to-customize"
+    },
+    {
+      "source": "/edit/context-selection",
+      "destination": "/features/edit/context-selection"
+    },
+    {
+      "source": "/agent/model-setup",
+      "destination": "/features/agent/model-setup"
+    },
+    {
+      "source": "/agent/how-to-customize",
+      "destination": "/features/agent/how-to-customize"
+    },
+    {
+      "source": "/agent/context-selection",
+      "destination": "/features/agent/context-selection"
     }
   ]
 }
