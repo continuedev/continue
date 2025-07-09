@@ -1,4 +1,4 @@
-import { AuthClient, GoogleAuth, auth } from "google-auth-library";
+import { AuthClient, GoogleAuth, JWT, auth } from "google-auth-library";
 
 import { streamResponse, streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
@@ -14,6 +14,7 @@ class VertexAI extends BaseLLM {
   declare vertexProvider: "mistral" | "anthropic" | "gemini" | "unknown";
   declare anthropicInstance: Anthropic;
   declare geminiInstance: Gemini;
+  static AUTH_SCOPES = "https://www.googleapis.com/auth/cloud-platform";
 
   static defaultOptions: Partial<LLMOptions> | undefined = {
     maxEmbeddingBatchSize: 250,
@@ -68,12 +69,12 @@ class VertexAI extends BaseLLM {
             ? "gemini"
             : "unknown";
 
-    // Validate inputs
+    // Set client authentication promise
     const { apiKey, region, projectId, env } = _options;
     const keyFile = env?.keyFile;
     const keyJson = env?.keyJson;
 
-    // Acceptable setup:
+    // Acceptable authentication methods:
     // apiKey only
     // region and projectId AND (keyFile OR keyJson OR nothing)
 
@@ -93,7 +94,7 @@ class VertexAI extends BaseLLM {
         );
       }
     } else {
-      if (region && projectId) {
+      if (!region && !projectId) {
         throw new Error(
           "region and projectId are required for VertexAI (when not using express/apiKey mode)",
         );
@@ -105,15 +106,6 @@ class VertexAI extends BaseLLM {
       }
     }
 
-    if (!this.apiBase) {
-      if (apiKey) {
-        this.apiBase = `https://aiplatform.googleapis.com/v1/`;
-      } else {
-        this.apiBase = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
-      }
-    }
-
-    const scopes = "https://www.googleapis.com/auth/cloud-platform";
     if (keyJson) {
       // Loading keys from manually set JSON
       if (typeof keyJson !== "string") {
@@ -121,7 +113,17 @@ class VertexAI extends BaseLLM {
       }
       try {
         const parsed = JSON.parse(keyJson);
-        this.clientPromise = Promise.resolve(auth.fromJSON(parsed));
+        if (!parsed?.private_key) {
+          throw new Error("VertexAI: keyJson must contain a valid private key");
+        }
+        parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+        const jsonClient = auth.fromJSON(parsed);
+        if (jsonClient instanceof JWT) {
+          jsonClient.scopes = [VertexAI.AUTH_SCOPES];
+        } else {
+          throw new Error("VertexAI: keyJson must be a valid JWT");
+        }
+        this.clientPromise = Promise.resolve(jsonClient);
       } catch (e) {
         throw new Error("VertexAI: Failed to parse keyJson");
       }
@@ -131,7 +133,7 @@ class VertexAI extends BaseLLM {
         throw new Error("VertexAI: keyFile must be a string");
       }
       this.clientPromise = new GoogleAuth({
-        scopes,
+        scopes: VertexAI.AUTH_SCOPES,
         keyFile,
       })
         .getClient()
@@ -143,7 +145,7 @@ class VertexAI extends BaseLLM {
     } else {
       // Loading keys from local credentials or environment variable
       this.clientPromise = new GoogleAuth({
-        scopes,
+        scopes: VertexAI.AUTH_SCOPES,
       })
         .getClient()
         .catch((e) => {
@@ -151,6 +153,16 @@ class VertexAI extends BaseLLM {
             `Failed to load credentials for Vertex AI: ${e.message}`,
           );
         });
+    }
+
+    // Set api base
+    if (!this.apiBase) {
+      if (apiKey) {
+        // Express mode
+        this.apiBase = `https://aiplatform.googleapis.com/v1/`;
+      } else {
+        this.apiBase = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
+      }
     }
 
     // Uses instances of other LLMs since underlying functionality is the same
