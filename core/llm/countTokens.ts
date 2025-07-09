@@ -5,7 +5,6 @@ import { autodetectTemplateType } from "./autodetect.js";
 import {
   addSpaceToAnyEmptyMessages,
   chatMessageIsEmpty,
-  flattenMessages,
   isUserOrToolMsg,
   messageHasToolCallId,
 } from "./messages.js";
@@ -260,8 +259,6 @@ function extractToolSequence(messages: ChatMessage[]): ChatMessage[] {
 
   return toolSequence;
 }
-
-// Remove the duplicate gptAsyncEncoder declaration
 
 function pruneLinesFromTop(
   prompt: string,
@@ -529,9 +526,7 @@ function compileChatMessages({
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
   reassembled.push(...toolSequence);
 
-  // Flatten the messages (combines adjacent similar messages)
-  const flattenedHistory = flattenMessages(reassembled);
-  return flattenedHistory;
+  return reassembled;
 }
 
 export {
