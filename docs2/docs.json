@@ -39,7 +39,10 @@
                 "icon": "sparkles",
                 "pages": [
                   "features/autocomplete/quick-start",
-                  "features/autocomplete/how-it-works"
+                  "features/autocomplete/how-it-works",
+                  "features/autocomplete/model-setup",
+                  "features/autocomplete/how-to-customize",
+                  "features/autocomplete/context-selection"
                 ]
               },
               {
@@ -913,7 +916,15 @@
     },
     {
       "source": "/autocomplete/model-setup",
-      "destination": "/customize/deep-dives/autocomplete#im-not-seeing-any-completions"
+      "destination": "/features/autocomplete/model-setup"
+    },
+    {
+      "source": "/autocomplete/how-to-customize",
+      "destination": "/features/autocomplete/how-to-customize"
+    },
+    {
+      "source": "/autocomplete/context-selection",
+      "destination": "/features/autocomplete/context-selection"
     }
   ]
 }
