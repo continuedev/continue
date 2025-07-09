@@ -283,20 +283,16 @@
     }
   },
   "navbar": {
-    "links": [],
+    "links": [
+      {
+        "label": "Explore",
+        "href": "https://hub.continue.dev/"
+      }
+    ],
     "primary": {
       "type": "github",
       "href": "https://github.com/continuedev/continue"
-    },
-    "secondary": {
-      "type": "button",
-      "label": "Explore",
-      "url": "https://hub.continue.dev/"
     }
-  },
-  "topbarCtaButton": {
-    "type": "github",
-    "url": "https://github.com/continuedev/continue"
   },
   "footer": {
     "socials": {
@@ -307,7 +303,12 @@
     }
   },
   "contextual": {
-    "options": ["copy"]
+    "options": ["copy", "view"]
+  },
+  "feedback": {
+    "thumbs": false,
+    "edits": true,
+    "issues": false
   },
   "integrations": {
     "ga4": {
