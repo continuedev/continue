@@ -67,6 +67,7 @@ async function getDefinitionFilesInDir(
 }
 
 export interface LoadAssistantFilesOptions {
+  disabled?: boolean;
   includeGlobal: boolean;
   includeWorkspace: boolean;
   fileExtType?: "yaml" | "markdown";

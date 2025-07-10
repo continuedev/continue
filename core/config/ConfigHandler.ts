@@ -11,7 +11,10 @@ import {
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
-import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes.js";
+import {
+  AuthType,
+  ControlPlaneSessionInfo,
+} from "../control-plane/AuthTypes.js";
 import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
 import {
@@ -134,6 +137,8 @@ export class ConfigHandler {
   }
 
   private async getOrgs(): Promise<OrgWithProfiles[]> {
+    const env = await getControlPlaneEnv(this.ideSettingsPromise);
+
     if (await this.controlPlaneClient.isSignedIn()) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
       const personalHubOrg = await this.getPersonalHubOrg();
@@ -187,8 +192,10 @@ export class ConfigHandler {
   private async getNonPersonalHubOrg(
     org: OrganizationDescription,
   ): Promise<OrgWithProfiles> {
+    const env = await getControlPlaneEnv(this.ideSettingsPromise);
     const localProfiles = await this.getLocalProfiles({
-      includeGlobal: false,
+      disabled: env.AUTH_TYPE === AuthType.OnPrem,
+      includeGlobal: true,
       includeWorkspace: true,
     });
     const profiles = [...(await this.getHubProfiles(org.id)), ...localProfiles];
@@ -202,10 +209,14 @@ export class ConfigHandler {
     slug: undefined,
   };
   private async getPersonalHubOrg() {
+    // Local customization disabled for on-premise deployments if signed in
+    const env = await getControlPlaneEnv(this.ideSettingsPromise);
     const localProfiles = await this.getLocalProfiles({
+      disabled: env.AUTH_TYPE === AuthType.OnPrem,
       includeGlobal: true,
       includeWorkspace: true,
     });
+
     const hubProfiles = await this.getHubProfiles(null);
     const profiles = [...hubProfiles, ...localProfiles];
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, profiles);
@@ -263,19 +274,16 @@ export class ConfigHandler {
     };
   }
 
-  async getLocalProfiles(options: LoadAssistantFilesOptions) {
+  async getLocalProfiles(
+    options: LoadAssistantFilesOptions,
+  ): Promise<ProfileLifecycleManager[]> {
     /**
      * Users can define as many local assistants as they want in a `.continue/assistants` folder
      */
-
-    // I'm leaving this in here because we might want to make this configurable for on prem
-    // Local customization disabled for on-premise deployments
-    // const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-    // if (env.AUTH_TYPE === AuthType.OnPrem) {
-    //   return [];
-    // }
-
     const localProfiles: ProfileLifecycleManager[] = [];
+    if (options.disabled) {
+      return [];
+    }
 
     if (options.includeGlobal) {
       localProfiles.push(this.globalLocalProfileManager);
@@ -476,7 +484,7 @@ export class ConfigHandler {
     if (profile?.profileDescription.profileType === "local") {
       await this.ide.openFile(profile.profileDescription.uri);
     } else {
-      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      const env = await getControlPlaneEnv(this.ideSettingsPromise);
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
   }
