@@ -125,9 +125,6 @@ export class AutocompleteLoggingService {
       ? void Telemetry.capture("autocomplete", {
           ...toLog,
           enabledStaticContextualization: true,
-          prefix,
-          suffix,
-          prompt,
         })
       : void Telemetry.capture("autocomplete", toLog);
   }
