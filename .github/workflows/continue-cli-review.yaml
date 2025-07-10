@@ -39,7 +39,7 @@ jobs:
 
           printf "\n\n---\n\n" >> prompt.txt
 
-          echo "Above is the git diff of the current PR. Please use it to review the changes. You can investigate the codebase as much as needed in order to better understand, but you do not need to make any changes. Once you are done investigating, you should create a file called 'review.txt' that includes the final results of your analysis." >> prompt.txt
+          echo "Above is the git diff of the current PR. Please use it to review the changes. You can investigate the codebase as much as needed in order to better understand, but you do not need to make any changes. Once you are done investigating, you should create a file called 'review.txt' that includes the final results of your analysis. You should list only important findings, be extremely concise in your description, and always offer a solution." >> prompt.txt
         env:
           GH_TOKEN: ${{ github.token }}
 
