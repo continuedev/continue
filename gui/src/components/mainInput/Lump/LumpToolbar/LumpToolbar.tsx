@@ -35,6 +35,7 @@ export function LumpToolbar() {
   );
 
   const isApplying = applyStates.some((state) => state.status === "streaming");
+  const ideMessenger = useContext(IdeMessengerContext);
 
   useEffect(() => {
     if (toolCallState?.status !== "generated") {
@@ -52,7 +53,6 @@ export function LumpToolbar() {
       } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
-        const ideMessenger = useContext(IdeMessengerContext);
         logToolUsage(toolCallState, false, true, ideMessenger);
         void dispatch(
           cancelToolCall({
