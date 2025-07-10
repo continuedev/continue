@@ -4,9 +4,6 @@ description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
 ---
 
-import TabItem from "@theme/TabItem";
-import Tabs from "@theme/Tabs";
-
 # MCP
 
 As AI systems get better, they're still held back by their training data and
@@ -27,9 +24,7 @@ MCP Servers can be added to hub Assistants using `mcpServers` blocks. You can
 explore available MCP server blocks
 [here](https://hub.continue.dev/explore/mcp).
 
-:::info
-MCP can only be used in the **agent** mode.
-:::
+<Info>MCP can only be used in the **agent** mode.</Info>
 
 ## Quick Start
 
@@ -58,7 +53,7 @@ Open the browser and navigate Hacker News. Save the top 10 headlines in a hn.txt
 
 The result will be a generated file called `hn.txt` in the current working directory.
 
-![playwright mcp](/img/mcp-playwright.png)
+![playwright mcp](/images/mcp-playwright.png)
 
 ## Continue Documentation Search
 
@@ -108,8 +103,8 @@ quickstart](https://modelcontextprotocol.io/quickstart) and then [create an
 block](https://hub.continue.dev/new?type=block&blockType=mcpServers) or add a local MCP
 server block to your [config file](./configuration.md):
 
-<Tabs groupId="config.yaml">
-  <TabItem value="yaml" label="YAML">
+<Tabs>
+  <Tab title="YAML">
   ```yaml title="config.yaml"
   mcpServers:
     - name: SQLite MCP
@@ -120,8 +115,8 @@ server block to your [config file](./configuration.md):
         - "/path/to/your/database.db"
 
 ````
-</TabItem>
-<TabItem value="json" label="JSON">
+</Tab>
+<Tab title="JSON">
 ```json title="config.json"
 {
   "experimental": {
@@ -138,7 +133,7 @@ server block to your [config file](./configuration.md):
 }
 ````
 
-  </TabItem>
+  </Tab>
 </Tabs>
 
 ### Syntax
@@ -150,7 +145,6 @@ MCP blocks follow the established syntax for blocks, with a few additional prope
 - `type` (optional): The type of the MCP server: `sse`, `stdio`, `streamable-http`
 - `args` (optional): Arguments to pass to the command.
 - `env` (optional): Secrets to be injected into the command as environment variables.
-- `cwd` (optional): Working directory to run the command in. Can be absolute or relative path.
 
 ### Transport Types
 
@@ -173,22 +167,12 @@ For local MCP servers that communicate via standard input and output:
 
 ```yaml
 mcpServers:
-  - name: SQLite Server
+  - name: Name
     type: stdio
     command: npx
     args:
       - "@modelcontextprotocol/server-sqlite"
-      - "./database.db"
-    cwd: "/path/to/project"
-
-  - name: Local Project Server
-    command: npm
-    args:
-      - "run"
-      - "mcp-server"
-    cwd: "./my-project"
-    env:
-      NODE_ENV: "production"
+      - "/path/to/your/database.db"
 ```
 
 #### Streamable HTTP Transport
