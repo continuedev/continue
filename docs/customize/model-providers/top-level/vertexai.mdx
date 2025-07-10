@@ -114,3 +114,33 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 Vertex AI currently does not offer any reranking models.
 
 [Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
+
+## Express mode
+
+You can use VertexAI in [express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) by only providing an API Key. Only some Gemini models are supported in express mode for now.
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Gemini 2.5 Flash - VertexAI
+        provider: vertexai
+        model: gemini-2.5-flash
+        apiKey: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Gemini 2.5 Flash - VertexAI",
+          "provider": "vertexai",
+          "model": "gemini-2.5-flash",
+          "apiKey": "[YOUR_GOOGLE_CLOUD_API_KEY]",
+        }
+      ]
+    }
+    ```
+    </TabItem>
+</Tabs>

@@ -83,12 +83,6 @@ export const uiSlice = createSlice({
     ) => {
       state.dialogMessage = action.payload;
     },
-    setDialogEntryOn: (
-      state,
-      action: PayloadAction<UIState["dialogEntryOn"]>,
-    ) => {
-      state.dialogEntryOn = action.payload;
-    },
     setShowDialog: (state, action: PayloadAction<UIState["showDialog"]>) => {
       state.showDialog = action.payload;
     },
@@ -97,9 +91,6 @@ export const uiSlice = createSlice({
       action: PayloadAction<UIState[LocalStorageKey.IsExploreDialogOpen]>,
     ) => {
       state.isExploreDialogOpen = action.payload;
-    },
-    setHasDismissedExploreDialog: (state, action: PayloadAction<boolean>) => {
-      state.hasDismissedExploreDialog = action.payload;
     },
     // Tools
     addTool: (state, action: PayloadAction<Tool>) => {
@@ -173,10 +164,8 @@ export const uiSlice = createSlice({
 export const {
   setOnboardingCard,
   setDialogMessage,
-  setDialogEntryOn,
   setShowDialog,
   setIsExploreDialogOpen,
-  setHasDismissedExploreDialog,
   toggleToolSetting,
   setToolPolicy,
   clearToolPolicy,

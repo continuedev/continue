@@ -15,12 +15,13 @@ export const processSmallEdit = async (
   ide: IDE,
 ) => {
   NextEditProvider.getInstance().addDiffToContext(
-    createDiff(
-      beforeAfterdiff.beforeContent,
-      beforeAfterdiff.afterContent,
-      beforeAfterdiff.filePath,
-      DiffFormatType.Unified,
-    ),
+    createDiff({
+      beforeContent: beforeAfterdiff.beforeContent,
+      afterContent: beforeAfterdiff.afterContent,
+      filePath: beforeAfterdiff.filePath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 3, // NOTE: This can change depending on experiments!
+    }),
   );
 
   // Get the current context data from the most recent message
