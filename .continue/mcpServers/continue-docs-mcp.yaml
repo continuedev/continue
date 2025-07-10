@@ -3,6 +3,9 @@ version: 0.0.1
 schema: v1
 mcpServers:
   - name: Continue Docs Search
-    command: node
+    type: stdio
+    command: npx
     args:
-      - /Users/briandouglas/.mcp/continue-docs/src/index.js
+      - mint-mcp
+      - add
+      - continue-docs
