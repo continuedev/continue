@@ -154,8 +154,6 @@ export const streamNormalInput = createAsyncThunk<
       next = await gen.next();
     }
 
-    dispatch(setInactive());
-
     // Attach prompt log and end thinking for reasoning models
     if (next.done && next.value) {
       dispatch(addPromptCompletionPair([next.value]));
@@ -212,6 +210,8 @@ export const streamNormalInput = createAsyncThunk<
       ) {
         const response = await dispatch(callCurrentTool());
         unwrapResult(response);
+      } else {
+        dispatch(setInactive());
       }
     }
   },
