@@ -1,0 +1,8 @@
+name: Continue Documentation MCP
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Continue Docs Search
+    command: node
+    args:
+      - /Users/briandouglas/.mcp/continue-docs/src/index.js
