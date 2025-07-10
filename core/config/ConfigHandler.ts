@@ -11,10 +11,7 @@ import {
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
-import {
-  AuthType,
-  ControlPlaneSessionInfo,
-} from "../control-plane/AuthTypes.js";
+import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes.js";
 import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
 import {
@@ -271,11 +268,12 @@ export class ConfigHandler {
      * Users can define as many local assistants as they want in a `.continue/assistants` folder
      */
 
+    // I'm leaving this in here because we might want to make this configurable for on prem
     // Local customization disabled for on-premise deployments
-    const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-    if (env.AUTH_TYPE === AuthType.OnPrem) {
-      return [];
-    }
+    // const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+    // if (env.AUTH_TYPE === AuthType.OnPrem) {
+    //   return [];
+    // }
 
     const localProfiles: ProfileLifecycleManager[] = [];
 
