@@ -31,7 +31,11 @@ export function addToolCallDeltaToState(
   const argsDelta = toolCallDelta.function?.arguments ?? "";
 
   let mergedName = currentName;
-  if (nameDelta.startsWith(currentName)) {
+  if (currentName === nameDelta) {
+    mergedName = currentName;
+    // Case where provider aggregates Tool Calls already (Bedrock.ts)
+    // TODO: Maybe we want to undo this complexity from the provider?
+  } else if (nameDelta.startsWith(currentName)) {
     // Case where model progresssively streams name but full name each time e.g. "readFi" -> "readFil" -> "readFile"
     mergedName = nameDelta;
   } else if (currentName.startsWith(nameDelta)) {
@@ -42,7 +46,15 @@ export function addToolCallDeltaToState(
     mergedName = currentName + nameDelta;
   }
 
-  const mergedArgs = currentArgs + argsDelta;
+  let mergedArgs = currentArgs;
+  if (currentArgs === argsDelta) {
+    mergedArgs = currentArgs;
+    // Case where provider aggregates Tool Calls already (Bedrock.ts)
+    // TODO: Maybe we want to undo this complexity from the provider?
+  } else {
+    mergedArgs = currentArgs + argsDelta;
+    // Case build up the args from the deltas.
+  }
 
   const [_, parsedArgs] = incrementalParseJson(mergedArgs || "{}");
 
