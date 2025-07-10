@@ -77,18 +77,21 @@ function getGlobPattern(
   if (id.uriType !== "file") {
     return globs;
   }
-  const dir = path.dirname(id.filePath);
+  let dir = path.dirname(id.filePath);
   if (dir.includes(".continue")) {
     return globs;
   }
+  if (!dir.endsWith("/")) {
+    dir = dir.concat("/");
+  }
   const prependDirAndApplyGlobstar = (glob: string) => {
     if (glob.startsWith("**")) {
-      return path.join(dir, glob);
+      return dir.concat(glob);
     }
-    return path.join(dir, `**/${glob}`);
+    return dir.concat("**/", glob);
   };
   if (!globs) {
-    return path.join(dir, "**/*");
+    return dir.concat("**/*");
   }
   if (Array.isArray(globs)) {
     return globs.map(prependDirAndApplyGlobstar);
