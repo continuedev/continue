@@ -584,6 +584,7 @@ export interface LLMOptions {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -612,6 +613,8 @@ export interface LLMOptions {
   // AWS options
   profile?: string;
   modelArn?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // AWS and VertexAI Options
   region?: string;
@@ -1083,6 +1086,7 @@ export interface ModelDescription {
 
   apiBase?: string;
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   orgScopeId?: string | null;
 
   onPremProxyUrl?: string | null;

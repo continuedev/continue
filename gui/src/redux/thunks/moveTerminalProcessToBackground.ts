@@ -10,9 +10,10 @@ import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 /**
  * This thunk is used to move a terminal command to the background
- * when the user clicks the "Continue" button in the UI
+ * when the user clicks the "Move to background" link in the UI
  *
- * It marks the command as visually complete without stopping
+ * It preserves all existing terminal output, marks the command as
+ * visually complete, and stops listening to further output from
  * the already running process
  */
 export const moveTerminalProcessToBackground = createAsyncThunk<
@@ -39,6 +40,12 @@ export const moveTerminalProcessToBackground = createAsyncThunk<
       return;
     }
 
+    // Find existing terminal output to preserve it
+    const existingOutput = toolCall.output?.find(
+      (item) => item.name === "Terminal",
+    );
+    const existingContent = existingOutput?.content || "";
+
     const status =
       "Command moved to background. Further output will be ignored.";
 
@@ -46,7 +53,7 @@ export const moveTerminalProcessToBackground = createAsyncThunk<
       {
         name: "Terminal",
         description: "Terminal command output",
-        content: "\n" + status,
+        content: existingContent + (existingContent ? "\n\n" : "") + status,
         status: status,
       },
     ];

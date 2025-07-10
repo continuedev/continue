@@ -1,5 +1,5 @@
 import { ConfigDependentToolParams, IDE, Tool } from "..";
-
+import * as toolDefinitions from "./definitions";
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 
 // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
@@ -22,14 +22,17 @@ export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => [
   toolDefinitions.requestRuleTool(params),
+  // Search and replace is now generally available
+  toolDefinitions.searchAndReplaceInFileTool,
+  // Keep edit file tool available for models that need it
+  toolDefinitions.editFileTool,
   ...(params.enableExperimentalTools
     ? [
-        toolDefinitions.searchAndReplaceInFileTool,
         toolDefinitions.viewRepoMapTool,
         toolDefinitions.viewSubdirectoryTool,
         toolDefinitions.codebaseTool,
       ]
-    : [toolDefinitions.editFileTool]),
+    : []),
 ];
 
 export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>

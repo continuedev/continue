@@ -19,9 +19,11 @@ export function ToolTruncateHistoryIcon({
   }, [history]);
   const dispatch = useAppDispatch();
   const { mainEditor } = useMainEditor();
+
   if (historyIndex === lastMessageIndex) {
     return null;
   }
+
   return (
     <ToolbarButtonWithTooltip
       tooltipContent={isStreaming ? "" : "Trim chat to this message"}
@@ -38,7 +40,7 @@ export function ToolTruncateHistoryIcon({
       }}
     >
       <BarsArrowUpIcon
-        className={`h-3 w-3 flex-shrink-0 ${isStreaming ? "cursor-not-allowed" : "cursor-pointer"}`}
+        className={`h-3 w-3 flex-shrink-0 opacity-60 ${isStreaming ? "cursor-not-allowed" : ""}`}
       />
     </ToolbarButtonWithTooltip>
   );
