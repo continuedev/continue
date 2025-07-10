@@ -141,6 +141,7 @@ export abstract class BaseLLM implements ILLM {
 
   title?: string;
   baseChatSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseAgentSystemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
@@ -155,6 +156,7 @@ export abstract class BaseLLM implements ILLM {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -172,6 +174,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
   profile?: string | undefined;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -209,6 +213,7 @@ export abstract class BaseLLM implements ILLM {
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.baseAgentSystemMessage = options.baseAgentSystemMessage;
+    this.basePlanSystemMessage = options.basePlanSystemMessage;
     this.baseChatSystemMessage = options.baseChatSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
@@ -246,6 +251,7 @@ export abstract class BaseLLM implements ILLM {
 
     // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
+    this.envSecretLocations = options.envSecretLocations;
     this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
 
@@ -270,6 +276,8 @@ export abstract class BaseLLM implements ILLM {
     this.region = options.region;
     this.projectId = options.projectId;
     this.profile = options.profile;
+    this.accessKeyId = options.accessKeyId;
+    this.secretAccessKey = options.secretAccessKey;
 
     this.openaiAdapter = this.createOpenAiAdapter();
 

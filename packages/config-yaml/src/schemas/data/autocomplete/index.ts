@@ -34,7 +34,7 @@ export const autocompleteEventAllSchema = baseDevDataAllSchema.extend({
   gitRepo: z.string().optional(),
   completionId: z.string(),
   uniqueId: z.string(),
-  timestamp: z.number(),
+  timestamp: z.string(),
 
   // For static contextualization.
   enabledStaticContextualization: z.boolean().optional(),

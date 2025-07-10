@@ -23,14 +23,30 @@ export interface TextApplier {
 }
 
 const SVG_CONFIG = {
-  stroke: "#999998",
+  // stroke: "#999998",
+  stroke: "#666667",
   strokeWidth: 1,
   textColor: "#999998",
-  filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.2))",
+  purple: "rgba(112, 114, 209)",
+  blue: "rgba(107, 166, 205)",
+  green: "rgba(136 194 163)",
+  // filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.2))",
+  // filter: "drop-shadow(0 2px 2px rgba(255,255,255,0.2))",
+  // filter:
+  //   "drop-shadow(0 2px 4px rgb(112, 114, 209)) drop-shadow(0 4px 8px rgb(136, 194, 163)) drop-shadow(0 6px 12px rgb(107, 166, 205));",
+  // filter:
+  //   "drop-shadow(0 3px 6px rgba(112, 114, 209, 0.4)) drop-shadow(0 3px 6px rgba(136, 194, 163, 0.4)) drop-shadow(0 3px 6px rgba(107, 166, 205, 0.4));",
+  // filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
+  //       drop-shadow(8px 8px 0px rgba(107, 166, 205, 0.3))
+  //       drop-shadow(12px 12px 0px rgba(136, 194, 163, 0.2));`,
+  filter: `drop-shadow(4px 4px 0px rgba(112, 114, 209, 0.4))
+        drop-shadow(-2px 4px 0px rgba(107, 166, 205, 0.3))
+        drop-shadow(4px -2px 0px rgba(136, 194, 163, 0.2))
+        drop-shadow(-2px -2px 0px rgba(112, 114, 209, 0.2));`,
   radius: 3,
   leftMargin: 40,
   defaultText: "",
-  lineSpacing: 1.2, // Line spacing multiplier
+  lineSpacing: 1.3, // Line spacing multiplier
   cursorOffset: 4, // Spaces to offset from cursor
 
   get fontSize() {
@@ -244,6 +260,7 @@ export class NextEditWindowManager {
     editor: vscode.TextEditor,
     currCursorPos: vscode.Position,
     editableRegionStartLine: number,
+    oldEditRangeSlice: string,
     newEditRangeSlice: string,
     diffLines: DiffLine[],
   ) {
@@ -278,7 +295,13 @@ export class NextEditWindowManager {
     );
 
     // Create and apply decoration with the text.
-    await this.renderTooltip(editor, currCursorPos, newEditRangeSlice);
+    await this.renderTooltip(
+      editor,
+      currCursorPos,
+      oldEditRangeSlice,
+      newEditRangeSlice,
+      editableRegionStartLine,
+    );
 
     // Reserve tab and esc to either accept or reject the displayed next edit contents.
     await NextEditWindowManager.reserveTabAndEsc();
@@ -507,6 +530,7 @@ export class NextEditWindowManager {
    */
   private async createCodeRender(
     text: string,
+    currLineOffsetFromTop: number,
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
@@ -529,6 +553,7 @@ export class NextEditWindowManager {
         {
           imageType: "svg",
         },
+        currLineOffsetFromTop,
       );
 
       return {
@@ -547,9 +572,16 @@ export class NextEditWindowManager {
    * @returns The decoration.
    */
   private async createCodeRenderDecoration(
-    code: string,
+    originalCode: string,
+    predictedCode: string,
+    position: vscode.Position,
+    editableRegionStartLine: number,
   ): Promise<vscode.TextEditorDecorationType | undefined> {
-    const uriAndDimensions = await this.createCodeRender(code);
+    const currLineOffsetFromTop = position.line - editableRegionStartLine;
+    const uriAndDimensions = await this.createCodeRender(
+      predictedCode,
+      currLineOffsetFromTop,
+    );
     if (!uriAndDimensions) {
       return undefined;
     }
@@ -558,38 +590,30 @@ export class NextEditWindowManager {
     const tipWidth = dimensions.width;
     const tipHeight = dimensions.height;
 
+    const offsetFromTop =
+      (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight;
+
+    // Set the margin-left so that it's never covering code inside the editable region.
+    const marginLeft =
+      SVG_CONFIG.getTipWidth(originalCode) -
+      SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]);
+
+    console.log(marginLeft);
+    console.log(SVG_CONFIG.getTipWidth(originalCode));
+    console.log(
+      SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]),
+    );
+    console.log(originalCode.split("\n")[currLineOffsetFromTop]);
     return vscode.window.createTextEditorDecorationType({
-      after: {
+      before: {
         contentIconPath: uri,
-        // border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px ${backgroundColour};
-        //           border-radius: ${SVG_CONFIG.radius}px;
-        //           filter: ${SVG_CONFIG.filter}`,
-        // width: `${tipWidth}px`,
-        // height: `${tipHeight}px`,
-        // border: `transparent; position: absolute; z-index: 1000;
-        //        box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke},
-        //                   inset 0 0 0 ${tipHeight}px ${backgroundColour};
-        //        border-radius: ${SVG_CONFIG.radius}px;
-        //        filter: ${SVG_CONFIG.filter};
-        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
-        border: `transparent; position: absolute; z-index: 1000;
-               box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${tipHeight}px;
-               filter: ${SVG_CONFIG.filter};
-               border-radius: ${SVG_CONFIG.radius}px;
-               margin-left: ${SVG_CONFIG.cursorOffset * 8}px;`,
-        // border: `solid 1px white; position: absolute; z-index: 1000;
-        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
-        //        margin-top: 0em;`,
-        // border: `solid 1px white; position: absolute; z-index: 1000;
-        //        margin: 0em; padding: 0em;
-        //        margin-left: ${SVG_CONFIG.cursorOffset * 8}px;
-        //        margin-top: 0em;`,
+        border: `transparent; position: absolute; z-index: 2147483647;        
+              filter: ${SVG_CONFIG.filter};
+              margin-top: ${-1 * offsetFromTop}px;
+              margin-left: ${marginLeft}px;`,
         width: `${tipWidth}px`,
         height: `${tipHeight}px`,
-        // textDecoration: `none; transform: translateY(-100%);`,
       },
-      // Set a negative margin to make the decoration float if it starts to displace text.
-      // Also use absolute positioning.
       rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     });
   }
@@ -684,16 +708,23 @@ export class NextEditWindowManager {
   private async renderTooltip(
     editor: vscode.TextEditor,
     position: vscode.Position,
-    text: string,
+    originalCode: string,
+    predictedCode: string,
+    editableRegionStartLine: number,
   ) {
     console.log("renderTooltip");
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
 
     // Create a new decoration with the text.
-    const decoration = await this.createCodeRenderDecoration(text);
+    const decoration = await this.createCodeRenderDecoration(
+      originalCode,
+      predictedCode,
+      position,
+      editableRegionStartLine,
+    );
     if (!decoration) {
-      console.error("Failed to create decoration for text:", text);
+      console.error("Failed to create decoration for text:", predictedCode);
       return;
     }
 

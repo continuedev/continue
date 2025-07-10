@@ -71,11 +71,7 @@ class Bedrock extends BaseLLM {
     if (!options.apiBase) {
       this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
     }
-    if (options.profile) {
-      this.profile = options.profile;
-    } else {
-      this.profile = "bedrock";
-    }
+
     this.requestOptions = {
       region: options.region,
       headers: {},
@@ -609,17 +605,24 @@ class Bedrock extends BaseLLM {
   }
 
   private async _getCredentials() {
+    if (this.accessKeyId && this.secretAccessKey) {
+      return {
+        accessKeyId: this.accessKeyId,
+        secretAccessKey: this.secretAccessKey,
+      };
+    }
+    const profile = this.profile ?? "bedrock";
     try {
       return await fromNodeProviderChain({
-        profile: this.profile,
+        profile: profile,
         ignoreCache: true,
       })();
     } catch (e) {
       console.warn(
-        `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
+        `AWS profile with name ${profile} not found in ~/.aws/credentials, using default profile`,
       );
-      return await fromNodeProviderChain()();
     }
+    return await fromNodeProviderChain()();
   }
 
   // EMBED //

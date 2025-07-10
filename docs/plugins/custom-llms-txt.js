@@ -28,7 +28,7 @@ module.exports = function customLLMsTxtPlugin(context, options) {
         Features: [],
         Guides: [],
         Customization: [],
-        Advanced: [],
+        Customize: [],
         Hub: [],
       };
 
@@ -73,8 +73,8 @@ module.exports = function customLLMsTxtPlugin(context, options) {
             sections["Guides"].push(docInfo);
           } else if (cleanPath.includes("customization")) {
             sections["Customization"].push(docInfo);
-          } else if (cleanPath.includes("advanced")) {
-            sections["Advanced"].push(docInfo);
+          } else if (cleanPath.includes("customize")) {
+            sections["Customize"].push(docInfo);
           } else if (cleanPath.includes("hub")) {
             sections["Hub"].push(docInfo);
           } else if (cleanPath === "" || cleanPath === "/") {

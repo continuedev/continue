@@ -225,9 +225,11 @@ Determine which tools should be used to answer this query. You should feel free 
               .join("");
       const parsed = JSON.parse(responseContent);
       toolCalls = parsed.tools || [];
-      console.log("retrieveWithTools", toolCalls);
     } catch (e) {
-      console.log("Failed to parse tool selection response", e);
+      console.log(
+        `Failed to parse tool selection response: ${toolSelectionResponse.content}\n\n`,
+        e,
+      );
       return [];
     }
 

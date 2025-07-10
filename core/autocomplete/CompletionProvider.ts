@@ -260,7 +260,7 @@ export class CompletionProvider {
         completionId: helper.input.completionId,
         gitRepo: await this.ide.getRepoName(helper.filepath),
         uniqueId: await this.ide.getUniqueId(),
-        timestamp: Date.now(),
+        timestamp: new Date().toISOString(),
         ...helper.options,
       };
 

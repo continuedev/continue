@@ -21,6 +21,7 @@ import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
+import MermaidBlock from "./MermaidBlock";
 import { rehypeHighlightPlugin } from "./rehypeHighlightPlugin";
 import { StepContainerPreToolbar } from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
@@ -127,6 +128,7 @@ interface StyledMarkdownPreviewProps {
   disableManualApply?: boolean;
   toolCallId?: string;
   expandCodeblocks?: boolean;
+  collapsible?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -305,6 +307,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               forceToolCallId={props.toolCallId}
               expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
+              collapsible={props.collapsible}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>
@@ -330,6 +333,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
                 return <FilenameLink rif={matchedSymbolOrFile} />;
               }
             }
+          }
+          if (codeProps.className?.includes("language-mermaid")) {
+            const codeText = String(codeProps.children || "");
+            return <MermaidBlock code={codeText} />;
           }
           return <code {...codeProps}>{codeProps.children}</code>;
         },
