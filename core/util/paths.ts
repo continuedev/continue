@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as URI from "uri-js";
 import * as YAML from "yaml";
 
 import { ConfigYaml, DevEventName } from "@continuedev/config-yaml";
@@ -466,3 +467,36 @@ export function getDiffsDirectoryPath(): string {
   }
   return diffsPath;
 }
+
+export const isFileWithinFolder = (
+  fileUri: string,
+  folderPath: string,
+): boolean => {
+  try {
+    if (!fileUri || !folderPath) {
+      return false;
+    }
+
+    const fileUriParsed = URI.parse(fileUri);
+    const fileScheme = fileUriParsed.scheme || "file";
+    let filePath = fileUriParsed.path || "";
+    filePath = decodeURIComponent(filePath);
+
+    let folderWithScheme = folderPath;
+    if (!folderPath.includes("://")) {
+      folderWithScheme = `${fileScheme}://${folderPath.startsWith("/") ? "" : "/"}${folderPath}`;
+    }
+    const folderUriParsed = URI.parse(folderWithScheme);
+
+    let folderPathClean = folderUriParsed.path || "";
+    folderPathClean = decodeURIComponent(folderPathClean);
+
+    filePath = filePath.replace(/\/$/, "");
+    folderPathClean = folderPathClean.replace(/\/$/, "");
+
+    return filePath === folderPath || filePath.startsWith(`${folderPath}/`);
+  } catch (error) {
+    console.error("Error in isFileWithinFolder:", error);
+    return false;
+  }
+};

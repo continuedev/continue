@@ -12,13 +12,21 @@ export type BeforeAfterDiff = {
   afterContent: string;
 };
 
-export const createDiff = (
-  beforeContent: string,
-  afterContent: string,
-  filePath: string,
-  diffType: DiffFormatType,
-  contextLines: number = 3,
-) => {
+export interface createDiffArgs {
+  beforeContent: string;
+  afterContent: string;
+  filePath: string;
+  diffType: DiffFormatType;
+  contextLines: number;
+}
+
+export const createDiff = ({
+  beforeContent,
+  afterContent,
+  filePath,
+  diffType,
+  contextLines,
+}: createDiffArgs) => {
   switch (diffType) {
     case DiffFormatType.Unified:
       return createUnifiedDiff(

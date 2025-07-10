@@ -3,8 +3,7 @@ import { AutocompleteCodeSnippet } from "core/autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "core/autocomplete/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { RecentlyEditedRange } from "core/nextEdit/types";
-import { getContinueGlobalPath } from "core/util/paths";
-import { findUriInDirs } from "core/util/uri";
+import { getContinueGlobalPath, isFileWithinFolder } from "core/util/paths";
 import fs from "fs";
 import { resolve } from "path";
 import * as vscode from "vscode";
@@ -19,26 +18,6 @@ export const getBeforeCursorPos = (range: Range, activePos: Position) => {
     return range.end as Position;
   } else {
     return range.start as Position;
-  }
-};
-
-const isFileWithinFolder = (fileUri: string, folderPath: string): boolean => {
-  try {
-    const uriMatch = fileUri.match(/^([a-zA-Z]+:\/\/)/);
-    const scheme = uriMatch ? uriMatch[1] : "file://";
-
-    const folderUri = folderPath.match(/^[a-zA-Z]+:\/\//)
-      ? folderPath
-      : `${scheme}${folderPath}`;
-
-    const normalizedFolderUri = folderUri.endsWith("/")
-      ? folderUri
-      : `${folderUri}/`;
-
-    const { foundInDir } = findUriInDirs(fileUri, [normalizedFolderUri]);
-    return foundInDir !== null;
-  } catch (error) {
-    return false;
   }
 };
 
