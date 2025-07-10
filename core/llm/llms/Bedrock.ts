@@ -54,7 +54,6 @@ class Bedrock extends BaseLLM {
     profile: "bedrock",
   };
 
-  private _currentToolResponse: Partial<ToolUseState> | null = null;
   private _promptCachingMetrics: PromptCachingMetrics = {
     cacheReadInputTokens: 0,
     cacheWriteInputTokens: 0,
