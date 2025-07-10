@@ -9,11 +9,6 @@ describe("Tool Definitions", () => {
     enableExperimentalTools: false,
   };
 
-  // Helper function to check if a value is a Tool or GetTool
-  const isToolOrGetTool = (value: any): value is Tool | GetTool => {
-    return typeof value === "object" || typeof value === "function";
-  };
-
   // Helper function to get the actual tool object
   const getToolObject = (toolDefinition: Tool | GetTool): Tool => {
     if (typeof toolDefinition === "function") {
