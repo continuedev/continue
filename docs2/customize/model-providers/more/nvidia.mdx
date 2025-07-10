@@ -1,0 +1,84 @@
+---
+title: "NVIDIA"
+---
+
+---
+
+## title: NVIDIA
+
+<Info>
+  [View the
+  docs](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)
+  to learn how to get an API key.
+</Info>
+
+## Chat model
+
+We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Nemotron-4-340B-Instruct
+      provider: nvidia
+      model: nvidia-nemotron-4-340b-instruct
+      apiKey: <YOUR_NVIDIA_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Nemotron-4-340B-Instruct",
+        "provider": "nvidia",
+        "model": "nvidia-nemotron-4-340b-instruct",
+        "apiKey": "<YOUR_NVIDIA_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+NVIDIA currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Nvidia Embedder
+      provider: nvidia
+      model: nvidia/nv-embedqa-mistral-7b-v2
+      apiKey: <YOUR_NVIDIA_API_KEY>
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "nvidia",
+      "model": "nvidia/nv-embedqa-mistral-7b-v2",
+      "apiKey": "<YOUR_NVIDIA_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Reranking model
+
+NVIDIA currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
