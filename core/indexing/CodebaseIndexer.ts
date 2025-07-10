@@ -664,7 +664,7 @@ export class CodebaseIndexer {
     for await (const update of this.waitForDBIndex()) {
       this.updateProgress(update);
     }
-    IndexLock.lock(paths.join(", ")); // acquire the index lock to prevent multiple windows to start indexing
+    await IndexLock.lock(paths.join(", ")); // acquire the index lock to prevent multiple windows to start indexing
     try {
       for await (const update of this.refreshDirs(
         paths,
@@ -680,7 +680,7 @@ export class CodebaseIndexer {
       console.log(`Failed refreshing codebase index directories: ${e}`);
       await this.handleIndexingError(e);
     }
-    IndexLock.unlock(); // release the index lock
+    await IndexLock.unlock(); // release the index lock
     // Directly refresh submenu items
     if (this.messenger) {
       this.messenger.send("refreshSubmenuItems", {
