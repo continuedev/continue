@@ -16,7 +16,7 @@ import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
-import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { getComputeDeleteAddRemove, IndexLock } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -643,11 +643,28 @@ export class CodebaseIndexer {
     );
   }
 
+  private async *waitForDBIndex(): AsyncGenerator<IndexingProgressUpdate> {
+    let foundLock = await IndexLock.isLocked();
+    while (foundLock?.locked) {
+      console.log(`indexing ${foundLock.dirs}`);
+      yield {
+        progress: 0,
+        desc: "",
+        status: "waiting",
+      };
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
   public async refreshCodebaseIndex(paths: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+    for await (const update of this.waitForDBIndex()) {
+      this.updateProgress(update);
+    }
+    IndexLock.lock(paths.join(", ")); // acquire the index lock to prevent multiple windows to start indexing
     try {
       for await (const update of this.refreshDirs(
         paths,
@@ -663,7 +680,7 @@ export class CodebaseIndexer {
       console.log(`Failed refreshing codebase index directories: ${e}`);
       await this.handleIndexingError(e);
     }
-
+    IndexLock.unlock(); // release the index lock
     // Directly refresh submenu items
     if (this.messenger) {
       this.messenger.send("refreshSubmenuItems", {

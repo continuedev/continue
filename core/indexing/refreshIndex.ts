@@ -45,6 +45,16 @@ export class SqliteDb {
             artifactId STRING NOT NULL
         )`,
     );
+
+    await db.exec(
+      `CREATE TABLE IF NOT EXISTS indexing_lock (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            locked BOOLEAN NOT NULL,
+            timestamp INTEGER NOT NULL,
+            dirs STRING NOT NULL
+        )`,
+    );
+
     // Delete duplicate rows from tag_catalog
     await db.exec(`
     DELETE FROM tag_catalog
@@ -531,4 +541,39 @@ export function truncateToLastNBytes(input: string, maxBytes: number): string {
 
 export function truncateSqliteLikePattern(input: string, safety: number = 100) {
   return truncateToLastNBytes(input, SQLITE_MAX_LIKE_PATTERN_LENGTH - safety);
+}
+
+export class IndexLock {
+  private static async getLockTableName() {
+    return "indexing_lock";
+  }
+
+  static async isLocked(): Promise<
+    { locked: boolean; dirs: string } | undefined | undefined
+  > {
+    const db = await SqliteDb.get();
+    const lockTableName = await IndexLock.getLockTableName();
+    const row = (await db.get(
+      `SELECT locked, dirs FROM ${lockTableName} WHERE locked = ?`,
+      true,
+    )) as { locked: boolean; dirs: string } | undefined;
+    return row;
+  }
+
+  static async lock(dirs: string) {
+    const db = await SqliteDb.get();
+    const lockTableName = await IndexLock.getLockTableName();
+    await db.run(
+      `INSERT INTO ${lockTableName} (locked, timestamp, dirs) VALUES (?, ?, ?)`,
+      true,
+      Date.now(),
+      dirs,
+    );
+  }
+
+  static async unlock() {
+    const db = await SqliteDb.get();
+    const lockTableName = await IndexLock.getLockTableName();
+    await db.run(`DELETE FROM ${lockTableName} WHERE locked = ?`, true);
+  }
 }
