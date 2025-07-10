@@ -22,7 +22,7 @@ export const searchAndReplaceInFileTool: Tool = {
   function: {
     name: BuiltInToolNames.SearchAndReplaceInFile,
     description:
-      "Description: Request to replace sections of content in an existing file using SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file.",
+      "Request to replace sections of content in an existing file using SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file.",
     parameters: {
       type: "object",
       required: ["filepath", "diff"],
@@ -56,7 +56,11 @@ Critical rules:
     * Include just the changing lines, and a few surrounding lines if needed for uniqueness.
     * Do not include long runs of unchanging lines in SEARCH/REPLACE blocks.
     * Each line must be complete. Never truncate lines mid-way through as this can cause matching failures.
-4. Special operations:
+4. Splitting up tool calls:
+    * When making multiple closely related edits to the same file, you should try to use multiple SEARCH/REPLACE blocks in a single tool call, rather than making multiple separate tool calls
+    * If you need to make follow up edits or group your work into logical segments, it is okay to perform additional tool calls
+    * DO NOT make back-to-back tool calls. Instead interleave with brief explanation of what each will do. For example, instead of [explanation, tool call, tool call] you should do [explanation, tool call, explanation, tool call]
+5. Special operations:
     * To move code: Use two SEARCH/REPLACE blocks (one to delete from original + one to insert at new location)
     * To delete code: Use empty REPLACE section
     

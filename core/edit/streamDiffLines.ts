@@ -55,7 +55,11 @@ export async function* addIndentation(
 }
 
 function modelIsInept(model: string): boolean {
-  return !(model.includes("gpt") || model.includes("claude"));
+  return !(
+    model.includes("gpt") ||
+    model.includes("claude") ||
+    model.includes("nova")
+  );
 }
 
 export async function* streamDiffLines({
@@ -66,7 +70,6 @@ export async function* streamDiffLines({
   abortController,
   input,
   language,
-  onlyOneInsertion,
   overridePrompt,
   rulesToInclude,
 }: {
@@ -77,7 +80,6 @@ export async function* streamDiffLines({
   abortController: AbortController;
   input: string;
   language: string | undefined;
-  onlyOneInsertion: boolean;
   overridePrompt: ChatMessage[] | undefined;
   rulesToInclude: RuleWithSource[] | undefined;
 }): AsyncGenerator<DiffLine> {
@@ -182,13 +184,7 @@ export async function* streamDiffLines({
     diffLines = addIndentation(diffLines, indentation);
   }
 
-  let seenGreen = false;
   for await (const diffLine of diffLines) {
     yield diffLine;
-    if (diffLine.type === "new") {
-      seenGreen = true;
-    } else if (onlyOneInsertion && seenGreen && diffLine.type === "same") {
-      break;
-    }
   }
 }

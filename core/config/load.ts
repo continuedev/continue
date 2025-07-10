@@ -62,7 +62,7 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { baseToolDefinitions } from "../tools";
+import { getToolsForIde } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
@@ -525,7 +525,7 @@ async function intermediateToFinalConfig({
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    tools: [...baseToolDefinitions],
+    tools: await getToolsForIde(ide),
     mcpServerStatuses: [],
     slashCommands: [],
     modelsByRole: {
@@ -643,6 +643,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     template: llm.template,
     completionOptions: llm.completionOptions,
     baseAgentSystemMessage: llm.baseAgentSystemMessage,
+    basePlanSystemMessage: llm.basePlanSystemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),
@@ -650,6 +651,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     roles: llm.roles,
     configurationStatus: llm.getConfigurationStatus(),
     apiKeyLocation: llm.apiKeyLocation,
+    envSecretLocations: llm.envSecretLocations,
   };
 }
 

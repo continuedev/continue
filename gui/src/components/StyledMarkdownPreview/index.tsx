@@ -76,7 +76,7 @@ const StyledMarkdown = styled.div<{
       display: none;
     }
     word-wrap: break-word;
-    border-radius: ${defaultBorderRadius};
+    border-radius: 0.3125rem;
     background-color: ${vscEditorBackground};
     font-size: ${getFontSize() - 2}px;
     font-family: var(--vscode-editor-font-family);
@@ -84,7 +84,6 @@ const StyledMarkdown = styled.div<{
 
   code:not(pre > code) {
     font-family: var(--vscode-editor-font-family);
-    color: var(--vscode-input-placeholderForeground);
   }
 
   background-color: ${(props) => props.bgColor};
@@ -128,6 +127,7 @@ interface StyledMarkdownPreviewProps {
   disableManualApply?: boolean;
   toolCallId?: string;
   expandCodeblocks?: boolean;
+  collapsible?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -306,6 +306,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               forceToolCallId={props.toolCallId}
               expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
+              collapsible={props.collapsible}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>

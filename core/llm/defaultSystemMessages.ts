@@ -1,7 +1,4 @@
-export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
-  "https://github.com/continuedev/continue/blob/main/core/llm/defaultSystemMessages.ts";
-
-export const DEFAULT_AGENT_SYSTEM_MESSAGE_URL =
+export const DEFAULT_SYSTEM_MESSAGES_URL =
   "https://github.com/continuedev/continue/blob/main/core/llm/defaultSystemMessages.ts";
 
 export const CODEBLOCK_FORMATTING_INSTRUCTIONS = `\
@@ -65,4 +62,18 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
   You are in agent mode.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
+</important_rules>`;
+
+// The note about read-only tools is for MCP servers
+// For now, all MCP tools are included so model can decide if they are read-only
+export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
+<important_rules>
+  You are in plan mode, in which you help the user understand and construct a plan.
+  Only use read-only tools. Do not use any tools that would write to non-temporary files.
+  If the user wants to make changes, offer that they can switch to Agent mode to give you access to write tools to make the suggested updates.
+
+${CODEBLOCK_FORMATTING_INSTRUCTIONS}
+${EDIT_CODE_INSTRUCTIONS}
+
+  In plan mode, only write code when directly suggesting changes. Prioritize understanding and developing a plan.
 </important_rules>`;

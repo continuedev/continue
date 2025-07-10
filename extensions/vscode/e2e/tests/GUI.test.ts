@@ -304,7 +304,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD * 100);
 
     it("should call tool after approval", async () => {
-      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
+      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -325,7 +325,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
 
     it("should cancel tool", async () => {
-      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
+      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -356,20 +356,6 @@ describe("GUI Test", () => {
       await messageInput.sendKeys("terminal");
       await messageInput.sendKeys(Key.ENTER);
       await messageInput.sendKeys(Key.ENTER);
-
-      // Open the context items peek
-      const contextItemsPeek = await GUISelectors.getContextItemsPeek(view);
-      await contextItemsPeek.click();
-
-      await TestUtils.waitForSuccess(async () => {
-        const firstContextItemInPeek =
-          await GUISelectors.getFirstContextItemsPeekItem(view);
-        await firstContextItemInPeek.click();
-
-        // Check that item is there with correct name
-        const description = await firstContextItemInPeek.getText();
-        expect(description).to.include("Terminal");
-      });
 
       // Check that the contents match what we expect (repeated back by the mock LLM)
       await TestUtils.waitForSuccess(() => {

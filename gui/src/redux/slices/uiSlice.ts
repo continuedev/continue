@@ -106,6 +106,18 @@ export const uiSlice = createSlice({
       state.toolSettings[action.payload.function.name] =
         "allowedWithPermission";
     },
+    setToolPolicy: (
+      state,
+      action: PayloadAction<{
+        toolName: string;
+        policy: ToolPolicy;
+      }>,
+    ) => {
+      state.toolSettings[action.payload.toolName] = action.payload.policy;
+    },
+    clearToolPolicy: (state, action: PayloadAction<string>) => {
+      delete state.toolSettings[action.payload];
+    },
     toggleToolSetting: (state, action: PayloadAction<string>) => {
       const setting = state.toolSettings[action.payload];
 
@@ -166,6 +178,8 @@ export const {
   setIsExploreDialogOpen,
   setHasDismissedExploreDialog,
   toggleToolSetting,
+  setToolPolicy,
+  clearToolPolicy,
   toggleToolGroupSetting,
   addTool,
   addRule,

@@ -26,7 +26,7 @@ Right click actions let you highlight a desired region of code, right click, and
 
 The highlighted code you’ve selected will be included in your prompt alongside a pre-written set of instructions depending on the selected action. This is the only section of code that the model will attempt to edit.
 
-Right click actions that generate inline diffs use the same prompt and response processing logic as [Edit](../../edit/how-it-works.md).
+Right click actions that generate inline diffs use the same prompt and response processing logic as [Edit](../../features/edit/how-it-works.mdx).
 
 ![context-menu](/img/context-menu.png)
 

@@ -8,7 +8,7 @@ import Tabs from "@theme/Tabs";
 
 # Rules
 
-Rules provide instructions to the model for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Agent](../../agent/how-to-use-it.md) requests.
+Rules provide instructions to the model for [Chat](../../features/chat/quick-start), [Edit](../../features/edit/quick-start), and [Agent](../../features/agent/quick-start) requests.
 
 :::info Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
 :::
@@ -48,7 +48,7 @@ Rules can be added locally using the "Add Rules" button while viewing the Local 
 ![add local rules button](/img/add-local-rules.png)
 
 :::info Automatically create local rule blocks
-When in Agent mode, you can prompt the agent to create a rule for you using the `builtin_create_rule_block` tool if enabled.
+When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
 
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 :::
@@ -172,11 +172,11 @@ Whenever you are writing React code, make sure to
 
 ### Chat System Message
 
-Continue includes a simple default system message for [Chat](../../chat/how-to-use-it.md) and [Agent](../../agent/how-to-use-it.md) requests, to help the model provide reliable codeblock formats in its output.
+Continue includes a simple default system message for [Chat](../../features/chat/quick-start) and [Agent](../../features/agent/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
 This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
 
-Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
+Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).
 
 ### `.continuerules`
 

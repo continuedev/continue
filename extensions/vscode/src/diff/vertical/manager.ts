@@ -287,7 +287,6 @@ export class VerticalDiffManager {
     input,
     llm,
     streamId,
-    onlyOneInsertion,
     quickEdit,
     range,
     newCode,
@@ -297,7 +296,6 @@ export class VerticalDiffManager {
     input: string;
     llm: ILLM;
     streamId?: string;
-    onlyOneInsertion?: boolean;
     quickEdit?: string;
     range?: vscode.Range;
     newCode?: string;
@@ -466,7 +464,6 @@ export class VerticalDiffManager {
           rulesToInclude,
           input,
           language: getMarkdownLanguageTagForFile(fileUri),
-          onlyOneInsertion: !!onlyOneInsertion,
           overridePrompt,
           abortController,
         });

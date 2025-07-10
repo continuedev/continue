@@ -30,6 +30,12 @@ fi
 echo "Installing root-level dependencies..."
 npm install
 
+echo "Building openai-adapters..."
+pushd packages/openai-adapters
+npm install
+npm run build
+popd
+
 echo "Building config-yaml..."
 pushd packages/config-yaml
 npm install
