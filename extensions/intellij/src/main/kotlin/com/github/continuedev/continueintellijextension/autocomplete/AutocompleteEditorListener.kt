@@ -61,6 +61,22 @@ class AutocompleteDocumentListener(private val editorManager: FileEditorManager,
 
         val nextEditService = editor.project?.service<NextEditService>() ?: return
 
+        // Check if we're in a test environment based on some property or condition
+        val isAutocompleteTestEnvironment = System.getProperty("continue.autocomplete.test.environment") == "true"
+        val isNextEditTestEnvironment = System.getProperty("continue.nextEdit.test.environment") == "true"
+
+        if (isAutocompleteTestEnvironment) {
+            invokeLater {
+                service.triggerCompletion(editor)
+            }
+            return
+        } else if (isNextEditTestEnvironment) {
+            invokeLater {
+                nextEditService.triggerNextEdit(editor)
+            }
+            return
+        }
+
         // Check settings to see if next edit is enabled, and then trigger either autocomplete or next exit.
         val continuePluginService = editor.project?.service<ContinuePluginService>()
         if (continuePluginService == null) {
@@ -71,14 +87,14 @@ class AutocompleteDocumentListener(private val editorManager: FileEditorManager,
             "config/getSerializedProfileInfo",
             null,
             null,
-            (request@ { response ->
+            ({ response ->
                 val optInNextEditFeature = response.castNestedOrNull<Boolean>(
                     "content",
                     "result",
                     "config",
                     "experimental",
                     "optInNextEditFeature"
-                ) ?: return@request
+                ) ?: false
 
                 invokeLater {
                     if (optInNextEditFeature) {
