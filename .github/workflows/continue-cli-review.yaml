@@ -78,7 +78,16 @@ jobs:
               comment.body.includes('PR Review')
             );
 
-            if (!botComment) {
+            if (botComment) {
+              // Update existing bot comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: `## PR Review\n\n${reviewContent}`
+              });
+            } else {
+              // Create new bot comment
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
