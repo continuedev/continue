@@ -163,20 +163,19 @@ class Bedrock extends BaseLLM {
           const delta: any = chunk.contentBlockDelta.delta;
 
           // Handle text content
-          if (chunk.contentBlockDelta.delta.text) {
+          if (delta.text) {
             yield {
               role: "assistant",
-              content: chunk.contentBlockDelta.delta.text,
+              content: delta.text,
             };
             continue;
           }
 
           // Handle text content
-          if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
+          if (delta.reasoningContent?.text) {
             yield {
               role: "thinking",
-              content: (chunk.contentBlockDelta.delta as any).reasoningContent
-                .text,
+              content: (delta as any).reasoningContent.text,
             };
             continue;
           }
@@ -201,17 +200,21 @@ class Bedrock extends BaseLLM {
             continue;
           }
 
-          if (
-            chunk.contentBlockDelta.delta.toolUse?.input &&
-            this._currentToolResponse
-          ) {
-            // Append the new input to the existing string
-            if (this._currentToolResponse.input === undefined) {
-              this._currentToolResponse.input = "";
-            }
-            this._currentToolResponse.input +=
-              chunk.contentBlockDelta.delta.toolUse.input;
-            continue;
+          if (delta.toolUse) {
+            yield {
+              role: "assistant",
+              content: "",
+              toolCalls: [
+                {
+                  id: delta.toolUse.toolUseId,
+                  type: delta.toolUse.type,
+                  function: {
+                    name: delta.toolUse.name,
+                    arguments: delta.toolUse.input,
+                  },
+                },
+              ],
+            };
           }
         }
 
@@ -223,37 +226,23 @@ class Bedrock extends BaseLLM {
               content: "",
               redactedThinking: start.redactedReasoning.data,
             };
-            continue;
           }
 
-          const toolUse = chunk.contentBlockStart.start.toolUse;
-          if (toolUse?.toolUseId && toolUse?.name) {
-            this._currentToolResponse = {
-              toolUseId: toolUse.toolUseId,
-              name: toolUse.name,
-              input: "",
-            };
-          }
-          continue;
-        }
-
-        if (chunk.contentBlockStop) {
-          if (this._currentToolResponse) {
+          if (start.toolUse) {
             yield {
               role: "assistant",
               content: "",
               toolCalls: [
                 {
-                  id: this._currentToolResponse.toolUseId,
-                  type: "function",
+                  id: start.toolUse.toolUseId,
+                  type: start.toolUse.type,
                   function: {
-                    name: this._currentToolResponse.name,
-                    arguments: this._currentToolResponse.input,
+                    name: start.toolUse.name,
+                    arguments: start.toolUse.input,
                   },
                 },
               ],
             };
-            this._currentToolResponse = null;
           }
           continue;
         }
