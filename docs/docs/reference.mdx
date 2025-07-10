@@ -19,7 +19,7 @@ from [the Hub](https://hub.continue.dev/explore/assistants) or locally
   - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces `config.json`, which is deprecated. View the **[Migration Guide](/advanced/yaml-migration)**.
+Config YAML replaces `config.json`, which is deprecated. View the **[Migration Guide](/customize/yaml-migration)**.
 :::
 
 An assistant is made up of:
@@ -191,9 +191,9 @@ chat, editing, and summarizing.
   provider and model. Supported capabilities include `tool_use` and `image_input`.
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are
-  `chat`, [`edit`](/advanced/model-roles/edit#prompt-templating), [
-  `apply`](/advanced/model-roles/apply#prompt-templating) and [
-  `autocomplete`](/advanced/model-roles/autocomplete#prompt-templating). The `chat` property must be a
+  `chat`, [`edit`](/customize/model-roles/edit#prompt-templating), [
+  `apply`](/customize/model-roles/apply#prompt-templating) and [
+  `autocomplete`](/customize/model-roles/autocomplete#prompt-templating). The `chat` property must be a
   valid template name, such as `llama3` or `anthropic`.
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
   - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
@@ -263,7 +263,7 @@ models:
 The `context` section defines context providers, which supply additional information or context to the language models.
 Each context provider can be configured with specific parameters.
 
-More information about usage/params for each context provider can be found [here](/advanced/custom-providers)
+More information about usage/params for each context provider can be found [here](/customize/custom-providers)
 
 **Properties:**
 
@@ -384,6 +384,7 @@ prompts, context, and tool use. Continue supports any MCP server with the MCP co
 - `command` (**required**): The command used to start the server.
 - `args`: An optional array of arguments for the command.
 - `env`: An optional map of environment variables for the server process.
+- `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 - `connectionTimeout`: An optional connection timeout number to the server in milliseconds.
 
 **Example:**
@@ -395,12 +396,15 @@ mcpServers:
     args:
       - mcp-server-sqlite
       - --db-path
-      - /Users/NAME/test.db
+      - ./test.db
+    cwd: /Users/NAME/project
+    env:
+      NODE_ENV: production
 ```
 
 ### `data`
 
-Destinations to which [development data](/advanced/deep-dives/development-data) will be sent.
+Destinations to which [development data](/customize/deep-dives/development-data) will be sent.
 
 **Properties:**
 

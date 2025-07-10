@@ -33,6 +33,7 @@ import {
   selectCurrentToolCallApplyState,
 } from "../../redux/selectors/selectCurrentToolCall";
 import {
+  cancelToolCall,
   newSession,
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
@@ -108,7 +109,6 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
-  const toolCallState = useAppSelector(selectCurrentToolCall);
   const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
@@ -147,6 +147,7 @@ export function Chat() {
     isStreaming,
   );
 
+  const currentToolCallState = useAppSelector(selectCurrentToolCall);
   const currentToolCallApplyState = useAppSelector(
     selectCurrentToolCallApplyState,
   );
@@ -158,20 +159,19 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (toolCallState?.status === "generated") {
-        return console.error(
-          "Cannot submit message while awaiting tool confirmation",
+      if (currentToolCallState) {
+        dispatch(
+          cancelToolCall({
+            toolCallId: currentToolCallState.toolCallId,
+          }),
         );
       }
       if (
         currentToolCallApplyState &&
         currentToolCallApplyState.status !== "closed"
       ) {
-        return console.error(
-          "Cannot submit message while awaiting tool call apply",
-        );
+        ideMessenger.post("rejectDiff", currentToolCallApplyState);
       }
-
       const model = isInEdit
         ? (selectedModels?.edit ?? selectedModels?.chat)
         : selectedModels?.chat;
@@ -241,7 +241,7 @@ export function Chat() {
       mode,
       isInEdit,
       codeToEdit,
-      toolCallState,
+      currentToolCallState,
       currentToolCallApplyState,
     ],
   );
