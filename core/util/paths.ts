@@ -494,7 +494,9 @@ export const isFileWithinFolder = (
     filePath = filePath.replace(/\/$/, "");
     folderPathClean = folderPathClean.replace(/\/$/, "");
 
-    return filePath === folderPath || filePath.startsWith(`${folderPath}/`);
+    return (
+      filePath === folderPathClean || filePath.startsWith(`${folderPathClean}/`)
+    );
   } catch (error) {
     console.error("Error in isFileWithinFolder:", error);
     return false;
