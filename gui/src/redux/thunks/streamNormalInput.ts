@@ -213,6 +213,8 @@ export const streamNormalInput = createAsyncThunk<
       } else {
         dispatch(setInactive());
       }
+    } else {
+      dispatch(setInactive());
     }
   },
 );
