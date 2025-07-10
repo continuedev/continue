@@ -62,18 +62,34 @@ Anthropic currently does not offer any reranking models.
 
 Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
 
-Prompt caching is generally available for:
+> **NOTE:** As part of their `Beta` support [Extended caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration) caching TTL can be extended to 1 hour.
+
+**Prompt caching is generally available for:**
 
 - Claude 4 Sonnet
 - Claude 3.7 Sonnet
 - Claude 3.5 Sonnet
 - Claude 3.5 Haiku
 
-To enable caching of the system message and the turn-by-turn conversation, update your model configuration as follows:
+### Caching Options
+
+* `cacheSystemMessage` - if `true`, caches the system message across requests
+* `cacheConversation` - if `true`, caches conversation messages (user and assistant messages)
+* `cacheToolMessages` - if `true`, caches tool results and assistant tool calls (useful for Agent mode)
+* `useExtendedCacheTtlBeta` - if `true` will enable Beta feature and allow to set 5m or 1h ttl for caching
+* `cacheTtl` - accepts only `5m` or `1h` as values, and if parameter not set `5m` default cache will be used then.
+* `cacheDebug` - if `true`, will report into Console information which can help to see and understand usage of cache.
+
+> **NOTE:** `1h` cacheTtl can be set only if `useExtendedCacheTtlBeta` is `true`
+
+### Basic Configuration
+
+To enable caching of the system message and conversation history with basic five minutes caching support:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="config.yaml"
+  ```yaml
+  # config.yaml
   models:
     - name: Anthropic
       provider: anthropic
@@ -83,16 +99,19 @@ To enable caching of the system message and the turn-by-turn conversation, updat
         - chat
       defaultCompletionOptions:
         promptCaching: true
+      cacheBehavior:
+        cacheSystemMessage: true
+        cacheConversation: true
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
-  ```json title="config.json"
+  ```json
   {
     "models": [
       {
         "cacheBehavior": {
           "cacheSystemMessage": true,
-          "cacheConversation": true
+          "cacheConversation": true,
         },
         "title": "Anthropic",
         "provider": "anthropic",
@@ -107,3 +126,67 @@ To enable caching of the system message and the turn-by-turn conversation, updat
   ```
   </TabItem>
 </Tabs>
+
+### Enhanced Configuration with extended caching support
+
+For heavy Agent mode usage with tool calls, enable tool message caching to maximize efficiency:
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml
+  # config.yaml
+  models:
+    - name: Claude Agent
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - chat
+        - agent
+      defaultCompletionOptions:
+        promptCaching: true
+      cacheBehavior:
+        cacheSystemMessage: true
+        cacheConversation: true
+        cacheToolMessages: true
+        useExtendedCacheTtlBeta: true
+        cacheTtl: "1h"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json
+  {
+    "models": [
+      {
+        "title": "Claude Agent",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-latest",
+        "roles": ["chat", "agent"],
+        "defaultCompletionOptions": {
+          "promptCaching": true
+        },
+        "cacheBehavior": {
+          "cacheSystemMessage": true,
+          "cacheConversation": true,
+          "cacheToolMessages": true,
+          "useExtendedCacheTtlBeta": true,
+          "cacheTtl": "1h"
+        },
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### Benefits
+
+Enhanced caching provides significant benefits for Agent mode usage:
+
+- **Cost Reduction**: Reduces input token costs by ~27% for tool-heavy conversations
+- **Performance**: Faster response times due to cached content
+- **Efficiency**: Maximizes cache hits for repetitive tool operations
+- **Simplicity**: Easy boolean configuration instead of complex numeric tuning
+
+The tool message caching (`cacheToolMessages: true`) is particularly effective when using Continue's Agent mode with frequent tool calls, as it caches both tool results and assistant tool call messages that would otherwise consume expensive input tokens on every request.

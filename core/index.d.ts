@@ -965,8 +965,11 @@ export interface RequestOptions {
 export interface CacheBehavior {
   cacheSystemMessage?: boolean;
   cacheConversation?: boolean;
+  cacheToolMessages?: boolean;
+  cacheDebug?: boolean;
+  useExtendedCacheTtlBeta?: boolean;
+  cacheTtl?: string;
 }
-
 export interface ClientCertificateOptions {
   cert: string;
   key: string;
