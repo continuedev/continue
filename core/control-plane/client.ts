@@ -135,14 +135,33 @@ export class ControlPlaneClient {
       return [];
     }
 
-    try {
-      const resp = await this.request("ide/list-organizations", {
-        method: "GET",
-      });
-      const { organizations } = (await resp.json()) as any;
-      return organizations;
-    } catch (e) {
-      return [];
+    // We try again here because when users sign up with an email domain that is
+    // captured by an org, we need to wait for the user account creation webhook to
+    // take effect. Otherwise the organization(s) won't show up.
+    let retries = 0;
+    const maxRetries = 5;
+    const maxWaitTime = 20000; // 20 seconds in milliseconds
+
+    while (true) {
+      try {
+        const resp = await this.request("ide/list-organizations", {
+          method: "GET",
+        });
+        const { organizations } = (await resp.json()) as any;
+        return organizations;
+      } catch (error: any) {
+        if (error?.message?.includes("404") && retries < maxRetries) {
+          retries++;
+          const waitTime = Math.min(
+            Math.pow(2, retries) * 100,
+            maxWaitTime / maxRetries,
+          );
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        } else {
+          // If not a 404 error or we've exceeded max retries, rethrow
+          throw error;
+        }
+      }
     }
   }
 
