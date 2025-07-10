@@ -643,9 +643,21 @@ export class CodebaseIndexer {
     );
   }
 
+  /**
+   * We want to prevent sqlite concurrent write errors
+   * when there are 2 indexing happening from different windows.
+   * We want the other window to wait until the first window's indexing finishes.
+   * Incase the first window closes before indexing is finished,
+   * we want to unlock the IndexLock by checking the last timestamp.
+   */
   private async *waitForDBIndex(): AsyncGenerator<IndexingProgressUpdate> {
     let foundLock = await IndexLock.isLocked();
     while (foundLock?.locked) {
+      if ((Date.now() - foundLock.timestamp) / 1000 > 10) {
+        console.log(`${foundLock.dirs} is not being indexed... unlocking`);
+        await IndexLock.unlock();
+        break;
+      }
       console.log(`indexing ${foundLock.dirs}`);
       yield {
         progress: 0,
@@ -653,6 +665,7 @@ export class CodebaseIndexer {
         status: "waiting",
       };
       await new Promise((resolve) => setTimeout(resolve, 1000));
+      foundLock = await IndexLock.isLocked();
     }
   }
 
@@ -664,7 +677,13 @@ export class CodebaseIndexer {
     for await (const update of this.waitForDBIndex()) {
       this.updateProgress(update);
     }
-    await IndexLock.lock(paths.join(", ")); // acquire the index lock to prevent multiple windows to start indexing
+
+    await IndexLock.lock(paths.join(", ")); // acquire the index lock to prevent multiple windows to begin indexing
+    const indexLockTimestampUpdateInterval = setInterval(
+      () => void IndexLock.updateTimestamp(),
+      5_000,
+    );
+
     try {
       for await (const update of this.refreshDirs(
         paths,
@@ -680,7 +699,10 @@ export class CodebaseIndexer {
       console.log(`Failed refreshing codebase index directories: ${e}`);
       await this.handleIndexingError(e);
     }
-    await IndexLock.unlock(); // release the index lock
+
+    clearInterval(indexLockTimestampUpdateInterval); // interval will also be cleared when window closes before indexing is finished
+    await IndexLock.unlock();
+
     // Directly refresh submenu items
     if (this.messenger) {
       this.messenger.send("refreshSubmenuItems", {

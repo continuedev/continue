@@ -544,36 +544,45 @@ export function truncateSqliteLikePattern(input: string, safety: number = 100) {
 }
 
 export class IndexLock {
-  private static async getLockTableName() {
+  private static getLockTableName() {
     return "indexing_lock";
   }
 
   static async isLocked(): Promise<
-    { locked: boolean; dirs: string } | undefined | undefined
+    { locked: boolean; dirs: string; timestamp: number } | undefined | undefined
   > {
     const db = await SqliteDb.get();
-    const lockTableName = await IndexLock.getLockTableName();
     const row = (await db.get(
-      `SELECT locked, dirs FROM ${lockTableName} WHERE locked = ?`,
+      `SELECT locked, dirs, timestamp FROM ${IndexLock.getLockTableName()} WHERE locked = ?`,
       true,
-    )) as { locked: boolean; dirs: string } | undefined;
+    )) as { locked: boolean; dirs: string; timestamp: number } | undefined;
     return row;
   }
 
   static async lock(dirs: string) {
     const db = await SqliteDb.get();
-    const lockTableName = await IndexLock.getLockTableName();
     await db.run(
-      `INSERT INTO ${lockTableName} (locked, timestamp, dirs) VALUES (?, ?, ?)`,
+      `INSERT INTO ${IndexLock.getLockTableName()} (locked, timestamp, dirs) VALUES (?, ?, ?)`,
       true,
       Date.now(),
       dirs,
     );
   }
 
+  static async updateTimestamp() {
+    const db = await SqliteDb.get();
+    await db.run(
+      `UPDATE ${IndexLock.getLockTableName()} SET timestamp = ? where locked = ?`,
+      Date.now(),
+      true,
+    );
+  }
+
   static async unlock() {
     const db = await SqliteDb.get();
-    const lockTableName = await IndexLock.getLockTableName();
-    await db.run(`DELETE FROM ${lockTableName} WHERE locked = ?`, true);
+    await db.run(
+      `DELETE FROM ${IndexLock.getLockTableName()} WHERE locked = ?`,
+      true,
+    );
   }
 }
