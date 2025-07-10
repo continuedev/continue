@@ -4,7 +4,7 @@ import { ChatHistoryItemWithMessageId } from "../slices/sessionSlice";
 import { RootState } from "../store";
 
 /**
- * Checks if there are any current tool calls in the most recent message.
+ * Checks if there are any current tool calls in the most recent assistant message.
  *
  * @param chatHistory - The chat history array from Redux state
  * @returns True if there are any current tool calls, false otherwise
@@ -12,12 +12,7 @@ import { RootState } from "../store";
 export function hasCurrentToolCalls(
   chatHistory: RootState["session"]["history"],
 ): boolean {
-  const lastItem = chatHistory[chatHistory.length - 1];
-  if (!lastItem) {
-    return false;
-  }
-
-  return !!lastItem.toolCallStates && lastItem.toolCallStates.length > 0;
+  return findAllCurToolCalls(chatHistory).length > 0;
 }
 
 /**
@@ -37,7 +32,7 @@ export function findAllCurToolCallsByStatus(
 }
 
 /**
- * Finds all current tool calls from the most recent message in chat history.
+ * Finds all current tool calls from the most recent assistant message with tool call states.
  *
  * @param chatHistory - The chat history array from Redux state
  * @returns An array of all current tool call states, or empty array if none found
@@ -45,12 +40,15 @@ export function findAllCurToolCallsByStatus(
 export function findAllCurToolCalls(
   chatHistory: RootState["session"]["history"],
 ): ToolCallState[] {
-  const lastItem = chatHistory[chatHistory.length - 1];
-  if (!lastItem) {
-    return [];
+  // Find the most recent assistant message that has tool call states
+  for (let i = chatHistory.length - 1; i >= 0; i--) {
+    const item = chatHistory[i];
+    if (item.message.role === "assistant" && item.toolCallStates && item.toolCallStates.length > 0) {
+      return item.toolCallStates;
+    }
   }
 
-  return lastItem.toolCallStates || [];
+  return [];
 }
 
 /**

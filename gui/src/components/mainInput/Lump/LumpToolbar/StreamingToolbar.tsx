@@ -1,7 +1,6 @@
 import { useAppDispatch } from "../../../../redux/hooks";
 import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
-import { Container, StopButton } from "./components";
 import { GeneratingIndicator } from "./GeneratingIndicator";
 
 export function StreamingToolbar() {
@@ -9,16 +8,16 @@ export function StreamingToolbar() {
   const jetbrains = isJetBrains();
 
   return (
-    <Container>
+    <div className="flex w-full items-center justify-between">
       <GeneratingIndicator />
-      <StopButton
-        className="text-description"
+      <div
+        className="text-description text-2xs cursor-pointer p-0.5 pr-1 hover:brightness-125"
         onClick={() => {
           void dispatch(cancelStream());
         }}
       >
         {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
-      </StopButton>
-    </Container>
+      </div>
+    </div>
   );
 }

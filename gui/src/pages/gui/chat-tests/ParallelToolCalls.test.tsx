@@ -1426,4 +1426,197 @@ describe("Parallel Tool Calls", () => {
       }
     }
   });
+
+  test("should handle individual tool call accept/reject in multiple tool calls without breaking other calls", async () => {
+    const { ideMessenger, store } = await renderWithProviders(<Chat />);
+
+    await act(async () => {
+      addAndSelectMockLlm(store, ideMessenger);
+    });
+
+    // Test with multiple tools that require approval
+    const MULTIPLE_TOOL_CALLS_RESPONSE: ChatMessage[] = [
+      {
+        role: "assistant",
+        content: "I'll use multiple tools that require approval.",
+        toolCalls: [
+          {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: "write_file",
+              arguments: JSON.stringify({
+                file_path: "test1.js",
+                content: "console.log('test1');",
+              }),
+            },
+          },
+          {
+            id: "tool-call-2",
+            type: "function",
+            function: {
+              name: "write_file",
+              arguments: JSON.stringify({
+                file_path: "test2.js",
+                content: "console.log('test2');",
+              }),
+            },
+          },
+        ],
+      },
+    ];
+
+    await sendInputWithMockedResponse(
+      ideMessenger,
+      "Use multiple tools",
+      MULTIPLE_TOOL_CALLS_RESPONSE,
+    );
+
+    // Wait for processing
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    const { findAllCurToolCallsByStatus } = await import(
+      "../../../redux/util"
+    );
+    const { callToolById } = await import(
+      "../../../redux/thunks/callToolById"
+    );
+
+    // Verify we have multiple pending tool calls
+    let state = store.getState();
+    let pendingToolCalls = findAllCurToolCallsByStatus(
+      state.session.history,
+      "generated",
+    );
+    expect(pendingToolCalls).toHaveLength(2);
+    expect(pendingToolCalls[0].toolCallId).toBe("tool-call-1");
+    expect(pendingToolCalls[1].toolCallId).toBe("tool-call-2");
+
+    // Accept the first tool call
+    await act(async () => {
+      await store.dispatch(callToolById({ toolCallId: "tool-call-1" }));
+    });
+
+    // Wait for state update
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    // Check state after accepting first tool call
+    state = store.getState();
+    pendingToolCalls = findAllCurToolCallsByStatus(
+      state.session.history,
+      "generated",
+    );
+    
+    // The second tool call should still be pending
+    expect(pendingToolCalls).toHaveLength(1);
+    expect(pendingToolCalls[0].toolCallId).toBe("tool-call-2");
+
+    // The first tool call should now be in "done" status
+    const completedToolCalls = findAllCurToolCallsByStatus(
+      state.session.history,
+      "done",
+    );
+    
+    expect(completedToolCalls).toHaveLength(1);
+    expect(completedToolCalls[0].toolCallId).toBe("tool-call-1");
+  });
+
+  test("should handle individual tool call cancellation in multiple tool calls without breaking other calls", async () => {
+    const { ideMessenger, store } = await renderWithProviders(<Chat />);
+
+    await act(async () => {
+      addAndSelectMockLlm(store, ideMessenger);
+    });
+
+    // Test with multiple tools that require approval
+    const MULTIPLE_TOOL_CALLS_RESPONSE: ChatMessage[] = [
+      {
+        role: "assistant",
+        content: "I'll use multiple tools that require approval.",
+        toolCalls: [
+          {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: "write_file",
+              arguments: JSON.stringify({
+                file_path: "test1.js",
+                content: "console.log('test1');",
+              }),
+            },
+          },
+          {
+            id: "tool-call-2",
+            type: "function",
+            function: {
+              name: "write_file",
+              arguments: JSON.stringify({
+                file_path: "test2.js",
+                content: "console.log('test2');",
+              }),
+            },
+          },
+        ],
+      },
+    ];
+
+    await sendInputWithMockedResponse(
+      ideMessenger,
+      "Use multiple tools",
+      MULTIPLE_TOOL_CALLS_RESPONSE,
+    );
+
+    // Wait for processing
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    const { findAllCurToolCallsByStatus } = await import(
+      "../../../redux/util"
+    );
+    const { cancelToolCall } = await import(
+      "../../../redux/slices/sessionSlice"
+    );
+
+    // Verify we have multiple pending tool calls
+    let state = store.getState();
+    let pendingToolCalls = findAllCurToolCallsByStatus(
+      state.session.history,
+      "generated",
+    );
+    expect(pendingToolCalls).toHaveLength(2);
+
+    // Cancel the first tool call
+    await act(async () => {
+      store.dispatch(cancelToolCall({ toolCallId: "tool-call-1" }));
+    });
+
+    // Wait for state update
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    // Check state after canceling first tool call
+    state = store.getState();
+    pendingToolCalls = findAllCurToolCallsByStatus(
+      state.session.history,
+      "generated",
+    );
+    
+    // The second tool call should still be pending
+    expect(pendingToolCalls).toHaveLength(1);
+    expect(pendingToolCalls[0].toolCallId).toBe("tool-call-2");
+
+    // The first tool call should now be in "canceled" status
+    const canceledToolCalls = findAllCurToolCallsByStatus(
+      state.session.history,
+      "canceled",
+    );
+    expect(canceledToolCalls).toHaveLength(1);
+    expect(canceledToolCalls[0].toolCallId).toBe("tool-call-1");
+  });
 });

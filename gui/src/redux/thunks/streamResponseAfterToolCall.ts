@@ -41,7 +41,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         };
         dispatch(streamUpdate([newMessage]));
 
-        // Check if all parallel tool calls are complete before continuing (original logic adaptation)
+        // Check if all parallel tool calls are complete before continuing
         const history = getState().session.history;
         const assistantMessage = history.find(item => 
           item.message.role === "assistant" && 
@@ -52,12 +52,13 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           const totalToolCalls = assistantMessage.toolCallStates.length;
           const completedToolCalls = assistantMessage.toolCallStates.filter(tc => tc.status === "done");
           
-          // Only continue streaming if ALL parallel tool calls are complete (like original logic)
+          // Only continue streaming if ALL parallel tool calls are complete
           if (completedToolCalls.length === totalToolCalls) {
             unwrapResult(await dispatch(streamNormalInput({})));
           }
+          // If not all are complete, just wait - don't continue streaming yet
         } else {
-          // Fallback: use original logic for single tool call
+          // Fallback: use original logic for single tool call (only when no assistant message found)
           unwrapResult(await dispatch(streamNormalInput({})));
         }
       }),

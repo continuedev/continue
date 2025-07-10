@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   selectCurrentToolCall,
   selectCurrentToolCallApplyState,
-} from "../redux/selectors/selectCurrentToolCall";
+} from "../redux/selectors/selectToolCalls";
 import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,

@@ -31,7 +31,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   selectCurrentToolCall,
   selectCurrentToolCallApplyState,
-} from "../../redux/selectors/selectCurrentToolCall";
+} from "../../redux/selectors/selectToolCalls";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,

@@ -2,7 +2,10 @@ import { useContext, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
+import {
+  selectCurrentToolCall,
+  selectFirstPendingToolCall,
+} from "../../../../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callToolById } from "../../../../redux/thunks/callToolById";
 import { logToolUsage } from "../../../../redux/util";
@@ -16,59 +19,74 @@ import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
 import { TtsActiveToolbar } from "./TtsActiveToolbar";
 
+// Keyboard shortcut detection utilities
+const isExecuteToolCallShortcut = (event: KeyboardEvent) => {
+  const metaKey = event.metaKey || event.ctrlKey;
+  return metaKey && event.key === "Enter";
+};
+
+const isCancelToolCallShortcut = (
+  event: KeyboardEvent,
+  isJetBrains: boolean,
+) => {
+  const metaKey = event.metaKey || event.ctrlKey;
+  const altKey = event.altKey;
+  const modifierKey = isJetBrains ? altKey : metaKey;
+  return modifierKey && event.key === "Backspace";
+};
+
 export function LumpToolbar() {
+  const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const isInEdit = useAppSelector((state) => state.session.isInEdit);
   const jetbrains = isJetBrains();
   const toolCallState = useSelector(selectCurrentToolCall);
+  const firstPendingToolCall = useAppSelector(selectFirstPendingToolCall);
   const editApplyState = useAppSelector(
     (state) => state.editModeState.applyState,
   );
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
   );
-
   const pendingApplyStates = applyStates.filter(
     (state) => state.status === "done",
   );
-
   const isApplying = applyStates.some((state) => state.status === "streaming");
 
   useEffect(() => {
-    if (toolCallState?.status !== "generated") {
+    if (!firstPendingToolCall) {
       return;
     }
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const metaKey = event.metaKey || event.ctrlKey;
-      const altKey = event.altKey;
+    const handleToolCallKeyboardShortcuts = (event: KeyboardEvent) => {
+      if (isExecuteToolCallShortcut(event)) {
+        event.preventDefault();
+        event.stopPropagation();
 
-      if (metaKey && event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
         void dispatch(
-          callToolById({ toolCallId: toolCallState.toolCallId })
+          callToolById({ toolCallId: firstPendingToolCall.toolCallId }),
         );
-      } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
+      } else if (isCancelToolCallShortcut(event, jetbrains)) {
         event.preventDefault();
         event.stopPropagation();
-        const ideMessenger = useContext(IdeMessengerContext);
-        logToolUsage(toolCallState, false, true, ideMessenger);
+
         void dispatch(
           cancelToolCall({
-            toolCallId: toolCallState.toolCallId,
+            toolCallId: firstPendingToolCall.toolCallId,
           }),
         );
+
+        logToolUsage(firstPendingToolCall, false, true, ideMessenger);
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleToolCallKeyboardShortcuts);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleToolCallKeyboardShortcuts);
     };
-  }, [toolCallState]);
+  }, [firstPendingToolCall]);
 
   if (isApplying) {
     return <IsApplyingToolbar />;
