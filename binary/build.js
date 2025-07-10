@@ -21,6 +21,7 @@ function cleanSlate() {
   rimrafSync(out);
   rimrafSync(build);
   rimrafSync(path.join(__dirname, "tmp"));
+  rimrafSync(path.join(__dirname, "tree-sitter"));
   fs.mkdirSync(bin);
   fs.mkdirSync(out);
   fs.mkdirSync(build);
@@ -134,6 +135,25 @@ async function buildWithEsbuild() {
       (error) => {
         if (error) {
           console.warn("[error] Error copying tree-sitter-wasm files", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+
+  // copy tree-sitter colder to binary folder to make it available when running in intellij debug mode
+  const treeSitterDir = path.join(__dirname, "tree-sitter");
+  fs.mkdirSync(treeSitterDir);
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "..", "extensions", "vscode", "tree-sitter"),
+      treeSitterDir,
+      { dereference: true },
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying tree-sitter files", error);
           reject(error);
         } else {
           resolve();
