@@ -2,8 +2,9 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { selectPendingToolCalls } from "../../../../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callToolById } from "../../../../redux/thunks/callToolById";
-import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
+import { getMetaKeyLabel, isJetBrains } from "../../../../util";
 import { Button } from "../../../ui";
+import { CancelButton } from "./CancelButton";
 
 export function PendingToolCallToolbar() {
   const dispatch = useAppDispatch();
@@ -35,13 +36,10 @@ export function PendingToolCallToolbar() {
 
           <div className="flex items-center gap-2">
             {index === 0 && (
-              <div
-                className="text-description text-2xs cursor-pointer px-1.5 py-0.5 hover:brightness-125"
+              <CancelButton
                 onClick={() => handleReject(toolCall.toolCallId)}
                 data-testid={`reject-tool-call-button-${toolCall.toolCallId}`}
-              >
-                {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
-              </div>
+              />
             )}
 
             <Button
@@ -52,7 +50,7 @@ export function PendingToolCallToolbar() {
               data-testid={`accept-tool-call-button-${toolCall.toolCallId}`}
             >
               {index === 0 && (
-                <code className="text-2xs mr-1">{getMetaKeyLabel()} ⏎</code>
+                <span className="text-2xs mr-1.5">{getMetaKeyLabel()}⏎</span>
               )}
               <span>Accept</span>
             </Button>

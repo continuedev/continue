@@ -128,17 +128,6 @@ export const streamNormalInput = createAsyncThunk<
             }),
           },
         });
-        // else if (state.session.mode === "edit") {
-        //   extra.ideMessenger.post("devdata/log", {
-        //     name: "editInteraction",
-        //     data: {
-        //       prompt: next.value.prompt,
-        //       completion: next.value.completion,
-        //       modelProvider: selectedChatModel.provider,
-        //       modelTitle: selectedChatModel.title,
-        //     },
-        //   });
-        // }
       } catch (e) {
         console.error("Failed to send dev data interaction log", e);
       }
@@ -159,22 +148,21 @@ export const streamNormalInput = createAsyncThunk<
       );
     });
 
-    // Run tool calls in parallel for auto-approved tools
-    const autoApprovedToolCalls = toolCallStates.filter(
+    // Check if ALL tool calls are auto-approved - if not, wait for user approval
+    const allAutoApproved = toolCallStates.every(
       (toolCallState) =>
         toolSettings[toolCallState.toolCall.function.name] ===
         "allowedWithoutPermission",
     );
 
-    if (autoApprovedToolCalls.length > 0) {
-      const toolCallPromises = autoApprovedToolCalls.map(
-        async (toolCallState) => {
-          const response = await dispatch(
-            callToolById({ toolCallId: toolCallState.toolCallId }),
-          );
-          return unwrapResult(response);
-        },
-      );
+    // Only execute automatically if ALL tool calls are auto-approved
+    if (allAutoApproved && toolCallStates.length > 0) {
+      const toolCallPromises = toolCallStates.map(async (toolCallState) => {
+        const response = await dispatch(
+          callToolById({ toolCallId: toolCallState.toolCallId }),
+        );
+        return unwrapResult(response);
+      });
 
       await Promise.all(toolCallPromises);
     }
