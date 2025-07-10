@@ -637,6 +637,18 @@ const config = {
             from: "/autocomplete/how-it-works",
           },
           {
+            to: "/features/autocomplete/model-setup",
+            from: "/autocomplete/model-setup",
+          },
+          {
+            to: "/features/autocomplete/how-to-customize",
+            from: "/autocomplete/how-to-customize",
+          },
+          {
+            to: "/features/autocomplete/context-selection",
+            from: "/autocomplete/context-selection",
+          },
+          {
             to: "/features/edit/how-it-works",
             from: "/edit/how-it-works",
           },
@@ -655,6 +667,43 @@ const config = {
           {
             to: "/customize/json-reference",
             from: ["/json-reference", "/advanced/json-reference"],
+          },
+          // New feature page redirects
+          {
+            to: "/features/chat/model-setup",
+            from: "/chat/model-setup",
+          },
+          {
+            to: "/features/chat/how-to-customize",
+            from: "/chat/how-to-customize",
+          },
+          {
+            to: "/features/chat/context-selection",
+            from: "/chat/context-selection",
+          },
+          {
+            to: "/features/edit/model-setup",
+            from: "/edit/model-setup",
+          },
+          {
+            to: "/features/edit/how-to-customize",
+            from: "/edit/how-to-customize",
+          },
+          {
+            to: "/features/edit/context-selection",
+            from: "/edit/context-selection",
+          },
+          {
+            to: "/features/agent/model-setup",
+            from: "/agent/model-setup",
+          },
+          {
+            to: "/features/agent/how-to-customize",
+            from: "/agent/how-to-customize",
+          },
+          {
+            to: "/features/agent/context-selection",
+            from: "/agent/context-selection",
           },
         ],
       },
