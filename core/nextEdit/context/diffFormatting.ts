@@ -12,7 +12,7 @@ export type BeforeAfterDiff = {
   afterContent: string;
 };
 
-export interface createDiffArgs {
+export interface CreateDiffArgs {
   beforeContent: string;
   afterContent: string;
   filePath: string;
@@ -26,7 +26,7 @@ export const createDiff = ({
   filePath,
   diffType,
   contextLines,
-}: createDiffArgs) => {
+}: CreateDiffArgs) => {
   switch (diffType) {
     case DiffFormatType.Unified:
       return createUnifiedDiff(
