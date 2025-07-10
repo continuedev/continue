@@ -52,9 +52,7 @@ export function PendingToolCallToolbar() {
               data-testid={`accept-tool-call-button-${toolCall.toolCallId}`}
             >
               {index === 0 && (
-                <code className="mr-1 text-[0.5625rem]">
-                  {getMetaKeyLabel()} ⏎
-                </code>
+                <code className="text-2xs mr-1">{getMetaKeyLabel()} ⏎</code>
               )}
               <span>Accept</span>
             </Button>

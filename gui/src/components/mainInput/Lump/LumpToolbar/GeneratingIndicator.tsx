@@ -8,13 +8,12 @@ export function GeneratingIndicator({
   testId?: string;
 }) {
   return (
-    <div className="flex items-center" data-testid={testId}>
-      <ContinueSignet
-        className="animate-spin-slow text-foreground"
-        width={26}
-        height={26}
-      />
-      <span className="text-description-muted text-xs">{text}...</span>
+    <div
+      className="text-description-muted flex items-center"
+      data-testid={testId}
+    >
+      <ContinueSignet className="animate-spin-slow" width={26} height={26} />
+      <span className="text-xs">{text}...</span>
     </div>
   );
 }
