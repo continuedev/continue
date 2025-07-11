@@ -677,8 +677,12 @@ export interface DiffLine extends DiffObject {
 
 interface DiffChar extends DiffObject {
   char: string;
-  oldIndex?: number;
+  oldIndex?: number; // Character index assuming a flattened line string.
   newIndex?: number;
+  oldCharIndexInLine?: number; // Character index assuming new lines reset the character index to 0.
+  newCharIndexInLine?: number;
+  oldLineIndex?: number;
+  newLineIndex?: number;
 }
 
 export interface Problem {
