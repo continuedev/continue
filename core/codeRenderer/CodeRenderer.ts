@@ -232,7 +232,7 @@ export class CodeRenderer {
     ${guts}
   </g>
 </svg>`;
-    console.log(svg);
+    // console.log(svg);
 
     return Buffer.from(svg, "utf8");
   }
