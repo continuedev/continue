@@ -16,7 +16,7 @@ import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
-import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { getComputeDeleteAddRemove, IndexLock } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -643,11 +643,47 @@ export class CodebaseIndexer {
     );
   }
 
+  /**
+   * We want to prevent sqlite concurrent write errors
+   * when there are 2 indexing happening from different windows.
+   * We want the other window to wait until the first window's indexing finishes.
+   * Incase the first window closes before indexing is finished,
+   * we want to unlock the IndexLock by checking the last timestamp.
+   */
+  private async *waitForDBIndex(): AsyncGenerator<IndexingProgressUpdate> {
+    let foundLock = await IndexLock.isLocked();
+    while (foundLock?.locked) {
+      if ((Date.now() - foundLock.timestamp) / 1000 > 10) {
+        console.log(`${foundLock.dirs} is not being indexed... unlocking`);
+        await IndexLock.unlock();
+        break;
+      }
+      console.log(`indexing ${foundLock.dirs}`);
+      yield {
+        progress: 0,
+        desc: "",
+        status: "waiting",
+      };
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      foundLock = await IndexLock.isLocked();
+    }
+  }
+
   public async refreshCodebaseIndex(paths: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+    for await (const update of this.waitForDBIndex()) {
+      this.updateProgress(update);
+    }
+
+    await IndexLock.lock(paths.join(", ")); // acquire the index lock to prevent multiple windows to begin indexing
+    const indexLockTimestampUpdateInterval = setInterval(
+      () => void IndexLock.updateTimestamp(),
+      5_000,
+    );
+
     try {
       for await (const update of this.refreshDirs(
         paths,
@@ -663,6 +699,9 @@ export class CodebaseIndexer {
       console.log(`Failed refreshing codebase index directories: ${e}`);
       await this.handleIndexingError(e);
     }
+
+    clearInterval(indexLockTimestampUpdateInterval); // interval will also be cleared when window closes before indexing is finished
+    await IndexLock.unlock();
 
     // Directly refresh submenu items
     if (this.messenger) {

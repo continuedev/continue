@@ -18,6 +18,7 @@ import { TtsActiveToolbar } from "./TtsActiveToolbar";
 
 export function LumpToolbar() {
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const isInEdit = useAppSelector((state) => state.session.isInEdit);
@@ -52,7 +53,6 @@ export function LumpToolbar() {
       } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
-        const ideMessenger = useContext(IdeMessengerContext);
         logToolUsage(toolCallState, false, true, ideMessenger);
         void dispatch(
           cancelToolCall({
