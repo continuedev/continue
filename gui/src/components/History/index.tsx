@@ -160,7 +160,7 @@ export function History() {
     >
       <div className="relative my-2 flex justify-center space-x-2">
         <input
-          className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-base outline-none focus:outline-none"
+          className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-sm outline-none focus:outline-none"
           ref={searchInputRef}
           placeholder="Search past sessions"
           type="text"
@@ -179,7 +179,7 @@ export function History() {
           />
         )}
       </div>
-      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto pr-4">
+      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto">
         {filteredAndSortedSessions.length === 0 && (
           <div className="m-3 text-center">
             {isSessionMetadataLoading ? (
@@ -229,27 +229,27 @@ export function History() {
                     </div>
                   )}
 
-                  <HistoryTableRow
-                    sessionMetadata={session}
-                    date={date}
-                    index={index}
-                  />
+                  <HistoryTableRow sessionMetadata={session} index={index} />
                 </Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col items-end justify-center border-0 border-t border-solid border-gray-400 px-2 py-1.5 text-sm">
-        <i
-          className=""
-          data-testid="history-sessions-note"
-        >{`Data is saved in ${platform === "windows" ? "%USERPROFILE%/.continue" : "~/.continue/sessions"}`}</i>
+      <div className="border-border flex items-center justify-center border-0 border-t border-solid px-2 py-3 text-xs">
+        <span data-testid="history-sessions-note">
+          Data is saved in{" "}
+          <span className="italic">
+            {platform === "windows"
+              ? "%USERPROFILE%/.continue"
+              : "~/.continue/sessions"}
+          </span>
+        </span>
         <span
-          className="cursor-pointer text-xs text-gray-400 hover:underline"
+          className="text-2xs text-description-muted ml-1 cursor-pointer hover:underline"
           onClick={showClearSessionsDialog}
         >
-          Clear session history
+          (Clear session history)
         </span>
       </div>
     </div>
