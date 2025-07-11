@@ -1,6 +1,7 @@
 import {
   BedrockRuntimeClient,
   ContentBlock,
+  ContentBlockStart,
   ConversationRole,
   ConverseStreamCommand,
   ConverseStreamCommandInput,
@@ -57,8 +58,6 @@ interface ToolUseState {
 }
 
 export class BedrockApi implements BaseLlmApi {
-  private _currentToolResponse: Partial<ToolUseState> | null = null;
-
   constructor(protected config: BedrockConfig) {
     if (config.env?.accessKeyId || config?.env?.secretAccessKey) {
       if (!config.env?.accessKeyId) {
@@ -455,8 +454,6 @@ export class BedrockApi implements BaseLlmApi {
         throw new Error("No stream received from Bedrock API");
       }
 
-      this._currentToolResponse = null;
-
       for await (const chunk of response.stream) {
         if (chunk.contentBlockDelta?.delta) {
           const delta: any = chunk.contentBlockDelta.delta;
@@ -479,56 +476,50 @@ export class BedrockApi implements BaseLlmApi {
           }
 
           // Handle tool use
-          if (delta.toolUse?.input && this._currentToolResponse) {
-            if (this._currentToolResponse.input === undefined) {
-              this._currentToolResponse.input = "";
-            }
-            this._currentToolResponse.input += delta.toolUse.input;
-            continue;
-          }
-        }
-
-        if (chunk.contentBlockStart?.start) {
-          const start: any = chunk.contentBlockStart.start;
-
-          // Handle tool start
-          const toolUse = start.toolUse;
-          if (toolUse?.toolUseId && toolUse?.name) {
-            this._currentToolResponse = {
-              toolUseId: toolUse.toolUseId,
-              name: toolUse.name,
-              input: "",
-            };
-          }
-          continue;
-        }
-
-        if (chunk.contentBlockStop) {
-          // End of a content block
-          if (this._currentToolResponse) {
+          if (delta.toolUse) {
             yield chatChunkFromDelta({
               model: body.model,
               delta: {
                 tool_calls: [
                   {
                     index: 0,
-                    id: this._currentToolResponse.toolUseId,
+                    id: delta.toolUse.toolUseId,
                     type: "function",
                     function: {
-                      name: this._currentToolResponse.name,
-                      arguments: this._currentToolResponse.input,
+                      name: delta.toolUse.name,
+                      arguments: delta.toolUse.input,
                     },
                   },
                 ],
               },
             });
-            this._currentToolResponse = null;
           }
-          continue;
+        }
+
+        if (chunk.contentBlockStart?.start) {
+          const start: ContentBlockStart = chunk.contentBlockStart.start;
+
+          if (start.toolUse) {
+            yield chatChunkFromDelta({
+              model: body.model,
+              delta: {
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: start.toolUse.toolUseId,
+                    type: "function",
+                    function: {
+                      name: start.toolUse.name,
+                      arguments: undefined,
+                    },
+                  },
+                ],
+              },
+            });
+          }
         }
       }
     } catch (error) {
-      this._currentToolResponse = null;
       if (error instanceof Error) {
         if ("code" in error) {
           throw new Error(

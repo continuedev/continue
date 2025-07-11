@@ -1,0 +1,93 @@
+---
+title: "AskSage"
+---
+
+<Info>
+  To get an Ask Sage API key login to the Ask Sage platform (If you don't have
+  an account, you can create one [here](https://chat.asksage.ai/)) and follow
+  the instructions in the Ask Sage Docs: [Ask Sage API
+  Key](https://docs.asksage.ai/docs/api-documentation/api-documentation.html)
+</Info>
+
+## Configuration
+
+To use the Ask Sage models, you can use the following
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4 gov
+      provider: askSage
+      model: gpt4-gov
+      apiBase: https://api.asksage.ai/server/
+      apiKey: <YOUR_ASK_SAGE_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4 gov",
+        "provider": "askSage",
+        "model": "gpt4-gov",
+        "apiBase": "https://api.asksage.ai/server/",
+        "apiKey": "<YOUR_ASK_SAGE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+The `apiBase` will be listed on the Ask Sage platform when you generate an `API key`. You will see context as shown below:
+
+> Server API for query/training etc.:
+>
+> - Documentation: https://app.swaggerhub.com/apis-docs/NICOLASCHAILLAN_1/server_ask-sage_api/1.0
+> - URL for this API is: https://api.asksage.ai/server/
+
+## Usage
+
+Currently, the setup for the models provided by Ask Sage is to support the following two functionalities provided by Continue.Dev:
+
+- `Chat` to understand and iterate on code in the sidebar
+- `Edit` to modify code without leaving your current file
+
+More models, functionalities and documentation will be added in the future for Ask Sage Integration.
+
+> We recommend to utilize the `OpenAI` or `Anthropic` models for the best performance and results for the `Chat` and `Edit` functionalities.
+
+## Ask Sage Documentation
+
+Ask Sage documentation is not available with Continue.Dev, so if you have any questions or need help with Ask Sage type `@ask` and select the `Ask Sage` option in the chat. Then procced to ask your question about Ask Sage.
+
+## Current Models From Ask Sage Supported
+
+The current Models available provided by Ask Sage are:
+
+| Index | Model                 | Added |
+| ----- | --------------------- | ----- |
+| 1     | GPT-4 Gov             | ✅    |
+| 2     | GPT-4o Gov            | ✅    |
+| 3     | GPT-4o-mini Gov       | ✅    |
+| 4     | GPT-3.5-Turbo Gov     | ✅    |
+| 5     | GPT-4o                | ✅    |
+| 6     | GPT-4o-mini           | ✅    |
+| 7     | GPT-4                 | ✅    |
+| 8     | GPT-4-32K             | ✅    |
+| 9     | GPT-o1                | ✅    |
+| 10    | GPT-o1-mini           | ✅    |
+| 10    | GPT-o3-mini           | ✅    |
+| 11    | GPT-3.5-turbo         | ✅    |
+| 12    | Claude 3.5 Sonnet Gov | ✅    |
+| 13    | Claude 3 Opus         | ✅    |
+| 14    | Claude 3 Sonet        | ✅    |
+| 15    | Claude 3.5 Sonnet     | ✅    |
+| 16    | Grok (xAI)            | ✅    |
+| 17    | Groq Llama 3.3        | ✅    |
+| 18    | Groq 70B              | ✅    |
+| 19    | Gemini Pro            | ✅    |
+| 20    | llama 3               | ✅    |
+| 21    | Mistral Large         | ✅    |

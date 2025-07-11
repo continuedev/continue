@@ -482,12 +482,13 @@ export class EditAggregator {
       return;
     }
 
-    const diff = createDiff(
-      beforeContent,
-      afterContent,
-      filePath,
-      DiffFormatType.Unified,
-    ); // Used for checks, not for final output
+    const diff = createDiff({
+      beforeContent: beforeContent,
+      afterContent: afterContent,
+      filePath: filePath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 3,
+    }); // Used for checks, not for final output
 
     // Skip diffs with too many changed lines
     const changedLineCount = this.countChangedLines(diff);

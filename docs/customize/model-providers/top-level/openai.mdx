@@ -1,0 +1,158 @@
+---
+title: OpenAI
+slug: ../openai
+---
+
+<Info>
+  You can get an API key from the [OpenAI
+  console](https://platform.openai.com/account/api-keys)
+</Info>
+
+## Chat model
+
+We recommend configuring **GPT-4o** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: openai
+      model: gpt-4o
+      apiKey: <YOUR_OPENAI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4o",
+        "provider": "openai", 
+        "model": "gpt-4o",
+        "apiKey": "<YOUR_OPENAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+OpenAI currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+We recommend configuring **text-embedding-3-large** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: OpenAI Embeddings
+      provider: openai
+      model: text-embedding-3-large
+      apiKey: <YOUR_OPENAI_API_KEY>
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "openai",
+      "model": "text-embedding-3-large", 
+      "apiKey": "<YOUR_OPENAI_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Reranking model
+
+OpenAI currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
+
+## OpenAI compatible servers / APIs
+
+OpenAI compatible servers
+
+- [KoboldCpp](https://github.com/lostruins/koboldcpp)
+- [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
+- [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
+- [LocalAI](https://localai.io/basics/getting_started/)
+- [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
+- [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples)
+- [vLLM](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)
+- [BerriAI/litellm](https://github.com/BerriAI/litellm)
+
+OpenAI compatible APIs
+
+- [Anyscale Endpoints](https://github.com/continuedev/deploy-os-code-llm#others)
+- [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints)
+
+If you are using an OpenAI compatible server / API, you can change the `apiBase` like this:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: OpenAI-compatible server / API
+      provider: openai
+      model: MODEL_NAME 
+      apiBase: http://localhost:8000/v1
+      apiKey: <YOUR_CUSTOM_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "OpenAI-compatible server / API", 
+        "provider": "openai",
+        "model": "MODEL_NAME",
+        "apiKey": "<YOUR_CUSTOM_API_KEY>",
+        "apiBase": "http://localhost:8000/v1"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+To force usage of `chat/completions` instead of `completions` endpoint you can set:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: OpenAI-compatible server / API
+      provider: openai
+      model: MODEL_NAME 
+      apiBase: http://localhost:8000/v1
+      useLegacyCompletionsEndpoint: true
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "OpenAI-compatible server / API",
+        "provider": "openai",
+        "model": "MODEL_NAME",
+        "apiBase": "http://localhost:8000/v1", 
+        "useLegacyCompletionsEndpoint": true
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
