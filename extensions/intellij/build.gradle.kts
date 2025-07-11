@@ -34,9 +34,6 @@ repositories {
 // Dependencies are managed with Gradle version catalog - read more:
 // https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    implementation("com.squareup.okhttp3:okhttp:4.12.0") {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-    }
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
     implementation("com.posthog.java:posthog:1.+")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
