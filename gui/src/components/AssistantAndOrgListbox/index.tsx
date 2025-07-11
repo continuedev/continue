@@ -98,28 +98,6 @@ export function AssistantAndOrgListbox() {
     };
   }, [currentOrg, selectedProfile]);
 
-  if (!selectedProfile) {
-    return (
-      <div
-        onClick={() => {
-          void ideMessenger.request("controlPlane/openUrl", {
-            path: "/new?type=assistant",
-            orgSlug: currentOrg?.slug,
-          });
-        }}
-        className="text-description flex cursor-pointer select-none items-center gap-1"
-        style={{ fontSize: smallFont }}
-      >
-        <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
-        <span
-          className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-        >
-          Create your first assistant
-        </span>
-      </div>
-    );
-  }
-
   return (
     <Listbox>
       <div className="relative" ref={listboxRef}>
@@ -143,8 +121,9 @@ export function AssistantAndOrgListbox() {
                 )}
               </div>
             </div>
+
             <AssistantOptions
-              selectedProfileId={selectedProfile.id}
+              selectedProfileId={selectedProfile?.id}
               onClose={close}
             />
 
