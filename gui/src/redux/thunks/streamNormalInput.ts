@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
+import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -153,8 +154,6 @@ export const streamNormalInput = createAsyncThunk<
       next = await gen.next();
     }
 
-    dispatch(setInactive());
-
     // Attach prompt log and end thinking for reasoning models
     if (next.done && next.value) {
       dispatch(addPromptCompletionPair([next.value]));
@@ -171,6 +170,10 @@ export const streamNormalInput = createAsyncThunk<
             ...(!!activeTools.length && {
               tools: activeTools.map((tool) => tool.function.name),
             }),
+            rules: appliedRules.map((rule) => ({
+              id: getRuleId(rule),
+              rule: rule.rule,
+            })),
           },
         });
         // else if (state.session.mode === "edit") {
@@ -207,7 +210,11 @@ export const streamNormalInput = createAsyncThunk<
       ) {
         const response = await dispatch(callCurrentTool());
         unwrapResult(response);
+      } else {
+        dispatch(setInactive());
       }
+    } else {
+      dispatch(setInactive());
     }
   },
 );

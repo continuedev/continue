@@ -46,6 +46,7 @@ import { PROVIDER_TOOL_SUPPORT } from "./toolSupport.js";
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
   "openai",
+  "nvidia",
   "ollama",
   "together",
   "novita",
