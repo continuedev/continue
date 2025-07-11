@@ -987,6 +987,33 @@ The response 200 OK should be a JSON object with the following structure:
   "description": "",
   "content": ""
 }
+
+// For response context items with hyperlinks
+
+[
+  {
+    "name": "",
+    "description": "",
+    "content": "",
+    "uri": {
+      "type": "file" or "url",
+      "value": "file:///path/to/file" or "https://example.com",
+    }
+  }
+]
+
+// OR
+
+{
+  "name": "",
+  "description": "",
+  "content": "",
+  "uri": {
+    "type": "file" or "url",
+    "value": "file:///path/to/file" or "https://example.com",
+  }
+}
+
 ```
 
 ### `@Commits`
