@@ -102,7 +102,7 @@ class ContinueAuthService {
                     updateRefreshToken(refreshToken)
                 }
                 log.info("Token refreshed, retrying in 15 minutes")
-                delay(10.minutes)
+                delay(15.minutes)
             }
         }
     }
