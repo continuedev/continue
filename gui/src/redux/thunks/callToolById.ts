@@ -7,6 +7,7 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
   errorToolCall,
+  setInactive,
   setToolCallCalling,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
@@ -29,7 +30,6 @@ export const callToolById = createAsyncThunk<
   if (toolCallState.status !== "generated") {
     return;
   }
-
 
   const selectedChatModel = selectSelectedChatModel(state);
 
@@ -146,5 +146,7 @@ export const callToolById = createAsyncThunk<
       }),
     );
     unwrapResult(wrapped);
+  } else {
+    dispatch(setInactive());
   }
 });

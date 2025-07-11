@@ -36,8 +36,8 @@ const isCancelToolCallShortcut = (
 };
 
 export function LumpToolbar() {
-  const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const isInEdit = useAppSelector((state) => state.session.isInEdit);
@@ -71,7 +71,6 @@ export function LumpToolbar() {
       } else if (isCancelToolCallShortcut(event, jetbrains)) {
         event.preventDefault();
         event.stopPropagation();
-
         void dispatch(
           cancelToolCall({
             toolCallId: firstPendingToolCall.toolCallId,

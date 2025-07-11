@@ -26,15 +26,24 @@ export function addToolCallDeltaToState(
   if (nameDelta.startsWith(currentName)) {
     // Case where model progresssively streams name but full name each time e.g. "readFi" -> "readFil" -> "readFile"
     mergedName = nameDelta;
-  } else if (currentName.startsWith(nameDelta)) {
-    // Case where model streams in full name each time e.g. readFile -> readFile -> readFile
-    // do nothing
-  } else {
-    // Case where model streams in name in parts e.g. "read" -> "File"
+  } else if (!currentName.startsWith(nameDelta)) {
     mergedName = currentName + nameDelta;
   }
 
-  const mergedArgs = currentArgs + argsDelta;
+  // Similar logic for args, with an extra JSON check
+  let mergedArgs = currentArgs;
+  try {
+    // If args is JSON parseable, it is complete, don't add to it
+    JSON.parse(currentArgs);
+  } catch (e) {
+    if (argsDelta.startsWith(currentArgs)) {
+      // Case where model progresssively streams args but full args each time e.g. "{"file": "file1"}" -> "{"file": "file1", "line": 1}"
+      mergedArgs = argsDelta;
+    } else if (!currentArgs.startsWith(argsDelta)) {
+      // Case where model streams in args in parts e.g. "{"file": "file1"" -> ", "line": 1}"
+      mergedArgs = currentArgs + argsDelta;
+    }
+  }
 
   const [_, parsedArgs] = incrementalParseJson(mergedArgs || "{}");
 

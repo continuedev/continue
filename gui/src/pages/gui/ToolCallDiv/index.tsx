@@ -107,6 +107,7 @@ export function ToolCallDiv({
     );
   }
 
+
   return (
     <div>
       {toolCallStates.map((toolCallState) => (

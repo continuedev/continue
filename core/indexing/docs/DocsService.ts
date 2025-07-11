@@ -107,6 +107,17 @@ const siteIndexingConfigsAreEqual = (
   );
 };
 
+const siteIndexingConfigsAreEqualExceptTitleAndFavicon = (
+  config1: SiteIndexingConfig,
+  config2: SiteIndexingConfig,
+) => {
+  return (
+    config1.startUrl === config2.startUrl &&
+    config1.maxDepth === config2.maxDepth &&
+    config1.useLocalCrawling === config2.useLocalCrawling
+  );
+};
+
 /*
   General process:
   - On config update:
@@ -395,6 +406,21 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
   ): Promise<boolean> {
     try {
+      // Set a initial status when retrieving cache
+      this.handleStatusUpdate({
+        type: "docs",
+        id: startUrl,
+        embeddingsProviderId: embeddingId,
+        isReindexing: false,
+        title: siteIndexingConfig.title,
+        debugInfo: "Loaded from cache",
+        icon: siteIndexingConfig.faviconUrl,
+        url: startUrl,
+        progress: 0,
+        description: "Try to retrieve cache",
+        status: "indexing",
+      });
+
       const cacheHit = await this.tryFetchFromCache(startUrl, embeddingId);
 
       if (cacheHit) {
@@ -429,7 +455,8 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     forceReindex: boolean = false,
   ): Promise<void> {
-    const { startUrl, useLocalCrawling, maxDepth } = siteIndexingConfig;
+    const { startUrl, useLocalCrawling, maxDepth, faviconUrl } =
+      siteIndexingConfig;
 
     // First, if indexing is already in process, don't attempt
     // This queue is necessary because indexAndAdd is invoked circularly by config edits
@@ -685,7 +712,9 @@ export default class DocsService {
         await this.deleteIndexes(startUrl);
       }
 
-      const favicon = await fetchFavicon(new URL(siteIndexingConfig.startUrl));
+      const favicon =
+        faviconUrl ||
+        (await fetchFavicon(new URL(siteIndexingConfig.startUrl)));
 
       if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
@@ -717,10 +746,6 @@ export default class DocsService {
       if (forceReindex) {
         void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
       }
-
-      this.messenger?.send("refreshSubmenuItems", {
-        providers: ["docs"],
-      });
 
       removeFromFailedGlobalContext(siteIndexingConfig);
     } catch (e) {
@@ -766,14 +791,22 @@ export default class DocsService {
       const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
 
       // Try to get a favicon for the site
-      const favicon = await fetchFavicon(new URL(startUrl));
+      const favicon =
+        this.statuses.get(startUrl)?.icon ||
+        (await fetchFavicon(new URL(startUrl)));
+
+      // Always try to make the title match what users set in the config
+      const title =
+        this.statuses.get(startUrl)?.title ||
+        siteEmbeddings.title ||
+        new URL(startUrl).hostname;
 
       // Add the cached embeddings to our database
       await this.add({
         favicon,
         siteIndexingConfig: {
           startUrl,
-          title: siteEmbeddings.title || new URL(startUrl).hostname,
+          title,
         },
         chunks: siteEmbeddings.chunks,
         embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
@@ -910,6 +943,10 @@ export default class DocsService {
         );
 
         if (cacheHit) {
+          // If cache hit, refresh the submenu items for docs
+          this.messenger?.send("refreshSubmenuItems", {
+            providers: ["docs"],
+          });
           // If cache hit, retry the search once
           return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
         }
@@ -987,8 +1024,7 @@ export default class DocsService {
       const currentStartUrls = currentlyIndexedDocs.map((doc) => doc.startUrl);
 
       // Anything found in old config, new config, AND sqlite that doesn't match should be reindexed
-      // TODO if only favicon and title change, only update, don't embed
-      // Otherwise anything found in new config that isn't in sqlite should be added/indexed
+      // Anything found in new config that isn't in sqlite should be added/indexed
       const addedDocs: SiteIndexingConfig[] = [];
       const changedDocs: SiteIndexingConfig[] = [];
       for (const doc of newConfigDocs) {
@@ -999,12 +1035,26 @@ export default class DocsService {
             (d) => d.startUrl === doc.startUrl,
           );
 
+          // TODO: Changes to the docs config made while Continue isn't running won't be caught
           if (oldConfigDoc && !siteIndexingConfigsAreEqual(oldConfigDoc, doc)) {
-            changedDocs.push(doc);
+            // When only the title or faviconUrl changed, Update the sqlite metadate instead of reindexing
+            if (
+              siteIndexingConfigsAreEqualExceptTitleAndFavicon(
+                oldConfigDoc,
+                doc,
+              )
+            ) {
+              await this.updateMetadataInSqlite(doc);
+            } else {
+              changedDocs.push(doc);
+            }
           } else {
             if (forceReindex) {
               changedDocs.push(doc);
             } else {
+              // This is a temperary fix to catch the changes to the docs config that were made when Continue isn't running
+              // We only update title and faviconUrl here
+              await this.updateMetadataInSqlite(doc);
               // if get's here, not changed, no update needed, mark as complete
               this.handleStatusUpdate({
                 type: "docs",
@@ -1036,6 +1086,10 @@ export default class DocsService {
       console.error("Error syncing docs index on config update", e);
     } finally {
       this.isSyncing = false;
+      // Refresh the submenu items for docs
+      this.messenger?.send("refreshSubmenuItems", {
+        providers: ["docs"],
+      });
     }
   }
 
@@ -1182,6 +1236,27 @@ export default class DocsService {
     );
   }
 
+  private async updateMetadataInSqlite(siteIndexingConfig: SiteIndexingConfig) {
+    const { startUrl, title, faviconUrl } = siteIndexingConfig;
+    const favicon = faviconUrl || (await fetchFavicon(new URL(startUrl)));
+    if (!this.config.selectedModelByRole.embed) {
+      console.warn(
+        `Attempting to add metadata for ${startUrl} without embeddings provider specified`,
+      );
+      return;
+    }
+
+    const db = await this.getOrCreateSqliteDb();
+
+    await db.run(
+      `UPDATE ${DocsService.sqlitebTableName} SET title = ?, favicon = ? WHERE startUrl = ? AND embeddingsProviderId = ?`,
+      title,
+      favicon,
+      startUrl,
+      this.config.selectedModelByRole.embed.embeddingId,
+    );
+  }
+
   private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
@@ -1286,5 +1361,6 @@ export default class DocsService {
     this.messenger?.send("refreshSubmenuItems", {
       providers: ["docs"],
     });
+    this.statuses.delete(startUrl);
   }
 }
