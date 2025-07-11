@@ -154,7 +154,13 @@ export default async function doLoadConfig(options: {
   newConfig.contextProviders.push(new RulesContextProvider({}));
 
   // Add current file as context if setting is enabled
-  if (newConfig.experimental?.useCurrentFileAsContext === true) {
+  if (
+    newConfig.experimental?.useCurrentFileAsContext === true &&
+    !newConfig.contextProviders.find(
+      (c) =>
+        c.description.title === CurrentFileContextProvider.description.title,
+    )
+  ) {
     newConfig.contextProviders.push(new CurrentFileContextProvider({}));
   }
 
