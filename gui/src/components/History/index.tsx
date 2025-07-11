@@ -34,7 +34,7 @@ const parseDate = (date: string): Date => {
 };
 
 const HEADER_CLASS =
-  "flex user-select-none pt-2 pb-3 opacity-75 text-center font-bold items-center justify-center sticky h-6";
+  "flex user-select-none mt-1 opacity-75 text-center font-bold items-center justify-center sticky h-6";
 
 export function History() {
   const dispatch = useAppDispatch();

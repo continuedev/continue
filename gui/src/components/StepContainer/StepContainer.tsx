@@ -39,7 +39,6 @@ export default function StepContainer(props: StepContainerProps) {
   const uiConfig = useAppSelector(selectUIConfig);
 
   const isUserOrSysMsg =
-    !historyItemAfterThis ||
     historyItemAfterThis?.message.role === "user" ||
     historyItemAfterThis?.message.role === "system";
 

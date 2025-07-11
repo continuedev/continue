@@ -54,15 +54,13 @@ export function getGroupActionVerb(toolCallStates: ToolCallState[]): string {
   // Get the most "active" status from all tool calls
   const statuses = toolCallStates.map((state) => state.status);
 
-  console.log({ statuses });
-
   // Priority order: calling > generating > generated > done > errored/canceled
   if (statuses.includes("calling")) {
     return "Performing";
   } else if (statuses.includes("generating")) {
     return "Generating";
   } else if (statuses.includes("generated")) {
-    return "Will perform";
+    return "Pending";
   } else if (statuses.some((s) => s === "done")) {
     return "Performed";
   } else if (statuses.some((s) => s === "errored" || s === "canceled")) {
@@ -84,9 +82,6 @@ export const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.ViewRepoMap]: MapIcon,
   [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
   [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
-  // EditExistingFile
-  // CreateNewFile
-  // RunTerminalCommand
 };
 
 export function getStatusIcon(state: ToolStatus) {
@@ -97,10 +92,10 @@ export function getStatusIcon(state: ToolStatus) {
     case "generated":
       return <ArrowRightIcon color={vscButtonBackground} />;
     case "done":
-      return <CheckIcon className="text-green-500" />;
+      return <CheckIcon className="text-success" />;
     case "canceled":
     case "errored":
-      return <XMarkIcon className="text-red-500" />;
+      return <XMarkIcon className="text-error" />;
   }
 }
 

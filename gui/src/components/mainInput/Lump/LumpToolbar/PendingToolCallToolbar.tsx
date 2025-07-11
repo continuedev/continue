@@ -2,9 +2,8 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { selectPendingToolCalls } from "../../../../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callToolById } from "../../../../redux/thunks/callToolById";
-import { getMetaKeyLabel, isJetBrains } from "../../../../util";
+import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
 import { Button } from "../../../ui";
-import { CancelButton } from "./CancelButton";
 
 export function PendingToolCallToolbar() {
   const dispatch = useAppDispatch();
@@ -34,13 +33,22 @@ export function PendingToolCallToolbar() {
             {toolCall.tool?.displayTitle ?? toolCall.toolCall.function.name}
           </span>
 
-          <div className="flex items-center gap-2">
-            {index === 0 && (
-              <CancelButton
-                onClick={() => handleReject(toolCall.toolCallId)}
-                data-testid={`reject-tool-call-button-${toolCall.toolCallId}`}
-              />
-            )}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-description-muted my-1 font-medium"
+              onClick={() => handleReject(toolCall.toolCallId)}
+              data-testid={`reject-tool-call-button-${toolCall.toolCallId}`}
+            >
+              {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
+              {index === 0 && (
+                <span className="text-2xs mr-1">
+                  {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()}⌫
+                </span>
+              )}
+              <span>Reject</span>
+            </Button>
 
             <Button
               variant="primary"
@@ -50,7 +58,7 @@ export function PendingToolCallToolbar() {
               data-testid={`accept-tool-call-button-${toolCall.toolCallId}`}
             >
               {index === 0 && (
-                <span className="text-2xs mr-1.5">{getMetaKeyLabel()}⏎</span>
+                <span className="text-2xs mr-1">{getMetaKeyLabel()}⏎</span>
               )}
               <span>Accept</span>
             </Button>
