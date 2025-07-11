@@ -186,6 +186,41 @@ aws_secret_access_key = hijklmno
 aws_session_token = pqrstuvwxyz # Optional: means short term creds.
 ```
 
+You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication instead of a local credentials profile.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.7 Sonnet
+      provider: bedrock
+      model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+      env:
+        region: us-east-1
+        accessKeyId: ${{ secrets.AWS_ACCESS_KEY_ID }} # can also enter key inline here for local assistants
+        secretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # can also enter key inline here for local assistants
+      roles:
+        - chat
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.7 Sonnet",
+        "provider": "bedrock",
+        "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        "region": "us-east-1",
+        "accessKeyId": "[YOUR_ACCESS_KEY_ID]",
+        "secretAccessKey": "[YOUR_SECRET_ACCESS_KEY]" 
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
 ## Custom Imported Models
 
 To setup Bedrock using custom imported models, add the following to your config file:
