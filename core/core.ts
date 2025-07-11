@@ -11,7 +11,6 @@ import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
-import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
@@ -202,11 +201,6 @@ export class Core {
     dataLogger.ideSettingsPromise = ideSettingsPromise;
 
     void ideSettingsPromise.then((ideSettings) => {
-      const continueServerClient = new ContinueServerClient(
-        ideSettings.remoteConfigServerUrl,
-        ideSettings.userToken,
-      );
-
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
