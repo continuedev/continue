@@ -180,7 +180,7 @@ export function AssistantAndOrgListbox() {
                       configLoading && "animate-spin-slow",
                     )}
                   />
-                  Reload config
+                  Reload assistants
                 </span>
               </ListboxOption>
 
