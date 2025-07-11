@@ -62,24 +62,62 @@ export function myersCharDiff(
 ): DiffChar[] {
   const theirFormat = diffChars(oldContent, newContent);
   console.log(theirFormat);
-  const ourFormat = theirFormat.flatMap(convertMyersChangeToChars);
+
+  // Track indices as we process the diff.
+  let oldIndex = 0;
+  let newIndex = 0;
+  const ourFormat = theirFormat.flatMap((change) => {
+    const result = convertMyersChangeToChars(change, oldIndex, newIndex);
+
+    // Update indices based on the change type.
+    if (change.added) {
+      newIndex += change.value.length;
+    } else if (change.removed) {
+      oldIndex += change.value.length;
+    } else {
+      oldIndex += change.value.length;
+      newIndex += change.value.length;
+    }
+
+    return result;
+  });
 
   return ourFormat;
 }
 
-// NOTE: I'm not sure if we need this tbh.
-// diffChars already gives us a pretty decent format.
-// This is mostly to match parity with the line diff.
-function convertMyersChangeToChars(change: {
-  value: string;
-  added?: boolean;
-  removed?: boolean;
-}): DiffChar[] {
+function convertMyersChangeToChars(
+  change: {
+    value: string;
+    added?: boolean;
+    removed?: boolean;
+  },
+  oldIndex: number,
+  newIndex: number,
+): DiffChar[] {
   if (change.added) {
-    return [{ type: "new", char: change.value }];
+    return [
+      {
+        type: "new",
+        char: change.value,
+        newIndex: newIndex,
+      },
+    ];
   } else if (change.removed) {
-    return [{ type: "old", char: change.value }];
+    return [
+      {
+        type: "old",
+        char: change.value,
+        oldIndex: oldIndex,
+      },
+    ];
   } else {
-    return [{ type: "same", char: change.value }];
+    return [
+      {
+        type: "same",
+        char: change.value,
+        oldIndex: oldIndex,
+        newIndex: newIndex,
+      },
+    ];
   }
 }
