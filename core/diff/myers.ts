@@ -1,6 +1,6 @@
-import { diffLines, type Change } from "diff";
+import { diffChars, diffLines, type Change } from "diff";
 
-import { DiffLine } from "..";
+import { DiffChar, DiffLine } from "..";
 
 export function convertMyersChangeToDiffLines(change: Change): DiffLine[] {
   const type: DiffLine["type"] = change.added
@@ -54,4 +54,32 @@ export function myersDiff(oldContent: string, newContent: string): DiffLine[] {
   }
 
   return ourFormat;
+}
+
+export function myersCharDiff(
+  oldContent: string,
+  newContent: string,
+): DiffChar[] {
+  const theirFormat = diffChars(oldContent, newContent);
+  console.log(theirFormat);
+  const ourFormat = theirFormat.flatMap(convertMyersChangeToChars);
+
+  return ourFormat;
+}
+
+// NOTE: I'm not sure if we need this tbh.
+// diffChars already gives us a pretty decent format.
+// This is mostly to match parity with the line diff.
+function convertMyersChangeToChars(change: {
+  value: string;
+  added?: boolean;
+  removed?: boolean;
+}): DiffChar[] {
+  if (change.added) {
+    return [{ type: "new", char: change.value }];
+  } else if (change.removed) {
+    return [{ type: "old", char: change.value }];
+  } else {
+    return [{ type: "same", char: change.value }];
+  }
 }
