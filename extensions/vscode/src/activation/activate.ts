@@ -6,25 +6,19 @@ import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
-import {
-  getArchitecture,
-  getExtensionVersion,
-  getPlatform,
-  isUnsupportedPlatform,
-} from "../util/util";
+import { getExtensionVersion, isUnsupportedPlatform } from "../util/util";
 
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   const platformCheck = isUnsupportedPlatform();
-  if (platformCheck.isUnsupported) {
-    const platformTarget = `${getPlatform()}-${getArchitecture()}`;
-    void vscode.window.showErrorMessage(
-      `Continue extension cannot activate on ${platformTarget}: ${platformCheck.reason}`,
-    );
-    const error = new Error(
-      `Continue extension cannot activate on ${platformTarget}: ${platformCheck.reason}`,
+  if (!platformCheck.isUnsupported) {
+    // const platformTarget = `${getPlatform()}-${getArchitecture()}`;
+    const platformTarget = "windows-arm64";
+
+    void vscode.window.showInformationMessage(
+      `Continue detected that you are using ${platformTarget}. Due to native dependencies, Continue may not be able to start`,
     );
 
     void Telemetry.capture(
@@ -36,8 +30,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       },
       true,
     );
-
-    throw error;
   }
 
   // Add necessary files
