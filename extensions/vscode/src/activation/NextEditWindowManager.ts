@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 
 import { DiffLine } from "core";
 import { CodeRenderer } from "core/codeRenderer/CodeRenderer";
+import { myersCharDiff } from "core/diff/myers";
 import {
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
@@ -303,6 +304,13 @@ export class NextEditWindowManager {
       editableRegionStartLine,
     );
 
+    this.renderDeletes(
+      editor,
+      editableRegionStartLine,
+      oldEditRangeSlice,
+      newEditRangeSlice,
+    );
+
     // Reserve tab and esc to either accept or reject the displayed next edit contents.
     await NextEditWindowManager.reserveTabAndEsc();
   }
@@ -598,12 +606,12 @@ export class NextEditWindowManager {
       SVG_CONFIG.getTipWidth(originalCode) -
       SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]);
 
-    console.log(marginLeft);
-    console.log(SVG_CONFIG.getTipWidth(originalCode));
-    console.log(
-      SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]),
-    );
-    console.log(originalCode.split("\n")[currLineOffsetFromTop]);
+    // console.log(marginLeft);
+    // console.log(SVG_CONFIG.getTipWidth(originalCode));
+    // console.log(
+    //   SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]),
+    // );
+    // console.log(originalCode.split("\n")[currLineOffsetFromTop]);
     return vscode.window.createTextEditorDecorationType({
       before: {
         contentIconPath: uri,
@@ -772,6 +780,42 @@ export class NextEditWindowManager {
       this.loggingService.cancelRejectionTimeoutButKeepCompletionId(
         this.mostRecentCompletionId,
       );
+  }
+
+  private renderDeletes(
+    editor: vscode.TextEditor,
+    editableRegionStartLine: number,
+    oldEditRangeSlice: string,
+    newEditRangeSlice: string,
+  ) {
+    const charsToDelete: vscode.DecorationOptions[] = [];
+
+    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
+
+    diffChars.forEach((diff) => {
+      if (diff.type === "old") {
+        charsToDelete.push({
+          range: new vscode.Range(
+            new vscode.Position(
+              editableRegionStartLine + diff.oldLineIndex!,
+              diff.oldCharIndexInLine!,
+            ),
+            new vscode.Position(
+              editableRegionStartLine + diff.oldLineIndex!,
+              diff.oldCharIndexInLine! + diff.char.length,
+            ),
+          ),
+        });
+      }
+    });
+
+    const deleteDecorationType = vscode.window.createTextEditorDecorationType({
+      backgroundColor: "rgba(255, 0, 0, 0.5)",
+      textDecoration: "line-through",
+    });
+
+    editor.setDecorations(deleteDecorationType, charsToDelete);
+    this.disposables.push(deleteDecorationType);
   }
 }
 
