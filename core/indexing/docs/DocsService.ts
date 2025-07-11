@@ -72,13 +72,7 @@ const markFailedInGlobalContext = (
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) =>
-      !siteIndexingConfigsAreEqual(
-        siteIndexingConfig,
-        d,
-        continueConfig,
-        continueConfig,
-      ),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d, continueConfig),
   );
   newFailedDocs.push(siteIndexingConfig);
   globalContext.update("failedDocs", newFailedDocs);
@@ -91,13 +85,7 @@ const removeFromFailedGlobalContext = (
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) =>
-      !siteIndexingConfigsAreEqual(
-        siteIndexingConfig,
-        d,
-        continueConfig,
-        continueConfig,
-      ),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d, continueConfig),
   );
   globalContext.update("failedDocs", newFailedDocs);
 };
@@ -109,12 +97,21 @@ const hasIndexingFailed = (
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   return failedDocs.find((d) =>
-    siteIndexingConfigsAreEqual(
-      siteIndexingConfig,
-      d,
-      continueConfig,
-      continueConfig,
-    ),
+    docConfigsAreEqual(siteIndexingConfig, d, continueConfig),
+  );
+};
+
+const docConfigsAreEqual = (
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+  contConfig: ContinueConfig,
+) => {
+  return siteIndexingConfigsAreEqual(
+    siteConfig1,
+    siteConfig2,
+    // These are equal because this function only checks the doc configs for changes
+    contConfig,
+    contConfig,
   );
 };
 
@@ -1306,12 +1303,7 @@ export default class DocsService {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
     const doesEquivalentDocExist = this.config.docs?.some((doc) =>
-      siteIndexingConfigsAreEqual(
-        doc,
-        siteIndexingConfig,
-        this.config,
-        this.config,
-      ),
+      docConfigsAreEqual(doc, siteIndexingConfig, this.config),
     );
 
     if (!doesEquivalentDocExist) {
