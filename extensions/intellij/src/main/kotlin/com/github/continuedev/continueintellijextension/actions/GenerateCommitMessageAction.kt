@@ -1,6 +1,6 @@
 package com.github.continuedev.continueintellijextension.actions
 
-import com.github.continuedev.continueintellijextension.ContinueIcons
+import com.github.continuedev.continueintellijextension.Icons
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -30,6 +30,7 @@ import com.intellij.openapi.vcs.VcsDataKeys
 import com.intellij.openapi.vcs.changes.Change
 import com.intellij.openapi.vcs.changes.CurrentContentRevision
 import com.intellij.openapi.vcs.ui.CommitMessage
+import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.speedSearch.SpeedSearchUtil
@@ -63,6 +64,8 @@ class GenerateCommitMessageAction : DumbAwareAction(TIP_TITLE_GENERATE), CustomC
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
+    private val animatedIcon = AnimatedIcon.Default()
+
     override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     override fun update(e: AnActionEvent) {
@@ -70,7 +73,7 @@ class GenerateCommitMessageAction : DumbAwareAction(TIP_TITLE_GENERATE), CustomC
         val workflowUi = commitWorkflowUi(e) ?: return
         val presentation = e.presentation
         presentation.isVisible = e.isFromActionToolbar && commitMessage(e) != null
-        presentation.icon = if (isActive(workflowUi)) ContinueIcons.SPINNING else ContinueIcons.CONTINUE
+        presentation.icon = if (isActive(workflowUi)) animatedIcon else Icons.Continue
         initializeGenerationJobAndModelOptions(project, workflowUi, presentation)
     }
 
