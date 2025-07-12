@@ -37,7 +37,7 @@ function FunctionSpecificToolCallDiv({
       return (
         <EditFile
           relativeFilePath={args.filepath ?? ""}
-          changes={args.diff ?? ""}
+          changes={args.diffs ? args.diffs.join("\n\n---\n\n") : ""}
           toolCallId={toolCall.id}
           historyIndex={historyIndex}
         />
