@@ -31,7 +31,9 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   for (let diffIndex = 0; diffIndex < diffs.length; diffIndex++) {
     const blocks = parseAllSearchReplaceBlocks(diffs[diffIndex]);
     if (blocks.length === 0) {
-      throw new Error(`No complete search/replace blocks found in diff ${diffIndex + 1}`);
+      throw new Error(
+        `No complete search/replace blocks found in diff ${diffIndex + 1}`,
+      );
     }
     allBlocks.push(...blocks);
   }

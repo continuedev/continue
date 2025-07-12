@@ -87,7 +87,10 @@ describe("searchReplaceToolImpl", () => {
 
       await expect(
         searchReplaceToolImpl(
-          { filepath: "test.txt", diffs: ["valid diff", "invalid diff content"] },
+          {
+            filepath: "test.txt",
+            diffs: ["valid diff", "invalid diff content"],
+          },
           "tool-call-id",
           mockExtras,
         ),
@@ -392,8 +395,14 @@ const c = 3;`;
 
       // Verify parseAllSearchReplaceBlocks was called for each diff
       expect(mockParseAllSearchReplaceBlocks).toHaveBeenCalledTimes(2);
-      expect(mockParseAllSearchReplaceBlocks).toHaveBeenNthCalledWith(1, "first diff");
-      expect(mockParseAllSearchReplaceBlocks).toHaveBeenNthCalledWith(2, "second diff");
+      expect(mockParseAllSearchReplaceBlocks).toHaveBeenNthCalledWith(
+        1,
+        "first diff",
+      );
+      expect(mockParseAllSearchReplaceBlocks).toHaveBeenNthCalledWith(
+        2,
+        "second diff",
+      );
 
       // Verify final applyToFile call
       expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
