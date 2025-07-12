@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getContinueBinaryPath
@@ -44,11 +45,8 @@ class ContinueBinaryProcess(private val onExit: () -> Unit) : ContinueProcess {
                 err = err.substring(doneIndex + delimiter.length)
             }
         }
-
-        println("Core process exited with output: $err")
-
-        val telemetryService = service<TelemetryService>()
-        telemetryService.capture("jetbrains_core_exit", mapOf("error" to err))
+        service<ContinueErrorService>().reportMessage("Core process exited with output: $err")
+        service<TelemetryService>().capture("jetbrains_core_exit", mapOf("error" to err))
     }
 
     private companion object {
@@ -67,6 +65,7 @@ class ContinueBinaryProcess(private val onExit: () -> Unit) : ContinueProcess {
             elevatePermissions()
         }
 
+        // todo: consider setting permissions ahead-of-time during build/packaging, not at runtime
         private fun elevatePermissions() {
             val path = getContinueBinaryPath()
             val permissions = setOf(
