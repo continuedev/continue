@@ -9,9 +9,7 @@
  * creating a render of it.
  */
 import {
-  transformerMetaHighlight,
   transformerNotationDiff,
-  transformerNotationFocus,
   transformerNotationHighlight,
 } from "@shikijs/transformers";
 import { JSDOM } from "jsdom";
@@ -169,7 +167,9 @@ export class CodeRenderer {
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
   ): Promise<string> {
+    const lines = code.split("\n");
     const newDiffLineMap = new Set();
+
     if (newDiffLines) {
       newDiffLines.forEach((diffLine) => {
         if (diffLine.type === "new") {
@@ -178,29 +178,42 @@ export class CodeRenderer {
       });
     }
 
-    const annotatedCode = code
-      .split("\n")
-      .map((line, i) =>
-        i === currLineOffsetFromTop
-          ? line + " \/\/ \[\!code highlight\]"
-          : newDiffLineMap.has(line)
-            ? line + "\/\/ \[\!code \+\+\]"
-            : line,
-      )
-      .join("\n");
+    const annotatedLines = [];
+
+    // NOTE: Shiki's preprocessor deletes transformer annotations when applied to an empty line.
+    // If you are transforming an empty line, make sure that
+    // the transformation is applied to a non-empty line first.
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Add highlight comment before target line.
+      if (i + 1 === currLineOffsetFromTop && currLineOffsetFromTop >= 0) {
+        annotatedLines.push("// [!code highlight:1]");
+      }
+
+      // Handle diff lines
+      if (newDiffLineMap.has(line)) {
+        if (line.trim() === "") {
+          // For empty lines, add the magic comment on a separate line before.
+          annotatedLines.push("// [!code ++]");
+          annotatedLines.push(line); // The empty line itself.
+        } else {
+          // For non-empty lines, append the magic comment.
+          annotatedLines.push(line + "// [!code ++]");
+        }
+        newDiffLineMap.delete(line);
+      } else {
+        annotatedLines.push(line);
+      }
+    }
+
+    const annotatedCode = annotatedLines.join("\n");
 
     await this.highlighter!.loadLanguage(language as BundledLanguage);
-
     return this.highlighter!.codeToHtml(annotatedCode, {
       lang: language,
       theme: this.currentTheme,
-      transformers: [
-        // transformerColorizedBrackets(),
-        transformerMetaHighlight(),
-        transformerNotationHighlight(),
-        transformerNotationDiff(),
-        transformerNotationFocus(),
-      ],
+      transformers: [transformerNotationHighlight(), transformerNotationDiff()],
     });
   }
 
