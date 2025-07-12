@@ -75,6 +75,10 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   applyToFile: undefined,
   acceptDiff: undefined,
   readFile: "File contents",
+  "llm/compileChat": {
+    compiledChatMessages: [],
+    pruningStatus: "not-pruned",
+  },
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [
