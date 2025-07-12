@@ -7,6 +7,7 @@ type ToggleSwitchProps = {
   text: string;
   size?: number;
   showIfToggled?: ReactNode;
+  disabled?: boolean;
 };
 
 const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
@@ -15,15 +16,18 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   text,
   size = 16,
   showIfToggled,
+  disabled = false,
 }) => {
   return (
-    <div className="flex cursor-pointer select-none items-center justify-between gap-3">
+    <div
+      className={`flex select-none items-center justify-between gap-3 ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+    >
       <span className="truncate-right">{text}</span>
       <div className="flex flex-row items-center gap-1">
         {isToggled && !!showIfToggled && showIfToggled}
         <div
           className={`border-vsc-input-border bg-vsc-input-background flex items-center rounded-full border border-solid`}
-          onClick={onToggle}
+          onClick={disabled ? undefined : onToggle}
           style={{
             height: size,
             width: size * 2,

@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.Icons
 import com.github.continuedev.continueintellijextension.ContinueIcons
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
@@ -25,7 +26,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     private val animatedIcon = ContinueIcons.SPINNING
 
     init {
-        Disposer.register(ContinuePluginDisposable.getInstance(project), this)
+        Disposer.register(project.service<ContinuePluginDisposable>(), this)
         updateIcon()
     }
 
@@ -49,7 +50,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     }
 
     override fun getIcon(): Icon = if (isLoading) animatedIcon else
-        ContinueIcons.CONTINUE
+        Icons.Continue
 
     fun setLoading(loading: Boolean) {
         isLoading = loading

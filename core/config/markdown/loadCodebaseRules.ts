@@ -33,7 +33,7 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
         const content = await ide.readFile(filePath);
         const rule = markdownToRule(content, { uriType: "file", filePath });
 
-        rules.push({ ...rule, source: "rules-block" });
+        rules.push({ ...rule, source: "rules-block", ruleFile: filePath });
       } catch (e) {
         errors.push({
           fatal: false,

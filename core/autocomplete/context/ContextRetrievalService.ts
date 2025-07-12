@@ -70,4 +70,20 @@ export class ContextRetrievalService {
       helper.treePath,
     );
   }
+
+  /**
+   * Initialize the import definitions cache for a file.
+   * This is normally done automatically when the active text editor changes,
+   * but needs to be called manually when using context fetching outside the normal flow.
+   */
+  public async initializeForFile(filepath: string): Promise<void> {
+    try {
+      await (this.importDefinitionsService as any).cache.initKey(filepath);
+    } catch (e) {
+      console.warn(
+        `Failed to initialize import definitions cache for ${filepath}:`,
+        e,
+      );
+    }
+  }
 }

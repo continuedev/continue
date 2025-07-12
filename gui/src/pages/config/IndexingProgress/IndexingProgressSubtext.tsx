@@ -11,6 +11,7 @@ const STATUS_TO_SUBTITLE_TEXT: Record<
 > = {
   done: "Click to re-index",
   loading: "",
+  waiting: "",
   indexing: "Click to pause",
   paused: "Click to resume",
   failed: "Click to retry",

@@ -1,9 +1,11 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
+import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
-import { cancelCurrentToolCall } from "../../../../redux/thunks/cancelCurrentToolCall";
+import { logToolUsage } from "../../../../redux/util";
 import { isJetBrains } from "../../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
@@ -16,6 +18,7 @@ import { TtsActiveToolbar } from "./TtsActiveToolbar";
 
 export function LumpToolbar() {
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const isInEdit = useAppSelector((state) => state.session.isInEdit);
@@ -50,7 +53,12 @@ export function LumpToolbar() {
       } else if ((jetbrains ? altKey : metaKey) && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
-        void dispatch(cancelCurrentToolCall());
+        logToolUsage(toolCallState, false, true, ideMessenger);
+        void dispatch(
+          cancelToolCall({
+            toolCallId: toolCallState.toolCallId,
+          }),
+        );
       }
     };
 

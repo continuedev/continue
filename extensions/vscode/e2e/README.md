@@ -31,3 +31,11 @@ All e2e tests are separated (by folder) into
 - Is your `data-testid` or selector actually just wrong?
 - Are you inconsistently getting different behaviors? You can try adding a `TestUtils.waitForTimeout` between two events if you think it's caused by a race condition. Note that this may lead to flake down the road.
 - Alternatively, you can add a `TestUtils.waitForSuccess`
+
+### How is it connecting to the LLM?
+
+- This depends on the model provider written inside the `test-continue/config.json` and `test-continue/config.yaml`. If the model provider is `mock`, it will use `MockLLM`, and if it uses `test`, it will use `TestLLM`.
+
+### Quirks
+
+- For non-macOS systems, `codesign` is not available. You should run `npm run e2e:all-non-mac` instead of `npm run e2e:all`.

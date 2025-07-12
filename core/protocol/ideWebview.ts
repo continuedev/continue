@@ -4,6 +4,7 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 import {
   AcceptOrRejectDiffPayload,
   ApplyState,
+  ApplyToFilePayload,
   HighlightedCodePayload,
   MessageContent,
   RangeInFileWithContents,
@@ -13,15 +14,7 @@ import {
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openUrl: [string, void];
-  applyToFile: [
-    {
-      text: string;
-      streamId: string;
-      filepath?: string;
-      toolCallId?: string;
-    },
-    void,
-  ];
+  applyToFile: [ApplyToFilePayload, void];
   overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showFile: [ShowFilePayload, void];
@@ -84,4 +77,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   updateApplyState: [ApplyState, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
+  generateRule: [undefined, void];
 };

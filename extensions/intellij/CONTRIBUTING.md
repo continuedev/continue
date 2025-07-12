@@ -9,6 +9,7 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
 - [Environment Setup](#environment-setup)
   - [IDE Installation](#ide-installation)
   - [IDE configuration](#ide-configuration)
+    - [Recommended plugins](#recommended-plugins)
   - [Node.js Requirements](#nodejs-requirements)
   - [Install all dependencies](#install-all-dependencies)
   - [Misc](#misc)
@@ -27,6 +28,7 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
     - [Setup](#setup)
     - [Running the tests](#running-the-tests)
     - [Identifying selectors](#identifying-selectors)
+    - [Rebuilding the extension](#rebuilding-the-extension)
 
 ## Architecture Overview
 
@@ -49,6 +51,13 @@ notes below).
 ### IDE configuration
 
 - Enable code formatting on save: `Settings | Tools | Actions on Save | Reformat code`
+
+#### Recommended plugins
+
+- [Thread Access Info](https://plugins.jetbrains.com/plugin/16815-thread-access-info) - adds an extra debug panel
+  showing possible thread access violation (according to Intellij Platform SDK guidelines)
+- [File Expander](https://plugins.jetbrains.com/plugin/11940-file-expander) - allows you to easily preview archives as
+  directories (like `build/distributions/continue-*.zip`)
 
 ### Node.js Requirements
 
@@ -184,7 +193,7 @@ Run a single test
 While the `runIdeForUiTests` task is running, you can visit the following URL
 to view the UI hierarchy of the running IDE:
 
-http://127.0.0.1:8082/
+<http://127.0.0.1:8082/>
 
 #### Rebuilding the extension
 

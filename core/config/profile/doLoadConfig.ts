@@ -20,6 +20,7 @@ import {
   Tool,
 } from "../../";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
+import CurrentFileContextProvider from "../../context/providers/CurrentFileContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
@@ -152,6 +153,17 @@ export default async function doLoadConfig(options: {
   newConfig.rules.unshift(...rules);
   newConfig.contextProviders.push(new RulesContextProvider({}));
 
+  // Add current file as context if setting is enabled
+  if (
+    newConfig.experimental?.useCurrentFileAsContext === true &&
+    !newConfig.contextProviders.find(
+      (c) =>
+        c.description.title === CurrentFileContextProvider.description.title,
+    )
+  ) {
+    newConfig.contextProviders.push(new CurrentFileContextProvider({}));
+  }
+
   // Add rules from colocated rules.md files in the codebase
   const { rules: codebaseRules, errors: codebaseRulesErrors } =
     await loadCodebaseRules(ide);
@@ -230,6 +242,8 @@ export default async function doLoadConfig(options: {
   newConfig.tools.push(
     ...getConfigDependentToolDefinitions({
       rules: newConfig.rules,
+      enableExperimentalTools:
+        newConfig.experimental?.enableExperimentalTools ?? false,
     }),
   );
 

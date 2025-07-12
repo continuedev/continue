@@ -8,6 +8,7 @@ import {
   deleteSessionMetadata,
   newSession,
   setAllSessionMetadata,
+  setIsSessionMetadataLoading,
   updateSessionMetadata,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -43,6 +44,7 @@ export const refreshSessionMetadata = createAsyncThunk<
   if (result.status === "error") {
     throw new Error(result.error);
   }
+  dispatch(setIsSessionMetadataLoading(false));
   dispatch(setAllSessionMetadata(result.content));
   return result.content;
 });
@@ -63,7 +65,7 @@ export const deleteSession = createAsyncThunk<void, string, ThunkApiType>(
     if (result.status === "error") {
       throw new Error(result.error);
     }
-    dispatch(refreshSessionMetadata({}));
+    void dispatch(refreshSessionMetadata({}));
   },
 );
 

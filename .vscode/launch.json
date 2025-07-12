@@ -73,32 +73,6 @@
       "sourceMaps": true
       // "preLaunchTask": "gui:dev"
     },
-    // Has to be run after starting the server (separately or using the compound configuration)
-    {
-      "name": "Run tests",
-      "type": "extensionHost",
-      "request": "launch",
-      "cwd": "${workspaceFolder}/extensions/vscode",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        // Pass a directory to run tests in
-        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox",
-        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
-        "--extensionTestsPath=${workspaceFolder}/extensions/vscode/out/test/runner/mochaRunner"
-      ],
-      "outFiles": [
-        // Allows setting breakpoints in test suites across the /src folder
-        "${workspaceFolder}/extensions/vscode/out/test/test-suites/**/*.js",
-        // Allows setting breakpoints in mocha test runner file
-        "${workspaceFolder}/extensions/vscode/out/test/runner/**/*.js"
-      ],
-      "internalConsoleOptions": "openOnSessionStart",
-      "preLaunchTask": "vscode-extension:tests:build",
-      "env": {
-        // Avoid timing out when stopping on breakpoints during debugging in VSCode
-        "MOCHA_TIMEOUT": "0"
-      }
-    },
     {
       "name": "[Core] Jest Test Debugger, Current Open File",
       "type": "node",

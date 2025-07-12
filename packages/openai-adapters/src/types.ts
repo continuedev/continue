@@ -71,9 +71,30 @@ export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
 });
 export type DeepseekConfig = z.infer<typeof DeepseekConfigSchema>;
 
+export const BedrockConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("bedrock"),
+  // cacheBehavior: z.object({
+  //   cacheSystemMessage: z.boolean().optional(),
+  //   cacheConversation: z.boolean().optional(),
+  // }).optional(),
+  env: z.object({
+    region: z.string().optional(),
+    accessKeyId: z.string().optional(),
+    secretAccessKey: z.string().optional(),
+    profile: z.string().optional(),
+  }),
+});
+export type BedrockConfig = z.infer<typeof BedrockConfigSchema>;
+
+export const LlamastackConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("llamastack"),
+});
+export type LlamastackConfig = z.infer<typeof LlamastackConfigSchema>;
+
 export const MockConfigSchema = BasePlusConfig.extend({
   provider: z.literal("mock"),
 });
+
 export type MockConfig = z.infer<typeof MockConfigSchema>;
 
 // Other APIs
@@ -136,6 +157,7 @@ export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
+  BedrockConfigSchema,
   MoonshotConfigSchema,
   DeepseekConfigSchema,
   CohereConfigSchema,
@@ -146,5 +168,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,
+  LlamastackConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

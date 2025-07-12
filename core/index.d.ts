@@ -50,6 +50,7 @@ export interface IndexingProgressUpdate {
   shouldClearIndexes?: boolean;
   status:
     | "loading"
+    | "waiting"
     | "indexing"
     | "done"
     | "failed"
@@ -57,6 +58,7 @@ export interface IndexingProgressUpdate {
     | "disabled"
     | "cancelled";
   debugInfo?: string;
+  warnings?: string[];
 }
 
 // This is more or less a V2 of IndexingProgressUpdate for docs etc.
@@ -186,6 +188,7 @@ export interface ContextProviderExtras {
   ide: IDE;
   selectedCode: RangeInFile[];
   fetch: FetchFunction;
+  isInAgentMode: boolean;
 }
 
 export interface LoadSubmenuItemsArgs {
@@ -426,7 +429,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "agent";
+export type MessageModes = "chat" | "agent" | "plan";
 
 export type ToolStatus =
   | "generating"
@@ -443,6 +446,7 @@ interface ToolCallState {
   status: ToolStatus;
   parsedArgs: any;
   output?: ContextItem[];
+  tool?: Tool;
 }
 
 interface Reasoning {
@@ -565,6 +569,7 @@ export interface LLMOptions {
   title?: string;
   uniqueId?: string;
   baseAgentSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseChatSystemMessage?: string;
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
   contextLength?: number;
@@ -580,6 +585,7 @@ export interface LLMOptions {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -608,6 +614,8 @@ export interface LLMOptions {
   // AWS options
   profile?: string;
   modelArn?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // AWS and VertexAI Options
   region?: string;
@@ -1036,6 +1044,7 @@ interface ToolChoice {
 
 export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
+  enableExperimentalTools: boolean;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;
@@ -1078,6 +1087,7 @@ export interface ModelDescription {
 
   apiBase?: string;
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   orgScopeId?: string | null;
 
   onPremProxyUrl?: string | null;
@@ -1087,6 +1097,7 @@ export interface ModelDescription {
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   baseAgentSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
@@ -1158,6 +1169,7 @@ export interface StdioOptions {
   command: string;
   args: string[];
   env?: Record<string, string>;
+  cwd?: string;
   requestOptions?: RequestOptions;
 }
 
@@ -1257,6 +1269,7 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
   showSessionTabs?: boolean;
   autoAcceptEditToolDiffs?: boolean;
+  logEditingData?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1320,6 +1333,14 @@ export interface ShowFilePayload {
   filepath: string;
 }
 
+export interface ApplyToFilePayload {
+  streamId: string;
+  filepath?: string;
+  text: string;
+  toolCallId?: string;
+  isSearchAndReplace?: boolean;
+}
+
 export interface RangeInFileWithContents {
   filepath: string;
   range: {
@@ -1327,6 +1348,16 @@ export interface RangeInFileWithContents {
     end: { line: number; character: number };
   };
   contents: string;
+}
+
+export interface RangeInFileWithNextEditInfo {
+  filepath: string;
+  range: Range;
+  fileContents: string;
+  editText: string;
+  afterCursorPos: Position;
+  beforeCursorPos: Position;
+  workspaceDir: string;
 }
 
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
@@ -1365,6 +1396,7 @@ export interface ExperimentalConfig {
   modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
+  enableExperimentalTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
@@ -1389,6 +1421,22 @@ export interface ExperimentalConfig {
    * If enabled, will add the current file as context.
    */
   useCurrentFileAsContext?: boolean;
+
+  /**
+   * If enabled, will save data on the user's editing processes
+   */
+  logEditingData?: boolean;
+
+  /**
+   * If enabled, will enable next edit in place of autocomplete
+   */
+  optInNextEditFeature?: boolean;
+
+  /**
+   * If enabled, @codebase will only use tool calling
+   * instead of embeddings, FTS, recently edited files, etc.
+   */
+  codebaseToolCallingOnly?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1596,9 +1644,11 @@ export interface TerminalOptions {
 
 export type RuleSource =
   | "default-chat"
+  | "default-plan"
   | "default-agent"
-  | "model-chat-options"
-  | "model-agent-options"
+  | "model-options-chat"
+  | "model-options-plan"
+  | "model-options-agent"
   | "rules-block"
   | "json-systemMessage"
   | ".continuerules";
