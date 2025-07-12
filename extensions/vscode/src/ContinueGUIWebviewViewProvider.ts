@@ -1,4 +1,3 @@
-import { ConfigHandler } from "core/config/ConfigHandler";
 import * as vscode from "vscode";
 
 import { getTheme } from "./util/getTheme";
@@ -58,16 +57,10 @@ export class ContinueGUIWebviewViewProvider
   }
 
   constructor(
-    private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
   ) {
-    this.webviewProtocol = new VsCodeWebviewProtocol(
-      (async () => {
-        const configHandler = await this.configHandlerPromise;
-        return configHandler.reloadConfig();
-      }).bind(this),
-    );
+    this.webviewProtocol = new VsCodeWebviewProtocol();
   }
 
   getSidebarContent(

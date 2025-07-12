@@ -44,6 +44,17 @@ export class ConfigHandler {
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles;
+  totalConfigLoads: number = 0;
+  public isInitialized: Promise<void>;
+  private setInitialized:
+    | undefined
+    | ((value: void | PromiseLike<void>) => void) = undefined;
+
+  cascadeAbortController: AbortController;
+  private abortCascade() {
+    this.cascadeAbortController.abort();
+    this.cascadeAbortController = new AbortController();
+  }
 
   constructor(
     private readonly ide: IDE,
@@ -79,8 +90,12 @@ export class ConfigHandler {
 
     this.currentOrg = personalOrg;
     this.organizations = [personalOrg];
+    this.isInitialized = new Promise((resolve) => {
+      this.setInitialized = resolve;
+    });
 
-    void this.cascadeInit();
+    this.cascadeAbortController = new AbortController();
+    void this.cascadeInit("Config handler initialization");
   }
 
   private workspaceDirs: string[] | null = null;
@@ -96,52 +111,67 @@ export class ConfigHandler {
     return `${workspaceId}:::${orgId}`;
   }
 
-  private async cascadeInit() {
+  private async cascadeInit(reason: string) {
+    const signal = this.cascadeAbortController.signal;
     this.workspaceDirs = null; // forces workspace dirs reload
 
-    const orgs = await this.getOrgs();
+    try {
+      const orgs = await this.getOrgs(signal);
 
-    // Figure out selected org
-    const workspaceId = await this.getWorkspaceId();
-    const selectedOrgs =
-      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-    const currentSelection = selectedOrgs[workspaceId];
+      // Figure out selected org
+      const workspaceId = await this.getWorkspaceId();
+      const selectedOrgs =
+        this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
+      const currentSelection = selectedOrgs[workspaceId];
 
-    const firstNonPersonal = orgs.find(
-      (org) => org.id !== this.PERSONAL_ORG_DESC.id,
-    );
-    const fallback = firstNonPersonal ?? orgs[0];
-    // note, ignoring case of zero orgs since should never happen
+      const firstNonPersonal = orgs.find(
+        (org) => org.id !== this.PERSONAL_ORG_DESC.id,
+      );
+      const fallback = firstNonPersonal ?? orgs[0];
+      // note, ignoring case of zero orgs since should never happen
 
-    let selectedOrg: OrgWithProfiles;
-    if (!currentSelection) {
-      selectedOrg = fallback;
-    } else {
-      const match = orgs.find((org) => org.id === currentSelection);
-      if (match) {
-        selectedOrg = match;
-      } else {
+      let selectedOrg: OrgWithProfiles;
+      if (!currentSelection) {
         selectedOrg = fallback;
+      } else {
+        const match = orgs.find((org) => org.id === currentSelection);
+        if (match) {
+          selectedOrg = match;
+        } else {
+          selectedOrg = fallback;
+        }
+      }
+
+      if (signal.aborted) {
+        return; // local only case, no fetch to throw abort error
+      }
+      this.setInitialized?.();
+
+      this.globalContext.update("lastSelectedOrgIdForWorkspace", {
+        ...selectedOrgs,
+        [workspaceId]: selectedOrg.id,
+      });
+
+      this.organizations = orgs;
+      this.currentOrg = selectedOrg;
+      this.currentProfile = selectedOrg.currentProfile;
+
+      await this.reloadConfig(reason);
+    } catch (e) {
+      if (e instanceof Error && e.message.includes("AbortError")) {
+        return;
+      } else {
+        throw e;
       }
     }
-
-    this.globalContext.update("lastSelectedOrgIdForWorkspace", {
-      ...selectedOrgs,
-      [workspaceId]: selectedOrg.id,
-    });
-
-    this.organizations = orgs;
-    this.currentOrg = selectedOrg;
-    this.currentProfile = selectedOrg.currentProfile;
-    await this.reloadConfig();
   }
 
-  private async getOrgs(): Promise<OrgWithProfiles[]> {
+  private async getOrgs(signal: AbortSignal): Promise<OrgWithProfiles[]> {
     if (await this.controlPlaneClient.isSignedIn()) {
-      const orgDescs = await this.controlPlaneClient.listOrganizations();
-      const personalHubOrg = await this.getPersonalHubOrg();
+      const orgDescs = await this.controlPlaneClient.listOrganizations(signal);
+      const personalHubOrg = await this.getPersonalHubOrg(signal);
       const hubOrgs = await Promise.all(
-        orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+        orgDescs.map((org) => this.getNonPersonalHubOrg(org, signal)),
       );
       return [...hubOrgs, personalHubOrg];
     } else {
@@ -160,8 +190,11 @@ export class ConfigHandler {
     }));
   }
 
-  private async getHubProfiles(orgScopeId: string | null) {
-    const assistants = await this.controlPlaneClient.listAssistants(orgScopeId);
+  private async getHubProfiles(orgScopeId: string | null, signal: AbortSignal) {
+    const assistants = await this.controlPlaneClient.listAssistants(
+      orgScopeId,
+      signal,
+    );
 
     return await Promise.all(
       assistants.map(async (assistant) => {
@@ -189,12 +222,16 @@ export class ConfigHandler {
 
   private async getNonPersonalHubOrg(
     org: OrganizationDescription,
+    signal: AbortSignal,
   ): Promise<OrgWithProfiles> {
     const localProfiles = await this.getLocalProfiles({
       includeGlobal: false,
       includeWorkspace: true,
     });
-    const profiles = [...(await this.getHubProfiles(org.id)), ...localProfiles];
+    const profiles = [
+      ...(await this.getHubProfiles(org.id, signal)),
+      ...localProfiles,
+    ];
     return this.rectifyProfilesForOrg(org, profiles);
   }
 
@@ -204,12 +241,12 @@ export class ConfigHandler {
     name: "Personal",
     slug: undefined,
   };
-  private async getPersonalHubOrg() {
+  private async getPersonalHubOrg(signal: AbortSignal) {
     const localProfiles = await this.getLocalProfiles({
       includeGlobal: true,
       includeWorkspace: true,
     });
-    const hubProfiles = await this.getHubProfiles(null);
+    const hubProfiles = await this.getHubProfiles(null, signal);
     const profiles = [...hubProfiles, ...localProfiles];
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, profiles);
   }
@@ -312,13 +349,14 @@ export class ConfigHandler {
   // Should not be used internally
   //////////////////
   async refreshAll() {
-    await this.cascadeInit();
+    await this.cascadeInit("External refresh all");
   }
 
   // Ide settings change: refresh session and cascade refresh from the top
   async updateIdeSettings(ideSettings: IdeSettings) {
     this.ideSettingsPromise = Promise.resolve(ideSettings);
-    await this.cascadeInit();
+    this.abortCascade();
+    await this.cascadeInit("IDE settings update");
   }
 
   // Session change: refresh session and cascade refresh from the top
@@ -329,7 +367,8 @@ export class ConfigHandler {
       Promise.resolve(sessionInfo),
       this.ideSettingsPromise,
     );
-    await this.cascadeInit();
+    this.abortCascade();
+    await this.cascadeInit("Control plane session info update");
   }
 
   // Org id: check id validity, save selection, switch and reload
@@ -356,7 +395,7 @@ export class ConfigHandler {
       await this.setSelectedProfileId(profileId);
     } else {
       this.currentProfile = org.currentProfile;
-      await this.reloadConfig();
+      await this.reloadConfig("Selected org changed");
     }
   }
 
@@ -384,14 +423,16 @@ export class ConfigHandler {
     });
 
     this.currentProfile = profile;
-    await this.reloadConfig();
+    await this.reloadConfig("Selected profile changed");
   }
 
   // Bottom level of cascade: refresh the current profile
   // IMPORTANT - must always refresh when switching profiles
   // Because of e.g. MCP singleton and docs service using things from config
   // Could improve this
-  async reloadConfig() {
+  async reloadConfig(reason: string) {
+    this.totalConfigLoads += 1;
+    // console.log(`Reloading config (${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
       return {
         config: undefined,
@@ -457,6 +498,7 @@ export class ConfigHandler {
         configLoadInterrupted: true,
       };
     }
+    await this.isInitialized;
     const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );
@@ -487,7 +529,7 @@ export class ConfigHandler {
   private additionalContextProviders: IContextProvider[] = [];
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
-    void this.reloadConfig();
+    void this.reloadConfig("Custom context provider registered");
   }
   /**
    * Retrieves the titles of additional context providers that are of type "submenu".

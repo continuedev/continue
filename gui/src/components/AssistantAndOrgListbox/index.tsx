@@ -166,7 +166,7 @@ export function AssistantAndOrgListbox() {
                 className="border-border border-b px-2 py-1.5"
               >
                 <span
-                  className="text-description flex flex-row items-center"
+                  className="text-description flex flex-1 flex-row items-center"
                   style={{ fontSize: tinyFont }}
                   onClick={async (e) => {
                     e.stopPropagation();
