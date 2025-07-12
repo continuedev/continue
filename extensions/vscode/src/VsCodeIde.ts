@@ -191,6 +191,14 @@ class VsCodeIde implements IDE {
     return this.ideUtils.getRepo(vscode.Uri.parse(dir));
   }
 
+  async getRepoDirect(uri: vscode.Uri): Promise<Repository | undefined> {
+    return this.ideUtils.getRepoDirect(uri);
+  }
+
+  async getRepos(): Promise<Repository[] | undefined> {
+    return this.ideUtils.getRepos();
+  }
+
   async isTelemetryEnabled(): Promise<boolean> {
     const globalEnabled = vscode.env.isTelemetryEnabled;
     const continueEnabled: boolean =
