@@ -35,6 +35,7 @@ async function getContextProviderExtras(
     ideSettingsPromise,
     llmLogger,
     Promise.resolve(undefined),
+    Promise.resolve("1.0.0"),
   );
   const { config } = await configHandler.loadConfig();
   if (!config) {

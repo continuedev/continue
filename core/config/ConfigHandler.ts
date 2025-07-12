@@ -53,9 +53,11 @@ export class ConfigHandler {
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
+
     this.controlPlaneClient = new ControlPlaneClient(
       sessionInfoPromise,
       ideSettingsPromise,
+      this.ide.getIdeInfo(),
     );
 
     // This profile manager will always be available
@@ -328,6 +330,7 @@ export class ConfigHandler {
     this.controlPlaneClient = new ControlPlaneClient(
       Promise.resolve(sessionInfo),
       this.ideSettingsPromise,
+      this.ide.getIdeInfo(),
     );
     await this.cascadeInit();
   }
