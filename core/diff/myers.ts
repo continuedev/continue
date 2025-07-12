@@ -1,6 +1,6 @@
-import { diffLines, type Change } from "diff";
+import { diffChars, diffLines, type Change } from "diff";
 
-import { DiffLine } from "..";
+import { DiffChar, DiffLine } from "..";
 
 export function convertMyersChangeToDiffLines(change: Change): DiffLine[] {
   const type: DiffLine["type"] = change.added
@@ -54,4 +54,158 @@ export function myersDiff(oldContent: string, newContent: string): DiffLine[] {
   }
 
   return ourFormat;
+}
+
+export function myersCharDiff(
+  oldContent: string,
+  newContent: string,
+): DiffChar[] {
+  // Process the content character by character.
+  // We will handle newlines separately,
+  // because diffChars does not have an option to ignore eol newlines.
+  const theirFormat = diffChars(oldContent, newContent);
+
+  // Track indices as we process the diff.
+  let oldIndex = 0;
+  let newIndex = 0;
+  let oldLineIndex = 0;
+  let newLineIndex = 0;
+  let oldCharIndexInLine = 0;
+  let newCharIndexInLine = 0;
+
+  const result: DiffChar[] = [];
+
+  for (const change of theirFormat) {
+    // Split the change value by newlines to handle them separately.
+    if (change.value.includes("\n")) {
+      const parts = change.value.split(/(\n)/g); // This keeps the newlines as separate entries.
+
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (part === "") continue;
+
+        if (part === "\n") {
+          // Handle newline.
+          if (change.added) {
+            result.push({
+              type: "new",
+              char: part,
+              newIndex: newIndex,
+              newLineIndex: newLineIndex,
+              newCharIndexInLine: newCharIndexInLine,
+            });
+            newIndex += part.length;
+            newLineIndex++;
+            newCharIndexInLine = 0; // Reset when moving to a new line.
+          } else if (change.removed) {
+            result.push({
+              type: "old",
+              char: part,
+              oldIndex: oldIndex,
+              oldLineIndex: oldLineIndex,
+              oldCharIndexInLine: oldCharIndexInLine,
+            });
+            oldIndex += part.length;
+            oldLineIndex++;
+            oldCharIndexInLine = 0; // Reset when moving to a new line.
+          } else {
+            result.push({
+              type: "same",
+              char: part,
+              oldIndex: oldIndex,
+              newIndex: newIndex,
+              oldLineIndex: oldLineIndex,
+              newLineIndex: newLineIndex,
+              oldCharIndexInLine: oldCharIndexInLine,
+              newCharIndexInLine: newCharIndexInLine,
+            });
+            oldIndex += part.length;
+            newIndex += part.length;
+            oldLineIndex++;
+            newLineIndex++;
+            oldCharIndexInLine = 0;
+            newCharIndexInLine = 0;
+          }
+        } else {
+          // Handle regular text.
+          if (change.added) {
+            result.push({
+              type: "new",
+              char: part,
+              newIndex: newIndex,
+              newLineIndex: newLineIndex,
+              newCharIndexInLine: newCharIndexInLine,
+            });
+            newIndex += part.length;
+            newCharIndexInLine += part.length;
+          } else if (change.removed) {
+            result.push({
+              type: "old",
+              char: part,
+              oldIndex: oldIndex,
+              oldLineIndex: oldLineIndex,
+              oldCharIndexInLine: oldCharIndexInLine,
+            });
+            oldIndex += part.length;
+            oldCharIndexInLine += part.length;
+          } else {
+            result.push({
+              type: "same",
+              char: part,
+              oldIndex: oldIndex,
+              newIndex: newIndex,
+              oldLineIndex: oldLineIndex,
+              newLineIndex: newLineIndex,
+              oldCharIndexInLine: oldCharIndexInLine,
+              newCharIndexInLine: newCharIndexInLine,
+            });
+            oldIndex += part.length;
+            newIndex += part.length;
+            oldCharIndexInLine += part.length;
+            newCharIndexInLine += part.length;
+          }
+        }
+      }
+    } else {
+      // No newlines, handle as a simple change.
+      if (change.added) {
+        result.push({
+          type: "new",
+          char: change.value,
+          newIndex: newIndex,
+          newLineIndex: newLineIndex,
+          newCharIndexInLine: newCharIndexInLine,
+        });
+        newIndex += change.value.length;
+        newCharIndexInLine += change.value.length;
+      } else if (change.removed) {
+        result.push({
+          type: "old",
+          char: change.value,
+          oldIndex: oldIndex,
+          oldLineIndex: oldLineIndex,
+          oldCharIndexInLine: oldCharIndexInLine,
+        });
+        oldIndex += change.value.length;
+        oldCharIndexInLine += change.value.length;
+      } else {
+        result.push({
+          type: "same",
+          char: change.value,
+          oldIndex: oldIndex,
+          newIndex: newIndex,
+          oldLineIndex: oldLineIndex,
+          newLineIndex: newLineIndex,
+          oldCharIndexInLine: oldCharIndexInLine,
+          newCharIndexInLine: newCharIndexInLine,
+        });
+        oldIndex += change.value.length;
+        newIndex += change.value.length;
+        oldCharIndexInLine += change.value.length;
+        newCharIndexInLine += change.value.length;
+      }
+    }
+  }
+
+  return result;
 }

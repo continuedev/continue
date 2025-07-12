@@ -666,11 +666,24 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
-export type DiffLineType = "new" | "old" | "same";
+export type DiffType = "new" | "old" | "same";
 
-export interface DiffLine {
-  type: DiffLineType;
+export interface DiffObject {
+  type: DiffType;
+}
+
+export interface DiffLine extends DiffObject {
   line: string;
+}
+
+interface DiffChar extends DiffObject {
+  char: string;
+  oldIndex?: number; // Character index assuming a flattened line string.
+  newIndex?: number;
+  oldCharIndexInLine?: number; // Character index assuming new lines reset the character index to 0.
+  newCharIndexInLine?: number;
+  oldLineIndex?: number;
+  newLineIndex?: number;
 }
 
 export interface Problem {
