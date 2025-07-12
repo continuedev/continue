@@ -13,7 +13,7 @@ export const ideSettingsPromise = testIde.getIdeSettings();
 export const testControlPlaneClient = new ControlPlaneClient(
   Promise.resolve(undefined),
   ideSettingsPromise,
-  Promise.resolve("1.0.0"),
+  testIde.getIdeInfo(),
 );
 
 export const testConfigHandler = new ConfigHandler(
@@ -21,7 +21,6 @@ export const testConfigHandler = new ConfigHandler(
   ideSettingsPromise,
   new LLMLogger(),
   Promise.resolve(undefined),
-  Promise.resolve("1.0.0"),
 );
 
 export const testLLM = new Mock({
