@@ -52,6 +52,7 @@ import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
+import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
 import {
   setupLocalConfig,
   setupProviderConfig,
@@ -233,6 +234,14 @@ export class Core {
       (..._) => Promise.resolve([]),
     );
 
+    const codebaseRulesCache = CodebaseRulesCache.getInstance();
+    codebaseRulesCache
+      .refresh(ide)
+      .catch((e) => console.error("Failed to initialize colocated rules cache"))
+      .then(() => {
+        this.configHandler.reloadConfig();
+      });
+
     this.registerMessageHandlers(ideSettingsPromise);
   }
 
@@ -323,8 +332,10 @@ export class Core {
     });
 
     on("config/reload", async (msg) => {
+      // User force reloading will retrigger colocated rules
+      const codebaseRulesCache = CodebaseRulesCache.getInstance();
+      await codebaseRulesCache.refresh(this.ide);
       void this.configHandler.reloadConfig();
-      return await this.configHandler.getSerializedConfig();
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -966,15 +977,16 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith(RULES_MARKDOWN_FILENAME) ||
-          BLOCK_TYPES.some(
-            (blockType) =>
-              uri.includes(`.continue/${blockType}`) ||
-              uri.includes(`.continue\\${blockType}`),
+          (uri.includes(".continue") &&
+            (uri.endsWith(".yaml") || uri.endsWith("yml"))) ||
+          BLOCK_TYPES.some((blockType) =>
+            uri.includes(`.continue/${blockType}`),
           )
         ) {
           await this.configHandler.reloadConfig();
+        } else if (uri.endsWith(RULES_MARKDOWN_FILENAME)) {
+          const codebaseRulesCache = CodebaseRulesCache.getInstance();
+          void codebaseRulesCache.update(this.ide, uri);
         } else if (
           uri.endsWith(".continueignore") ||
           uri.endsWith(".gitignore")

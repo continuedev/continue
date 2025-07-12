@@ -1650,6 +1650,7 @@ export type RuleSource =
   | "model-options-plan"
   | "model-options-agent"
   | "rules-block"
+  | "colocated-markdown"
   | "json-systemMessage"
   | ".continuerules";
 

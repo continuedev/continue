@@ -27,6 +27,8 @@ const getSourceLabel = (source: RuleSource): string => {
       return "Model Agent Options";
     case "rules-block":
       return "Rules Block";
+    case "colocated-markdown":
+      return "Codebase Rule";
     case "json-systemMessage":
       return "System Message";
     case ".continuerules":
