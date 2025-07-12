@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path-to-signatures: "signatures/version1/cla.json"
-          path-to-document: "https://github.com/continuedev/continue/blob/main/docs/docs/CLA.md"
+          path-to-document: "https://github.com/continuedev/continue/blob/main/CLA.md"
           branch: cla-signatures
           # Bots and CLAs signed outside of GitHub
           allowlist: dependabot[bot],fbricon,panyamkeerthana,Jazzcort,owtaylor,halfline
