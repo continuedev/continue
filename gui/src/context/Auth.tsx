@@ -1,6 +1,6 @@
 import {
-  OrganizationDescription,
   ProfileDescription,
+  SerializedOrgWithProfiles,
 } from "core/config/ProfileLifecycleManager";
 import { ControlPlaneSessionInfo } from "core/control-plane/AuthTypes";
 import React, {
@@ -28,7 +28,7 @@ interface AuthContextType {
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
   refreshProfiles: () => Promise<void>;
-  organizations: OrganizationDescription[];
+  organizations: SerializedOrgWithProfiles[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
