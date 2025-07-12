@@ -1669,3 +1669,18 @@ export interface CompleteOnboardingPayload {
   provider?: string;
   apiKey?: string;
 }
+
+type TaskMetadata = {
+  createdAt: string;
+  updatedAt: string;
+};
+
+type TaskStatusType = keyof typeof TaskStatus;
+
+type TaskInfo = {
+  id: string;
+  name: string;
+  description: string;
+  status: TaskStatus;
+  metadata: TaskMetadata;
+};
