@@ -14,6 +14,7 @@ export enum BuiltInToolNames {
   RequestRule = "request_rule",
   FetchUrlContent = "fetch_url_content",
   CodebaseTool = "codebase",
+  TaskList = "task_list",
 
   // excluded from allTools for now
   ViewRepoMap = "view_repo_map",
