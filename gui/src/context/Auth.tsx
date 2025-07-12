@@ -95,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     "sessionUpdate",
     async (data) => {
       setSession(data.sessionInfo);
-      void refreshProfiles();
     },
     [],
   );

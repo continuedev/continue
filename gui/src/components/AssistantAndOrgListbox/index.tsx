@@ -161,10 +161,9 @@ export function AssistantAndOrgListbox() {
               </ListboxOption>
 
               <ListboxOption
-                value="new-assistant"
+                value="reload-config"
                 fontSizeModifier={-2}
                 className="border-border border-b px-2 py-1.5"
-                onClick={session ? onNewAssistant : () => login(false)}
               >
                 <span
                   className="text-description flex flex-row items-center"
