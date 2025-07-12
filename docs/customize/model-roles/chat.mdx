@@ -1,0 +1,404 @@
+---
+title: Chat Role
+description: Chat model role
+keywords: [chat, model, role]
+sidebar_position: 1
+---
+
+A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
+
+In Continue, these models are used for normal [Chat](../../features/chat/quick-start) and [VS Code actions](../deep-dives/vscode-actions.md). The selected chat model will also be used for [Edit](../../features/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
+
+## Recommended Chat models
+
+## Best overall experience
+
+For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.
+
+### Claude Sonnet 3.7 from Anthropic
+
+Our current top recommendation is Claude 3.7 Sonnet from [Anthropic](../model-providers/top-level/anthropic.mdx).
+
+<Tabs>
+  <Tab title="Hub">
+  View the [Claude 3.7 Sonnet model block](https://hub.continue.dev/anthropic/claude-3-7-sonnet) on the hub.
+  </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.7 Sonnet
+      provider: anthropic
+      model: claude-3-7-sonnet-latest
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-latest",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+### Gemma from Google DeepMind
+
+If you prefer to use an open-weight model, then the Gemma family of Models from Google DeepMind is a good choice. You will need to decide if you use it through a SaaS model provider, e.g. [Together](../model-providers/more/together.mdx), or self-host it, e.g. [Ollama](../model-providers/top-level/ollama.mdx).
+
+<Tabs>
+  <Tab title="Hub">
+    <Tabs>
+        <Tab title="Ollama">
+        Add the [Ollama Gemma 3 27B block](https://hub.continue.dev/ollama/gemma3-27b) from the hub
+        </Tab>
+        <Tab title="Together">
+        Add the [Together Gemma 2 27B Instruct block](https://hub.continue.dev/togetherai/gemma-2-instruct-27b) from the hub
+        </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="YAML">
+    <Tabs>
+        <Tab title="Ollama">
+        ```yaml title="config.yaml"
+        models:
+          - name: "Gemma 3 27B"
+            provider: "ollama"
+            model: "gemma3:27b"
+        ```
+        </Tab>
+        <Tab title="Together">
+        ```yaml title="config.yaml"
+        models:
+          - name: "Gemma 3 27B"
+            provider: "together"
+            model: "google/gemma-2-27b-it"
+            apiKey: <YOUR_TOGETHER_API_KEY>
+        ```
+        </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="JSON">
+    <Tabs>
+        <Tab title="Ollama">
+        ```json title="config.json"
+        {
+          "models": [
+            {
+              "title": "Gemma 3 27B",
+              "provider": "ollama",
+              "model": "gemma3:27b"
+            }
+          ]
+        }
+        ```
+        </Tab>
+        <Tab title="Together">
+        ```json title="config.json"
+        {
+          "models": [
+            {
+              "title": "Gemma 3 27B",
+              "provider": "together",
+              "model": "google/gemma-2-27b-it",
+              "apiKey": "<YOUR_TOGETHER_API_KEY>"
+            }
+          ]
+        }
+        ```
+        </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+### GPT-4o from OpenAI
+
+If you prefer to use a model from [OpenAI](../model-providers/top-level/openai.mdx), then we recommend GPT-4o.
+
+<Tabs>
+    <Tab title="Hub">
+    Add the [OpenAI GPT-4o block](https://hub.continue.dev/openai/gpt-4o) from the hub
+    </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: openai
+      model: ''
+      apiKey: <YOUR_OPENAI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4o",
+        "provider": "openai",
+        "model": "",
+        "apiKey": "<YOUR_OPENAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+### Grok-2 from xAI
+
+If you prefer to use a model from [xAI](../model-providers/top-level/xAI.mdx), then we recommend Grok-2.
+
+<Tabs>
+    <Tab title="Hub">
+    Add the [xAI Grok-2 block](https://hub.continue.dev/xai/grok-2) from the hub
+    </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Grok-2
+      provider: xAI
+      model: grok-2-latest
+      apiKey: <YOUR_XAI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Grok-2",
+        "provider": "xAI",
+        "model": "grok-2-latest",
+        "apiKey": "<YOUR_XAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+### Gemini 2.0 Flash from Google
+
+If you prefer to use a model from [Google](../model-providers/top-level/gemini.mdx), then we recommend Gemini 2.0 Flash.
+
+<Tabs>
+    <Tab title="Hub">
+    Add the [Gemini 2.0 Flash block](https://hub.continue.dev/google/gemini-2.0-flash) from the hub
+    </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Gemini 2.0 Flash
+      provider: gemini
+      model: gemini-2.0-flash
+      apiKey: <YOUR_GEMINI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Gemini 2.0 Flash",
+        "provider": "gemini",
+        "model": "gemini-2.0-flash",
+        "apiKey": "<YOUR_GEMINI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Local, offline experience
+
+For the best local, offline Chat experience, you will want to use a model that is large but fast enough on your machine.
+
+### Llama 3.1 8B
+
+If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
+
+<Tabs>
+  <Tab title="Hub">
+    <Tabs>
+        <Tab title="Ollama">
+    Add the [Ollama Llama 3.1 8b block](https://hub.continue.dev/ollama/llama3.1-8b) from the hub
+    </Tab>
+    {/* HUB_TODO nonexistent block */}
+    {/* <Tab title="LM Studio">
+    Add the [LM Studio Llama 3.1 8b block](https://hub.continue.dev/explore/models) from the hub
+    </Tab> */}
+    </Tabs>
+  </Tab>
+  <Tab title="YAML">
+    <Tabs>
+      <Tab title="Ollama">
+      ```yaml title="config.yaml"
+      models:
+        - name: Llama 3.1 8B
+          provider: ollama
+          model: llama3.1:8b
+      ```
+      </Tab>
+      <Tab title="LM Studio">
+      ```yaml title="config.yaml"
+      models:
+        - name: Llama 3.1 8B
+          provider: lmstudio
+          model: llama3.1:8b
+      ```
+      </Tab>
+      <Tab title="Msty">
+      ```yaml title="config.yaml"
+      models:
+        - name: Llama 3.1 8B
+          provider: msty
+          model: llama3.1:8b
+      ```
+      </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="JSON">
+    <Tabs>
+      <Tab title="Ollama">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "Llama 3.1 8B",
+            "provider": "ollama",
+            "model": "llama3.1:8b"
+          }
+        ]
+      }
+      ```
+      </Tab>
+      <Tab title="LM Studio">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "Llama 3.1 8B",
+            "provider": "lmstudio",
+            "model": "llama3.1-8b"
+          }
+        ]
+      }
+      ```
+      </Tab>
+      <Tab title="Msty">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "Llama 3.1 8B",
+            "provider": "msty",
+            "model": "llama3.1-8b"
+          }
+        ]
+      }
+      ```
+      </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+### DeepSeek Coder 2 16B
+
+If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
+
+<Tabs>
+  {/* HUB_TODO nonexistent blocks */}
+  {/* <Tab title="Hub">
+    <Tabs>
+    <Tab title="Ollama">
+    Add the [Ollama Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
+    </Tab>
+    <Tab title="LM Studio">
+    Add the [LM Studio Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
+    </Tab>
+    </Tabs>
+  </Tab> */}
+  <Tab title="YAML">
+    <Tabs>
+        <Tab title="Ollama">
+        ```yaml title="config.yaml"
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: ollama
+            model: deepseek-coder-v2:16b
+        ```
+        </Tab>
+        <Tab title="LM Studio">
+        ```yaml title="config.yaml"
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: lmstudio
+            model: deepseek-coder-v2:16b
+        ```
+        </Tab>
+        <Tab title="Msty">
+        ```yaml title="config.yaml"
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: msty
+            model: deepseek-coder-v2:16b
+        ```
+        </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="JSON">
+    <Tabs>
+      <Tab title="Ollama">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "DeepSeek Coder 2 16B",
+            "provider": "ollama",
+            "model": "deepseek-coder-v2:16b",
+            "apiBase": "http://localhost:11434"
+          }
+        ]
+      }
+      ```
+      </Tab>
+      <Tab title="LM Studio">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "DeepSeek Coder 2 16B",
+            "provider": "lmstudio",
+            "model": "deepseek-coder-v2:16b"
+          }
+        ]
+      }
+      ```
+      </Tab>
+      <Tab title="Msty">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "DeepSeek Coder 2 16B",
+            "provider": "msty",
+            "model": "deepseek-coder-v2:16b"
+          }
+        ]
+      }
+      ```
+      </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+## Other experiences
+
+There are many more models and providers you can use with Chat beyond those mentioned above. Read more [here](../model-roles/chat.mdx)

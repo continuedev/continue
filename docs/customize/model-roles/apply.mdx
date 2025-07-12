@@ -1,0 +1,43 @@
+---
+title: Apply Role
+description: Apply model role
+keywords: [apply, model, role]
+sidebar_position: 4
+---
+
+When editing code, Chat and Edit model output often doesn't clearly align with existing code. A model with the `apply` role is used to generate a more precise diff to apply changes to a file.
+
+## Recommended Apply models
+
+We recommend [Morph Fast Apply](https://morphllm.com) or [Relace's Instant Apply model](https://hub.continue.dev/relace/instant-apply) for the fastest Apply experience. You can sign up for Morph's free tier [here](https://morphllm.com/dashboard) or get a Relace API key [here](https://app.relace.ai/settings/api-keys).
+
+However, most Chat models can also be used for applying code changes. We recommend smaller/cheaper models for the task, such as Claude 3.5 Haiku.
+
+<Info>
+  Explore all apply models in [the
+  Hub](https://hub.continue.dev/explore/models?roles=apply)
+</Info>
+
+## Prompt templating
+
+You can customize the prompt template used for applying code changes by setting the `promptTemplates.apply` property in your model configuration. Continue uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
+
+Available variables for the apply template:
+
+- `{{{original_code}}}` - The original code before changes
+- `{{{new_code}}}` - The new code after changes
+
+Example:
+
+```yaml
+models:
+  - name: My Custom Apply Template
+    provider: anthropic
+    model: claude-3-5-sonnet-latest
+    promptTemplates:
+      apply: |
+        Original: {{{original_code}}}
+        New: {{{new_code}}}
+
+        Please generate the final code without any markers or explanations.
+```

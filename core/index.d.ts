@@ -50,6 +50,7 @@ export interface IndexingProgressUpdate {
   shouldClearIndexes?: boolean;
   status:
     | "loading"
+    | "waiting"
     | "indexing"
     | "done"
     | "failed"
