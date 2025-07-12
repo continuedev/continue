@@ -10,7 +10,7 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath, diff } = args;
+  const { filepath, diffs } = args;
 
   const state = extras.getState();
   const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
@@ -26,11 +26,18 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     throw new Error(`File ${filepath} does not exist`);
   }
 
-  // Parse all search/replace blocks from the diff content
-  const blocks = parseAllSearchReplaceBlocks(diff);
+  // Parse all search/replace blocks from all diff strings
+  const allBlocks = [];
+  for (let diffIndex = 0; diffIndex < diffs.length; diffIndex++) {
+    const blocks = parseAllSearchReplaceBlocks(diffs[diffIndex]);
+    if (blocks.length === 0) {
+      throw new Error(`No complete search/replace blocks found in diff ${diffIndex + 1}`);
+    }
+    allBlocks.push(...blocks);
+  }
 
-  if (blocks.length === 0) {
-    throw new Error("No complete search/replace blocks found");
+  if (allBlocks.length === 0) {
+    throw new Error("No complete search/replace blocks found in any diffs");
   }
 
   try {
@@ -40,8 +47,8 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     let currentContent = originalContent;
 
     // Apply all replacements sequentially to build the final content
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
+    for (let i = 0; i < allBlocks.length; i++) {
+      const block = allBlocks[i];
       const { searchContent, replaceContent } = block;
 
       // Find the search content in the current state of the file
