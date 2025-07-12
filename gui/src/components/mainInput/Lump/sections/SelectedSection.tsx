@@ -6,6 +6,7 @@ import MCPSection from "./mcp/MCPSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
 import { RulesSection } from "./RulesSection";
+import { TasksSection } from "./TasksSection";
 import { ToolPoliciesSection } from "./tool-policies/ToolPoliciesSection";
 
 /**
@@ -27,6 +28,8 @@ export function SelectedSection() {
       return <ContextSection />;
     case "tools":
       return <ToolPoliciesSection />;
+    case "tasks":
+      return <TasksSection />;
     case "mcp":
       return <MCPSection />;
     case "error":

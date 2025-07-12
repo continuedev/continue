@@ -1,6 +1,7 @@
 import {
   BookOpenIcon,
   ChatBubbleLeftIcon,
+  CheckCircleIcon,
   ChevronLeftIcon,
   CubeIcon,
   EllipsisHorizontalIcon,
@@ -71,6 +72,12 @@ const sections: Section[] = [
     title: "Errors",
     tooltip: <ErrorsSectionTooltip />,
     icon: ExclamationTriangleIcon,
+  },
+  {
+    id: "tasks",
+    title: "Tasks",
+    tooltip: "Tasks",
+    icon: CheckCircleIcon,
   },
 ];
 
