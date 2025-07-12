@@ -19,6 +19,7 @@ export function getProxyFromEnv(protocol: string): string | undefined {
 }
 
 // Note that request options proxy (per model) takes precedence over environment variables
+// todo: this is the code i'm looking for?
 export function getProxy(
   protocol: string,
   requestOptions?: RequestOptions,
