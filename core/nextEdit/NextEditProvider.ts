@@ -158,19 +158,19 @@ export class NextEditProvider {
     this.loggingService.cancel();
   }
 
-  // public accept(completionId: string) {
-  //   const outcome = this.loggingService.accept(completionId);
-  //   if (!outcome) {
-  //     return;
-  //   }
-  // }
+  public accept(completionId: string) {
+    const outcome = this.loggingService.accept(completionId);
+    if (!outcome) {
+      return;
+    }
+  }
 
-  // public reject(completionId: string) {
-  //   const outcome = this.loggingService.reject(completionId);
-  //   if (!outcome) {
-  //     return;
-  //   }
-  // }
+  public reject(completionId: string) {
+    const outcome = this.loggingService.reject(completionId);
+    if (!outcome) {
+      return;
+    }
+  }
 
   public markDisplayed(completionId: string, outcome: NextEditOutcome) {
     this.loggingService.markDisplayed(completionId, outcome);
@@ -237,7 +237,6 @@ export class NextEditProvider {
 
       // TODO: Toggle between the default endpoint and the finetuned endpoint.
       const prompts: Prompt[] = [];
-
       if (this.endpointType === "default") {
         prompts.push(renderDefaultSystemPrompt());
         prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
@@ -272,17 +271,30 @@ export class NextEditProvider {
             cursorPosition: helper.pos,
             ...helper.options,
           };
+
+          // When using the JetBrains extension, mark as displayed.
+          // This helps us not need to make additional network calls just to mark as displayed.
+          const ideType = (await this.ide.getIdeInfo()).ideType;
+          if (ideType === "jetbrains") {
+            this.markDisplayed(input.completionId, outcomeNext);
+          }
+
           return outcomeNext;
         } else {
           return undefined;
         }
       } else {
         const msg: ChatMessage = await llm.chat(prompts, token);
+
         if (typeof msg.content === "string") {
-          // TODO: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
-          const nextCompletion = replaceEscapedCharacters(
-            msg.content.split("<|editable_region_start|>\n")[1],
-          ).replace(/\n$/, "");
+          // NOTE: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
+          const nextCompletion = msg.content.split(
+            "<|editable_region_start|>\n",
+          )[1]
+            ? replaceEscapedCharacters(
+                msg.content.split("<|editable_region_start|>\n")[1],
+              ).replace(/\n$/, "")
+            : "";
 
           const currCursorPos = helper.pos;
           const editableRegionStartLine = Math.max(
@@ -319,6 +331,14 @@ export class NextEditProvider {
             cursorPosition: helper.pos,
             ...helper.options,
           };
+
+          // When using the JetBrains extension, mark as displayed.
+          // This helps us not need to make additional network calls just to mark as displayed.
+          const ideType = (await this.ide.getIdeInfo()).ideType;
+          if (ideType === "jetbrains") {
+            this.markDisplayed(input.completionId, outcomeNext);
+          }
+
           return outcomeNext;
         } else {
           return undefined;
