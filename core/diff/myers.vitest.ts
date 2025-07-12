@@ -366,7 +366,7 @@ describe("Test myersCharDiff function on the same line", () => {
   });
 });
 
-describe("Test myersCharDiff function on the same line", () => {
+describe("Test myersCharDiff function on different lines", () => {
   test("should track line indices for multi-line changes", () => {
     const oldContent = ["Line one", "Line two", "Line three"].join("\n");
 
