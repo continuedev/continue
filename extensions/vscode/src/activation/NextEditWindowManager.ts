@@ -3,7 +3,7 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 // @ts-ignore
 import * as vscode from "vscode";
 
-import { DiffLine } from "core";
+import { DiffChar, DiffLine } from "core";
 import { CodeRenderer } from "core/codeRenderer/CodeRenderer";
 import { myersCharDiff } from "core/diff/myers";
 import {
@@ -296,20 +296,18 @@ export class NextEditWindowManager {
     );
 
     // Create and apply decoration with the text.
-    await this.renderTooltip(
+    await this.renderWindow(
       editor,
       currCursorPos,
       oldEditRangeSlice,
       newEditRangeSlice,
       editableRegionStartLine,
+      diffLines,
     );
 
-    this.renderDeletes(
-      editor,
-      editableRegionStartLine,
-      oldEditRangeSlice,
-      newEditRangeSlice,
-    );
+    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
+
+    this.renderDeletes(editor, editableRegionStartLine, diffChars);
 
     // Reserve tab and esc to either accept or reject the displayed next edit contents.
     await NextEditWindowManager.reserveTabAndEsc();
@@ -539,6 +537,7 @@ export class NextEditWindowManager {
   private async createCodeRender(
     text: string,
     currLineOffsetFromTop: number,
+    newDiffLines: DiffLine[],
   ): Promise<
     | { uri: vscode.Uri; dimensions: { width: number; height: number } }
     | undefined
@@ -562,6 +561,7 @@ export class NextEditWindowManager {
           imageType: "svg",
         },
         currLineOffsetFromTop,
+        newDiffLines,
       );
 
       return {
@@ -584,11 +584,13 @@ export class NextEditWindowManager {
     predictedCode: string,
     position: vscode.Position,
     editableRegionStartLine: number,
+    newDiffLines: DiffLine[],
   ): Promise<vscode.TextEditorDecorationType | undefined> {
     const currLineOffsetFromTop = position.line - editableRegionStartLine;
     const uriAndDimensions = await this.createCodeRender(
       predictedCode,
       currLineOffsetFromTop,
+      newDiffLines,
     );
     if (!uriAndDimensions) {
       return undefined;
@@ -711,16 +713,16 @@ export class NextEditWindowManager {
   }
 
   /**
-   * Render a tooltip with the given text at the specified position.
+   * Render a window with the given text at the specified position.
    */
-  private async renderTooltip(
+  private async renderWindow(
     editor: vscode.TextEditor,
     position: vscode.Position,
     originalCode: string,
     predictedCode: string,
     editableRegionStartLine: number,
+    newDiffLines: DiffLine[],
   ) {
-    console.log("renderTooltip");
     // Capture document version to detect changes.
     const docVersion = editor.document.version;
 
@@ -730,6 +732,7 @@ export class NextEditWindowManager {
       predictedCode,
       position,
       editableRegionStartLine,
+      newDiffLines,
     );
     if (!decoration) {
       console.error("Failed to create decoration for text:", predictedCode);
@@ -745,7 +748,8 @@ export class NextEditWindowManager {
 
     // Store the decoration and editor.
     await this.hideAllNextEditWindows();
-    this.currentDecoration = decoration;
+    this.currentDecoration = decoration; // TODO: This might be redundant.
+    this.disposables.push(decoration);
     this.activeEditor = editor;
 
     // Calculate how far off to the right of the cursor the decoration should be.
@@ -785,14 +789,16 @@ export class NextEditWindowManager {
   private renderDeletes(
     editor: vscode.TextEditor,
     editableRegionStartLine: number,
-    oldEditRangeSlice: string,
-    newEditRangeSlice: string,
+    // oldEditRangeSlice: string,
+    // newEditRangeSlice: string,
+    oldDiffChars: DiffChar[],
   ) {
     const charsToDelete: vscode.DecorationOptions[] = [];
 
-    const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
+    // const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
 
-    diffChars.forEach((diff) => {
+    oldDiffChars.forEach((diff) => {
+      // TODO: This check if technically redundant.
       if (diff.type === "old") {
         charsToDelete.push({
           range: new vscode.Range(
@@ -816,6 +822,28 @@ export class NextEditWindowManager {
 
     editor.setDecorations(deleteDecorationType, charsToDelete);
     this.disposables.push(deleteDecorationType);
+  }
+
+  async getExactCharacterWidth(): Promise<number> {
+    // For VS Code extensions, you can sometimes access the editor's text metrics
+    const activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor) {
+      // VS Code has internal methods to measure text, but they're not all exposed
+      // in the public API. You might need to use reflection or known properties.
+
+      // Example accessing through reflection (this is pseudocode)
+      const editorInstance = activeEditor as any;
+      if (editorInstance._modelData && editorInstance._modelData.viewModel) {
+        const viewModel = editorInstance._modelData.viewModel;
+        return (
+          viewModel.getLineWidth(0) /
+          activeEditor.document.lineAt(0).text.length
+        );
+      }
+    }
+
+    // If all else fails, return a reasonable default
+    return SVG_CONFIG.fontSize * 0.6;
   }
 }
 
