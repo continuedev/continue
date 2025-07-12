@@ -4,6 +4,7 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteSnippet,
   AutocompleteSnippetType,
+  AutocompleteStaticSnippet,
 } from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 import { formatOpenedFilesContext } from "./formatOpenedFilesContext";
@@ -32,9 +33,9 @@ const shuffleArray = <T>(array: T[]): T[] => {
 };
 
 function filterSnippetsAlreadyInCaretWindow(
-  snippets: AutocompleteCodeSnippet[],
+  snippets: (AutocompleteCodeSnippet | AutocompleteStaticSnippet)[],
   caretWindow: string,
-): AutocompleteCodeSnippet[] {
+): (AutocompleteCodeSnippet | AutocompleteStaticSnippet)[] {
   return snippets.filter(
     (s) => s.content.trim() !== "" && !caretWindow.includes(s.content.trim()),
   );
@@ -52,7 +53,11 @@ export const getSnippets = (
     recentlyOpenedFiles: payload.recentlyOpenedFileSnippets,
     base: shuffleArray(
       filterSnippetsAlreadyInCaretWindow(
-        [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],
+        [
+          ...payload.rootPathSnippets,
+          ...payload.importDefinitionSnippets,
+          ...payload.staticSnippet,
+        ],
         helper.prunedCaretWindow,
       ),
     ),
@@ -107,7 +112,11 @@ export const getSnippets = (
       defaultPriority: 99, // make sure it's the last one to be processed, but still possible to override
       snippets: shuffleArray(
         filterSnippetsAlreadyInCaretWindow(
-          [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],
+          [
+            ...payload.rootPathSnippets,
+            ...payload.importDefinitionSnippets,
+            ...payload.staticSnippet,
+          ],
           helper.prunedCaretWindow,
         ),
       ),

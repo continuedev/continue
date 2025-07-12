@@ -13,7 +13,13 @@ import { intersection } from "core/util/ranges";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import type { IDE, Range, RangeInFile, RangeInFileWithContents } from "core";
+import type {
+  IDE,
+  Range,
+  RangeInFile,
+  RangeInFileWithContents,
+  SignatureHelp,
+} from "core";
 import type Parser from "web-tree-sitter";
 
 type GotoProviderName =
@@ -22,6 +28,8 @@ type GotoProviderName =
   | "vscode.executeDeclarationProvider"
   | "vscode.executeImplementationProvider"
   | "vscode.executeReferenceProvider";
+
+type SignatureHelpProviderName = "vscode.executeSignatureHelpProvider";
 
 interface GotoInput {
   uri: vscode.Uri;
@@ -33,8 +41,19 @@ function gotoInputKey(input: GotoInput) {
   return `${input.name}${input.uri.toString()}${input.line}${input.character}`;
 }
 
+interface SignatureHelpInput {
+  uri: vscode.Uri;
+  line: number;
+  character: number;
+  name: SignatureHelpProviderName;
+}
+function signatureHelpKey(input: SignatureHelpInput) {
+  return `${input.name}${input.uri.toString()}${input.line}${input.character}`;
+}
+
 const MAX_CACHE_SIZE = 500;
 const gotoCache = new Map<string, RangeInFile[]>();
+const signatureHelpCache = new Map<string, vscode.SignatureHelp>();
 
 export async function executeGotoProvider(
   input: GotoInput,
@@ -382,3 +401,36 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
     return [];
   }
 };
+
+export async function executeSignatureHelpProvider(
+  input: SignatureHelpInput,
+): Promise<SignatureHelp | null> {
+  const cacheKey = signatureHelpKey(input);
+  const cached = signatureHelpCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const definitions = (await vscode.commands.executeCommand(
+      input.name,
+      input.uri,
+      new vscode.Position(input.line, input.character),
+    )) as SignatureHelp;
+
+    // Add to cache
+    if (signatureHelpCache.size >= MAX_CACHE_SIZE) {
+      // Remove the oldest item from the cache
+      const oldestKey = signatureHelpCache.keys().next().value;
+      if (oldestKey) {
+        signatureHelpCache.delete(oldestKey);
+      }
+    }
+    signatureHelpCache.set(cacheKey, definitions);
+
+    return definitions;
+  } catch (e) {
+    console.warn(`Error executing ${input.name}:`, e);
+    return null;
+  }
+}
