@@ -8,14 +8,6 @@ export function addToolCallDeltaToState(
   toolCallDelta: ToolCallDelta,
   currentState: ToolCallState | undefined,
 ): ToolCallState {
-  // This prevents multiple tool calls for now, by ignoring new tool call ids
-  if (
-    toolCallDelta.id &&
-    currentState?.toolCallId &&
-    toolCallDelta.id !== currentState?.toolCallId
-  ) {
-    return currentState;
-  }
 
   const currentCall = currentState?.toolCall;
 

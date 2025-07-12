@@ -3,7 +3,6 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../../redux/hooks";
 import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { getAltKeyLabel, getMetaKeyLabel } from "../../../../util";
-import { Container, StopButton } from "./components";
 import { GeneratingIndicator } from "./GeneratingIndicator";
 
 export const IsApplyingToolbar = () => {
@@ -12,11 +11,11 @@ export const IsApplyingToolbar = () => {
   const jetbrains = window.location.protocol === "jb-api:";
 
   return (
-    <Container>
+    <div className="flex w-full items-center justify-between">
       <GeneratingIndicator text="Applying" testId={"notch-applying-text"} />
-      <StopButton
+      <div
         data-testid="notch-applying-cancel-button"
-        className="text-description"
+        className="text-description text-2xs cursor-pointer p-0.5 pr-1 hover:brightness-125"
         onClick={() => {
           // Note that this will NOT stop generation but once apply is cancelled will show the Generating/cancel option
           // Apply is prioritized because it can be more catastrophic
@@ -28,7 +27,7 @@ export const IsApplyingToolbar = () => {
       >
         {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
         {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
-      </StopButton>
-    </Container>
+      </div>
+    </div>
   );
 };

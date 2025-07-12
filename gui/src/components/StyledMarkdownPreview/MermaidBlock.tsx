@@ -3,7 +3,9 @@ import {
   MagnifyingGlassMinusIcon,
   MagnifyingGlassPlusIcon,
 } from "@heroicons/react/24/outline";
+// @ts-ignore
 import Panzoom from "@panzoom/panzoom";
+// @ts-ignore
 import mermaid from "mermaid";
 import { useEffect, useId, useRef, useState } from "react";
 import { useDebouncedEffect } from "../find/useDebounce";

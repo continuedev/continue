@@ -3,7 +3,7 @@ import { ApplyState } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
+import { selectCurrentToolCallApplyState } from "../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../redux/slices/sessionSlice";
 import { getMetaKeyLabel } from "../util";
 import { ToolTip } from "./gui/Tooltip";

@@ -1,6 +1,6 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ComponentType, useState } from "react";
-import { lightGray, vscBackground } from ".";
+import { vscBackground } from ".";
 
 interface ToggleProps {
   children: React.ReactNode;
@@ -26,31 +26,31 @@ function ToggleDiv({
       }}
     >
       <div
-        className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
+        className="text-description flex cursor-pointer items-center justify-start text-xs hover:brightness-125"
         onClick={() => setOpen((prev) => !prev)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         data-testid={testId}
       >
-        <div className="relative mr-1 h-4 w-4">
+        <div className="relative h-4 w-4">
           {Icon && !isHovered && !open ? (
-            <Icon className={`absolute h-4 w-4 text-[${lightGray}]`} />
+            <Icon className="absolute h-4 w-4" />
           ) : (
             <>
               <ChevronRightIcon
-                className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+                className={`absolute h-4 w-4 transition-all duration-200 ease-in-out ${
                   open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
                 }`}
               />
               <ChevronDownIcon
-                className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+                className={`absolute h-4 w-4 transition-all duration-200 ease-in-out ${
                   open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
                 }`}
               />
             </>
           )}
         </div>
-        <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
+        <span className="ml-1 text-xs transition-colors duration-200">
           {title}
         </span>
       </div>

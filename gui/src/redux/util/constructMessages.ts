@@ -21,7 +21,7 @@ import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
-import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
+import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
 
 export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
 export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
@@ -94,17 +94,20 @@ export function constructMessages(
         // If the assistant message has tool calls, we need to insert tool messages
         for (const toolCall of item.message.toolCalls) {
           let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
-          // TODO parallel tool calls: toolCallState only supports one tool call per message for now
-          if (item.toolCallState?.status === "canceled") {
+
+          // Find the corresponding tool call state for this specific tool call
+          const toolCallState = item.toolCallStates?.find(
+            (state) => state.toolCallId === toolCall.id,
+          );
+
+          if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (
-            item.toolCallState?.toolCallId === toolCall.id &&
-            item.toolCallState?.output
-          ) {
-            content = renderContextItems(item.toolCallState.output);
+          } else if (toolCallState?.output) {
+            content = renderContextItems(toolCallState.output);
           }
+
           msgs.push({
-            ctxItems: toolCallStateToContextItems(item.toolCallState),
+            ctxItems: toolCallStateToContextItems(toolCallState),
             message: {
               role: "tool",
               content,
@@ -112,6 +115,19 @@ export function constructMessages(
             },
           });
         }
+      } else if (item.toolCallStates && item.toolCallStates.length > 0) {
+        // This case indicates a potential mismatch - we have tool call states but no message.toolCalls
+        console.error(
+          "ERROR constructMessages: Assistant message has toolCallStates but no message.toolCalls:",
+          {
+            toolCallStates: item.toolCallStates.length,
+            toolCallIds: item.toolCallStates.map((s) => s.toolCallId),
+            messageContent:
+              typeof item.message.content === "string"
+                ? item.message.content?.substring(0, 50) + "..."
+                : "Non-string content",
+          },
+        );
       }
     }
   }

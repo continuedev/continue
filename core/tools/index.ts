@@ -6,7 +6,7 @@ import { editFileTool } from "./definitions/editFile";
 import { fetchUrlContentTool } from "./definitions/fetchUrlContent";
 import { globSearchTool } from "./definitions/globSearch";
 import { grepSearchTool } from "./definitions/grepSearch";
-import { lsTool } from "./definitions/lsTool";
+import { lsTool } from "./definitions/ls";
 import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
 import { readFileTool } from "./definitions/readFile";
 import { requestRuleTool } from "./definitions/requestRule";

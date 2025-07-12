@@ -2,12 +2,14 @@ import { CSSProperties } from "react";
 import ReactDOM from "react-dom";
 import { ITooltip, Tooltip } from "react-tooltip";
 import { vscBackground, vscForeground } from "..";
+import { varWithFallback } from "../../styles/theme";
 import { fontSize } from "../../util";
 
+// Needed to override styles in react-tooltip
 const TooltipStyles: CSSProperties = {
-  fontSize: fontSize(-2),
+  fontSize: fontSize(-4),
   backgroundColor: vscBackground,
-  outline: `0.5px solid ${vscForeground}`,
+  outline: `0.5px solid ${varWithFallback("badge-background")}`,
   color: vscForeground,
   padding: "4px 8px",
   zIndex: 1000,

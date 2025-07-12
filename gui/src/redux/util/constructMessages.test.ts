@@ -316,7 +316,7 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
+        toolCallStates: [{
           toolCallId: "tool-call-1",
           toolCall: {
             id: "tool-call-1",
@@ -329,7 +329,7 @@ describe("constructMessages", () => {
           status: "done",
           parsedArgs: { query: "test" },
           output: [createContextItem("search-result", "Search result content")],
-        },
+        }],
       },
     ];
 
@@ -370,7 +370,7 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
+        toolCallStates: [{
           toolCallId: "tool-call-1",
           toolCall: {
             id: "tool-call-1",
@@ -382,7 +382,7 @@ describe("constructMessages", () => {
           },
           status: "canceled",
           parsedArgs: { query: "test" },
-        },
+        }],
       },
     ];
 
@@ -422,7 +422,7 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
+        toolCallStates: [{
           toolCallId: "tool-call-1",
           toolCall: {
             id: "tool-call-1",
@@ -434,7 +434,7 @@ describe("constructMessages", () => {
           },
           status: "generating", // Not done yet
           parsedArgs: { query: "test" },
-        },
+        }],
       },
     ];
 
@@ -499,7 +499,7 @@ describe("constructMessages", () => {
       {
         message: assistantWithMultipleToolCalls,
         contextItems: [],
-        toolCallState: {
+        toolCallStates: [{
           toolCallId: "tool-call-1",
           toolCall: {
             id: "tool-call-1",
@@ -512,7 +512,7 @@ describe("constructMessages", () => {
           status: "done",
           parsedArgs: { query: "test" },
           output: [createContextItem("search-result", "Search result content")],
-        },
+        }],
       },
     ];
 
@@ -665,7 +665,7 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
+        toolCallStates: [{
           toolCallId: "tool-call-1",
           toolCall: {
             id: "tool-call-1",
@@ -678,7 +678,7 @@ describe("constructMessages", () => {
           status: "done",
           parsedArgs: { query: "test" },
           output: [triggeringToolOutput],
-        },
+        }],
       },
     ];
 
