@@ -114,7 +114,8 @@ export function History() {
 
     return allSessionMetadata
       .filter(
-        (session) => searchTerm === "" || sessionIds.includes(session.sessionId),
+        (session) =>
+          searchTerm === "" || sessionIds.includes(session.sessionId),
       )
       .sort(
         (a, b) =>
@@ -158,7 +159,7 @@ export function History() {
         {/* Collapse Button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute left-2 top-1/2 -translate-y-1/2 transform bg-vsc-background text-vsc-foreground hover:bg-vsc-editor-background p-1 rounded-md"
+          className="bg-vsc-background text-vsc-foreground hover:bg-vsc-editor-background absolute left-2 top-1/2 -translate-y-1/2 transform rounded-md p-1"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
@@ -199,8 +200,9 @@ export function History() {
                   "Loading Sessions..."
                 ) : (
                   <>
-                    No past sessions found. To start a new session, either click the
-                    "+" button or use the keyboard shortcut: <Shortcut>meta L</Shortcut>
+                    No past sessions found. To start a new session, either click
+                    the "+" button or use the keyboard shortcut:{" "}
+                    <Shortcut>meta L</Shortcut>
                   </>
                 )}
               </div>
@@ -211,7 +213,9 @@ export function History() {
                 {filteredAndSortedSessions.map((session, index) => {
                   const prevDate =
                     index > 0
-                      ? parseDate(filteredAndSortedSessions[index - 1].dateCreated)
+                      ? parseDate(
+                          filteredAndSortedSessions[index - 1].dateCreated,
+                        )
                       : earlier;
                   const date = parseDate(session.dateCreated);
 
