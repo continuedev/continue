@@ -553,12 +553,12 @@ export class NextEditWindowManager {
       const uri = await this.codeRenderer.getDataUri(
         text,
         "typescript",
-        this.fontSize,
-        this.fontFamily,
-        dimensions,
-        SVG_CONFIG.lineHeight,
         {
           imageType: "svg",
+          fontSize: this.fontSize,
+          fontFamily: this.fontFamily,
+          dimensions: dimensions,
+          lineHeight: SVG_CONFIG.lineHeight,
         },
         currLineOffsetFromTop,
         newDiffLines,

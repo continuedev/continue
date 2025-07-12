@@ -36,6 +36,10 @@ interface HTMLOptions {
 interface ConversionOptions extends HTMLOptions {
   transparent?: boolean;
   imageType: "svg";
+  fontSize: number;
+  fontFamily: string;
+  dimensions: Dimensions;
+  lineHeight: number;
 }
 
 interface Dimensions {
@@ -220,10 +224,6 @@ export class CodeRenderer {
   async convertToSVG(
     code: string,
     language: string = "javascript",
-    fontSize: number,
-    fontFamily: string,
-    dimensions: Dimensions,
-    lineHeight: number,
     options: ConversionOptions,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
@@ -239,14 +239,11 @@ export class CodeRenderer {
 
     const { guts, lineBackgrounds } = this.convertShikiHtmlToSvgGut(
       highlightedCodeHtml,
-      fontSize,
-      fontFamily,
-      lineHeight,
-      dimensions,
+      options,
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dimensions.width}" height="${dimensions.height}" shape-rendering="crispEdges">
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${options.dimensions.width}" height="${options.dimensions.height}" shape-rendering="crispEdges">
     <style>
       :root {
         --purple: rgb(112, 114, 209);
@@ -255,7 +252,7 @@ export class CodeRenderer {
       }
     </style>
     <g>
-    <rect x="0" y="0" rx="10" ry="10" width="${dimensions.width}" height="${dimensions.height}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
+    <rect x="0" y="0" rx="10" ry="10" width="${options.dimensions.width}" height="${options.dimensions.height}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
       ${lineBackgrounds}
       ${guts}
     </g>
@@ -267,10 +264,7 @@ export class CodeRenderer {
 
   convertShikiHtmlToSvgGut(
     shikiHtml: string,
-    fontSize: number,
-    fontFamily: string,
-    lineHeight: number,
-    dimensions: Dimensions,
+    options: ConversionOptions,
   ): { guts: string; lineBackgrounds: string } {
     const dom = new JSDOM(shikiHtml);
     const document = dom.window.document;
@@ -307,8 +301,8 @@ export class CodeRenderer {
       // The first step is to add lineHeight / 2 to move the axis down.
       // The second step is to add 'dominant-baseline="central"' to vertically center the text.
       // Note that we choose "central" over "middle". "middle" will center the text too perfectly, which is actually undesirable!
-      const y = index * lineHeight + lineHeight / 2;
-      return `<text x="0" y="${y}" font-family="${fontFamily}" font-size="${fontSize.toString()}" xml:space="preserve" dominant-baseline="central" shape-rendering="crispEdges">${spans}</text>`;
+      const y = index * options.lineHeight + options.lineHeight / 2;
+      return `<text x="0" y="${y}" font-family="${options.fontFamily}" font-size="${options.fontSize.toString()}" xml:space="preserve" dominant-baseline="central" shape-rendering="crispEdges">${spans}</text>`;
     });
 
     const lineBackgrounds = lines
@@ -320,7 +314,7 @@ export class CodeRenderer {
             ? "rgba(255, 255, 0, 0.2)"
             : this.editorBackground;
 
-        const y = index * lineHeight;
+        const y = index * options.lineHeight;
         const isFirst = index === 0;
         const isLast = index === lines.length - 1;
         const radius = 10;
@@ -329,24 +323,24 @@ export class CodeRenderer {
         // This is undesirable in our case because pixel-perfect alignment of these rectangles will introduce thin gaps.
         // Turning it off with 'shape-rendering="crispEdges"' solves the issue.
         return isFirst
-          ? `<path d="M ${0} ${y + lineHeight}
+          ? `<path d="M ${0} ${y + options.lineHeight}
              L ${0} ${y + radius}
              Q ${0} ${y} ${radius} ${y}
-             L ${dimensions.width - radius} ${y}
-             Q ${dimensions.width} ${y} ${dimensions.width} ${y + radius}
-             L ${dimensions.width} ${y + lineHeight}
+             L ${options.dimensions.width - radius} ${y}
+             Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
+             L ${options.dimensions.width} ${y + options.lineHeight}
              Z"
           fill="${bgColor}" />`
           : isLast
             ? `<path d="M ${0} ${y}
-             L ${0} ${y + lineHeight - radius}
-             Q ${0} ${y + lineHeight} ${radius} ${y + lineHeight}
-             L ${dimensions.width - radius} ${y + lineHeight}
-             Q ${dimensions.width} ${y + lineHeight} ${dimensions.width} ${y + lineHeight - 10}
-             L ${dimensions.width} ${y}
+             L ${0} ${y + options.lineHeight - radius}
+             Q ${0} ${y + options.lineHeight} ${radius} ${y + options.lineHeight}
+             L ${options.dimensions.width - radius} ${y + options.lineHeight}
+             Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - 10}
+             L ${options.dimensions.width} ${y}
              Z"
           fill="${bgColor}" />`
-            : `<rect x="0" y="${y}" width="100%" height="${lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
+            : `<rect x="0" y="${y}" width="100%" height="${options.lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
       })
       .join("\n");
 
@@ -376,10 +370,6 @@ export class CodeRenderer {
   async getDataUri(
     code: string,
     language: string = "javascript",
-    fontSize: number,
-    fontFamily: string,
-    dimensions: Dimensions,
-    lineHeight: number,
     options: ConversionOptions,
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
@@ -399,10 +389,6 @@ export class CodeRenderer {
         const svgBuffer = await this.convertToSVG(
           code,
           language,
-          fontSize,
-          fontFamily,
-          dimensions,
-          lineHeight,
           options,
           currLineOffsetFromTop,
           newDiffLines,
