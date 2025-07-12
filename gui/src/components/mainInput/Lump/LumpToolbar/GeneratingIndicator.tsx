@@ -1,4 +1,4 @@
-import ContinueSignet from "../../../svg/ContinueSignet";
+import { AnimatedEllipsis } from "../../..";
 
 export function GeneratingIndicator({
   text = "Generating",
@@ -8,9 +8,12 @@ export function GeneratingIndicator({
   testId?: string;
 }) {
   return (
-    <div className="text-description flex items-center" data-testid={testId}>
-      <ContinueSignet className="animate-spin-slow" width={26} height={26} />
-      <span className="text-xs">{text}...</span>
+    <div
+      className="text-description flex items-center text-xs"
+      data-testid={testId}
+    >
+      <span>{text}</span>
+      <AnimatedEllipsis />
     </div>
   );
 }
