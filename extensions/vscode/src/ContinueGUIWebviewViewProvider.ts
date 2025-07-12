@@ -23,6 +23,7 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
   ): void | Thenable<void> {
+    this.webviewProtocol.webview = webviewView.webview;
     this._webviewView = webviewView;
     this._webview = webviewView.webview;
     webviewView.webview.html = this.getSidebarContent(
