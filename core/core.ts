@@ -985,8 +985,13 @@ export class Core {
         ) {
           await this.configHandler.reloadConfig();
         } else if (uri.endsWith(RULES_MARKDOWN_FILENAME)) {
-          const codebaseRulesCache = CodebaseRulesCache.getInstance();
-          void codebaseRulesCache.update(this.ide, uri);
+          try {
+            const codebaseRulesCache = CodebaseRulesCache.getInstance();
+            await codebaseRulesCache.update(this.ide, uri);
+            this.configHandler.reloadConfig();
+          } catch (e) {
+            console.error("Failed to update codebase rule", e);
+          }
         } else if (
           uri.endsWith(".continueignore") ||
           uri.endsWith(".gitignore")
