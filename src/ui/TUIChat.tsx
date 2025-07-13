@@ -4,6 +4,7 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { streamChatResponse } from "../streamChatResponse.js";
+import { TextBuffer } from "./TextBuffer.js";
 
 interface TUIChatProps {
   assistant: ContinueClient["assistant"];
@@ -33,7 +34,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
   );
 
-  const [userInput, setUserInput] = useState("");
+  const [textBuffer] = useState(() => new TextBuffer());
+  const [inputText, setInputText] = useState("");
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [inputMode, setInputMode] = useState(true);
@@ -142,21 +144,20 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
 
     if (key.return) {
-      if (userInput.trim() && !isWaitingForResponse) {
-        handleUserMessage(userInput.trim());
-        setUserInput("");
+      if (textBuffer.text.trim() && !isWaitingForResponse) {
+        handleUserMessage(textBuffer.text.trim());
+        textBuffer.clear();
+        setInputText("");
       }
       return;
     }
 
-    if (key.backspace || key.delete) {
-      setUserInput((prev) => prev.slice(0, -1));
-      return;
-    }
+    // Let TextBuffer handle the input
+    const handled = textBuffer.handleInput(input, key);
 
-    // Only add printable characters
-    if (input && input.length === 1 && !key.ctrl && !key.meta) {
-      setUserInput((prev) => prev + input);
+    // Update React state to trigger re-render
+    if (handled) {
+      setInputText(textBuffer.text);
     }
   });
 
@@ -197,8 +198,40 @@ const TUIChat: React.FC<TUIChatProps> = ({
         <Text color="green" bold>
           You:{" "}
         </Text>
-        <Text>{userInput}</Text>
-        {inputMode && !isWaitingForResponse && <Text color="gray">▋</Text>}
+        {(() => {
+          const cursorPosition = textBuffer.cursor;
+
+          if (inputText.length === 0) {
+            return (
+              <>
+                {inputMode && !isWaitingForResponse && (
+                  <Text color="gray">▋Type your message...</Text>
+                )}
+                {(!inputMode || isWaitingForResponse) && (
+                  <Text color="gray">Type your message...</Text>
+                )}
+              </>
+            );
+          }
+
+          if (inputMode && !isWaitingForResponse) {
+            // Show cursor at the correct position
+            const beforeCursor = inputText.slice(0, cursorPosition);
+            const atCursor =
+              inputText.slice(cursorPosition, cursorPosition + 1) || " ";
+            const afterCursor = inputText.slice(cursorPosition + 1);
+
+            return (
+              <>
+                <Text>{beforeCursor}</Text>
+                <Text inverse>{atCursor}</Text>
+                <Text>{afterCursor}</Text>
+              </>
+            );
+          } else {
+            return <Text>{inputText}</Text>;
+          }
+        })()}
       </Box>
 
       {/* Status */}

@@ -13,7 +13,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
-    "repomix:cli": "npx repomix --ignore sdk-repomix.xml -o cli-repomix.xml"
+    "repomix:cli": "npx repomix --ignore sdk-repomix.xml -o cli-repomix.xml",
+    "lint": "tsc --noEmit"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
