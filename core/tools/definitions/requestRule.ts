@@ -63,6 +63,6 @@ export const requestRuleTool: GetTool = ({ rules }) => ({
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.RequestRule,
     getRequestRuleSystemMessageDescription(rules),
-    `<name>rule_name</name>`,
+    [["name", "rule_name"]],
   ),
 });

@@ -103,8 +103,9 @@ Each block should follow this format:
 ${SEARCH_AND_REPLACE_FORMAT}
 
 For example, you could respond with:`,
-    `<diff>
-${SEARCH_AND_REPLACE_EXAMPLE}
-</diff>`,
+    [
+      ["filepath", "path/to/file.ts"],
+      ["diff", SEARCH_AND_REPLACE_EXAMPLE],
+    ],
   ),
 };

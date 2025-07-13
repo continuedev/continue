@@ -61,8 +61,8 @@ export const runTerminalCommandTool: Tool = {
     BuiltInToolNames.RunTerminalCommand,
     `To run a terminal command, use the ${BuiltInToolNames.RunTerminalCommand} tool
 ${RUN_COMMAND_NOTES}
-You can also optionally include <waitForCompletion>false</waitForCompletion> within <args> to run the command in the background.      
+You can also optionally include the waitForCompletion argument set to false to run the command in the background.      
 For example, to see the git log, you could respond with:`,
-    `<command>git log</command>`,
+    [["command", "git log"]],
   ),
 };

@@ -30,6 +30,6 @@ export const codebaseTool: Tool = {
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.CodebaseTool,
     `To search the codebase, use the ${BuiltInToolNames.CodebaseTool} tool with a natural language query. For example, to find authentication logic, you might respond with:`,
-    `<query>How is user authentication handled in this codebase?</query>`,
+    [["query", "How is user authentication handled in this codebase?"]],
   ),
 };

@@ -71,9 +71,18 @@ To create a rule, respond with a ${BuiltInToolNames.CreateRuleBlock} tool call a
 - globs: ${GLOB_ARG_DESC}
 - alwaysApply: ${ALWAYS_APPLY_DESC}
 For example:`,
-    `<name>Use PropTypes</name>
-<rule>Always use PropTypes when declaring React component properties</rule>
-<description>Ensure that all prop types are explicitly declared for better type safety and code maintainability in React components.</description>
-<globs>**/*.js</globs>`,
+    [
+      ["name", "Use PropTypes"],
+      [
+        "rule",
+        "Always use PropTypes when declaring React component properties",
+      ],
+      [
+        "description",
+        "Ensure that all prop types are explicitly declared for better type safety and code maintainability in React components.",
+      ],
+      ["globs", "**/*.js"],
+      ["alwaysApply", "false"],
+    ],
   ),
 };

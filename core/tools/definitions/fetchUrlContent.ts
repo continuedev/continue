@@ -29,6 +29,6 @@ export const fetchUrlContentTool: Tool = {
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.FetchUrlContent,
     `To fetch the content of a URL, use the ${BuiltInToolNames.FetchUrlContent} tool. For example, to read the contents of a webpage, you might respond with:`,
-    `<url>https://example.com</url>`,
+    [["url", "https://example.com"]],
   ),
 };

@@ -30,6 +30,6 @@ export const grepSearchTool: Tool = {
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.GrepSearch,
     `To perform a grep search within the project, call the ${BuiltInToolNames.GrepSearch} tool with the query pattern to match. For example:`,
-    `<query>.*main_services.*</query>`,
+    [["query", ".*main_services.*"]],
   ),
 };

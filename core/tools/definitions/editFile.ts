@@ -46,10 +46,12 @@ export const editFileTool: Tool = {
 - changes: ${CHANGES_DESCRIPTION}
 Only use this tool if you already know the contents of the file. Otherwise, use the ${BuiltInToolNames.ReadFile} or ${BuiltInToolNames.ReadCurrentlyOpenFile} tool to read it first.
 For example:`,
-    `<filepath>path/to/the_file.ts</filepath><changes>// ... existing code ...
-    function subtract(a: number, b: number): number {
-      return a - b;
-    }
-    // ... rest of code ...</changes>`,
+    [
+      ["filepath", "path/to/the_file.ts"],
+      [
+        "changes",
+        "// ... existing code ...\nfunction subtract(a: number, b: number): number {\n  return a - b;\n}\n// ... rest of code ...",
+      ],
+    ],
   ),
 };

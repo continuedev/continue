@@ -35,6 +35,9 @@ export const lsTool: Tool = {
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.LSTool,
     `To list files and folders in a given directory, call the ${BuiltInToolNames.LSTool} tool with "dirPath" and "recursive". For example:`,
-    `<dirPath>path/to/dir</dirPath>\n<recursive>false</recursive>`,
+    [
+      ["dirPath", "path/to/dir"],
+      ["recursive", "false"],
+    ],
   ),
 };

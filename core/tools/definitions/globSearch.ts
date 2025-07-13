@@ -29,6 +29,6 @@ export const globSearchTool: Tool = {
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.FileGlobSearch,
     `To return a list of files based on a glob search pattern, use the ${BuiltInToolNames.FileGlobSearch} tool`,
-    `<pattern>*.py</pattern>`,
+    [["pattern", "*.py"]],
   ),
 };
