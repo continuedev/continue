@@ -25,7 +25,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/src/index.ts",
-      "args": ["--assistant", "nate/default-assistant"],
+      "args": ["--config", "nate/default-assistant"],
       "env": {
         "NODE_ENV": "development"
       },
@@ -45,7 +45,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/dist/index.js",
       "preLaunchTask": "npm: build",
-      "args": ["--assistant", "default/assistant", "--prompt", "Hello world"],
+      "args": ["--config", "nate/default-assistant", "--prompt", "Hello world"],
       "env": {
         "NODE_ENV": "development"
       },
@@ -66,8 +66,8 @@
       "preLaunchTask": "npm: build",
       "args": [
         "--headless",
-        "--assistant",
-        "default/assistant",
+        "--config",
+        "nate/default-assistant",
         "--prompt",
         "What is TypeScript?"
       ],

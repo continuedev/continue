@@ -28,7 +28,7 @@ continue-cli
 ### With Custom Assistant
 
 ```bash
-continue-cli --assistant-path /path/to/assistant.json
+continue-cli --config /path/to/config.yaml
 ```
 
 ### Headless Mode
