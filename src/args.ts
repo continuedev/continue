@@ -1,10 +1,8 @@
-import * as os from "os";
-import * as path from "path";
-
 export interface CommandLineArgs {
   isHeadless: boolean;
   configPath: string;
   prompt?: string; // Optional prompt argument
+  useTUI: boolean; // New flag for TUI mode
 }
 
 /**
@@ -17,12 +15,17 @@ export function parseArgs(): CommandLineArgs {
   // Default values
   const result: CommandLineArgs = {
     isHeadless: false,
-    configPath: path.join(os.homedir(), ".continue", "config.yaml"),
+    configPath: "nate/default-assistant",
+    useTUI: false,
   };
 
   // Parse flags
   if (args.includes("--headless")) {
     result.isHeadless = true;
+  }
+
+  if (args.includes("--tui")) {
+    result.useTUI = true;
   }
 
   // Get config path from --config flag

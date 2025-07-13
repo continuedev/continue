@@ -13,6 +13,7 @@ import { configureLogger } from "./logger.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
+import { startTUIChat } from "./ui/index.js";
 
 // Parse command line arguments
 const args = parseArgs();
@@ -26,6 +27,12 @@ async function chat() {
   if (!isAuthenticated) {
     console.error(chalk.red("Authentication failed. Exiting..."));
     process.exit(1);
+  }
+
+  // If TUI mode is requested, start the TUI chat
+  if (args.useTUI) {
+    await startTUIChat(args.configPath, args.prompt);
+    return;
   }
 
   const authConfig = loadAuthConfig();

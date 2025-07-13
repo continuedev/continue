@@ -5,6 +5,7 @@ A command-line interface for Continue Dev that provides an interactive AI-assist
 ## Features
 
 - 🤖 Interactive AI Assistant Chat
+- 🎨 Beautiful Terminal User Interface (TUI)
 - 🔐 Secure Authentication via WorkOS
 - 🛠️ Built-in Development Tools
 - ⚡ Real-time Response Streaming
@@ -23,6 +24,12 @@ npm install @continuedev/cli -g
 
 ```bash
 continue-cli
+```
+
+### Terminal User Interface Mode
+
+```bash
+continue-cli --tui
 ```
 
 ### With Custom Assistant
@@ -87,6 +94,7 @@ npm test
 src/
 ├── auth/           # Authentication implementation
 ├── tools/          # CLI tools and utilities
+├── ui/             # Terminal User Interface components
 ├── index.ts        # Main entry point
 ├── args.ts         # Command line argument parsing
 ├── client.ts       # Client implementation
@@ -99,6 +107,7 @@ src/
 - `@continuedev/*` packages for core functionality
 - `@workos-inc/node` for authentication
 - `openai` for AI capabilities
+- `ink` and `react` for Terminal UI
 - Various utility packages (chalk, axios, etc.)
 
 ## License
