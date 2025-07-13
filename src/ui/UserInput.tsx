@@ -6,12 +6,14 @@ interface UserInputProps {
   onSubmit: (message: string) => void;
   isWaitingForResponse: boolean;
   inputMode: boolean;
+  onInterrupt?: () => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
   onSubmit,
   isWaitingForResponse,
   inputMode,
+  onInterrupt,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputText, setInputText] = useState("");
@@ -21,6 +23,12 @@ const UserInput: React.FC<UserInputProps> = ({
   useInput((input, key) => {
     if (key.ctrl && (input === "c" || input === "d")) {
       exit();
+      return;
+    }
+
+    // Handle escape key to interrupt streaming
+    if (key.escape && isWaitingForResponse && onInterrupt) {
+      onInterrupt();
       return;
     }
 

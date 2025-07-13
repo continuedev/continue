@@ -62,7 +62,8 @@ export async function streamChatResponse(
   chatHistory: ChatCompletionMessageParam[],
   assistant: ContinueClient["assistant"],
   client: ContinueClient["client"],
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
+  abortController?: AbortController
 ) {
   // Prepare tools for the API call
   const toolsForRequest = getAllTools();
@@ -84,6 +85,8 @@ export async function streamChatResponse(
         messages: chatHistory,
         stream: true,
         tools: toolsForRequest,
+      }, {
+        signal: abortController?.signal,
       });
     } catch (error: any) {
       console.error(
@@ -99,6 +102,11 @@ export async function streamChatResponse(
     let toolArguments = "";
 
     for await (const chunk of stream) {
+      // Check if we should abort
+      if (abortController?.signal.aborted) {
+        break;
+      }
+
       // Handle regular content
       if (chunk.choices[0].delta.content) {
         const content = chunk.choices[0].delta.content;

@@ -37,6 +37,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [inputMode, setInputMode] = useState(true);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
   const { exit } = useApp();
 
   // Handle initial prompt
@@ -79,6 +80,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setMessages((prev) => [...prev, { role: "user", content: message }]);
 
     // Start streaming response
+    const controller = new AbortController();
+    setAbortController(controller);
     setIsWaitingForResponse(true);
     setInputMode(false);
 
@@ -122,7 +125,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         },
       };
 
-      await streamChatResponse(newHistory, assistant, client, streamCallbacks);
+      await streamChatResponse(newHistory, assistant, client, streamCallbacks, controller);
 
       // Finalize the assistant message
       const finalAssistantMessage: ChatCompletionMessageParam = {
@@ -147,8 +150,19 @@ const TUIChat: React.FC<TUIChatProps> = ({
         { role: "system", content: errorMessage },
       ]);
     } finally {
+      setAbortController(null);
       setIsWaitingForResponse(false);
       setInputMode(true);
+    }
+  };
+
+  const handleInterrupt = () => {
+    if (abortController && isWaitingForResponse) {
+      abortController.abort();
+      setMessages((prev) => [
+        ...prev,
+        { role: "system", content: "[Interrupted by user]" },
+      ]);
     }
   };
 
@@ -198,6 +212,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onSubmit={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
           inputMode={inputMode}
+          onInterrupt={handleInterrupt}
         />
       </Box>
     </Box>
