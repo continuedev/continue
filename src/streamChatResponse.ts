@@ -50,11 +50,19 @@ export function getAllTools() {
 
 type TODO = any;
 
+export interface StreamCallbacks {
+  onContent?: (content: string) => void;
+  onToolStart?: (toolName: string) => void;
+  onToolResult?: (result: string) => void;
+  onToolError?: (error: string) => void;
+}
+
 // Define a function to handle streaming responses with tool calling
 export async function streamChatResponse(
   chatHistory: ChatCompletionMessageParam[],
   assistant: ContinueClient["assistant"],
-  client: ContinueClient["client"]
+  client: ContinueClient["client"],
+  callbacks?: StreamCallbacks
 ) {
   // Prepare tools for the API call
   const toolsForRequest = getAllTools();
@@ -94,7 +102,11 @@ export async function streamChatResponse(
       // Handle regular content
       if (chunk.choices[0].delta.content) {
         const content = chunk.choices[0].delta.content;
-        process.stdout.write(chalk.white(content));
+        if (callbacks?.onContent) {
+          callbacks.onContent(content);
+        } else {
+          process.stdout.write(chalk.white(content));
+        }
         aiResponse += content;
       }
 
@@ -121,11 +133,15 @@ export async function streamChatResponse(
             if (toolCall) {
               if (!toolCall.name) {
                 toolCall.name = toolCallDelta.function.name;
-                process.stdout.write(
-                  `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
-                    toolCall.name
-                  )}${chalk.yellow("]")}`
-                );
+                if (callbacks?.onToolStart) {
+                  callbacks.onToolStart(toolCall.name);
+                } else {
+                  process.stdout.write(
+                    `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
+                      toolCall.name
+                    )}${chalk.yellow("]")}`
+                  );
+                }
               }
             }
           }
@@ -152,7 +168,9 @@ export async function streamChatResponse(
       }
     }
 
-    console.info(); // Add a newline after the response
+    if (!callbacks?.onContent) {
+      console.info(); // Add a newline after the response
+    }
 
     // Add the assistant's response to chat history if there's content or tool calls
     if (currentToolCalls.length > 0) {
@@ -193,7 +211,11 @@ export async function streamChatResponse(
             content: toolResult,
           });
 
-          console.info(chalk.green(toolResult) + "\n");
+          if (callbacks?.onToolResult) {
+            callbacks.onToolResult(toolResult);
+          } else {
+            console.info(chalk.green(toolResult) + "\n");
+          }
         } catch (error) {
           const errorMessage = `Error executing tool ${toolCall.name}: ${
             error instanceof Error ? error.message : String(error)
@@ -203,11 +225,15 @@ export async function streamChatResponse(
             tool_call_id: toolCall.id,
             content: errorMessage,
           });
-          console.info(
-            `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(
-              ")"
-            )}`
-          );
+          if (callbacks?.onToolError) {
+            callbacks.onToolError(errorMessage);
+          } else {
+            console.info(
+              `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(
+                ")"
+              )}`
+            );
+          }
         }
       }
 

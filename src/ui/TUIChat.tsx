@@ -3,7 +3,7 @@ import { Box, Text, useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
-import { streamChatResponse } from "../streamChatResponse.js";
+import { streamChatResponse, StreamCallbacks } from "../streamChatResponse.js";
 import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
@@ -92,18 +92,45 @@ const TUIChat: React.FC<TUIChatProps> = ({
       const newHistory = [...chatHistory, newUserMessage];
       let assistantResponse = "";
 
-      // Mock the streaming for now - you'll need to modify streamChatResponse
-      // to accept a callback or use a different approach
-      await streamChatResponse(newHistory, assistant, client);
+      // Create callbacks to handle streaming updates
+      const streamCallbacks: StreamCallbacks = {
+        onContent: (content: string) => {
+          assistantResponse += content;
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage.isStreaming) {
+              lastMessage.content += content;
+            }
+            return newMessages;
+          });
+        },
+        onToolStart: (toolName: string) => {
+          setMessages((prev) => [
+            ...prev,
+            { role: "system", content: `[Using tool: ${toolName}]` },
+          ]);
+        },
+        onToolResult: (result: string) => {
+          setMessages((prev) => [
+            ...prev,
+            { role: "system", content: result },
+          ]);
+        },
+        onToolError: (error: string) => {
+          setMessages((prev) => [
+            ...prev,
+            { role: "system", content: `[Tool error: ${error}]` },
+          ]);
+        },
+      };
 
-      // For now, we'll just wait and then get the response
-      // In a real implementation, you'd need to modify streamChatResponse
-      // to provide a way to capture the streamed content
+      await streamChatResponse(newHistory, assistant, client, streamCallbacks);
 
       // Finalize the assistant message
       const finalAssistantMessage: ChatCompletionMessageParam = {
         role: "assistant",
-        content: assistantResponse || "Response received", // Fallback
+        content: assistantResponse,
       };
       setChatHistory((prev) => [...prev, finalAssistantMessage]);
 
@@ -113,9 +140,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
         const lastMessage = newMessages[newMessages.length - 1];
         if (lastMessage.isStreaming) {
           lastMessage.isStreaming = false;
-          if (!lastMessage.content) {
-            lastMessage.content = "Response received";
-          }
         }
         return newMessages;
       });
@@ -159,24 +183,27 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   return (
     <Box flexDirection="column" height="100%">
-      {/* Chat history */}
-      <Box flexDirection="column" flexGrow={1} paddingX={1}>
+      {/* Chat history - takes up all available space above input */}
+      <Box flexDirection="column" flexGrow={1} paddingX={1} overflow="hidden">
         {messages.map(renderMessage)}
       </Box>
 
-      {/* Input area */}
-      <UserInput
-        onSubmit={handleUserMessage}
-        isWaitingForResponse={isWaitingForResponse}
-        inputMode={inputMode}
-      />
-
-      {/* Status */}
-      {isWaitingForResponse && (
-        <Box paddingX={1}>
-          <Text color="yellow">Waiting for response...</Text>
-        </Box>
-      )}
+      {/* Fixed bottom section */}
+      <Box flexDirection="column" flexShrink={0}>
+        {/* Status */}
+        {isWaitingForResponse && (
+          <Box paddingX={1}>
+            <Text color="yellow">Waiting for response...</Text>
+          </Box>
+        )}
+        
+        {/* Input area - always at bottom */}
+        <UserInput
+          onSubmit={handleUserMessage}
+          isWaitingForResponse={isWaitingForResponse}
+          inputMode={inputMode}
+        />
+      </Box>
     </Box>
   );
 };
