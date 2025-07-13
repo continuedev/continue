@@ -1,3 +1,4 @@
+import { expect } from "vitest";
 import MockLLM from "../../../llm/llms/Mock";
 import { testConfigHandler, testIde } from "../../../test/fixtures";
 import { joinPathsToUri } from "../../../util/uri";

@@ -9,11 +9,12 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectSelectedChatModel } from "../../../redux/slices/configSlice";
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
-import { DragOverlay, InputBoxDiv } from "./components";
+import { DragOverlay } from "./components/DragOverlay";
+import { InputBoxDiv } from "./components/StyledComponents";
 import { useMainEditor } from "./MainEditorProvider";
 import "./TipTapEditor.css";
-import { handleImageFile } from "./utils";
 import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
+import { handleImageFile } from "./utils/imageUtils";
 import { useEditorEventHandlers } from "./utils/keyHandlers";
 
 export interface TipTapEditorProps {
@@ -178,7 +179,11 @@ export function TipTapEditor(props: TipTapEditorProps) {
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
-      className={shouldHideToolbar ? "cursor-default" : "cursor-text"}
+      className={
+        !props.isMainInput && shouldHideToolbar
+          ? "cursor-pointer hover:brightness-105"
+          : "cursor-text"
+      }
       onClick={() => {
         editor?.commands.focus();
       }}

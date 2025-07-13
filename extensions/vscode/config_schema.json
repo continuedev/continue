@@ -359,8 +359,18 @@
           "description": "The AWS security profile to use",
           "type": "string"
         },
+        "accessKeyId": {
+          "title": "Access Key ID",
+          "description": "AWS access key id (can be used together with secretAccessKey in place of profile)",
+          "type": "string"
+        },
+        "secretAccessKey": {
+          "title": "Secret Access Key",
+          "description": "AWS secret access key (can be used together with secretAccessKey in place of profile)",
+          "type": "string"
+        },
         "modelArn": {
-          "title": "Profile",
+          "title": "Model ARN",
           "description": "The AWS arn for the imported model",
           "type": "string"
         },
@@ -868,7 +878,21 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["command-r", "command-r-plus"]
+                "enum": [
+                  "c4ai-aya-expanse-8b",
+                  "c4ai-aya-expanse-32b",
+                  "c4ai-aya-vision-8b",
+                  "c4ai-aya-vision-32b",
+                  "command-r",
+                  "command-r-plus",
+                  "command-r-03-2024",
+                  "command-r-plus-04-2024",
+                  "command-r-08-2024",
+                  "command-r-plus-08-2024",
+                  "command-r7b-12-2024",
+                  "command-r7b-arabic-02-2025",
+                  "command-a-03-2025"
+                ]
               }
             }
           }
@@ -2134,6 +2158,29 @@
           "if": {
             "properties": {
               "name": {
+                "enum": ["search"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "maxResults": {
+                    "title": "Max Results",
+                    "description": "The maximum number of results to return",
+                    "default": 200,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
                 "enum": ["open"]
               }
             }
@@ -2865,6 +2912,16 @@
             "profile": {
               "title": "Profile",
               "description": "The AWS security profile to use",
+              "type": "string"
+            },
+            "accessKeyId": {
+              "title": "Access Key ID",
+              "description": "AWS access key id (can be used together with secretAccessKey in place of profile)",
+              "type": "string"
+            },
+            "secretAccessKey": {
+              "title": "Secret Access Key",
+              "description": "AWS secret access key (can be used together with secretAccessKey in place of profile)",
               "type": "string"
             }
           },

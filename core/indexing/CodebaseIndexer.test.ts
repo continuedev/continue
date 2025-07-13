@@ -124,14 +124,6 @@ describe("CodebaseIndexer", () => {
     return updates;
   }
 
-  async function refreshIndexFiles(files: string[]) {
-    const updates = [];
-    for await (const update of codebaseIndexer.refreshFiles(files)) {
-      updates.push(update);
-    }
-    return updates;
-  }
-
   async function getAllIndexedFiles() {
     const files = await testIndex.getIndexedFilesForTags(
       await testIde.getTags(testIndex.artifactId),
@@ -197,7 +189,7 @@ describe("CodebaseIndexer", () => {
   test("should successfuly re-index specific files", async () => {
     // Could add more specific tests for this but uses similar logic
     const before = await getAllIndexedFiles();
-    await refreshIndexFiles(before);
+    await codebaseIndexer.refreshCodebaseIndexFiles(before);
 
     const after = await getAllIndexedFiles();
     expect(after.length).toBe(before.length);

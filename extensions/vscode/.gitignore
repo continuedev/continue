@@ -9,6 +9,7 @@ src/client
 exe
 bin
 assets
+tmp
 
 gui/**
 

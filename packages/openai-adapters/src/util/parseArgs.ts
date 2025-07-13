@@ -3,7 +3,7 @@ export function safeParseArgs(
   errorId?: string,
 ): Record<string, any> {
   try {
-    return JSON.parse(args ?? "{}");
+    return JSON.parse(args?.trim() || "{}");
   } catch (e) {
     const identifier = errorId ? `Call: ${errorId}\nArgs:${args}\n` : "";
     console.error(

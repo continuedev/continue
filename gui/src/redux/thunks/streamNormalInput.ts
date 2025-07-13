@@ -1,62 +1,148 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions } from "core";
+import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
+import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  setActive,
+  setAppliedRulesAtIndex,
+  setInactive,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import {
+  constructMessages,
+  getBaseSystemMessage,
+} from "../util/constructMessages";
 import { callCurrentTool } from "./callCurrentTool";
+
+/**
+ * Filters tools based on the selected model's capabilities.
+ * Returns either the edit file tool or search and replace tool, but not both.
+ */
+function filterToolsForModel(
+  tools: Tool[],
+  selectedModel: ModelDescription,
+): Tool[] {
+  const editFileTool = tools.find(
+    (tool) => tool.function.name === BuiltInToolNames.EditExistingFile,
+  );
+  const searchAndReplaceTool = tools.find(
+    (tool) => tool.function.name === BuiltInToolNames.SearchAndReplaceInFile,
+  );
+
+  // If we don't have both tools, return tools as-is
+  if (!editFileTool || !searchAndReplaceTool) {
+    return tools;
+  }
+
+  // Determine which tool to use based on the model
+  const shouldUseFindReplace = shouldUseFindReplaceEdits(selectedModel);
+
+  // Filter out the unwanted tool
+  return tools.filter((tool) => {
+    if (tool.function.name === BuiltInToolNames.EditExistingFile) {
+      return !shouldUseFindReplace;
+    }
+    if (tool.function.name === BuiltInToolNames.SearchAndReplaceInFile) {
+      return shouldUseFindReplace;
+    }
+    return true;
+  });
+}
+
+/**
+ * Determines whether to use search and replace tool instead of edit file
+ * Right now we only know that this is reliable with Claude models
+ */
+function shouldUseFindReplaceEdits(model: ModelDescription): boolean {
+  return model.model.includes("claude");
+}
 
 export const streamNormalInput = createAsyncThunk<
   void,
   {
-    messages: ChatMessage[];
     legacySlashCommandData?: ToCoreProtocol["llm/streamChat"][0]["legacySlashCommandData"];
   },
   ThunkApiType
 >(
   "chat/streamNormalInput",
-  async (
-    { messages, legacySlashCommandData },
-    { dispatch, extra, getState },
-  ) => {
-    // Gather state
+  async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
-    const streamAborter = state.session.streamAborter;
     if (!selectedChatModel) {
-      throw new Error("Default model not defined");
+      throw new Error("No chat model selected");
     }
 
-    let completionOptions: LLMFullCompletionOptions = {};
-    const activeTools = selectActiveTools(state);
+    // Get tools and filter them based on the selected model
+    const allActiveTools = selectActiveTools(state);
+    const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
     const toolsSupported = modelSupportsTools(selectedChatModel);
+
+    // Construct completion options
+    let completionOptions: LLMFullCompletionOptions = {};
     if (toolsSupported && activeTools.length > 0) {
       completionOptions = {
         tools: activeTools,
       };
     }
 
-    // Send request
+    if (state.session.hasReasoningEnabled) {
+      completionOptions = {
+        ...completionOptions,
+        reasoning: true,
+        reasoningBudgetTokens: completionOptions.reasoningBudgetTokens ?? 2048,
+      };
+    }
+
+    // Construct messages (excluding system message)
+    const baseSystemMessage = getBaseSystemMessage(
+      state.session.mode,
+      selectedChatModel,
+    );
+
+    const withoutMessageIds = state.session.history.map((item) => {
+      const { id, ...messageWithoutId } = item.message;
+      return { ...item, message: messageWithoutId };
+    });
+    const { messages, appliedRules, appliedRuleIndex } = constructMessages(
+      withoutMessageIds,
+      baseSystemMessage,
+      state.config.config.rules,
+      state.ui.ruleSettings,
+    );
+
+    // TODO parallel tool calls will cause issues with this
+    // because there will be multiple tool messages, so which one should have applied rules?
+    dispatch(
+      setAppliedRulesAtIndex({
+        index: appliedRuleIndex,
+        appliedRules: appliedRules,
+      }),
+    );
+
+    dispatch(setActive());
+
+    // Send request and stream response
+    const streamAborter = state.session.streamAborter;
     const gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
-        messages,
+        messages: messages,
         legacySlashCommandData,
       },
       streamAborter.signal,
     );
 
-    // Stream response
     let next = await gen.next();
     while (!next.done) {
       if (!getState().session.isStreaming) {
@@ -73,21 +159,23 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(addPromptCompletionPair([next.value]));
 
       try {
-        if (state.session.mode === "chat" || state.session.mode === "agent") {
-          extra.ideMessenger.post("devdata/log", {
-            name: "chatInteraction",
-            data: {
-              prompt: next.value.prompt,
-              completion: next.value.completion,
-              modelProvider: selectedChatModel.underlyingProviderName,
-              modelTitle: selectedChatModel.title,
-              sessionId: state.session.id,
-              ...(state.session.mode === "agent" && {
-                tools: activeTools.map((tool) => tool.function.name),
-              }),
-            },
-          });
-        }
+        extra.ideMessenger.post("devdata/log", {
+          name: "chatInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: selectedChatModel.underlyingProviderName,
+            modelTitle: selectedChatModel.title,
+            sessionId: state.session.id,
+            ...(!!activeTools.length && {
+              tools: activeTools.map((tool) => tool.function.name),
+            }),
+            rules: appliedRules.map((rule) => ({
+              id: getRuleId(rule),
+              rule: rule.rule,
+            })),
+          },
+        });
         // else if (state.session.mode === "edit") {
         //   extra.ideMessenger.post("devdata/log", {
         //     name: "editInteraction",
@@ -112,6 +200,7 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(
         setToolGenerated({
           toolCallId: toolCallState.toolCallId,
+          tools: state.config.config.tools,
         }),
       );
 
@@ -121,7 +210,11 @@ export const streamNormalInput = createAsyncThunk<
       ) {
         const response = await dispatch(callCurrentTool());
         unwrapResult(response);
+      } else {
+        dispatch(setInactive());
       }
+    } else {
+      dispatch(setInactive());
     }
   },
 );

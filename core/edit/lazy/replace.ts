@@ -59,6 +59,7 @@ export async function* getReplacementWithLlm(
   linesBefore: string[],
   linesAfter: string[],
   llm: ILLM,
+  abortController: AbortController,
 ): AsyncGenerator<string> {
   const userPrompt = dedent`
     ORIGINAL CODE:
@@ -88,7 +89,7 @@ export async function* getReplacementWithLlm(
       { role: "user", content: userPrompt },
       { role: "assistant", content: assistantPrompt },
     ],
-    new AbortController().signal,
+    abortController.signal,
   );
 
   let lines = streamLines(completion);

@@ -13,10 +13,10 @@ export const createRuleBlock: Tool = {
   function: {
     name: BuiltInToolNames.CreateRuleBlock,
     description:
-      "Creates a persistent rule for all future conversations. For establishing code standards or preferences that should be applied consistently. To modify existing rules, use the edit tool instead.",
+      'Creates a "rule" that can be referenced in future conversations. This should be used whenever you want to establish code standards / preferences that should be applied consistently, or when you want to avoid making a mistake again. To modify existing rules, use the edit tool instead.\n\nRule Types:\n- Always: Include only "rule" (always included in model context)\n- Auto Attached: Include "rule", "globs", and/or "regex" (included when files match patterns)\n- Agent Requested: Include "rule" and "description" (AI decides when to apply based on description)\n- Manual: Include only "rule" (only included when explicitly mentioned using @ruleName)',
     parameters: {
       type: "object",
-      required: ["name", "rule", "alwaysApply", "description"],
+      required: ["name", "rule", "description"],
       properties: {
         name: {
           type: "string",
@@ -30,12 +30,23 @@ export const createRuleBlock: Tool = {
         },
         description: {
           type: "string",
-          description: "Short description of the rule",
+          description:
+            "Description of when this rule should be applied. Required for Agent Requested rules (AI decides when to apply). Optional for other types.",
         },
         globs: {
           type: "string",
           description:
             "Optional file patterns to which this rule applies (e.g. ['**/*.{ts,tsx}'] or ['src/**/*.ts', 'tests/**/*.ts'])",
+        },
+        regex: {
+          type: "string",
+          description:
+            "Optional regex patterns to match against file content. Rule applies only to files whose content matches the pattern (e.g. 'useEffect' for React hooks or '\\bclass\\b' for class definitions)",
+        },
+        alwaysApply: {
+          type: "boolean",
+          description:
+            "Whether this rule should always be applied. Set to false for Agent Requested and Manual rules. Omit or set to true for Always and Auto Attached rules.",
         },
       },
     },

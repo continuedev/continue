@@ -1,0 +1,11 @@
+name: Continue Documentation MCP
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Continue Docs Search
+    type: stdio
+    command: npx
+    args:
+      - mint-mcp
+      - add
+      - continue-docs

@@ -1,5 +1,5 @@
 import { useAppDispatch } from "../../../../redux/hooks";
-import { cancelStream } from "../../../../redux/thunks";
+import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
 import { Container, StopButton } from "./components";
 import { GeneratingIndicator } from "./GeneratingIndicator";

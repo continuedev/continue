@@ -1,1 +1,1 @@
-export * from "./ModeSelect";
+export { ModeSelect } from "./ModeSelect";

@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { setSelectedProfile } from "../slices";
+import { setSelectedProfile } from "../slices/profilesSlice";
 import { ThunkApiType } from "../store";
 
 /**

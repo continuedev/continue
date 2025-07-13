@@ -161,12 +161,7 @@ function testLLM(
                   group: "Hello",
                 },
               ],
-              toolChoice: {
-                type: "function",
-                function: {
-                  name: "say_hello",
-                },
-              },
+              toolChoice: { type: "function", function: { name: "say_hello" } },
             },
           )) {
             const typedChunk = chunk as AssistantChatMessage;
@@ -211,10 +206,7 @@ describe("LLM", () => {
       model: "claude-3-5-sonnet-latest",
       apiKey: process.env.ANTHROPIC_API_KEY,
     }),
-    {
-      skip: false,
-      testToolCall: true,
-    },
+    { skip: false, testToolCall: true },
   );
   testLLM(new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o" }), {
     skip: false,
@@ -240,12 +232,7 @@ describe("LLM", () => {
       apiKey: process.env.MISTRAL_API_KEY,
       model: "codestral-latest",
     }),
-    {
-      testFim: true,
-      skip: false,
-      testToolCall: true,
-      timeout: 60000,
-    },
+    { testFim: true, skip: false, testToolCall: true, timeout: 60000 },
   );
   testLLM(
     new Azure({
@@ -260,11 +247,10 @@ describe("LLM", () => {
   );
   testLLM(
     new Azure({
-      apiKey: process.env.AZURE_FOUNDRY_API_KEY,
-      model: "codestral-latest",
-      apiBase:
-        "https://codestral-2501-continue-testing.eastus.models.ai.azure.com",
-      apiType: "azure-foundry",
+      apiKey: process.env.AZURE_FOUNDRY_CODESTRAL_API_KEY,
+      model: "Codestral-2501",
+      apiBase: "https://continue-foundry-resource.services.ai.azure.com",
+      env: { apiType: "azure-foundry", apiVersion: "2024-05-01-preview" },
     }),
     { testFim: false, skip: false, timeout: 20000 },
   );

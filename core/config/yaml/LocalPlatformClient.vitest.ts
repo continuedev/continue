@@ -123,7 +123,6 @@ describe("LocalPlatformClient", () => {
       expect(
         (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
       ).toBe(secretValue);
-      console.log("debug1 resolved fqsn", resolvedFQSNs);
     });
   });
 

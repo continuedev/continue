@@ -25,16 +25,7 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
       });
   }
 
-  async embed(chunks: string[]) {
-    const batchedChunks = this.getBatchedChunks(chunks);
-
-    const results = await Promise.all(
-      batchedChunks.map((batch) => this.doEmbedRequest(batch)),
-    );
-    return results.flat();
-  }
-
-  async doEmbedRequest(batch: string[]): Promise<number[][]> {
+  async _embed(batch: string[]): Promise<number[][]> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };

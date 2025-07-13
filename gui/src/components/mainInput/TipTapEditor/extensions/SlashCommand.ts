@@ -22,11 +22,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
           // First delete the slash character and any text after it
           editor.chain().focus().deleteRange(range).run();
 
-          editor.commands.insertPrompt({
-            name: props.title,
-            description: props.description,
-            prompt: props.content,
-          });
+          editor.commands.insertPrompt(props);
         },
       },
     };

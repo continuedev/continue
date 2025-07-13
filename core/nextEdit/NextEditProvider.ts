@@ -1,26 +1,33 @@
+import * as path from "path";
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { IDE, ILLM } from "../index.js";
+import { ChatMessage, IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
-import { shouldCompleteMultiline } from "../autocomplete/classification/shouldCompleteMultiline.js";
 import { ContextRetrievalService } from "../autocomplete/context/ContextRetrievalService.js";
 
 import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
-import { postprocessCompletion } from "../autocomplete/postprocessing/index.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
-import { getAllSnippets } from "../autocomplete/snippets/index.js";
-import { renderPrompt } from "../autocomplete/templating/index.js";
+import { getAllSnippetsWithoutRace } from "../autocomplete/snippets/index.js";
 import { GetLspDefinitionsFunction } from "../autocomplete/types.js";
 import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebouncer.js";
-import { AutocompleteLoggingService } from "../autocomplete/util/AutocompleteLoggingService.js";
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
+import { AutocompleteInput } from "../autocomplete/util/types.js";
+import { replaceEscapedCharacters } from "../util/text.js";
 import {
-  AutocompleteInput,
-  AutocompleteOutcome,
-} from "../autocomplete/util/types.js";
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "./constants.js";
+import { NextEditLoggingService } from "./NextEditLoggingService.js";
+import {
+  renderDefaultSystemPrompt,
+  renderDefaultUserPrompt,
+  renderPrompt,
+} from "./templating/NextEditPromptEngine.js";
+import { NextEditOutcome, Prompt, PromptMetadata } from "./types.js";
+// import { renderPrompt } from "./templating/NextEditPromptEngine.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -33,23 +40,65 @@ const ERRORS_TO_IGNORE = [
 ];
 
 export class NextEditProvider {
+  private static instance: NextEditProvider | null = null;
+
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
   private debouncer = new AutocompleteDebouncer();
   private completionStreamer: CompletionStreamer;
-  private loggingService = new AutocompleteLoggingService();
+  private loggingService: NextEditLoggingService;
   private contextRetrievalService: ContextRetrievalService;
+  private endpointType: "default" | "fineTuned";
+  private diffContext: string = "";
+  private promptMetadata: PromptMetadata | null = null;
 
-  constructor(
+  private constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly _injectedGetLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
     private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
+    endpointType: "default" | "fineTuned",
   ) {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
+    this.endpointType = endpointType;
+    this.loggingService = NextEditLoggingService.getInstance();
+  }
+
+  public static initialize(
+    configHandler: ConfigHandler,
+    ide: IDE,
+    injectedGetLlm: () => Promise<ILLM | undefined>,
+    onError: (e: any) => void,
+    getDefinitionsFromLsp: GetLspDefinitionsFunction,
+    endpointType: "default" | "fineTuned",
+  ): NextEditProvider {
+    if (!NextEditProvider.instance) {
+      NextEditProvider.instance = new NextEditProvider(
+        configHandler,
+        ide,
+        injectedGetLlm,
+        onError,
+        getDefinitionsFromLsp,
+        endpointType,
+      );
+    }
+    return NextEditProvider.instance;
+  }
+
+  public static getInstance(): NextEditProvider {
+    if (!NextEditProvider.instance) {
+      throw new Error(
+        "NextEditProvider has not been initialized. Call initialize() first.",
+      );
+    }
+    return NextEditProvider.instance;
+  }
+
+  public addDiffToContext(diff: string): void {
+    this.diffContext = diff;
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -109,18 +158,21 @@ export class NextEditProvider {
     this.loggingService.cancel();
   }
 
-  public accept(completionId: string) {
-    const outcome = this.loggingService.accept(completionId);
-    if (!outcome) {
-      return;
-    }
-    this.bracketMatchingService.handleAcceptedCompletion(
-      outcome.completion,
-      outcome.filepath,
-    );
-  }
+  // public accept(completionId: string) {
+  //   const outcome = this.loggingService.accept(completionId);
+  //   if (!outcome) {
+  //     return;
+  //   }
+  // }
 
-  public markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
+  // public reject(completionId: string) {
+  //   const outcome = this.loggingService.reject(completionId);
+  //   if (!outcome) {
+  //     return;
+  //   }
+  // }
+
+  public markDisplayed(completionId: string, outcome: NextEditOutcome) {
     this.loggingService.markDisplayed(completionId, outcome);
   }
 
@@ -136,7 +188,7 @@ export class NextEditProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
-  ): Promise<AutocompleteOutcome | undefined> {
+  ): Promise<NextEditOutcome | undefined> {
     try {
       // Create abort signal if not given
       if (!token) {
@@ -174,7 +226,7 @@ export class NextEditProvider {
       }
 
       const [snippetPayload, workspaceDirs] = await Promise.all([
-        getAllSnippets({
+        getAllSnippetsWithoutRace({
           helper,
           ide: this.ide,
           getDefinitionsFromLsp: this.getDefinitionsFromLsp,
@@ -183,100 +235,95 @@ export class NextEditProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      const { prompt, prefix, suffix, completionOptions } = renderPrompt({
-        snippetPayload,
-        workspaceDirs,
-        helper,
-      });
+      // TODO: Toggle between the default endpoint and the finetuned endpoint.
+      const prompts: Prompt[] = [];
 
-      // Completion
-      let completion: string | undefined = "";
-
-      const cache = await autocompleteCache;
-      const cachedCompletion = helper.options.useCache
-        ? await cache.get(helper.prunedPrefix)
-        : undefined;
-      let cacheHit = false;
-      if (cachedCompletion) {
-        // Cache
-        cacheHit = true;
-        completion = cachedCompletion;
+      if (this.endpointType === "default") {
+        prompts.push(renderDefaultSystemPrompt());
+        prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
       } else {
-        const multiline =
-          !helper.options.transform || shouldCompleteMultiline(helper);
+        const promptMetadata = renderPrompt(helper, this.diffContext);
+        this.promptMetadata = promptMetadata;
+        prompts.push(promptMetadata.prompt);
+      }
 
-        const completionStream =
-          this.completionStreamer.streamCompletionWithFilters(
-            token,
-            llm,
-            prefix,
-            suffix,
-            prompt,
-            multiline,
-            completionOptions,
-            helper,
-          );
-
-        for await (const update of completionStream) {
-          completion += update;
-        }
-
-        // Don't postprocess if aborted
-        if (token.aborted) {
+      if (this.endpointType === "default") {
+        const msg: ChatMessage = await llm.chat(prompts, token);
+        if (typeof msg.content === "string") {
+          const nextCompletion = JSON.parse(msg.content).newCode;
+          const outcomeNext: NextEditOutcome = {
+            elapsed: Date.now() - startTime,
+            modelProvider: llm.underlyingProviderName,
+            modelName: llm.model + ":zetaDataset",
+            completionOptions: null,
+            // filepath: helper.filepath,
+            completionId: helper.input.completionId,
+            gitRepo: await this.ide.getRepoName(helper.filepath),
+            uniqueId: await this.ide.getUniqueId(),
+            timestamp: Date.now(),
+            fileUri: helper.filepath,
+            workspaceDirUri:
+              helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+            prompt: prompts.join("\n"),
+            userEdits: "",
+            userExcerpts: "",
+            originalEditableRange: "",
+            completion: nextCompletion,
+            cursorPosition: helper.pos,
+            ...helper.options,
+          };
+          return outcomeNext;
+        } else {
           return undefined;
         }
+      } else {
+        const msg: ChatMessage = await llm.chat(prompts, token);
+        if (typeof msg.content === "string") {
+          // TODO: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
+          const nextCompletion = replaceEscapedCharacters(
+            msg.content.split("<|editable_region_start|>\n")[1],
+          ).replace(/\n$/, "");
 
-        const processedCompletion = helper.options.transform
-          ? postprocessCompletion({
-              completion,
-              prefix: helper.prunedPrefix,
-              suffix: helper.prunedSuffix,
-              llm,
-            })
-          : completion;
+          const currCursorPos = helper.pos;
+          const editableRegionStartLine = Math.max(
+            currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+            0,
+          );
+          const editableRegionEndLine = Math.min(
+            currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+            helper.fileLines.length - 1,
+          );
+          const oldEditRangeSlice = helper.fileContents
+            .split("\n")
+            .slice(editableRegionStartLine, editableRegionEndLine + 1)
+            .join("\n");
 
-        completion = processedCompletion;
+          const outcomeNext: NextEditOutcome = {
+            elapsed: Date.now() - startTime,
+            modelProvider: llm.underlyingProviderName,
+            modelName: llm.model + ":zetaDataset",
+            completionOptions: null,
+            // filepath: helper.filepath,
+            completionId: helper.input.completionId,
+            gitRepo: await this.ide.getRepoName(helper.filepath),
+            uniqueId: await this.ide.getUniqueId(),
+            timestamp: Date.now(),
+            fileUri: helper.filepath,
+            workspaceDirUri:
+              helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+            prompt: this.promptMetadata!.prompt.content,
+            userEdits: this.promptMetadata!.userEdits,
+            userExcerpts: this.promptMetadata!.userExcerpts,
+            originalEditableRange: oldEditRangeSlice,
+            completion: nextCompletion,
+            cursorPosition: helper.pos,
+            ...helper.options,
+          };
+          return outcomeNext;
+        } else {
+          return undefined;
+        }
       }
-
-      if (!completion) {
-        return undefined;
-      }
-
-      const outcome: AutocompleteOutcome = {
-        time: Date.now() - startTime,
-        completion,
-        prefix,
-        suffix,
-        prompt,
-        modelProvider: llm.underlyingProviderName,
-        modelName: llm.model,
-        completionOptions,
-        cacheHit,
-        filepath: helper.filepath,
-        numLines: completion.split("\n").length,
-        completionId: helper.input.completionId,
-        gitRepo: await this.ide.getRepoName(helper.filepath),
-        uniqueId: await this.ide.getUniqueId(),
-        timestamp: Date.now(),
-        ...helper.options,
-      };
-
-      //////////
-
-      // Save to cache
-      if (!outcome.cacheHit && helper.options.useCache) {
-        (await this.autocompleteCache)
-          .put(outcome.prefix, outcome.completion)
-          .catch((e) => console.warn(`Failed to save to cache: ${e.message}`));
-      }
-
-      // When using the JetBrains extension, Mark as displayed
-      const ideType = (await this.ide.getIdeInfo()).ideType;
-      if (ideType === "jetbrains") {
-        this.markDisplayed(input.completionId, outcome);
-      }
-
-      return outcome;
     } catch (e: any) {
       this.onError(e);
     } finally {

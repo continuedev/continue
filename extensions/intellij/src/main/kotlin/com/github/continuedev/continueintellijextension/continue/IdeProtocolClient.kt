@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.*
 import com.github.continuedev.continueintellijextension.utils.*
@@ -46,7 +47,7 @@ class IdeProtocolClient(
     init {
         // Setup config.json / config.ts save listeners
         VirtualFileManager.getInstance().addAsyncFileListener(
-            AsyncFileSaveListener(continuePluginService), ContinuePluginDisposable.getInstance(project)
+            AsyncFileSaveListener(continuePluginService), project.service<ContinuePluginDisposable>()
         )
     }
 
@@ -67,8 +68,7 @@ class IdeProtocolClient(
                     }
 
                     "jetbrains/isOSREnabled" -> {
-                        val isOSREnabled =
-                            ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+                        val isOSREnabled = service<ContinueExtensionSettings>().continueState.enableOSR
                         respond(isOSREnabled)
                     }
 
@@ -200,6 +200,11 @@ class IdeProtocolClient(
                     "getTerminalContents" -> {
                         val contents = ide.getTerminalContents()
                         respond(contents)
+                    }
+
+                    "isWorkspaceRemote" -> {
+                        val isRemote = ide.isWorkspaceRemote()
+                        respond(isRemote)
                     }
 
                     "saveFile" -> {
@@ -356,7 +361,7 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             GetSearchResultsParams::class.java
                         )
-                        val results = ide.getSearchResults(params.query)
+                        val results = ide.getSearchResults(params.query, params.maxResults)
                         respond(results)
                     }
 
@@ -365,7 +370,7 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             GetFileResultsParams::class.java
                         )
-                        val results = ide.getFileResults(params.pattern)
+                        val results = ide.getFileResults(params.pattern, params.maxResults)
                         respond(results)
                     }
 
@@ -463,8 +468,10 @@ class IdeProtocolClient(
                         println("Unknown message type: $messageType")
                     }
                 }
-            } catch (error: Exception) {
-                ide.showToast(ToastType.ERROR, " Error handling message of type $messageType: $error")
+            } catch (exception: Exception) {
+                val exceptionMessage = "Error handling message of type $messageType: $exception"
+                service<ContinueErrorService>().report(exception, exceptionMessage)
+                ide.showToast(ToastType.ERROR, exceptionMessage)
             }
         }
     }
@@ -473,7 +480,7 @@ class IdeProtocolClient(
         val editor = EditorUtils.getEditor(project)
         val rif = editor?.getHighlightedRIF() ?: return
 
-       val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
+        val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
             filepath = rif.filepath,
             range = rif.range,
             contents = rif.contents

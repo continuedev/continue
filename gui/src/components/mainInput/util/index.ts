@@ -1,8 +1,6 @@
 import { SetCodeToEditPayload } from "core";
 import { getUriPathBasename } from "core/util/uri";
 
-export * from "./handleMetaKeyIssues";
-
 export function getEditFilenameAndRangeText(code: SetCodeToEditPayload) {
   const fileName = getUriPathBasename(code.filepath);
   let title = `${fileName}`;

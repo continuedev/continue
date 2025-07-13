@@ -33,6 +33,15 @@ function FunctionSpecificToolCallDiv({
           historyIndex={historyIndex}
         />
       );
+    case BuiltInToolNames.SearchAndReplaceInFile:
+      return (
+        <EditFile
+          relativeFilePath={args.filepath ?? ""}
+          changes={args.diff ?? ""}
+          toolCallId={toolCall.id}
+          historyIndex={historyIndex}
+        />
+      );
     case BuiltInToolNames.RunTerminalCommand:
       return (
         <RunTerminalCommand

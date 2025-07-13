@@ -97,8 +97,8 @@ export class LanceDbIndex implements CodebaseIndex {
         contents TEXT NOT NULL
     )`);
 
-    await new Promise((resolve) =>
-      migrate(
+    await new Promise((resolve) => {
+      void migrate(
         "lancedb_sqlite_artifact_id_column",
         async () => {
           try {
@@ -118,8 +118,8 @@ export class LanceDbIndex implements CodebaseIndex {
           }
         },
         () => resolve(undefined),
-      ),
-    );
+      );
+    });
   }
 
   private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
@@ -234,6 +234,23 @@ export class LanceDbIndex implements CodebaseIndex {
     return results;
   }
 
+  /**
+   * Due to a bug in indexing, some indexes have vectors
+   * without the surrounding []. These would fail to parse
+   * but this allows such existing indexes to function properly
+   */
+  private parseVector(vector: string): number[] {
+    try {
+      return JSON.parse(vector);
+    } catch (err) {
+      try {
+        return JSON.parse(`[${vector}]`);
+      } catch (err2) {
+        throw new Error(`Failed to parse vector: ${vector}`, { cause: err2 });
+      }
+    }
+  }
+
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
@@ -297,10 +314,10 @@ export class LanceDbIndex implements CodebaseIndex {
       const lanceRows: LanceDbRow[] = [];
       for (const item of cachedItems) {
         try {
-          const vector = JSON.parse(item.vector);
+          const vector = this.parseVector(item.vector);
           const { uuid, startLine, endLine, contents } = item;
 
-          cachedItems.push({
+          lanceRows.push({
             path,
             uuid,
             startLine,
