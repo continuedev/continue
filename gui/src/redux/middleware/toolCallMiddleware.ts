@@ -20,7 +20,7 @@ export const toolCallMiddleware: Middleware<{}, RootState> =
 
       if (toolCallState?.status === "generated") {
         const toolName = toolCallState.toolCall.function.name;
-        
+
         // Check if this tool should be auto-executed
         if (toolSettings[toolName] === "allowedWithoutPermission") {
           // Execute immediately - no delays needed since we're in the Redux action flow
