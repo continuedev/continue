@@ -145,26 +145,6 @@ export class TextBuffer {
     if (isOptionKey) {
       const sequence = input.slice(1);
 
-      // Option + left arrow - various possible sequences
-      if (sequence === "b" || 
-          sequence.includes("1;9D") || 
-          sequence.includes("[1;3D") || 
-          sequence.includes("[D") ||
-          sequence.includes("OD")) {
-        this.moveWordLeft();
-        return true;
-      }
-
-      // Option + right arrow - various possible sequences
-      if (sequence === "f" || 
-          sequence.includes("1;9C") || 
-          sequence.includes("[1;3C") || 
-          sequence.includes("[C") ||
-          sequence.includes("OC")) {
-        this.moveWordRight();
-        return true;
-      }
-
       // Option + backspace (usually \u001b\u0008 or \u001b\u007f)
       if (sequence === "\u0008" || sequence === "\u007f") {
         this.deleteWordBackward();
@@ -216,6 +196,16 @@ export class TextBuffer {
         return true;
       }
       if (key.rightArrow) {
+        this.moveWordRight();
+        return true;
+      }
+      
+      // Handle option+left/right as characters (on Mac, option+arrow sends character codes)
+      if (input === "b") {
+        this.moveWordLeft();
+        return true;
+      }
+      if (input === "f") {
         this.moveWordRight();
         return true;
       }
