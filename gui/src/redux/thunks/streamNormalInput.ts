@@ -1,4 +1,4 @@
-import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
@@ -21,7 +21,6 @@ import {
   constructMessages,
   getBaseSystemMessage,
 } from "../util/constructMessages";
-import { callCurrentTool } from "./callCurrentTool";
 
 /**
  * Filters tools based on the selected model's capabilities.
@@ -192,9 +191,9 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
-    // If it's a tool call that is automatically accepted, we should call it
+    // Set tool call as generated if one exists, but don't execute it yet
+    // Tool execution will be handled by useToolCallTrigger hook after state settles
     const newState = getState();
-    const toolSettings = newState.ui.toolSettings;
     const toolCallState = selectCurrentToolCall(newState);
     if (toolCallState) {
       dispatch(
@@ -203,18 +202,9 @@ export const streamNormalInput = createAsyncThunk<
           tools: state.config.config.tools,
         }),
       );
-
-      if (
-        toolSettings[toolCallState.toolCall.function.name] ===
-        "allowedWithoutPermission"
-      ) {
-        const response = await dispatch(callCurrentTool());
-        unwrapResult(response);
-      } else {
-        dispatch(setInactive());
-      }
-    } else {
-      dispatch(setInactive());
     }
+
+    // Always set inactive when streaming completes to let state settle
+    dispatch(setInactive());
   },
 );
