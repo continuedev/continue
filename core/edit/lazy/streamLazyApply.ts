@@ -26,6 +26,7 @@ export async function* streamLazyApply(
   const promptMessages = promptFactory(oldCode, filename, newCode);
   const lazyCompletion = llm.streamChat(promptMessages, abortController.signal);
 
+  // Do find and replace over the lazy edit response
   async function* replacementFunction(
     oldCode: string,
     linesBefore: string[],
@@ -52,12 +53,14 @@ export async function* streamLazyApply(
   lazyCompletionLines = filterLeadingNewline(lazyCompletionLines);
   lazyCompletionLines = removeTrailingWhitespace(lazyCompletionLines);
 
+  // Fill in unchanged code
   let lines = streamFillUnchangedCode(
     lazyCompletionLines,
     oldCode,
     replacementFunction,
   );
 
+  // Convert output to diff
   const oldLines = oldCode.split(/\r?\n/);
   let diffLines = streamDiff(oldLines, lines);
   diffLines = filterLeadingAndTrailingNewLineInsertion(diffLines);
@@ -78,11 +81,13 @@ async function* streamFillUnchangedCode(
   const newLines = [];
   let buffer = [];
   let waitingForBuffer = false;
+
   for await (const line of lines) {
     if (waitingForBuffer) {
       buffer.push(line);
 
       if (buffer.length >= BUFFER_LINES_BELOW) {
+        // Find the replacement and continue streaming once we have it
         const replacementLines = replacementFunction(oldCode, newLines, buffer);
         let replacement = "";
         for await (const replacementLine of replacementLines) {
@@ -90,6 +95,7 @@ async function* streamFillUnchangedCode(
           newLines.push(replacementLine);
           replacement += replacementLine + "\n";
         }
+        // Yield the buffered lines
         for (const bufferedLine of buffer) {
           yield bufferedLine;
           newLines.push(bufferedLine);
@@ -104,7 +110,9 @@ async function* streamFillUnchangedCode(
     }
 
     if (line.includes(UNCHANGED_CODE)) {
+      // Buffer so we can give the context of BUFFER_LINES_BELOW lines below
       waitingForBuffer = true;
+      // TODO: If the UNCHANGED CODE is at the very top of the file we need to handle a bit differently
     } else {
       yield line;
       newLines.push(line);
@@ -112,11 +120,14 @@ async function* streamFillUnchangedCode(
   }
 
   if (waitingForBuffer) {
+    // If we're still waiting for a buffer, we've reached the end of the stream
+    // and we should just look for the replacement with what we have
     const replacementLines = replacementFunction(oldCode, newLines, buffer);
     for await (const replacementLine of replacementLines) {
       yield replacementLine;
       newLines.push(replacementLine);
     }
+    // Yield the buffered lines
     for (const bufferedLine of buffer) {
       yield bufferedLine;
       newLines.push(bufferedLine);
