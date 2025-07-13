@@ -192,7 +192,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     return (
       <Box key={index} marginBottom={1}>
         <Text color={isUser ? "green" : "blue"} bold>
-          {isUser ? "You:" : "Assistant:"}
+          ●
         </Text>
         <Text> {message.content}</Text>
         {message.isStreaming && <Text color="gray">▋</Text>}
@@ -207,10 +207,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {messages.map(renderMessage)}
       </Box>
 
-      {/* Input area */}
-      <Box borderStyle="single" borderTop={true} paddingX={1}>
+      {/* Input area with rounded corners */}
+      <Box borderStyle="round" borderTop={true} paddingX={1}>
         <Text color="green" bold>
-          You:{" "}
+          ●{" "}
         </Text>
         {(() => {
           if (inputText.length === 0) {
