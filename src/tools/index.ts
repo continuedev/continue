@@ -9,7 +9,7 @@ import { Tool, ToolParameters } from "./types.js";
 import { viewDiffTool } from "./viewDiff.js";
 import { writeFileTool } from "./writeFile.js";
 
-export { Tool } from "./types.js";
+export { Tool, ToolParameters };
 
 export const BUILTIN_TOOLS: Tool[] = [
   readFileTool,

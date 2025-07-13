@@ -26,12 +26,6 @@ npm install @continuedev/cli -g
 continue-cli
 ```
 
-### Terminal User Interface Mode
-
-```bash
-continue-cli --tui
-```
-
 ### With Custom Assistant
 
 ```bash

@@ -12,6 +12,7 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc",
     "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
     "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
     "repomix:cli": "npx repomix --ignore sdk-repomix.xml -o cli-repomix.xml",
     "lint": "tsc --noEmit"
@@ -42,6 +43,7 @@
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.3",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3"
   }
 }

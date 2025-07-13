@@ -81,16 +81,14 @@ async function chat() {
     throw error;
   }
 
-  // If TUI mode is requested, start the TUI chat with the initialized services
-  if (args.useTUI) {
+  // If not in headless mode, start the TUI chat (default)
+  if (!args.isHeadless) {
     await startTUIChat(assistant, client, mcpService, args.prompt);
     return;
   }
 
-  // Only show intro message if not in headless mode
-  if (!args.isHeadless) {
-    introMessage(assistant, mcpService);
-  }
+  // Show intro message for headless mode
+  introMessage(assistant, mcpService);
 
   // Rules
   const chatHistory: ChatCompletionMessageParam[] = [];
