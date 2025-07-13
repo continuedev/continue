@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { ContinueClient } from "@continuedev/sdk";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
@@ -8,11 +9,10 @@ import { ensureAuthenticated } from "./auth/ensureAuth.js";
 import { loadAuthConfig } from "./auth/workos.js";
 import { initializeContinueSDK } from "./continueSDK.js";
 import { introMessage } from "./intro.js";
+import { configureLogger } from "./logger.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
-import { configureLogger } from "./logger.js";
-import { ContinueClient } from "@continuedev/sdk";
 
 // Parse command line arguments
 const args = parseArgs();
