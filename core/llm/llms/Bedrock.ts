@@ -23,6 +23,7 @@ import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
+import { withLLMRetry } from "../utils/retry.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -89,6 +90,7 @@ class Bedrock extends BaseLLM {
     }
   }
 
+  @withLLMRetry()
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
@@ -132,16 +134,9 @@ class Bedrock extends BaseLLM {
     });
     const command = new ConverseStreamCommand(input);
 
-    let response: ConverseStreamCommandOutput;
-    try {
-      response = (await client.send(command, {
-        abortSignal: signal,
-      })) as ConverseStreamCommandOutput;
-    } catch (error: unknown) {
-      console.error(error);
-      const message = error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Failed to communicate with Bedrock API: ${message}`);
-    }
+    const response = (await client.send(command, {
+      abortSignal: signal,
+    })) as ConverseStreamCommandOutput;
 
     if (!response?.stream) {
       throw new Error("No stream received from Bedrock API");
@@ -259,19 +254,9 @@ class Bedrock extends BaseLLM {
         }
       }
     } catch (error: unknown) {
+      // Clean up state and let the original error bubble up to the retry decorator
       this._currentToolResponse = null;
-      if (error instanceof Error) {
-        if ("code" in error) {
-          // AWS SDK specific errors
-          throw new Error(
-            `AWS Bedrock stream error (${(error as any).code}): ${error.message}`,
-          );
-        }
-        throw new Error(`Error processing Bedrock stream: ${error.message}`);
-      }
-      throw new Error(
-        "Error processing Bedrock stream: Unknown error occurred",
-      );
+      throw error;
     }
   }
 
