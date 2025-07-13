@@ -200,7 +200,7 @@ export class TextBuffer {
         return true;
       }
       if (key.delete) {
-        this.deleteWordForward();
+        this.deleteWordBackward();
         return true;
       }
       if (key.leftArrow) {
@@ -224,12 +224,13 @@ export class TextBuffer {
     }
 
     // Handle backspace/delete
-    if (key.backspace && !key.meta) {
+    // On Mac, backspace key registers as key.delete, so treat it as backward deletion
+    if (key.delete && !key.meta) {
       this.deleteBackward();
       return true;
     }
-    if (key.delete && !key.meta) {
-      this.deleteForward();
+    if (key.backspace && !key.meta) {
+      this.deleteBackward();
       return true;
     }
 
