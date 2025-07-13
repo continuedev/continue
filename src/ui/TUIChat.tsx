@@ -144,12 +144,23 @@ const TUIChat: React.FC<TUIChatProps> = ({
       return;
     }
 
-    if (key.return) {
+    // Handle Enter key (regular enter for submit)
+    if (key.return && !key.shift) {
       if (textBuffer.text.trim() && !isWaitingForResponse) {
         handleUserMessage(textBuffer.text.trim());
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);
+      }
+      return;
+    }
+
+    // Handle Shift+Enter (carriage return character) for new line
+    if (input === "\r" || input === "\\\r") {
+      const handled = textBuffer.handleInput("\n", key);
+      if (handled) {
+        setInputText(textBuffer.text);
+        setCursorPosition(textBuffer.cursor);
       }
       return;
     }
@@ -202,7 +213,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
           You:{" "}
         </Text>
         {(() => {
-
           if (inputText.length === 0) {
             return (
               <>
@@ -217,20 +227,60 @@ const TUIChat: React.FC<TUIChatProps> = ({
           }
 
           if (inputMode && !isWaitingForResponse) {
-            // Show cursor at the correct position
-            const beforeCursor = inputText.slice(0, cursorPosition);
-            const atCursor = inputText.slice(cursorPosition, cursorPosition + 1);
-            const afterCursor = inputText.slice(cursorPosition + 1);
+            // Handle multi-line text with cursor
+            const lines = inputText.split("\n");
+            let charCount = 0;
+            let cursorLine = 0;
+            let cursorCol = 0;
+
+            // Find which line and column the cursor is on
+            for (let i = 0; i < lines.length; i++) {
+              if (cursorPosition <= charCount + lines[i].length) {
+                cursorLine = i;
+                cursorCol = cursorPosition - charCount;
+                break;
+              }
+              charCount += lines[i].length + 1; // +1 for the newline character
+            }
+
+            // Handle cursor at the very end
+            if (cursorPosition >= inputText.length) {
+              cursorLine = lines.length - 1;
+              cursorCol = lines[cursorLine].length;
+            }
 
             return (
-              <>
-                <Text>{beforeCursor}</Text>
-                <Text inverse>{atCursor || " "}</Text>
-                <Text>{afterCursor}</Text>
-              </>
+              <Box flexDirection="column">
+                {lines.map((line, lineIndex) => {
+                  if (lineIndex === cursorLine) {
+                    // Line with cursor
+                    const beforeCursor = line.slice(0, cursorCol);
+                    const atCursor = line.slice(cursorCol, cursorCol + 1);
+                    const afterCursor = line.slice(cursorCol + 1);
+
+                    return (
+                      <Text key={lineIndex}>
+                        {beforeCursor}
+                        <Text inverse>{atCursor || " "}</Text>
+                        {afterCursor}
+                      </Text>
+                    );
+                  } else {
+                    // Regular line
+                    return <Text key={lineIndex}>{line}</Text>;
+                  }
+                })}
+              </Box>
             );
           } else {
-            return <Text>{inputText}</Text>;
+            // Not in input mode, just display the text
+            return (
+              <Box flexDirection="column">
+                {inputText.split("\n").map((line, index) => (
+                  <Text key={index}>{line}</Text>
+                ))}
+              </Box>
+            );
           }
         })()}
       </Box>
