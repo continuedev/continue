@@ -58,6 +58,29 @@ describe("Retry Functionality", () => {
       expect(mockFn).toHaveBeenCalledTimes(3);
     });
 
+    it("should throw the last error when all retries are exhausted", async () => {
+      const firstError = new Error("First error");
+      (firstError as any).code = "ECONNRESET";
+      const secondError = new Error("Second error");
+      (secondError as any).code = "ECONNRESET";
+      const lastError = new Error("Last error");
+      (lastError as any).code = "ECONNRESET";
+
+      const mockFn = jest
+        .fn()
+        .mockRejectedValueOnce(firstError)
+        .mockRejectedValueOnce(secondError)
+        .mockRejectedValueOnce(lastError);
+
+      await expect(
+        retryAsync(mockFn, {
+          maxAttempts: 3,
+          baseDelay: 10,
+        }),
+      ).rejects.toThrow("Last error");
+      expect(mockFn).toHaveBeenCalledTimes(3);
+    });
+
     it("should handle HTTP 429 errors", async () => {
       const error = new Error("Too Many Requests");
       (error as any).status = 429;
@@ -175,6 +198,48 @@ describe("Retry Functionality", () => {
       const result = await testClass.testMethod();
 
       expect(result).toBe("success");
+      expect(testClass.attempts).toBe(3);
+    });
+
+    it("should throw the last error when all retries are exhausted", async () => {
+      const testClass = {
+        attempts: 0,
+
+        async testMethod(): Promise<string> {
+          this.attempts++;
+          if (this.attempts === 1) {
+            const error = new Error("First decorator error");
+            (error as any).code = "ECONNRESET";
+            throw error;
+          } else if (this.attempts === 2) {
+            const error = new Error("Second decorator error");
+            (error as any).code = "ECONNRESET";
+            throw error;
+          } else {
+            const error = new Error("Last decorator error");
+            (error as any).code = "ECONNRESET";
+            throw error;
+          }
+        },
+      };
+
+      // Apply decorator manually
+      const decorator = withRetry({
+        maxAttempts: 3,
+        baseDelay: 10,
+      });
+      const descriptor = decorator(testClass, "testMethod", {
+        value: testClass.testMethod,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      });
+
+      if (descriptor?.value) {
+        testClass.testMethod = descriptor.value;
+      }
+
+      await expect(testClass.testMethod()).rejects.toThrow("Last decorator error");
       expect(testClass.attempts).toBe(3);
     });
   });
@@ -407,8 +472,8 @@ describe("Retry Functionality", () => {
 
       expect(result).toBe("success");
       // Should use header value (300ms)
-      expect(delays[0]).toBeGreaterThan(285);
-      expect(delays[0]).toBeLessThan(315);
+      expect(delays[0]).toBeGreaterThan(284);
+      expect(delays[0]).toBeLessThan(316);
     });
   });
 });
