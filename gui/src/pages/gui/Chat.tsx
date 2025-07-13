@@ -25,7 +25,6 @@ import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useToolCallTrigger } from "../../hooks/useToolCallTrigger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
@@ -115,9 +114,6 @@ export function Chat() {
   }, []);
 
   useAutoScroll(stepsDivRef, history);
-
-  // Enable automatic tool call execution after streaming completes
-  useToolCallTrigger();
 
   useEffect(() => {
     // Cmd + Backspace to delete current step

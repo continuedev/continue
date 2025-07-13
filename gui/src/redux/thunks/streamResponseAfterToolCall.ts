@@ -36,13 +36,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         };
         dispatch(streamUpdate([newMessage]));
 
-        // Ensure we have a clean state before starting the new stream
-        const currentState = getState();
-        if (currentState.session.isStreaming) {
-          console.warn("Attempting to start stream while already streaming, skipping");
-          return;
-        }
-
         unwrapResult(await dispatch(streamNormalInput({})));
       }),
     );
