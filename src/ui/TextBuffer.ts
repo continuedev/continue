@@ -145,14 +145,22 @@ export class TextBuffer {
     if (isOptionKey) {
       const sequence = input.slice(1);
 
-      // Option + left arrow (usually \u001b[1;9D or \u001bb)
-      if (sequence === "b" || sequence.includes("1;9D")) {
+      // Option + left arrow - various possible sequences
+      if (sequence === "b" || 
+          sequence.includes("1;9D") || 
+          sequence.includes("[1;3D") || 
+          sequence.includes("[D") ||
+          sequence.includes("OD")) {
         this.moveWordLeft();
         return true;
       }
 
-      // Option + right arrow (usually \u001b[1;9C or \u001bf)
-      if (sequence === "f" || sequence.includes("1;9C")) {
+      // Option + right arrow - various possible sequences
+      if (sequence === "f" || 
+          sequence.includes("1;9C") || 
+          sequence.includes("[1;3C") || 
+          sequence.includes("[C") ||
+          sequence.includes("OC")) {
         this.moveWordRight();
         return true;
       }

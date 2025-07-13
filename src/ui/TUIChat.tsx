@@ -36,6 +36,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputText, setInputText] = useState("");
+  const [cursorPosition, setCursorPosition] = useState(0);
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [inputMode, setInputMode] = useState(true);
@@ -148,6 +149,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         handleUserMessage(textBuffer.text.trim());
         textBuffer.clear();
         setInputText("");
+        setCursorPosition(0);
       }
       return;
     }
@@ -158,6 +160,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     // Update React state to trigger re-render
     if (handled) {
       setInputText(textBuffer.text);
+      setCursorPosition(textBuffer.cursor);
     }
   });
 
@@ -199,7 +202,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
           You:{" "}
         </Text>
         {(() => {
-          const cursorPosition = textBuffer.cursor;
 
           if (inputText.length === 0) {
             return (
@@ -217,14 +219,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
           if (inputMode && !isWaitingForResponse) {
             // Show cursor at the correct position
             const beforeCursor = inputText.slice(0, cursorPosition);
-            const atCursor =
-              inputText.slice(cursorPosition, cursorPosition + 1) || " ";
+            const atCursor = inputText.slice(cursorPosition, cursorPosition + 1);
             const afterCursor = inputText.slice(cursorPosition + 1);
 
             return (
               <>
                 <Text>{beforeCursor}</Text>
-                <Text inverse>{atCursor}</Text>
+                <Text inverse>{atCursor || " "}</Text>
                 <Text>{afterCursor}</Text>
               </>
             );
