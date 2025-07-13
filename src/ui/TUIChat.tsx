@@ -266,8 +266,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
                       </Text>
                     );
                   } else {
-                    // Regular line
-                    return <Text key={lineIndex}>{line}</Text>;
+                    // Regular line - ensure empty lines still render
+                    return <Text key={lineIndex}>{line || " "}</Text>;
                   }
                 })}
               </Box>
@@ -277,7 +277,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             return (
               <Box flexDirection="column">
                 {inputText.split("\n").map((line, index) => (
-                  <Text key={index}>{line}</Text>
+                  <Text key={index}>{line || " "}</Text>
                 ))}
               </Box>
             );
