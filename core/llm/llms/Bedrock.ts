@@ -11,10 +11,10 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
+import type { CompletionOptions } from "../../index.js";
 import {
   ChatMessage,
   Chunk,
-  CompletionOptions,
   LLMOptions,
   MessageContent,
 } from "../../index.js";

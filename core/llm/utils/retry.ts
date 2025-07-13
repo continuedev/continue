@@ -52,17 +52,18 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
   }
 
   // AWS SDK specific errors (v3 - check for AWS error structure and retryable types)
-  const isAwsError = error.$fault || error.$metadata || (error.name && error.__type);
+  const isAwsError =
+    error.$fault || error.$metadata || (error.name && error.__type);
   const awsRetryableErrors = [
     "ThrottlingException",
-    "ServiceUnavailableException", 
+    "ServiceUnavailableException",
     "InternalServerError",
     "RequestTimeout",
     "ModelNotReadyException",
     "ModelTimeoutException",
-    "ResourceNotFoundException"
+    "ResourceNotFoundException",
   ];
-  
+
   if (isAwsError && error.name && awsRetryableErrors.includes(error.name)) {
     return true;
   }
@@ -126,7 +127,7 @@ function calculateDelay(
 ): number {
   // Check for rate limiting headers first (more accurate than exponential backoff)
   if (error?.headers) {
-    const retryAfter = 
+    const retryAfter =
       error.headers["retry-after"] ||
       error.headers["x-ratelimit-reset"] ||
       error.headers["ratelimit-reset"] ||
@@ -136,9 +137,9 @@ function calculateDelay(
 
     if (retryAfter) {
       let delayMs: number;
-      
+
       // Parse retry-after header (can be seconds or HTTP date)
-      if (typeof retryAfter === 'string' && isNaN(Number(retryAfter))) {
+      if (typeof retryAfter === "string" && isNaN(Number(retryAfter))) {
         // HTTP date format
         const resetTime = new Date(retryAfter).getTime();
         const now = Date.now();
@@ -147,7 +148,7 @@ function calculateDelay(
         // Seconds format
         delayMs = Number(retryAfter) * 1000;
       }
-      
+
       // Respect maxDelay and add small jitter to spread requests
       const cappedDelay = Math.min(delayMs, maxDelay);
       const jitterMultiplier = 1 + (Math.random() * 0.1 - 0.05); // Small jitter ±5%
@@ -210,12 +211,13 @@ export function withRetry(options: RetryOptions = {}) {
     }
 
     // Check if the original method is an async generator function
-    const isAsyncGenerator = originalMethod.constructor.name === 'AsyncGeneratorFunction';
-    
-    const wrappedMethod = isAsyncGenerator 
+    const isAsyncGenerator =
+      originalMethod.constructor.name === "AsyncGeneratorFunction";
+
+    const wrappedMethod = isAsyncGenerator
       ? async function* (this: any, ...methodArgs: any[]) {
           let lastError: any;
-          
+
           for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
             try {
               const generator = originalMethod.apply(this, methodArgs);
@@ -448,10 +450,10 @@ export async function retryAsync<T>(
  */
 export function withLLMRetry(options: Partial<RetryOptions> = {}) {
   return withRetry({
-    maxAttempts: 5,        // More attempts for capacity issues
-    baseDelay: 2000,       // Start with 2 seconds
-    maxDelay: 90000,       // Allow up to 90 seconds for capacity provisioning
-    jitterFactor: 0.4,     // Slightly more jitter to spread load
+    maxAttempts: 5, // More attempts for capacity issues
+    baseDelay: 2000, // Start with 2 seconds
+    maxDelay: 90000, // Allow up to 90 seconds for capacity provisioning
+    jitterFactor: 0.4, // Slightly more jitter to spread load
     ...options,
   });
 }
