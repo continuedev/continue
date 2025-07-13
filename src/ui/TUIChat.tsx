@@ -3,7 +3,7 @@ import { Box, Text, useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
-import { streamChatResponse, StreamCallbacks } from "../streamChatResponse.js";
+import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
 import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
@@ -112,10 +112,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           ]);
         },
         onToolResult: (result: string) => {
-          setMessages((prev) => [
-            ...prev,
-            { role: "system", content: result },
-          ]);
+          setMessages((prev) => [...prev, { role: "system", content: result }]);
         },
         onToolError: (error: string) => {
           setMessages((prev) => [
@@ -155,7 +152,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
   };
 
-
   const renderMessage = (message: DisplayMessage, index: number) => {
     const isUser = message.role === "user";
     const isSystem = message.role === "system";
@@ -193,10 +189,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* Status */}
         {isWaitingForResponse && (
           <Box paddingX={1}>
-            <Text color="yellow">Waiting for response...</Text>
+            <Text color="gray">esc to interrupt</Text>
           </Box>
         )}
-        
+
         {/* Input area - always at bottom */}
         <UserInput
           onSubmit={handleUserMessage}
