@@ -1,8 +1,7 @@
 import { LineStream } from "../diff/util";
 import {
   isMarkdownFile,
-  MarkdownBlockStateTracker,
-  headerIsMarkdown,
+  MarkdownBlockStateTracker
 } from "./markdownUtils";
 
 /**
@@ -85,33 +84,13 @@ export async function* stopAtLinesWithMarkdownSupport(
 
   // Use optimized state tracker for markdown block analysis
   const stateTracker = new MarkdownBlockStateTracker(allLines);
-  let nestCount = 0;
-  const trimmedLines = allLines.map((l) => l.trim());
 
-  for (let i = 0; i < trimmedLines.length; i++) {
-    const line = trimmedLines[i];
-
-    if (nestCount > 0) {
-      if (line.match(/^`+$/)) {
-        // Use optimized state tracker for markdown block logic
-        if (stateTracker.shouldStopAtPosition(i)) {
-          for (let j = 0; j < i; j++) {
-            yield allLines[j];
-          }
-          return;
-        }
-      } else if (line.startsWith("```")) {
-        nestCount++;
+  for (let i = 0; i < allLines.length; i++) {
+    if (stateTracker.shouldStopAtPosition(i)) {
+      for (let j = 0; j < i; j++) {
+        yield allLines[j];
       }
-    } else {
-      if (line.startsWith("```")) {
-        const header = line.replaceAll("`", "");
-        const isMarkdown = headerIsMarkdown(header);
-
-        if (isMarkdown) {
-          nestCount = 1;
-        }
-      }
+      return;
     }
   }
 
