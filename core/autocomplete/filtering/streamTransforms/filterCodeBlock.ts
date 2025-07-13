@@ -10,10 +10,7 @@ import {
   shouldStopAtMarkdownBlock,
 } from "../../../utils/streamMarkdownUtils";
 
-import {
-  hasNestedMarkdownBlocks,
-  shouldChangeLineAndStop,
-} from "./lineStream";
+import { hasNestedMarkdownBlocks, shouldChangeLineAndStop } from "./lineStream";
 
 /**
  * Filters and processes lines from a code block, removing unnecessary markers and handling edge cases.
@@ -83,7 +80,11 @@ export async function* filterCodeBlockLines(
     const line = allLines[i];
 
     // Process block nesting logic for the first fence
-    const nesting = processBlockNesting(line, seenFirstFence, shouldRemoveLineBeforeStart);
+    const nesting = processBlockNesting(
+      line,
+      seenFirstFence,
+      shouldRemoveLineBeforeStart,
+    );
     if (nesting.shouldSkip) {
       continue; // Filter out starting ``` or START block
     }

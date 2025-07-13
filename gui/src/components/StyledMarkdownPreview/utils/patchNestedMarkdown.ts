@@ -7,48 +7,10 @@
 
     Note, this was benchmarked at sub-millisecond
 */
-import { headerIsMarkdown } from "./headerIsMarkdown";
-
-/**
- * Optimized state tracker for markdown patch operations to avoid recomputing on each call.
- */
-class MarkdownPatchStateTracker {
-  private trimmedLines: string[];
-  private bareBacktickPositions: number[];
-
-  constructor(lines: string[]) {
-    this.trimmedLines = lines.map((l) => l.trim());
-    // Pre-compute positions of all bare backtick lines for faster lookup
-    this.bareBacktickPositions = [];
-    for (let i = 0; i < this.trimmedLines.length; i++) {
-      if (this.trimmedLines[i].match(/^`+$/)) {
-        this.bareBacktickPositions.push(i);
-      }
-    }
-  }
-
-  /**
-   * Efficiently determines if there are remaining bare backticks after the given position.
-   */
-  getRemainingBareBackticksAfter(currentIndex: number): number {
-    return this.bareBacktickPositions.filter((pos) => pos > currentIndex)
-      .length;
-  }
-
-  /**
-   * Checks if the line at the given index is a bare backtick line.
-   */
-  isBareBacktickLine(index: number): boolean {
-    return this.bareBacktickPositions.includes(index);
-  }
-
-  /**
-   * Gets the trimmed lines array.
-   */
-  getTrimmedLines(): string[] {
-    return this.trimmedLines;
-  }
-}
+import {
+  headerIsMarkdown,
+  MarkdownBlockStateTracker,
+} from "../../../../../core/utils/markdownUtils";
 
 export const patchNestedMarkdown = (source: string): string => {
   // Early return if no markdown codeblock pattern is found (including GitHub variants)
@@ -59,7 +21,7 @@ export const patchNestedMarkdown = (source: string): string => {
   const lines = source.split("\n");
 
   // Use optimized state tracker for efficient bare backtick analysis
-  const stateTracker = new MarkdownPatchStateTracker(lines);
+  const stateTracker = new MarkdownBlockStateTracker(lines);
   const trimmedLines = stateTracker.getTrimmedLines();
 
   for (let i = 0; i < trimmedLines.length; i++) {

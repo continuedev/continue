@@ -38,8 +38,8 @@ export function isMarkdownFile(filepath?: string): boolean {
  * Optimized to handle nested markdown code blocks.
  */
 export class MarkdownBlockStateTracker {
-  private trimmedLines: string[];
-  private bareBacktickPositions: number[];
+  protected trimmedLines: string[];
+  protected bareBacktickPositions: number[];
   private markdownNestCount: number = 0;
   private lastProcessedIndex: number = -1;
 
@@ -72,9 +72,8 @@ export class MarkdownBlockStateTracker {
         if (currentLine.match(/^`+$/)) {
           // Found bare backticks - check if this is the last one
           if (j === currentIndex) {
-            const remainingBareBackticks = this.bareBacktickPositions.filter(
-              (pos) => pos > j,
-            ).length;
+            const remainingBareBackticks =
+              this.getRemainingBareBackticksAfter(j);
             if (remainingBareBackticks === 0) {
               this.markdownNestCount = 0;
               this.lastProcessedIndex = j;
@@ -98,6 +97,28 @@ export class MarkdownBlockStateTracker {
 
     this.lastProcessedIndex = currentIndex;
     return false;
+  }
+
+  /**
+   * Efficiently determines if there are remaining bare backticks after the given position.
+   */
+  getRemainingBareBackticksAfter(currentIndex: number): number {
+    return this.bareBacktickPositions.filter((pos) => pos > currentIndex)
+      .length;
+  }
+
+  /**
+   * Checks if the line at the given index is a bare backtick line.
+   */
+  isBareBacktickLine(index: number): boolean {
+    return this.bareBacktickPositions.includes(index);
+  }
+
+  /**
+   * Gets the trimmed lines array.
+   */
+  getTrimmedLines(): string[] {
+    return this.trimmedLines;
   }
 }
 

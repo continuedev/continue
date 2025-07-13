@@ -1,8 +1,5 @@
 import { LineStream } from "../diff/util";
-import {
-  isMarkdownFile,
-  MarkdownBlockStateTracker
-} from "./markdownUtils";
+import { isMarkdownFile, MarkdownBlockStateTracker } from "./markdownUtils";
 
 /**
  * Determines if we should stop at a markdown block based on nested markdown logic.

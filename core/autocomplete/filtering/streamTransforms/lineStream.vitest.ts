@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 
-import { collectAllLines, MarkdownBlockStateTracker } from "../../../utils/markdownUtils";
+import {
+  collectAllLines,
+  MarkdownBlockStateTracker,
+} from "../../../utils/markdownUtils";
 import { shouldStopAtMarkdownBlock } from "../../../utils/streamMarkdownUtils";
 import * as lineStream from "./lineStream";
 
@@ -1203,6 +1206,96 @@ describe("lineStream", () => {
         "",
         "Usage notes and more documentation.",
       ]);
+    });
+  });
+
+  describe("validatePatternInLine", () => {
+    it("should return false when pattern is not found", () => {
+      const result = lineStream.validatePatternInLine(
+        "const x = 5;",
+        "[/CODE]",
+      );
+      expect(result.isValid).toBe(false);
+      expect(result.patternIndex).toBe(-1);
+      expect(result.beforePattern).toBe("");
+    });
+
+    it("should return false when pattern is preceded by non-whitespace", () => {
+      const result = lineStream.validatePatternInLine(
+        'const var[/CODE]Name = "test";',
+        "[/CODE]",
+      );
+      expect(result.isValid).toBe(false);
+      expect(result.patternIndex).toBe(9);
+    });
+
+    it("should return false when pattern is inside double quotes", () => {
+      const result = lineStream.validatePatternInLine(
+        'console.log("test [/CODE] end");',
+        "[/CODE]",
+      );
+      expect(result.isValid).toBe(false);
+      expect(result.patternIndex).toBe(18);
+    });
+
+    it("should return false when pattern is inside single quotes", () => {
+      const result = lineStream.validatePatternInLine(
+        "const message = 'test [/CODE] end';",
+        "[/CODE]",
+      );
+      expect(result.isValid).toBe(false);
+      expect(result.patternIndex).toBe(22);
+    });
+
+    it("should return true when pattern is properly separated by whitespace", () => {
+      const result = lineStream.validatePatternInLine(
+        "some code [/CODE] more text",
+        "[/CODE]",
+      );
+      expect(result.isValid).toBe(true);
+      expect(result.patternIndex).toBe(10);
+      expect(result.beforePattern).toBe("some code ");
+    });
+
+    it("should return true when pattern is at start of line", () => {
+      const result = lineStream.validatePatternInLine("[/CODE]", "[/CODE]");
+      expect(result.isValid).toBe(true);
+      expect(result.patternIndex).toBe(0);
+      expect(result.beforePattern).toBe("");
+    });
+
+    it("should return true when pattern has only whitespace before it", () => {
+      const result = lineStream.validatePatternInLine("    [/CODE]", "[/CODE]");
+      expect(result.isValid).toBe(true);
+      expect(result.patternIndex).toBe(4);
+      expect(result.beforePattern).toBe("    ");
+    });
+
+    it("should handle complex quote scenarios correctly", () => {
+      // Unmatched quote should make it invalid
+      const result1 = lineStream.validatePatternInLine(
+        'const x = "unclosed quote [/CODE]',
+        "[/CODE]",
+      );
+      expect(result1.isValid).toBe(false);
+
+      // Matched quotes should make it valid
+      const result2 = lineStream.validatePatternInLine(
+        'const x = "closed"; [/CODE]',
+        "[/CODE]",
+      );
+      expect(result2.isValid).toBe(true);
+    });
+
+    it("should work with different patterns", () => {
+      const result1 = lineStream.validatePatternInLine(
+        "# End of file. Done",
+        "# End of file.",
+      );
+      expect(result1.isValid).toBe(true);
+
+      const result2 = lineStream.validatePatternInLine("    ```", "```");
+      expect(result2.isValid).toBe(true);
     });
   });
 });

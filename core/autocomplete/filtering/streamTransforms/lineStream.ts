@@ -3,13 +3,8 @@ import { distance } from "fastest-levenshtein";
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
 
-import {
-  headerIsMarkdown,
-  isMarkdownFile
-} from "../../../utils/markdownUtils";
-import {
-  processBlockNesting as processBlockNestingUtil
-} from "../../../utils/streamMarkdownUtils";
+import { headerIsMarkdown, isMarkdownFile } from "../../../utils/markdownUtils";
+import { processBlockNesting as processBlockNestingUtil } from "../../../utils/streamMarkdownUtils";
 
 export { filterCodeBlockLines } from "./filterCodeBlock";
 
@@ -60,6 +55,47 @@ function shouldRemoveLineBeforeStart(line: string): boolean {
   );
 }
 
+/**
+ * Shared utility for validating patterns in lines to avoid code duplication.
+ * Checks if a pattern appears in a valid context (not inside quotes or identifiers).
+ */
+export function validatePatternInLine(
+  line: string,
+  pattern: string,
+): {
+  isValid: boolean;
+  patternIndex: number;
+  beforePattern: string;
+} {
+  const patternIndex = line.indexOf(pattern);
+
+  if (patternIndex === -1) {
+    return { isValid: false, patternIndex: -1, beforePattern: "" };
+  }
+
+  // Check if pattern is preceded by a non-whitespace character
+  // If so, it might be part of an identifier, so don't handle it
+  if (patternIndex > 0) {
+    const charBefore = line[patternIndex - 1];
+    if (charBefore && !charBefore.match(/\s/)) {
+      return { isValid: false, patternIndex, beforePattern: "" };
+    }
+  }
+
+  // Check if pattern appears to be inside quotes
+  // Simple heuristic: count unmatched quotes before the pattern
+  const beforePattern = line.substring(0, patternIndex);
+  const singleQuotes = (beforePattern.match(/'/g) || []).length;
+  const doubleQuotes = (beforePattern.match(/"/g) || []).length;
+
+  // If there's an odd number of quotes before pattern, we're likely inside quotes
+  if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
+    return { isValid: false, patternIndex, beforePattern };
+  }
+
+  return { isValid: true, patternIndex, beforePattern };
+}
+
 export function shouldChangeLineAndStop(line: string): string | undefined {
   if (line.trimStart() === "```") {
     return line;
@@ -67,26 +103,10 @@ export function shouldChangeLineAndStop(line: string): string | undefined {
 
   // Check if [/CODE] appears in the line
   if (line.includes(CODE_STOP_BLOCK)) {
-    const stopBlockIndex = line.indexOf(CODE_STOP_BLOCK);
+    const validation = validatePatternInLine(line, CODE_STOP_BLOCK);
 
-    // Check if [/CODE] is preceded by a non-whitespace character
-    // If so, it might be part of an identifier, so don't handle it
-    if (stopBlockIndex > 0) {
-      const charBefore = line[stopBlockIndex - 1];
-      if (charBefore && !charBefore.match(/\s/)) {
-        return undefined; // Don't handle [/CODE] that's part of an identifier
-      }
-    }
-
-    // Check if [/CODE] appears to be inside quotes
-    // Simple heuristic: count unmatched quotes before the stop block
-    const beforeStopBlock = line.substring(0, stopBlockIndex);
-    const singleQuotes = (beforeStopBlock.match(/'/g) || []).length;
-    const doubleQuotes = (beforeStopBlock.match(/"/g) || []).length;
-
-    // If there's an odd number of quotes before [/CODE], we're likely inside quotes
-    if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
-      return undefined; // Don't handle [/CODE] inside quotes
+    if (!validation.isValid) {
+      return undefined;
     }
 
     // Get the trimmed line to check if [/CODE] is at logical start
@@ -100,7 +120,7 @@ export function shouldChangeLineAndStop(line: string): string | undefined {
     }
 
     // [/CODE] appears after some content (separated by whitespace) - return part before
-    return beforeStopBlock.trimEnd();
+    return validation.beforePattern.trimEnd();
   }
 
   return undefined;
@@ -336,26 +356,10 @@ export async function* stopAtLines(
     // Check each stop phrase
     for (const stopAt of linesToStopAt) {
       if (line.includes(stopAt)) {
-        const stopAtIndex = line.indexOf(stopAt);
+        const validation = validatePatternInLine(line, stopAt);
 
-        // Check if stop phrase is preceded by a non-whitespace character
-        // If so, it might be part of an identifier, so don't handle it
-        if (stopAtIndex > 0) {
-          const charBefore = line[stopAtIndex - 1];
-          if (charBefore && !charBefore.match(/\s/)) {
-            continue; // Don't handle stop phrase that's part of an identifier
-          }
-        }
-
-        // Check if stop phrase appears to be inside quotes
-        // Simple heuristic: count unmatched quotes before the stop phrase
-        const beforeStopPhrase = line.substring(0, stopAtIndex);
-        const singleQuotes = (beforeStopPhrase.match(/'/g) || []).length;
-        const doubleQuotes = (beforeStopPhrase.match(/"/g) || []).length;
-
-        // If there's an odd number of quotes before stop phrase, we're likely inside quotes
-        if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
-          continue; // Don't handle stop phrase inside quotes
+        if (!validation.isValid) {
+          continue;
         }
 
         // Get the trimmed line to check if stop phrase is at logical start
@@ -367,8 +371,10 @@ export async function* stopAtLines(
           break;
         } else {
           // Stop phrase appears after some content - check if it's separated by whitespace
-          const contentBeforeStopPhrase = beforeStopPhrase.trimEnd();
-          if (contentBeforeStopPhrase.length < beforeStopPhrase.length) {
+          const contentBeforeStopPhrase = validation.beforePattern.trimEnd();
+          if (
+            contentBeforeStopPhrase.length < validation.beforePattern.length
+          ) {
             // There's whitespace before the stop phrase, so it's properly separated
             shouldStop = true;
             break;
