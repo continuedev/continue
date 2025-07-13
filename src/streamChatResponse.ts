@@ -1,3 +1,4 @@
+import { ContinueClient } from "@continuedev/sdk";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 import type {
@@ -8,7 +9,6 @@ import type {
 import { MCPService } from "./mcp.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
-import { ContinueClient } from "@continuedev/sdk";
 
 dotenv.config();
 
@@ -67,6 +67,10 @@ export async function streamChatResponse(
     let stream;
 
     try {
+      // fs.appendFileSync(
+      //   "chat.log",
+      //   "---\n\n" + JSON.stringify(chatHistory, null, 2) + "\n\n"
+      // );
       stream = await client.chat.completions.create({
         model: assistant.getModel(),
         messages: chatHistory,
@@ -150,7 +154,7 @@ export async function streamChatResponse(
 
     console.info(); // Add a newline after the response
 
-    // Add the tool calls to the chat history
+    // Add the assistant's response to chat history if there's content or tool calls
     if (currentToolCalls.length > 0) {
       const toolCalls: ChatCompletionMessageToolCall[] = currentToolCalls.map(
         (tc) => ({
@@ -164,9 +168,12 @@ export async function streamChatResponse(
       );
       chatHistory.push({
         role: "assistant",
-        content: "",
+        content: aiResponse,
         tool_calls: toolCalls,
       });
+    } else if (aiResponse.trim()) {
+      // Only add assistant response if there's actual content
+      chatHistory.push({ role: "assistant", content: aiResponse });
     }
 
     // If we have tool calls, execute them
@@ -210,9 +217,6 @@ export async function streamChatResponse(
       // No more tool calls, end the conversation
       shouldContinueConversation = false;
     }
-
-    // Add the assistant's response to chat history before any tool calls
-    chatHistory.push({ role: "assistant", content: aiResponse });
   }
 
   return aiResponse;
