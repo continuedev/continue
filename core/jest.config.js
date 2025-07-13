@@ -3,14 +3,17 @@ import { fileURLToPath } from "url";
 
 export default {
   transform: {
-    "^.+\\.(ts|js)$": ["ts-jest", { 
-      useESM: true, 
-      useIsolatedModules: true,
-      tsconfig: {
-        experimentalDecorators: true,
-        emitDecoratorMetadata: true
-      }
-    }],
+    "^.+\\.(ts|js)$": [
+      "ts-jest",
+      {
+        useESM: true,
+        useIsolatedModules: true,
+        tsconfig: {
+          experimentalDecorators: true,
+          emitDecoratorMetadata: true,
+        },
+      },
+    ],
   },
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
