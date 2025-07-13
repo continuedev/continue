@@ -2,11 +2,17 @@ import { LineStream } from "../../../diff/util";
 
 import {
   collectAllLines,
-  hasNestedMarkdownBlocks,
-  MarkdownBlockState,
+  MarkdownBlockStateTracker,
+} from "../../../utils/markdownUtils";
+
+import {
   processBlockNesting,
-  shouldChangeLineAndStop,
   shouldStopAtMarkdownBlock,
+} from "../../../utils/streamMarkdownUtils";
+
+import {
+  hasNestedMarkdownBlocks,
+  shouldChangeLineAndStop,
 } from "./lineStream";
 
 /**
@@ -68,16 +74,16 @@ export async function* filterCodeBlockLines(
   let nestCount = 0;
 
   // Create optimized state tracker for markdown block analysis if needed
-  let markdownStateTracker: MarkdownBlockState | undefined;
+  let markdownStateTracker: MarkdownBlockStateTracker | undefined;
   if (hasNestedMarkdown) {
-    markdownStateTracker = new MarkdownBlockState(allLines);
+    markdownStateTracker = new MarkdownBlockStateTracker(allLines);
   }
 
   for (let i = 0; i < allLines.length; i++) {
     const line = allLines[i];
 
     // Process block nesting logic for the first fence
-    const nesting = processBlockNesting(line, seenFirstFence);
+    const nesting = processBlockNesting(line, seenFirstFence, shouldRemoveLineBeforeStart);
     if (nesting.shouldSkip) {
       continue; // Filter out starting ``` or START block
     }

@@ -5,13 +5,10 @@ import { LineStream } from "../../../diff/util";
 
 import {
   headerIsMarkdown,
-  isMarkdownFile,
-  MarkdownBlockStateTracker,
-  collectAllLines,
+  isMarkdownFile
 } from "../../../utils/markdownUtils";
 import {
-  shouldStopAtMarkdownBlock,
-  processBlockNesting as processBlockNestingUtil,
+  processBlockNesting as processBlockNestingUtil
 } from "../../../utils/streamMarkdownUtils";
 
 export { filterCodeBlockLines } from "./filterCodeBlock";
@@ -131,11 +128,6 @@ export function hasNestedMarkdownBlocks(
     Boolean(filepath && isMarkdownFile(filepath))
   );
 }
-
-// Re-export shared utilities
-export { collectAllLines, isMarkdownFile };
-export { MarkdownBlockStateTracker as MarkdownBlockState };
-export { shouldStopAtMarkdownBlock };
 
 // Wrapper for processBlockNesting with local shouldRemoveLineBeforeStart function
 export function processBlockNesting(

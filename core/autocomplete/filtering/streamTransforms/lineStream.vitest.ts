@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 
+import { collectAllLines, MarkdownBlockStateTracker } from "../../../utils/markdownUtils";
+import { shouldStopAtMarkdownBlock } from "../../../utils/streamMarkdownUtils";
 import * as lineStream from "./lineStream";
 
 // eslint-disable-next-line max-lines-per-function
@@ -897,7 +899,7 @@ describe("lineStream", () => {
         "line3",
       ]);
 
-      const result = await lineStream.collectAllLines(linesGenerator);
+      const result = await collectAllLines(linesGenerator);
 
       expect(result).toEqual(["line1", "line2", "line3"]);
     });
@@ -905,7 +907,7 @@ describe("lineStream", () => {
     it("should handle empty stream", async () => {
       const linesGenerator = await getLineGenerator([]);
 
-      const result = await lineStream.collectAllLines(linesGenerator);
+      const result = await collectAllLines(linesGenerator);
 
       expect(result).toEqual([]);
     });
@@ -913,7 +915,7 @@ describe("lineStream", () => {
     it("should handle stream with empty lines", async () => {
       const linesGenerator = await getLineGenerator(["", "line2", "", "line4"]);
 
-      const result = await lineStream.collectAllLines(linesGenerator);
+      const result = await collectAllLines(linesGenerator);
 
       expect(result).toEqual(["", "line2", "", "line4"]);
     });
@@ -922,14 +924,14 @@ describe("lineStream", () => {
   describe("shouldStopAtMarkdownBlock", () => {
     it("should return false when current line is not closing backticks", () => {
       const allLines = ["```markdown", "content", "more content"];
-      const state = new lineStream.MarkdownBlockState(allLines);
-      expect(lineStream.shouldStopAtMarkdownBlock(state, 2)).toBe(false);
+      const state = new MarkdownBlockStateTracker(allLines);
+      expect(shouldStopAtMarkdownBlock(state, 2)).toBe(false);
     });
 
     it("should handle simple nested markdown case", () => {
       const allLines = ["```markdown", "# Title", "```"];
-      const state = new lineStream.MarkdownBlockState(allLines);
-      expect(lineStream.shouldStopAtMarkdownBlock(state, 2)).toBe(true);
+      const state = new MarkdownBlockStateTracker(allLines);
+      expect(shouldStopAtMarkdownBlock(state, 2)).toBe(true);
     });
 
     it("should handle complex nested markdown with inner code blocks", () => {
@@ -941,11 +943,11 @@ describe("lineStream", () => {
         "```",
         "```",
       ];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
       // At index 4 (first inner closing), should not stop
-      expect(lineStream.shouldStopAtMarkdownBlock(state, 4)).toBe(false);
+      expect(shouldStopAtMarkdownBlock(state, 4)).toBe(false);
       // At index 5 (outer closing), should stop
-      expect(lineStream.shouldStopAtMarkdownBlock(state, 5)).toBe(true);
+      expect(shouldStopAtMarkdownBlock(state, 5)).toBe(true);
     });
 
     it("should handle multiple bare backticks scenario", () => {
@@ -956,11 +958,11 @@ describe("lineStream", () => {
         "More content",
         "```",
       ];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
       // At index 2, should not stop (not the last bare backticks)
-      expect(lineStream.shouldStopAtMarkdownBlock(state, 2)).toBe(false);
+      expect(shouldStopAtMarkdownBlock(state, 2)).toBe(false);
       // At index 4, should stop (last bare backticks)
-      expect(lineStream.shouldStopAtMarkdownBlock(state, 4)).toBe(true);
+      expect(shouldStopAtMarkdownBlock(state, 4)).toBe(true);
     });
   });
 
@@ -1014,7 +1016,7 @@ describe("lineStream", () => {
   describe("MarkdownBlockState", () => {
     it("should initialize with correct state", () => {
       const allLines = ["```markdown", "content", "```", "more content", "```"];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       // Test basic initialization - we can't directly test private properties,
       // but we can test the behavior through shouldStopAtPosition
@@ -1023,7 +1025,7 @@ describe("lineStream", () => {
 
     it("should correctly identify bare backticks positions", () => {
       const allLines = ["```markdown", "```", "content", "```"];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       // At position 1 (first bare backticks), should not stop
       expect(state.shouldStopAtPosition(1)).toBe(false);
@@ -1041,7 +1043,7 @@ describe("lineStream", () => {
         "More content",
         "```",
       ];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       // Process positions incrementally
       expect(state.shouldStopAtPosition(2)).toBe(false); // Start of inner block
@@ -1066,7 +1068,7 @@ describe("lineStream", () => {
         "Final notes",
         "```",
       ];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       // Test multiple positions in sequence
       expect(state.shouldStopAtPosition(6)).toBe(false); // End of first inner block
@@ -1076,7 +1078,7 @@ describe("lineStream", () => {
 
     it("should handle non-backtick lines correctly", () => {
       const allLines = ["```markdown", "regular content", "```"];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       // Position 1 is not backticks, should return false
       expect(state.shouldStopAtPosition(1)).toBe(false);
@@ -1084,7 +1086,7 @@ describe("lineStream", () => {
 
     it("should handle empty lines and edge cases", () => {
       const allLines = ["```markdown", "", "```"];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       expect(state.shouldStopAtPosition(1)).toBe(false); // Empty line
       expect(state.shouldStopAtPosition(2)).toBe(true); // Closing backticks
@@ -1092,7 +1094,7 @@ describe("lineStream", () => {
 
     it("should reset nest count when reaching final bare backticks", () => {
       const allLines = ["```markdown", "content", "```"];
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       // First call should stop and reset count
       expect(state.shouldStopAtPosition(2)).toBe(true);
@@ -1112,7 +1114,7 @@ describe("lineStream", () => {
         return `line ${i}`;
       });
 
-      const state = new lineStream.MarkdownBlockState(allLines);
+      const state = new MarkdownBlockStateTracker(allLines);
 
       // Test that we can call multiple times without recomputing everything
       const start = performance.now();
@@ -1120,7 +1122,7 @@ describe("lineStream", () => {
       // Test several positions in sequence
       for (let i = 10; i < 90; i += 10) {
         if (allLines[i].trim() === "```") {
-          lineStream.shouldStopAtMarkdownBlock(state, i);
+          shouldStopAtMarkdownBlock(state, i);
         }
       }
 
