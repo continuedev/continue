@@ -65,14 +65,14 @@ async function chat() {
   try {
     let continueSdk = await initializeContinueSDK(
       authConfig.accessToken,
-      args.assistantPath
+      args.configPath
     );
 
     assistant = continueSdk.assistant;
     client = continueSdk.client;
   } catch (error) {
     console.error(
-      chalk.red(`Error loading assistant ${args.assistantPath}:`),
+      chalk.red(`Error loading assistant ${args.configPath}:`),
       error
     );
     throw error;

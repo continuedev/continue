@@ -3,7 +3,7 @@ import * as path from "path";
 
 export interface CommandLineArgs {
   isHeadless: boolean;
-  assistantPath: string;
+  configPath: string;
   prompt?: string; // Optional prompt argument
 }
 
@@ -17,7 +17,7 @@ export function parseArgs(): CommandLineArgs {
   // Default values
   const result: CommandLineArgs = {
     isHeadless: false,
-    assistantPath: path.join(os.homedir(), ".continue", "config.yaml"),
+    configPath: path.join(os.homedir(), ".continue", "config.yaml"),
   };
 
   // Parse flags
@@ -25,10 +25,10 @@ export function parseArgs(): CommandLineArgs {
     result.isHeadless = true;
   }
 
-  // Get assistant path from --assistant flag
-  const assistantIndex = args.indexOf("--assistant");
-  if (assistantIndex !== -1 && assistantIndex + 1 < args.length) {
-    result.assistantPath = args[assistantIndex + 1];
+  // Get config path from --config flag
+  const configIndex = args.indexOf("--config");
+  if (configIndex !== -1 && configIndex + 1 < args.length) {
+    result.configPath = args[configIndex + 1];
   }
 
   // Find the last argument that's not a flag or a flag value
@@ -38,7 +38,7 @@ export function parseArgs(): CommandLineArgs {
 
     // Skip flag values
     const prevArg = index > 0 ? args[index - 1] : "";
-    if (prevArg === "--assistant") return false;
+    if (prevArg === "--config") return false;
 
     return true;
   });
