@@ -1,10 +1,10 @@
-import { Key } from 'ink';
+import { Key } from "ink";
 
 export class TextBuffer {
-  private _text: string = '';
+  private _text: string = "";
   private _cursor: number = 0;
 
-  constructor(initialText: string = '') {
+  constructor(initialText: string = "") {
     this._text = initialText;
     this._cursor = initialText.length;
   }
@@ -27,13 +27,15 @@ export class TextBuffer {
   }
 
   insertText(text: string): void {
-    this._text = this._text.slice(0, this._cursor) + text + this._text.slice(this._cursor);
+    this._text =
+      this._text.slice(0, this._cursor) + text + this._text.slice(this._cursor);
     this._cursor += text.length;
   }
 
   deleteCharAt(position: number): void {
     if (position >= 0 && position < this._text.length) {
-      this._text = this._text.slice(0, position) + this._text.slice(position + 1);
+      this._text =
+        this._text.slice(0, position) + this._text.slice(position + 1);
       if (this._cursor > position) {
         this._cursor--;
       }
@@ -52,60 +54,65 @@ export class TextBuffer {
     }
   }
 
-  private findWordBoundary(position: number, direction: 'left' | 'right'): number {
-    if (direction === 'left') {
+  private findWordBoundary(
+    position: number,
+    direction: "left" | "right"
+  ): number {
+    if (direction === "left") {
       // Find start of current word or previous word
       let pos = Math.max(0, position - 1);
-      
+
       // Skip whitespace
       while (pos > 0 && /\s/.test(this._text[pos])) {
         pos--;
       }
-      
+
       // Find word boundary
       while (pos > 0 && !/\s/.test(this._text[pos - 1])) {
         pos--;
       }
-      
+
       return pos;
     } else {
       // Find end of current word or next word
       let pos = position;
-      
+
       // Skip whitespace
       while (pos < this._text.length && /\s/.test(this._text[pos])) {
         pos++;
       }
-      
+
       // Find word boundary
       while (pos < this._text.length && !/\s/.test(this._text[pos])) {
         pos++;
       }
-      
+
       return pos;
     }
   }
 
   moveWordLeft(): void {
-    this._cursor = this.findWordBoundary(this._cursor, 'left');
+    this._cursor = this.findWordBoundary(this._cursor, "left");
   }
 
   moveWordRight(): void {
-    this._cursor = this.findWordBoundary(this._cursor, 'right');
+    this._cursor = this.findWordBoundary(this._cursor, "right");
   }
 
   deleteWordBackward(): void {
-    const wordStart = this.findWordBoundary(this._cursor, 'left');
+    const wordStart = this.findWordBoundary(this._cursor, "left");
     if (wordStart < this._cursor) {
-      this._text = this._text.slice(0, wordStart) + this._text.slice(this._cursor);
+      this._text =
+        this._text.slice(0, wordStart) + this._text.slice(this._cursor);
       this._cursor = wordStart;
     }
   }
 
   deleteWordForward(): void {
-    const wordEnd = this.findWordBoundary(this._cursor, 'right');
+    const wordEnd = this.findWordBoundary(this._cursor, "right");
     if (wordEnd > this._cursor) {
-      this._text = this._text.slice(0, this._cursor) + this._text.slice(wordEnd);
+      this._text =
+        this._text.slice(0, this._cursor) + this._text.slice(wordEnd);
     }
   }
 
@@ -126,61 +133,61 @@ export class TextBuffer {
   }
 
   clear(): void {
-    this._text = '';
+    this._text = "";
     this._cursor = 0;
   }
 
   handleInput(input: string, key: Key): boolean {
     // Detect option key combinations through escape sequences
-    const isOptionKey = input.startsWith('\u001b') && input.length > 1;
-    
+    const isOptionKey = input.startsWith("\u001b") && input.length > 1;
+
     // Handle option key combinations (detected through escape sequences)
     if (isOptionKey) {
       const sequence = input.slice(1);
-      
+
       // Option + left arrow (usually \u001b[1;9D or \u001bb)
-      if (sequence === 'b' || sequence.includes('1;9D')) {
+      if (sequence === "b" || sequence.includes("1;9D")) {
         this.moveWordLeft();
         return true;
       }
-      
+
       // Option + right arrow (usually \u001b[1;9C or \u001bf)
-      if (sequence === 'f' || sequence.includes('1;9C')) {
+      if (sequence === "f" || sequence.includes("1;9C")) {
         this.moveWordRight();
         return true;
       }
-      
+
       // Option + backspace (usually \u001b\u0008 or \u001b\u007f)
-      if (sequence === '\u0008' || sequence === '\u007f') {
+      if (sequence === "\u0008" || sequence === "\u007f") {
         this.deleteWordBackward();
         return true;
       }
-      
+
       return true; // Consume other option sequences
     }
 
     // Handle special key combinations based on input character
     if (key.ctrl) {
       switch (input) {
-        case 'a':
+        case "a":
           this.moveToStart();
           return true;
-        case 'e':
+        case "e":
           this.moveToEnd();
           return true;
-        case 'u':
+        case "u":
           // Delete from cursor to start of line
           this._text = this._text.slice(this._cursor);
           this._cursor = 0;
           return true;
-        case 'k':
+        case "k":
           // Delete from cursor to end of line
           this._text = this._text.slice(0, this._cursor);
           return true;
-        case 'w':
+        case "w":
           this.deleteWordBackward();
           return true;
-        case 'd':
+        case "d":
           this.deleteWordForward();
           return true;
       }
@@ -236,14 +243,17 @@ export class TextBuffer {
   }
 
   // Helper method to render text with cursor
-  renderWithCursor(placeholder?: string): { text: string; cursorPosition: number } {
+  renderWithCursor(placeholder?: string): {
+    text: string;
+    cursorPosition: number;
+  } {
     if (this._text.length === 0 && placeholder) {
       return { text: placeholder, cursorPosition: 0 };
     }
-    
+
     return {
       text: this._text,
-      cursorPosition: this._cursor
+      cursorPosition: this._cursor,
     };
   }
 }
