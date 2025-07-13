@@ -41,6 +41,13 @@ class MarkdownPatchStateTracker {
   isBareBacktickLine(index: number): boolean {
     return this.bareBacktickPositions.includes(index);
   }
+
+  /**
+   * Gets the trimmed lines array.
+   */
+  getTrimmedLines(): string[] {
+    return this.trimmedLines;
+  }
 }
 
 export const patchNestedMarkdown = (source: string): string => {
@@ -50,10 +57,10 @@ export const patchNestedMarkdown = (source: string): string => {
 
   let nestCount = 0;
   const lines = source.split("\n");
-  const trimmedLines = lines.map((l) => l.trim());
 
   // Use optimized state tracker for efficient bare backtick analysis
   const stateTracker = new MarkdownPatchStateTracker(lines);
+  const trimmedLines = stateTracker.getTrimmedLines();
 
   for (let i = 0; i < trimmedLines.length; i++) {
     const line = trimmedLines[i];
