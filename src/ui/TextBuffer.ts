@@ -232,8 +232,8 @@ export class TextBuffer {
       return true;
     }
 
-    // Handle regular character input
-    if (input && input.length === 1 && !key.ctrl && !key.meta && !isOptionKey) {
+    // Handle regular character input (including paste - multi-character input)
+    if (input && input.length >= 1 && !key.ctrl && !key.meta && !isOptionKey) {
       this.insertText(input);
       return true;
     }
