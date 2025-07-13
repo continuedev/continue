@@ -13,6 +13,7 @@ import { configureLogger } from "./logger.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
+import { startTUIChat } from "./ui/index.js";
 
 // Parse command line arguments
 const args = parseArgs();
@@ -29,10 +30,6 @@ async function chat() {
   }
 
   const authConfig = loadAuthConfig();
-
-  // Check if the assistant path is a file or a slug
-  let assistant: ContinueClient["assistant"];
-  let client: ContinueClient["client"];
 
   // This was the previous default behavior, but currently the SDK
   // only supports slugs, so we've disabled reading local assistant files
@@ -62,14 +59,20 @@ async function chat() {
   // }
   // }
 
+  // Initialize ContinueSDK and MCPService once
+  let assistant: ContinueClient["assistant"];
+  let client: ContinueClient["client"];
+  let mcpService: MCPService;
+
   try {
-    let continueSdk = await initializeContinueSDK(
+    const continueSdk = await initializeContinueSDK(
       authConfig.accessToken,
       args.configPath
     );
 
     assistant = continueSdk.assistant;
     client = continueSdk.client;
+    mcpService = await MCPService.create(assistant.config);
   } catch (error) {
     console.error(
       chalk.red(`Error loading assistant ${args.configPath}:`),
@@ -78,16 +81,18 @@ async function chat() {
     throw error;
   }
 
-  const mcpService = await MCPService.create(assistant!.config);
-
-  // Only show intro message if not in headless mode
+  // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
-    introMessage(assistant!, mcpService);
+    await startTUIChat(assistant, client, mcpService, args.prompt);
+    return;
   }
+
+  // Show intro message for headless mode
+  introMessage(assistant, mcpService);
 
   // Rules
   const chatHistory: ChatCompletionMessageParam[] = [];
-  const systemMessage = assistant!.systemMessage;
+  const systemMessage = assistant.systemMessage;
   if (systemMessage) {
     chatHistory.push({ role: "system", content: systemMessage });
   }
@@ -108,7 +113,7 @@ async function chat() {
     isFirstMessage = false;
 
     // Handle slash commands
-    const commandResult = handleSlashCommands(userInput, assistant!.config);
+    const commandResult = handleSlashCommands(userInput, assistant.config);
     if (commandResult) {
       if (commandResult.exit) {
         break;
@@ -133,7 +138,7 @@ async function chat() {
     }
 
     try {
-      await streamChatResponse(chatHistory, assistant!, client!);
+      await streamChatResponse(chatHistory, assistant, client);
     } catch (e: any) {
       console.error(`\n${chalk.red(`Error: ${e.message}`)}`);
       console.info(
