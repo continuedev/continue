@@ -1,5 +1,6 @@
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { ToolCallState } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
@@ -49,6 +50,19 @@ export function ToolCallDiv({
       );
     }
 
+    // Trying this out while it's an experimental feature
+    // Obviously missing the truncate and args buttons
+    // All the info from args is displayed here
+    // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
+    if (functionName === BuiltInToolNames.SearchAndReplaceInFile) {
+      return (
+        <FunctionSpecificToolCallDiv
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        />
+      );
+    }
+
     return (
       <ToolCallDisplay
         icon={getStatusIcon(toolCallState.status)}
@@ -57,7 +71,6 @@ export function ToolCallDiv({
         historyIndex={historyIndex}
       >
         <FunctionSpecificToolCallDiv
-          toolCall={toolCallState.toolCall}
           toolCallState={toolCallState}
           historyIndex={historyIndex}
         />
@@ -89,16 +102,5 @@ export function ToolCallDiv({
     );
   }
 
-  return (
-    <div className="space-y-1">
-      {toolCallStates.map((toolCallState) => (
-        <div
-          className="border-border rounded-lg border p-3"
-          key={toolCallState.toolCallId}
-        >
-          {renderToolCall(toolCallState)}
-        </div>
-      ))}
-    </div>
-  );
+  return toolCallStates.map(renderToolCall);
 }
