@@ -1,3 +1,20 @@
+# [1.2.0](https://github.com/continuedev/cli/compare/v1.1.0...v1.2.0) (2025-07-14)
+
+
+### Bug Fixes
+
+* bg color for diff ([63c9ecf](https://github.com/continuedev/cli/commit/63c9ecf24fcf74f43d07244c963cef04f91baee8))
+* display diff ([fde6098](https://github.com/continuedev/cli/commit/fde6098ef2c4d99a9b9b8d6ffc1299436e0f52c1))
+* improve streaming message handling and display buffering ([d1372b3](https://github.com/continuedev/cli/commit/d1372b3aa2f79221957468fd1decbae2258becc0))
+* remove part of the system message ([daae972](https://github.com/continuedev/cli/commit/daae97242f1fca92f42f8c979df8d9c3f912f69d))
+* truncate diff at 16 lines ([cbb77e3](https://github.com/continuedev/cli/commit/cbb77e35ff19809c1c05760fbdf7c995d85dc72c))
+
+
+### Features
+
+* add /clear command to clear chat history ([c9c000c](https://github.com/continuedev/cli/commit/c9c000cfab6aa6efe156126f1eafc99349466413))
+* convert absolute paths to relative paths in tool display ([2c722c4](https://github.com/continuedev/cli/commit/2c722c485eea4c3c283fb643193a4b1ffe14bf7f))
+
 # [1.1.0](https://github.com/continuedev/cli/compare/v1.0.1...v1.1.0) (2025-07-14)
 
 
