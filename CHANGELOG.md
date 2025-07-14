@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/continuedev/cli/compare/v1.0.0...v1.0.1) (2025-07-14)
+
+
+### Bug Fixes
+
+* release index.js ([091cfa7](https://github.com/continuedev/cli/commit/091cfa7b64c1591f371e444e602d04fdcbca48d4))
+
 # 1.0.0 (2025-07-14)
 
 
