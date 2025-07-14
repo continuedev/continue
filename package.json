@@ -47,6 +47,7 @@
     "open": "^10.1.0",
     "react": "^19.1.0",
     "readline-sync": "^1.4.10",
+    "typescript": "^5.8.3",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

@@ -2,6 +2,7 @@ export interface CommandLineArgs {
   isHeadless: boolean;
   configPath: string;
   prompt?: string; // Optional prompt argument
+  resume?: boolean; // Resume from last session
 }
 
 /**
@@ -20,6 +21,10 @@ export function parseArgs(): CommandLineArgs {
   // Parse flags
   if (args.includes("--headless")) {
     result.isHeadless = true;
+  }
+
+  if (args.includes("--resume")) {
+    result.resume = true;
   }
 
   // Get config path from --config flag
