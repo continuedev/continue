@@ -168,7 +168,9 @@ describe("sessionSlice streamUpdate", () => {
       // Check generating message
       expect(newState.history[1].message.role).toBe("assistant");
       expect(newState.history[1].message.content).toBe("");
-      expect(newState.history[1].toolCallStates?.[0]?.status).toBe("generating");
+      expect(newState.history[1].toolCallStates?.[0]?.status).toBe(
+        "generating",
+      );
       expect(newState.history[1].toolCallStates?.[0]?.toolCallId).toBe("1234");
 
       const toolResponseAction = {
@@ -237,7 +239,9 @@ describe("sessionSlice streamUpdate", () => {
       // Check generating message
       expect(newState.history[1].message.role).toBe("assistant");
       expect(newState.history[1].message.content).toBe("");
-      expect(newState.history[1].toolCallStates?.[0]?.status).toBe("generating");
+      expect(newState.history[1].toolCallStates?.[0]?.status).toBe(
+        "generating",
+      );
       expect(newState.history[1].toolCallStates?.[0]?.toolCallId).toBe("1234");
 
       const toolResponseAction = {
@@ -418,7 +422,7 @@ describe("sessionSlice streamUpdate", () => {
     it("should handle basic tool call streaming", () => {
       const initialState = createInitialState();
       const toolCallId = "call_123";
-      
+
       const action = {
         type: "session/streamUpdate",
         payload: [

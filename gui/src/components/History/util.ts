@@ -13,7 +13,9 @@ export interface SessionGroup {
   sessions: SessionMetadata[];
 }
 
-export const groupSessionsByDate = (sessions: SessionMetadata[]): SessionGroup[] => {
+export const groupSessionsByDate = (
+  sessions: SessionMetadata[],
+): SessionGroup[] => {
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
   const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
   const lastMonth = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);

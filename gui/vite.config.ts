@@ -49,7 +49,10 @@ export default defineConfig({
     },
     onUnhandledRejection(err) {
       // Suppress ProseMirror DOM errors in test environment
-      if (err.message?.includes("getClientRects") || err.message?.includes("prosemirror")) {
+      if (
+        err.message?.includes("getClientRects") ||
+        err.message?.includes("prosemirror")
+      ) {
         return false;
       }
       return true;

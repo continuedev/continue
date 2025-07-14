@@ -42,24 +42,29 @@ import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
 /**
  * Helper function to filter out duplicate edit/search-replace tool calls.
  * Only keeps the first occurrence of edit tools.
- * 
- * We don't support multiple parallel apply calls - see tool definitions for 
+ *
+ * We don't support multiple parallel apply calls - see tool definitions for
  * instructions we provide to models to prevent this behavior.
  */
-function filterMultipleEditToolCalls(toolCalls: ToolCallDelta[]): ToolCallDelta[] {
-  const editToolNames = [BuiltInToolNames.EditExistingFile, BuiltInToolNames.SearchAndReplaceInFile];
+function filterMultipleEditToolCalls(
+  toolCalls: ToolCallDelta[],
+): ToolCallDelta[] {
+  const editToolNames = [
+    BuiltInToolNames.EditExistingFile,
+    BuiltInToolNames.SearchAndReplaceInFile,
+  ];
   let hasSeenEditTool = false;
-  
-  return toolCalls.filter(toolCall => {
+
+  return toolCalls.filter((toolCall) => {
     const isEditTool = editToolNames.includes(toolCall.function?.name as any);
-    
+
     if (isEditTool) {
       if (hasSeenEditTool) {
         return false; // Skip this duplicate edit tool
       }
       hasSeenEditTool = true;
     }
-    
+
     return true;
   });
 }
@@ -103,12 +108,12 @@ export function handleToolCallsInMessage(
 
 /**
  * Applies a single tool call delta to the tool call states array.
- * 
+ *
  * This function handles the core logic for OpenAI-style tool call streaming where:
  * - Initial tool calls come with full details (ID, name, arguments)
  * - Subsequent argument fragments come without IDs and need to update the most recent tool call
  * - Multiple parallel tool calls can be streamed simultaneously
- * 
+ *
  * @param toolCallDelta - The incoming tool call delta from the LLM stream
  * @param toolCallStates - Array of existing tool call states (modified in place)
  */
@@ -119,19 +124,19 @@ function applyToolCallDelta(
   // Find existing state by matching toolCallId - this ensures we update
   // the correct tool call even when multiple tool calls are being streamed
   let existingStateIndex = -1;
-  
+
   if (toolCallDelta.id) {
     // Tool call has an ID - find by exact match
     // This handles: new tool calls or explicit updates to existing ones
     existingStateIndex = toolCallStates.findIndex(
-      (state) => state.toolCallId === toolCallDelta.id
+      (state) => state.toolCallId === toolCallDelta.id,
     );
   } else {
     // No ID in delta (common in OpenAI streaming fragments)
     // Strategy: Update the most recently added tool call that's still being generated
     // This handles the pattern: initial tool call with ID, then fragments without ID
     existingStateIndex = toolCallStates.length - 1;
-    
+
     // Ensure we have at least one tool call to update
     if (existingStateIndex < 0) {
       existingStateIndex = -1; // Will create new tool call
@@ -139,15 +144,10 @@ function applyToolCallDelta(
   }
 
   const existingState =
-    existingStateIndex >= 0
-      ? toolCallStates[existingStateIndex]
-      : undefined;
+    existingStateIndex >= 0 ? toolCallStates[existingStateIndex] : undefined;
 
   // Apply the delta to create an updated state (either updating existing or creating new)
-  const updatedState = addToolCallDeltaToState(
-    toolCallDelta,
-    existingState,
-  );
+  const updatedState = addToolCallDeltaToState(toolCallDelta, existingState);
 
   if (existingStateIndex >= 0) {
     // Update existing tool call state in place

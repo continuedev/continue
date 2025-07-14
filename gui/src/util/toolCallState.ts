@@ -8,7 +8,6 @@ export function addToolCallDeltaToState(
   toolCallDelta: ToolCallDelta,
   currentState: ToolCallState | undefined,
 ): ToolCallState {
-
   const currentCall = currentState?.toolCall;
 
   // These will/should not be partially streamed

@@ -24,7 +24,10 @@ describe("Parallel Tool Calls", () => {
           type: "function",
           function: {
             name: "write_file",
-            arguments: JSON.stringify({ filepath: "output.js", content: "test" }),
+            arguments: JSON.stringify({
+              filepath: "output.js",
+              content: "test",
+            }),
           },
         },
       ],
@@ -53,10 +56,11 @@ describe("Parallel Tool Calls", () => {
 
     // Should have user message and assistant message
     expect(history).toHaveLength(2);
-    
+
     // Find assistant message with tool calls
     const assistantMessage = history.find(
-      (item) => item.message.role === "assistant" && item.toolCallStates?.length
+      (item) =>
+        item.message.role === "assistant" && item.toolCallStates?.length,
     );
 
     expect(assistantMessage).toBeDefined();
@@ -83,7 +87,9 @@ describe("Parallel Tool Calls", () => {
     });
 
     const { findAllCurToolCallsByStatus } = await import("../../../redux/util");
-    const { cancelToolCall } = await import("../../../redux/slices/sessionSlice");
+    const { cancelToolCall } = await import(
+      "../../../redux/slices/sessionSlice"
+    );
 
     // Verify we have multiple pending tool calls
     let state = store.getState();
@@ -104,7 +110,7 @@ describe("Parallel Tool Calls", () => {
       state.session.history,
       "generated",
     );
-    
+
     // The second tool call should still be pending
     expect(pendingToolCalls).toHaveLength(1);
     expect(pendingToolCalls[0].toolCallId).toBe("tool-call-2");
@@ -187,21 +193,27 @@ describe("Parallel Tool Calls", () => {
 
     const state = store.getState();
     const history = state.session.history;
-    
+
     // Should have only one assistant message after streaming
-    const assistantMessages = history.filter(item => item.message.role === "assistant");
+    const assistantMessages = history.filter(
+      (item) => item.message.role === "assistant",
+    );
     expect(assistantMessages).toHaveLength(1);
-    
+
     const assistantMessage = assistantMessages[0];
-    
+
     // Should preserve original content
-    expect(assistantMessage.message.content).toContain("I'll call both tools in parallel");
-    
+    expect(assistantMessage.message.content).toContain(
+      "I'll call both tools in parallel",
+    );
+
     // Should have both tool calls after streaming completes
     expect(assistantMessage.toolCallStates).toHaveLength(2);
-    
+
     // Verify tool calls are properly constructed
-    const toolCallIds = assistantMessage.toolCallStates!.map(tc => tc.toolCallId);
+    const toolCallIds = assistantMessage.toolCallStates!.map(
+      (tc) => tc.toolCallId,
+    );
     expect(toolCallIds).toContain("tool-call-1");
     expect(toolCallIds).toContain("tool-call-2");
   });
