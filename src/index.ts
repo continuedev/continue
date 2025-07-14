@@ -15,6 +15,7 @@ import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
 import { constructSystemMessage } from "./systemMessage.js";
 import { startTUIChat } from "./ui/index.js";
+import { loadSession, saveSession, hasSession } from "./session.js";
 
 // Parse command line arguments
 const args = parseArgs();
@@ -84,7 +85,7 @@ async function chat() {
 
   // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
-    await startTUIChat(assistant, client, mcpService, args.prompt);
+    await startTUIChat(assistant, client, mcpService, args.prompt, args.resume);
     return;
   }
 
@@ -92,11 +93,26 @@ async function chat() {
   introMessage(assistant, mcpService);
 
   // Rules
-  const chatHistory: ChatCompletionMessageParam[] = [];
-  const rulesSystemMessage = assistant.systemMessage;
-  const systemMessage = constructSystemMessage(rulesSystemMessage);
-  if (systemMessage) {
-    chatHistory.push({ role: "system", content: systemMessage });
+  let chatHistory: ChatCompletionMessageParam[] = [];
+  
+  // Load previous session if --resume flag is used
+  if (args.resume) {
+    const savedHistory = loadSession();
+    if (savedHistory) {
+      chatHistory = savedHistory;
+      console.log(chalk.yellow("Resuming previous session..."));
+    } else {
+      console.log(chalk.yellow("No previous session found, starting fresh..."));
+    }
+  }
+  
+  // If no session loaded or not resuming, initialize with system message
+  if (chatHistory.length === 0) {
+    const rulesSystemMessage = assistant.systemMessage;
+    const systemMessage = constructSystemMessage(rulesSystemMessage);
+    if (systemMessage) {
+      chatHistory.push({ role: "system", content: systemMessage });
+    }
   }
 
   let isFirstMessage = true;
@@ -141,6 +157,8 @@ async function chat() {
 
     try {
       await streamChatResponse(chatHistory, assistant, client);
+      // Save session after each successful response
+      saveSession(chatHistory);
     } catch (e: any) {
       console.error(`\n${chalk.red(`Error: ${e.message}`)}`);
       console.info(

@@ -7,6 +7,7 @@ import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { getToolDisplayName } from "../tools.js";
+import { loadSession, saveSession, hasSession } from "../session.js";
 import LoadingAnimation from "./LoadingAnimation.js";
 import ToolResultSummary from "./ToolResultSummary.js";
 import UserInput from "./UserInput.js";
@@ -15,6 +16,7 @@ interface TUIChatProps {
   assistant: ContinueClient["assistant"];
   client: ContinueClient["client"];
   initialPrompt?: string;
+  resume?: boolean;
 }
 
 interface DisplayMessage {
@@ -30,21 +32,49 @@ const TUIChat: React.FC<TUIChatProps> = ({
   assistant,
   client,
   initialPrompt,
+  resume,
 }) => {
   const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
     () => {
-      const history: ChatCompletionMessageParam[] = [];
-      const rulesSystemMessage = assistant.systemMessage;
-      const systemMessage = constructSystemMessage(rulesSystemMessage);
-      if (systemMessage) {
-        history.push({ role: "system", content: systemMessage });
+      let history: ChatCompletionMessageParam[] = [];
+      
+      // Load previous session if --resume flag is used
+      if (resume) {
+        const savedHistory = loadSession();
+        if (savedHistory) {
+          history = savedHistory;
+        }
       }
+      
+      // If no session loaded or not resuming, initialize with system message
+      if (history.length === 0) {
+        const rulesSystemMessage = assistant.systemMessage;
+        const systemMessage = constructSystemMessage(rulesSystemMessage);
+        if (systemMessage) {
+          history.push({ role: "system", content: systemMessage });
+        }
+      }
+      
       return history;
     }
   );
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
-  const [messages, setMessages] = useState<DisplayMessage[]>([]);
+  const [messages, setMessages] = useState<DisplayMessage[]>(() => {
+    // Convert loaded chat history to display messages (excluding system messages)
+    if (resume) {
+      const savedHistory = loadSession();
+      if (savedHistory) {
+        return savedHistory
+          .filter(msg => msg.role !== "system")
+          .map(msg => ({
+            role: msg.role,
+            content: msg.content as string
+          }));
+      }
+    }
+    return [];
+  });
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
@@ -244,6 +274,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           { role: "assistant", content: messageContent, isStreaming: false }
         ]);
       }
+
+      // Save session after successful response
+      saveSession(newHistory);
     } catch (error: any) {
       const errorMessage = `Error: ${error.message}`;
       setMessages((prev) => [

@@ -202,8 +202,13 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
+    // Allow typing during streaming, but block submission
     if (!inputMode) {
-      return;
+      // Block only Enter key submission during streaming
+      if (key.return && !key.shift) {
+        return;
+      }
+      // Allow all other input (typing, navigation, etc.)
     }
 
     // Handle slash command navigation
@@ -302,6 +307,7 @@ const UserInput: React.FC<UserInputProps> = ({
         setCursorPosition(0);
         setShowSlashCommands(false);
       }
+      // Note: Enter key is already blocked during streaming by the inputMode check above
       return;
     }
 
@@ -341,17 +347,17 @@ const UserInput: React.FC<UserInputProps> = ({
     if (inputText.length === 0) {
       return (
         <>
-          {inputMode && !isWaitingForResponse && (
+          {(inputMode || isWaitingForResponse) && (
             <Text color="gray">▋{placeholderText}</Text>
           )}
-          {(!inputMode || isWaitingForResponse) && (
+          {!inputMode && !isWaitingForResponse && (
             <Text color="gray">{placeholderText}</Text>
           )}
         </>
       );
     }
 
-    if (inputMode && !isWaitingForResponse) {
+    if (inputMode || isWaitingForResponse) {
       // Handle multi-line text with cursor
       const lines = inputText.split("\n");
       let charCount = 0;

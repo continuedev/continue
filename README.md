@@ -1,117 +1,59 @@
 # Continue CLI
 
-A command-line interface for Continue Dev that provides an interactive AI-assisted development experience.
-
-## Features
-
-- 🤖 Interactive AI Assistant Chat
-- 🎨 Beautiful Terminal User Interface (TUI)
-- 🔐 Secure Authentication via WorkOS
-- 🛠️ Built-in Development Tools
-- ⚡ Real-time Response Streaming
-- 🎯 Slash Command Support
-- 🤫 Headless Mode for Automation
+The Continue CLI is a customizable command line coding agent.
 
 ## Installation
 
 ```bash
-npm install @continuedev/cli -g
+npm i -g @continuedev/cli
 ```
 
 ## Usage
 
-### Basic Usage
-
 ```bash
-continue-cli
-```
-
-### With Custom Assistant
-
-```bash
-continue-cli --config /path/to/config.yaml
+cn
 ```
 
 ### Headless Mode
 
 ```bash
-continue-cli --headless --prompt "Your command here"
+cn --headless "Generate a conventional commit name for the current git changes."
 ```
 
-## Available Commands
+### Session Management
 
-The CLI supports various slash commands during interaction:
-
-- `/help` - Display help information
-- `/exit` - Exit the CLI
-- Additional commands available during chat sessions
-
-## Development
-
-### Prerequisites
-
-- Node.js (version specified in .nvmrc)
-- npm or yarn
-
-### Setup
-
-1. Clone the repository
-2. Install dependencies:
+The CLI automatically saves your chat history for each terminal session. You can resume where you left off:
 
 ```bash
-npm install
+# Resume the last session in this terminal
+cn --resume
 ```
 
-3. Build the project:
+Each terminal window maintains its own separate session, so you can have multiple concurrent conversations without them interfering with each other.
+
+### Advanced Usage
 
 ```bash
-npm run build
+# Resume session with specific assistant
+cn --resume --config my-assistant
+
+# Resume session in headless mode
+cn --resume --headless
 ```
 
-4. Start in development mode:
+## Command Line Options
 
-```bash
-npm start
-```
+- `--headless`: Run in headless mode (no TUI)
+- `--config <path>`: Specify assistant configuration path
+- `--resume`: Resume the last session for this terminal
+- `<prompt>`: Optional prompt to start with
 
-### Testing
+## Session Storage
 
-Run the test suite:
+Sessions are stored in `~/.continue-cli/sessions/` and are automatically managed per terminal window using environment variables like:
+- `TERM_SESSION_ID`
+- `SSH_TTY` 
+- `TMUX`
+- `STY`
 
-```bash
-npm test
-```
-
-## Project Structure
-
-```
-src/
-├── auth/           # Authentication implementation
-├── tools/          # CLI tools and utilities
-├── ui/             # Terminal User Interface components
-├── index.ts        # Main entry point
-├── args.ts         # Command line argument parsing
-├── client.ts       # Client implementation
-├── mcp.ts          # Model Context Protocol integration
-└── ...            # Various utility files
-```
-
-## Dependencies
-
-- `@continuedev/*` packages for core functionality
-- `@workos-inc/node` for authentication
-- `openai` for AI capabilities
-- `ink` and `react` for Terminal UI
-- Various utility packages (chalk, axios, etc.)
-
-## License
-
-Apache-2.0 - see LICENSE file for details
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-For issues and feature requests, please use the GitHub issue tracker.
+If none of these are available, the process ID is used as a fallback.
