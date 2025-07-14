@@ -9,6 +9,7 @@ export type ToolParameters = Record<
 
 export interface Tool {
   name: string;
+  displayName: string;
   description: string;
   parameters: ToolParameters;
   run: (args: any) => Promise<string>;

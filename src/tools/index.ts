@@ -22,6 +22,11 @@ export const BUILTIN_TOOLS: Tool[] = [
   ...(parseArgs().isHeadless ? [exitTool] : []),
 ];
 
+export function getToolDisplayName(toolName: string): string {
+  const tool = BUILTIN_TOOLS.find(t => t.name === toolName);
+  return tool?.displayName || toolName;
+}
+
 export function getToolsDescription(): string {
   return BUILTIN_TOOLS.map((tool) => {
     const params = Object.entries(tool.parameters)
@@ -99,6 +104,7 @@ export async function executeToolCall(toolCall: {
       ?.getTools()
       .map((t) => ({
         name: t.name,
+        displayName: t.name.replace("mcp__", "").replace("ide__", ""),
         description: t.description ?? "",
         parameters: convertInputSchemaToParameters(t.inputSchema),
         run: async (args: any) => {

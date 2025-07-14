@@ -52,9 +52,9 @@ type TODO = any;
 
 export interface StreamCallbacks {
   onContent?: (content: string) => void;
-  onToolStart?: (toolName: string) => void;
-  onToolResult?: (result: string) => void;
-  onToolError?: (error: string) => void;
+  onToolStart?: (toolName: string, toolArgs?: any) => void;
+  onToolResult?: (result: string, toolName: string) => void;
+  onToolError?: (error: string, toolName?: string) => void;
 }
 
 // Define a function to handle streaming responses with tool calling
@@ -62,7 +62,8 @@ export async function streamChatResponse(
   chatHistory: ChatCompletionMessageParam[],
   assistant: ContinueClient["assistant"],
   client: ContinueClient["client"],
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
+  abortController?: AbortController
 ) {
   // Prepare tools for the API call
   const toolsForRequest = getAllTools();
@@ -84,6 +85,8 @@ export async function streamChatResponse(
         messages: chatHistory,
         stream: true,
         tools: toolsForRequest,
+      }, {
+        signal: abortController?.signal,
       });
     } catch (error: any) {
       console.error(
@@ -99,6 +102,11 @@ export async function streamChatResponse(
     let toolArguments = "";
 
     for await (const chunk of stream) {
+      // Check if we should abort
+      if (abortController?.signal.aborted) {
+        break;
+      }
+
       // Handle regular content
       if (chunk.choices[0].delta.content) {
         const content = chunk.choices[0].delta.content;
@@ -120,6 +128,7 @@ export async function streamChatResponse(
                 id: toolCallDelta.id,
                 name: "",
                 arguments: {},
+                startNotified: false,
               };
             }
             currentToolCallId = toolCallDelta.id;
@@ -133,15 +142,7 @@ export async function streamChatResponse(
             if (toolCall) {
               if (!toolCall.name) {
                 toolCall.name = toolCallDelta.function.name;
-                if (callbacks?.onToolStart) {
-                  callbacks.onToolStart(toolCall.name);
-                } else {
-                  process.stdout.write(
-                    `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
-                      toolCall.name
-                    )}${chalk.yellow("]")}`
-                  );
-                }
+                toolCall.startNotified = false;
               }
             }
           }
@@ -159,6 +160,20 @@ export async function streamChatResponse(
                 // Try to parse complete JSON
                 const parsed = JSON.parse(toolArguments);
                 toolCall.arguments = parsed;
+                
+                // Notify start if we haven't already and have both name and args
+                if (toolCall.name && !toolCall.startNotified) {
+                  toolCall.startNotified = true;
+                  if (callbacks?.onToolStart) {
+                    callbacks.onToolStart(toolCall.name, toolCall.arguments);
+                  } else {
+                    process.stdout.write(
+                      `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
+                        toolCall.name
+                      )}${chalk.yellow("]")}`
+                    );
+                  }
+                }
               } catch (e) {
                 // Not complete JSON yet, continue collecting
               }
@@ -212,7 +227,7 @@ export async function streamChatResponse(
           });
 
           if (callbacks?.onToolResult) {
-            callbacks.onToolResult(toolResult);
+            callbacks.onToolResult(toolResult, toolCall.name);
           } else {
             console.info(chalk.green(toolResult) + "\n");
           }
@@ -226,7 +241,7 @@ export async function streamChatResponse(
             content: errorMessage,
           });
           if (callbacks?.onToolError) {
-            callbacks.onToolError(errorMessage);
+            callbacks.onToolError(errorMessage, toolCall.name);
           } else {
             console.info(
               `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(

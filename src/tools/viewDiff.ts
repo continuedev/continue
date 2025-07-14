@@ -7,6 +7,7 @@ const execPromise = util.promisify(child_process.exec);
 
 export const viewDiffTool: Tool = {
   name: "view_diff",
+  displayName: "Diff",
   description: "View all uncommitted changes in the git repository",
   parameters: {
     path: {

@@ -4,6 +4,9 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
+import { getToolDisplayName } from "../tools.js";
+import LoadingAnimation from "./LoadingAnimation.js";
+import ToolResultSummary from "./ToolResultSummary.js";
 import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
@@ -16,6 +19,9 @@ interface DisplayMessage {
   role: string;
   content: string;
   isStreaming?: boolean;
+  messageType?: "tool-start" | "tool-result" | "tool-error" | "system";
+  toolName?: string;
+  toolResult?: string;
 }
 
 const TUIChat: React.FC<TUIChatProps> = ({
@@ -37,6 +43,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [inputMode, setInputMode] = useState(true);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
   const { exit } = useApp();
 
   // Handle initial prompt
@@ -59,7 +67,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
       if (commandResult.output) {
         setMessages((prev) => [
           ...prev,
-          { role: "system", content: commandResult.output! },
+          {
+            role: "system",
+            content: commandResult.output!,
+            messageType: "system",
+          },
         ]);
       }
 
@@ -79,6 +91,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setMessages((prev) => [...prev, { role: "user", content: message }]);
 
     // Start streaming response
+    const controller = new AbortController();
+    setAbortController(controller);
     setIsWaitingForResponse(true);
     setInputMode(false);
 
@@ -105,24 +119,66 @@ const TUIChat: React.FC<TUIChatProps> = ({
             return newMessages;
           });
         },
-        onToolStart: (toolName: string) => {
+        onToolStart: (toolName: string, toolArgs?: any) => {
+          const formatToolCall = (name: string, args: any) => {
+            const displayName = getToolDisplayName(name);
+            if (!args) return displayName;
+
+            // Get the first parameter value for display
+            const firstValue = Object.values(args)[0];
+            return `${displayName}(${firstValue || ""})`;
+          };
+
           setMessages((prev) => [
             ...prev,
-            { role: "system", content: `[Using tool: ${toolName}]` },
+            {
+              role: "system",
+              content: formatToolCall(toolName, toolArgs),
+              messageType: "tool-start",
+              toolName,
+            },
           ]);
         },
-        onToolResult: (result: string) => {
-          setMessages((prev) => [...prev, { role: "system", content: result }]);
+        onToolResult: (result: string, toolName: string) => {
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            // Find the last tool-start message for this tool and replace it
+            for (let i = newMessages.length - 1; i >= 0; i--) {
+              if (
+                newMessages[i].messageType === "tool-start" &&
+                newMessages[i].toolName === toolName
+              ) {
+                newMessages[i] = {
+                  ...newMessages[i],
+                  messageType: "tool-result",
+                  toolResult: result, // Store the actual result separately
+                };
+                break;
+              }
+            }
+            return newMessages;
+          });
         },
-        onToolError: (error: string) => {
+        onToolError: (error: string, toolName?: string) => {
           setMessages((prev) => [
             ...prev,
-            { role: "system", content: `[Tool error: ${error}]` },
+            {
+              role: "system",
+              content: error,
+              messageType: "tool-error",
+              toolName,
+            },
           ]);
         },
       };
 
-      await streamChatResponse(newHistory, assistant, client, streamCallbacks);
+      await streamChatResponse(
+        newHistory,
+        assistant,
+        client,
+        streamCallbacks,
+        controller
+      );
 
       // Finalize the assistant message
       const finalAssistantMessage: ChatCompletionMessageParam = {
@@ -144,11 +200,26 @@ const TUIChat: React.FC<TUIChatProps> = ({
       const errorMessage = `Error: ${error.message}`;
       setMessages((prev) => [
         ...prev,
-        { role: "system", content: errorMessage },
+        { role: "system", content: errorMessage, messageType: "system" },
       ]);
     } finally {
+      setAbortController(null);
       setIsWaitingForResponse(false);
       setInputMode(true);
+    }
+  };
+
+  const handleInterrupt = () => {
+    if (abortController && isWaitingForResponse) {
+      abortController.abort();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: "[Interrupted by user]",
+          messageType: "system",
+        },
+      ]);
     }
   };
 
@@ -157,20 +228,56 @@ const TUIChat: React.FC<TUIChatProps> = ({
     const isSystem = message.role === "system";
 
     if (isSystem) {
-      return (
-        <Box key={index} marginBottom={1}>
-          <Text color="gray" italic>
-            {message.content}
-          </Text>
-        </Box>
-      );
+      // Handle different types of system messages
+      switch (message.messageType) {
+        case "tool-start":
+          return (
+            <Box key={index} marginBottom={1}>
+              <Text color="white">○ {message.content}</Text>
+            </Box>
+          );
+
+        case "tool-result":
+          return (
+            <Box key={index} marginBottom={1} flexDirection="column">
+              <Box>
+                <Text color="green">●</Text>
+                <Text> {message.content}</Text>
+              </Box>
+              <Box marginLeft={2}>
+                <ToolResultSummary
+                  toolName={message.toolName}
+                  content={message.toolResult || ""}
+                />
+              </Box>
+            </Box>
+          );
+
+        case "tool-error":
+          return (
+            <Box key={index} marginBottom={1}>
+              <Text color="red" bold>
+                ✗{" "}
+              </Text>
+              <Text color="red">Tool error: {message.content}</Text>
+            </Box>
+          );
+
+        default:
+          // Regular system messages
+          return (
+            <Box key={index} marginBottom={1}>
+              <Text color="gray" italic>
+                {message.content}
+              </Text>
+            </Box>
+          );
+      }
     }
 
     return (
       <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "green" : "blue"} bold>
-          ●
-        </Text>
+        <Text color={isUser ? "green" : "blue"}>●</Text>
         <Text> {message.content}</Text>
         {message.isStreaming && <Text color="gray">▋</Text>}
       </Box>
@@ -188,7 +295,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
       <Box flexDirection="column" flexShrink={0}>
         {/* Status */}
         {isWaitingForResponse && (
-          <Box paddingX={1}>
+          <Box paddingX={1} flexDirection="row" gap={1}>
+            <LoadingAnimation visible={isWaitingForResponse} />
             <Text color="gray">esc to interrupt</Text>
           </Box>
         )}
@@ -198,7 +306,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onSubmit={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
           inputMode={inputMode}
+          onInterrupt={handleInterrupt}
+          assistant={assistant.config}
         />
+        <Box marginRight={2} justifyContent="flex-end">
+          <Text color="gray">● Continue CLI</Text>
+        </Box>
       </Box>
     </Box>
   );

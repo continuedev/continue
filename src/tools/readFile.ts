@@ -3,6 +3,7 @@ import { Tool } from "./types.js";
 
 export const readFileTool: Tool = {
   name: "read_file",
+  displayName: "Read",
   description: "Read the contents of a file at the specified path",
   parameters: {
     filepath: {

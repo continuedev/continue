@@ -7,6 +7,7 @@ const execPromise = util.promisify(child_process.exec);
 
 export const searchCodeTool: Tool = {
   name: "search_code",
+  displayName: "Search",
   description: "Search the codebase using ripgrep (rg) for a specific pattern",
   parameters: {
     pattern: {
