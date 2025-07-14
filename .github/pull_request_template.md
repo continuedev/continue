@@ -8,9 +8,9 @@
 - [] The relevant docs, if any, have been updated or created
 - [] The relevant tests, if any, have been updated or created
 
-## Screen recording (for new features)
+## Screen recording
 
-[ For new features, please include a short screen recording - this makes it much easier for us as contributors to review and understand your changes. See [this PR](https://github.com/continuedev/continue/pull/6455) as a good example. ]
+[ When applicable, please include a short screen recording - this makes it much easier for us as contributors to review and understand your changes. See [this PR](https://github.com/continuedev/continue/pull/6455) as a good example. ]
 
 ## Tests
 
