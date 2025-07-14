@@ -82,6 +82,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getFileStats: [{ files: string[] }, FileStatsMap];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
+  getReferences: [{ location: Location }, RangeInFile[]];
 
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },

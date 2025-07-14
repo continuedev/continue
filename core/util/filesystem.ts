@@ -44,6 +44,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
+  getReferences(location: Location): Promise<RangeInFile[]> {
+    return Promise.resolve([]);
+  }
+
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     return;
   }

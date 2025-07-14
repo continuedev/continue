@@ -191,6 +191,7 @@ interface IDE {
 
     // LSP
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
+    suspend fun getReferences(location: Location): List<RangeInFile>
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)

@@ -390,6 +390,10 @@ export class VsCodeMessenger {
       return await ide.gotoDefinition(msg.data.location);
     });
 
+    this.onWebviewOrCore("getReferences", async (msg) => {
+      return await ide.getReferences(msg.data.location);
+    });
+
     this.onWebviewOrCore("getFileStats", async (msg) => {
       return await ide.getFileStats(msg.data.files);
     });

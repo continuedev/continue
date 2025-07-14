@@ -45,6 +45,10 @@ export class MessageIde implements IDE {
     return this.request("gotoDefinition", { location });
   }
 
+  async getReferences(location: Location): Promise<RangeInFile[]> {
+    return this.request("getReferences", { location });
+  }
+
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     this.on("didChangeActiveTextEditor", (data) => callback(data.filepath));
   }
