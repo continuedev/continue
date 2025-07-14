@@ -164,10 +164,12 @@ export class ControlPlaneClient {
           maxWaitTime / maxRetries,
         );
         await new Promise((resolve) => setTimeout(resolve, waitTime));
+        continue;
       } else if (!resp.ok) {
-        throw new Error(
+        console.warn(
           `Failed to list organizations (${resp.status}): ${await resp.text()}`,
         );
+        return [];
       }
       const { organizations } = (await resp.json()) as any;
       return organizations;
