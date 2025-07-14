@@ -135,6 +135,5 @@ export function constructSystemMessage(rulesSystemMessage: string): string {
     systemMessage += "\n</context>";
   }
 
-  console.log("SYS: ", systemMessage);
   return systemMessage;
 }

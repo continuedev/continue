@@ -89,7 +89,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
       role: "user",
       content: message,
     };
-    setChatHistory((prev) => [...prev, newUserMessage]);
+    const newHistory = [...chatHistory, newUserMessage];
+    setChatHistory(newHistory);
     setMessages((prev) => [...prev, { role: "user", content: message }]);
 
     // Start streaming response
@@ -98,28 +99,44 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setIsWaitingForResponse(true);
     setInputMode(false);
 
-    // Add placeholder for streaming message
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: "", isStreaming: true },
-    ]);
-
     try {
-      const newHistory = [...chatHistory, newUserMessage];
-      let assistantResponse = "";
+      let currentStreamingMessage: DisplayMessage | null = null;
 
       // Create callbacks to handle streaming updates
       const streamCallbacks: StreamCallbacks = {
         onContent: (content: string) => {
-          assistantResponse += content;
           setMessages((prev) => {
             const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage.isStreaming) {
-              lastMessage.content += content;
+            
+            // Find or create current streaming message
+            if (!currentStreamingMessage) {
+              currentStreamingMessage = { role: "assistant", content: "", isStreaming: true };
+              newMessages.push(currentStreamingMessage);
             }
+            
+            // Update the streaming message
+            const streamingIndex = newMessages.indexOf(currentStreamingMessage);
+            if (streamingIndex >= 0) {
+              newMessages[streamingIndex].content += content;
+            }
+            
             return newMessages;
           });
+        },
+        onContentComplete: (content: string) => {
+          // Finalize the current streaming message
+          if (currentStreamingMessage) {
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              const streamingIndex = newMessages.indexOf(currentStreamingMessage!);
+              if (streamingIndex >= 0) {
+                newMessages[streamingIndex].isStreaming = false;
+                newMessages[streamingIndex].content = content;
+              }
+              return newMessages;
+            });
+            currentStreamingMessage = null;
+          }
         },
         onToolStart: (toolName: string, toolArgs?: any) => {
           const formatToolCall = (name: string, args: any) => {
@@ -182,22 +199,17 @@ const TUIChat: React.FC<TUIChatProps> = ({
         controller
       );
 
-      // Finalize the assistant message
-      const finalAssistantMessage: ChatCompletionMessageParam = {
-        role: "assistant",
-        content: assistantResponse,
-      };
-      setChatHistory((prev) => [...prev, finalAssistantMessage]);
-
-      // Update messages to remove streaming flag
-      setMessages((prev) => {
-        const newMessages = [...prev];
-        const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage.isStreaming) {
-          lastMessage.isStreaming = false;
-        }
-        return newMessages;
-      });
+      // Finalize any remaining streaming message
+      if (currentStreamingMessage) {
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const streamingIndex = newMessages.indexOf(currentStreamingMessage!);
+          if (streamingIndex >= 0) {
+            newMessages[streamingIndex].isStreaming = false;
+          }
+          return newMessages;
+        });
+      }
     } catch (error: any) {
       const errorMessage = `Error: ${error.message}`;
       setMessages((prev) => [

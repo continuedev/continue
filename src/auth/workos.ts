@@ -132,7 +132,7 @@ function getAuthUrlForTokenPage(useOnboarding: boolean = false): string {
  */
 async function refreshToken(refreshToken: string): Promise<AuthConfig> {
   try {
-    const response = await axios.post(`${env.apiBase}auth/refresh`, {
+    const response = await axios.post(`${env.apiBase}/auth/refresh`, {
       refreshToken,
     });
 
