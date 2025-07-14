@@ -2,7 +2,7 @@
 title: "config.yaml Reference"
 ---
 
-## Introduction[​](#introduction "Direct link to Introduction")
+## Introduction
 
 Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from [the Hub](https://hub.continue.dev/explore/assistants) or locally
 
@@ -28,7 +28,7 @@ Examples of blocks and assistants can be found on the [Continue hub](https://hub
 
 Assistants can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
 
-### Using Blocks[​](#using-blocks "Direct link to Using Blocks")
+### Using Blocks
 
 Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 
@@ -45,7 +45,7 @@ models:
     provider: ollama
 ```
 
-### Local Blocks[​](#local-blocks "Direct link to Local Blocks")
+### Local Blocks
 
 It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
 
@@ -61,7 +61,7 @@ Blocks:
 - `.continue/models` - for models
 - `.continue/prompts` - for prompts
 - `.continue/context` - for context providers
-- `.continue/docs` - for docs
+- `.continue/docs` - for docs~~~~
 - `.continue/data` - for data
 - `.continue/mcpServers` - for MCP Servers
 
@@ -75,7 +75,7 @@ Local blocks utilizing mustache notation for secrets (`${{ secrets.SECRET_NAME }
 
 </Info>
 
-### Inputs[​](#inputs "Direct link to Inputs")
+### Inputs
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
 
@@ -106,7 +106,7 @@ models:
 
 Note that hub secrets can be passed as inputs, using a similar mustache format: `secrets.SECRET_NAME`.
 
-### Overrides[​](#overrides "Direct link to Overrides")
+### Overrides
 
 Block properties can be also be directly overriden using `override`. For example:
 
@@ -124,7 +124,7 @@ models:
         - chat
 ```
 
-## Properties[​](#properties "Direct link to Properties")
+## Properties
 
 Below are details for each property that can be set in `config.yaml`.
 
@@ -145,7 +145,7 @@ The top-level properties in the `config.yaml` configuration file are:
 
 ---
 
-### `name`[​](#name "Direct link to name")
+### `name`
 
 The `name` property specifies the name of your project or configuration.
 
@@ -157,17 +157,17 @@ name: MyProject
 
 ---
 
-### `version`[​](#version "Direct link to version")
+### `version`
 
 The `version` property specifies the version of your project or configuration.
 
-### `schema`[​](#schema "Direct link to schema")
+### `schema`
 
 The `schema` property specifies the schema version used for the `config.yaml`, e.g. `v1`
 
 ---
 
-### `models`[​](#models "Direct link to models")
+### `models`
 
 The `models` section defines the language models used in your configuration. Models are used for functionalities such as chat, editing, and summarizing.
 
@@ -190,13 +190,16 @@ The `models` section defines the language models used in your configuration. Mod
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are `chat`, [`edit`](/customize/model-roles#edit-prompt-templating), [`apply`](/customize/model-roles#apply-prompt-templating) and [`autocomplete`](/customize/model-roles#autocomplete-prompt-templating). The `chat` property must be a valid template name, such as `llama3` or `anthropic`.
 
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
+
   - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
 
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
+
   - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
   - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
 
 - `defaultCompletionOptions`: Default completion options for model settings.
+
   - `contextLength`: Maximum context length of the model, typically in tokens.
   - `maxTokens`: Maximum number of tokens to generate in a completion.
   - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
@@ -207,6 +210,7 @@ The `models` section defines the language models used in your configuration. Mod
   - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 
 - `requestOptions`: HTTP request options specific to the model.
+
   - `timeout`: Timeout for each request to the language model.
 
   - `verifySsl`: Whether to verify SSL certificates for requests.
@@ -226,7 +230,7 @@ The `models` section defines the language models used in your configuration. Mod
     - `key`: Path to the client certificate key file.
     - `passphrase`: Optional passphrase for the client certificate key file.
 
-#### Example[​](#example "Direct link to Example")
+#### Example
 
 config.yaml
 
@@ -261,7 +265,7 @@ models:
 
 ---
 
-### `context`[​](#context "Direct link to context")
+### `context`
 
 The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
 
@@ -296,7 +300,7 @@ context:
 
 ---
 
-### `rules`[​](#rules "Direct link to rules")
+### `rules`
 
 List of rules that the LLM should follow. These are concatenated into the system message for all [Chat](/features/chat/quick-start), [Edit](/features/edit/quick-start), and [Agent](/features/agent/quick-start) requests. See the [rules deep dive](/customization/rules) for details.
 
@@ -326,7 +330,7 @@ rules:
 
 ---
 
-### `prompts`[​](#prompts "Direct link to prompts")
+### `prompts`
 
 A list of custom prompts that can be invoked from the chat window. Each prompt has a name, description, and the actual prompt text.
 
@@ -345,7 +349,7 @@ prompts:
 
 ---
 
-### `docs`[​](#docs "Direct link to docs")
+### `docs`
 
 List of documentation sites to index.
 
@@ -371,7 +375,7 @@ docs:
 
 ---
 
-### `mcpServers`[​](#mcpservers "Direct link to mcpservers")
+### `mcpServers`
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider.
 
@@ -401,7 +405,7 @@ mcpServers:
       NODE_ENV: production
 ```
 
-### `data`[​](#data "Direct link to data")
+### `data`
 
 Destinations to which [development data](/customize/overview#development-data) will be sent.
 
@@ -410,6 +414,7 @@ Destinations to which [development data](/customize/overview#development-data) w
 - `name` (**required**): The display name of the data destination
 
 - `destination` (**required**): The destination/endpoint that will receive the data. Can be:
+
   - an HTTP endpoint that will receive a POST request with a JSON blob
   - a file URL to a directory in which events will be dumpted to `.jsonl` files
 
@@ -444,7 +449,7 @@ data:
 
 ---
 
-## Complete YAML Config Example[​](#complete-yaml-config-example "Direct link to Complete YAML Config Example")
+## Complete YAML Config Example
 
 Putting it all together, here's a complete example of a `config.yaml` configuration file:
 
@@ -521,7 +526,7 @@ data:
       - chatInteraction
 ```
 
-## Using YAML anchors to avoid config duplication[​](#using-yaml-anchors-to-avoid-config-duplication "Direct link to Using YAML anchors to avoid config duplication")
+## Using YAML anchors to avoid config duplication
 
 You can also use node anchors to avoid duplication of properties. To do so, adding the YAML version header `%YAML 1.1` is needed, here's an example of a `config.yaml` configuration file using anchors:
 
