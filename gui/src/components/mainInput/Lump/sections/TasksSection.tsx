@@ -8,13 +8,19 @@ import {
 import { TaskInfo } from "core";
 import { useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { cn } from "../../../../util/cn";
 import { useFontSize } from "../../../ui/font";
 
 const TaskItem = ({ task }: { task: TaskInfo }) => {
   const ideMessenger = useContext(IdeMessengerContext);
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
-  const [editing, setEditing] = useState(false);
+
+  const [editedTask, setEditedTask] = useState({
+    name: "",
+    description: "",
+    isEditing: false,
+  });
 
   const handleRunTask = () => {
     // TODO: Implement run task functionality
@@ -28,10 +34,22 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
   };
 
   const handleEditTask = () => {
-    if (editing) {
-      setEditing(false);
+    if (editedTask.isEditing) {
+      void ideMessenger.request("taskList/update", {
+        sessionId: "abcd",
+        task: {
+          ...task,
+          name: editedTask.name,
+          description: editedTask.description,
+        },
+      });
+      setEditedTask({
+        name: "",
+        description: "",
+        isEditing: false,
+      });
     } else {
-      setEditing(true);
+      setEditedTask({ ...task, isEditing: true });
     }
   };
 
@@ -52,10 +70,13 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
       <div className="flex flex-col">
         <div className="flex flex-row items-center justify-between gap-2">
           <div className="flex flex-1 flex-row items-center gap-2">
-            {editing ? (
+            {editedTask.isEditing ? (
               <input
                 className="bg-input text-input-foreground border-input-border placeholder:text-input-placeholder focus:border-border-focus flex-grow rounded-md border border-solid p-1 focus:outline-none"
-                defaultValue={task.name}
+                value={editedTask.name}
+                onChange={(e) =>
+                  setEditedTask((prev) => ({ ...prev, name: e.target.value }))
+                }
               />
             ) : (
               <span
@@ -75,11 +96,14 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
               <PlayIcon className="h-3 w-3" />
             </div>
             <div
-              className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
+              className={cn(
+                "text-lightgray flex cursor-pointer items-center hover:opacity-80",
+                editedTask.isEditing && "text-success",
+              )}
               onClick={handleEditTask}
               title="Edit Task"
             >
-              {editing ? (
+              {editedTask.isEditing ? (
                 <CheckIcon className="h-3 w-3" />
               ) : (
                 <PencilIcon className="h-3 w-3" />
@@ -101,10 +125,16 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
           </div>
         </div>
 
-        {editing ? (
+        {editedTask.isEditing ? (
           <textarea
             className="bg-input text-input-foreground border-input-border placeholder:text-input-placeholder focus:border-border-focus field-sizing-content mt-1 h-full resize-none rounded-md border border-solid p-1 font-[family-name:var(--vscode-font-family)] focus:outline-none"
-            defaultValue={task.description}
+            value={editedTask.description}
+            onChange={(e) =>
+              setEditedTask((prev) => ({
+                ...prev,
+                description: e.target.value,
+              }))
+            }
           />
         ) : (
           <span

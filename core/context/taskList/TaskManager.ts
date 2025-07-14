@@ -54,7 +54,7 @@ export class TaskManager {
   update(taskId: TaskInfo["id"], name: string, description: string) {
     const previousTask = this.taskMap.get(taskId);
     if (!previousTask) {
-      return;
+      throw new Error(`Task with id "${taskId}" not found`);
     }
 
     const updatedTask: TaskInfo = {
