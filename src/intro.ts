@@ -1,9 +1,8 @@
+import { Assistant, type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
-import * as fs from "fs";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { MCPService } from "./mcp.js";
 import { getAllTools } from "./streamChatResponse.js";
-import { Assistant, type AssistantConfig } from "@continuedev/sdk";
 
 export function loadSystemMessage(
   assistant: AssistantConfig

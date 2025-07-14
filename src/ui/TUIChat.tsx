@@ -135,35 +135,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 return `Terminal(${args.command || ""})`;
               case "view_diff":
                 return `Diff(${args.path || "."})`;
-
-              // External Claude Code Tools (PascalCase)
-              case "Read":
-                return `Read(${args.file_path || args.path || ""})`;
-              case "Write":
-                return `Write(${args.file_path || ""})`;
-              case "Edit":
-              case "MultiEdit":
-                return `Edit(${args.file_path || ""})`;
-              case "Bash":
-                return `Terminal(${args.command || ""})`;
-              case "Glob":
-                return `Find(${args.pattern || ""})`;
-              case "Grep":
-                return `Search(${args.pattern || ""})`;
-              case "LS":
-                return `List(${args.path || ""})`;
-              case "NotebookRead":
-                return `Notebook(${args.notebook_path || ""})`;
-              case "NotebookEdit":
-                return `Notebook(${args.notebook_path || ""})`;
-              case "WebFetch":
-                return `Web(${args.url || ""})`;
-              case "WebSearch":
-                return `Search(${args.query || ""})`;
-              case "TodoWrite":
-                return `Todo(${args.todos?.length || 0} items)`;
-              case "Task":
-                return `Task(${args.description || ""})`;
               default:
                 // Handle MCP tools or unknown tools
                 if (name.startsWith("mcp__")) {
