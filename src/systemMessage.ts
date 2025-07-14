@@ -1,6 +1,9 @@
 import { execSync } from "child_process";
 import * as fs from "fs";
+import pkg from "ignore-walk";
+import { Minimatch } from "minimatch";
 import * as path from "path";
+const { WalkerSync } = pkg;
 
 /**
  * Check if current directory is a git repository
@@ -19,14 +22,29 @@ function isGitRepo(): boolean {
  */
 function getDirectoryStructure(): string {
   try {
-    const result = execSync(
-      'find . -type f -name "*.ts" -o -name "*.js" -o -name "*.json" -o -name "*.md" | head -20',
-      {
-        encoding: "utf-8",
-        cwd: process.cwd(),
-      }
-    );
-    return result.trim() || "No structure available";
+    const walker = new WalkerSync({
+      path: process.cwd(),
+      includeEmpty: false,
+      follow: false,
+      ignoreFiles: [".gitignore", ".continueignore", ".customignore"],
+    });
+
+    (walker.ignoreRules as any)[".customignore"] = [
+      new Minimatch(".git/*", {
+        matchBase: true,
+        dot: true,
+        flipNegate: true,
+        nocase: true,
+      }),
+    ];
+
+    const files = walker.start().result as string[];
+
+    const filteredFiles = files
+      .slice(0, 100)
+      .map((file: string) => `./${file}`);
+
+    return filteredFiles.join("\n") || "No structure available";
   } catch {
     return "Directory structure not available";
   }
