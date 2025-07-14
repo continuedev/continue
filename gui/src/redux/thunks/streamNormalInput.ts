@@ -191,8 +191,7 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
-    // Set tool call as generated if one exists, but don't execute it yet
-    // Tool execution will be handled by useToolCallTrigger hook after state settles
+    // If it's a tool call that is automatically accepted, we should call it
     const newState = getState();
     const toolCallState = selectCurrentToolCall(newState);
     if (toolCallState) {
