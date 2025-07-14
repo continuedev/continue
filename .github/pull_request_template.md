@@ -10,7 +10,7 @@
 
 ## Screenshots
 
-[ For visual changes, include screenshots. Screen recordings are particularly helpful, and appreciated! ]
+[ For visual changes, include screenshots. **For new features, please include a short screen recording** - this makes it much easier for us as contributors to review and understand your changes. See [this PR](https://github.com/continuedev/continue/pull/6455) as a good example. ]
 
 ## Tests
 
