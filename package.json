@@ -15,10 +15,20 @@
     "dev": "tsx src/index.ts",
     "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
     "repomix:cli": "npx repomix --ignore sdk-repomix.xml -o cli-repomix.xml",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "semantic-release": "semantic-release",
+    "semantic-release:dry-run": "semantic-release --dry-run"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/continuedev/cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/continuedev/continuedev/issues"
+  },
+  "homepage": "https://continue.dev",
   "dependencies": {
     "@continuedev/openai-adapters": "^1.0.18",
     "@continuedev/sdk": "^0.0.12",
@@ -36,12 +46,18 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.3",
+    "@semantic-release/npm": "^12.0.2",
     "@types/diff": "^7.0.2",
     "@types/jest": "^29.5.14",
     "@types/readline-sync": "^1.4.8",
     "@types/uuid": "^9.0.8",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
+    "semantic-release": "^24.2.7",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3"
