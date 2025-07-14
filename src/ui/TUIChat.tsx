@@ -306,6 +306,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           inputMode={inputMode}
           onInterrupt={handleInterrupt}
         />
+        <Box marginRight={2} justifyContent="flex-end">
+          <Text color="gray">● Continue CLI</Text>
+        </Box>
       </Box>
     </Box>
   );

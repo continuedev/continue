@@ -141,7 +141,7 @@ const UserInput: React.FC<UserInputProps> = ({
   };
 
   return (
-    <Box borderStyle="round" borderTop={true} paddingX={1}>
+    <Box borderStyle="round" borderTop={true} paddingX={1} borderColor="gray">
       <Text color="green" bold>
         ●{" "}
       </Text>
