@@ -38,6 +38,9 @@ export default defineConfig({
           [
             "contentEditable",
             "An update to Chat inside a test was not wrapped in act",
+            "An update to TipTapEditor inside a test was not wrapped in act",
+            "An update to ThinkingIndicator inside a test was not wrapped in act",
+            "The current testing environment is not configured to support act",
             "target.getClientRects is not a function",
             "prosemirror",
           ].some((text) => log.includes(text))

@@ -68,7 +68,6 @@ describe("Parallel Tool Calls", () => {
         item.message.role === "assistant" && item.toolCallStates?.length,
     );
 
-
     expect(assistantMessage).toBeDefined();
     expect(assistantMessage!.toolCallStates).toHaveLength(2);
     expect(assistantMessage!.toolCallStates![0].toolCallId).toBe("tool-call-1");

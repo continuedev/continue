@@ -98,7 +98,7 @@ describe("get rendered v1 prompt file", () => {
     // Mock console.error to prevent error output during test
     const originalConsoleError = console.error;
     console.error = vi.fn();
-    
+
     ideMessenger.responses["fileExists"] = false;
     // Mock readFile to throw an error for nonexistent files
     ideMessenger.responseHandlers["readFile"] = async (filepath) => {
@@ -115,7 +115,7 @@ describe("get rendered v1 prompt file", () => {
     expect(rendered).toBe(
       `Content with provider [Error reading file "nonexistent"]\n\nUser input`,
     );
-    
+
     // Restore console.error
     console.error = originalConsoleError;
   });

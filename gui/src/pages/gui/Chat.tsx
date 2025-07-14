@@ -27,7 +27,10 @@ import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectDoneApplyStates, selectPendingToolCalls } from "../../redux/selectors/selectToolCalls";
+import {
+  selectDoneApplyStates,
+  selectPendingToolCalls,
+} from "../../redux/selectors/selectToolCalls";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
