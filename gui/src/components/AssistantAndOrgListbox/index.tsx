@@ -18,7 +18,6 @@ import {
   Transition,
   useFontSize,
 } from "../ui";
-import { AccountOption } from "./AccountOption";
 import { AssistantOptions } from "./AssistantOptions";
 import { ScopeSelect } from "./ScopeSelect";
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
@@ -34,6 +33,7 @@ export function AssistantAndOrgListbox() {
     selectedProfile,
     session,
     login,
+    logout,
     organizations,
     refreshProfiles,
   } = useAuth();
@@ -54,6 +54,11 @@ export function AssistantAndOrgListbox() {
       path: "/new",
       orgSlug: currentOrg?.slug,
     });
+    close();
+  }
+
+  function onLogout() {
+    logout();
     close();
   }
 
@@ -184,7 +189,21 @@ export function AssistantAndOrgListbox() {
                 </span>
               </ListboxOption>
 
-              <AccountOption onClose={close} />
+              {session && (
+                <ListboxOption
+                  value="log-out"
+                  fontSizeModifier={-2}
+                  className="border-border border-b px-3 py-1.5"
+                  onClick={onLogout}
+                >
+                  <div
+                    className="text-description flex flex-row items-center"
+                    style={{ fontSize: tinyFont }}
+                  >
+                    Log out
+                  </div>
+                </ListboxOption>
+              )}
 
               <div
                 className="text-description border-border flex items-center justify-between gap-1.5 border-x-0 border-b-0 border-t border-solid px-2 py-2"
