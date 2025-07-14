@@ -1,6 +1,37 @@
 import { Text } from "ink";
 import React, { useEffect, useState } from "react";
 
+const SPINNER_BARS = "▁▂▃▄▅▆▇█▇▆▅▄▃▁";
+const SPINNER_BLOCKS = "▉▊▋▌▍▎▏▎▍▌▋▊▉";
+const SPINNER_CORNERS = "▖▘▝▗";
+const SPINNER_CLASSIC = "-/|\\-/|";
+const SPINNER_BOX = "┤┘┴└├┌┬┐";
+const SPINNER_DOUBLE_BARS = [
+  "▁▁",
+  "▁▂",
+  "▁▃",
+  "▁▄",
+  "▁▅",
+  "▁▆",
+  "▁▇",
+  "▁█",
+  "▂▇",
+  "▃▆",
+  "▄▅",
+  "▅▄",
+  "▆▃",
+  "▇▂",
+  "█▁",
+  "▇▁",
+  "▆▁",
+  "▅▁",
+  "▄▁",
+  "▃▁",
+  "▂▁",
+];
+
+const SPINNER: string | string[] = SPINNER_CORNERS;
+
 interface LoadingAnimationProps {
   visible?: boolean;
   color?: string;
@@ -8,10 +39,11 @@ interface LoadingAnimationProps {
 
 const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
   visible = true,
-  color = "gray",
+  color = "blue",
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const animationChars = ["-", "/", "|", "\\", "-", "/"];
+  const animationChars =
+    typeof SPINNER === "string" ? (SPINNER as string).split("") : SPINNER;
 
   useEffect(() => {
     if (!visible) return;
