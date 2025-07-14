@@ -6,10 +6,6 @@ import * as vscode from "vscode";
 import { DiffChar, DiffLine } from "core";
 import { CodeRenderer } from "core/codeRenderer/CodeRenderer";
 import { myersCharDiff } from "core/diff/myers";
-import {
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-} from "core/nextEdit/constants";
 import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { getThemeString } from "../util/getTheme";
@@ -283,7 +279,8 @@ export class NextEditWindowManager {
     this.currentTooltipText = newEditRangeSlice;
 
     // How far away is the current line from the start of the editable region?
-    const lineOffsetAtCursorPos = currCursorPos.line - this.editableRegionStartLine;
+    const lineOffsetAtCursorPos =
+      currCursorPos.line - this.editableRegionStartLine;
 
     // How long is the line at the current cursor position?
     const lineContentAtCursorPos =
@@ -394,7 +391,10 @@ export class NextEditWindowManager {
       const endPosChar = editor.document.lineAt(this.editableRegionEndLine).text
         .length;
 
-      const endPos = new vscode.Position(this.editableRegionEndLine, endPosChar);
+      const endPos = new vscode.Position(
+        this.editableRegionEndLine,
+        endPosChar,
+      );
       const editRange = new vscode.Range(startPos, endPos);
 
       success = await editor.edit((editBuilder) => {
@@ -749,7 +749,6 @@ export class NextEditWindowManager {
     }
 
     // Store the decoration and editor.
-    await this.hideAllNextEditWindows();
     this.currentDecoration = decoration; // TODO: This might be redundant.
     this.disposables.push(decoration);
     this.activeEditor = editor;
@@ -788,10 +787,7 @@ export class NextEditWindowManager {
       );
   }
 
-  private renderDeletes(
-    editor: vscode.TextEditor,
-    oldDiffChars: DiffChar[],
-  ) {
+  private renderDeletes(editor: vscode.TextEditor, oldDiffChars: DiffChar[]) {
     const charsToDelete: vscode.DecorationOptions[] = [];
 
     // const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
