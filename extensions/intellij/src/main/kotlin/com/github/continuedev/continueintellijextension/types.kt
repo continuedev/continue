@@ -248,3 +248,8 @@ data class AcceptOrRejectDiffPayload(
 data class ShowFilePayload(
     val filepath: String
 )
+
+sealed class FimResult {
+    data class FimEdit(val fimText: String) : FimResult()
+    object NotFimEdit : FimResult()
+}
