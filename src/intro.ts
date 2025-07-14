@@ -39,7 +39,6 @@ export function introMessage(assistant: Assistant, mcpService: MCPService) {
   console.info(`- ${chalk.green("/exit")}: Exit the chat`);
   console.info(`- ${chalk.green("/clear")}: Clear the chat history`);
   console.info(`- ${chalk.green("/help")}: Show help message`);
-  console.info(`- ${chalk.green("/models")}: Show available models`);
   console.info(`- ${chalk.green("/login")}: Authenticate with your account`);
   console.info(`- ${chalk.green("/logout")}: Sign out of your current session`);
   console.info(
