@@ -52,7 +52,7 @@ type TODO = any;
 
 export interface StreamCallbacks {
   onContent?: (content: string) => void;
-  onToolStart?: (toolName: string) => void;
+  onToolStart?: (toolName: string, toolArgs?: any) => void;
   onToolResult?: (result: string, toolName: string) => void;
   onToolError?: (error: string, toolName?: string) => void;
 }
@@ -128,6 +128,7 @@ export async function streamChatResponse(
                 id: toolCallDelta.id,
                 name: "",
                 arguments: {},
+                startNotified: false,
               };
             }
             currentToolCallId = toolCallDelta.id;
@@ -141,15 +142,7 @@ export async function streamChatResponse(
             if (toolCall) {
               if (!toolCall.name) {
                 toolCall.name = toolCallDelta.function.name;
-                if (callbacks?.onToolStart) {
-                  callbacks.onToolStart(toolCall.name);
-                } else {
-                  process.stdout.write(
-                    `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
-                      toolCall.name
-                    )}${chalk.yellow("]")}`
-                  );
-                }
+                toolCall.startNotified = false;
               }
             }
           }
@@ -167,6 +160,20 @@ export async function streamChatResponse(
                 // Try to parse complete JSON
                 const parsed = JSON.parse(toolArguments);
                 toolCall.arguments = parsed;
+                
+                // Notify start if we haven't already and have both name and args
+                if (toolCall.name && !toolCall.startNotified) {
+                  toolCall.startNotified = true;
+                  if (callbacks?.onToolStart) {
+                    callbacks.onToolStart(toolCall.name, toolCall.arguments);
+                  } else {
+                    process.stdout.write(
+                      `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
+                        toolCall.name
+                      )}${chalk.yellow("]")}`
+                    );
+                  }
+                }
               } catch (e) {
                 // Not complete JSON yet, continue collecting
               }

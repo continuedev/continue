@@ -4,8 +4,8 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
-import UserInput from "./UserInput.js";
 import ToolResultSummary from "./ToolResultSummary.js";
+import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
   assistant: ContinueClient["assistant"];
@@ -19,6 +19,7 @@ interface DisplayMessage {
   isStreaming?: boolean;
   messageType?: "tool-start" | "tool-result" | "tool-error" | "system";
   toolName?: string;
+  toolResult?: string;
 }
 
 const TUIChat: React.FC<TUIChatProps> = ({
@@ -116,12 +117,56 @@ const TUIChat: React.FC<TUIChatProps> = ({
             return newMessages;
           });
         },
-        onToolStart: (toolName: string) => {
+        onToolStart: (toolName: string, toolArgs?: any) => {
+          const formatToolCall = (name: string, args: any) => {
+            if (!args) return name;
+
+            switch (name) {
+              case "Read":
+                return `Read(${args.file_path || args.path || ""})`;
+              case "Write":
+                return `Write(${args.file_path || ""})`;
+              case "Edit":
+              case "MultiEdit":
+                return `Edit(${args.file_path || ""})`;
+              case "Bash":
+                return `Bash(${args.command || ""})`;
+              case "Glob":
+                return `Glob(${args.pattern || ""})`;
+              case "Grep":
+                return `Grep(${args.pattern || ""})`;
+              case "LS":
+                return `LS(${args.path || ""})`;
+              case "NotebookRead":
+                return `NotebookRead(${args.notebook_path || ""})`;
+              case "NotebookEdit":
+                return `NotebookEdit(${args.notebook_path || ""})`;
+              case "WebFetch":
+                return `WebFetch(${args.url || ""})`;
+              case "WebSearch":
+                return `WebSearch(${args.query || ""})`;
+              case "TodoWrite":
+                return `TodoWrite(${args.todos?.length || 0} items)`;
+              case "Task":
+                return `Task(${args.description || ""})`;
+              default:
+                // Handle MCP tools or unknown tools
+                if (name.startsWith("mcp__")) {
+                  const mcpToolName = name.replace("mcp__", "");
+                  const firstParam = Object.values(args)[0];
+                  return `${mcpToolName}(${firstParam || ""})`;
+                }
+                // For unknown tools, show first parameter value
+                const firstValue = Object.values(args)[0];
+                return `${name}(${firstValue || ""})`;
+            }
+          };
+
           setMessages((prev) => [
             ...prev,
             {
               role: "system",
-              content: `Using ${toolName}...`,
+              content: formatToolCall(toolName, toolArgs),
               messageType: "tool-start",
               toolName,
             },
@@ -132,11 +177,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
             const newMessages = [...prev];
             // Find the last tool-start message for this tool and replace it
             for (let i = newMessages.length - 1; i >= 0; i--) {
-              if (newMessages[i].messageType === "tool-start" && newMessages[i].toolName === toolName) {
+              if (
+                newMessages[i].messageType === "tool-start" &&
+                newMessages[i].toolName === toolName
+              ) {
                 newMessages[i] = {
                   ...newMessages[i],
-                  content: result,
                   messageType: "tool-result",
+                  toolResult: result, // Store the actual result separately
                 };
                 break;
               }
@@ -218,9 +266,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         case "tool-start":
           return (
             <Box key={index} marginBottom={1} paddingLeft={2}>
-              <Text color="white">
-                ○ {message.content}
-              </Text>
+              <Text color="white">○ {message.content}</Text>
             </Box>
           );
 
@@ -233,14 +279,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
               flexDirection="column"
             >
               <Box>
-                <Text color="white">
-                  ✓ Completed {message.toolName}
-                </Text>
+                <Text color="green">● {message.content}</Text>
               </Box>
               <Box marginLeft={2} paddingTop={1}>
-                <ToolResultSummary 
-                  toolName={message.toolName} 
-                  content={message.content} 
+                <ToolResultSummary
+                  toolName={message.toolName}
+                  content={message.toolResult || ""}
                 />
               </Box>
             </Box>
