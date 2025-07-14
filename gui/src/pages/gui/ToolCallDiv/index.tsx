@@ -102,5 +102,12 @@ export function ToolCallDiv({
     );
   }
 
-  return toolCallStates.map(renderToolCall);
+  return toolCallStates.map((toolCallState) => (
+    <div
+      className="border-border rounded-lg border p-3"
+      key={toolCallState.toolCallId}
+    >
+      {renderToolCall(toolCallState)}
+    </div>
+  ));
 }

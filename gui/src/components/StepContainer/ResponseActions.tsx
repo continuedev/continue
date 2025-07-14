@@ -67,7 +67,7 @@ export default function ResponseActions({
           text="Continue generation"
           onClick={onContinueGeneration}
         >
-          <BarsArrowDownIcon className="h-3.5 w-3.5" />
+          <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
         </HeaderButtonWithToolTip>
       )}
 
