@@ -1,6 +1,7 @@
 import { Tool } from "../..";
+import { closeTag } from "./xmlToolUtils";
 
-export const TOOL_INSTRUCTIONS_TAG = "TOOL_USE_INSTRUCTIONS";
+export const TOOL_INSTRUCTIONS_TAG = "<tool_use_instructions>";
 export const TOOL_DEFINITION_TAG = "TOOL_DEFINITION";
 export const TOOL_DESCRIPTION_TAG = "DESCRIPTION";
 
@@ -86,9 +87,9 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
     (tool) => !tool.systemMessageDescription,
   );
 
-  let prompt = `--- ${TOOL_INSTRUCTIONS_TAG} ---\n`;
-  prompt += `You have access to several "tools" that you can use at any time to perform tasks for the User and interact with the IDE.`;
-  prompt += `\nTo use a tool, respond with a code block using the tool syntax as shown in the examples below:`;
+  let prompt = `${TOOL_INSTRUCTIONS_TAG}\n`;
+  prompt += `You have access to several "tools" that you can use at any time to retrieve information and/or perform tasks for the User.`;
+  prompt += `\nTo use a tool, respond with a tool code block using the syntax shown in the examples below:`;
 
   if (withPredefinedMessage.length > 0) {
     prompt += `\n\nThe following tools are available to you:`;
@@ -119,10 +120,10 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
   //   prompt += EXAMPLE_TOOL_CALL;
   // }
 
-  prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool's description.`;
-  prompt += `\nYou are the one who sends the tool call, not the user. You can only call one tool at a time.`;
+  prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool descriptions`;
+  prompt += `\nYou are the one who sends the tool call, not the user. You can only call ONE TOOL AT A TIME.`;
 
-  prompt += `\n--- END ${TOOL_INSTRUCTIONS_TAG} ---`;
+  prompt += `\n${closeTag(TOOL_INSTRUCTIONS_TAG)}`;
 
   return prompt;
 };

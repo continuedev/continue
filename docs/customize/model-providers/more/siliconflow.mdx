@@ -1,0 +1,90 @@
+---
+title: "SiliconFlow"
+---
+
+---
+
+## title: SiliconFlow
+
+<Info>
+  You can get an API key from the [Silicon
+  Cloud](https://cloud.siliconflow.cn/account/ak).
+</Info>
+
+## Chat model
+
+We recommend configuring **Qwen/Qwen2.5-Coder-32B-Instruct** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Qwen
+        provider: siliconflow
+        model: Qwen/Qwen2.5-Coder-32B-Instruct
+        apiKey: <YOUR_SILICONFLOW_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Qwen",
+          "provider": "siliconflow",
+          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+          "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **Qwen/Qwen2.5-Coder-7B-Instruct** as your autocomplete model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Qwen
+        provider: siliconflow
+        model: Qwen/Qwen2.5-Coder-32B-Instruct
+        apiKey: <YOUR_SILICONFLOW_API_KEY>
+        roles: 
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Qwen",
+          "provider": "siliconflow",
+          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+          "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
+        }
+      ]
+      "tabAutocompleteModel": {
+        "title": "Qwen",
+        "provider": "siliconflow",
+        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings model
+
+SiliconFlow provide some embeddings models. [Click here](https://siliconflow.cn/models) to see a list of embeddings models.
+
+## Reranking model
+
+SiliconFlow provide some reranking models. [Click here](https://siliconflow.cn/models) to see a list of reranking models.

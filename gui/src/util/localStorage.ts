@@ -6,7 +6,6 @@ type LocalStorageTypes = {
   hasDismissedExploreDialog: boolean;
   onboardingStatus?: OnboardingStatus;
   hasDismissedOnboardingCard: boolean;
-  mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
   vsCodeUriScheme: string;
   ftc: number;

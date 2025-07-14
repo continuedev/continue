@@ -1,0 +1,76 @@
+---
+title: "OVHcloud"
+---
+
+---
+
+## title: OVHcloud AI Endpoints
+
+OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR.
+
+<Info>
+  To get started, create an API key on the OVHcloud [AI Endpoints
+  website](https://endpoints.ai.cloud.ovh.net/). For more information, including
+  pricing, visit the OVHcloud [AI Endpoints product
+  page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/).
+</Info>
+
+## Chat model
+
+We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
+Check our [catalog](https://endpoints.ai.cloud.ovh.net/catalog) to see all of our models hsoted on AI Endpoints.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Qwen2.5-Coder-32B-Instruct
+        provider: ovhcloud
+        model: qwen2.5-coder-32b
+        apiKey: <YOUR_AIENDPOINTS_API_KEY>
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Qwen2.5-Coder-32B-Instruct",
+          "provider": "ovhcloud",
+          "model": "qwen2.5-coder-32b",
+          "apiKey": "<YOUR_AIENDPOINTS_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings model
+
+We recommend configuring **bge-multilingual-gemma2** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: BGE Multilingual Gemma2
+      provider: ovhcloud
+      model: bge-multilingual-gemma2
+      apiKey: <YOUR_AIENDPOINTS_API_KEY>
+      roles: 
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "ovhcloud",
+      "model": "bge-multilingual-gemma2",
+      "apiKey": "<YOUR_AIENDPOINTS_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>

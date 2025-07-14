@@ -8,6 +8,7 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
   errorToolCall,
+  setInactive,
   setToolCallCalling,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
@@ -145,6 +146,8 @@ export const callCurrentTool = createAsyncThunk<void, undefined, ThunkApiType>(
         }),
       );
       unwrapResult(wrapped);
+    } else {
+      dispatch(setInactive());
     }
   },
 );
