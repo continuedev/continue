@@ -4,6 +4,7 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
+import { getToolDisplayName } from "../tools.js";
 import ToolResultSummary from "./ToolResultSummary.js";
 import UserInput from "./UserInput.js";
 
@@ -119,35 +120,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
         },
         onToolStart: (toolName: string, toolArgs?: any) => {
           const formatToolCall = (name: string, args: any) => {
-            if (!args) return name;
+            const displayName = getToolDisplayName(name);
+            if (!args) return displayName;
 
-            switch (name) {
-              // CLI Internal Tools (snake_case)
-              case "read_file":
-                return `Read(${args.filepath || ""})`;
-              case "write_file":
-                return `Write(${args.filepath || ""})`;
-              case "list_files":
-                return `List(${args.dirpath || ""})`;
-              case "search_code":
-                return `Search(${args.pattern || ""})`;
-              case "run_terminal_command":
-                return `Terminal(${args.command || ""})`;
-              case "view_diff":
-                return `Diff(${args.path || "."})`;
-              default:
-                // Handle MCP tools or unknown tools
-                if (name.startsWith("mcp__")) {
-                  const mcpToolName = name
-                    .replace("mcp__", "")
-                    .replace("ide__", "");
-                  const firstParam = Object.values(args)[0];
-                  return `${mcpToolName}(${firstParam || ""})`;
-                }
-                // For unknown tools, show first parameter value
-                const firstValue = Object.values(args)[0];
-                return `${name}(${firstValue || ""})`;
-            }
+            // Get the first parameter value for display
+            const firstValue = Object.values(args)[0];
+            return `${displayName}(${firstValue || ""})`;
           };
 
           setMessages((prev) => [

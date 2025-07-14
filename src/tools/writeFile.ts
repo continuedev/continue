@@ -4,6 +4,7 @@ import { Tool } from "./types.js";
 
 export const writeFileTool: Tool = {
   name: "write_file",
+  displayName: "Write",
   description: "Write content to a file at the specified path",
   parameters: {
     filepath: {

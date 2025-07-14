@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import React from "react";
+import { getToolDisplayName } from "../tools.js";
 
 interface ToolResultSummaryProps {
   toolName?: string;
@@ -15,18 +16,18 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
     const lines = content.split("\n").length;
     const chars = content.length;
+    const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
 
-    // Use exact tool name matching
+    // Handle specific tool output formatting
     switch (toolName) {
-      // CLI Internal Tools (snake_case)
       case "read_file":
         // Try to extract file path from content if it contains line numbers
         if (content.includes("→")) {
           const pathMatch = content.match(/^(.+?):/);
           const filePath = pathMatch ? pathMatch[1] : "file";
-          return `Read ${filePath} (${lines} lines)`;
+          return `${displayName} ${filePath} (${lines} lines)`;
         }
-        return `Read tool output (${lines} lines)`;
+        return `${displayName} tool output (${lines} lines)`;
 
       case "write_file":
         return "File written successfully";
@@ -44,21 +45,11 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         return `Diff output (${lines} lines)`;
 
       default:
-        // Handle MCP tools or unknown tools
-        if (toolName?.startsWith("mcp__")) {
-          const mcpToolName = toolName
-            .replace("mcp__", "")
-            .replace("ide__", "");
-          return `${mcpToolName} tool output (${lines} lines)`;
-        }
-
-        // Fallback for unknown tools
+        // Fallback for all tools using display name
         if (chars > 1000) {
-          return `${
-            toolName || "Tool"
-          } output: ${lines} lines, ${chars} characters`;
+          return `${displayName} output: ${lines} lines, ${chars} characters`;
         } else if (lines > 10) {
-          return `${toolName || "Tool"} output: ${lines} lines`;
+          return `${displayName} output: ${lines} lines`;
         } else {
           return content.slice(0, 100) + (content.length > 100 ? "..." : "");
         }

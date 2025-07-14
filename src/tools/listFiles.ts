@@ -5,6 +5,7 @@ import { Tool } from "./types.js";
 // List files in a directory
 export const listFilesTool: Tool = {
   name: "list_files",
+  displayName: "List",
   description: "List files in a directory",
   parameters: {
     dirpath: {

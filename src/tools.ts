@@ -3,6 +3,7 @@ import {
   executeToolCall,
   extractToolCalls,
   getToolsDescription,
+  getToolDisplayName,
   Tool,
 } from "./tools/index.js";
 
@@ -11,6 +12,7 @@ export {
   executeToolCall,
   extractToolCalls,
   getToolsDescription,
+  getToolDisplayName,
   Tool,
   BUILTIN_TOOLS as tools,
 };

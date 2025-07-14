@@ -3,6 +3,7 @@ import { exec } from "child_process";
 
 export const runTerminalCommandTool: Tool = {
   name: "run_terminal_command",
+  displayName: "Terminal",
   description: "Executes a terminal command and returns the output.",
   parameters: {
     command: {

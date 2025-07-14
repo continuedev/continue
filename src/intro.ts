@@ -21,10 +21,10 @@ export function introMessage(assistant: Assistant, mcpService: MCPService) {
 
   console.info(chalk.cyan(CONTINUE_ASCII_ART));
 
-  console.info(`\n${chalk.bold.blue(`Assistant: ${assistantConfig.name}`)}`);
-  console.info(`${chalk.blue(`Model: ${assistant.getModel()}`)}\n`);
+  console.info(`\n${chalk.bold.blue(`Agent: ${assistantConfig.name}\n`)}`);
+  console.info(`${chalk.yellow("Model:")} ${assistant.getModel()}\n`);
 
-  console.info(chalk.yellow("Available tools:"));
+  console.info(chalk.yellow("Tools:"));
   getAllTools().forEach((tool) => {
     console.info(
       `- ${chalk.green(tool.function.name)}: ${tool.function.description ?? ""}`
@@ -35,14 +35,16 @@ export function introMessage(assistant: Assistant, mcpService: MCPService) {
   });
   console.info("");
 
-  console.info(chalk.yellow("\nAvailable slash commands:"));
-  console.info("- /exit: Exit the chat");
-  console.info("- /clear: Clear the chat history");
-  console.info("- /help: Show help message");
-  console.info("- /models: Show available models");
-  console.info("- /login: Authenticate with your account");
-  console.info("- /logout: Sign out of your current session");
-  console.info("- /whoami: Check who you're currently logged in as");
+  console.info(chalk.yellow("Slash commands:"));
+  console.info(`- ${chalk.green("/exit")}: Exit the chat`);
+  console.info(`- ${chalk.green("/clear")}: Clear the chat history`);
+  console.info(`- ${chalk.green("/help")}: Show help message`);
+  console.info(`- ${chalk.green("/models")}: Show available models`);
+  console.info(`- ${chalk.green("/login")}: Authenticate with your account`);
+  console.info(`- ${chalk.green("/logout")}: Sign out of your current session`);
+  console.info(
+    `- ${chalk.green("/whoami")}: Check who you're currently logged in as`
+  );
   for (const prompt of assistantConfig.prompts ?? []) {
     console.info(`- /${prompt?.name}: ${prompt?.description}`);
   }
