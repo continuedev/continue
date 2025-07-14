@@ -530,11 +530,10 @@ export const sessionSlice = createSlice({
             message.role === "tool" // Tool messages should always create new messages
           ) {
             // Create a new message
-            const renderedContent = renderChatMessage(message);
             const historyItem: ChatHistoryItemWithMessageId = {
               message: {
                 ...message,
-                content: renderedContent,
+                content: "", // Start with empty content, let accumulation logic handle it
                 id: uuidv4(),
               },
               contextItems: [],

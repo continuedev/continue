@@ -28,7 +28,7 @@ export function ToolbarButtonWithTooltip({
         }}
         data-tooltip-id={tooltipId}
         data-testid={testId}
-        className="hover:description-muted/30 cursor-pointer select-none rounded bg-transparent px-1 py-0.5 hover:opacity-80"
+        className="hover:description-muted/30 cursor-pointer select-none rounded bg-transparent px-0.5 py-0.5 hover:opacity-80 flex items-center justify-center"
       >
         {children}
       </div>
