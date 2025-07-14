@@ -24,7 +24,6 @@ export default function StepContainer(props: StepContainerProps) {
     (state) => state.session.history[props.index + 1],
   );
   const uiConfig = useAppSelector(selectUIConfig);
-  const history = useAppSelector((state) => state.session.history);
 
   const isNextMsgAssistantOrThinking =
     historyItemAfterThis?.message.role === "assistant" ||
