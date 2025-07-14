@@ -41,11 +41,6 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
         description: "Check who you're currently logged in as",
         category: "system",
       },
-      {
-        name: "models",
-        description: "List available AI models",
-        category: "system",
-      },
     ];
 
     const assistantCommands: SlashCommand[] =
