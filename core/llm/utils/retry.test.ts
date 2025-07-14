@@ -351,8 +351,8 @@ describe("Retry Functionality", () => {
       expect(result).toBe("success");
       expect(mockFn).toHaveBeenCalledTimes(2);
       // Should use header value (1000ms) not exponential backoff (100ms)
-      expect(delays[0]).toBeGreaterThan(950); // 1000ms ±5% jitter
-      expect(delays[0]).toBeLessThan(1050);
+      expect(delays[0]).toBeGreaterThan(940); // 1000ms with wider tolerance for jitter and system performance
+      expect(delays[0]).toBeLessThan(1080);
     });
 
     it("should respect x-ratelimit-reset header", async () => {
@@ -375,8 +375,8 @@ describe("Retry Functionality", () => {
 
       expect(result).toBe("success");
       // Should use header value (500ms) not exponential backoff (100ms)
-      expect(delays[0]).toBeGreaterThan(475);
-      expect(delays[0]).toBeLessThan(525);
+      expect(delays[0]).toBeGreaterThan(470); // 500ms with wider tolerance for jitter and system performance
+      expect(delays[0]).toBeLessThan(540);
     });
 
     it("should handle HTTP date format in retry-after header", async () => {

@@ -151,7 +151,7 @@ function calculateDelay(
 
       // Respect maxDelay and add small jitter to spread requests
       const cappedDelay = Math.min(delayMs, maxDelay);
-      const jitterMultiplier = 1 + (Math.random() * 0.1 - 0.025); // Small jitter -2.5% to +7.5%
+      const jitterMultiplier = 1 + (Math.random() * 0.1 - 0.05); // Small jitter ±5%
       return Math.max(0, Math.floor(cappedDelay * jitterMultiplier));
     }
   }
