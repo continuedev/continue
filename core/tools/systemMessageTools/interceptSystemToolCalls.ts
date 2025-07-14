@@ -26,7 +26,6 @@ export async function* interceptSystemToolCalls(
 
   let done = false;
   let buffer = "";
-  let currentToolCallLine = 1;
 
   while (true) {
     if (abortController.signal.aborted) {
@@ -80,14 +79,12 @@ export async function* interceptSystemToolCalls(
             }
 
             toolCallText += buffer;
-
             try {
               const { delta, done: toolCallDone } = parseToolCallText(
                 toolCallText,
                 currentToolCallId,
               );
               if (delta) {
-                console.log(delta);
                 yield [
                   {
                     ...message,

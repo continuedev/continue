@@ -66,7 +66,8 @@ export function parseToolCallText(
   let args: Record<string, any> = {};
   let done = false;
   const lines = text.trim().split("\n");
-  let isInArg: string | undefined = undefined;
+  let isInArg = false;
+  let currentArgName: string | undefined = undefined;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -91,33 +92,35 @@ export function parseToolCallText(
       name = (line.split(/tool_?name:/i)[1] ?? "").trim();
     } else if (isInArg) {
       if (acceptableEndArgTags.find((tag) => lowerCaseLine.startsWith(tag))) {
-        const endValue = args[isInArg];
-        // Case, received back to back BEGIN/END tags -> empty string
-        if (!endValue) {
-          args[isInArg] = "";
-          // Boolean and number args support
-        } else if (endValue.toLowerCase() === "false") {
-          args[isInArg] = false;
-        } else if (endValue.toLowerCase() === "true") {
-          args[isInArg] = true;
-        } else {
-          const num = Number(endValue);
-          if (!isNaN(num)) {
-            args[isInArg] = num;
+        if (currentArgName) {
+          const endValue = args[currentArgName];
+          // Case, received back to back BEGIN/END tags -> empty string
+          if (!endValue) {
+            args[currentArgName] = "";
+            // Boolean and number args support
+          } else if (endValue.toLowerCase() === "false") {
+            args[currentArgName] = false;
+          } else if (endValue.toLowerCase() === "true") {
+            args[currentArgName] = true;
+          } else {
+            const num = Number(endValue);
+            if (!isNaN(num)) {
+              args[currentArgName] = num;
+            }
           }
         }
-
-        isInArg = undefined;
+        isInArg = false;
+        currentArgName = undefined;
       } else if (
         isLastLine &&
         acceptableEndArgTags.find((tag) => tag.startsWith(lowerCaseLine))
       ) {
         break;
-      } else {
-        if (args[isInArg]) {
-          args[isInArg] += "\n" + line;
+      } else if (currentArgName) {
+        if (args[currentArgName]) {
+          args[currentArgName] += "\n" + line;
         } else {
-          args[isInArg] = line;
+          args[currentArgName] = line;
         }
       }
     } else if (
@@ -125,7 +128,8 @@ export function parseToolCallText(
     ) {
       const argName = (line.split(/begin_?arg:/i)[1] ?? "").trim();
       if (argName) {
-        isInArg = argName;
+        isInArg = true;
+        currentArgName = argName;
       }
     } else if (line === "```") {
       done = true;
