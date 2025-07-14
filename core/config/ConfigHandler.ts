@@ -17,6 +17,7 @@ import {
 } from "../control-plane/AuthTypes.js";
 import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
+import { Telemetry } from "../util/posthog.js";
 import {
   ASSISTANTS,
   getAllDotContinueDefinitionFiles,
@@ -431,6 +432,7 @@ export class ConfigHandler {
   // Because of e.g. MCP singleton and docs service using things from config
   // Could improve this
   async reloadConfig(reason: string) {
+    const startTime = performance.now();
     this.totalConfigLoads += 1;
     // console.log(`Reloading config (${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
@@ -456,6 +458,17 @@ export class ConfigHandler {
       await this.currentProfile.reloadConfig(this.additionalContextProviders);
 
     this.notifyConfigListeners({ config, errors, configLoadInterrupted });
+    
+    // Track config loading telemetry
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    void Telemetry.capture("config_reload", {
+      duration,
+      reason,
+      totalConfigLoads: this.totalConfigLoads,
+      configLoadInterrupted,
+    });
+    
     return { config, errors, configLoadInterrupted };
   }
 
