@@ -10,11 +10,7 @@ import {
 } from "react";
 import Shortcut from "../gui/Shortcut";
 
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -25,19 +21,11 @@ import {
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { refreshSessionMetadata } from "../../redux/thunks/session";
 import { getFontSize, getPlatform } from "../../util";
-import { cn } from "../../util/cn";
 import { ROUTES } from "../../util/navigation";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import { Button } from "../ui";
 import { HistoryTableRow } from "./HistoryTableRow";
 import { groupSessionsByDate, parseDate } from "./util";
-
-const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
-const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
-const lastMonth = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
-const earlier = new Date(0);
-
-const HEADER_CLASS = "user-select-none sticky mb-3 ml-2 flex h-6 justify-start text-left text-base font-bold opacity-75";
 
 export function History() {
   const dispatch = useAppDispatch();
@@ -46,7 +34,6 @@ export function History() {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [collapsed, setCollapsed] = useState(false);
 
   const minisearch = useRef<MiniSearch>(
     new MiniSearch({
@@ -149,27 +136,11 @@ export function History() {
   return (
     <div
       style={{ fontSize: getFontSize() }}
-      className={`flex flex-1 flex-col overflow-auto px-1 transition-all duration-300 ${
-        collapsed ? "w-10" : "w-full"
-      }`}
+      className="flex flex-1 flex-col overflow-auto px-1"
     >
       <div className="relative my-2 mt-4 flex justify-center space-x-2">
-        {/* Collapse Button */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="bg-vsc-background text-vsc-foreground hover:bg-vsc-editor-background absolute left-2 top-1/2 -translate-y-1/2 transform rounded-md p-1"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <ChevronRightIcon className="h-5 w-5" />
-          ) : (
-            <ChevronLeftIcon className="h-5 w-5" />
-          )}
-        </button>
-
-        {/* Search Input */}
         <input
-          className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-8 pr-8 text-sm outline-none focus:outline-none"
+          className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-sm outline-none focus:outline-none"
           ref={searchInputRef}
           placeholder="Search past sessions"
           type="text"
@@ -189,66 +160,61 @@ export function History() {
         )}
       </div>
 
-      {!collapsed && (
-        <>
-          <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto">
-            {filteredAndSortedSessions.length === 0 && (
-              <div className="m-3 text-center">
-                {isSessionMetadataLoading ? (
-                  "Loading Sessions..."
-                ) : (
-                  <>
-                    No past sessions found. To start a new session, either click the
-                    "+" button or use the keyboard shortcut:{" "}
-                    <Shortcut>meta L</Shortcut>
-                  </>
-                )}
-              </div>
+      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto">
+        {filteredAndSortedSessions.length === 0 && (
+          <div className="m-3 text-center">
+            {isSessionMetadataLoading ? (
+              "Loading Sessions..."
+            ) : (
+              <>
+                No past sessions found. To start a new session, either click the
+                "+" button or use the keyboard shortcut:{" "}
+                <Shortcut>meta L</Shortcut>
+              </>
             )}
+          </div>
+        )}
 
-            <table className="flex flex-1 flex-col">
-              <tbody className="">
-                {sessionGroups.map((group, groupIndex) => (
-                  <Fragment key={group.label}>
-                    <tr
-                      className={cn(
-                        "user-select-none sticky mb-3 ml-2 flex h-6 justify-start text-left text-base font-bold opacity-75",
-                        groupIndex === 0 ? "mt-2" : "mt-8",
-                      )}
-                    >
-                      <td colSpan={3}>{group.label}</td>
-                    </tr>
-                    {group.sessions.map((session, sessionIndex) => (
-                      <HistoryTableRow
-                        key={session.sessionId}
-                        sessionMetadata={session}
-                        index={sessionIndex}
-                      />
-                    ))}
-                  </Fragment>
+        <table className="flex flex-1 flex-col">
+          <tbody className="">
+            {sessionGroups.map((group, groupIndex) => (
+              <Fragment key={group.label}>
+                <tr
+                  className={`user-select-none sticky mb-3 ml-2 flex h-6 justify-start text-left text-base font-bold opacity-75 ${
+                    groupIndex === 0 ? "mt-2" : "mt-8"
+                  }`}
+                >
+                  <td colSpan={3}>{group.label}</td>
+                </tr>
+                {group.sessions.map((session, sessionIndex) => (
+                  <HistoryTableRow
+                    key={session.sessionId}
+                    sessionMetadata={session}
+                    index={sessionIndex}
+                  />
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-          <div className="border-border flex flex-col items-end justify-center border-0 border-t border-solid px-2 py-3 text-xs">
-            <Button variant="secondary" size="sm" onClick={showClearSessionsDialog}>
-              Clear chats
-            </Button>
-            <span
-              className="text-description text-2xs"
-              data-testid="history-sessions-note"
-            >
-              Chat history is saved to{" "}
-              <span className="italic">
-                {platform === "windows"
-                  ? "%USERPROFILE%/.continue"
-                  : "~/.continue/sessions"}
-              </span>
-            </span>
-          </div>
-        </>
-      )}
+      <div className="border-border flex flex-col items-end justify-center border-0 border-t border-solid px-2 py-3 text-xs">
+        <Button variant="secondary" size="sm" onClick={showClearSessionsDialog}>
+          Clear chats
+        </Button>
+        <span
+          className="text-description text-2xs"
+          data-testid="history-sessions-note"
+        >
+          Chat history is saved to{" "}
+          <span className="italic">
+            {platform === "windows"
+              ? "%USERPROFILE%/.continue"
+              : "~/.continue/sessions"}
+          </span>
+        </span>
+      </div>
     </div>
   );
 }
