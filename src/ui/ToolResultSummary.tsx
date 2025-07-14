@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+import path from "path";
 import React from "react";
 import { getToolDisplayName } from "../tools.js";
 import { ColoredDiff } from "./ColoredDiff.js";
@@ -43,13 +44,24 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
   // Handle all other cases with text summary
   const getSummary = () => {
+    // Convert absolute paths to relative paths from workspace root
+    const formatPath = (filePath: string) => {
+      if (path.isAbsolute(filePath)) {
+        const workspaceRoot = process.cwd();
+        const relativePath = path.relative(workspaceRoot, filePath);
+        return relativePath || filePath;
+      }
+      return filePath;
+    };
+
+    // Handle specific tool output formatting
     switch (toolName) {
       case "read_file":
         // Try to extract file path from content if it contains line numbers
         if (content.includes("→")) {
           const pathMatch = content.match(/^(.+?):/);
           const filePath = pathMatch ? pathMatch[1] : "file";
-          return `${displayName} ${filePath} (${lines} lines)`;
+          return `${displayName} ${formatPath(filePath)} (${lines} lines)`;
         }
         return `${displayName} tool output (${lines} lines)`;
 

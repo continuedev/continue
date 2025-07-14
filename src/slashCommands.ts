@@ -14,6 +14,7 @@ export function handleSlashCommands(
   output?: string;
   exit?: boolean;
   newInput?: string;
+  clear?: boolean;
 } | null {
   if (input.startsWith("/")) {
     const [command, ...args] = input.slice(1).split(" ");
@@ -22,23 +23,16 @@ export function handleSlashCommands(
         const helpMessage = [
           "Available commands:",
           "/help - Show this help message",
+          "/clear - Clear the chat history",
           "/exit - Exit the chat",
           "/login - Authenticate with your account",
           "/logout - Sign out of your current session",
           "/whoami - Check who you're currently logged in as",
-          "/models - List available AI models",
           ...(assistant.prompts?.map(
             (prompt) => `/${prompt?.name} - ${prompt?.description}`
           ) ?? []),
         ].join("\n");
         return { output: helpMessage };
-      case "models":
-        return {
-          output: `Available models:\n• ${
-            assistant.models?.map((model) => model?.name)?.join("\n• ") ||
-            "None"
-          }`,
-        };
       case "exit":
         return { exit: true, output: "Goodbye!" };
       case "login":
