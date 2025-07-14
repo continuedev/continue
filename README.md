@@ -1,117 +1,21 @@
 # Continue CLI
 
-A command-line interface for Continue Dev that provides an interactive AI-assisted development experience.
-
-## Features
-
-- 🤖 Interactive AI Assistant Chat
-- 🎨 Beautiful Terminal User Interface (TUI)
-- 🔐 Secure Authentication via WorkOS
-- 🛠️ Built-in Development Tools
-- ⚡ Real-time Response Streaming
-- 🎯 Slash Command Support
-- 🤫 Headless Mode for Automation
+The Continue CLI is a customizable command line coding agent.
 
 ## Installation
 
 ```bash
-npm install @continuedev/cli -g
+npm i -g @continuedev/cli
 ```
 
 ## Usage
 
-### Basic Usage
-
 ```bash
-continue-cli
-```
-
-### With Custom Assistant
-
-```bash
-continue-cli --config /path/to/config.yaml
+cn
 ```
 
 ### Headless Mode
 
 ```bash
-continue-cli --headless --prompt "Your command here"
+cn --headless "Generate a conventional commit name for the current git changes."
 ```
-
-## Available Commands
-
-The CLI supports various slash commands during interaction:
-
-- `/help` - Display help information
-- `/exit` - Exit the CLI
-- Additional commands available during chat sessions
-
-## Development
-
-### Prerequisites
-
-- Node.js (version specified in .nvmrc)
-- npm or yarn
-
-### Setup
-
-1. Clone the repository
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Build the project:
-
-```bash
-npm run build
-```
-
-4. Start in development mode:
-
-```bash
-npm start
-```
-
-### Testing
-
-Run the test suite:
-
-```bash
-npm test
-```
-
-## Project Structure
-
-```
-src/
-├── auth/           # Authentication implementation
-├── tools/          # CLI tools and utilities
-├── ui/             # Terminal User Interface components
-├── index.ts        # Main entry point
-├── args.ts         # Command line argument parsing
-├── client.ts       # Client implementation
-├── mcp.ts          # Model Context Protocol integration
-└── ...            # Various utility files
-```
-
-## Dependencies
-
-- `@continuedev/*` packages for core functionality
-- `@workos-inc/node` for authentication
-- `openai` for AI capabilities
-- `ink` and `react` for Terminal UI
-- Various utility packages (chalk, axios, etc.)
-
-## License
-
-Apache-2.0 - see LICENSE file for details
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-For issues and feature requests, please use the GitHub issue tracker.
