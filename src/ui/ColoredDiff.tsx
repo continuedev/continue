@@ -83,19 +83,19 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({ diffContent }) 
       {displayableLines.map((line, index) => {
         const lineKey = `diff-line-${index}`;
         let gutterNumStr = '';
-        let color: string | undefined = undefined;
         let prefixSymbol = ' ';
         let dim = false;
+        let backgroundColor: string | undefined = undefined;
 
         switch (line.type) {
           case 'add':
             gutterNumStr = (line.newLine ?? '').toString();
-            color = 'green';
+            backgroundColor = '#1a4a1a';
             prefixSymbol = '+';
             break;
           case 'del':
             gutterNumStr = (line.oldLine ?? '').toString();
-            color = 'red';
+            backgroundColor = '#4a1a1a';
             prefixSymbol = '-';
             break;
           case 'context':
@@ -110,10 +110,10 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({ diffContent }) 
         return (
           <Box key={lineKey} flexDirection="row">
             <Text color="gray">{gutterNumStr.padEnd(4)} </Text>
-            <Text color={color} dimColor={dim}>
+            <Text backgroundColor={backgroundColor} dimColor={dim}>
               {prefixSymbol}{' '}
             </Text>
-            <Text color={color} dimColor={dim}>
+            <Text backgroundColor={backgroundColor} dimColor={dim}>
               {line.content}
             </Text>
           </Box>
