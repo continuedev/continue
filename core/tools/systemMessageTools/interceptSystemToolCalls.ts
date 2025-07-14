@@ -1,9 +1,9 @@
-import { ChatMessage, PromptLog, ToolCallDelta } from "../..";
-import { renderChatMessage } from "../../util/messageContent";
+import { ChatMessage, PromptLog, TextMessagePart } from "../..";
+import { normalizeToMessageParts } from "../../util/messageContent";
 import { detectToolCallStart } from "./detectToolCallStart";
 import { generateOpenAIToolCallId } from "./openAiToolCallId";
-import { parsePartialXml } from "./parsePartialXmlToolCall";
-import { getStringDelta, splitAtTagsAndCodeblocks } from "./xmlToolUtils";
+import { parseToolCallText } from "./parseSystemToolCall";
+import { splitAtCodeblocksAndNewLines } from "./xmlToolUtils";
 
 /*
     Function to intercept tool calls in XML format from a chat message stream
@@ -16,17 +16,17 @@ import { getStringDelta, splitAtTagsAndCodeblocks } from "./xmlToolUtils";
     7. Closes when closed </tool_call> tag is found
     8. TERMINATES AFTER THE FIRST TOOL CALL - TODO - REMOVE THIS FOR PARALLEL SUPPORT
 */
-export async function* interceptXMLToolCalls(
+export async function* interceptSystemToolCalls(
   messageGenerator: AsyncGenerator<ChatMessage[], PromptLog | undefined>,
   abortController: AbortController,
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
   let toolCallText = "";
   let currentToolCallId: string | undefined = undefined;
-  let currentToolCallArgs: string = "";
   let inToolCall = false;
 
   let done = false;
   let buffer = "";
+  let currentToolCallLine = 1;
 
   while (true) {
     if (abortController.signal.aborted) {
@@ -47,9 +47,19 @@ export async function* interceptXMLToolCalls(
           continue;
         }
 
-        const content = renderChatMessage(message);
-        const splitContent = splitAtTagsAndCodeblocks(content); // split at tag starts/ends e.g. < >
-        for (const chunk of splitContent) {
+        const parts = normalizeToMessageParts(message);
+
+        // Image output cannot be combined with tools
+        if (parts.find((part) => part.type === "imageUrl")) {
+          yield [message];
+          continue;
+        }
+
+        const chunks = (parts as TextMessagePart[])
+          .map((part) => splitAtCodeblocksAndNewLines(part.text))
+          .flat();
+
+        for (const chunk of chunks) {
           buffer += chunk;
           if (!inToolCall) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
@@ -68,54 +78,36 @@ export async function* interceptXMLToolCalls(
             if (!currentToolCallId) {
               currentToolCallId = generateOpenAIToolCallId();
             }
+
             toolCallText += buffer;
 
-            // Handle tool call
-            const parsed = parsePartialXml(toolCallText);
-
-            if (parsed?.tool_call?.tool_name) {
-              const args = parsed.tool_call.args
-                ? JSON.stringify(parsed.tool_call.args)
-                : "";
-
-              const argsDelta = getStringDelta(currentToolCallArgs, args);
-
-              const toolCallDelta: ToolCallDelta = {
-                id: currentToolCallId,
-                type: "function",
-                function: {
-                  name: parsed.tool_call.tool_name,
-                  arguments: argsDelta,
-                },
-              };
-
-              currentToolCallArgs = args;
-
+            try {
+              const { delta, done: toolCallDone } = parseToolCallText(
+                toolCallText,
+                currentToolCallId,
+              );
+              if (delta) {
+                console.log(delta);
+                yield [
+                  {
+                    ...message,
+                    content: "",
+                    toolCalls: [delta],
+                  },
+                ];
+              }
+              if (toolCallDone) {
+                inToolCall = false;
+                done = true;
+              }
+            } catch (e) {
+              console.error("Failed to parse system tool call");
               yield [
                 {
                   ...message,
-                  content: "",
-                  toolCalls: [toolCallDelta],
+                  content: toolCallText,
                 },
               ];
-            } else {
-              // Prevent dispatching with empty name
-              buffer = "";
-              continue;
-            }
-
-            // Check for exit from tool call
-            if (
-              toolCallText.includes("</tool_call>") // parallel might need better handling for xml that comes in codeblocks
-            ) {
-              inToolCall = false;
-              toolCallText = "";
-              currentToolCallId = undefined;
-              currentToolCallArgs = "";
-
-              // Terminate at first tool call TODO parallel support
-              done = true;
-              break;
             }
           } else {
             // Yield normal assistant message

@@ -1,8 +1,6 @@
-import { XMLBuilder } from "fast-xml-parser";
 import {
   AssistantChatMessage,
   MessagePart,
-  ToolCallDelta,
   ToolCallState,
   UserChatMessage,
 } from "../..";
@@ -10,19 +8,19 @@ import {
   normalizeToMessageParts,
   renderContextItems,
 } from "../../util/messageContent";
-function toolCallsToXml(toolCall: ToolCallDelta): string {
-  const builder = new XMLBuilder({
-    format: true,
-    ignoreAttributes: false,
-    suppressEmptyNode: true,
-  });
-  return builder.build({
-    tool_call: {
-      tool_name: toolCall.function?.name,
-      id: toolCall.id,
-      args: toolCall.function?.arguments,
-    },
-  });
+function toolCallStateToSystemToolCall(state: ToolCallState): string {
+  let parts = ["```tool"];
+  parts.push(`TOOL_NAME: ${state.toolCall.function.name}`);
+  try {
+    for (const arg of state.parsedArgs) {
+      parts.push(`BEGIN_ARG: ${arg}`);
+      parts.push(JSON.stringify(state.parsedArgs[arg]));
+      parts.push(`END_ARG`);
+    }
+  } catch (e) {}
+  // TODO - include tool call id for parrallel. Confuses dumb models
+  parts.push("```");
+  return parts.join("\n");
 }
 export function convertToolCallStateToXmlCallsAndOutput(
   originalAssistantMessage: AssistantChatMessage,
@@ -32,13 +30,13 @@ export function convertToolCallStateToXmlCallsAndOutput(
   userMessage: UserChatMessage;
 } {
   const parts = normalizeToMessageParts(originalAssistantMessage);
-  if (originalAssistantMessage.toolCalls?.length) {
-    const toolCallParts: MessagePart[] = originalAssistantMessage.toolCalls.map(
-      (toolCall) => ({
+  if (toolCallState) {
+    const toolCallParts: MessagePart[] = [
+      {
         type: "text",
-        text: toolCallsToXml(toolCall),
-      }),
-    );
+        text: toolCallStateToSystemToolCall(toolCallState),
+      },
+    ];
     parts.push(...toolCallParts);
   }
 

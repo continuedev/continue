@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { closeTag, splitAtTagsAndCodeblocks } from "./xmlToolUtils";
+import { closeTag, splitAtCodeblocksAndNewLines } from "./xmlToolUtils";
 
 describe("closeTag", () => {
   const testCases = [
@@ -22,33 +22,15 @@ describe("closeTag", () => {
   });
 });
 
-describe("splitAtTagsAndCodeblocks", () => {
-  test("doesn't split plain text without tags", () => {
-    expect(splitAtTagsAndCodeblocks("hello world")).toEqual(["hello world"]);
-  });
-
-  test("splits single complete tag", () => {
-    expect(splitAtTagsAndCodeblocks("<tag>")).toEqual(["<tag>"]);
-  });
-
-  test("splits text with complete tag", () => {
-    expect(splitAtTagsAndCodeblocks("before<tag>after")).toEqual([
-      "before",
-      "<tag>",
-      "after",
-    ]);
-  });
-
-  test("splits multiple complete tags", () => {
-    expect(splitAtTagsAndCodeblocks("<one>middle<two>")).toEqual([
-      "<one>",
-      "middle",
-      "<two>",
+describe("splitAtCodeblocks", () => {
+  test("doesn't split plain text without codeblocks", () => {
+    expect(splitAtCodeblocksAndNewLines("hello world")).toEqual([
+      "hello world",
     ]);
   });
 
   test("splits at codeblocks", () => {
-    expect(splitAtTagsAndCodeblocks("```<one>middle```<two>")).toEqual([
+    expect(splitAtCodeblocksAndNewLines("```<one>middle```<two>")).toEqual([
       "```",
       "<one>",
       "middle",
@@ -57,19 +39,20 @@ describe("splitAtTagsAndCodeblocks", () => {
     ]);
   });
 
-  test("handles partial opening tag", () => {
-    expect(splitAtTagsAndCodeblocks("text<tag")).toEqual(["text", "<tag"]);
+  test("splits at new lines", () => {
+    expect(splitAtCodeblocksAndNewLines("hello\nhoware\n you\n")).toEqual([
+      "hello",
+      "\n",
+      "howare",
+      "\n",
+      " you",
+      "\n",
+    ]);
   });
 
-  test("handles partial closing tag", () => {
-    expect(splitAtTagsAndCodeblocks("text>")).toEqual(["text>"]);
-  });
-
-  test("handles empty string", () => {
-    expect(splitAtTagsAndCodeblocks("")).toEqual([""]);
-  });
-
-  test("handles consecutive tag boundaries", () => {
-    expect(splitAtTagsAndCodeblocks("<><>")).toEqual(["<>", "<>"]);
+  test("splits at both codeblocks and new lines", () => {
+    expect(splitAtCodeblocksAndNewLines("hello```\nho```ware\n you\n")).toEqual(
+      ["hello", "```", "\n", "ho", "```", "ware", "\n", " you", "\n"],
+    );
   });
 });

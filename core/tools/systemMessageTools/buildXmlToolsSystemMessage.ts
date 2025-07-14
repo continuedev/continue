@@ -1,5 +1,4 @@
 import { Tool } from "../..";
-import { closeTag } from "./xmlToolUtils";
 
 export const TOOL_INSTRUCTIONS_TAG = "<tool_use_instructions>";
 export const TOOL_DEFINITION_TAG = "TOOL_DEFINITION";
@@ -87,7 +86,7 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
     (tool) => !tool.systemMessageDescription,
   );
 
-  let prompt = `${TOOL_INSTRUCTIONS_TAG}\n`;
+  let prompt = ""; // `${TOOL_INSTRUCTIONS_TAG}\n`;
   prompt += `You have access to several "tools" that you can use at any time to retrieve information and/or perform tasks for the User.`;
   prompt += `\nTo use a tool, respond with a tool code block using the syntax shown in the examples below:`;
 
@@ -121,9 +120,9 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
   // }
 
   prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool descriptions`;
-  prompt += `\nYou are the one who sends the tool call, not the user. You can only call ONE TOOL AT A TIME.`;
+  prompt += `\nYou are the one who sends the tool call, not the user. You can only call ONE TOOL AT A TIME. If you choose to use a tool, do not say anything AFTER sending the tool codeblock.`;
 
-  prompt += `\n${closeTag(TOOL_INSTRUCTIONS_TAG)}`;
+  // prompt += `\n${closeTag(TOOL_INSTRUCTIONS_TAG)}`;
 
   return prompt;
 };

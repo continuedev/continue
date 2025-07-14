@@ -2,8 +2,9 @@ let boundaryTypeIndex = 0;
 
 // Poor models are really bad at following instructions
 // Here are some examples of what they often start the tool call with
-const acceptedBoundaries: [string, string][] = [
+const acceptedToolStarts: [string, string][] = [
   ["```tool\n", "```tool\n"],
+  ["tool_name:", "```tool\ntool_name:"],
   // ["<tool_call>", "<tool_call>"],
   // ["<tool_call>", "<tool_call>"],
   // ["```xml\n<tool_call>", "<tool_call>"],
@@ -17,35 +18,48 @@ const acceptedBoundaries: [string, string][] = [
 
 export function detectToolCallStart(buffer: string) {
   let modifiedBuffer = buffer;
+  let isInToolCall = false;
+  let isInPartialStart = false;
   const lowerCaseBuffer = buffer.toLowerCase();
-  for (let i = 0; i < acceptedBoundaries.length; i++) {
-    const [start, _] = acceptedBoundaries[i];
-    debugger;
+  for (let i = 0; i < acceptedToolStarts.length; i++) {
+    const [start, _] = acceptedToolStarts[i];
     if (lowerCaseBuffer.startsWith(start)) {
       boundaryTypeIndex = i;
-      // for e.g. ```tool_call case, replace before adding to buffer, case insensitive
+      // for non-standard cases like no ```tool codeblock, etc, replace before adding to buffer, case insensitive
       if (boundaryTypeIndex !== 0) {
-        modifiedBuffer = modifiedBuffer.replace(
+        modifiedBuffer = buffer.replace(
           new RegExp(start, "i"),
-          acceptedBoundaries[boundaryTypeIndex][1],
+          acceptedToolStarts[boundaryTypeIndex][1],
         );
       }
-      return {
-        isInToolCall: true,
-        isInPartialStart: false,
-        modifiedBuffer,
-      };
+      isInToolCall = true;
+      break;
     } else if (start.startsWith(lowerCaseBuffer)) {
-      return {
-        isInToolCall: false,
-        isInPartialStart: true,
-        modifiedBuffer,
-      };
+      isInPartialStart = true;
     }
   }
   return {
-    isInToolCall: false,
-    isInPartialStart: false,
+    isInToolCall,
+    isInPartialStart,
     modifiedBuffer,
   };
 }
+
+const acceptedToolEnds = ["END_ARG\n```", ""];
+
+// export function detectToolCallEnd(toolCallText: string): {
+//   hasEnd: boolean
+//   extraText?: string
+// } {
+
+// const END_TAG = "END_ARG\n```";
+//             const endTagIdx = toolCallText.indexOf(END_TAG);
+//             if (endTagIdx !== -1) {
+//               leaveToolCall()
+//               done = true;
+//               // buffer = toolCallText.slice(endTagIdx + END_TAG.length)
+//             }
+// return {
+//   hasEnd: false
+// }
+// }

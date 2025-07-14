@@ -399,6 +399,7 @@ export const sessionSlice = createSlice({
                   toolCallDelta,
                   lastItem.toolCallState,
                 );
+                console.log(newToolCallState);
                 lastItem.toolCallState = newToolCallState;
                 // We know this is one of these two types because we just added it
                 const curMessage = lastMessage as

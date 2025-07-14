@@ -12,17 +12,15 @@ export function getStringDelta(original: string, updated: string): string {
   return updated.slice(original.length);
 }
 
-export function splitAtTagsAndCodeblocks(content: string) {
+export function splitAtCodeblocksAndNewLines(content: string) {
   if (!content) return [""];
 
-  // Add spaces after > and before < to help with splitting
-  const BOUNDARY = "XML_PARSING_BOUNDARY_9b1deb4d3b7d"; // not that important, just something unique
-  const spaced = content
-    .replace(/\`\`\`/g, `${BOUNDARY}\`\`\`${BOUNDARY}`)
-    .replace(/>/g, `>${BOUNDARY}`)
-    .replace(/</g, `${BOUNDARY}<`);
+  // Add split markers before and after codeblocks/new lines
+  const BOUNDARY = "SPLIT_BOUNDARY_9b1deb4d3b7d"; // not that important, just something unique
+  let spaced = content.replaceAll("```", `${BOUNDARY}\`\`\`${BOUNDARY}`);
+  spaced = content.replaceAll("\n", `${BOUNDARY}\n${BOUNDARY}`);
 
-  // Split on spaces and filter out empty strings
+  // Split on markers and filter out empty strings
   const parts = spaced.split(BOUNDARY).filter(Boolean);
 
   return parts;

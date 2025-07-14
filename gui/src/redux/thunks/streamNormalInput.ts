@@ -5,7 +5,7 @@ import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildXmlToolsSystemMessage";
-import { interceptXMLToolCalls } from "core/tools/systemMessageTools/interceptXmlToolCalls";
+import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -151,7 +151,7 @@ export const streamNormalInput = createAsyncThunk<
       streamAborter.signal,
     );
     if (!useNativeTools && !!activeTools.length) {
-      gen = interceptXMLToolCalls(gen, streamAborter);
+      gen = interceptSystemToolCalls(gen, streamAborter);
     }
 
     let next = await gen.next();
