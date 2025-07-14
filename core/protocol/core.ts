@@ -35,6 +35,7 @@ import {
   SiteIndexingConfig,
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
+  TaskInfo,
   ToolCall,
 } from "../";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
@@ -241,4 +242,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
+  "taskList/list": [{ id: Session["sessionId"] }, TaskInfo[]];
 };

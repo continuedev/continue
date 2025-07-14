@@ -67,6 +67,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "process/markAsBackgrounded",
     "process/isBackgrounded",
     "controlPlane/getFreeTrialStatus",
+    "taskList/list",
   ];
 
 // Message types to pass through from core to webview

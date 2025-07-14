@@ -1,10 +1,10 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
-import { getTaskManagerForSession } from "../../context/taskList/TaskManager";
+import { getTaskManagerForSession } from "../../context/taskList";
 
 export const taskListImpl: ToolImpl = async (args, extras) => {
   let contextItem: ContextItem;
-  const manager = getTaskManagerForSession("abcd");
+  const manager = getTaskManagerForSession("abcd", extras.messenger!);
 
   const { action } = args;
 

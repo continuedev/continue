@@ -6,6 +6,8 @@ import {
 import Parser from "web-tree-sitter";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import type { IMessenger } from "./protocol/messenger";
 
 declare global {
   interface Window {
@@ -1011,6 +1013,7 @@ export interface ToolExtras {
     contextItems: ContextItem[];
   }) => void;
   config: ContinueConfig;
+  messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>;
   codeBaseIndexer?: CodebaseIndexer;
 }
 
@@ -1670,6 +1673,8 @@ export interface CompleteOnboardingPayload {
   apiKey?: string;
 }
 
+// Task Manager
+
 type TaskMetadata = {
   createdAt: string;
   updatedAt: string;
@@ -1677,7 +1682,7 @@ type TaskMetadata = {
 
 type TaskStatusType = keyof typeof TaskStatus;
 
-type TaskInfo = {
+export type TaskInfo = {
   id: string;
   name: string;
   description: string;

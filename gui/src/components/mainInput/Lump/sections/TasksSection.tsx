@@ -4,7 +4,7 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { TaskInfo } from "core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useFontSize } from "../../../ui/font";
 
@@ -73,48 +73,38 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
 export function TasksSection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const fetchTaskIntervalRef = useRef<NodeJS.Timeout | null>();
+
+  // useWebviewListener(
+  //   "taskEvent",
+  //   async (data) => {
+  //     console.log("debug1 updated task event", data);
+  //     setTasks(data.tasks);
+  //   },
+  //   [],
+  // );
 
   useEffect(() => {
     const fetchTasks = async () => {
-      try {
-        setLoading(true);
-        const response = await ideMessenger.request("tools/call", {
-          toolCall: {
-            id: "task-list-fetch",
-            type: "function",
-            function: {
-              name: "task_list",
-              arguments: JSON.stringify({ action: "list" }),
-            },
-          },
-        });
-
-        if (response.status === "success" && response.content.contextItems) {
-          const taskContent = response.content.contextItems[0]?.content;
-          if (taskContent) {
-            const taskData = JSON.parse(taskContent);
-            setTasks(taskData);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch tasks:", error);
-        setTasks([]);
-      } finally {
-        setLoading(false);
+      const response = await ideMessenger.request("taskList/list", {
+        id: "abcd",
+      });
+      if (response.status === "success") {
+        setTasks(response.content);
       }
     };
+    fetchTaskIntervalRef.current = setInterval(() => {
+      void fetchTasks();
+    }, 1000);
 
     void fetchTasks();
-  }, [ideMessenger]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <span className="text-gray-400">Loading tasks...</span>
-      </div>
-    );
-  }
+    return () => {
+      if (fetchTaskIntervalRef.current) {
+        clearInterval(fetchTaskIntervalRef.current);
+      }
+    };
+  }, [ideMessenger]);
 
   if (tasks.length === 0) {
     return (

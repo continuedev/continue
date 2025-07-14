@@ -37,26 +37,6 @@ export const taskListTool: Tool = {
           type: "string",
           description: "Required when updating or removing a task",
         },
-        // filter: {
-        //   type: "object",
-        //   properties: {
-        //     status: {
-        //       type: "array",
-        //       items: {
-        //         type: "string",
-        //         enum: [
-        //           "pending",
-        //           "running",
-        //           "completed",
-        //           "failed",
-        //           "cancelled",
-        //         ],
-        //       },
-        //       description: "Filter tasks by status",
-        //     },
-        //   },
-        //   description: "Filter criteria for listing tasks",
-        // },
       },
     },
   },
