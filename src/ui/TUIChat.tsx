@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
 import { getToolDisplayName } from "../tools.js";
+import LoadingAnimation from "./LoadingAnimation.js";
 import ToolResultSummary from "./ToolResultSummary.js";
 import UserInput from "./UserInput.js";
 
@@ -294,7 +295,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
       <Box flexDirection="column" flexShrink={0}>
         {/* Status */}
         {isWaitingForResponse && (
-          <Box paddingX={1}>
+          <Box paddingX={1} flexDirection="row" gap={1}>
+            <LoadingAnimation visible={isWaitingForResponse} />
             <Text color="gray">esc to interrupt</Text>
           </Box>
         )}
@@ -305,6 +307,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           isWaitingForResponse={isWaitingForResponse}
           inputMode={inputMode}
           onInterrupt={handleInterrupt}
+          assistant={assistant.config}
         />
         <Box marginRight={2} justifyContent="flex-end">
           <Text color="gray">● Continue CLI</Text>

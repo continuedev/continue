@@ -1,5 +1,7 @@
+import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
+import SlashCommandUI from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
@@ -7,6 +9,7 @@ interface UserInputProps {
   isWaitingForResponse: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
+  assistant: AssistantConfig;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -14,11 +17,90 @@ const UserInput: React.FC<UserInputProps> = ({
   isWaitingForResponse,
   inputMode,
   onInterrupt,
+  assistant,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [showSlashCommands, setShowSlashCommands] = useState(false);
+  const [slashCommandFilter, setSlashCommandFilter] = useState("");
+  const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
   const { exit } = useApp();
+
+  // Get all available slash commands
+  const getSlashCommands = () => {
+    const systemCommands = [
+      { name: "help", description: "Show help message" },
+      { name: "exit", description: "Exit the chat" },
+      { name: "login", description: "Authenticate with your account" },
+      { name: "logout", description: "Sign out of your current session" },
+      {
+        name: "whoami",
+        description: "Check who you're currently logged in as",
+      },
+      { name: "models", description: "List available AI models" },
+    ];
+
+    const assistantCommands =
+      assistant.prompts?.map((prompt) => ({
+        name: prompt?.name || "",
+        description: prompt?.description || "",
+      })) || [];
+
+    return [...systemCommands, ...assistantCommands];
+  };
+
+  // Update slash command UI state based on input
+  const updateSlashCommandState = (text: string, cursor: number) => {
+    // Check if we're in a slash command context
+    const beforeCursor = text.slice(0, cursor);
+    const lastSlashIndex = beforeCursor.lastIndexOf("/");
+
+    if (lastSlashIndex !== -1) {
+      // Check if there's any whitespace between the last slash and cursor
+      const afterSlash = beforeCursor.slice(lastSlashIndex + 1);
+
+      if (!afterSlash.includes(" ") && !afterSlash.includes("\n")) {
+        // We're in a slash command context
+        setShowSlashCommands(true);
+        setSlashCommandFilter(afterSlash);
+        setSelectedCommandIndex(0);
+      } else {
+        setShowSlashCommands(false);
+      }
+    } else {
+      setShowSlashCommands(false);
+    }
+  };
+
+  // Get filtered commands for navigation
+  const getFilteredCommands = () => {
+    const allCommands = getSlashCommands();
+    return allCommands.filter((cmd) =>
+      cmd.name.toLowerCase().includes(slashCommandFilter.toLowerCase())
+    );
+  };
+
+  // Handle slash command selection
+  const selectSlashCommand = (commandName: string) => {
+    const beforeCursor = inputText.slice(0, cursorPosition);
+    const lastSlashIndex = beforeCursor.lastIndexOf("/");
+
+    if (lastSlashIndex !== -1) {
+      const beforeSlash = inputText.slice(0, lastSlashIndex);
+      const afterCursor = inputText.slice(cursorPosition);
+
+      // Replace the partial command with the full command
+      const newText = beforeSlash + "/" + commandName + " " + afterCursor;
+      const newCursorPos = lastSlashIndex + 1 + commandName.length + 1;
+
+      textBuffer.setText(newText);
+      textBuffer.setCursor(newCursorPos);
+      setInputText(newText);
+      setCursorPosition(newCursorPos);
+      setShowSlashCommands(false);
+    }
+  };
 
   useInput((input, key) => {
     if (key.ctrl && (input === "c" || input === "d")) {
@@ -32,8 +114,47 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
+    // Handle escape key to close slash command UI
+    if (key.escape && showSlashCommands && inputMode) {
+      setShowSlashCommands(false);
+      return;
+    }
+
     if (!inputMode) {
       return;
+    }
+
+    // Handle slash command navigation
+    if (showSlashCommands) {
+      const filteredCommands = getFilteredCommands();
+
+      if (key.upArrow) {
+        setSelectedCommandIndex((prev) =>
+          prev > 0 ? prev - 1 : filteredCommands.length - 1
+        );
+        return;
+      }
+
+      if (key.downArrow) {
+        setSelectedCommandIndex((prev) =>
+          prev < filteredCommands.length - 1 ? prev + 1 : 0
+        );
+        return;
+      }
+
+      if (key.return && !key.shift) {
+        if (filteredCommands.length > 0) {
+          selectSlashCommand(filteredCommands[selectedCommandIndex].name);
+        }
+        return;
+      }
+
+      if (key.tab) {
+        if (filteredCommands.length > 0) {
+          selectSlashCommand(filteredCommands[selectedCommandIndex].name);
+        }
+        return;
+      }
     }
 
     // Handle Enter key (regular enter for submit)
@@ -43,6 +164,7 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);
+        setShowSlashCommands(false);
       }
       return;
     }
@@ -51,8 +173,11 @@ const UserInput: React.FC<UserInputProps> = ({
     if (input === "\r" || input === "\\\r") {
       const handled = textBuffer.handleInput("\n", key);
       if (handled) {
-        setInputText(textBuffer.text);
-        setCursorPosition(textBuffer.cursor);
+        const newText = textBuffer.text;
+        const newCursor = textBuffer.cursor;
+        setInputText(newText);
+        setCursorPosition(newCursor);
+        updateSlashCommandState(newText, newCursor);
       }
       return;
     }
@@ -62,8 +187,11 @@ const UserInput: React.FC<UserInputProps> = ({
 
     // Update React state to trigger re-render
     if (handled) {
-      setInputText(textBuffer.text);
-      setCursorPosition(textBuffer.cursor);
+      const newText = textBuffer.text;
+      const newCursor = textBuffer.cursor;
+      setInputText(newText);
+      setCursorPosition(newCursor);
+      updateSlashCommandState(newText, newCursor);
     }
   });
 
@@ -141,11 +269,24 @@ const UserInput: React.FC<UserInputProps> = ({
   };
 
   return (
-    <Box borderStyle="round" borderTop={true} paddingX={1} borderColor="gray">
-      <Text color="green" bold>
-        ●{" "}
-      </Text>
-      {renderInputText()}
+    <Box flexDirection="column">
+      {/* Input box */}
+      <Box borderStyle="round" borderTop={true} paddingX={1} borderColor="gray">
+        <Text color="green" bold>
+          ●{" "}
+        </Text>
+        {renderInputText()}
+      </Box>
+
+      {/* Slash command UI */}
+      {showSlashCommands && inputMode && (
+        <SlashCommandUI
+          assistant={assistant}
+          filter={slashCommandFilter}
+          selectedIndex={selectedCommandIndex}
+          onSelect={selectSlashCommand}
+        />
+      )}
     </Box>
   );
 };
