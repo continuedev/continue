@@ -2,6 +2,7 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
 import SlashCommandUI from "./SlashCommandUI.js";
+import FileSearchUI from "./FileSearchUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 import { InputHistory } from "../util/inputHistory.js";
 
@@ -11,6 +12,7 @@ interface UserInputProps {
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant: AssistantConfig;
+  onFileAttached?: (filePath: string, content: string) => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -19,6 +21,7 @@ const UserInput: React.FC<UserInputProps> = ({
   inputMode,
   onInterrupt,
   assistant,
+  onFileAttached,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -27,6 +30,10 @@ const UserInput: React.FC<UserInputProps> = ({
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+  const [showFileSearch, setShowFileSearch] = useState(false);
+  const [fileSearchFilter, setFileSearchFilter] = useState("");
+  const [selectedFileIndex, setSelectedFileIndex] = useState(0);
+  const [currentFiles, setCurrentFiles] = useState<Array<{path: string; displayName: string}>>([]);
   const { exit } = useApp();
 
   // Get all available slash commands
@@ -66,11 +73,36 @@ const UserInput: React.FC<UserInputProps> = ({
         setShowSlashCommands(true);
         setSlashCommandFilter(afterSlash);
         setSelectedCommandIndex(0);
+        setShowFileSearch(false);
       } else {
         setShowSlashCommands(false);
       }
     } else {
       setShowSlashCommands(false);
+    }
+  };
+
+  // Update file search UI state based on input
+  const updateFileSearchState = (text: string, cursor: number) => {
+    // Check if we're in a file search context
+    const beforeCursor = text.slice(0, cursor);
+    const lastAtIndex = beforeCursor.lastIndexOf("@");
+
+    if (lastAtIndex !== -1) {
+      // Check if there's any whitespace between the last @ and cursor
+      const afterAt = beforeCursor.slice(lastAtIndex + 1);
+
+      if (!afterAt.includes(" ") && !afterAt.includes("\n")) {
+        // We're in a file search context
+        setShowFileSearch(true);
+        setFileSearchFilter(afterAt);
+        setSelectedFileIndex(0);
+        setShowSlashCommands(false);
+      } else {
+        setShowFileSearch(false);
+      }
+    } else {
+      setShowFileSearch(false);
     }
   };
 
@@ -113,6 +145,39 @@ const UserInput: React.FC<UserInputProps> = ({
     }
   };
 
+  // Handle file selection
+  const selectFile = async (filePath: string) => {
+    const beforeCursor = inputText.slice(0, cursorPosition);
+    const lastAtIndex = beforeCursor.lastIndexOf("@");
+
+    if (lastAtIndex !== -1) {
+      const beforeAt = inputText.slice(0, lastAtIndex);
+      const afterCursor = inputText.slice(cursorPosition);
+
+      // Replace the partial file reference with the full file name
+      const fileName = filePath.split('/').pop() || filePath;
+      const newText = beforeAt + "@" + fileName + " " + afterCursor;
+      const newCursorPos = lastAtIndex + 1 + fileName.length + 1;
+
+      textBuffer.setText(newText);
+      textBuffer.setCursor(newCursorPos);
+      setInputText(newText);
+      setCursorPosition(newCursorPos);
+      setShowFileSearch(false);
+
+      // Read the file content and notify parent component
+      if (onFileAttached) {
+        try {
+          const fs = await import("fs/promises");
+          const content = await fs.readFile(filePath, "utf-8");
+          onFileAttached(filePath, content);
+        } catch (error) {
+          console.error(`Error reading file ${filePath}:`, error);
+        }
+      }
+    }
+  };
+
   useInput((input, key) => {
     if (key.ctrl && (input === "c" || input === "d")) {
       exit();
@@ -128,6 +193,12 @@ const UserInput: React.FC<UserInputProps> = ({
     // Handle escape key to close slash command UI
     if (key.escape && showSlashCommands && inputMode) {
       setShowSlashCommands(false);
+      return;
+    }
+
+    // Handle escape key to close file search UI
+    if (key.escape && showFileSearch && inputMode) {
+      setShowFileSearch(false);
       return;
     }
 
@@ -168,8 +239,35 @@ const UserInput: React.FC<UserInputProps> = ({
       }
     }
 
-    // Handle input history navigation (only when not in slash command mode)
-    if (!showSlashCommands) {
+    // Handle file search navigation
+    if (showFileSearch) {
+      if (key.upArrow) {
+        setSelectedFileIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, Math.min(currentFiles.length - 1, 9))));
+        return;
+      }
+
+      if (key.downArrow) {
+        setSelectedFileIndex((prev) => (prev < Math.min(currentFiles.length - 1, 9) ? prev + 1 : 0));
+        return;
+      }
+
+      if (key.return && !key.shift) {
+        if (currentFiles.length > 0 && selectedFileIndex < currentFiles.length) {
+          selectFile(currentFiles[selectedFileIndex].path);
+        }
+        return;
+      }
+
+      if (key.tab) {
+        if (currentFiles.length > 0 && selectedFileIndex < currentFiles.length) {
+          selectFile(currentFiles[selectedFileIndex].path);
+        }
+        return;
+      }
+    }
+
+    // Handle input history navigation (only when not in slash command or file search mode)
+    if (!showSlashCommands && !showFileSearch) {
       if (key.upArrow) {
         const historyEntry = inputHistory.navigateUp(inputText);
         if (historyEntry !== null) {
@@ -216,6 +314,7 @@ const UserInput: React.FC<UserInputProps> = ({
         setInputText(newText);
         setCursorPosition(newCursor);
         updateSlashCommandState(newText, newCursor);
+        updateFileSearchState(newText, newCursor);
       }
       return;
     }
@@ -230,6 +329,7 @@ const UserInput: React.FC<UserInputProps> = ({
       setInputText(newText);
       setCursorPosition(newCursor);
       updateSlashCommandState(newText, newCursor);
+      updateFileSearchState(newText, newCursor);
       
       // Reset history navigation when user starts typing
       inputHistory.resetNavigation();
@@ -326,6 +426,16 @@ const UserInput: React.FC<UserInputProps> = ({
           filter={slashCommandFilter}
           selectedIndex={selectedCommandIndex}
           onSelect={selectSlashCommand}
+        />
+      )}
+
+      {/* File search UI */}
+      {showFileSearch && inputMode && (
+        <FileSearchUI
+          filter={fileSearchFilter}
+          selectedIndex={selectedFileIndex}
+          onSelect={selectFile}
+          onFilesUpdated={setCurrentFiles}
         />
       )}
     </Box>
