@@ -1,6 +1,7 @@
 import { ContinueClient } from "@continuedev/sdk";
 import { Box, Text, useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import path from "path";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
@@ -145,7 +146,18 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
             // Get the first parameter value for display
             const firstValue = Object.values(args)[0];
-            return `${displayName}(${firstValue || ""})`;
+            
+            // Convert absolute paths to relative paths from workspace root
+            const formatPath = (value: any) => {
+              if (typeof value === "string" && path.isAbsolute(value)) {
+                const workspaceRoot = process.cwd();
+                const relativePath = path.relative(workspaceRoot, value);
+                return relativePath || value;
+              }
+              return value;
+            };
+
+            return `${displayName}(${formatPath(firstValue) || ""})`;
           };
 
           setMessages((prev) => [
