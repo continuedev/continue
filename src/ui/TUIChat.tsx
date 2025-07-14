@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
 import UserInput from "./UserInput.js";
+import ToolResultSummary from "./ToolResultSummary.js";
 
 interface TUIChatProps {
   assistant: ContinueClient["assistant"];
@@ -126,23 +127,25 @@ const TUIChat: React.FC<TUIChatProps> = ({
             },
           ]);
         },
-        onToolResult: (result: string) => {
+        onToolResult: (result: string, toolName: string) => {
           setMessages((prev) => [
             ...prev,
             {
               role: "system",
               content: result,
               messageType: "tool-result",
+              toolName,
             },
           ]);
         },
-        onToolError: (error: string) => {
+        onToolError: (error: string, toolName?: string) => {
           setMessages((prev) => [
             ...prev,
             {
               role: "system",
               content: error,
               messageType: "tool-error",
+              toolName,
             },
           ]);
         },
@@ -231,7 +234,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 <Text color="green">Tool completed</Text>
               </Box>
               <Box marginLeft={2} paddingTop={1}>
-                <Text color="gray">{message.content}</Text>
+                <ToolResultSummary 
+                  toolName={message.toolName} 
+                  content={message.content} 
+                />
               </Box>
             </Box>
           );

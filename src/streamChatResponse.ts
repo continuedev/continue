@@ -53,8 +53,8 @@ type TODO = any;
 export interface StreamCallbacks {
   onContent?: (content: string) => void;
   onToolStart?: (toolName: string) => void;
-  onToolResult?: (result: string) => void;
-  onToolError?: (error: string) => void;
+  onToolResult?: (result: string, toolName: string) => void;
+  onToolError?: (error: string, toolName?: string) => void;
 }
 
 // Define a function to handle streaming responses with tool calling
@@ -220,7 +220,7 @@ export async function streamChatResponse(
           });
 
           if (callbacks?.onToolResult) {
-            callbacks.onToolResult(toolResult);
+            callbacks.onToolResult(toolResult, toolCall.name);
           } else {
             console.info(chalk.green(toolResult) + "\n");
           }
@@ -234,7 +234,7 @@ export async function streamChatResponse(
             content: errorMessage,
           });
           if (callbacks?.onToolError) {
-            callbacks.onToolError(errorMessage);
+            callbacks.onToolError(errorMessage, toolCall.name);
           } else {
             console.info(
               `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(
