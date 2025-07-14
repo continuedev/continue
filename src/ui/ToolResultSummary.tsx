@@ -2,6 +2,7 @@ import { Box, Text } from "ink";
 import path from "path";
 import React from "react";
 import { getToolDisplayName } from "../tools.js";
+import { ColoredDiff } from "./ColoredDiff.js";
 
 interface ToolResultSummaryProps {
   toolName?: string;
@@ -12,13 +13,37 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   toolName,
   content,
 }) => {
+  if (!content) {
+    return (
+      <Box>
+        <Text color="gray">⎿ </Text>
+        <Text color="gray"> No output</Text>
+      </Box>
+    );
+  }
+
+  const lines = content.split("\n").length;
+  const chars = content.length;
+  const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
+
+  // Handle write_file with diff specially
+  if (toolName === "write_file" && content.includes("Diff:\n")) {
+    const diffSection = content.split("Diff:\n")[1];
+    if (diffSection) {
+      return (
+        <Box flexDirection="column">
+          <Box>
+            <Text color="gray">⎿ </Text>
+            <Text color="green"> File written successfully</Text>
+          </Box>
+          <ColoredDiff diffContent={diffSection} />
+        </Box>
+      );
+    }
+  }
+
+  // Handle all other cases with text summary
   const getSummary = () => {
-    if (!content) return "No output";
-
-    const lines = content.split("\n").length;
-    const chars = content.length;
-    const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
-
     // Convert absolute paths to relative paths from workspace root
     const formatPath = (filePath: string) => {
       if (path.isAbsolute(filePath)) {
@@ -41,7 +66,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         return `${displayName} tool output (${lines} lines)`;
 
       case "write_file":
-        return "File written successfully";
+        return content.includes("Successfully created file") ? "File created successfully" : "File written successfully";
 
       case "list_files":
         return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;

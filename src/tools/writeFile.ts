@@ -1,6 +1,19 @@
 import * as fs from "fs";
 import * as path from "path";
+import { createTwoFilesPatch } from "diff";
 import { Tool } from "./types.js";
+
+function generateDiff(oldContent: string, newContent: string, filePath: string): string {
+  return createTwoFilesPatch(
+    filePath,
+    filePath,
+    oldContent,
+    newContent,
+    undefined,
+    undefined,
+    { context: 3 }
+  );
+}
 
 export const writeFileTool: Tool = {
   name: "write_file",
@@ -25,8 +38,22 @@ export const writeFileTool: Tool = {
         fs.mkdirSync(dirPath, { recursive: true });
       }
 
+      // Read existing file content if it exists
+      let oldContent = '';
+      if (fs.existsSync(args.filepath)) {
+        oldContent = fs.readFileSync(args.filepath, "utf-8");
+      }
+
+      // Write new content
       fs.writeFileSync(args.filepath, args.content, "utf-8");
-      return `Successfully wrote to file: ${args.filepath}`;
+      
+      // Generate diff if file existed before
+      if (oldContent) {
+        const diff = generateDiff(oldContent, args.content, args.filepath);
+        return `Successfully wrote to file: ${args.filepath}\n\nDiff:\n${diff}`;
+      } else {
+        return `Successfully created file: ${args.filepath}`;
+      }
     } catch (error) {
       return `Error writing to file: ${error instanceof Error ? error.message : String(error)}`;
     }
