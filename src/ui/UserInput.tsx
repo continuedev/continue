@@ -3,6 +3,7 @@ import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
 import SlashCommandUI from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
+import { InputHistory } from "../util/inputHistory.js";
 
 interface UserInputProps {
   onSubmit: (message: string) => void;
@@ -20,6 +21,7 @@ const UserInput: React.FC<UserInputProps> = ({
   assistant,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
+  const [inputHistory] = useState(() => new InputHistory());
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
@@ -166,10 +168,37 @@ const UserInput: React.FC<UserInputProps> = ({
       }
     }
 
+    // Handle input history navigation (only when not in slash command mode)
+    if (!showSlashCommands) {
+      if (key.upArrow) {
+        const historyEntry = inputHistory.navigateUp(inputText);
+        if (historyEntry !== null) {
+          textBuffer.setText(historyEntry);
+          textBuffer.setCursor(historyEntry.length);
+          setInputText(historyEntry);
+          setCursorPosition(historyEntry.length);
+        }
+        return;
+      }
+
+      if (key.downArrow) {
+        const historyEntry = inputHistory.navigateDown(inputText);
+        if (historyEntry !== null) {
+          textBuffer.setText(historyEntry);
+          textBuffer.setCursor(historyEntry.length);
+          setInputText(historyEntry);
+          setCursorPosition(historyEntry.length);
+        }
+        return;
+      }
+    }
+
     // Handle Enter key (regular enter for submit)
     if (key.return && !key.shift) {
       if (textBuffer.text.trim() && !isWaitingForResponse) {
-        onSubmit(textBuffer.text.trim());
+        const submittedText = textBuffer.text.trim();
+        inputHistory.addEntry(submittedText);
+        onSubmit(submittedText);
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);
@@ -201,6 +230,9 @@ const UserInput: React.FC<UserInputProps> = ({
       setInputText(newText);
       setCursorPosition(newCursor);
       updateSlashCommandState(newText, newCursor);
+      
+      // Reset history navigation when user starts typing
+      inputHistory.resetNavigation();
     }
   });
 
