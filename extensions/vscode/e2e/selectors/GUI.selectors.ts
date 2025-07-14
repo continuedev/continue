@@ -100,11 +100,9 @@ export class GUISelectors {
   }
 
   public static getNthMessageDeleteButton(view: WebView, index: number) {
-    const adjustedIndex = 1 + index * 2;
-
     return SelectorUtils.getElementByDataTestId(
       view,
-      `delete-button-${adjustedIndex}`,
+      `delete-button-${index}`,
     );
   }
 
