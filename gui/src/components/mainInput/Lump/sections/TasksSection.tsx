@@ -23,7 +23,15 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
   });
 
   const handleRunTask = () => {
-    // TODO: Implement run task functionality
+    window.postMessage(
+      {
+        messageType: "userInput",
+        data: {
+          input: `Please execute the task with name "${task.name}" and mark it as completed when done.`,
+        },
+      },
+      "*",
+    );
   };
 
   const handleDeleteTask = () => {
@@ -208,7 +216,7 @@ export function TasksSection() {
         </div>
       </div>
       {tasks.length === 0 ? (
-        <div className="flex items-center justify-center py-0.5">
+        <div className="flex items-center justify-center pb-0.5">
           <span className="text-gray-400">No tasks found</span>
         </div>
       ) : (

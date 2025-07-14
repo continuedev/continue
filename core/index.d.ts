@@ -4,6 +4,7 @@ import {
   PromptTemplates,
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { TaskStatus } from "./context/taskList/TaskManager";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -1679,8 +1680,6 @@ type TaskMetadata = {
   createdAt: string;
   updatedAt: string;
 };
-
-type TaskStatusType = keyof typeof TaskStatus;
 
 export type TaskInfo = {
   id: string;

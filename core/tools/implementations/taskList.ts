@@ -1,6 +1,7 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
 import { getTaskManagerForSession } from "../../context/taskList";
+import { TaskStatus } from "../../context/taskList/TaskManager";
 
 export const taskListImpl: ToolImpl = async (args, extras) => {
   let contextItem: ContextItem;
@@ -47,12 +48,32 @@ export const taskListImpl: ToolImpl = async (args, extras) => {
       };
       break;
     }
-    case "start": {
+    case "runTask": {
+      manager.setTaskStatus(args.taskId, TaskStatus.Running);
+      const task = manager.getTaskById(args.taskId);
+      contextItem = {
+        name: "Task started",
+        description: `Task ID: ${task.id} started`,
+        content: JSON.stringify(task, null, 2),
+      };
+      break;
+    }
+    case "completeTask": {
+      manager.setTaskStatus(args.taskId, TaskStatus.Completed);
+      const task = manager.getTaskById(args.taskId);
+      contextItem = {
+        name: "Task completed",
+        description: `Task ID: ${args.taskId} completed`,
+        content: JSON.stringify(task, null, 2),
+      };
+      break;
+    }
+    case "runAllTasks": {
       const task = manager.next();
       if (task) {
         contextItem = {
           name: "Task started",
-          description: "Task processing started",
+          description: `Task ID: ${task.id} started`,
           content: JSON.stringify(
             {
               ...task,

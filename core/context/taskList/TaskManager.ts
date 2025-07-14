@@ -1,13 +1,13 @@
 import { v4 as uuidv4 } from "uuid";
-import { TaskInfo, TaskStatusType } from "../..";
+import { TaskInfo } from "../..";
 import type { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import type { IMessenger } from "../../protocol/messenger";
 
-const TaskStatus: Record<TaskStatusType, string> = {
-  Pending: "pending",
-  Running: "running",
-  Completed: "completed",
-};
+export enum TaskStatus {
+  Pending = "pending",
+  Running = "running",
+  Completed = "completed",
+}
 
 export interface TaskEvent {
   type: "add" | "update" | "remove";
@@ -86,6 +86,23 @@ export class TaskManager {
 
   list() {
     return Array.from(this.taskMap.values());
+  }
+
+  setTaskStatus(taskId: TaskInfo["id"], status: TaskStatus) {
+    if (!this.taskMap.has(taskId)) {
+      throw new Error(`Task with id "${taskId}" not found`);
+    }
+    this.taskMap.set(taskId, {
+      ...this.taskMap.get(taskId)!,
+      status,
+    });
+  }
+
+  getTaskById(taskId: TaskInfo["id"]) {
+    if (!this.taskMap.has(taskId)) {
+      throw new Error(`Task with id "${taskId}" not found`);
+    }
+    return this.taskMap.get(taskId)!;
   }
 
   next() {
