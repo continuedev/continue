@@ -414,5 +414,36 @@ describe("sessionSlice streamUpdate", () => {
       expect(newState.history).toHaveLength(2);
       expect(newState.history[1].message.content).toBe("Hello world!");
     });
+
+    it("should handle basic tool call streaming", () => {
+      const initialState = createInitialState();
+      const toolCallId = "call_123";
+      
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "",
+            toolCalls: [
+              {
+                id: toolCallId,
+                type: "function" as const,
+                function: {
+                  name: "test_tool",
+                  arguments: '{"arg":"value"}',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].toolCallStates).toHaveLength(1);
+    });
   });
 });

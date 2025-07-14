@@ -22,6 +22,7 @@ import {
   ThinkingChatMessage,
   Tool,
   ToolCallState,
+  ToolCallDelta,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -72,6 +73,63 @@ export function handleToolCallsInMessage(
 }
 
 /**
+ * Applies a single tool call delta to the tool call states array.
+ * 
+ * This function handles the core logic for OpenAI-style tool call streaming where:
+ * - Initial tool calls come with full details (ID, name, arguments)
+ * - Subsequent argument fragments come without IDs and need to update the most recent tool call
+ * - Multiple parallel tool calls can be streamed simultaneously
+ * 
+ * @param toolCallDelta - The incoming tool call delta from the LLM stream
+ * @param toolCallStates - Array of existing tool call states (modified in place)
+ */
+function applyToolCallDelta(
+  toolCallDelta: ToolCallDelta,
+  toolCallStates: ToolCallState[],
+): void {
+  // Find existing state by matching toolCallId - this ensures we update
+  // the correct tool call even when multiple tool calls are being streamed
+  let existingStateIndex = -1;
+  
+  if (toolCallDelta.id) {
+    // Tool call has an ID - find by exact match
+    // This handles: new tool calls or explicit updates to existing ones
+    existingStateIndex = toolCallStates.findIndex(
+      (state) => state.toolCallId === toolCallDelta.id
+    );
+  } else {
+    // No ID in delta (common in OpenAI streaming fragments)
+    // Strategy: Update the most recently added tool call that's still being generated
+    // This handles the pattern: initial tool call with ID, then fragments without ID
+    existingStateIndex = toolCallStates.length - 1;
+    
+    // Ensure we have at least one tool call to update
+    if (existingStateIndex < 0) {
+      existingStateIndex = -1; // Will create new tool call
+    }
+  }
+
+  const existingState =
+    existingStateIndex >= 0
+      ? toolCallStates[existingStateIndex]
+      : undefined;
+
+  // Apply the delta to create an updated state (either updating existing or creating new)
+  const updatedState = addToolCallDeltaToState(
+    toolCallDelta,
+    existingState,
+  );
+
+  if (existingStateIndex >= 0) {
+    // Update existing tool call state in place
+    toolCallStates[existingStateIndex] = updatedState;
+  } else {
+    // Add new tool call state for a newly discovered tool call
+    toolCallStates.push(updatedState);
+  }
+}
+
+/**
  * Handles incremental updates to tool calls during streaming responses.
  * This function processes streaming deltas for tool calls, updating existing
  * tool call states or creating new ones as needed. It uses ID-based matching
@@ -94,32 +152,9 @@ export function handleStreamingToolCallUpdates(
     const updatedToolCallStates: ToolCallState[] = [...existingToolCallStates];
 
     // Process each incoming tool call delta, matching by ID to update the correct state
-    for (const toolCallDelta of message.toolCalls) {
-      // Find existing state by matching toolCallId - this ensures we update
-      // the correct tool call even when multiple tool calls are being streamed
-      const existingStateIndex = updatedToolCallStates.findIndex(
-        (state) => state.toolCallId === toolCallDelta.id,
-      );
-
-      const existingState =
-        existingStateIndex >= 0
-          ? updatedToolCallStates[existingStateIndex]
-          : undefined;
-
-      // Apply the delta to create an updated state (either updating existing or creating new)
-      const updatedState = addToolCallDeltaToState(
-        toolCallDelta,
-        existingState,
-      );
-
-      if (existingStateIndex >= 0) {
-        // Update existing tool call state in place
-        updatedToolCallStates[existingStateIndex] = updatedState;
-      } else {
-        // Add new tool call state for a newly discovered tool call
-        updatedToolCallStates.push(updatedState);
-      }
-    }
+    message.toolCalls.forEach((toolCallDelta) => {
+      applyToolCallDelta(toolCallDelta, updatedToolCallStates);
+    });
 
     // Replace the entire tool call states array with the updated version
     lastItem.toolCallStates = updatedToolCallStates;
