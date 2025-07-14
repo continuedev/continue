@@ -33,7 +33,7 @@ export function HelpCenterSection() {
           description="Learn how to configure and use Granite.Code"
           Icon={ArrowTopRightOnSquareIcon}
           onClick={() =>
-            ideMessenger.post("openUrl", "https://granitecode.ai/")
+            ideMessenger.post("openUrl", "https://docs.granitecode.ai/")
           }
         />
 
