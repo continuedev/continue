@@ -13,8 +13,7 @@
       "@semantic-release/npm",
       {
         "npmPublish": true,
-        "pkgRoot": ".",
-        "tarballDir": "dist"
+        "pkgRoot": "."
       }
     ],
     [
@@ -24,16 +23,6 @@
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
-    [
-      "@semantic-release/github",
-      {
-        "assets": [
-          {
-            "path": "dist/*.tgz",
-            "label": "Distribution"
-          }
-        ]
-      }
-    ]
+    "@semantic-release/github"
   ]
 }
