@@ -239,7 +239,9 @@ describe("Retry Functionality", () => {
         testClass.testMethod = descriptor.value;
       }
 
-      await expect(testClass.testMethod()).rejects.toThrow("Last decorator error");
+      await expect(testClass.testMethod()).rejects.toThrow(
+        "Last decorator error",
+      );
       expect(testClass.attempts).toBe(3);
     });
   });
