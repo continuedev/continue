@@ -38,13 +38,9 @@ export default function StepContainer(props: StepContainerProps) {
   );
   const uiConfig = useAppSelector(selectUIConfig);
 
-  const isUserOrSysOrLastMsg =
-    historyItemAfterThis?.message.role === "user" ||
-    historyItemAfterThis?.message.role === "system" ||
-    !historyItemAfterThis;
-
-  const showResponseActions =
-    isUserOrSysOrLastMsg && !(isStreaming && props.isLast);
+  const isAssistantOrThinkingMsg =
+    historyItemAfterThis?.message.role === "assistant" ||
+    historyItemAfterThis?.message.role === "thinking";
 
   useEffect(() => {
     if (!isStreaming) {
@@ -106,9 +102,9 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </ContentDiv>
       {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete */}
-      {isUserOrSysOrLastMsg && (
+      {isAssistantOrThinkingMsg && props.isLast && (
         <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
-          {showResponseActions && (
+          {!isStreaming && (
             <ResponseActions
               isTruncated={isTruncated}
               onDelete={onDelete}
