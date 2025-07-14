@@ -128,15 +128,21 @@ const TUIChat: React.FC<TUIChatProps> = ({
           ]);
         },
         onToolResult: (result: string, toolName: string) => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: result,
-              messageType: "tool-result",
-              toolName,
-            },
-          ]);
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            // Find the last tool-start message for this tool and replace it
+            for (let i = newMessages.length - 1; i >= 0; i--) {
+              if (newMessages[i].messageType === "tool-start" && newMessages[i].toolName === toolName) {
+                newMessages[i] = {
+                  ...newMessages[i],
+                  content: result,
+                  messageType: "tool-result",
+                };
+                break;
+              }
+            }
+            return newMessages;
+          });
         },
         onToolError: (error: string, toolName?: string) => {
           setMessages((prev) => [
@@ -212,10 +218,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
         case "tool-start":
           return (
             <Box key={index} marginBottom={1} paddingLeft={2}>
-              <Text color="yellow" bold>
-                🔧{" "}
+              <Text color="white">
+                ○ {message.content}
               </Text>
-              <Text color="yellow">{message.content}</Text>
             </Box>
           );
 
@@ -228,10 +233,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
               flexDirection="column"
             >
               <Box>
-                <Text color="green" bold>
-                  ✓{" "}
+                <Text color="white">
+                  ✓ Completed {message.toolName}
                 </Text>
-                <Text color="green">Tool completed</Text>
               </Box>
               <Box marginLeft={2} paddingTop={1}>
                 <ToolResultSummary 
