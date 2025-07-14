@@ -294,7 +294,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 <Text color="green">●</Text>
                 <Text> {message.content}</Text>
               </Box>
-              <Box marginLeft={2} paddingTop={1}>
+              <Box marginLeft={2}>
                 <ToolResultSummary
                   toolName={message.toolName}
                   content={message.toolResult || ""}
@@ -327,9 +327,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
     return (
       <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "green" : "blue"}>
-          ●
-        </Text>
+        <Text color={isUser ? "green" : "blue"}>●</Text>
         <Text> {message.content}</Text>
         {message.isStreaming && <Text color="gray">▋</Text>}
       </Box>

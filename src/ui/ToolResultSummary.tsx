@@ -1,4 +1,4 @@
-import { Text, Box } from "ink";
+import { Box, Text } from "ink";
 import React from "react";
 
 interface ToolResultSummaryProps {
@@ -13,7 +13,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   const getSummary = () => {
     if (!content) return "No output";
 
-    const lines = content.split('\n').length;
+    const lines = content.split("\n").length;
     const chars = content.length;
 
     // Use exact tool name matching
@@ -32,10 +32,10 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         return "File written successfully";
 
       case "list_files":
-        return `Listed ${lines} ${lines === 1 ? 'item' : 'items'}`;
+        return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;
 
       case "search_code":
-        return `Found ${lines} ${lines === 1 ? 'match' : 'matches'}`;
+        return `Found ${lines} ${lines === 1 ? "match" : "matches"}`;
 
       case "run_terminal_command":
         return `Command output (${lines} lines)`;
@@ -58,13 +58,13 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
       case "Glob":
         const fileCount = lines;
-        return `Found ${fileCount} ${fileCount === 1 ? 'file' : 'files'}`;
+        return `Found ${fileCount} ${fileCount === 1 ? "file" : "files"}`;
 
       case "Grep":
-        return `Found ${lines} ${lines === 1 ? 'match' : 'matches'}`;
+        return `Found ${lines} ${lines === 1 ? "match" : "matches"}`;
 
       case "LS":
-        return `Listed ${lines} ${lines === 1 ? 'item' : 'items'}`;
+        return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;
 
       case "Write":
         return "File written successfully";
@@ -94,15 +94,19 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       default:
         // Handle MCP tools or unknown tools
         if (toolName?.startsWith("mcp__")) {
-          const mcpToolName = toolName.replace("mcp__", "").replace("ide__", "");
+          const mcpToolName = toolName
+            .replace("mcp__", "")
+            .replace("ide__", "");
           return `${mcpToolName} tool output (${lines} lines)`;
         }
 
         // Fallback for unknown tools
         if (chars > 1000) {
-          return `${toolName || 'Tool'} output: ${lines} lines, ${chars} characters`;
+          return `${
+            toolName || "Tool"
+          } output: ${lines} lines, ${chars} characters`;
         } else if (lines > 10) {
-          return `${toolName || 'Tool'} output: ${lines} lines`;
+          return `${toolName || "Tool"} output: ${lines} lines`;
         } else {
           return content.slice(0, 100) + (content.length > 100 ? "..." : "");
         }
@@ -111,7 +115,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
   return (
     <Box>
-      <Text color="gray">{getSummary()}</Text>
+      <Text color="gray">⎿ </Text>
+      <Text color="gray"> {getSummary()}</Text>
     </Box>
   );
 };
