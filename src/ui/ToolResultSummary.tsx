@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import React from "react";
 import { getToolDisplayName } from "../tools.js";
+import { ColoredDiff } from "./ColoredDiff.js";
 
 interface ToolResultSummaryProps {
   toolName?: string;
@@ -11,14 +12,37 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   toolName,
   content,
 }) => {
+  if (!content) {
+    return (
+      <Box>
+        <Text color="gray">⎿ </Text>
+        <Text color="gray"> No output</Text>
+      </Box>
+    );
+  }
+
+  const lines = content.split("\n").length;
+  const chars = content.length;
+  const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
+
+  // Handle write_file with diff specially
+  if (toolName === "write_file" && content.includes("Diff:\n")) {
+    const diffSection = content.split("Diff:\n")[1];
+    if (diffSection) {
+      return (
+        <Box flexDirection="column">
+          <Box>
+            <Text color="gray">⎿ </Text>
+            <Text color="green"> File written successfully</Text>
+          </Box>
+          <ColoredDiff diffContent={diffSection} />
+        </Box>
+      );
+    }
+  }
+
+  // Handle all other cases with text summary
   const getSummary = () => {
-    if (!content) return "No output";
-
-    const lines = content.split("\n").length;
-    const chars = content.length;
-    const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
-
-    // Handle specific tool output formatting
     switch (toolName) {
       case "read_file":
         // Try to extract file path from content if it contains line numbers
@@ -30,13 +54,6 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         return `${displayName} tool output (${lines} lines)`;
 
       case "write_file":
-        // For write_file, we want to display the diff content if it exists
-        if (content.includes("Diff:\n")) {
-          const diffSection = content.split("Diff:\n")[1];
-          if (diffSection) {
-            return `File written successfully\n${diffSection}`;
-          }
-        }
         return content.includes("Successfully created file") ? "File created successfully" : "File written successfully";
 
       case "list_files":
