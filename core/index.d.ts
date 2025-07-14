@@ -167,6 +167,11 @@ export interface ModelInstaller {
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
+export type ContextIndexingType =
+  | "chunk"
+  | "embeddings"
+  | "fullTextSearch"
+  | "codeSnippets";
 
 export interface ContextProviderDescription {
   title: ContextProviderName;
@@ -174,7 +179,7 @@ export interface ContextProviderDescription {
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
-  dependsOnIndexing?: boolean;
+  dependsOnIndexing?: ContextIndexingType[];
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
