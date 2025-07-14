@@ -116,7 +116,6 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
 
     // Sync remote config from server
     private fun syncRemoteConfig() {
-        // todo: test this feature manually before publishing PR (i don't have access)
         val remoteServerUrl = state.remoteConfigServerUrl
         val token = state.userToken
         if (remoteServerUrl != null && remoteServerUrl.isNotEmpty()) {
