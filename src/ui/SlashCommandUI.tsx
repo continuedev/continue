@@ -61,10 +61,17 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   const allCommands = getSlashCommands();
 
   // Filter commands based on the current filter
-  const filteredCommands = allCommands.filter((cmd) =>
-    cmd.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filteredCommands = allCommands
+    .filter((cmd) => cmd.name.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a, b) => {
+      const aStartsWith = a.name.toLowerCase().startsWith(filter.toLowerCase());
+      const bStartsWith = b.name.toLowerCase().startsWith(filter.toLowerCase());
 
+      if (aStartsWith && !bStartsWith) return -1;
+      if (!aStartsWith && bStartsWith) return 1;
+
+      return a.name.localeCompare(b.name);
+    });
   if (filteredCommands.length === 0) {
     return (
       <Box
