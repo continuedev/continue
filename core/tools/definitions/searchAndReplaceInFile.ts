@@ -6,6 +6,10 @@ export interface SearchAndReplaceInFileArgs {
   diff: string;
 }
 
+// Currently unsupported and filtered out in `gui/src/redux/slices/sessionSlice.ts`
+export const NO_PARALLEL_TOOL_CALLING_INSRUCTION =
+  "Note this tool CANNOT be called in parallel.";
+
 /**
  * This tool is in an experimental state.
  * Our starting point is heavily inspired by Cline's `replace_in_file` tool: https://github.com/cline/cline/blob/2709ccefcddc616e89a70962f017bcbbca1f17bf/src/core/prompts/system.ts#L87-L121
@@ -21,8 +25,7 @@ export const searchAndReplaceInFileTool: Tool = {
   isInstant: false,
   function: {
     name: BuiltInToolNames.SearchAndReplaceInFile,
-    description:
-      "Request to replace sections of content in an existing file using SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file.",
+    description: `Request to replace sections of content in an existing file using SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`,
     parameters: {
       type: "object",
       required: ["filepath", "diff"],

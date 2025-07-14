@@ -24,6 +24,7 @@ import {
   ToolCallState,
   ToolCallDelta,
 } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
   renderChatMessage,
@@ -37,6 +38,31 @@ import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
+
+/**
+ * Helper function to filter out duplicate edit/search-replace tool calls.
+ * Only keeps the first occurrence of edit tools.
+ * 
+ * We don't support multiple parallel apply calls - see tool definitions for 
+ * instructions we provide to models to prevent this behavior.
+ */
+function filterMultipleEditToolCalls(toolCalls: ToolCallDelta[]): ToolCallDelta[] {
+  const editToolNames = [BuiltInToolNames.EditExistingFile, BuiltInToolNames.SearchAndReplaceInFile];
+  let hasSeenEditTool = false;
+  
+  return toolCalls.filter(toolCall => {
+    const isEditTool = editToolNames.includes(toolCall.function?.name as any);
+    
+    if (isEditTool) {
+      if (hasSeenEditTool) {
+        return false; // Skip this duplicate edit tool
+      }
+      hasSeenEditTool = true;
+    }
+    
+    return true;
+  });
+}
 
 /**
  * Initializes tool call states for a new message containing tool calls.
@@ -55,9 +81,12 @@ export function handleToolCallsInMessage(
     (message.role === "assistant" || message.role === "thinking") &&
     message.toolCalls?.length
   ) {
-    // Initialize tool call states for each tool call in the message
+    // Filter out duplicate edit/search-replace tool calls - only keep the first one
+    const filteredToolCalls = filterMultipleEditToolCalls(message.toolCalls);
+
+    // Initialize tool call states for each filtered tool call in the message
     // Each tool call gets its own state to track generation/execution progress
-    lastItem.toolCallStates = message.toolCalls.map((toolCallDelta) =>
+    lastItem.toolCallStates = filteredToolCalls.map((toolCallDelta) =>
       addToolCallDeltaToState(toolCallDelta, undefined),
     );
 
@@ -151,8 +180,11 @@ export function handleStreamingToolCallUpdates(
     const existingToolCallStates = lastItem.toolCallStates || [];
     const updatedToolCallStates: ToolCallState[] = [...existingToolCallStates];
 
-    // Process each incoming tool call delta, matching by ID to update the correct state
-    message.toolCalls.forEach((toolCallDelta) => {
+    // Filter out duplicate edit/search-replace tool calls - only keep the first one
+    const filteredToolCalls = filterMultipleEditToolCalls(message.toolCalls);
+
+    // Process each filtered tool call delta, matching by ID to update the correct state
+    filteredToolCalls.forEach((toolCallDelta) => {
       applyToolCallDelta(toolCallDelta, updatedToolCallStates);
     });
 
