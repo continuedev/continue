@@ -9,7 +9,8 @@ export async function startTUIChat(
   assistant: ContinueClient["assistant"],
   client: ContinueClient["client"],
   mcpService: MCPService,
-  initialPrompt?: string
+  initialPrompt?: string,
+  resume?: boolean
 ) {
   // Show intro message before starting TUI
   introMessage(assistant, mcpService);
@@ -20,6 +21,7 @@ export async function startTUIChat(
       assistant,
       client,
       initialPrompt,
+      resume,
     })
   );
 
