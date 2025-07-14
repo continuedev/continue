@@ -157,13 +157,13 @@ describe("GUI Test", () => {
       );
 
       GUISelectors.getThreadMessageByText(view, llmResponse1);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 3)).click();
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
       GUISelectors.getThreadMessageByText(view, llmResponse0);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
+      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse0),
       );
