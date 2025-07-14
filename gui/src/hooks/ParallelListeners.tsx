@@ -4,10 +4,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import {
-  selectCurrentToolCall,
-  selectCurrentToolCallApplyState,
-} from "../redux/selectors/selectToolCalls";
 import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
@@ -55,13 +51,9 @@ function ParallelListeners() {
     (store) => store.profiles.selectedProfileId,
   );
   const hasDoneInitialConfigLoad = useRef(false);
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
-  );
   const autoAcceptEditToolDiffs = useAppSelector(
     (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
   );
-  const currentToolCall = useAppSelector(selectCurrentToolCall);
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
 
@@ -274,11 +266,8 @@ function ParallelListeners() {
         // chat or agent
         dispatch(updateApplyState(state));
 
-        // Handle apply status updates that are associated with current tool call
-        if (
-          currentToolCallApplyState &&
-          currentToolCallApplyState.streamId === state.streamId
-        ) {
+        // Handle apply status updates - use toolCallId from event payload
+        if (state.toolCallId) {
           if (state.status === "done" && autoAcceptEditToolDiffs) {
             ideMessenger.post("acceptDiff", {
               streamId: state.streamId,
@@ -286,15 +275,20 @@ function ParallelListeners() {
             });
           }
           if (state.status === "closed") {
-            if (currentToolCall?.status !== "canceled") {
+            // Find the tool call to check if it was canceled
+            const toolCallState = findToolCallById(
+              store.getState().session.history,
+              state.toolCallId,
+            );
+            if (toolCallState && toolCallState.status !== "canceled") {
               dispatch(
                 acceptToolCall({
-                  toolCallId: currentToolCallApplyState.toolCallId!,
+                  toolCallId: state.toolCallId,
                 }),
               );
               void dispatch(
                 streamResponseAfterToolCall({
-                  toolCallId: currentToolCallApplyState.toolCallId!,
+                  toolCallId: state.toolCallId,
                 }),
               );
             }
@@ -308,12 +302,7 @@ function ParallelListeners() {
         }
       }
     },
-    [
-      currentToolCall,
-      currentToolCallApplyState,
-      autoAcceptEditToolDiffs,
-      ideMessenger,
-    ],
+    [autoAcceptEditToolDiffs, ideMessenger],
   );
 
   useEffect(() => {

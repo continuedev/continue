@@ -3,8 +3,8 @@ import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
-  selectCurrentToolCall,
   selectFirstPendingToolCall,
+  selectPendingToolCalls,
 } from "../../../../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callToolById } from "../../../../redux/thunks/callToolById";
@@ -42,7 +42,7 @@ export function LumpToolbar() {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const isInEdit = useAppSelector((state) => state.session.isInEdit);
   const jetbrains = isJetBrains();
-  const toolCallState = useSelector(selectCurrentToolCall);
+  const pendingToolCalls = useAppSelector(selectPendingToolCalls);
   const firstPendingToolCall = useAppSelector(selectFirstPendingToolCall);
   const editApplyState = useAppSelector(
     (state) => state.editModeState.applyState,
@@ -107,7 +107,7 @@ export function LumpToolbar() {
     return <StreamingToolbar />;
   }
 
-  if (toolCallState?.status === "generated") {
+  if (pendingToolCalls.length > 0) {
     return <PendingToolCallToolbar />;
   }
 

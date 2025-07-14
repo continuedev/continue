@@ -4,6 +4,7 @@ import { RootState } from "../store";
 import {
   findAllCurToolCalls,
   findAllCurToolCallsByStatus,
+  findToolCallById,
   hasCurrentToolCalls,
 } from "../util";
 
@@ -26,12 +27,6 @@ export const selectToolCallsByStatus = createSelector(
   (history, status) => findAllCurToolCallsByStatus(history, status),
 );
 
-// Convenience selectors for single tool calls
-export const selectCurrentToolCall = createSelector(
-  selectCurrentToolCalls,
-  (toolCalls) => toolCalls[0] || undefined,
-);
-
 export const selectFirstPendingToolCall = createSelector(
   (store: RootState) => store.session.history,
   (history) => {
@@ -40,20 +35,22 @@ export const selectFirstPendingToolCall = createSelector(
   },
 );
 
-// Apply state selectors
-export const selectCurrentToolCallApplyState = createSelector(
+// ID-based selectors for specific tool calls
+export const selectToolCallById = createSelector(
   [
-    selectCurrentToolCalls,
-    (store: RootState) => store.session.codeBlockApplyStates,
+    (store: RootState) => store.session.history,
+    (_store: RootState, toolCallId: string) => toolCallId,
   ],
-  (toolCalls, applyStates) => {
-    if (toolCalls.length === 0) {
-      return undefined;
-    }
-    const firstToolCall = toolCalls[0];
-    return applyStates.states.find(
-      (state) => state.toolCallId === firstToolCall.toolCallId,
-    );
+  (history, toolCallId) => findToolCallById(history, toolCallId),
+);
+
+export const selectApplyStateByToolCallId = createSelector(
+  [
+    (store: RootState) => store.session.codeBlockApplyStates,
+    (_store: RootState, toolCallId: string) => toolCallId,
+  ],
+  (applyStates, toolCallId) => {
+    return applyStates.states.find((state) => state.toolCallId === toolCallId);
   },
 );
 

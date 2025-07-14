@@ -28,8 +28,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
-  selectCurrentToolCall,
-  selectCurrentToolCallApplyState,
+  selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
 import {
   cancelToolCall,
@@ -141,9 +140,11 @@ export function Chat() {
     isStreaming,
   );
 
-  const currentToolCallState = useAppSelector(selectCurrentToolCall);
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
+  const pendingToolCalls = useAppSelector(selectPendingToolCalls);
+  const pendingApplyStates = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.states.filter(
+      (applyState) => applyState.status === "done"
+    )
   );
 
   const sendInput = useCallback(
@@ -153,19 +154,21 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (currentToolCallState) {
+      // Cancel all pending tool calls
+      pendingToolCalls.forEach((toolCallState) => {
         dispatch(
           cancelToolCall({
-            toolCallId: currentToolCallState.toolCallId,
+            toolCallId: toolCallState.toolCallId,
           }),
         );
-      }
-      if (
-        currentToolCallApplyState &&
-        currentToolCallApplyState.status !== "closed"
-      ) {
-        ideMessenger.post("rejectDiff", currentToolCallApplyState);
-      }
+      });
+      
+      // Reject all pending apply states
+      pendingApplyStates.forEach((applyState) => {
+        if (applyState.status !== "closed") {
+          ideMessenger.post("rejectDiff", applyState);
+        }
+      });
       const model = isInEdit
         ? (selectedModels?.edit ?? selectedModels?.chat)
         : selectedModels?.chat;
@@ -222,8 +225,8 @@ export function Chat() {
       mode,
       isInEdit,
       codeToEdit,
-      currentToolCallState,
-      currentToolCallApplyState,
+      pendingToolCalls,
+      pendingApplyStates,
     ],
   );
 

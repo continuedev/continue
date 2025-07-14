@@ -2,8 +2,7 @@ import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { selectCurrentToolCallApplyState } from "../redux/selectors/selectToolCalls";
+import { useAppDispatch } from "../redux/hooks";
 import { cancelToolCall } from "../redux/slices/sessionSlice";
 import { getMetaKeyLabel } from "../util";
 import { ToolTip } from "./gui/Tooltip";
@@ -23,21 +22,22 @@ export default function AcceptRejectAllButtons({
     (state) => state.status === "done",
   );
   const ideMessenger = useContext(IdeMessengerContext);
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
-  );
   const dispatch = useAppDispatch();
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
-    if (
-      status === "rejectDiff" &&
-      currentToolCallApplyState?.status === "done"
-    ) {
-      dispatch(
-        cancelToolCall({
-          toolCallId: currentToolCallApplyState.toolCallId!,
-        }),
-      );
+    // For reject operations, cancel all tool calls associated with pending apply states
+    if (status === "rejectDiff") {
+      for (const applyState of pendingApplyStates) {
+        if (applyState.toolCallId && applyState.status === "done") {
+          dispatch(
+            cancelToolCall({
+              toolCallId: applyState.toolCallId,
+            }),
+          );
+        }
+      }
     }
+
+    // Process all pending apply states
     for (const { filepath = "", streamId } of pendingApplyStates) {
       ideMessenger.post(status, {
         filepath,

@@ -8,11 +8,8 @@ export function GeneratingIndicator({
   testId?: string;
 }) {
   return (
-    <div
-      className="text-description flex items-center text-xs"
-      data-testid={testId}
-    >
-      <span>{text}</span>
+    <div className="flex items-center" data-testid={testId}>
+      <span className="text-description text-xs">{text}</span>
       <AnimatedEllipsis />
     </div>
   );

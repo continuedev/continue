@@ -35,10 +35,10 @@ async function handleToolCallExecution(
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
   const allToolCallStates = selectCurrentToolCalls(newState);
-  
+
   // Only process tool calls that are in "generating" status (newly created during this streaming session)
   const toolCallStates = allToolCallStates.filter(
-    (toolCallState) => toolCallState.status === "generating"
+    (toolCallState) => toolCallState.status === "generating",
   );
 
   // If no generating tool calls, nothing to process
