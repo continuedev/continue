@@ -32,16 +32,14 @@ export class GUISelectors {
   }
 
   public static getAcceptToolCallButton(view: WebView) {
-    return SelectorUtils.getElementByDataTestId(
-      view,
-      "accept-tool-call-button",
+    return view.findWebElement(
+      By.css("[data-testid*='accept-tool-call-button']"),
     );
   }
 
   public static getRejectToolCallButton(view: WebView) {
-    return SelectorUtils.getElementByDataTestId(
-      view,
-      "reject-tool-call-button",
+    return view.findWebElement(
+      By.css("[data-testid*='reject-tool-call-button']"),
     );
   }
 
