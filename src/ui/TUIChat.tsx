@@ -1,6 +1,7 @@
 import { ContinueClient } from "@continuedev/sdk";
 import { Box, Text, useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import path from "path";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
@@ -123,36 +124,19 @@ const TUIChat: React.FC<TUIChatProps> = ({
       // Create callbacks to handle streaming updates
       const streamCallbacks: StreamCallbacks = {
         onContent: (content: string) => {
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            
-            // Find or create current streaming message
-            if (!currentStreamingMessage) {
-              currentStreamingMessage = { role: "assistant", content: "", isStreaming: true };
-              newMessages.push(currentStreamingMessage);
-            }
-            
-            // Update the streaming message
-            const streamingIndex = newMessages.indexOf(currentStreamingMessage);
-            if (streamingIndex >= 0) {
-              newMessages[streamingIndex].content += content;
-            }
-            
-            return newMessages;
-          });
+          // Buffer content but don't update UI until complete or tool call
+          if (!currentStreamingMessage) {
+            currentStreamingMessage = { role: "assistant", content: "", isStreaming: true };
+          }
+          currentStreamingMessage.content += content;
         },
         onContentComplete: (content: string) => {
-          // Finalize the current streaming message
+          // Display the complete message
           if (currentStreamingMessage) {
-            setMessages((prev) => {
-              const newMessages = [...prev];
-              const streamingIndex = newMessages.indexOf(currentStreamingMessage!);
-              if (streamingIndex >= 0) {
-                newMessages[streamingIndex].isStreaming = false;
-                newMessages[streamingIndex].content = content;
-              }
-              return newMessages;
-            });
+            setMessages((prev) => [
+              ...prev,
+              { role: "assistant", content: content, isStreaming: false }
+            ]);
             currentStreamingMessage = null;
           }
         },
@@ -163,8 +147,29 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
             // Get the first parameter value for display
             const firstValue = Object.values(args)[0];
-            return `${displayName}(${firstValue || ""})`;
+            
+            // Convert absolute paths to relative paths from workspace root
+            const formatPath = (value: any) => {
+              if (typeof value === "string" && path.isAbsolute(value)) {
+                const workspaceRoot = process.cwd();
+                const relativePath = path.relative(workspaceRoot, value);
+                return relativePath || value;
+              }
+              return value;
+            };
+
+            return `${displayName}(${formatPath(firstValue) || ""})`;
           };
+
+          // Display buffered content when tool starts
+          if (currentStreamingMessage && currentStreamingMessage.content) {
+            const messageContent = currentStreamingMessage.content;
+            setMessages((prev) => [
+              ...prev,
+              { role: "assistant", content: messageContent, isStreaming: false }
+            ]);
+            currentStreamingMessage = null;
+          }
 
           setMessages((prev) => [
             ...prev,
@@ -218,15 +223,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
       );
 
       // Finalize any remaining streaming message
-      if (currentStreamingMessage) {
-        setMessages((prev) => {
-          const newMessages = [...prev];
-          const streamingIndex = newMessages.indexOf(currentStreamingMessage!);
-          if (streamingIndex >= 0) {
-            newMessages[streamingIndex].isStreaming = false;
-          }
-          return newMessages;
-        });
+      if (currentStreamingMessage && (currentStreamingMessage as any).content) {
+        const messageContent = (currentStreamingMessage as any).content;
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: messageContent, isStreaming: false }
+        ]);
       }
     } catch (error: any) {
       const errorMessage = `Error: ${error.message}`;

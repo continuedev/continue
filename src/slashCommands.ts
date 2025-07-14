@@ -28,21 +28,11 @@ export function handleSlashCommands(
           "/login - Authenticate with your account",
           "/logout - Sign out of your current session",
           "/whoami - Check who you're currently logged in as",
-          "/models - List available AI models",
           ...(assistant.prompts?.map(
             (prompt) => `/${prompt?.name} - ${prompt?.description}`
           ) ?? []),
         ].join("\n");
         return { output: helpMessage };
-      case "models":
-        return {
-          output: `Available models:\n• ${
-            assistant.models?.map((model) => model?.name)?.join("\n• ") ||
-            "None"
-          }`,
-        };
-      case "clear":
-        return { clear: true, output: "Chat history cleared." };
       case "exit":
         return { exit: true, output: "Goodbye!" };
       case "login":

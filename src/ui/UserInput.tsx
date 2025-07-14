@@ -38,7 +38,6 @@ const UserInput: React.FC<UserInputProps> = ({
         name: "whoami",
         description: "Check who you're currently logged in as",
       },
-      { name: "models", description: "List available AI models" },
     ];
 
     const assistantCommands =
