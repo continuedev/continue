@@ -106,36 +106,19 @@ const TUIChat: React.FC<TUIChatProps> = ({
       // Create callbacks to handle streaming updates
       const streamCallbacks: StreamCallbacks = {
         onContent: (content: string) => {
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            
-            // Find or create current streaming message
-            if (!currentStreamingMessage) {
-              currentStreamingMessage = { role: "assistant", content: "", isStreaming: true };
-              newMessages.push(currentStreamingMessage);
-            }
-            
-            // Update the streaming message
-            const streamingIndex = newMessages.indexOf(currentStreamingMessage);
-            if (streamingIndex >= 0) {
-              newMessages[streamingIndex].content += content;
-            }
-            
-            return newMessages;
-          });
+          // Buffer content but don't update UI until complete or tool call
+          if (!currentStreamingMessage) {
+            currentStreamingMessage = { role: "assistant", content: "", isStreaming: true };
+          }
+          currentStreamingMessage.content += content;
         },
         onContentComplete: (content: string) => {
-          // Finalize the current streaming message
+          // Display the complete message
           if (currentStreamingMessage) {
-            setMessages((prev) => {
-              const newMessages = [...prev];
-              const streamingIndex = newMessages.indexOf(currentStreamingMessage!);
-              if (streamingIndex >= 0) {
-                newMessages[streamingIndex].isStreaming = false;
-                newMessages[streamingIndex].content = content;
-              }
-              return newMessages;
-            });
+            setMessages((prev) => [
+              ...prev,
+              { role: "assistant", content: content, isStreaming: false }
+            ]);
             currentStreamingMessage = null;
           }
         },
@@ -159,6 +142,16 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
             return `${displayName}(${formatPath(firstValue) || ""})`;
           };
+
+          // Display buffered content when tool starts
+          if (currentStreamingMessage && currentStreamingMessage.content) {
+            const messageContent = currentStreamingMessage.content;
+            setMessages((prev) => [
+              ...prev,
+              { role: "assistant", content: messageContent, isStreaming: false }
+            ]);
+            currentStreamingMessage = null;
+          }
 
           setMessages((prev) => [
             ...prev,
@@ -212,15 +205,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
       );
 
       // Finalize any remaining streaming message
-      if (currentStreamingMessage) {
-        setMessages((prev) => {
-          const newMessages = [...prev];
-          const streamingIndex = newMessages.indexOf(currentStreamingMessage!);
-          if (streamingIndex >= 0) {
-            newMessages[streamingIndex].isStreaming = false;
-          }
-          return newMessages;
-        });
+      if (currentStreamingMessage && (currentStreamingMessage as any).content) {
+        const messageContent = (currentStreamingMessage as any).content;
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: messageContent, isStreaming: false }
+        ]);
       }
     } catch (error: any) {
       const errorMessage = `Error: ${error.message}`;
