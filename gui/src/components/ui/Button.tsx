@@ -31,7 +31,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "my-1.5 cursor-pointer rounded font-sans transition-all duration-200",
+          "my-1.5 cursor-pointer rounded transition-all duration-200",
           "hover:enabled:cursor-pointer",
           "disabled:text-description-muted disabled:pointer-events-none disabled:opacity-50",
           buttonVariants[variant],

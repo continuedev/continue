@@ -10,6 +10,15 @@ export function addToolCallDeltaToState(
 ): ToolCallState {
   const currentCall = currentState?.toolCall;
 
+  // If we have a current state and the delta has a different ID, ignore the delta
+  if (
+    currentState &&
+    toolCallDelta.id &&
+    currentCall?.id !== toolCallDelta.id
+  ) {
+    return currentState;
+  }
+
   // These will/should not be partially streamed
   const callType = toolCallDelta.type ?? "function";
   const callId = currentCall?.id || toolCallDelta.id || "";

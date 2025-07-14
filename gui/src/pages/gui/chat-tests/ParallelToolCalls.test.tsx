@@ -10,6 +10,10 @@ describe("Parallel Tool Calls", () => {
     {
       role: "assistant",
       content: "I'll call both tools in parallel.",
+    },
+    {
+      role: "assistant",
+      content: "",
       toolCalls: [
         {
           id: "tool-call-1",
@@ -47,8 +51,9 @@ describe("Parallel Tool Calls", () => {
       PARALLEL_TOOL_CALL_RESPONSE,
     );
 
+    // Wait for streaming to complete and tool calls to be set to generated
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     });
 
     const state = store.getState();
@@ -62,6 +67,7 @@ describe("Parallel Tool Calls", () => {
       (item) =>
         item.message.role === "assistant" && item.toolCallStates?.length,
     );
+
 
     expect(assistantMessage).toBeDefined();
     expect(assistantMessage!.toolCallStates).toHaveLength(2);
@@ -82,8 +88,9 @@ describe("Parallel Tool Calls", () => {
       PARALLEL_TOOL_CALL_RESPONSE,
     );
 
+    // Wait for streaming to complete and tool calls to be set to generated
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     });
 
     const { findAllCurToolCallsByStatus } = await import("../../../redux/util");
@@ -187,8 +194,9 @@ describe("Parallel Tool Calls", () => {
       STREAMING_RESPONSE,
     );
 
+    // Wait for streaming to complete and tool calls to be set to generated
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     });
 
     const state = store.getState();

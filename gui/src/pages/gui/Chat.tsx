@@ -27,7 +27,7 @@ import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectPendingToolCalls } from "../../redux/selectors/selectToolCalls";
+import { selectDoneApplyStates, selectPendingToolCalls } from "../../redux/selectors/selectToolCalls";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -139,11 +139,7 @@ export function Chat() {
   );
 
   const pendingToolCalls = useAppSelector(selectPendingToolCalls);
-  const pendingApplyStates = useAppSelector((state) =>
-    state.session.codeBlockApplyStates.states.filter(
-      (applyState) => applyState.status === "done",
-    ),
-  );
+  const pendingApplyStates = useAppSelector(selectDoneApplyStates);
 
   const sendInput = useCallback(
     (

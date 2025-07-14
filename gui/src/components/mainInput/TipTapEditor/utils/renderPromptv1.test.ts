@@ -95,7 +95,15 @@ describe("get rendered v1 prompt file", () => {
   });
 
   it("should render file read errors within prompt", async () => {
+    // Mock console.error to prevent error output during test
+    const originalConsoleError = console.error;
+    console.error = vi.fn();
+    
     ideMessenger.responses["fileExists"] = false;
+    // Mock readFile to throw an error for nonexistent files
+    ideMessenger.responseHandlers["readFile"] = async (filepath) => {
+      throw new Error(`File not found: ${filepath}`);
+    };
     const rawContent = "Content with provider {{{ nonexistent }}}";
     const command = getTestPromptV1Command(rawContent);
     const rendered = await getRenderedV1Prompt(
@@ -107,6 +115,9 @@ describe("get rendered v1 prompt file", () => {
     expect(rendered).toBe(
       `Content with provider [Error reading file "nonexistent"]\n\nUser input`,
     );
+    
+    // Restore console.error
+    console.error = originalConsoleError;
   });
 
   it("should handle multiple attachments", async () => {

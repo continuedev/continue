@@ -59,3 +59,8 @@ export const selectPendingToolCalls = createSelector(
   (store: RootState) => store.session.history,
   (history) => findAllCurToolCallsByStatus(history, "generated"),
 );
+
+export const selectDoneApplyStates = createSelector(
+  (store: RootState) => store.session.codeBlockApplyStates.states,
+  (states) => states.filter((applyState) => applyState.status === "done"),
+);

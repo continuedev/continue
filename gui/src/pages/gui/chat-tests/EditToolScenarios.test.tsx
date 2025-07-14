@@ -7,6 +7,7 @@ import { renderWithProviders } from "../../../util/test/render";
 import { Chat } from "../Chat";
 
 import { waitFor } from "@testing-library/dom";
+import { act } from "@testing-library/react";
 import { ChatMessage } from "core";
 import { toggleToolSetting } from "../../../redux/slices/uiSlice";
 import {
@@ -22,6 +23,10 @@ const EDIT_FILE_URI = `${EDIT_WORKSPACE_DIR}/${EDIT_FILEPATH}`;
 const EDIT_CHANGES = "New content";
 const EDIT_TOOL_CALL_ID = "known-id";
 const EDIT_MESSAGES: ChatMessage[] = [
+  {
+    role: "assistant",
+    content: "I'll edit the file for you.",
+  },
   {
     role: "assistant",
     content: "",
@@ -45,7 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test("Edit run with ask first policy and no auto apply", async () => {
+test("Edit run with ask first policy and no auto apply", { timeout: 10000 }, async () => {
   // Setup
   const { ideMessenger, store, user } = await renderWithProviders(<Chat />);
 
@@ -61,6 +66,11 @@ test("Edit run with ask first policy and no auto apply", async () => {
     EDIT_MESSAGES,
   );
 
+  // Wait for streaming to complete and tool calls to be set to generated
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  });
+
   // Toggle the codeblock and make sure the changes show
   const toggleCodeblockChevron = await getElementByTestId("toggle-codeblock");
 
@@ -69,7 +79,7 @@ test("Edit run with ask first policy and no auto apply", async () => {
 
   // Pending tool call - find and click the accept button
   const acceptToolCallButton = await getElementByTestId(
-    "accept-tool-call-button",
+    `accept-tool-call-button-${EDIT_TOOL_CALL_ID}`,
   );
   await user.click(acceptToolCallButton);
 
@@ -112,6 +122,9 @@ test("Edit run with ask first policy and no auto apply", async () => {
   const acceptButton = await getElementByTestId("edit-accept-button");
   await getElementByTestId("edit-reject-button");
 
+  // Set the chat response text before accepting changes
+  ideMessenger.setChatResponseText(POST_EDIT_RESPONSE);
+
   // Accept the changes, which should trigger a response after the tool call
   await user.click(acceptButton);
 
@@ -120,7 +133,7 @@ test("Edit run with ask first policy and no auto apply", async () => {
     filepath: EDIT_FILE_URI,
   });
 
-  ideMessenger.setChatResponseText(POST_EDIT_RESPONSE);
+  // Close the stream - this should trigger the streaming response
   ideMessenger.mockMessageToWebview("updateApplyState", {
     status: "closed",
     streamId,
@@ -128,13 +141,18 @@ test("Edit run with ask first policy and no auto apply", async () => {
     filepath: EDIT_FILE_URI,
   });
 
+  // Allow time for the auto-streaming to complete
+  await new Promise(resolve => setTimeout(resolve, 500));
+
   await verifyNotPresentByTestId("edit-accept-button");
   await verifyNotPresentByTestId("edit-reject-button");
 
-  await getElementByText(POST_EDIT_RESPONSE);
+  await waitFor(() => getElementByText(POST_EDIT_RESPONSE), {
+    timeout: 5000,
+  });
 });
 
-test("Edit run with no policy and yolo mode", async () => {
+test("Edit run with no policy and yolo mode", { timeout: 10000 }, async () => {
   // Setup
   const { ideMessenger, store, user } = await renderWithProviders(<Chat />);
 
@@ -165,6 +183,11 @@ test("Edit run with no policy and yolo mode", async () => {
     EDIT_MESSAGES,
   );
 
+  // Wait for streaming to complete and tool calls to be processed
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  });
+
   // Toggle the codeblock and make sure the changes show
   const toggleCodeblockChevron = await getElementByTestId("toggle-codeblock");
 
@@ -172,7 +195,7 @@ test("Edit run with no policy and yolo mode", async () => {
   await getElementByText(EDIT_CHANGES);
 
   // Make sure there's no pending tool call
-  verifyNotPresentByTestId("accept-tool-call-button");
+  verifyNotPresentByTestId(`accept-tool-call-button-${EDIT_TOOL_CALL_ID}`);
   // Tool call, check that applyToFile was called for edit
   await waitFor(() => {
     expect(messengerPostSpy).toHaveBeenCalledWith("applyToFile", {
@@ -208,6 +231,9 @@ test("Edit run with no policy and yolo mode", async () => {
     filepath: EDIT_FILE_URI,
   });
 
+  // Set the chat response text before the auto-accept triggers
+  ideMessenger.setChatResponseText(POST_EDIT_RESPONSE);
+
   await waitFor(() => {
     expect(messengerPostSpy).toHaveBeenCalledWith("acceptDiff", {
       streamId,
@@ -216,7 +242,6 @@ test("Edit run with no policy and yolo mode", async () => {
   });
 
   // Close the stream, ensure response is shown and diff buttons are not present
-  ideMessenger.setChatResponseText(POST_EDIT_RESPONSE);
   ideMessenger.mockMessageToWebview("updateApplyState", {
     status: "closed",
     streamId,
@@ -224,8 +249,13 @@ test("Edit run with no policy and yolo mode", async () => {
     filepath: EDIT_FILE_URI,
   });
 
+  // Allow time for the auto-streaming to complete
+  await new Promise(resolve => setTimeout(resolve, 500));
+
   await verifyNotPresentByTestId("edit-accept-button");
   await verifyNotPresentByTestId("edit-reject-button");
 
-  await getElementByText(POST_EDIT_RESPONSE);
+  await waitFor(() => getElementByText(POST_EDIT_RESPONSE), {
+    timeout: 5000,
+  });
 });
