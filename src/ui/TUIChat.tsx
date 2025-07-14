@@ -135,7 +135,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 return `Terminal(${args.command || ""})`;
               case "view_diff":
                 return `Diff(${args.path || "."})`;
-              
+
               // External Claude Code Tools (PascalCase)
               case "Read":
                 return `Read(${args.file_path || args.path || ""})`;
@@ -167,7 +167,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
               default:
                 // Handle MCP tools or unknown tools
                 if (name.startsWith("mcp__")) {
-                  const mcpToolName = name.replace("mcp__", "").replace("ide__", "");
+                  const mcpToolName = name
+                    .replace("mcp__", "")
+                    .replace("ide__", "");
                   const firstParam = Object.values(args)[0];
                   return `${mcpToolName}(${firstParam || ""})`;
                 }
@@ -280,21 +282,17 @@ const TUIChat: React.FC<TUIChatProps> = ({
       switch (message.messageType) {
         case "tool-start":
           return (
-            <Box key={index} marginBottom={1} paddingLeft={2}>
+            <Box key={index} marginBottom={1}>
               <Text color="white">○ {message.content}</Text>
             </Box>
           );
 
         case "tool-result":
           return (
-            <Box
-              key={index}
-              marginBottom={1}
-              paddingLeft={2}
-              flexDirection="column"
-            >
+            <Box key={index} marginBottom={1} flexDirection="column">
               <Box>
-                <Text color="green">● {message.content}</Text>
+                <Text color="green">●</Text>
+                <Text> {message.content}</Text>
               </Box>
               <Box marginLeft={2} paddingTop={1}>
                 <ToolResultSummary
@@ -307,7 +305,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
         case "tool-error":
           return (
-            <Box key={index} marginBottom={1} paddingLeft={2}>
+            <Box key={index} marginBottom={1}>
               <Text color="red" bold>
                 ✗{" "}
               </Text>
@@ -329,7 +327,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
     return (
       <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "green" : "blue"} bold>
+        <Text color={isUser ? "green" : "blue"}>
           ●
         </Text>
         <Text> {message.content}</Text>
