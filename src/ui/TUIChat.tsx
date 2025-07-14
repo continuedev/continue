@@ -65,6 +65,24 @@ const TUIChat: React.FC<TUIChatProps> = ({
         return;
       }
 
+      if (commandResult.clear) {
+        // Clear chat history but keep system message
+        const systemMessage = chatHistory.find(msg => msg.role === "system");
+        const newHistory = systemMessage ? [systemMessage] : [];
+        setChatHistory(newHistory);
+        setMessages([]);
+        
+        // Add command output to messages
+        if (commandResult.output) {
+          setMessages([{
+            role: "system",
+            content: commandResult.output!,
+            messageType: "system",
+          }]);
+        }
+        return;
+      }
+
       // Add command output to messages
       if (commandResult.output) {
         setMessages((prev) => [
