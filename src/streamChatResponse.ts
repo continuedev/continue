@@ -52,6 +52,7 @@ type TODO = any;
 
 export interface StreamCallbacks {
   onContent?: (content: string) => void;
+  onContentComplete?: (content: string) => void;
   onToolStart?: (toolName: string, toolArgs?: any) => void;
   onToolResult?: (result: string, toolName: string) => void;
   onToolError?: (error: string, toolName?: string) => void;
@@ -187,6 +188,11 @@ export async function streamChatResponse(
       console.info(); // Add a newline after the response
     }
 
+    // Notify that content is complete if we have content and are about to process tool calls
+    if (aiResponse.trim() && currentToolCalls.length > 0 && callbacks?.onContentComplete) {
+      callbacks.onContentComplete(aiResponse);
+    }
+
     // Add the assistant's response to chat history if there's content or tool calls
     if (currentToolCalls.length > 0) {
       const toolCalls: ChatCompletionMessageToolCall[] = currentToolCalls.map(
@@ -207,6 +213,10 @@ export async function streamChatResponse(
     } else if (aiResponse.trim()) {
       // Only add assistant response if there's actual content
       chatHistory.push({ role: "assistant", content: aiResponse });
+      // Also notify content complete for standalone messages
+      if (callbacks?.onContentComplete) {
+        callbacks.onContentComplete(aiResponse);
+      }
     }
 
     // If we have tool calls, execute them
