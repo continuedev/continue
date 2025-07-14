@@ -78,9 +78,12 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({ diffContent }) 
     (l) => l.type !== 'hunk' && l.type !== 'other',
   );
 
+  const truncatedLines = displayableLines.slice(0, 16);
+  const isTruncated = displayableLines.length > 16;
+
   return (
     <Box flexDirection="column">
-      {displayableLines.map((line, index) => {
+      {truncatedLines.map((line, index) => {
         const lineKey = `diff-line-${index}`;
         let gutterNumStr = '';
         let prefixSymbol = ' ';
@@ -119,6 +122,11 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({ diffContent }) 
           </Box>
         );
       })}
+      {isTruncated && (
+        <Text color="gray" dimColor>
+          ... ({displayableLines.length - 16} more lines)
+        </Text>
+      )}
     </Box>
   );
 };
