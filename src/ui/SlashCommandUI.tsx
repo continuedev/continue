@@ -25,6 +25,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   const getSlashCommands = (): SlashCommand[] => {
     const systemCommands: SlashCommand[] = [
       { name: "help", description: "Show help message", category: "system" },
+      { name: "clear", description: "Clear the chat history", category: "system" },
       { name: "exit", description: "Exit the chat", category: "system" },
       {
         name: "login",
