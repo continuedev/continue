@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/continuedev/cli/compare/v1.0.1...v1.1.0) (2025-07-14)
+
+
+### Bug Fixes
+
+* improve streaming message handling and API endpoint ([b822b93](https://github.com/continuedev/cli/commit/b822b938f110af2de2c040f45cd3fca770d9a4a7))
+* use ignore-walk for sys msg ([eb59dcc](https://github.com/continuedev/cli/commit/eb59dcc76a5bf16d4da2e4f2c7dc87765e8382b3))
+
+
+### Features
+
+* base system message ([25a67cf](https://github.com/continuedev/cli/commit/25a67cf947f786d4cdc36c60e36e303a4e466c87))
+
 ## [1.0.1](https://github.com/continuedev/cli/compare/v1.0.0...v1.0.1) (2025-07-14)
 
 
