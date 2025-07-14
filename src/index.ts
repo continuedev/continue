@@ -93,8 +93,8 @@ async function chat() {
 
   // Rules
   const chatHistory: ChatCompletionMessageParam[] = [];
-  const baseSystemMessage = assistant.systemMessage;
-  const systemMessage = constructSystemMessage(baseSystemMessage);
+  const rulesSystemMessage = assistant.systemMessage;
+  const systemMessage = constructSystemMessage(rulesSystemMessage);
   if (systemMessage) {
     chatHistory.push({ role: "system", content: systemMessage });
   }

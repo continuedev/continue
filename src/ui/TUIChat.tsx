@@ -33,8 +33,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
     () => {
       const history: ChatCompletionMessageParam[] = [];
-      const baseSystemMessage = assistant.systemMessage;
-      const systemMessage = constructSystemMessage(baseSystemMessage);
+      const rulesSystemMessage = assistant.systemMessage;
+      const systemMessage = constructSystemMessage(rulesSystemMessage);
       if (systemMessage) {
         history.push({ role: "system", content: systemMessage });
       }
