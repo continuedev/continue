@@ -122,6 +122,21 @@ const TUIChat: React.FC<TUIChatProps> = ({
             if (!args) return name;
 
             switch (name) {
+              // CLI Internal Tools (snake_case)
+              case "read_file":
+                return `Read(${args.filepath || ""})`;
+              case "write_file":
+                return `Write(${args.filepath || ""})`;
+              case "list_files":
+                return `List(${args.dirpath || ""})`;
+              case "search_code":
+                return `Search(${args.pattern || ""})`;
+              case "run_terminal_command":
+                return `Terminal(${args.command || ""})`;
+              case "view_diff":
+                return `Diff(${args.path || "."})`;
+              
+              // External Claude Code Tools (PascalCase)
               case "Read":
                 return `Read(${args.file_path || args.path || ""})`;
               case "Write":
@@ -130,29 +145,29 @@ const TUIChat: React.FC<TUIChatProps> = ({
               case "MultiEdit":
                 return `Edit(${args.file_path || ""})`;
               case "Bash":
-                return `Bash(${args.command || ""})`;
+                return `Terminal(${args.command || ""})`;
               case "Glob":
-                return `Glob(${args.pattern || ""})`;
+                return `Find(${args.pattern || ""})`;
               case "Grep":
-                return `Grep(${args.pattern || ""})`;
+                return `Search(${args.pattern || ""})`;
               case "LS":
-                return `LS(${args.path || ""})`;
+                return `List(${args.path || ""})`;
               case "NotebookRead":
-                return `NotebookRead(${args.notebook_path || ""})`;
+                return `Notebook(${args.notebook_path || ""})`;
               case "NotebookEdit":
-                return `NotebookEdit(${args.notebook_path || ""})`;
+                return `Notebook(${args.notebook_path || ""})`;
               case "WebFetch":
-                return `WebFetch(${args.url || ""})`;
+                return `Web(${args.url || ""})`;
               case "WebSearch":
-                return `WebSearch(${args.query || ""})`;
+                return `Search(${args.query || ""})`;
               case "TodoWrite":
-                return `TodoWrite(${args.todos?.length || 0} items)`;
+                return `Todo(${args.todos?.length || 0} items)`;
               case "Task":
                 return `Task(${args.description || ""})`;
               default:
                 // Handle MCP tools or unknown tools
                 if (name.startsWith("mcp__")) {
-                  const mcpToolName = name.replace("mcp__", "");
+                  const mcpToolName = name.replace("mcp__", "").replace("ide__", "");
                   const firstParam = Object.values(args)[0];
                   return `${mcpToolName}(${firstParam || ""})`;
                 }
