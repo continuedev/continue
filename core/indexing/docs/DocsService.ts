@@ -968,7 +968,6 @@ export default class DocsService {
 
       await db.exec("PRAGMA busy_timeout = 3000;");
 
-      await runSqliteMigrations(db);
       // First create the table if it doesn't exist
       await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -977,6 +976,8 @@ export default class DocsService {
             favicon STRING,
             embeddingsProviderId STRING
         )`);
+
+      await runSqliteMigrations(db);
 
       this.sqliteDb = db;
     }
