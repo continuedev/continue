@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "continue-cli": "dist/index.js"
+    "continue-cli": "dist/index.js",
+    "cn": "dist/index.js"
   },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
