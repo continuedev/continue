@@ -65,14 +65,11 @@ export type AddParams = {
   favicon?: string;
 };
 
-const markFailedInGlobalContext = (
-  siteIndexingConfig: SiteIndexingConfig,
-  continueConfig: ContinueConfig,
-) => {
+const markFailedInGlobalContext = (siteIndexingConfig: SiteIndexingConfig) => {
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) => !docConfigsAreEqual(siteIndexingConfig, d, continueConfig),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d),
   );
   newFailedDocs.push(siteIndexingConfig);
   globalContext.update("failedDocs", newFailedDocs);
@@ -80,38 +77,51 @@ const markFailedInGlobalContext = (
 
 const removeFromFailedGlobalContext = (
   siteIndexingConfig: SiteIndexingConfig,
-  continueConfig: ContinueConfig,
 ) => {
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) => !docConfigsAreEqual(siteIndexingConfig, d, continueConfig),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d),
   );
   globalContext.update("failedDocs", newFailedDocs);
 };
 
-const hasIndexingFailed = (
-  siteIndexingConfig: SiteIndexingConfig,
-  continueConfig: ContinueConfig,
-) => {
+const hasIndexingFailed = (siteIndexingConfig: SiteIndexingConfig) => {
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
-  return failedDocs.find((d) =>
-    docConfigsAreEqual(siteIndexingConfig, d, continueConfig),
-  );
+  return failedDocs.find((d) => docConfigsAreEqual(siteIndexingConfig, d));
 };
+
+export function embedModelsAreEqual(
+  llm1: ILLM | null | undefined,
+  llm2: ILLM | null | undefined,
+): boolean {
+  return (
+    llm1?.underlyingProviderName === llm2?.underlyingProviderName &&
+    llm1?.title === llm2?.title &&
+    llm1?.maxEmbeddingChunkSize === llm2?.maxEmbeddingChunkSize
+  );
+}
 
 const docConfigsAreEqual = (
   siteConfig1: SiteIndexingConfig,
   siteConfig2: SiteIndexingConfig,
-  contConfig: ContinueConfig,
 ) => {
-  return siteIndexingConfigsAreEqual(
-    siteConfig1,
-    siteConfig2,
-    // These are equal because this function only checks the doc configs for changes
-    contConfig,
-    contConfig,
+  return (
+    siteConfig1.faviconUrl === siteConfig2.faviconUrl &&
+    siteConfig1.title === siteConfig2.title &&
+    docConfigsAreEqualExceptTitleAndFavicon(siteConfig1, siteConfig2)
+  );
+};
+
+const docConfigsAreEqualExceptTitleAndFavicon = (
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+) => {
+  return (
+    siteConfig1.startUrl === siteConfig2.startUrl &&
+    siteConfig1.maxDepth === siteConfig2.maxDepth &&
+    siteConfig1.useLocalCrawling === siteConfig2.useLocalCrawling
   );
 };
 
@@ -122,13 +132,10 @@ const siteIndexingConfigsAreEqual = (
   contConfig2: ContinueConfig,
 ) => {
   return (
-    siteConfig1.faviconUrl === siteConfig2.faviconUrl &&
-    siteConfig1.title === siteConfig2.title &&
-    siteIndexingConfigsAreEqualExceptTitleAndFavicon(
-      siteConfig1,
-      siteConfig2,
-      contConfig1,
-      contConfig2,
+    docConfigsAreEqual(siteConfig1, siteConfig2) &&
+    embedModelsAreEqual(
+      contConfig1?.selectedModelByRole.embed,
+      contConfig2.selectedModelByRole.embed,
     )
   );
 };
@@ -140,9 +147,7 @@ const siteIndexingConfigsAreEqualExceptTitleAndFavicon = (
   contConfig2: ContinueConfig,
 ) => {
   return (
-    siteConfig1.startUrl === siteConfig2.startUrl &&
-    siteConfig1.maxDepth === siteConfig2.maxDepth &&
-    siteConfig1.useLocalCrawling === siteConfig2.useLocalCrawling &&
+    docConfigsAreEqualExceptTitleAndFavicon(siteConfig1, siteConfig2) &&
     embedModelsAreEqual(
       contConfig1?.selectedModelByRole.embed,
       contConfig2.selectedModelByRole.embed,
@@ -538,7 +543,7 @@ export default class DocsService {
 
     // If not force-reindexing and has failed with same config, don't reattempt
     if (!forceReindex) {
-      if (hasIndexingFailed(siteIndexingConfig, this.config)) {
+      if (hasIndexingFailed(siteIndexingConfig)) {
         console.log(
           `Not reattempting to index ${siteIndexingConfig.startUrl}, has already failed with same config`,
         );
@@ -721,7 +726,7 @@ export default class DocsService {
         });
 
         // void this.ide.showToast("info", `Failed to index ${startUrl}`);
-        markFailedInGlobalContext(siteIndexingConfig, this.config);
+        markFailedInGlobalContext(siteIndexingConfig);
         return;
       }
 
@@ -779,7 +784,7 @@ export default class DocsService {
         void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
       }
 
-      removeFromFailedGlobalContext(siteIndexingConfig, this.config);
+      removeFromFailedGlobalContext(siteIndexingConfig);
     } catch (e) {
       console.error(
         `Error indexing docs at: ${siteIndexingConfig.startUrl}`,
@@ -800,7 +805,7 @@ export default class DocsService {
         status: "failed",
         progress: 1,
       });
-      markFailedInGlobalContext(siteIndexingConfig, this.config);
+      markFailedInGlobalContext(siteIndexingConfig);
     } finally {
       this.docsIndexingQueue.delete(startUrl);
     }
@@ -1303,7 +1308,7 @@ export default class DocsService {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
     const doesEquivalentDocExist = this.config.docs?.some((doc) =>
-      docConfigsAreEqual(doc, siteIndexingConfig, this.config),
+      docConfigsAreEqual(doc, siteIndexingConfig),
     );
 
     if (!doesEquivalentDocExist) {
@@ -1405,15 +1410,4 @@ export default class DocsService {
     });
     this.statuses.delete(startUrl);
   }
-}
-
-export function embedModelsAreEqual(
-  llm1: ILLM | null | undefined,
-  llm2: ILLM | null | undefined,
-): boolean {
-  return (
-    llm1?.underlyingProviderName === llm2?.underlyingProviderName &&
-    llm1?.title === llm2?.title &&
-    llm1?.maxEmbeddingChunkSize === llm2?.maxEmbeddingChunkSize
-  );
 }
