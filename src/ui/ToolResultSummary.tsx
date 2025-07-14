@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+import path from "path";
 import React from "react";
 import { getToolDisplayName } from "../tools.js";
 
@@ -18,6 +19,16 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     const chars = content.length;
     const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
 
+    // Convert absolute paths to relative paths from workspace root
+    const formatPath = (filePath: string) => {
+      if (path.isAbsolute(filePath)) {
+        const workspaceRoot = process.cwd();
+        const relativePath = path.relative(workspaceRoot, filePath);
+        return relativePath || filePath;
+      }
+      return filePath;
+    };
+
     // Handle specific tool output formatting
     switch (toolName) {
       case "read_file":
@@ -25,7 +36,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         if (content.includes("→")) {
           const pathMatch = content.match(/^(.+?):/);
           const filePath = pathMatch ? pathMatch[1] : "file";
-          return `${displayName} ${filePath} (${lines} lines)`;
+          return `${displayName} ${formatPath(filePath)} (${lines} lines)`;
         }
         return `${displayName} tool output (${lines} lines)`;
 
