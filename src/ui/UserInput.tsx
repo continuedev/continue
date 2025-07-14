@@ -68,14 +68,15 @@ const UserInput: React.FC<UserInputProps> = ({
   });
 
   const renderInputText = () => {
+    const placeholderText = "Ask anything, @ for context, / for slash commands";
     if (inputText.length === 0) {
       return (
         <>
           {inputMode && !isWaitingForResponse && (
-            <Text color="gray">▋Type your message...</Text>
+            <Text color="gray">▋{placeholderText}</Text>
           )}
           {(!inputMode || isWaitingForResponse) && (
-            <Text color="gray">Type your message...</Text>
+            <Text color="gray">{placeholderText}</Text>
           )}
         </>
       );
