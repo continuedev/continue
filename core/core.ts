@@ -59,7 +59,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
-import { fetchTaskList } from "./context/taskList";
+import { deleteTaskFromTaskList, fetchTaskList } from "./context/taskList";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -840,7 +840,15 @@ export class Core {
     });
 
     on("taskList/list", ({ data }) => {
-      return fetchTaskList(data.id, this.messenger);
+      return fetchTaskList(data.sessionId, this.messenger);
+    });
+
+    // on("taskList/update", ({data})=> {
+
+    // })
+
+    on("taskList/remove", ({ data }) => {
+      deleteTaskFromTaskList(data.sessionId, data.taskId, this.messenger);
     });
   }
 
