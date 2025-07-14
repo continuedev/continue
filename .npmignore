@@ -1,2 +1,9 @@
-.env
+.env*
 test
+.vscode
+.github
+.continue
+.releaserc.json
+AGENTS.md
+jest.config.mjs
+tsconfig.json
