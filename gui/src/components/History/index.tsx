@@ -1,6 +1,6 @@
 import { SessionMetadata } from "core";
 import MiniSearch from "minisearch";
-import {
+import React, {
   Fragment,
   useContext,
   useEffect,
@@ -30,7 +30,7 @@ import { groupSessionsByDate, parseDate } from "./util";
 export function History() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,25 +67,30 @@ export function History() {
   const platform = useMemo(() => getPlatform(), []);
 
   const filteredAndSortedSessions: SessionMetadata[] = useMemo(() => {
+    // 1. Exact phrase matching
     const exactResults = minisearch.search(searchTerm, {
       fuzzy: false,
     });
 
+    // 2. Fuzzy matching with higher tolerance
     const fuzzyResults = minisearch.search(searchTerm, {
       fuzzy: 0.3,
     });
 
+    // 3. Prefix matching for partial words
     const prefixResults = minisearch.search(searchTerm, {
       prefix: true,
       fuzzy: 0.2,
     });
 
+    // Combine results, with exact matches having higher priority
     const allResults = [
       ...exactResults.map((r) => ({ ...r, priority: 3 })),
       ...fuzzyResults.map((r) => ({ ...r, priority: 2 })),
       ...prefixResults.map((r) => ({ ...r, priority: 1 })),
     ];
 
+    // Remove duplicates while preserving highest priority
     const uniqueResultsMap = new Map<string, any>();
     allResults.forEach((result) => {
       const existing = uniqueResultsMap.get(result.id);
@@ -93,16 +98,16 @@ export function History() {
         uniqueResultsMap.set(result.id, result);
       }
     });
+    const uniqueResults = Array.from(uniqueResultsMap.values());
 
-    const sessionIds = Array.from(uniqueResultsMap.values())
+    const sessionIds = uniqueResults
       .sort((a, b) => b.priority - a.priority || b.score - a.score)
       .map((result) => result.id);
 
     return allSessionMetadata
-      .filter(
-        (session) =>
-          searchTerm === "" || sessionIds.includes(session.sessionId),
-      )
+      .filter((session) => {
+        return searchTerm === "" || sessionIds.includes(session.sessionId);
+      })
       .sort(
         (a, b) =>
           parseDate(b.dateCreated).getTime() -
@@ -121,9 +126,14 @@ export function History() {
           title={`Clear sessions`}
           text={`Are you sure you want to permanently delete all chat sessions, including the current chat session?`}
           onConfirm={async () => {
+            // optimistic update
             dispatch(setAllSessionMetadata([]));
+
+            // actual update + refresh
             await ideMessenger.request("history/clear", undefined);
             void dispatch(refreshSessionMetadata({}));
+
+            // start a new session
             dispatch(newSession());
             navigate(ROUTES.HOME);
           }}
