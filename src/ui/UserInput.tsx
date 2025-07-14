@@ -73,12 +73,22 @@ const UserInput: React.FC<UserInputProps> = ({
     }
   };
 
-  // Get filtered commands for navigation
+  // Get filtered commands for navigation - using the same sorting logic as SlashCommandUI
   const getFilteredCommands = () => {
     const allCommands = getSlashCommands();
-    return allCommands.filter((cmd) =>
-      cmd.name.toLowerCase().includes(slashCommandFilter.toLowerCase())
-    );
+    return allCommands
+      .filter((cmd) =>
+        cmd.name.toLowerCase().includes(slashCommandFilter.toLowerCase())
+      )
+      .sort((a, b) => {
+        const aStartsWith = a.name.toLowerCase().startsWith(slashCommandFilter.toLowerCase());
+        const bStartsWith = b.name.toLowerCase().startsWith(slashCommandFilter.toLowerCase());
+
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+
+        return a.name.localeCompare(b.name);
+      });
   };
 
   // Handle slash command selection
