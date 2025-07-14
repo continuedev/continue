@@ -78,6 +78,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<Array<{path: string; content: string}>>([]);
   const { exit } = useApp();
 
   // Handle initial prompt
@@ -134,9 +135,22 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
 
     // Add user message to history and display
+    let messageContent = message;
+    
+    // Prepend attached files to the message
+    if (attachedFiles.length > 0) {
+      const fileContents = attachedFiles.map(file => 
+        `\n\n<file path="${file.path}">\n${file.content}\n</file>`
+      ).join('');
+      messageContent = `${message}${fileContents}`;
+      
+      // Clear attached files after sending
+      setAttachedFiles([]);
+    }
+    
     const newUserMessage: ChatCompletionMessageParam = {
       role: "user",
-      content: message,
+      content: messageContent,
     };
     const newHistory = [...chatHistory, newUserMessage];
     setChatHistory(newHistory);
@@ -290,6 +304,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
   };
 
+  const handleFileAttached = (filePath: string, content: string) => {
+    setAttachedFiles(prev => [...prev, { path: filePath, content }]);
+  };
+
   const renderMessage = (message: DisplayMessage, index: number) => {
     const isUser = message.role === "user";
     const isSystem = message.role === "system";
@@ -368,6 +386,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           </Box>
         )}
 
+
         {/* Input area - always at bottom */}
         <UserInput
           onSubmit={handleUserMessage}
@@ -375,6 +394,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           inputMode={inputMode}
           onInterrupt={handleInterrupt}
           assistant={assistant.config}
+          onFileAttached={handleFileAttached}
         />
         <Box marginRight={2} justifyContent="flex-end">
           <Text color="gray">● Continue CLI</Text>
