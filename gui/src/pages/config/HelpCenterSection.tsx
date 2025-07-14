@@ -1,6 +1,5 @@
 import {
   ArrowTopRightOnSquareIcon,
-  DocumentArrowUpIcon,
   PaintBrushIcon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
@@ -8,8 +7,6 @@ import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch } from "../../redux/hooks";
-import { setOnboardingCard } from "../../redux/slices/uiSlice";
-import { saveCurrentSession } from "../../redux/thunks/session";
 import { ROUTES } from "../../util/navigation";
 import MoreHelpRow from "./MoreHelpRow";
 
@@ -70,6 +67,7 @@ export function HelpCenterSection() {
           onClick={() => navigate("/stats")}
         />
 
+        {/*  Disable for Granite.Code
         <MoreHelpRow
           title="Quickstart"
           description="Reopen the quickstart and tutorial file"
@@ -86,7 +84,7 @@ export function HelpCenterSection() {
             dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
             ideMessenger.post("showTutorial", undefined);
           }}
-        />
+        /> */}
         {process.env.NODE_ENV === "development" && (
           <MoreHelpRow
             title="Theme Test Page"
