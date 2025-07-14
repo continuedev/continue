@@ -30,7 +30,14 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         return `${displayName} tool output (${lines} lines)`;
 
       case "write_file":
-        return "File written successfully";
+        // For write_file, we want to display the diff content if it exists
+        if (content.includes("Diff:\n")) {
+          const diffSection = content.split("Diff:\n")[1];
+          if (diffSection) {
+            return `File written successfully\n${diffSection}`;
+          }
+        }
+        return content.includes("Successfully created file") ? "File created successfully" : "File written successfully";
 
       case "list_files":
         return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;
