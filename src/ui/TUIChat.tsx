@@ -4,6 +4,7 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React, { useEffect, useState } from "react";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
+import { constructSystemMessage } from "../systemMessage.js";
 import { getToolDisplayName } from "../tools.js";
 import LoadingAnimation from "./LoadingAnimation.js";
 import ToolResultSummary from "./ToolResultSummary.js";
@@ -32,7 +33,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
     () => {
       const history: ChatCompletionMessageParam[] = [];
-      const systemMessage = assistant.systemMessage;
+      const baseSystemMessage = assistant.systemMessage;
+      const systemMessage = constructSystemMessage(baseSystemMessage);
       if (systemMessage) {
         history.push({ role: "system", content: systemMessage });
       }

@@ -13,6 +13,7 @@ import { configureLogger } from "./logger.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
+import { constructSystemMessage } from "./systemMessage.js";
 import { startTUIChat } from "./ui/index.js";
 
 // Parse command line arguments
@@ -92,7 +93,8 @@ async function chat() {
 
   // Rules
   const chatHistory: ChatCompletionMessageParam[] = [];
-  const systemMessage = assistant.systemMessage;
+  const baseSystemMessage = assistant.systemMessage;
+  const systemMessage = constructSystemMessage(baseSystemMessage);
   if (systemMessage) {
     chatHistory.push({ role: "system", content: systemMessage });
   }
