@@ -1,6 +1,6 @@
+import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
 import React from "react";
-import { type AssistantConfig } from "@continuedev/sdk";
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
@@ -26,28 +26,43 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     const systemCommands: SlashCommand[] = [
       { name: "help", description: "Show help message", category: "system" },
       { name: "exit", description: "Exit the chat", category: "system" },
-      { name: "login", description: "Authenticate with your account", category: "system" },
-      { name: "logout", description: "Sign out of your current session", category: "system" },
-      { name: "whoami", description: "Check who you're currently logged in as", category: "system" },
-      { name: "models", description: "List available AI models", category: "system" },
+      {
+        name: "login",
+        description: "Authenticate with your account",
+        category: "system",
+      },
+      {
+        name: "logout",
+        description: "Sign out of your current session",
+        category: "system",
+      },
+      {
+        name: "whoami",
+        description: "Check who you're currently logged in as",
+        category: "system",
+      },
+      {
+        name: "models",
+        description: "List available AI models",
+        category: "system",
+      },
     ];
 
-    const assistantCommands: SlashCommand[] = assistant.prompts?.map(
-      (prompt) => ({
+    const assistantCommands: SlashCommand[] =
+      assistant.prompts?.map((prompt) => ({
         name: prompt?.name || "",
         description: prompt?.description || "",
         category: "assistant" as const,
-      })
-    ) || [];
+      })) || [];
 
     return [...systemCommands, ...assistantCommands];
   };
 
   const allCommands = getSlashCommands();
-  
+
   // Filter commands based on the current filter
-  const filteredCommands = allCommands.filter(
-    (cmd) => cmd.name.toLowerCase().includes(filter.toLowerCase())
+  const filteredCommands = allCommands.filter((cmd) =>
+    cmd.name.toLowerCase().includes(filter.toLowerCase())
   );
 
   if (filteredCommands.length === 0) {
@@ -65,39 +80,21 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   }
 
   return (
-    <Box
-      borderStyle="round"
-      borderColor="gray"
-      paddingX={1}
-      marginX={1}
-      marginBottom={1}
-      flexDirection="column"
-    >
-      <Box marginBottom={1}>
-        <Text color="gray" bold>
-          Slash Commands
-        </Text>
-      </Box>
-      
+    <Box paddingX={1} marginX={1} marginBottom={1} flexDirection="column">
       {filteredCommands.map((command, index) => {
         const isSelected = index === selectedIndex;
-        const categoryColor = command.category === "system" ? "cyan" : "yellow";
-        
+
         return (
-          <Box key={command.name} marginBottom={index === filteredCommands.length - 1 ? 0 : 1}>
-            <Text
-              color={isSelected ? "black" : "white"}
-              backgroundColor={isSelected ? "white" : undefined}
-              bold={isSelected}
-            >
-              {isSelected ? "▶ " : "  "}
-              <Text color={categoryColor}>/{command.name}</Text>
+          <Box key={command.name}>
+            <Text color="white" bold={isSelected}>
+              {"  "}
+              <Text color="green">/{command.name}</Text>
               <Text color="gray"> - {command.description}</Text>
             </Text>
           </Box>
         );
       })}
-      
+
       <Box marginTop={1}>
         <Text color="gray" dimColor>
           Use ↑/↓ to navigate, Enter to select, Tab to complete
