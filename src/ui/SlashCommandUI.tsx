@@ -74,13 +74,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     });
   if (filteredCommands.length === 0) {
     return (
-      <Box
-        borderStyle="round"
-        borderColor="gray"
-        paddingX={1}
-        marginX={1}
-        marginBottom={1}
-      >
+      <Box paddingX={1} marginX={1} marginBottom={1}>
         <Text color="gray">No matching commands found</Text>
       </Box>
     );
