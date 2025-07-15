@@ -1,4 +1,5 @@
 import React from "react";
+import { Text } from "ink";
 import MarkdownRenderer from "./MarkdownRenderer.js";
 
 describe("MarkdownRenderer", () => {
@@ -156,7 +157,7 @@ describe("MarkdownRenderer", () => {
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
       // The result should be a Text element containing syntax highlighted code
-      expect((result[0] as any).type).toBe("ink-text");
+      expect((result[0] as any).type).toBe(Text);
       expect((result[0] as any).props.children).toBeDefined();
       expect(Array.isArray((result[0] as any).props.children)).toBe(true);
     });
@@ -165,7 +166,7 @@ describe("MarkdownRenderer", () => {
       const result = renderMarkdown("```console.log('hello')```");
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
-      expect((result[0] as any).type).toBe("ink-text");
+      expect((result[0] as any).type).toBe(Text);
       expect((result[0] as any).props.children).toBeDefined();
     });
 
@@ -173,7 +174,7 @@ describe("MarkdownRenderer", () => {
       const result = renderMarkdown("```javascript\nconst x = 1;\n```");
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
-      expect((result[0] as any).type).toBe("ink-text");
+      expect((result[0] as any).type).toBe(Text);
       expect((result[0] as any).props.children).toBeDefined();
     });
 
@@ -184,7 +185,7 @@ describe("MarkdownRenderer", () => {
       expect(result.length).toBe(5);
       expect(result[0]).toBe("Here's some code:\n");
       expect(React.isValidElement(result[1])).toBe(true);
-      expect((result[1] as any).type).toBe("ink-text");
+      expect((result[1] as any).type).toBe(Text);
       expect(result[2]).toBe("\nAnd ");
       expect((result[3] as any).props.bold).toBe(true);
       expect((result[3] as any).props.children).toBe("bold");
@@ -195,7 +196,7 @@ describe("MarkdownRenderer", () => {
       const result = renderMarkdown("``````");
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
-      expect((result[0] as any).type).toBe("ink-text");
+      expect((result[0] as any).type).toBe(Text);
     });
   });
 });
