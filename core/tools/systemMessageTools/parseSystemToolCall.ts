@@ -1,155 +1,132 @@
 import { ToolCallDelta } from "../..";
 
-// export function parseSystemToolCall(toolCallText: string): {
-//   delta: ToolCallDelta | undefined;
-//   done: boolean;
-// } {
-//   let done = false;
-//   let name = "";
-//   const args: Record<string, string> = {};
-//   const lines = toolCallText.split("\n");
-//   const nameLine = lines[1];
-
-//   for (let i = 0; i < lines.length; i++) {
-//     if (i === 0) {
-//       continue;
-//     }
-//     const line = lines[i];
-//     if (i === 1) {
-//       name = (line.split("TOOL_NAME:")[1] ?? "").trim();
-//     } else if (i === 2 && line === "```") {
-//       done = true;
-//       break;
-//     } else {
-//       //
-//     }
-//   }
-
-//   if (done && !name) {
-//     throw new Error(
-//       "System tool call parsing failed: no name detected\n" + toolCallText,
-//     );
-//   }
-
-//   if (!name) {
-//     return {
-//       delta: undefined,
-//       done: false,
-//     };
-//   }
-
-//   return {
-//     delta: {
-//       type: "function",
-//       function: {
-//         arguments: JSON.stringify(args),
-//         name,
-//       },
-//       id: "",
-//     },
-//     done,
-//   };
-// }
-
 const acceptableToolNameTags = ["tool_name:", "toolname:"];
 const acceptableBeginArgTags = ["begin_arg", "beginarg"];
 const acceptableEndArgTags = ["end_arg", "endarg"];
 
-export function parseToolCallText(
-  text: string,
-  toolCallId: string,
-): {
+export type ToolCallParseState = {
+  name: string;
+  args: Record<string, any>;
+  isInArg: boolean;
+  currentArgName: string | undefined;
+  currentLineIndex: number;
+  currentLine: string;
+  done: boolean;
+};
+
+export const DEFAULT_TOOL_CALL_PARSE_STATE: ToolCallParseState = {
+  name: "",
+  args: {},
+  isInArg: false,
+  currentArgName: undefined,
+  currentLineIndex: 0,
+  currentLine: "",
+  done: false,
+};
+
+type ParseToolCallOutput = {
   delta: ToolCallDelta | undefined;
   done: boolean;
-} {
-  let name = "";
-  let args: Record<string, any> = {};
-  let done = false;
-  const lines = text.trim().split("\n");
-  let isInArg = false;
-  let currentArgName: string | undefined = undefined;
+};
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lowerCaseLine = line.toLowerCase();
-    const isLastLine = i === lines.length - 1;
+const NO_OUTPUT: ParseToolCallOutput = {
+  delta: undefined,
+  done: false,
+};
 
-    // Skip the ```tool line
-    if (i === 0) {
-      continue;
+export function handleToolCallBuffer(
+  chunk: string,
+  toolCallId: string,
+  state: ToolCallParseState,
+): ParseToolCallOutput {
+  if (chunk === "\n") {
+    state.currentLineIndex++;
+    state.currentLine = "";
+  } else {
+    state.currentLine += chunk;
+  }
+  const lowerCaseLine = state.currentLine.toLowerCase();
+
+  if (state.currentLineIndex === 0) {
+    return NO_OUTPUT;
+  }
+  debugger;
+  if (state.currentLineIndex === 1) {
+    if (acceptableToolNameTags.find((tag) => lowerCaseLine.startsWith(tag))) {
+      state.name = (state.currentLine.split(/tool_?name:/i)[1] ?? "").trim();
     }
-
-    // Special handling for TOOL_NAME line
-    if (i === 1) {
-      if (acceptableToolNameTags.find((tag) => lowerCaseLine.startsWith(tag)))
-        if (
-          isLastLine &&
-          acceptableToolNameTags.find((tag) => tag.startsWith(lowerCaseLine))
-        ) {
-          // If it COULD be a tool name tag, break
-          break;
-        }
-      name = (line.split(/tool_?name:/i)[1] ?? "").trim();
-    } else if (isInArg) {
-      if (acceptableEndArgTags.find((tag) => lowerCaseLine.startsWith(tag))) {
-        if (currentArgName) {
-          const endValue = args[currentArgName];
-          // Case, received back to back BEGIN/END tags -> empty string
-          if (!endValue) {
-            args[currentArgName] = "";
-            // Boolean and number args support
-          } else if (endValue.toLowerCase() === "false") {
-            args[currentArgName] = false;
-          } else if (endValue.toLowerCase() === "true") {
-            args[currentArgName] = true;
-          } else {
-            const num = Number(endValue);
-            if (!isNaN(num)) {
-              args[currentArgName] = num;
-            }
+    if (acceptableToolNameTags.find((tag) => tag.startsWith(lowerCaseLine))) {
+      return NO_OUTPUT;
+    }
+  } else if (state.isInArg) {
+    if (acceptableEndArgTags.find((tag) => lowerCaseLine.startsWith(tag))) {
+      if (state.currentArgName) {
+        const endValue = state.args[state.currentArgName];
+        if (!endValue) {
+          state.args[state.currentArgName] = "";
+        } else if (endValue.toLowerCase() === "false") {
+          state.args[state.currentArgName] = false;
+        } else if (endValue.toLowerCase() === "true") {
+          state.args[state.currentArgName] = true;
+        } else {
+          const num = Number(endValue);
+          if (!isNaN(num)) {
+            state.args[state.currentArgName] = num;
           }
         }
-        isInArg = false;
-        currentArgName = undefined;
-      } else if (
-        isLastLine &&
-        acceptableEndArgTags.find((tag) => tag.startsWith(lowerCaseLine))
-      ) {
-        break;
-      } else if (currentArgName) {
-        if (args[currentArgName]) {
-          args[currentArgName] += "\n" + line;
-        } else {
-          args[currentArgName] = line;
-        }
       }
+      state.isInArg = false;
+      state.currentArgName = undefined;
     } else if (
-      acceptableBeginArgTags.find((tag) => lowerCaseLine.startsWith(tag))
+      acceptableEndArgTags.find((tag) => tag.startsWith(lowerCaseLine))
     ) {
-      const argName = (line.split(/begin_?arg:/i)[1] ?? "").trim();
-      if (argName) {
-        isInArg = true;
-        currentArgName = argName;
+      return NO_OUTPUT;
+    } else if (state.currentArgName) {
+      if (state.args[state.currentArgName]) {
+        state.args[state.currentArgName] += chunk;
+      } else {
+        state.args[state.currentArgName] = chunk;
       }
-    } else if (line === "```") {
-      done = true;
-    } else if (
-      isLastLine &&
-      ["```", ...acceptableBeginArgTags].some((v) =>
-        v.startsWith(lowerCaseLine),
-      )
-    ) {
-      break;
-    } else {
-      throw new Error("Invalid/hanging line in tool call:\n" + line);
     }
+  } else if (
+    acceptableBeginArgTags.find((tag) => lowerCaseLine.startsWith(tag))
+  ) {
+    const argName = (state.currentLine.split(/begin_?arg:/i)[1] ?? "").trim();
+    if (argName) {
+      state.isInArg = true;
+      state.currentArgName = argName;
+    }
+  } else if (state.currentLine === "```") {
+    state.done = true;
+  } else if (
+    ["```", ...acceptableBeginArgTags].some((v) => v.startsWith(lowerCaseLine))
+  ) {
+    return NO_OUTPUT;
+  } else {
+    throw new Error("Invalid/hanging line in tool call:\n" + state.currentLine);
   }
 
-  if (done && !name) {
-    throw new Error("Invalid tool name found in call:\n" + text);
+  if (state.done) {
+    if (!state.name) {
+      throw new Error("Invalid tool name found in call");
+    }
+
+    const result: ParseToolCallOutput = {
+      done: state.done,
+      delta: {
+        type: "function",
+        function: {
+          arguments: JSON.stringify(state.args),
+          name: state.name,
+        },
+        id: toolCallId,
+      },
+    };
+
+    return result;
   }
 
-  if (!name) {
+  if (!state.name) {
     return {
       done: false,
       delta: undefined,
@@ -157,12 +134,12 @@ export function parseToolCallText(
   }
 
   return {
-    done,
+    done: state.done,
     delta: {
       type: "function",
       function: {
-        arguments: JSON.stringify(args),
-        name,
+        arguments: JSON.stringify(state.args),
+        name: state.name,
       },
       id: toolCallId,
     },

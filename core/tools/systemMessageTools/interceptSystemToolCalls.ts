@@ -2,7 +2,11 @@ import { ChatMessage, PromptLog, TextMessagePart } from "../..";
 import { normalizeToMessageParts } from "../../util/messageContent";
 import { detectToolCallStart } from "./detectToolCallStart";
 import { generateOpenAIToolCallId } from "./openAiToolCallId";
-import { parseToolCallText } from "./parseSystemToolCall";
+import {
+  DEFAULT_TOOL_CALL_PARSE_STATE,
+  handleToolCallBuffer,
+  ToolCallParseState,
+} from "./parseSystemToolCall";
 import { splitAtCodeblocksAndNewLines } from "./xmlToolUtils";
 
 /*
@@ -20,24 +24,19 @@ export async function* interceptSystemToolCalls(
   messageGenerator: AsyncGenerator<ChatMessage[], PromptLog | undefined>,
   abortController: AbortController,
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
-  let toolCallText = "";
-  let currentToolCallId: string | undefined = undefined;
   let inToolCall = false;
-
-  let done = false;
+  let currentToolCallId: string | undefined = undefined;
   let buffer = "";
 
-  while (true) {
-    if (abortController.signal.aborted) {
-      done = true;
-    }
+  let parseState: ToolCallParseState | undefined;
 
+  while (true) {
     const result = await messageGenerator.next();
     if (result.done) {
       return result.value;
     } else {
       for await (const message of result.value) {
-        if (done) {
+        if (abortController.signal.aborted || parseState?.done) {
           break;
         }
         // Skip non-assistant messages or messages with native tool calls
@@ -60,6 +59,7 @@ export async function* interceptSystemToolCalls(
 
         for (const chunk of chunks) {
           buffer += chunk;
+          debugger;
           if (!inToolCall) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
               detectToolCallStart(buffer);
@@ -77,12 +77,16 @@ export async function* interceptSystemToolCalls(
             if (!currentToolCallId) {
               currentToolCallId = generateOpenAIToolCallId();
             }
+            if (!parseState) {
+              parseState = DEFAULT_TOOL_CALL_PARSE_STATE;
+            }
 
-            toolCallText += buffer;
             try {
-              const { delta, done: toolCallDone } = parseToolCallText(
-                toolCallText,
+              // Directly parse the accumulated buffer without storing a separate toolCallText
+              const { delta, done: toolCallDone } = handleToolCallBuffer(
+                buffer,
                 currentToolCallId,
+                parseState,
               );
               if (delta) {
                 yield [
@@ -93,18 +97,24 @@ export async function* interceptSystemToolCalls(
                   },
                 ];
               }
+
               if (toolCallDone) {
                 inToolCall = false;
-                done = true;
+                currentToolCallId = undefined;
+                parseState = undefined;
               }
+
+              // Reset the buffer after successful parsing
+              buffer = "";
             } catch (e) {
-              console.error("Failed to parse system tool call");
+              console.error("Failed to parse system tool call", e);
               yield [
                 {
                   ...message,
-                  content: toolCallText,
+                  content: buffer,
                 },
               ];
+              buffer = "";
             }
           } else {
             // Yield normal assistant message
@@ -114,8 +124,8 @@ export async function* interceptSystemToolCalls(
                 content: buffer,
               },
             ];
+            buffer = "";
           }
-          buffer = "";
         }
       }
     }
