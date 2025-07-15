@@ -5,7 +5,7 @@ import {
   constructLlmApi,
   LLMConfig,
 } from "@continuedev/openai-adapters";
-import { Assistant, ContinueClient } from "@continuedev/sdk";
+import { Assistant } from "@continuedev/sdk";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
@@ -75,6 +75,15 @@ function getLlmApi(
   return [llmApi, model.model];
 }
 
+async function loadAssistant(
+  accessToken: string | undefined,
+  configPath: string
+): Promise<Assistant> {
+  const continueSdk = await initializeContinueSDK(accessToken, configPath);
+
+  return continueSdk.assistant;
+}
+
 async function chat() {
   const isAuthenticated = await ensureAuthenticated(true);
 
@@ -114,28 +123,12 @@ async function chat() {
   // }
 
   // Initialize ContinueSDK and MCPService once
-  let assistant: ContinueClient["assistant"];
-  let model: string;
-  let llmApi: BaseLlmApi;
-  let mcpService: MCPService;
-
-  try {
-    const continueSdk = await initializeContinueSDK(
-      authConfig.accessToken,
-      args.configPath
-    );
-
-    assistant = continueSdk.assistant;
-    [llmApi, model] = getLlmApi(assistant, authConfig);
-
-    mcpService = await MCPService.create(assistant.config);
-  } catch (error) {
-    console.error(
-      chalk.red(`Error loading assistant ${args.configPath}:`),
-      error
-    );
-    throw error;
-  }
+  const assistant = await loadAssistant(
+    authConfig.accessToken,
+    args.configPath
+  );
+  const [llmApi, model] = getLlmApi(assistant, authConfig);
+  const mcpService = await MCPService.create(assistant.config);
 
   // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
