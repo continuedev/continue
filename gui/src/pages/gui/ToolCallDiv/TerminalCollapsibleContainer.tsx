@@ -26,9 +26,10 @@ export function TerminalCollapsibleContainer({
   return (
     <div className={`relative ${className}`}>
       {/* Indicator bar - shows for both collapsed and expanded states */}
-      {((!isExpanded && hiddenLinesCount > 0) || (isExpanded && collapsible)) && (
-        <IndicatorBar 
-          text={isExpanded ? 'Collapse' : `+${hiddenLinesCount} more lines`}
+      {((!isExpanded && hiddenLinesCount > 0) ||
+        (isExpanded && collapsible)) && (
+        <IndicatorBar
+          text={isExpanded ? "Collapse" : `+${hiddenLinesCount} more lines`}
           isExpanded={isExpanded}
         />
       )}
@@ -41,30 +42,30 @@ export function TerminalCollapsibleContainer({
             e.stopPropagation();
             setIsExpanded(!isExpanded);
           }}
-          className="absolute inset-0 cursor-pointer z-20"
+          className="absolute inset-0 z-20 cursor-pointer"
         />
       )}
 
       {/* Content container with proper constraint for gradient */}
       <div
-        className={`relative overflow-hidden ${collapsible ? 'cursor-pointer' : ''}`}
+        className={`relative overflow-hidden ${collapsible ? "cursor-pointer" : ""}`}
         style={{ borderRadius: defaultBorderRadius }}
       >
         {/* Gradient overlay on top of content - only when collapsed */}
         {!isExpanded && hiddenLinesCount > 0 && (
           <div
-            className="absolute pointer-events-none top-4 left-[9px] right-[9px] h-[100px] z-[5]"
+            className="pointer-events-none absolute left-[9px] right-[9px] top-4 z-[5] h-[100px]"
             style={{
-              background: 'linear-gradient(to bottom, var(--vscode-editor-background, #1e1e1e), transparent)',
+              background:
+                "linear-gradient(to bottom, var(--vscode-editor-background, #1e1e1e), transparent)",
               borderTopLeftRadius: `calc(${defaultBorderRadius} - 1px)`,
-              borderTopRightRadius: `calc(${defaultBorderRadius} - 1px)`
+              borderTopRightRadius: `calc(${defaultBorderRadius} - 1px)`,
             }}
           />
         )}
 
         {isExpanded ? expandedContent : collapsedContent}
       </div>
-
     </div>
   );
 }
