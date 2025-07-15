@@ -4,7 +4,7 @@ import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const lsTool: Tool = {
   type: "function",
-  displayTitle: "LS Tool",
+  displayTitle: "ls",
   wouldLikeTo: "list files and folders in {{{ dirPath }}}",
   isCurrently: "listing files and folders in {{{ dirPath }}}",
   hasAlready: "listed files and folders in {{{ dirPath }}}",

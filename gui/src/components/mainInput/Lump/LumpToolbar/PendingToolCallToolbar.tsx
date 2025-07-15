@@ -1,69 +1,83 @@
-import styled from "styled-components";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { selectCurrentToolCall } from "../../../../redux/selectors/selectCurrentToolCall";
+import { selectPendingToolCalls } from "../../../../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
-import { callCurrentTool } from "../../../../redux/thunks/callCurrentTool";
-import {
-  getAltKeyLabel,
-  getFontSize,
-  getMetaKeyLabel,
-  isJetBrains,
-} from "../../../../util";
-import { EnterButton } from "../../InputToolbar/EnterButton";
+import { callToolById } from "../../../../redux/thunks/callToolById";
+import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
+import { Button } from "../../../ui";
 
-const Container = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-`;
-
-const StopButton = styled.div`
-  font-size: ${getFontSize() - 3}px;
-  padding: 2px;
-  padding-right: 4px;
-  cursor: pointer;
-`;
+export const generateToolCallButtonTestId = (
+  action: "accept" | "reject",
+  toolCallId: string,
+) => {
+  return `${action}-tool-call-button-${toolCallId}`;
+};
 
 export function PendingToolCallToolbar() {
   const dispatch = useAppDispatch();
   const jetbrains = isJetBrains();
-  const currentToolCall = useAppSelector(selectCurrentToolCall);
+  const pendingToolCalls = useAppSelector(selectPendingToolCalls);
+
+  if (pendingToolCalls.length === 0) {
+    return null;
+  }
+
+  const handleAccept = (toolCallId: string) => {
+    void dispatch(callToolById({ toolCallId }));
+  };
+
+  const handleReject = (toolCallId: string) => {
+    void dispatch(cancelToolCall({ toolCallId }));
+  };
 
   return (
-    <Container>
-      <div className="text-description flex flex-row items-center pb-0.5 pr-1 text-xs">
-        <span className="hidden sm:flex">Pending tool call</span>
-      </div>
+    <div className="flex w-full flex-col pb-0.5">
+      {pendingToolCalls.map((toolCall, index) => (
+        <div
+          key={toolCall.toolCallId}
+          className="border-input bg-input flex items-center gap-2 rounded border"
+        >
+          <span className="text-description flex-1 truncate text-xs italic">
+            {toolCall.tool?.displayTitle ?? toolCall.toolCall.function.name}
+          </span>
 
-      <div className="flex gap-2 pb-0.5">
-        <StopButton
-          className="text-description"
-          onClick={
-            currentToolCall
-              ? () => {
-                  dispatch(
-                    cancelToolCall({
-                      toolCallId: currentToolCall.toolCallId,
-                    }),
-                  );
-                }
-              : undefined
-          }
-          data-testid="reject-tool-call-button"
-        >
-          {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
-          {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
-        </StopButton>
-        <EnterButton
-          isPrimary={true}
-          className="text-description"
-          onClick={() => dispatch(callCurrentTool())}
-          data-testid="accept-tool-call-button"
-        >
-          {getMetaKeyLabel()} ⏎ Continue
-        </EnterButton>
-      </div>
-    </Container>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-description-muted my-1 font-medium"
+              onClick={() => handleReject(toolCall.toolCallId)}
+              data-testid={generateToolCallButtonTestId(
+                "reject",
+                toolCall.toolCallId,
+              )}
+            >
+              {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
+              {index === 0 && (
+                <span className="text-2xs mr-1">
+                  {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()}⌫
+                </span>
+              )}
+              <span>Reject</span>
+            </Button>
+
+            <Button
+              variant="primary"
+              size="sm"
+              className="my-1 font-medium"
+              onClick={() => handleAccept(toolCall.toolCallId)}
+              data-testid={generateToolCallButtonTestId(
+                "accept",
+                toolCall.toolCallId,
+              )}
+            >
+              {index === 0 && (
+                <span className="text-2xs mr-1">{getMetaKeyLabel()}⏎</span>
+              )}
+              <span>Accept</span>
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
