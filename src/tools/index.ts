@@ -1,6 +1,7 @@
 import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
 import { exitTool } from "./exit.js";
+import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
@@ -18,6 +19,7 @@ export const BUILTIN_TOOLS: Tool[] = [
   viewDiffTool,
   searchCodeTool,
   runTerminalCommandTool,
+  fetchTool,
   // When in headless mode, there is a tool that the LLM can call to make the GitHub Action fail
   ...(parseArgs().isHeadless ? [exitTool] : []),
 ];
