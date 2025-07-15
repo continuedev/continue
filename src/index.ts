@@ -1,24 +1,14 @@
 #!/usr/bin/env node
 
-import { AssistantUnrolled } from "@continuedev/config-yaml";
-import {
-  BaseLlmApi,
-  constructLlmApi,
-  LLMConfig,
-} from "@continuedev/openai-adapters";
-import {
-  Configuration,
-  DefaultApi,
-} from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { parseArgs } from "./args.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
-import { AuthConfig, loadAuthConfig } from "./auth/workos.js";
+import { initializeAssistant } from "./assistant.js";
+import { loadAuthConfig } from "./auth/workos.js";
 import { introMessage } from "./intro.js";
 import { configureLogger } from "./logger.js";
-import { MCPService } from "./mcp.js";
 import { loadSession, saveSession } from "./session.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
@@ -31,99 +21,7 @@ const args = parseArgs();
 // Configure logger based on headless mode
 configureLogger(args.isHeadless);
 
-function getLlmApi(
-  assistant: AssistantUnrolled,
-  authConfig: AuthConfig
-): [BaseLlmApi, string] {
-  const model = assistant.models?.find((model) =>
-    model?.roles?.includes("chat")
-  );
 
-  if (!model) {
-    throw new Error(
-      "No models with the chat role found in the configured assistant"
-    );
-  }
-
-  const config: LLMConfig =
-    model.provider === "continue-proxy"
-      ? {
-          provider: model.provider,
-          requestOptions: model.requestOptions,
-          apiBase: model.apiBase,
-          apiKey: authConfig.accessToken,
-          env: {
-            apiKeyLocation: (model as any).apiKeyLocation,
-            // envSecretLocations: model.env,
-            orgScopeId: null, // TODO
-            proxyUrl: undefined, // TODO
-          },
-        }
-      : {
-          provider: model.provider as any,
-          apiKey: model.apiKey,
-          apiBase: model.apiBase,
-          requestOptions: model.requestOptions,
-          env: model.env,
-        };
-
-  const llmApi = constructLlmApi(config);
-
-  if (!llmApi) {
-    throw new Error(
-      "Failed to initialized LLM. Please check your configuration."
-    );
-  }
-
-  return [llmApi, model.model];
-}
-
-async function loadAssistant(
-  accessToken: string | undefined,
-  config: string | undefined,
-  organizationId: string | undefined
-): Promise<AssistantUnrolled> {
-  const apiClient = new DefaultApi(
-    new Configuration({
-      accessToken,
-    })
-  );
-
-  if (!config) {
-    // Fall back to listing assistants and taking the first one
-    const assistants = await apiClient.listAssistants({
-      alwaysUseProxy: "false",
-      organizationId,
-    });
-
-    const result = assistants[0].configResult;
-    if (result.errors?.length || !result.config) {
-      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
-    }
-
-    return result.config as AssistantUnrolled;
-  } else if (config.startsWith(".") || config.startsWith("/")) {
-    // Load from file
-    throw new Error("Loading from file is not supported yet.");
-    // return loadAssistantFromFile(config);
-  } else {
-    // Load from slug
-    const [ownerSlug, packageSlug] = config.split("/");
-    const resp = await apiClient.getAssistant({
-      ownerSlug,
-      packageSlug,
-      alwaysUseProxy: "false",
-      organizationId,
-    });
-
-    const result = resp.configResult;
-    if (result.errors?.length || !result.config) {
-      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
-    }
-
-    return result.config as AssistantUnrolled;
-  }
-}
 
 async function chat() {
   const isAuthenticated = await ensureAuthenticated(true);
@@ -164,13 +62,10 @@ async function chat() {
   // }
 
   // Initialize ContinueSDK and MCPService once
-  const config = await loadAssistant(
-    authConfig.accessToken,
-    args.configPath,
-    undefined
+  const { config, llmApi, model, mcpService } = await initializeAssistant(
+    authConfig,
+    args.configPath
   );
-  const [llmApi, model] = getLlmApi(config, authConfig);
-  const mcpService = await MCPService.create(config);
 
   // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
