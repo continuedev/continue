@@ -62,7 +62,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = de
       ),
     },
     {
-      regex: /`([^`]+)`/g,
+      regex: /`([^`\n]+)`/g,
       render: (content, key) => (
         <Text key={key} color="cyan">
           {content}
