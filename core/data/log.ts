@@ -214,6 +214,8 @@ export class DataLogger {
             }),
           },
           dataConfig.requestOptions,
+          // todo: proxy config is not available in this namespace
+          "TEST HOST (logToOneDestination)",
         );
         if (!response.ok) {
           throw new Error(

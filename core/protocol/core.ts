@@ -23,6 +23,7 @@ import {
   DocsIndexingDetails,
   ExperimentalModelRoles,
   FileSymbolMap,
+  IdeProxySettings,
   IdeSettings,
   LLMFullCompletionOptions,
   ModelDescription,
@@ -79,6 +80,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
+  "config/ideProxySettings": [IdeProxySettings, void];
   "config/getSerializedProfileInfo": [
     undefined,
     {

@@ -331,6 +331,15 @@ export class Core {
       await this.configHandler.updateIdeSettings(msg.data);
     });
 
+    on("config/ideProxySettings", async (msg) => {
+      this.configHandler.ideProxySettings = msg.data;
+
+      // todo: just a debug. remove when PR is ready
+      console.log(
+        `ideProxySettings: ${JSON.stringify(this.configHandler.ideProxySettings)}`,
+      );
+    });
+
     on("config/refreshProfiles", async (msg) => {
       const { selectOrgId, selectProfileId } = msg.data ?? {};
       await this.configHandler.refreshAll();
@@ -418,7 +427,13 @@ export class Core {
             config,
             ide: this.ide,
             fetch: (url, init) =>
-              fetchwithRequestOptions(url, init, config.requestOptions),
+              fetchwithRequestOptions(
+                url,
+                init,
+                config.requestOptions,
+                // this.configHandler.ideProxySettings?.host,
+                "TEST HOST (loadSubmenuItems)", // todo
+              ),
           });
         return items || [];
       } catch (e) {
@@ -870,7 +885,13 @@ export class Core {
       ide: this.ide,
       llm: config.selectedModelByRole.chat,
       fetch: (url, init) =>
-        fetchwithRequestOptions(url, init, config.requestOptions),
+        fetchwithRequestOptions(
+          url,
+          init,
+          config.requestOptions,
+          //this.configHandler.ideProxySettings?.host,
+          "TEST HOST (handleToolCall)",
+        ),
       tool,
       toolCallId: toolCall.id,
       onPartialOutput,
@@ -1109,7 +1130,13 @@ export class Core {
         selectedCode,
         reranker: config.selectedModelByRole.rerank,
         fetch: (url, init) =>
-          fetchwithRequestOptions(url, init, config.requestOptions),
+          fetchwithRequestOptions(
+            url,
+            init,
+            config.requestOptions,
+            //this.configHandler.ideProxySettings?.host,
+            "TEST HOST (getContextItems)",
+          ),
         isInAgentMode: msg.data.isInAgentMode,
       });
 

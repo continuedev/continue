@@ -89,6 +89,8 @@ export async function* llmStreamChat(
             signal: abortController.signal,
           },
           config.requestOptions,
+          // todo: proxy config is not available in this namespace
+          "TEST HOST (llmStreamChat)",
         ),
       completionOptions,
       abortController,

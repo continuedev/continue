@@ -6,6 +6,7 @@ import {
   ContinueConfig,
   IContextProvider,
   IDE,
+  IdeProxySettings,
   IdeSettings,
   ILLMLogger,
 } from "../index.js";
@@ -44,6 +45,7 @@ export class ConfigHandler {
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles;
+  ideProxySettings?: IdeProxySettings; // todo: are these settings OK here?
 
   constructor(
     private readonly ide: IDE,
