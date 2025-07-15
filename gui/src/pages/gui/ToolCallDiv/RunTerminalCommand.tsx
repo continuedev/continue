@@ -1,10 +1,12 @@
 import { ToolCallState } from "core";
+import { useMemo } from "react";
 import styled from "styled-components";
 import { vscForeground } from "../../../components";
 import Ansi from "../../../components/ansiTerminal/Ansi";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 import { useAppDispatch } from "../../../redux/hooks";
 import { moveTerminalProcessToBackground } from "../../../redux/thunks/moveTerminalProcessToBackground";
+import { TerminalCollapsibleContainer } from "./TerminalCollapsibleContainer";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
@@ -84,6 +86,41 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const isRunning = props.toolCallState.status === "calling";
   const hasOutput = terminalContent.length > 0;
 
+  const displayLines = 15;
+
+  // Process terminal content for line limiting
+  const processedTerminalContent = useMemo(() => {
+    if (!terminalContent) return { 
+      fullContent: "", 
+      limitedContent: "", 
+      totalLines: 0, 
+      isLimited: false, 
+      hiddenLinesCount: 0 
+    };
+    
+    const lines = terminalContent.split('\n');
+    const totalLines = lines.length;
+    
+    if (totalLines > displayLines) {
+      const lastTwentyLines = lines.slice(-displayLines);
+      return {
+        fullContent: terminalContent,
+        limitedContent: lastTwentyLines.join('\n'),
+        totalLines,
+        isLimited: true,
+        hiddenLinesCount: totalLines - displayLines
+      };
+    }
+    
+    return {
+      fullContent: terminalContent,
+      limitedContent: terminalContent,
+      totalLines,
+      isLimited: false,
+      hiddenLinesCount: 0
+    };
+  }, [terminalContent]);
+
   // Determine status type
   let statusType: "running" | "completed" | "failed" | "background" =
     "completed";
@@ -108,9 +145,21 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
         <WaitingMessage>Waiting for output...</WaitingMessage>
       )}
       {hasOutput && (
-        <AnsiWrapper>
-          <Ansi>{terminalContent}</Ansi>
-        </AnsiWrapper>
+        <TerminalCollapsibleContainer
+          collapsible={processedTerminalContent.isLimited}
+          hiddenLinesCount={processedTerminalContent.hiddenLinesCount}
+          className="mt-2"
+          collapsedContent={
+            <AnsiWrapper>
+              <Ansi>{processedTerminalContent.limitedContent}</Ansi>
+            </AnsiWrapper>
+          }
+          expandedContent={
+            <AnsiWrapper>
+              <Ansi>{processedTerminalContent.fullContent}</Ansi>
+            </AnsiWrapper>
+          }
+        />
       )}
 
       {/* Status information */}
