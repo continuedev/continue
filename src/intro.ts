@@ -1,4 +1,5 @@
-import { Assistant, type AssistantConfig } from "@continuedev/sdk";
+import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { MCPService } from "./mcp.js";
@@ -13,16 +14,18 @@ export function loadSystemMessage(
     .join("\n");
 }
 
-export function introMessage(assistant: Assistant, mcpService: MCPService) {
-  const assistantConfig = assistant.config;
-
+export function introMessage(
+  config: AssistantUnrolled,
+  modelName: string,
+  mcpService: MCPService
+) {
   const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
 
   console.info(chalk.cyan(CONTINUE_ASCII_ART));
 
-  console.info(`\n${chalk.bold.blue(`Agent: ${assistantConfig.name}\n`)}`);
-  console.info(`${chalk.yellow("Model:")} ${assistant.getModel()}\n`);
+  console.info(`\n${chalk.bold.blue(`Agent: ${config.name}\n`)}`);
+  console.info(`${chalk.yellow("Model:")} ${modelName}\n`);
 
   console.info(chalk.yellow("Tools:"));
   getAllTools().forEach((tool) => {
@@ -44,7 +47,7 @@ export function introMessage(assistant: Assistant, mcpService: MCPService) {
   console.info(
     `- ${chalk.green("/whoami")}: Check who you're currently logged in as`
   );
-  for (const prompt of assistantConfig.prompts ?? []) {
+  for (const prompt of config.prompts ?? []) {
     console.info(`- /${prompt?.name}: ${prompt?.description}`);
   }
   for (const prompt of mcpPrompts) {
@@ -52,15 +55,13 @@ export function introMessage(assistant: Assistant, mcpService: MCPService) {
   }
   console.info("");
 
-  if (assistantConfig.rules?.length) {
-    console.info(
-      chalk.yellow("\nAssistant rules: " + assistantConfig.rules.length)
-    );
+  if (config.rules?.length) {
+    console.info(chalk.yellow("\nAssistant rules: " + config.rules.length));
   }
 
-  if (assistantConfig.mcpServers?.length) {
+  if (config.mcpServers?.length) {
     console.info(chalk.yellow("\nMCP Servers:"));
-    assistantConfig.mcpServers.forEach((server: any) => {
+    config.mcpServers.forEach((server: any) => {
       console.info(`- ${chalk.cyan(server?.name)}`);
     });
   }

@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 
+import { AssistantUnrolled } from "@continuedev/config-yaml";
 import {
   BaseLlmApi,
   constructLlmApi,
   LLMConfig,
 } from "@continuedev/openai-adapters";
-import { Assistant } from "@continuedev/sdk";
+import {
+  Configuration,
+  DefaultApi,
+} from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { parseArgs } from "./args.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
 import { AuthConfig, loadAuthConfig } from "./auth/workos.js";
-import { initializeContinueSDK } from "./continueSDK.js";
 import { introMessage } from "./intro.js";
 import { configureLogger } from "./logger.js";
 import { MCPService } from "./mcp.js";
@@ -29,10 +32,10 @@ const args = parseArgs();
 configureLogger(args.isHeadless);
 
 function getLlmApi(
-  assistant: Assistant,
+  assistant: AssistantUnrolled,
   authConfig: AuthConfig
 ): [BaseLlmApi, string] {
-  const model = assistant.config.models?.find((model) =>
+  const model = assistant.models?.find((model) =>
     model?.roles?.includes("chat")
   );
 
@@ -77,11 +80,49 @@ function getLlmApi(
 
 async function loadAssistant(
   accessToken: string | undefined,
-  configPath: string
-): Promise<Assistant> {
-  const continueSdk = await initializeContinueSDK(accessToken, configPath);
+  config: string | undefined,
+  organizationId: string | undefined
+): Promise<AssistantUnrolled> {
+  const apiClient = new DefaultApi(
+    new Configuration({
+      accessToken,
+    })
+  );
 
-  return continueSdk.assistant;
+  if (!config) {
+    // Fall back to listing assistants and taking the first one
+    const assistants = await apiClient.listAssistants({
+      alwaysUseProxy: "false",
+      organizationId,
+    });
+
+    const result = assistants[0].configResult;
+    if (result.errors?.length || !result.config) {
+      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
+    }
+
+    return result.config as AssistantUnrolled;
+  } else if (config.startsWith(".") || config.startsWith("/")) {
+    // Load from file
+    throw new Error("Loading from file is not supported yet.");
+    // return loadAssistantFromFile(config);
+  } else {
+    // Load from slug
+    const [ownerSlug, packageSlug] = config.split("/");
+    const resp = await apiClient.getAssistant({
+      ownerSlug,
+      packageSlug,
+      alwaysUseProxy: "false",
+      organizationId,
+    });
+
+    const result = resp.configResult;
+    if (result.errors?.length || !result.config) {
+      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
+    }
+
+    return result.config as AssistantUnrolled;
+  }
 }
 
 async function chat() {
@@ -123,17 +164,18 @@ async function chat() {
   // }
 
   // Initialize ContinueSDK and MCPService once
-  const assistant = await loadAssistant(
+  const config = await loadAssistant(
     authConfig.accessToken,
-    args.configPath
+    args.configPath,
+    undefined
   );
-  const [llmApi, model] = getLlmApi(assistant, authConfig);
-  const mcpService = await MCPService.create(assistant.config);
+  const [llmApi, model] = getLlmApi(config, authConfig);
+  const mcpService = await MCPService.create(config);
 
   // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
     await startTUIChat(
-      assistant,
+      config,
       llmApi,
       model,
       mcpService,
@@ -144,7 +186,7 @@ async function chat() {
   }
 
   // Show intro message for headless mode
-  introMessage(assistant, mcpService);
+  introMessage(config, model, mcpService);
 
   // Rules
   let chatHistory: ChatCompletionMessageParam[] = [];
@@ -162,7 +204,7 @@ async function chat() {
 
   // If no session loaded or not resuming, initialize with system message
   if (chatHistory.length === 0) {
-    const rulesSystemMessage = assistant.systemMessage;
+    const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
     const systemMessage = constructSystemMessage(rulesSystemMessage);
     if (systemMessage) {
       chatHistory.push({ role: "system", content: systemMessage });
@@ -185,7 +227,7 @@ async function chat() {
     isFirstMessage = false;
 
     // Handle slash commands
-    const commandResult = handleSlashCommands(userInput, assistant.config);
+    const commandResult = handleSlashCommands(userInput, config);
     if (commandResult) {
       if (commandResult.exit) {
         break;

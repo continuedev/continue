@@ -1,6 +1,6 @@
 export interface CommandLineArgs {
   isHeadless: boolean;
-  configPath: string;
+  configPath?: string;
   prompt?: string; // Optional prompt argument
   resume?: boolean; // Resume from last session
 }
@@ -15,7 +15,6 @@ export function parseArgs(): CommandLineArgs {
   // Default values
   const result: CommandLineArgs = {
     isHeadless: false,
-    configPath: "nate/default-assistant",
   };
 
   // Parse flags

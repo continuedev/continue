@@ -1,5 +1,5 @@
+import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ContinueClient } from "@continuedev/sdk";
 import { Box, Text, useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import path from "path";
@@ -15,7 +15,7 @@ import ToolResultSummary from "./ToolResultSummary.js";
 import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
-  assistant: ContinueClient["assistant"];
+  config: AssistantUnrolled;
   model: string;
   llmApi: BaseLlmApi;
   initialPrompt?: string;
@@ -32,7 +32,7 @@ interface DisplayMessage {
 }
 
 const TUIChat: React.FC<TUIChatProps> = ({
-  assistant,
+  config: assistant,
   model,
   llmApi,
   initialPrompt,
@@ -52,7 +52,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
       // If no session loaded or not resuming, initialize with system message
       if (history.length === 0) {
-        const rulesSystemMessage = assistant.systemMessage;
+        const rulesSystemMessage = ""; // TODO // assistant.systemMessage;
         const systemMessage = constructSystemMessage(rulesSystemMessage);
         if (systemMessage) {
           history.push({ role: "system", content: systemMessage });
@@ -96,7 +96,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const handleUserMessage = async (message: string) => {
     // Handle slash commands
-    const commandResult = handleSlashCommands(message, assistant.config);
+    const commandResult = handleSlashCommands(message, assistant);
     if (commandResult) {
       if (commandResult.exit) {
         exit();
@@ -415,7 +415,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           isWaitingForResponse={isWaitingForResponse}
           inputMode={inputMode}
           onInterrupt={handleInterrupt}
-          assistant={assistant.config}
+          assistant={assistant}
           onFileAttached={handleFileAttached}
         />
         <Box marginRight={2} justifyContent="flex-end">
