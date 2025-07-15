@@ -75,6 +75,15 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   applyToFile: undefined,
   acceptDiff: undefined,
   readFile: "File contents",
+  "tools/call": {
+    contextItems: [
+      {
+        content: "Tool call executed successfully",
+        name: "Tool Result",
+        description: "Mock tool result",
+      },
+    ],
+  },
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [

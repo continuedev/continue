@@ -9,7 +9,7 @@ See also
 - [JSON Continue Config Reference](/reference)
 - [YAML Continue Config Reference](/reference)
 
-## Create YAML file[​](#create-yaml-file "Direct link to Create YAML file")
+## Create YAML file
 
 Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current `config.json` file. If a `config.yaml` file is present, it will be loaded instead of `config.json`.
 
@@ -21,7 +21,7 @@ config.yaml
 name: my-configurationversion: 0.0.1schema: v1
 ```
 
-### Models[​](#models "Direct link to Models")
+### Models
 
 Add all model configurations in `config.json`, including models in `models`, `tabAutocompleteModel`, `embeddingsProvider`, and `reranker`, to the `models` section of your new YAML config file. A new `roles` YAML field specifies which roles a model can be used for, with possible values `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`.
 
@@ -93,7 +93,7 @@ models:  - name: GPT-4    provider: openai    model: gpt-4    apiKey: <YOUR_OPEN
 
 Note that the `repoMapFileSelection` experimental model role has been deprecated and is only available in `config.json`.
 
-### Context Providers[​](#context-providers "Direct link to Context Providers")
+### Context Providers
 
 The JSON `contextProviders` field is replaced by the YAML `context` array.
 
@@ -122,7 +122,7 @@ config.yaml
 context:  - provider: docs  - provider: codebase    params:      nRetrieve: 30      nFinal: 3  - provider: diff
 ```
 
-### System Message[​](#system-message "Direct link to System Message")
+### System Message
 
 The `systemMessage` property has been replaced with a `rules` property that takes an array of strings.
 
@@ -142,7 +142,7 @@ config.yaml
 rules:  - Always give concise responses
 ```
 
-### Prompts[​](#prompts "Direct link to Prompts")
+### Prompts
 
 Rather than with `customCommands`, you can now use the `prompts` field to define custom prompts.
 
@@ -170,7 +170,7 @@ config.yaml
 prompts:  - name: check    description: Check for mistakes in my code    prompt: |      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:        - Syntax errors        - Logic errors        - Security vulnerabilities        - Performance issues        - Anything else that looks wrong      Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found.
 ```
 
-### Documentation[​](#documentation "Direct link to Documentation")
+### Documentation
 
 Documentation is largely the same, but the `title` property has been replaced with `name`. The `startUrl`, `rootUrl`, and `faviconUrl` properties remain.
 
@@ -195,7 +195,7 @@ config.yaml
 docs:  - name: nest.js    startUrl: https://docs.nestjs.com/  - name: My site    startUrl: https://mysite.com/docs/
 ```
 
-### MCP Servers[​](#mcp-servers "Direct link to MCP Servers")
+### MCP Servers
 
 **Properties:**
 
@@ -236,7 +236,7 @@ mcpServers:  - name: My MCP Server    command: uvx    args:      - mcp-server-sq
 
 ---
 
-## Deprecated configuration options[​](#deprecated-configuration-options "Direct link to Deprecated configuration options")
+## Deprecated configuration options
 
 Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](/customize/settings) (Gear Icon). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
 
@@ -267,6 +267,6 @@ The following top-level fields from `config.json` have been deprecated. Most UI-
 - `experimental`
 - `userToken`
 
-## New Configuration options[​](#new-configuration-options "Direct link to New Configuration options")
+## New Configuration options
 
 The YAML configuration format offers new configuration options not available in the JSON format. See the [YAML Config Reference](/reference) for more information.

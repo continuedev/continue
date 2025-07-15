@@ -19,7 +19,7 @@ import { BuiltInToolNames } from "../../../tools/builtIn";
 import { callBuiltInTool } from "../../../tools/callTool";
 import { globSearchTool } from "../../../tools/definitions/globSearch";
 import { grepSearchTool } from "../../../tools/definitions/grepSearch";
-import { lsTool } from "../../../tools/definitions/lsTool";
+import { lsTool } from "../../../tools/definitions/ls";
 import { readFileTool } from "../../../tools/definitions/readFile";
 import { viewRepoMapTool } from "../../../tools/definitions/viewRepoMap";
 import { viewSubdirectoryTool } from "../../../tools/definitions/viewSubdirectory";
