@@ -6,11 +6,10 @@ import * as readlineSync from "readline-sync";
 import { parseArgs } from "./args.js";
 import { initializeAssistant } from "./assistant.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
-import { loadAuthConfig, ensureOrganization } from "./auth/workos.js";
+import { ensureOrganization, loadAuthConfig } from "./auth/workos.js";
 import { introMessage } from "./intro.js";
 import { configureLogger } from "./logger.js";
 import { loadSession, saveSession } from "./session.js";
-import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
 import { constructSystemMessage } from "./systemMessage.js";
 import { startTUIChat } from "./ui/index.js";
@@ -21,7 +20,7 @@ const args = parseArgs();
 // Configure logger based on headless mode
 configureLogger(args.isHeadless);
 
-async function chat() {
+async function initializeChat() {
   const isAuthenticated = await ensureAuthenticated(true);
 
   if (!isAuthenticated) {
@@ -32,13 +31,22 @@ async function chat() {
   const authConfig = loadAuthConfig();
 
   // Ensure organization is selected
-  const authConfigWithOrg = await ensureOrganization(authConfig, args.isHeadless);
+  const authConfigWithOrg = await ensureOrganization(
+    authConfig,
+    args.isHeadless
+  );
 
   // Initialize ContinueSDK and MCPService once
   const { config, llmApi, model, mcpService } = await initializeAssistant(
     authConfigWithOrg,
     args.configPath
   );
+
+  return { config, llmApi, model, mcpService };
+}
+
+async function chat() {
+  let { config, llmApi, model, mcpService } = await initializeChat();
 
   // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
@@ -48,7 +56,8 @@ async function chat() {
       model,
       mcpService,
       args.prompt,
-      args.resume
+      args.resume,
+      args.configPath
     );
     return;
   }
@@ -94,22 +103,6 @@ async function chat() {
 
     isFirstMessage = false;
 
-    // Handle slash commands
-    const commandResult = handleSlashCommands(userInput, config);
-    if (commandResult) {
-      if (commandResult.exit) {
-        break;
-      }
-
-      // Note that `console.log` is shown in headless mode, `console.info` is not
-      console.log(`\n${chalk.italic.gray(commandResult.output ?? "")}`);
-
-      if (commandResult.newInput) {
-        userInput = commandResult.newInput;
-      } else {
-        continue;
-      }
-    }
 
     // Add user message to history
     chatHistory.push({ role: "user", content: userInput });

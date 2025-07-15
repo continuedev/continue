@@ -357,6 +357,46 @@ export async function ensureOrganization(
 }
 
 /**
+ * Gets the list of available organizations for the user
+ */
+export async function listUserOrganizations(): Promise<
+  { id: string; name: string }[] | null
+> {
+  // If using CONTINUE_API_KEY environment variable, organization switching is not supported
+  if (process.env.CONTINUE_API_KEY) {
+    return null;
+  }
+
+  const authConfig = loadAuthConfig();
+
+  if (!authConfig.accessToken) {
+    return null;
+  }
+
+  const apiClient = new DefaultApi(
+    new Configuration({
+      accessToken: authConfig.accessToken,
+    })
+  );
+
+  try {
+    const resp = await apiClient.listOrganizations();
+    return resp.organizations || [];
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Checks if the user has multiple organizations available
+ */
+export async function hasMultipleOrganizations(): Promise<boolean> {
+  const organizations = await listUserOrganizations();
+  // Has multiple organizations if there's at least one organization (plus personal)
+  return organizations !== null && organizations.length > 0;
+}
+
+/**
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {

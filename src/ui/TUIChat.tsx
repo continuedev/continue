@@ -6,11 +6,16 @@ import path from "path";
 import React, { useEffect, useState } from "react";
 import { loadSession, saveSession } from "../session.js";
 import { handleSlashCommands } from "../slashCommands.js";
+import { saveAuthConfig, loadAuthConfig } from "../auth/workos.js";
+import { initializeAssistant } from "../assistant.js";
+import { MCPService } from "../mcp.js";
+import { introMessage } from "../intro.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { getToolDisplayName } from "../tools.js";
 import LoadingAnimation from "./LoadingAnimation.js";
 import MarkdownRenderer from "./MarkdownRenderer.js";
+import OrganizationSelector from "./OrganizationSelector.js";
 import ToolResultSummary from "./ToolResultSummary.js";
 import UserInput from "./UserInput.js";
 
@@ -18,6 +23,8 @@ interface TUIChatProps {
   config: AssistantUnrolled;
   model: string;
   llmApi: BaseLlmApi;
+  mcpService: MCPService;
+  configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
 }
@@ -32,12 +39,19 @@ interface DisplayMessage {
 }
 
 const TUIChat: React.FC<TUIChatProps> = ({
-  config: assistant,
-  model,
-  llmApi,
+  config: initialAssistant,
+  model: initialModel,
+  llmApi: initialLlmApi,
+  mcpService: initialMcpService,
+  configPath,
   initialPrompt,
   resume,
 }) => {
+  // Track current assistant configuration state
+  const [assistant, setAssistant] = useState(initialAssistant);
+  const [model, setModel] = useState(initialModel);
+  const [llmApi, setLlmApi] = useState(initialLlmApi);
+  const [mcpService, setMcpService] = useState(initialMcpService);
   const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
     () => {
       let history: ChatCompletionMessageParam[] = [];
@@ -85,6 +99,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ path: string; content: string }>
   >([]);
+  const [showOrgSelector, setShowOrgSelector] = useState(false);
   const { exit } = useApp();
 
   // Handle initial prompt
@@ -95,8 +110,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
   }, [initialPrompt]);
 
   const handleUserMessage = async (message: string) => {
+    // Special handling for /org command in TUI - show selector instead of prompting
+    if (message.trim() === "/org") {
+      setShowOrgSelector(true);
+      return;
+    }
+
     // Handle slash commands
-    const commandResult = handleSlashCommands(message, assistant);
+    const commandResult = await handleSlashCommands(message, assistant);
     if (commandResult) {
       if (commandResult.exit) {
         exit();
@@ -122,6 +143,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         }
         return;
       }
+
 
       // Add command output to messages
       if (commandResult.output) {
@@ -392,6 +414,82 @@ const TUIChat: React.FC<TUIChatProps> = ({
     );
   };
 
+  const handleOrganizationSelect = async (organizationId: string | null, organizationName: string) => {
+    setShowOrgSelector(false);
+    
+    // Update auth config
+    const authConfig = loadAuthConfig();
+    const updatedConfig = {
+      ...authConfig,
+      organizationId,
+    };
+    saveAuthConfig(updatedConfig);
+    
+    try {
+      // Show loading message
+      setMessages([
+        {
+          role: "system",
+          content: `Switching to organization: ${organizationName}...`,
+          messageType: "system",
+        },
+      ]);
+      
+      // Reinitialize assistant with new organization (full refresh)
+      const { config, llmApi: newLlmApi, model: newModel, mcpService: newMcpService } = await initializeAssistant(
+        updatedConfig,
+        configPath // Pass the original config path to potentially load different assistant
+      );
+      
+      // Update state with new assistant configuration
+      setAssistant(config);
+      setLlmApi(newLlmApi);
+      setModel(newModel);
+      setMcpService(newMcpService);
+      
+      // Clear chat history and start fresh
+      const rulesSystemMessage = ""; // TODO: get from assistant.systemMessage if available
+      const systemMessage = constructSystemMessage(rulesSystemMessage);
+      const newHistory = systemMessage ? [{ role: "system" as const, content: systemMessage }] : [];
+      setChatHistory(newHistory);
+      
+      // Clear the screen completely
+      clearScreen();
+      
+      // Show the new intro message for the new assistant
+      introMessage(config, newModel, newMcpService);
+      
+      // Clear messages and show success
+      setMessages([
+        {
+          role: "system",
+          content: `Successfully switched to organization: ${organizationName}`,
+          messageType: "system",
+        },
+      ]);
+      
+    } catch (error: any) {
+      // Show error message
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: `Failed to switch organization: ${error.message}`,
+          messageType: "system",
+        },
+      ]);
+    }
+  };
+
+  const handleOrganizationCancel = () => {
+    setShowOrgSelector(false);
+  };
+
+  const clearScreen = () => {
+    // Clear the terminal screen
+    process.stdout.write('\x1b[2J\x1b[H');
+  };
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -409,6 +507,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
           </Box>
         )}
 
+        {/* Organization selector - shows above input when active */}
+        {showOrgSelector && (
+          <OrganizationSelector
+            onSelect={handleOrganizationSelect}
+            onCancel={handleOrganizationCancel}
+          />
+        )}
+
         {/* Input area - always at bottom */}
         <UserInput
           onSubmit={handleUserMessage}
@@ -417,6 +523,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onInterrupt={handleInterrupt}
           assistant={assistant}
           onFileAttached={handleFileAttached}
+          disabled={showOrgSelector}
         />
         <Box marginRight={2} justifyContent="flex-end">
           <Text color="gray">● Continue CLI</Text>

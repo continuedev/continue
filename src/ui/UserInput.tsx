@@ -1,6 +1,7 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { hasMultipleOrganizations } from "../auth/workos.js";
 import { InputHistory } from "../util/inputHistory.js";
 import FileSearchUI from "./FileSearchUI.js";
 import SlashCommandUI from "./SlashCommandUI.js";
@@ -13,6 +14,7 @@ interface UserInputProps {
   onInterrupt?: () => void;
   assistant: AssistantConfig;
   onFileAttached?: (filePath: string, content: string) => void;
+  disabled?: boolean;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -22,6 +24,7 @@ const UserInput: React.FC<UserInputProps> = ({
   onInterrupt,
   assistant,
   onFileAttached,
+  disabled = false,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -39,6 +42,12 @@ const UserInput: React.FC<UserInputProps> = ({
   const { exit } = useApp();
 
   // Get all available slash commands
+  const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
+
+  useEffect(() => {
+    hasMultipleOrganizations().then(setHasMultipleOrgs);
+  }, []);
+
   const getSlashCommands = () => {
     const systemCommands = [
       { name: "help", description: "Show help message" },
@@ -49,6 +58,10 @@ const UserInput: React.FC<UserInputProps> = ({
         name: "whoami",
         description: "Check who you're currently logged in as",
       },
+      ...(hasMultipleOrgs ? [{
+        name: "org",
+        description: "Switch organization",
+      }] : []),
     ];
 
     const assistantCommands =
@@ -185,6 +198,10 @@ const UserInput: React.FC<UserInputProps> = ({
   };
 
   useInput((input, key) => {
+    // Don't handle any input when disabled
+    if (disabled) {
+      return;
+    }
     if (key.ctrl && (input === "c" || input === "d")) {
       exit();
       return;
@@ -432,6 +449,11 @@ const UserInput: React.FC<UserInputProps> = ({
       );
     }
   };
+
+  // Don't render anything when disabled
+  if (disabled) {
+    return null;
+  }
 
   return (
     <Box flexDirection="column">
