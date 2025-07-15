@@ -432,12 +432,12 @@ export interface PromptLog {
 export type MessageModes = "chat" | "agent" | "plan";
 
 export type ToolStatus =
-  | "generating"
-  | "generated"
-  | "calling"
-  | "errored"
-  | "done"
-  | "canceled";
+  | "generating" // Tool call arguments are being streamed from the LLM
+  | "generated" // Tool call is complete and ready for execution (awaiting approval)
+  | "calling" // Tool is actively being executed
+  | "errored" // Tool execution failed with an error
+  | "done" // Tool execution completed successfully
+  | "canceled"; // Tool call was canceled by user or system
 
 // Will exist only on "assistant" messages with tool calls
 interface ToolCallState {
@@ -462,7 +462,7 @@ export interface ChatHistoryItem {
   editorState?: any;
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
-  toolCallState?: ToolCallState;
+  toolCallStates?: ToolCallState[];
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
   appliedRules?: RuleWithSource[];
