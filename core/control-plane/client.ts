@@ -45,7 +45,6 @@ export class ControlPlaneClient {
   async resolveFQSNs(
     fqsns: FQSN[],
     orgScopeId: string | null,
-    signal?: AbortSignal,
   ): Promise<(SecretResult | undefined)[]> {
     if (!(await this.isSignedIn())) {
       return fqsns.map((fqsn) => ({
@@ -61,7 +60,6 @@ export class ControlPlaneClient {
     const resp = await this.request("ide/sync-secrets", {
       method: "POST",
       body: JSON.stringify({ fqsns, orgScopeId }),
-      signal,
     });
     return (await resp.json()) as any;
   }
@@ -105,10 +103,7 @@ export class ControlPlaneClient {
     return resp;
   }
 
-  public async listAssistants(
-    organizationId: string | null,
-    signal?: AbortSignal,
-  ): Promise<
+  public async listAssistants(organizationId: string | null): Promise<
     {
       configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
@@ -128,7 +123,6 @@ export class ControlPlaneClient {
 
       const resp = await this.request(url, {
         method: "GET",
-        signal,
       });
       return (await resp.json()) as any;
     } catch (e) {
@@ -136,9 +130,7 @@ export class ControlPlaneClient {
     }
   }
 
-  public async listOrganizations(
-    signal?: AbortSignal,
-  ): Promise<Array<OrganizationDescription>> {
+  public async listOrganizations(): Promise<Array<OrganizationDescription>> {
     if (!(await this.isSignedIn())) {
       return [];
     }
@@ -146,7 +138,6 @@ export class ControlPlaneClient {
     try {
       const resp = await this.request("ide/list-organizations", {
         method: "GET",
-        signal,
       });
       const { organizations } = (await resp.json()) as any;
       return organizations;
@@ -157,7 +148,6 @@ export class ControlPlaneClient {
 
   public async listAssistantFullSlugs(
     organizationId: string | null,
-    signal?: AbortSignal,
   ): Promise<FullSlug[] | null> {
     if (!(await this.isSignedIn())) {
       return null;
@@ -170,7 +160,6 @@ export class ControlPlaneClient {
     try {
       const resp = await this.request(url, {
         method: "GET",
-        signal,
       });
       const { fullSlugs } = (await resp.json()) as any;
       return fullSlugs;
@@ -179,9 +168,7 @@ export class ControlPlaneClient {
     }
   }
 
-  public async getFreeTrialStatus(
-    signal?: AbortSignal,
-  ): Promise<FreeTrialStatus | null> {
+  public async getFreeTrialStatus(): Promise<FreeTrialStatus | null> {
     if (!(await this.isSignedIn())) {
       return null;
     }
@@ -189,7 +176,6 @@ export class ControlPlaneClient {
     try {
       const resp = await this.request("ide/free-trial-status", {
         method: "GET",
-        signal,
       });
       return (await resp.json()) as FreeTrialStatus;
     } catch (e) {
@@ -204,7 +190,6 @@ export class ControlPlaneClient {
    */
   public async getModelsAddOnCheckoutUrl(
     vsCodeUriScheme?: string,
-    signal?: AbortSignal,
   ): Promise<{ url: string } | null> {
     if (!(await this.isSignedIn())) {
       return null;
@@ -224,7 +209,6 @@ export class ControlPlaneClient {
         `ide/get-models-add-on-checkout-url?${params.toString()}`,
         {
           method: "GET",
-          signal,
         },
       );
       return (await resp.json()) as { url: string };

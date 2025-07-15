@@ -147,7 +147,9 @@ export class VsCodeExtension {
     resolveVerticalDiffManager?.(this.verticalDiffManager);
 
     void setupRemoteConfigSync(() =>
-      this.configHandler.reloadConfig.bind(this.configHandler),
+      this.configHandler.reloadConfig.bind(this.configHandler)(
+        "Remote config sync",
+      ),
     );
 
     void this.configHandler.loadConfig().then(({ config }) => {

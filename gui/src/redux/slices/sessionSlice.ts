@@ -21,10 +21,7 @@ import {
   SessionMetadata,
   ThinkingChatMessage,
   Tool,
-  ToolCallDelta,
-  ToolCallState,
 } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
   renderChatMessage,
@@ -33,170 +30,13 @@ import {
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
-import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
+import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
-import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
+import { findCurrentToolCall, findToolCall, findToolOutput } from "../util";
 
-/**
- * Helper function to filter out duplicate edit/search-replace tool calls.
- * Only keeps the first occurrence of edit tools.
- *
- * We don't support multiple parallel apply calls - see tool definitions for
- * instructions we provide to models to prevent this behavior.
- */
-function filterMultipleEditToolCalls(
-  toolCalls: ToolCallDelta[],
-): ToolCallDelta[] {
-  const editToolNames = [
-    BuiltInToolNames.EditExistingFile,
-    BuiltInToolNames.SearchAndReplaceInFile,
-  ];
-  let hasSeenEditTool = false;
-
-  return toolCalls.filter((toolCall) => {
-    const isEditTool = editToolNames.includes(toolCall.function?.name as any);
-
-    if (isEditTool) {
-      if (hasSeenEditTool) {
-        return false; // Skip this duplicate edit tool
-      }
-      hasSeenEditTool = true;
-    }
-
-    return true;
-  });
-}
-
-/**
- * Initializes tool call states for a new message containing tool calls.
- * This function is called when we receive a complete message with tool calls,
- * typically in non-streaming scenarios or when processing the first chunk
- * of a streaming message that contains tool calls.
- *
- * @param message - The chat message containing tool calls to process
- * @param lastItem - The chat history item to attach tool call states to
- */
-export function handleToolCallsInMessage(
-  message: ChatMessage,
-  lastItem: ChatHistoryItemWithMessageId,
-): void {
-  if (
-    (message.role === "assistant" || message.role === "thinking") &&
-    message.toolCalls?.length
-  ) {
-    // Filter out duplicate edit/search-replace tool calls - only keep the first one
-    const filteredToolCalls = filterMultipleEditToolCalls(message.toolCalls);
-
-    // Initialize tool call states for each filtered tool call in the message
-    // Each tool call gets its own state to track generation/execution progress
-    lastItem.toolCallStates = filteredToolCalls.map((toolCallDelta) =>
-      addToolCallDeltaToState(toolCallDelta, undefined),
-    );
-
-    // Update the message's toolCalls array to reflect the processed tool calls
-    // We can safely cast because we verified the role above
-    const curMessage = lastItem.message as
-      | AssistantChatMessage
-      | ThinkingChatMessage;
-    curMessage.toolCalls = lastItem.toolCallStates.map(
-      (state) => state.toolCall,
-    );
-  }
-}
-
-/**
- * Applies a single tool call delta to the tool call states array.
- *
- * This function handles the core logic for OpenAI-style tool call streaming where:
- * - Initial tool calls come with full details (ID, name, arguments)
- * - Subsequent argument fragments come without IDs and need to update the most recent tool call
- * - Multiple parallel tool calls can be streamed simultaneously
- *
- * @param toolCallDelta - The incoming tool call delta from the LLM stream
- * @param toolCallStates - Array of existing tool call states (modified in place)
- */
-function applyToolCallDelta(
-  toolCallDelta: ToolCallDelta,
-  toolCallStates: ToolCallState[],
-): void {
-  // Find existing state by matching toolCallId - this ensures we update
-  // the correct tool call even when multiple tool calls are being streamed
-  let existingStateIndex = -1;
-
-  if (toolCallDelta.id) {
-    // Tool call has an ID - find by exact match
-    // This handles: new tool calls or explicit updates to existing ones
-    existingStateIndex = toolCallStates.findIndex(
-      (state) => state.toolCallId === toolCallDelta.id,
-    );
-  } else {
-    // No ID in delta (common in OpenAI streaming fragments)
-    // Strategy: Update the most recently added tool call that's still being generated
-    // This handles the pattern: initial tool call with ID, then fragments without ID
-    existingStateIndex = toolCallStates.length - 1;
-
-    // Ensure we have at least one tool call to update
-    if (existingStateIndex < 0) {
-      existingStateIndex = -1; // Will create new tool call
-    }
-  }
-
-  const existingState =
-    existingStateIndex >= 0 ? toolCallStates[existingStateIndex] : undefined;
-
-  // Apply the delta to create an updated state (either updating existing or creating new)
-  const updatedState = addToolCallDeltaToState(toolCallDelta, existingState);
-
-  if (existingStateIndex >= 0) {
-    // Update existing tool call state in place
-    toolCallStates[existingStateIndex] = updatedState;
-  } else {
-    // Add new tool call state for a newly discovered tool call
-    toolCallStates.push(updatedState);
-  }
-}
-
-/**
- * Handles incremental updates to tool calls during streaming responses.
- * This function processes streaming deltas for tool calls, updating existing
- * tool call states or creating new ones as needed. It uses ID-based matching
- * to ensure tool call updates are applied to the correct tool call state.
- *
- * @param message - The streaming message chunk containing tool call deltas
- * @param lastItem - The chat history item containing existing tool call states
- */
-export function handleStreamingToolCallUpdates(
-  message: ChatMessage,
-  lastItem: ChatHistoryItemWithMessageId,
-): void {
-  if (
-    message.role === "assistant" &&
-    message.toolCalls?.length &&
-    lastItem.message.role === "assistant"
-  ) {
-    // Start with existing tool call states or empty array if none exist
-    const existingToolCallStates = lastItem.toolCallStates || [];
-    const updatedToolCallStates: ToolCallState[] = [...existingToolCallStates];
-
-    // Filter out duplicate edit/search-replace tool calls - only keep the first one
-    const filteredToolCalls = filterMultipleEditToolCalls(message.toolCalls);
-
-    // Process each filtered tool call delta, matching by ID to update the correct state
-    filteredToolCalls.forEach((toolCallDelta) => {
-      applyToolCallDelta(toolCallDelta, updatedToolCallStates);
-    });
-
-    // Replace the entire tool call states array with the updated version
-    lastItem.toolCallStates = updatedToolCallStates;
-
-    // Update the message's toolCalls array to reflect current tool call states
-    (lastItem.message as any).toolCalls = updatedToolCallStates.map(
-      (state) => state.toolCall,
-    );
-  }
-}
+const getIdeMessenger = () => (window as any).ideMessenger;
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -293,18 +133,14 @@ export const sessionSlice = createSlice({
       let validAssistantMessageIdx = -1;
       for (let i = state.history.length - 1; i > lastUserOrToolIdx; i--) {
         const message = state.history[i];
-        const hasGeneratedMsg = message.toolCallStates?.some(
-          (toolCallState) => toolCallState.status !== "generating",
-        );
-        if (message.message.content || hasGeneratedMsg) {
+        if (
+          message.message.content ||
+          message.toolCallState?.status !== "generating"
+        ) {
           validAssistantMessageIdx = i;
           // Cancel any tool calls that are dangling and generated
-          if (message.toolCallStates) {
-            message.toolCallStates.forEach((toolCallState) => {
-              if (toolCallState.status === "generated") {
-                toolCallState.status = "canceled";
-              }
-            });
+          if (message.toolCallState?.status === "generated") {
+            message.toolCallState.status = "canceled";
           }
           break;
         }
@@ -550,7 +386,30 @@ export const sessionSlice = createSlice({
               lastItem = state.history[state.history.length - 1];
               lastMessage = lastItem.message;
 
-              handleToolCallsInMessage(message, lastItem);
+              if (
+                (message.role === "assistant" || message.role === "thinking") &&
+                message.toolCalls?.[0]
+              ) {
+                // Only support one tool call for now.
+                // There are further changes required throughout the system
+                // to support multiple tool calls in a single message from
+                // OpenAI-compatible providers.
+                const toolCallDelta = message.toolCalls[0];
+                const newToolCallState = addToolCallDeltaToState(
+                  toolCallDelta,
+                  lastItem.toolCallState,
+                );
+                lastItem.toolCallState = newToolCallState;
+                // We know this is one of these two types because we just added it
+                const curMessage = lastMessage as
+                  | AssistantChatMessage
+                  | ThinkingChatMessage;
+                if (curMessage.toolCalls) {
+                  curMessage.toolCalls.push(newToolCallState.toolCall);
+                } else {
+                  curMessage.toolCalls = [newToolCallState.toolCall];
+                }
+              }
 
               return;
             }
@@ -559,18 +418,31 @@ export const sessionSlice = createSlice({
           // The remainder of this function handles streaming messages
           if (
             lastMessage.role !== message.role ||
-            message.role === "tool" // Tool messages should always create new messages
+            // This is for when a tool call comes immediately before/after tool call
+            (lastMessage.role === "assistant" &&
+              message.role === "assistant" &&
+              // Last message isn't completely new
+              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
+              // And there's a difference in tool call presence
+              (lastMessage.toolCalls?.length ?? 0) !==
+                (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
               message: {
                 ...message,
-                content: "", // Start with empty content, let accumulation logic handle it
+                content: "",
                 id: uuidv4(),
               },
               contextItems: [],
             };
-            handleToolCallsInMessage(message, historyItem);
+            if (message.role === "assistant" && message.toolCalls?.[0]) {
+              const toolCallDelta = message.toolCalls[0];
+              historyItem.toolCallState = addToolCallDeltaToState(
+                toolCallDelta,
+                undefined,
+              );
+            }
             state.history.push(historyItem);
             lastItem = state.history[state.history.length - 1];
             lastMessage = lastItem.message;
@@ -617,10 +489,17 @@ export const sessionSlice = createSlice({
             }
           } else if (
             message.role === "assistant" &&
-            message.toolCalls?.length &&
+            message.toolCalls?.[0] &&
             lastMessage.role === "assistant"
           ) {
-            handleStreamingToolCallUpdates(message, lastItem);
+            // Intentionally only supporting one tool call for now.
+            const toolCallDelta = message.toolCalls[0];
+            const newToolCallState = addToolCallDeltaToState(
+              toolCallDelta,
+              lastItem.toolCallState,
+            );
+            lastItem.toolCallState = newToolCallState;
+            lastMessage.toolCalls = [newToolCallState.toolCall];
           }
         }
       }
@@ -768,11 +647,10 @@ export const sessionSlice = createSlice({
         tools: Tool[];
       }>,
     ) => {
-      const toolCallState = findToolCallById(
+      const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
       );
-
       if (toolCallState) {
         toolCallState.status = "generated";
 
@@ -792,17 +670,14 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       // Update tool call state and corresponding tool output message
-      const toolCallState = findToolCallById(
+      const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
       );
       if (toolCallState) {
         toolCallState.output = action.payload.contextItems;
       }
-      const toolItem = findChatHistoryItemByToolCallId(
-        state.history,
-        action.payload.toolCallId,
-      );
+      const toolItem = findToolOutput(state.history, action.payload.toolCallId);
       if (toolItem) {
         toolItem.message.content = renderContextItems(
           action.payload.contextItems,
@@ -818,7 +693,7 @@ export const sessionSlice = createSlice({
         toolCallId: string;
       }>,
     ) => {
-      const toolCallState = findToolCallById(
+      const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
       );
@@ -832,7 +707,7 @@ export const sessionSlice = createSlice({
         toolCallId: string;
       }>,
     ) => {
-      const toolCallState = findToolCallById(
+      const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
       );
@@ -846,7 +721,7 @@ export const sessionSlice = createSlice({
         toolCallId: string;
       }>,
     ) => {
-      const toolCallState = findToolCallById(
+      const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
       );
@@ -860,7 +735,7 @@ export const sessionSlice = createSlice({
         toolCallId: string;
       }>,
     ) => {
-      const toolCallState = findToolCallById(
+      const toolCallState = findToolCall(
         state.history,
         action.payload.toolCallId,
       );
@@ -907,16 +782,23 @@ function addPassthroughCases(
 ) {
   thunks.forEach((thunk) => {
     builder
-      .addCase(thunk.fulfilled, (_state, _action) => {})
-      .addCase(thunk.rejected, (_state, _action) => {})
-      .addCase(thunk.pending, (_state, _action) => {});
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
   });
 }
+
+export const selectCurrentToolCall = createSelector(
+  (store: RootState) => store.session.history,
+  (history) => {
+    return findCurrentToolCall(history);
+  },
+);
 
 export const selectApplyStateByStreamId = createSelector(
   [
     (state: RootState) => state.session.codeBlockApplyStates.states,
-    (_state: RootState, streamId?: string) => streamId,
+    (state: RootState, streamId?: string) => streamId,
   ],
   (states, streamId) => {
     return states.find((state) => state.streamId === streamId);
@@ -926,7 +808,7 @@ export const selectApplyStateByStreamId = createSelector(
 export const selectApplyStateByToolCallId = createSelector(
   [
     (state: RootState) => state.session.codeBlockApplyStates.states,
-    (_state: RootState, toolCallId?: string) => toolCallId,
+    (state: RootState, toolCallId?: string) => toolCallId,
   ],
   (states, toolCallId) => {
     if (toolCallId) {

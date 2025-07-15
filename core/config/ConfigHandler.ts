@@ -117,7 +117,7 @@ export class ConfigHandler {
     this.workspaceDirs = null; // forces workspace dirs reload
 
     try {
-      const orgs = await this.getOrgs(signal);
+      const orgs = await this.getOrgs();
 
       // Figure out selected org
       const workspaceId = await this.getWorkspaceId();
@@ -162,17 +162,18 @@ export class ConfigHandler {
       if (e instanceof Error && e.message.includes("AbortError")) {
         return;
       } else {
+        this.setInitialized?.(); // Error case counts for initialization
         throw e;
       }
     }
   }
 
-  private async getOrgs(signal: AbortSignal): Promise<OrgWithProfiles[]> {
+  private async getOrgs(): Promise<OrgWithProfiles[]> {
     if (await this.controlPlaneClient.isSignedIn()) {
-      const orgDescs = await this.controlPlaneClient.listOrganizations(signal);
-      const personalHubOrg = await this.getPersonalHubOrg(signal);
+      const orgDescs = await this.controlPlaneClient.listOrganizations();
+      const personalHubOrg = await this.getPersonalHubOrg();
       const hubOrgs = await Promise.all(
-        orgDescs.map((org) => this.getNonPersonalHubOrg(org, signal)),
+        orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
       );
       return [...hubOrgs, personalHubOrg];
     } else {
@@ -191,11 +192,8 @@ export class ConfigHandler {
     }));
   }
 
-  private async getHubProfiles(orgScopeId: string | null, signal: AbortSignal) {
-    const assistants = await this.controlPlaneClient.listAssistants(
-      orgScopeId,
-      signal,
-    );
+  private async getHubProfiles(orgScopeId: string | null) {
+    const assistants = await this.controlPlaneClient.listAssistants(orgScopeId);
 
     return await Promise.all(
       assistants.map(async (assistant) => {
@@ -223,16 +221,12 @@ export class ConfigHandler {
 
   private async getNonPersonalHubOrg(
     org: OrganizationDescription,
-    signal: AbortSignal,
   ): Promise<OrgWithProfiles> {
     const localProfiles = await this.getLocalProfiles({
       includeGlobal: false,
       includeWorkspace: true,
     });
-    const profiles = [
-      ...(await this.getHubProfiles(org.id, signal)),
-      ...localProfiles,
-    ];
+    const profiles = [...(await this.getHubProfiles(org.id)), ...localProfiles];
     return this.rectifyProfilesForOrg(org, profiles);
   }
 
@@ -242,12 +236,12 @@ export class ConfigHandler {
     name: "Personal",
     slug: undefined,
   };
-  private async getPersonalHubOrg(signal: AbortSignal) {
+  private async getPersonalHubOrg() {
     const localProfiles = await this.getLocalProfiles({
       includeGlobal: true,
       includeWorkspace: true,
     });
-    const hubProfiles = await this.getHubProfiles(null, signal);
+    const hubProfiles = await this.getHubProfiles(null);
     const profiles = [...hubProfiles, ...localProfiles];
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, profiles);
   }

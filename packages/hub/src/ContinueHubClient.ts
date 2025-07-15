@@ -57,19 +57,16 @@ export class ContinueHubClient implements IContinueHubClient {
   async resolveFQSNs(
     fqsns: FQSN[],
     orgScopeId: string | null,
-    signal?: AbortSignal,
   ): Promise<(SecretResult | undefined)[]> {
     const resp = await this.request("ide/sync-secrets", {
       method: "POST",
       body: JSON.stringify({ fqsns, orgScopeId }),
-      signal,
     });
     return (await resp.json()) as any;
   }
   async listAssistants(options: {
     organizationId: string | null;
     alwaysUseProxy?: boolean;
-    signal?: AbortSignal;
   }): Promise<
     {
       configResult: ConfigResult<AssistantUnrolled>;
@@ -97,7 +94,6 @@ export class ContinueHubClient implements IContinueHubClient {
 
       const resp = await this.request(url, {
         method: "GET",
-        signal: options.signal,
       });
       return (await resp.json()) as any;
     } catch (e) {
@@ -107,7 +103,6 @@ export class ContinueHubClient implements IContinueHubClient {
 
   async listAssistantFullSlugs(
     organizationId: string | null,
-    signal?: AbortSignal,
   ): Promise<FullSlug[] | null> {
     const url = organizationId
       ? `ide/list-assistant-full-slugs?organizationId=${organizationId}`
@@ -116,7 +111,6 @@ export class ContinueHubClient implements IContinueHubClient {
     try {
       const resp = await this.request(url, {
         method: "GET",
-        signal,
       });
       const { fullSlugs } = (await resp.json()) as any;
       return fullSlugs;

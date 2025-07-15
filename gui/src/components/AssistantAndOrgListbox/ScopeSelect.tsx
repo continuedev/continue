@@ -10,7 +10,6 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   selectCurrentOrg,
   setSelectedOrgId,
-  setSelectedProfile,
 } from "../../redux/slices/profilesSlice";
 import {
   Listbox,
@@ -45,14 +44,8 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
   const dispatch = useAppDispatch();
 
   const handleChange = (newValue: string) => {
-    const org = organizations.find((o) => o.id === newValue);
-    if (!org) {
-      return;
-    }
-
     // optimisitic update
-    dispatch(setSelectedOrgId(org.id));
-    dispatch(setSelectedProfile(org.selectedProfileId));
+    dispatch(setSelectedOrgId(newValue));
     ideMessenger.post("didChangeSelectedOrg", {
       id: newValue,
     });
