@@ -239,7 +239,7 @@ describe("sessionSlice streamUpdate", () => {
           {
             role: "assistant" as const,
             content: "",
-          }
+          },
         ],
       };
 
@@ -257,7 +257,7 @@ describe("sessionSlice streamUpdate", () => {
       expect(newState.history[1].message.content).toBe("");
       expect(newState.history[1].toolCallState?.status).toBe("generating");
       expect(newState.history[1].toolCallState?.toolCallId).toBe("1234");
-      
+
       // Check we can find the current tool call
       expect(findCurrentToolCall(newState.history)?.status).toBe("generating");
 
