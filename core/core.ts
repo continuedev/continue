@@ -26,6 +26,7 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
+import { stripImages } from "./util/messageContent";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import {
@@ -498,6 +499,85 @@ export class Core {
       }
 
       return await ChatDescriber.describe(currentModel, {}, msg.data.text);
+    });
+
+    on("conversation/compact", async (msg) => {
+      const currentModel = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!currentModel) {
+        throw new Error("No chat model selected");
+      }
+
+      // Get the current session
+      const session = historyManager.load(msg.data.sessionId);
+      const historyUpToIndex = session.history.slice(0, msg.data.index + 1);
+
+      // Apply the same filtering logic as in constructMessages, but exclude the target message
+      // if it already has a summary (we're re-compacting)
+      let summaryContent = "";
+      let filteredHistory = historyUpToIndex;
+
+      // First, check if the target message already has a summary and ignore it
+      const targetMessageHasSummary =
+        historyUpToIndex[msg.data.index].conversationSummary;
+      const searchHistory = targetMessageHasSummary
+        ? historyUpToIndex.slice(0, msg.data.index)
+        : historyUpToIndex;
+
+      // Find the most recent conversation summary (excluding target if it has one)
+      for (let i = searchHistory.length - 1; i >= 0; i--) {
+        if (searchHistory[i].conversationSummary) {
+          summaryContent = searchHistory[i].conversationSummary;
+          // Only include messages that come AFTER the message with the summary
+          filteredHistory = historyUpToIndex.slice(i + 1);
+          break;
+        }
+      }
+
+      // Create messages from filtered history
+      const messages = filteredHistory.map((item: any) => item.message);
+
+      // If there's a previous summary, include it as a user message at the beginning
+      if (summaryContent) {
+        messages.unshift({
+          role: "user",
+          content: `Previous conversation summary:\n\n${summaryContent}`,
+        });
+      }
+      const compactionPrompt = {
+        role: "user" as const,
+        content:
+          "Summarize the conversation above in third person, focusing on key points, decisions made, and important context. If there is a previous conversation summary included in the messages above, integrate it with the new conversation content to create a single condensed summary. Remove any redundant or outdated information while preserving essential context. Include specific technical details such as file names, paths, class names, function names, and any other identifiers that would help understand what was worked on. Write an impersonal summary that describes what the user requested and what was accomplished. Do not address the user directly. This summary will replace the conversation history to save tokens while preserving essential information.",
+      };
+
+      try {
+        const response = await currentModel.chat(
+          [...messages, compactionPrompt],
+          new AbortController().signal,
+          {},
+        );
+
+        // Update the target message with the conversation summary
+        const updatedHistory = [...session.history];
+        updatedHistory[msg.data.index] = {
+          ...updatedHistory[msg.data.index],
+          conversationSummary: stripImages(response.content),
+        };
+
+        // Update the session with the new history
+        const updatedSession = {
+          ...session,
+          history: updatedHistory,
+        };
+
+        historyManager.save(updatedSession);
+
+        return undefined;
+      } catch (error) {
+        console.error("Error compacting conversation:", error);
+        return undefined;
+      }
     });
 
     // Autocomplete

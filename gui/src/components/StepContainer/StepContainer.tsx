@@ -6,6 +6,7 @@ import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
+import ConversationSummary from "./ConversationSummary";
 import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
@@ -14,6 +15,7 @@ interface StepContainerProps {
   item: ChatHistoryItem;
   index: number;
   isLast: boolean;
+  latestSummaryIndex?: number;
 }
 
 export default function StepContainer(props: StepContainerProps) {
@@ -24,6 +26,13 @@ export default function StepContainer(props: StepContainerProps) {
     (state) => state.session.history[props.index + 1],
   );
   const uiConfig = useAppSelector(selectUIConfig);
+
+  // Calculate dimming and indicator state based on latest summary index
+  const latestSummaryIndex = props.latestSummaryIndex ?? -1;
+  const isBeforeLatestSummary =
+    latestSummaryIndex !== -1 && props.index <= latestSummaryIndex;
+  const isLatestSummary =
+    latestSummaryIndex !== -1 && props.index === latestSummaryIndex;
 
   const isNextMsgAssistantOrThinking =
     historyItemAfterThis?.message.role === "assistant" ||
@@ -80,7 +89,9 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div>
-      <div className="bg-background overflow-hidden p-1 px-1.5">
+      <div
+        className={`bg-background overflow-hidden p-1 px-1.5 ${isBeforeLatestSummary ? "opacity-50" : ""}`}
+      >
         {uiConfig?.displayRawMarkdown ? (
           <pre className="text-2xs max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4">
             {renderChatMessage(props.item.message)}
@@ -98,6 +109,22 @@ export default function StepContainer(props: StepContainerProps) {
         )}
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </div>
+
+      {/* Show compaction indicator for the latest summary */}
+      {isLatestSummary && (
+        <div className="mx-1.5 mb-2 mt-2">
+          <div className="flex items-center">
+            <div className="flex-1 border-t border-dashed border-gray-500"></div>
+            <span className="mx-3 text-xs text-gray-500">
+              Previous Conversation Compacted
+            </span>
+            <div className="flex-1 border-t border-dashed border-gray-500"></div>
+          </div>
+        </div>
+      )}
+
+      {/* ConversationSummary is outside the dimmed container so it's always at full opacity */}
+      <ConversationSummary item={props.item} index={props.index} />
       {shouldRenderResponseAction() && (
         // We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete
         <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>

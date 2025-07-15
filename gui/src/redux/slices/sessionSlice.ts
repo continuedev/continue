@@ -223,6 +223,7 @@ type SessionState = {
   };
   newestToolbarPreviewForInput: Record<string, string>;
   hasReasoningEnabled?: boolean;
+  compactionLoading: Record<number, boolean>; // Track compaction loading by message index
 };
 
 const initialState: SessionState = {
@@ -242,6 +243,7 @@ const initialState: SessionState = {
   },
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
+  compactionLoading: {},
 };
 
 export const sessionSlice = createSlice({
@@ -889,6 +891,17 @@ export const sessionSlice = createSlice({
       state.newestToolbarPreviewForInput[payload.inputId] =
         payload.contextItemId;
     },
+    setCompactionLoading: (
+      state,
+      action: PayloadAction<{ index: number; loading: boolean }>,
+    ) => {
+      const { index, loading } = action.payload;
+      if (loading) {
+        state.compactionLoading[index] = true;
+      } else {
+        delete state.compactionLoading[index];
+      }
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -972,6 +985,7 @@ export const {
   setNewestToolbarPreviewForInput,
   setIsInEdit,
   setHasReasoningEnabled,
+  setCompactionLoading,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

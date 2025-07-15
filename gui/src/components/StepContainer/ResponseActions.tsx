@@ -2,6 +2,7 @@ import {
   BarsArrowDownIcon,
   PlusIcon,
   TrashIcon,
+  ArrowsPointingInIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
@@ -44,6 +45,18 @@ export default function ResponseActions({
     dispatch(setDialogMessage(<GenerateRuleDialog />));
   };
 
+  const onCompactConversation = () => {
+    window.postMessage(
+      {
+        messageType: "compactConversation",
+        data: {
+          index: index,
+        },
+      },
+      "*",
+    );
+  };
+
   return (
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
       {isLast && ruleGenerationSupported && (
@@ -70,6 +83,15 @@ export default function ResponseActions({
           <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
         </HeaderButtonWithToolTip>
       )}
+
+      <HeaderButtonWithToolTip
+        testId={`compact-button-${index}`}
+        text="Compact conversation"
+        tabIndex={-1}
+        onClick={onCompactConversation}
+      >
+        <ArrowsPointingInIcon className="text-description-muted h-3.5 w-3.5" />
+      </HeaderButtonWithToolTip>
 
       <HeaderButtonWithToolTip
         testId={`delete-button-${index}`}

@@ -43,6 +43,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "llm/listModels",
     "streamDiffLines",
     "chatDescriber/describe",
+    "conversation/compact",
     "stats/getTokensPerDay",
     "stats/getTokensPerModel",
     // Codebase

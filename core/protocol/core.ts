@@ -176,6 +176,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     string | undefined,
   ];
+  "conversation/compact": [
+    {
+      index: number;
+      sessionId: string;
+    },
+    string | undefined,
+  ];
   "stats/getTokensPerDay": [
     undefined,
     { day: string; promptTokens: number; generatedTokens: number }[],

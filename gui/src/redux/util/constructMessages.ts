@@ -40,7 +40,20 @@ export function constructMessages(
   appliedRules: RuleWithSource[];
   appliedRuleIndex: number;
 } {
-  const historyCopy = [...history];
+  // Find the most recent conversation summary and filter history accordingly
+  let summaryContent = "";
+  let filteredHistory = history;
+
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].conversationSummary) {
+      summaryContent = history[i].conversationSummary;
+      // Only include messages that come AFTER the message with the summary
+      filteredHistory = history.slice(i + 1);
+      break;
+    }
+  }
+
+  const historyCopy = [...filteredHistory];
 
   const msgs: MessageWithContextItems[] = [];
   let appliedRuleIndex = -1;
@@ -160,12 +173,20 @@ export function constructMessages(
     rulePolicies,
   });
 
-  if (systemMessage.trim()) {
+  // Append conversation summary to system message if it exists
+  let finalSystemMessage = systemMessage;
+  if (summaryContent) {
+    finalSystemMessage = systemMessage
+      ? `${systemMessage}\n\nPrevious conversation summary:\n\n ${summaryContent}`
+      : `Previous conversation summary:\n\n ${summaryContent}`;
+  }
+
+  if (finalSystemMessage.trim()) {
     msgs.unshift({
       ctxItems: [],
       message: {
         role: "system",
-        content: systemMessage,
+        content: finalSystemMessage,
       },
     });
   }
