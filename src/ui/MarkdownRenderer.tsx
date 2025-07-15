@@ -1,8 +1,10 @@
 import { Text } from "ink";
 import React from "react";
+import { highlightCode, detectLanguage, SyntaxHighlighterTheme, defaultTheme } from "./SyntaxHighlighter.js";
 
 interface MarkdownRendererProps {
   content: string;
+  theme?: SyntaxHighlighterTheme;
 }
 
 interface MarkdownPattern {
@@ -10,15 +12,14 @@ interface MarkdownPattern {
   render: (content: string, key: string) => React.ReactNode;
 }
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = defaultTheme }) => {
   const patterns: MarkdownPattern[] = [
     {
-      regex: /```([\s\S]*?)```/g,
-      render: (content, key) => (
-        <Text key={key} color="cyan">
-          {content}
-        </Text>
-      ),
+      regex: /```(?:(\w+)\n)?([\s\S]*?)```/g,
+      render: (content, key) => {
+        // content here is the captured group, but we need to parse the full match
+        return null; // This will be handled separately
+      },
     },
     {
       regex: /^(#{1,6})\s+(.+)$/gm,
@@ -61,7 +62,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       ),
     },
     {
-      regex: /`([^`]+)`/g,
+      regex: /`([^`\n]+)`/g,
       render: (content, key) => (
         <Text key={key} color="cyan">
           {content}
@@ -74,7 +75,27 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     const parts: React.ReactNode[] = [];
     let currentIndex = 0;
 
-    // Find all matches for all patterns
+    // First, handle code blocks separately
+    const codeBlockRegex = /```(?:(\w+)\n)?([\s\S]*?)```/g;
+    const codeBlocks: Array<{
+      index: number;
+      length: number;
+      language: string;
+      code: string;
+    }> = [];
+
+    let codeMatch;
+    while ((codeMatch = codeBlockRegex.exec(text)) !== null) {
+      const language = codeMatch[1] || detectLanguage(codeMatch[2]);
+      codeBlocks.push({
+        index: codeMatch.index,
+        length: codeMatch[0].length,
+        language,
+        code: codeMatch[2].trim()
+      });
+    }
+
+    // Find all matches for other patterns (excluding code blocks)
     const allMatches: Array<{
       index: number;
       length: number;
@@ -82,26 +103,59 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       render: (content: string, key: string) => React.ReactNode;
     }> = [];
 
-    patterns.forEach((pattern) => {
-      let match;
+    patterns.slice(1).forEach((pattern) => { // Skip the first pattern (code blocks)
+      let match: RegExpExecArray | null;
       const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
 
       while ((match = regex.exec(text)) !== null) {
-        allMatches.push({
-          index: match.index,
-          length: match[0].length,
-          content: match[2] || match[1], // Use second capture group for headings, first for others
-          render: pattern.render,
-        });
+        // Skip if this match is inside a code block
+        const isInCodeBlock = codeBlocks.some(block => 
+          match!.index >= block.index && match!.index < block.index + block.length
+        );
+        
+        if (!isInCodeBlock) {
+          allMatches.push({
+            index: match.index,
+            length: match[0].length,
+            content: match[2] || match[1], // Use second capture group for headings, first for others
+            render: pattern.render,
+          });
+        }
       }
     });
 
+    // Combine code blocks and other matches
+    const combinedMatches: Array<{
+      index: number;
+      length: number;
+      type: 'code' | 'other';
+      content?: string;
+      render?: (content: string, key: string) => React.ReactNode;
+      language?: string;
+      code?: string;
+    }> = [
+      ...codeBlocks.map(block => ({
+        index: block.index,
+        length: block.length,
+        type: 'code' as const,
+        language: block.language,
+        code: block.code
+      })),
+      ...allMatches.map(match => ({
+        index: match.index,
+        length: match.length,
+        type: 'other' as const,
+        content: match.content,
+        render: match.render
+      }))
+    ];
+
     // Sort matches by index to process them in order
-    allMatches.sort((a, b) => a.index - b.index);
+    combinedMatches.sort((a, b) => a.index - b.index);
 
     // Process matches, avoiding overlaps
-    let processedMatches: typeof allMatches = [];
-    for (const match of allMatches) {
+    let processedMatches: typeof combinedMatches = [];
+    for (const match of combinedMatches) {
       const overlaps = processedMatches.some(
         (processed) =>
           (match.index >= processed.index &&
@@ -123,7 +177,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       }
 
       // Add the formatted match
-      parts.push(match.render(match.content, `format-${idx}-${match.index}`));
+      if (match.type === 'code') {
+        const highlightedCode = highlightCode(match.code!, match.language!, theme);
+        parts.push(
+          <Text key={`code-${idx}-${match.index}`}>
+            {highlightedCode}
+          </Text>
+        );
+      } else {
+        parts.push(match.render!(match.content!, `format-${idx}-${match.index}`));
+      }
 
       currentIndex = match.index + match.length;
     });
@@ -140,3 +203,5 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
 };
 
 export default MarkdownRenderer;
+export type { SyntaxHighlighterTheme };
+export { defaultTheme };

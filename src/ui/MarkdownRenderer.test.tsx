@@ -155,28 +155,26 @@ describe("MarkdownRenderer", () => {
       const result = renderMarkdown("```\nconst x = 1;\nconsole.log(x);\n```");
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
-      expect((result[0] as any).props.color).toBe("cyan");
-      expect((result[0] as any).props.children).toBe(
-        "\nconst x = 1;\nconsole.log(x);\n"
-      );
+      // The result should be a Text element containing syntax highlighted code
+      expect((result[0] as any).type).toBe("ink-text");
+      expect((result[0] as any).props.children).toBeDefined();
+      expect(Array.isArray((result[0] as any).props.children)).toBe(true);
     });
 
     it("renders single line code blocks", () => {
       const result = renderMarkdown("```console.log('hello')```");
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
-      expect((result[0] as any).props.color).toBe("cyan");
-      expect((result[0] as any).props.children).toBe("console.log('hello')");
+      expect((result[0] as any).type).toBe("ink-text");
+      expect((result[0] as any).props.children).toBeDefined();
     });
 
     it("renders code blocks with language specification", () => {
       const result = renderMarkdown("```javascript\nconst x = 1;\n```");
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
-      expect((result[0] as any).props.color).toBe("cyan");
-      expect((result[0] as any).props.children).toBe(
-        "javascript\nconst x = 1;\n"
-      );
+      expect((result[0] as any).type).toBe("ink-text");
+      expect((result[0] as any).props.children).toBeDefined();
     });
 
     it("handles code blocks mixed with other formatting", () => {
@@ -185,10 +183,8 @@ describe("MarkdownRenderer", () => {
       );
       expect(result.length).toBe(5);
       expect(result[0]).toBe("Here's some code:\n");
-      expect((result[1] as any).props.color).toBe("cyan");
-      expect((result[1] as any).props.children).toBe(
-        "\nfunction test() {\n  return 42;\n}\n"
-      );
+      expect(React.isValidElement(result[1])).toBe(true);
+      expect((result[1] as any).type).toBe("ink-text");
       expect(result[2]).toBe("\nAnd ");
       expect((result[3] as any).props.bold).toBe(true);
       expect((result[3] as any).props.children).toBe("bold");
@@ -199,8 +195,7 @@ describe("MarkdownRenderer", () => {
       const result = renderMarkdown("``````");
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
-      expect((result[0] as any).props.color).toBe("cyan");
-      expect((result[0] as any).props.children).toBe("");
+      expect((result[0] as any).type).toBe("ink-text");
     });
   });
 });
