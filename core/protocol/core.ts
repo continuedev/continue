@@ -67,7 +67,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
   "history/clear": [undefined, void];
-  "history/getSessionData": [{ id: string }, string];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [

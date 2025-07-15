@@ -292,10 +292,6 @@ export class Core {
       historyManager.clearAll();
     });
 
-    on("history/getSessionData", (msg) => {
-      return historyManager.getSessionData(msg.data.id);
-    });
-
     on("devdata/log", async (msg) => {
       void DataLogger.getInstance().logDevData(msg.data);
     });

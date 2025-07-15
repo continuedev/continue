@@ -95,19 +95,6 @@ class HistoryManager {
     }
   }
 
-  getSessionData(sessionId: string): string {
-    try {
-      const sessionFile = getSessionFilePath(sessionId);
-      if (!fs.existsSync(sessionFile)) {
-        throw new Error(`Session file ${sessionFile} does not exist`);
-      }
-      const fileContent = fs.readFileSync(sessionFile, "utf8");
-      return JSON.stringify(JSON.parse(fileContent), null, 2);
-    } catch (e) {
-      throw new Error(`Error reading session data: ${e}`);
-    }
-  }
-
   save(session: Session) {
     // Save the main session json file
     // Explicitely rewriting here to influence the written key order in the file!

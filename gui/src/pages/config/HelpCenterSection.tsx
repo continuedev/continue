@@ -23,14 +23,14 @@ export function HelpCenterSection() {
 
   const handleViewSessionData = async () => {
     try {
-      const sessionData = await ideMessenger.request("history/getSessionData", {
+      const sessionData = await ideMessenger.request("history/load", {
         id: currentSession.id,
       });
 
       if (sessionData.status === "success") {
         await ideMessenger.request("showVirtualFile", {
-          name: "currentSessionData.json",
-          content: sessionData.content,
+          name: `${sessionData.content.title}.json`,
+          content: JSON.stringify(sessionData.content, null, 2),
         });
       }
     } catch (error) {
