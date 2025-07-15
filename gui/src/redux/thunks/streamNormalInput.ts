@@ -14,12 +14,11 @@ import {
   setInactive,
   streamUpdate,
 } from "../slices/sessionSlice";
-import { RootState, ThunkApiType } from "../store";
+import { ThunkApiType } from "../store";
 import {
   constructMessages,
   getBaseSystemMessage,
 } from "../util/constructMessages";
-
 
 /**
  * Filters tools based on the selected model's capabilities.
