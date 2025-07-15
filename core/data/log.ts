@@ -214,7 +214,7 @@ export class DataLogger {
             }),
           },
           dataConfig.requestOptions,
-          this.core?.configHandler?.ideProxySettings?.host,
+          this.core?.configHandler?.ideProxySettings,
         );
         if (!response.ok) {
           throw new Error(

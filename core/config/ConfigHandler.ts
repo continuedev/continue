@@ -1,12 +1,11 @@
 import { ConfigResult } from "@continuedev/config-yaml";
-
+import { IdeProxySettings } from "@continuedev/config-types";
 import { ControlPlaneClient } from "../control-plane/client.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
   IDE,
-  IdeProxySettings,
   IdeSettings,
   ILLMLogger,
 } from "../index.js";
@@ -45,7 +44,7 @@ export class ConfigHandler {
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles;
-  ideProxySettings?: IdeProxySettings; // todo: are these settings OK here?
+  ideProxySettings?: IdeProxySettings;
 
   constructor(
     private readonly ide: IDE,

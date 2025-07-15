@@ -718,12 +718,6 @@ export interface IdeSettings {
   pauseCodebaseIndexOnStart: boolean;
 }
 
-export interface IdeProxySettings {
-  useProxy: boolean;
-  host: string;
-  port: number;
-}
-
 export interface FileStats {
   size: number;
   lastModified: number;

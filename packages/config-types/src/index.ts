@@ -40,6 +40,12 @@ export const requestOptionsSchema = z.object({
 });
 export type RequestOptions = z.infer<typeof requestOptionsSchema>;
 
+export const ideProxySettingsSchema = z.object({
+  enabled: z.boolean().optional(),
+  proxy: z.string().optional(),
+});
+export type IdeProxySettings = z.infer<typeof ideProxySettingsSchema>;
+
 export const modelDescriptionSchema = z.object({
   title: z.string(),
   provider: z.enum([

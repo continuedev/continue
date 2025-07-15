@@ -1,4 +1,4 @@
-import { RequestOptions } from "@continuedev/config-types";
+import { RequestOptions, IdeProxySettings } from "@continuedev/config-types";
 import * as followRedirects from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -86,7 +86,7 @@ export async function fetchwithRequestOptions(
   // todo: introduce IdeProxySettings type that is available in packages/fetch and core
   // todo: where should I put this IdeProxySettings? packages/fetch and core seems to be tightly coupled
   // todo: type should be smth like:
-  ideProxySettingsHost?: string,
+  ideProxySettingsHost?: IdeProxySettings,
 ): Promise<Response> {
   const url = typeof url_ === "string" ? new URL(url_) : url_;
   if (url.host === "localhost") {

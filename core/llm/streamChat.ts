@@ -89,7 +89,7 @@ export async function* llmStreamChat(
             signal: abortController.signal,
           },
           config.requestOptions,
-          configHandler.ideProxySettings?.host,
+          configHandler.ideProxySettings,
         ),
       completionOptions,
       abortController,

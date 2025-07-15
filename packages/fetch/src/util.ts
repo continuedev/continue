@@ -1,4 +1,4 @@
-import { RequestOptions } from "@continuedev/config-types";
+import { RequestOptions, IdeProxySettings } from "@continuedev/config-types";
 
 /**
  * Gets the proxy settings from environment variables
@@ -22,7 +22,7 @@ export function getProxyFromEnv(protocol: string): string | undefined {
 export function getProxy(
   protocol: string,
   requestOptions?: RequestOptions,
-  ideProxySettingsHost?: string, // todo: type
+  ideProxySettingsHost?: IdeProxySettings,
 ): string | undefined {
   console.log(`ideProxySettingsHost: ${ideProxySettingsHost}`);
   // todo: decide which proxy config should be used

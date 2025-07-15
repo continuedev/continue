@@ -431,8 +431,7 @@ export class Core {
                 url,
                 init,
                 config.requestOptions,
-                // this.configHandler.ideProxySettings?.host,
-                "TEST HOST (loadSubmenuItems)", // todo
+                this.configHandler.ideProxySettings,
               ),
           });
         return items || [];
@@ -889,8 +888,7 @@ export class Core {
           url,
           init,
           config.requestOptions,
-          //this.configHandler.ideProxySettings?.host,
-          "TEST HOST (handleToolCall)",
+          this.configHandler.ideProxySettings,
         ),
       tool,
       toolCallId: toolCall.id,
@@ -1134,8 +1132,7 @@ export class Core {
             url,
             init,
             config.requestOptions,
-            //this.configHandler.ideProxySettings?.host,
-            "TEST HOST (getContextItems)",
+            this.configHandler.ideProxySettings,
           ),
         isInAgentMode: msg.data.isInAgentMode,
       });

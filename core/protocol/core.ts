@@ -4,7 +4,7 @@ import {
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
-
+import { IdeProxySettings } from "@continuedev/config-types";
 import {
   AutocompleteInput,
   RecentlyEditedRange,
@@ -23,7 +23,6 @@ import {
   DocsIndexingDetails,
   ExperimentalModelRoles,
   FileSymbolMap,
-  IdeProxySettings,
   IdeSettings,
   LLMFullCompletionOptions,
   ModelDescription,
