@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/continuedev/cli/compare/v1.2.0...v1.3.0) (2025-07-15)
+
+
+### Features
+
+* add session management with --resume flag and cn alias ([0096fbc](https://github.com/continuedev/cli/commit/0096fbcc4934d7264d9a7a134908e016e037df1a))
+
 # [1.2.0](https://github.com/continuedev/cli/compare/v1.1.0...v1.2.0) (2025-07-14)
 
 
