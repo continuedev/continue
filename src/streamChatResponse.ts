@@ -6,6 +6,7 @@ import type {
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from "openai/resources.mjs";
+import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
@@ -66,10 +67,12 @@ export async function streamChatResponse(
   callbacks?: StreamCallbacks,
   abortController?: AbortController
 ) {
+  const args = parseArgs();
+  const isHeadless = args.isHeadless;
   // Prepare tools for the API call
   const toolsForRequest = getAllTools();
 
-  let aiResponse = "";
+  let fullResponse = "";
   let currentToolCalls: TODO[] = [];
   let shouldContinueConversation = true;
 
@@ -97,7 +100,7 @@ export async function streamChatResponse(
       process.exit(1);
     }
 
-    aiResponse = "";
+    let aiResponse = "";
     currentToolCalls = [];
     let currentToolCallId = "";
     let toolArguments = "";
@@ -113,10 +116,11 @@ export async function streamChatResponse(
         const content = chunk.choices[0].delta.content;
         if (callbacks?.onContent) {
           callbacks.onContent(content);
-        } else {
+        } else if (!isHeadless) {
           process.stdout.write(chalk.white(content));
         }
         aiResponse += content;
+        fullResponse += content;
       }
 
       // Handle tool calls
@@ -167,7 +171,7 @@ export async function streamChatResponse(
                   toolCall.startNotified = true;
                   if (callbacks?.onToolStart) {
                     callbacks.onToolStart(toolCall.name, toolCall.arguments);
-                  } else {
+                  } else if (!isHeadless) {
                     process.stdout.write(
                       `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
                         toolCall.name
@@ -184,7 +188,7 @@ export async function streamChatResponse(
       }
     }
 
-    if (!callbacks?.onContent) {
+    if (!callbacks?.onContent && !isHeadless) {
       console.info(); // Add a newline after the response
     }
 
@@ -238,7 +242,7 @@ export async function streamChatResponse(
 
           if (callbacks?.onToolResult) {
             callbacks.onToolResult(toolResult, toolCall.name);
-          } else {
+          } else if (!isHeadless) {
             console.info(chalk.green(toolResult) + "\n");
           }
         } catch (error) {
@@ -252,7 +256,7 @@ export async function streamChatResponse(
           });
           if (callbacks?.onToolError) {
             callbacks.onToolError(errorMessage, toolCall.name);
-          } else {
+          } else if (!isHeadless) {
             console.info(
               `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(
                 ")"
@@ -270,5 +274,5 @@ export async function streamChatResponse(
     }
   }
 
-  return aiResponse;
+  return fullResponse;
 }
