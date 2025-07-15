@@ -37,6 +37,12 @@ describe("No sessions have been created", () => {
       sessionId: testSessionId,
     });
   });
+
+  test("Getting session data for non-existent session throws error", () => {
+    expect(() => {
+      historyManager.getSessionData(testSessionId);
+    }).toThrow();
+  });
 });
 
 describe("Full session lifecycle", () => {
@@ -53,6 +59,14 @@ describe("Full session lifecycle", () => {
   test("Loading session by ID returns correct object", () => {
     const retrievedSession = historyManager.load(testSession.sessionId);
     expect(retrievedSession).toEqual(testSession);
+  });
+
+  test("Getting session data returns formatted JSON string", () => {
+    const sessionData = historyManager.getSessionData(testSession.sessionId);
+    const parsed = JSON.parse(sessionData);
+    expect(parsed.sessionId).toBe(testSession.sessionId);
+    expect(parsed.title).toBe(testSession.title);
+    expect(parsed.workspaceDirectory).toBe(testSession.workspaceDirectory);
   });
 
   test("Saving session with new title updates session", () => {
