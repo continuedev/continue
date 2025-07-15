@@ -116,7 +116,7 @@ function getAuthUrlForTokenPage(useOnboarding: boolean = false): string {
     client_id: env.workOsClientId,
     redirect_uri: `${env.appUrl}/tokens/${
       useOnboarding ? "onboarding-" : ""
-    }callback`,
+    }callback/cli`,
     state: uuidv4(),
     provider: "authkit",
   };
