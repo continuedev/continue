@@ -33,7 +33,7 @@
   "homepage": "https://continue.dev",
   "dependencies": {
     "@continuedev/config-yaml": "^1.0.96",
-    "@continuedev/openai-adapters": "^1.0.46-beta",
+    "@continuedev/openai-adapters": "1.0.46-beta",
     "@continuedev/sdk": "^0.0.12",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@types/react": "^19.1.8",
