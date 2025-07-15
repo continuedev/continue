@@ -22,19 +22,15 @@ export function HelpCenterSection() {
   const currentSession = useAppSelector((state) => state.session);
 
   const handleViewSessionData = async () => {
-    try {
-      const sessionData = await ideMessenger.request("history/load", {
-        id: currentSession.id,
-      });
+    const sessionData = await ideMessenger.request("history/load", {
+      id: currentSession.id,
+    });
 
-      if (sessionData.status === "success") {
-        await ideMessenger.request("showVirtualFile", {
-          name: `${sessionData.content.title}.json`,
-          content: JSON.stringify(sessionData.content, null, 2),
-        });
-      }
-    } catch (error) {
-      console.error("Error viewing session data:", error);
+    if (sessionData.status === "success") {
+      await ideMessenger.request("showVirtualFile", {
+        name: `${sessionData.content.title}.json`,
+        content: JSON.stringify(sessionData.content, null, 2),
+      });
     }
   };
 
