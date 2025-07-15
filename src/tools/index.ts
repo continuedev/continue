@@ -5,11 +5,11 @@ import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
-import { Tool, ToolParameters } from "./types.js";
+import { type Tool, type ToolParameters } from "./types.js";
 import { viewDiffTool } from "./viewDiff.js";
 import { writeFileTool } from "./writeFile.js";
 
-export { Tool, ToolParameters };
+export type { Tool, ToolParameters };
 
 export const BUILTIN_TOOLS: Tool[] = [
   readFileTool,

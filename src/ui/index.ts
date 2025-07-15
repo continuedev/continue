@@ -5,6 +5,8 @@ import { introMessage } from "../intro.js";
 import { MCPService } from "../mcp.js";
 import TUIChat from "./TUIChat.js";
 
+export { default as MarkdownRenderer } from "./MarkdownRenderer.js";
+
 export async function startTUIChat(
   assistant: ContinueClient["assistant"],
   client: ContinueClient["client"],

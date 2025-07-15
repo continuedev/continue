@@ -3,12 +3,13 @@ import { Box, Text, useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import path from "path";
 import React, { useEffect, useState } from "react";
+import { loadSession, saveSession } from "../session.js";
 import { handleSlashCommands } from "../slashCommands.js";
 import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { getToolDisplayName } from "../tools.js";
-import { loadSession, saveSession, hasSession } from "../session.js";
 import LoadingAnimation from "./LoadingAnimation.js";
+import MarkdownRenderer from "./MarkdownRenderer.js";
 import ToolResultSummary from "./ToolResultSummary.js";
 import UserInput from "./UserInput.js";
 
@@ -37,7 +38,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
     () => {
       let history: ChatCompletionMessageParam[] = [];
-      
+
       // Load previous session if --resume flag is used
       if (resume) {
         const savedHistory = loadSession();
@@ -45,7 +46,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           history = savedHistory;
         }
       }
-      
+
       // If no session loaded or not resuming, initialize with system message
       if (history.length === 0) {
         const rulesSystemMessage = assistant.systemMessage;
@@ -54,7 +55,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           history.push({ role: "system", content: systemMessage });
         }
       }
-      
+
       return history;
     }
   );
@@ -66,10 +67,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
       const savedHistory = loadSession();
       if (savedHistory) {
         return savedHistory
-          .filter(msg => msg.role !== "system")
-          .map(msg => ({
+          .filter((msg) => msg.role !== "system")
+          .map((msg) => ({
             role: msg.role,
-            content: msg.content as string
+            content: msg.content as string,
           }));
       }
     }
@@ -78,7 +79,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
-  const [attachedFiles, setAttachedFiles] = useState<Array<{path: string; content: string}>>([]);
+  const [attachedFiles, setAttachedFiles] = useState<
+    Array<{ path: string; content: string }>
+  >([]);
   const { exit } = useApp();
 
   // Handle initial prompt
@@ -99,18 +102,20 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
       if (commandResult.clear) {
         // Clear chat history but keep system message
-        const systemMessage = chatHistory.find(msg => msg.role === "system");
+        const systemMessage = chatHistory.find((msg) => msg.role === "system");
         const newHistory = systemMessage ? [systemMessage] : [];
         setChatHistory(newHistory);
         setMessages([]);
-        
+
         // Add command output to messages
         if (commandResult.output) {
-          setMessages([{
-            role: "system",
-            content: commandResult.output!,
-            messageType: "system",
-          }]);
+          setMessages([
+            {
+              role: "system",
+              content: commandResult.output!,
+              messageType: "system",
+            },
+          ]);
         }
         return;
       }
@@ -136,18 +141,20 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
     // Add user message to history and display
     let messageContent = message;
-    
+
     // Prepend attached files to the message
     if (attachedFiles.length > 0) {
-      const fileContents = attachedFiles.map(file => 
-        `\n\n<file path="${file.path}">\n${file.content}\n</file>`
-      ).join('');
+      const fileContents = attachedFiles
+        .map(
+          (file) => `\n\n<file path="${file.path}">\n${file.content}\n</file>`
+        )
+        .join("");
       messageContent = `${message}${fileContents}`;
-      
+
       // Clear attached files after sending
       setAttachedFiles([]);
     }
-    
+
     const newUserMessage: ChatCompletionMessageParam = {
       role: "user",
       content: messageContent,
@@ -170,7 +177,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
         onContent: (content: string) => {
           // Buffer content but don't update UI until complete or tool call
           if (!currentStreamingMessage) {
-            currentStreamingMessage = { role: "assistant", content: "", isStreaming: true };
+            currentStreamingMessage = {
+              role: "assistant",
+              content: "",
+              isStreaming: true,
+            };
           }
           currentStreamingMessage.content += content;
         },
@@ -179,7 +190,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           if (currentStreamingMessage) {
             setMessages((prev) => [
               ...prev,
-              { role: "assistant", content: content, isStreaming: false }
+              { role: "assistant", content: content, isStreaming: false },
             ]);
             currentStreamingMessage = null;
           }
@@ -191,7 +202,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
             // Get the first parameter value for display
             const firstValue = Object.values(args)[0];
-            
+
             // Convert absolute paths to relative paths from workspace root
             const formatPath = (value: any) => {
               if (typeof value === "string" && path.isAbsolute(value)) {
@@ -210,7 +221,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
             const messageContent = currentStreamingMessage.content;
             setMessages((prev) => [
               ...prev,
-              { role: "assistant", content: messageContent, isStreaming: false }
+              {
+                role: "assistant",
+                content: messageContent,
+                isStreaming: false,
+              },
             ]);
             currentStreamingMessage = null;
           }
@@ -271,7 +286,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         const messageContent = (currentStreamingMessage as any).content;
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: messageContent, isStreaming: false }
+          { role: "assistant", content: messageContent, isStreaming: false },
         ]);
       }
 
@@ -305,7 +320,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   };
 
   const handleFileAttached = (filePath: string, content: string) => {
-    setAttachedFiles(prev => [...prev, { path: filePath, content }]);
+    setAttachedFiles((prev) => [...prev, { path: filePath, content }]);
   };
 
   const renderMessage = (message: DisplayMessage, index: number) => {
@@ -363,7 +378,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
     return (
       <Box key={index} marginBottom={1}>
         <Text color={isUser ? "green" : "blue"}>●</Text>
-        <Text> {message.content}</Text>
+        <Text> </Text>
+        {isUser ? (
+          <Text>{message.content}</Text>
+        ) : (
+          <MarkdownRenderer content={message.content} />
+        )}
         {message.isStreaming && <Text color="gray">▋</Text>}
       </Box>
     );
@@ -385,7 +405,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
             <Text color="gray">esc to interrupt</Text>
           </Box>
         )}
-
 
         {/* Input area - always at bottom */}
         <UserInput

@@ -4,7 +4,7 @@ import {
   extractToolCalls,
   getToolsDescription,
   getToolDisplayName,
-  Tool,
+  type Tool,
 } from "./tools/index.js";
 
 // Re-export all tool functionality
@@ -13,6 +13,7 @@ export {
   extractToolCalls,
   getToolsDescription,
   getToolDisplayName,
-  Tool,
   BUILTIN_TOOLS as tools,
 };
+
+export type { Tool };

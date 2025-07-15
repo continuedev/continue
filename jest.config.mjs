@@ -8,6 +8,7 @@ export default {
 
   moduleNameMapper: {
     "(.+)\\.js": "$1",
+    "^ink-testing-library$": "<rootDir>/node_modules/ink-testing-library/build/index.js",
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
