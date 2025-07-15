@@ -4,9 +4,9 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { parseArgs } from "./args.js";
-import { ensureAuthenticated } from "./auth/ensureAuth.js";
 import { initializeAssistant } from "./assistant.js";
-import { loadAuthConfig } from "./auth/workos.js";
+import { ensureAuthenticated } from "./auth/ensureAuth.js";
+import { loadAuthConfig, ensureOrganization } from "./auth/workos.js";
 import { introMessage } from "./intro.js";
 import { configureLogger } from "./logger.js";
 import { loadSession, saveSession } from "./session.js";
@@ -21,8 +21,6 @@ const args = parseArgs();
 // Configure logger based on headless mode
 configureLogger(args.isHeadless);
 
-
-
 async function chat() {
   const isAuthenticated = await ensureAuthenticated(true);
 
@@ -33,37 +31,12 @@ async function chat() {
 
   const authConfig = loadAuthConfig();
 
-  // This was the previous default behavior, but currently the SDK
-  // only supports slugs, so we've disabled reading local assistant files
-
-  // if (fs.existsSync(args.assistantPath)) {
-  // // If it's a file, load it directly
-  // console.info(
-  //   chalk.yellow(`Loading assistant from file: ${args.assistantPath}`)
-  // );
-  // // We need to extract the assistant slug from the yaml to use with the SDK
-  // // For now, let's just use a placeholder slug and use the file content for assistant config
-  // // In a real implementation, we'd need to parse the YAML and extract the slug
-  // const assistantSlug = "default/assistant";
-  // try {
-  //   sdkClient = await initializeContinueSDK(
-  //     authConfig.accessToken,
-  //     assistantSlug
-  //   );
-  //   // Since we're using a file, we need to manually set the assistant config
-  //   assistant = JSON.parse(JSON.stringify(sdkClient.assistant.config));
-  // } catch (error) {
-  //   console.error(
-  //     chalk.red("Error initializing SDK with local file:"),
-  //     error
-  //   );
-  //   throw error;
-  // }
-  // }
+  // Ensure organization is selected
+  const authConfigWithOrg = await ensureOrganization(authConfig, args.isHeadless);
 
   // Initialize ContinueSDK and MCPService once
   const { config, llmApi, model, mcpService } = await initializeAssistant(
-    authConfig,
+    authConfigWithOrg,
     args.configPath
   );
 

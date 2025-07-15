@@ -55,9 +55,9 @@ export function introMessage(
   }
   console.info("");
 
-  if (config.rules?.length) {
-    console.info(chalk.yellow("\nAssistant rules: " + config.rules.length));
-  }
+  // if (config.rules?.length) {
+  //   console.info(chalk.yellow("\nRules: " + config.rules.length));
+  // }
 
   if (config.mcpServers?.length) {
     console.info(chalk.yellow("\nMCP Servers:"));

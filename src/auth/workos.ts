@@ -1,3 +1,7 @@
+import {
+  Configuration,
+  DefaultApi,
+} from "@continuedev/sdk/dist/api/dist/index.js";
 import axios from "axios";
 import chalk from "chalk";
 import * as fs from "fs";
@@ -17,6 +21,7 @@ export interface AuthConfig {
   accessToken?: string;
   refreshToken?: string;
   expiresAt?: number;
+  organizationId?: string | null;
 }
 
 /**
@@ -208,6 +213,146 @@ export async function login(
       error.response?.data?.message || error.message || error
     );
     throw error;
+  }
+}
+
+/**
+ * Ensures the user has selected an organization, prompting if necessary
+ */
+export async function ensureOrganization(
+  authConfig: AuthConfig,
+  isHeadless: boolean = false
+): Promise<AuthConfig> {
+  // If using CONTINUE_API_KEY environment variable, don't require organization selection
+  if (process.env.CONTINUE_API_KEY) {
+    return authConfig;
+  }
+
+  // If already have organization ID (including null for personal), return as-is
+  if (authConfig.organizationId !== undefined) {
+    return authConfig;
+  }
+
+  // In headless mode, default to personal organization if none saved
+  if (isHeadless) {
+    const updatedConfig = {
+      ...authConfig,
+      organizationId: null, // Default to personal organization
+    };
+    saveAuthConfig(updatedConfig);
+    return updatedConfig;
+  }
+
+  // Need to select organization
+  const apiClient = new DefaultApi(
+    new Configuration({
+      accessToken: authConfig.accessToken,
+    })
+  );
+
+  try {
+    const resp = await apiClient.listOrganizations();
+    const organizations = resp.organizations;
+
+    if (organizations.length === 0) {
+      console.info(
+        chalk.green("No organizations found. Using personal organization.")
+      );
+      const updatedConfig = {
+        ...authConfig,
+        organizationId: null,
+      };
+      saveAuthConfig(updatedConfig);
+      return updatedConfig;
+    }
+
+    if (organizations.length === 1) {
+      // Show choice between personal and the one organization
+      const org = organizations[0];
+      console.info(chalk.cyan("\nSelect an organization:"));
+      console.info(chalk.white(`1. Personal (default)`));
+      console.info(chalk.white(`2. ${org.name}`));
+
+      const selection = await prompt(
+        chalk.yellow("Enter your choice (number): ")
+      );
+      const selectedIndex = parseInt(selection) - 1;
+
+      if (selectedIndex < 0 || selectedIndex > 1) {
+        console.error(chalk.red("Invalid selection. Please try again."));
+        return await ensureOrganization(authConfig, isHeadless);
+      }
+
+      let selectedOrgId: string | null;
+      let selectedOrgName: string;
+
+      if (selectedIndex === 0) {
+        // Personal organization selected
+        selectedOrgId = null;
+        selectedOrgName = "Personal";
+      } else {
+        // The one organization selected
+        selectedOrgId = org.id;
+        selectedOrgName = org.name;
+      }
+
+      console.info(chalk.green(`Selected organization: ${selectedOrgName}`));
+
+      const updatedConfig = {
+        ...authConfig,
+        organizationId: selectedOrgId,
+      };
+
+      saveAuthConfig(updatedConfig);
+      return updatedConfig;
+    }
+
+    // Multiple organizations - show selection including personal
+    console.info(chalk.cyan("\nSelect an organization:"));
+    console.info(chalk.white(`1. Personal (default)`));
+    organizations.forEach((org, index) => {
+      console.info(chalk.white(`${index + 2}. ${org.name}`));
+    });
+
+    const selection = await prompt(
+      chalk.yellow("Enter your choice (number): ")
+    );
+    const selectedIndex = parseInt(selection) - 1;
+
+    if (selectedIndex < 0 || selectedIndex > organizations.length) {
+      console.error(chalk.red("Invalid selection. Please try again."));
+      return await ensureOrganization(authConfig, isHeadless);
+    }
+
+    let selectedOrgId: string | null;
+    let selectedOrgName: string;
+
+    if (selectedIndex === 0) {
+      // Personal organization selected
+      selectedOrgId = null;
+      selectedOrgName = "Personal";
+    } else {
+      // Regular organization selected
+      const selectedOrg = organizations[selectedIndex - 1];
+      selectedOrgId = selectedOrg.id;
+      selectedOrgName = selectedOrg.name;
+    }
+    console.info(chalk.green(`Selected organization: ${selectedOrgName}`));
+
+    const updatedConfig = {
+      ...authConfig,
+      organizationId: selectedOrgId,
+    };
+
+    saveAuthConfig(updatedConfig);
+    return updatedConfig;
+  } catch (error: any) {
+    console.error(
+      chalk.red("Error fetching organizations:"),
+      error.response?.data?.message || error.message || error
+    );
+    console.info(chalk.yellow("Continuing without organization selection."));
+    return authConfig;
   }
 }
 

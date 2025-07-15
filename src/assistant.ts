@@ -35,7 +35,7 @@ export function getLlmApi(
           env: {
             apiKeyLocation: (model as any).apiKeyLocation,
             // envSecretLocations: model.env,
-            orgScopeId: null, // TODO
+            orgScopeId: authConfig.organizationId ?? null,
             proxyUrl: undefined, // TODO
           },
         }
@@ -117,7 +117,7 @@ export async function initializeAssistant(
   const config = await loadAssistant(
     authConfig.accessToken,
     configPath,
-    undefined
+    authConfig.organizationId ?? undefined
   );
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);
