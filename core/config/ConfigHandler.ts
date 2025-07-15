@@ -322,6 +322,15 @@ export class ConfigHandler {
     await this.cascadeInit();
   }
 
+  async updateIdeProxySettings(ideProxySettings: IdeProxySettings) {
+    this.ideProxySettings = ideProxySettings;
+    // todo: just a debug. remove when PR is ready
+    console.log(
+      `updateIdeProxySettings ideProxySettings: ${JSON.stringify(this.ideProxySettings)}`,
+    );
+    await this.cascadeInit();
+  }
+
   // Session change: refresh session and cascade refresh from the top
   async updateControlPlaneSessionInfo(
     sessionInfo: ControlPlaneSessionInfo | undefined,

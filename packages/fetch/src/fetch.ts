@@ -83,10 +83,7 @@ export async function fetchwithRequestOptions(
   url_: URL | string,
   init?: RequestInit,
   requestOptions?: RequestOptions,
-  // todo: introduce IdeProxySettings type that is available in packages/fetch and core
-  // todo: where should I put this IdeProxySettings? packages/fetch and core seems to be tightly coupled
-  // todo: type should be smth like:
-  ideProxySettingsHost?: IdeProxySettings,
+  ideProxySettings?: IdeProxySettings,
 ): Promise<Response> {
   const url = typeof url_ === "string" ? new URL(url_) : url_;
   if (url.host === "localhost") {
@@ -96,7 +93,7 @@ export async function fetchwithRequestOptions(
   const agentOptions = await getAgentOptions(requestOptions);
 
   // Get proxy from options or environment variables
-  const proxy = getProxy(url.protocol, requestOptions, ideProxySettingsHost);
+  const proxy = getProxy(url.protocol, requestOptions, ideProxySettings);
 
   // Check if should bypass proxy based on requestOptions or NO_PROXY env var
   const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);

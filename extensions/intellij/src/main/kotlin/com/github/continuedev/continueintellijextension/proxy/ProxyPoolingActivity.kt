@@ -34,7 +34,7 @@ class ProxyPoolingActivity : StartupActivity {
         return ProxySettings(
             enabled = settings.USE_HTTP_PROXY,
             proxy = "${settings.PROXY_HOST}:${settings.PROXY_PORT}",
-            noProxy = settings.PROXY_EXCEPTIONS.split(",")
+            // todo: noProxy = settings.PROXY_EXCEPTIONS.split(",")
         )
     }
 

@@ -22,9 +22,9 @@ export function getProxyFromEnv(protocol: string): string | undefined {
 export function getProxy(
   protocol: string,
   requestOptions?: RequestOptions,
-  ideProxySettingsHost?: IdeProxySettings,
+  ideProxySettings?: IdeProxySettings,
 ): string | undefined {
-  console.log(`ideProxySettingsHost: ${ideProxySettingsHost}`);
+  console.log(`getProxy ideProxySettings: ${JSON.stringify(ideProxySettings)}`);
   // todo: decide which proxy config should be used
   // todo: precedence: requestOptions > ide settings > environment vars
   if (requestOptions?.proxy) {

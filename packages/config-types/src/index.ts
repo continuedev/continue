@@ -41,8 +41,8 @@ export const requestOptionsSchema = z.object({
 export type RequestOptions = z.infer<typeof requestOptionsSchema>;
 
 export const ideProxySettingsSchema = z.object({
-  enabled: z.boolean().optional(),
-  proxy: z.string().optional(),
+  enabled: z.boolean(),
+  proxy: z.string(),
 });
 export type IdeProxySettings = z.infer<typeof ideProxySettingsSchema>;
 

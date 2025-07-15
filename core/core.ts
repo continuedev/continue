@@ -332,12 +332,7 @@ export class Core {
     });
 
     on("config/ideProxySettings", async (msg) => {
-      this.configHandler.ideProxySettings = msg.data;
-
-      // todo: just a debug. remove when PR is ready
-      console.log(
-        `ideProxySettings: ${JSON.stringify(this.configHandler.ideProxySettings)}`,
-      );
+      await this.configHandler.updateIdeProxySettings(msg.data);
     });
 
     on("config/refreshProfiles", async (msg) => {
