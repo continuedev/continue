@@ -156,14 +156,22 @@ async function chat() {
     }
 
     try {
-      await streamChatResponse(chatHistory, assistant, client);
+      const finalResponse = await streamChatResponse(chatHistory, assistant, client);
+      
+      // In headless mode, only print the final response
+      if (args.isHeadless && finalResponse.trim()) {
+        console.log(finalResponse);
+      }
+      
       // Save session after each successful response
       saveSession(chatHistory);
     } catch (e: any) {
       console.error(`\n${chalk.red(`Error: ${e.message}`)}`);
-      console.info(
-        chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
-      );
+      if (!args.isHeadless) {
+        console.info(
+          chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
+        );
+      }
     }
   }
 }
