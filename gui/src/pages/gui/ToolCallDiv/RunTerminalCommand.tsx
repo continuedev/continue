@@ -90,34 +90,35 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
 
   // Process terminal content for line limiting
   const processedTerminalContent = useMemo(() => {
-    if (!terminalContent) return { 
-      fullContent: "", 
-      limitedContent: "", 
-      totalLines: 0, 
-      isLimited: false, 
-      hiddenLinesCount: 0 
-    };
-    
-    const lines = terminalContent.split('\n');
+    if (!terminalContent)
+      return {
+        fullContent: "",
+        limitedContent: "",
+        totalLines: 0,
+        isLimited: false,
+        hiddenLinesCount: 0,
+      };
+
+    const lines = terminalContent.split("\n");
     const totalLines = lines.length;
-    
+
     if (totalLines > displayLines) {
       const lastTwentyLines = lines.slice(-displayLines);
       return {
         fullContent: terminalContent,
-        limitedContent: lastTwentyLines.join('\n'),
+        limitedContent: lastTwentyLines.join("\n"),
         totalLines,
         isLimited: true,
-        hiddenLinesCount: totalLines - displayLines
+        hiddenLinesCount: totalLines - displayLines,
       };
     }
-    
+
     return {
       fullContent: terminalContent,
       limitedContent: terminalContent,
       totalLines,
       isLimited: false,
-      hiddenLinesCount: 0
+      hiddenLinesCount: 0,
     };
   }, [terminalContent]);
 
