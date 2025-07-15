@@ -32,7 +32,8 @@
   },
   "homepage": "https://continue.dev",
   "dependencies": {
-    "@continuedev/openai-adapters": "^1.0.18",
+    "@continuedev/config-yaml": "^1.0.96",
+    "@continuedev/openai-adapters": "1.0.46-beta",
     "@continuedev/sdk": "^0.0.12",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@types/react": "^19.1.8",
@@ -46,6 +47,7 @@
     "ink": "^6.0.1",
     "lowlight": "^3.3.0",
     "minimatch": "^10.0.3",
+    "node-fetch": "^3.3.2",
     "open": "^10.1.0",
     "react": "^19.1.0",
     "readline-sync": "^1.4.10",

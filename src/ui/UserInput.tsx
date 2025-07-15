@@ -1,10 +1,10 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
-import SlashCommandUI from "./SlashCommandUI.js";
-import FileSearchUI from "./FileSearchUI.js";
-import { TextBuffer } from "./TextBuffer.js";
 import { InputHistory } from "../util/inputHistory.js";
+import FileSearchUI from "./FileSearchUI.js";
+import SlashCommandUI from "./SlashCommandUI.js";
+import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
   onSubmit: (message: string) => void;
@@ -33,7 +33,9 @@ const UserInput: React.FC<UserInputProps> = ({
   const [showFileSearch, setShowFileSearch] = useState(false);
   const [fileSearchFilter, setFileSearchFilter] = useState("");
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
-  const [currentFiles, setCurrentFiles] = useState<Array<{path: string; displayName: string}>>([]);
+  const [currentFiles, setCurrentFiles] = useState<
+    Array<{ path: string; displayName: string }>
+  >([]);
   const { exit } = useApp();
 
   // Get all available slash commands
@@ -114,8 +116,12 @@ const UserInput: React.FC<UserInputProps> = ({
         cmd.name.toLowerCase().includes(slashCommandFilter.toLowerCase())
       )
       .sort((a, b) => {
-        const aStartsWith = a.name.toLowerCase().startsWith(slashCommandFilter.toLowerCase());
-        const bStartsWith = b.name.toLowerCase().startsWith(slashCommandFilter.toLowerCase());
+        const aStartsWith = a.name
+          .toLowerCase()
+          .startsWith(slashCommandFilter.toLowerCase());
+        const bStartsWith = b.name
+          .toLowerCase()
+          .startsWith(slashCommandFilter.toLowerCase());
 
         if (aStartsWith && !bStartsWith) return -1;
         if (!aStartsWith && bStartsWith) return 1;
@@ -155,7 +161,7 @@ const UserInput: React.FC<UserInputProps> = ({
       const afterCursor = inputText.slice(cursorPosition);
 
       // Replace the partial file reference with the full file name
-      const fileName = filePath.split('/').pop() || filePath;
+      const fileName = filePath.split("/").pop() || filePath;
       const newText = beforeAt + "@" + fileName + " " + afterCursor;
       const newCursorPos = lastAtIndex + 1 + fileName.length + 1;
 
@@ -247,24 +253,36 @@ const UserInput: React.FC<UserInputProps> = ({
     // Handle file search navigation
     if (showFileSearch) {
       if (key.upArrow) {
-        setSelectedFileIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, Math.min(currentFiles.length - 1, 9))));
+        setSelectedFileIndex((prev) =>
+          prev > 0
+            ? prev - 1
+            : Math.max(0, Math.min(currentFiles.length - 1, 9))
+        );
         return;
       }
 
       if (key.downArrow) {
-        setSelectedFileIndex((prev) => (prev < Math.min(currentFiles.length - 1, 9) ? prev + 1 : 0));
+        setSelectedFileIndex((prev) =>
+          prev < Math.min(currentFiles.length - 1, 9) ? prev + 1 : 0
+        );
         return;
       }
 
       if (key.return && !key.shift) {
-        if (currentFiles.length > 0 && selectedFileIndex < currentFiles.length) {
+        if (
+          currentFiles.length > 0 &&
+          selectedFileIndex < currentFiles.length
+        ) {
           selectFile(currentFiles[selectedFileIndex].path);
         }
         return;
       }
 
       if (key.tab) {
-        if (currentFiles.length > 0 && selectedFileIndex < currentFiles.length) {
+        if (
+          currentFiles.length > 0 &&
+          selectedFileIndex < currentFiles.length
+        ) {
           selectFile(currentFiles[selectedFileIndex].path);
         }
         return;
@@ -336,7 +354,7 @@ const UserInput: React.FC<UserInputProps> = ({
       setCursorPosition(newCursor);
       updateSlashCommandState(newText, newCursor);
       updateFileSearchState(newText, newCursor);
-      
+
       // Reset history navigation when user starts typing
       inputHistory.resetNavigation();
     }

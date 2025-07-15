@@ -1,27 +1,79 @@
 #!/usr/bin/env node
 
-import { ContinueClient } from "@continuedev/sdk";
+import {
+  BaseLlmApi,
+  constructLlmApi,
+  LLMConfig,
+} from "@continuedev/openai-adapters";
+import { Assistant, ContinueClient } from "@continuedev/sdk";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { parseArgs } from "./args.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
-import { loadAuthConfig } from "./auth/workos.js";
+import { AuthConfig, loadAuthConfig } from "./auth/workos.js";
 import { initializeContinueSDK } from "./continueSDK.js";
 import { introMessage } from "./intro.js";
 import { configureLogger } from "./logger.js";
 import { MCPService } from "./mcp.js";
+import { loadSession, saveSession } from "./session.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
 import { constructSystemMessage } from "./systemMessage.js";
 import { startTUIChat } from "./ui/index.js";
-import { loadSession, saveSession, hasSession } from "./session.js";
 
 // Parse command line arguments
 const args = parseArgs();
 
 // Configure logger based on headless mode
 configureLogger(args.isHeadless);
+
+function getLlmApi(
+  assistant: Assistant,
+  authConfig: AuthConfig
+): [BaseLlmApi, string] {
+  const model = assistant.config.models?.find((model) =>
+    model?.roles?.includes("chat")
+  );
+
+  if (!model) {
+    throw new Error(
+      "No models with the chat role found in the configured assistant"
+    );
+  }
+
+  const config: LLMConfig =
+    model.provider === "continue-proxy"
+      ? {
+          provider: model.provider,
+          requestOptions: model.requestOptions,
+          apiBase: model.apiBase,
+          apiKey: authConfig.accessToken,
+          env: {
+            apiKeyLocation: (model as any).apiKeyLocation,
+            // envSecretLocations: model.env,
+            orgScopeId: null, // TODO
+            proxyUrl: undefined, // TODO
+          },
+        }
+      : {
+          provider: model.provider as any,
+          apiKey: model.apiKey,
+          apiBase: model.apiBase,
+          requestOptions: model.requestOptions,
+          env: model.env,
+        };
+
+  const llmApi = constructLlmApi(config);
+
+  if (!llmApi) {
+    throw new Error(
+      "Failed to initialized LLM. Please check your configuration."
+    );
+  }
+
+  return [llmApi, model.model];
+}
 
 async function chat() {
   const isAuthenticated = await ensureAuthenticated(true);
@@ -63,7 +115,8 @@ async function chat() {
 
   // Initialize ContinueSDK and MCPService once
   let assistant: ContinueClient["assistant"];
-  let client: ContinueClient["client"];
+  let model: string;
+  let llmApi: BaseLlmApi;
   let mcpService: MCPService;
 
   try {
@@ -73,7 +126,8 @@ async function chat() {
     );
 
     assistant = continueSdk.assistant;
-    client = continueSdk.client;
+    [llmApi, model] = getLlmApi(assistant, authConfig);
+
     mcpService = await MCPService.create(assistant.config);
   } catch (error) {
     console.error(
@@ -85,7 +139,14 @@ async function chat() {
 
   // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
-    await startTUIChat(assistant, client, mcpService, args.prompt, args.resume);
+    await startTUIChat(
+      assistant,
+      llmApi,
+      model,
+      mcpService,
+      args.prompt,
+      args.resume
+    );
     return;
   }
 
@@ -94,7 +155,7 @@ async function chat() {
 
   // Rules
   let chatHistory: ChatCompletionMessageParam[] = [];
-  
+
   // Load previous session if --resume flag is used
   if (args.resume) {
     const savedHistory = loadSession();
@@ -105,7 +166,7 @@ async function chat() {
       console.log(chalk.yellow("No previous session found, starting fresh..."));
     }
   }
-  
+
   // If no session loaded or not resuming, initialize with system message
   if (chatHistory.length === 0) {
     const rulesSystemMessage = assistant.systemMessage;
@@ -156,13 +217,19 @@ async function chat() {
     }
 
     try {
-      const finalResponse = await streamChatResponse(chatHistory, assistant, client);
-      
+      const abortController = new AbortController();
+      const finalResponse = await streamChatResponse(
+        chatHistory,
+        model,
+        llmApi,
+        abortController
+      );
+
       // In headless mode, only print the final response
       if (args.isHeadless && finalResponse.trim()) {
         console.log(finalResponse);
       }
-      
+
       // Save session after each successful response
       saveSession(chatHistory);
     } catch (e: any) {

@@ -11,7 +11,7 @@ import { env } from "../env.js";
 // Config file path
 const AUTH_CONFIG_PATH = path.join(os.homedir(), ".continue", "auth.json");
 
-interface AuthConfig {
+export interface AuthConfig {
   userId?: string;
   userEmail?: string;
   accessToken?: string;

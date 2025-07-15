@@ -1,3 +1,4 @@
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { ContinueClient } from "@continuedev/sdk";
 import { render } from "ink";
 import React from "react";
@@ -9,7 +10,8 @@ export { default as MarkdownRenderer } from "./MarkdownRenderer.js";
 
 export async function startTUIChat(
   assistant: ContinueClient["assistant"],
-  client: ContinueClient["client"],
+  llmApi: BaseLlmApi,
+  model: string,
   mcpService: MCPService,
   initialPrompt?: string,
   resume?: boolean
@@ -21,7 +23,8 @@ export async function startTUIChat(
   const { unmount } = render(
     React.createElement(TUIChat, {
       assistant,
-      client,
+      model,
+      llmApi,
       initialPrompt,
       resume,
     })
