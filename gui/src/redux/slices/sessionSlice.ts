@@ -423,6 +423,8 @@ export const sessionSlice = createSlice({
               message.role === "assistant" &&
               // Last message isn't completely new
               !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
+              // And make sure current message has a tool call
+              (message.toolCalls?.length ?? 0) !== 0 &&
               // And there's a difference in tool call presence
               (lastMessage.toolCalls?.length ?? 0) !==
                 (message.toolCalls?.length ?? 0))

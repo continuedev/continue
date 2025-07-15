@@ -3,6 +3,7 @@ import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4 } from "uuid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
+import { findCurrentToolCall } from "../util";
 import { ChatHistoryItemWithMessageId, sessionSlice } from "./sessionSlice";
 
 // Mock dependencies
@@ -170,6 +171,95 @@ describe("sessionSlice streamUpdate", () => {
       expect(newState.history[1].message.content).toBe("");
       expect(newState.history[1].toolCallState?.status).toBe("generating");
       expect(newState.history[1].toolCallState?.toolCallId).toBe("1234");
+
+      const toolResponseAction = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "tool" as const,
+            toolCallId: "1234",
+            content: "foo.txt\nbar.txt\nexample.php",
+          },
+          {
+            role: "assistant" as const,
+            content: "I see, the tool found 3 files.",
+          },
+        ],
+      };
+      newState = sessionSlice.reducer(newState, toolResponseAction);
+      expect(newState.history).toHaveLength(4);
+
+      // Check tool message
+      expect(newState.history[2].message.role).toBe("tool");
+      expect(newState.history[2].message.content).toBe(
+        "foo.txt\nbar.txt\nexample.php",
+      );
+      expect((newState.history[2].message as any).toolCallId).toBe("1234");
+
+      // Check final assistant message
+      expect(newState.history[3].message.role).toBe("assistant");
+      expect(newState.history[3].message.content).toBe(
+        "I see, the tool found 3 files.",
+      );
+    });
+  });
+
+  describe("Assistant Message Immediately After Tool Call", () => {
+    it("should handle assistant message immediately after tool call", () => {
+      const initialState = createInitialState();
+      const toolCallAction = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "<think>",
+          },
+          {
+            role: "assistant" as const,
+            content: "I should use a tool call.",
+          },
+          {
+            role: "assistant" as const,
+            content: "</think>",
+          },
+          {
+            role: "assistant" as const,
+            content: "",
+            toolCalls: [
+              {
+                id: "1234",
+                type: "function" as const,
+                function: {
+                  name: "builtin_ls",
+                  arguments: '{"dirPath":".","recursive":false}',
+                },
+              },
+            ],
+          },
+          {
+            role: "assistant" as const,
+            content: "",
+          }
+        ],
+      };
+
+      let newState = sessionSlice.reducer(initialState, toolCallAction);
+      expect(newState.history).toHaveLength(2);
+
+      // Check reasoning
+      // Streaming reasoning will generate a new message and add the reasoning text to it. Therefore, we need to check history[1] instead of history[0].
+      expect(newState.history[1].reasoning?.text).toBe(
+        "I should use a tool call.",
+      );
+
+      // Check generating message
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].message.content).toBe("");
+      expect(newState.history[1].toolCallState?.status).toBe("generating");
+      expect(newState.history[1].toolCallState?.toolCallId).toBe("1234");
+      
+      // Check we can find the current tool call
+      expect(findCurrentToolCall(newState.history)?.status).toBe("generating");
 
       const toolResponseAction = {
         type: "session/streamUpdate",
