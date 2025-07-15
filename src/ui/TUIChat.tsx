@@ -1,3 +1,4 @@
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { ContinueClient } from "@continuedev/sdk";
 import { Box, Text, useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
@@ -15,7 +16,8 @@ import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
   assistant: ContinueClient["assistant"];
-  client: ContinueClient["client"];
+  model: string;
+  llmApi: BaseLlmApi;
   initialPrompt?: string;
   resume?: boolean;
 }
@@ -31,7 +33,8 @@ interface DisplayMessage {
 
 const TUIChat: React.FC<TUIChatProps> = ({
   assistant,
-  client,
+  model,
+  llmApi,
   initialPrompt,
   resume,
 }) => {
@@ -275,10 +278,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
       await streamChatResponse(
         newHistory,
-        assistant,
-        client,
-        streamCallbacks,
-        controller
+        model,
+        llmApi,
+        controller,
+        streamCallbacks
       );
 
       // Finalize any remaining streaming message

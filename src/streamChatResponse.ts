@@ -1,4 +1,4 @@
-import { ContinueClient } from "@continuedev/sdk";
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 import type {
@@ -62,10 +62,10 @@ export interface StreamCallbacks {
 // Define a function to handle streaming responses with tool calling
 export async function streamChatResponse(
   chatHistory: ChatCompletionMessageParam[],
-  assistant: ContinueClient["assistant"],
-  client: ContinueClient["client"],
-  callbacks?: StreamCallbacks,
-  abortController?: AbortController
+  model: string,
+  llmApi: BaseLlmApi,
+  abortController: AbortController,
+  callbacks?: StreamCallbacks
 ) {
   const args = parseArgs();
   const isHeadless = args.isHeadless;
@@ -84,14 +84,15 @@ export async function streamChatResponse(
       //   "chat.log",
       //   "---\n\n" + JSON.stringify(chatHistory, null, 2) + "\n\n"
       // );
-      stream = await client.chat.completions.create({
-        model: assistant.getModel(),
-        messages: chatHistory,
-        stream: true,
-        tools: toolsForRequest,
-      }, {
-        signal: abortController?.signal,
-      });
+      stream = llmApi.chatCompletionStream(
+        {
+          model,
+          messages: chatHistory,
+          stream: true,
+          tools: toolsForRequest,
+        },
+        abortController.signal
+      );
     } catch (error: any) {
       console.error(
         chalk.red("Error in streamChatResponse:"),
@@ -165,7 +166,7 @@ export async function streamChatResponse(
                 // Try to parse complete JSON
                 const parsed = JSON.parse(toolArguments);
                 toolCall.arguments = parsed;
-                
+
                 // Notify start if we haven't already and have both name and args
                 if (toolCall.name && !toolCall.startNotified) {
                   toolCall.startNotified = true;
@@ -193,7 +194,11 @@ export async function streamChatResponse(
     }
 
     // Notify that content is complete if we have content and are about to process tool calls
-    if (aiResponse.trim() && currentToolCalls.length > 0 && callbacks?.onContentComplete) {
+    if (
+      aiResponse.trim() &&
+      currentToolCalls.length > 0 &&
+      callbacks?.onContentComplete
+    ) {
       callbacks.onContentComplete(aiResponse);
     }
 
@@ -258,9 +263,9 @@ export async function streamChatResponse(
             callbacks.onToolError(errorMessage, toolCall.name);
           } else if (!isHeadless) {
             console.info(
-              `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(
-                ")"
-              )}`
+              `${chalk.red("[Tool error:")} ${chalk.red(
+                errorMessage
+              )}${chalk.red(")")}`
             );
           }
         }
