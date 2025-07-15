@@ -94,6 +94,7 @@ export async function fetchwithRequestOptions(
 
   // Get proxy from options or environment variables
   const proxy = getProxy(url.protocol, requestOptions, ideProxySettings);
+  console.log(`used proxy: ${proxy}`);
 
   // Check if should bypass proxy based on requestOptions or NO_PROXY env var
   const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);

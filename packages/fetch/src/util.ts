@@ -24,9 +24,9 @@ export function getProxy(
   requestOptions?: RequestOptions,
   ideProxySettings?: IdeProxySettings,
 ): string | undefined {
-  console.log(`getProxy ideProxySettings: ${JSON.stringify(ideProxySettings)}`);
-  // todo: decide which proxy config should be used
-  // todo: precedence: requestOptions > ide settings > environment vars
+  if (ideProxySettings?.enabled ?? false) {
+    return ideProxySettings!.proxy;
+  }
   if (requestOptions?.proxy) {
     return requestOptions.proxy;
   }
