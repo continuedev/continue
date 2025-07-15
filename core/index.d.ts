@@ -432,12 +432,12 @@ export interface PromptLog {
 export type MessageModes = "chat" | "agent" | "plan";
 
 export type ToolStatus =
-  | "generating"
-  | "generated"
-  | "calling"
-  | "errored"
-  | "done"
-  | "canceled";
+  | "generating" // Tool call arguments are being streamed from the LLM
+  | "generated" // Tool call is complete and ready for execution (awaiting approval)
+  | "calling" // Tool is actively being executed
+  | "errored" // Tool execution failed with an error
+  | "done" // Tool execution completed successfully
+  | "canceled"; // Tool call was canceled by user or system
 
 // Will exist only on "assistant" messages with tool calls
 interface ToolCallState {
@@ -462,7 +462,7 @@ export interface ChatHistoryItem {
   editorState?: any;
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
-  toolCallState?: ToolCallState;
+  toolCallStates?: ToolCallState[];
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
   appliedRules?: RuleWithSource[];
@@ -666,11 +666,24 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
-export type DiffLineType = "new" | "old" | "same";
+export type DiffType = "new" | "old" | "same";
 
-export interface DiffLine {
-  type: DiffLineType;
+export interface DiffObject {
+  type: DiffType;
+}
+
+export interface DiffLine extends DiffObject {
   line: string;
+}
+
+interface DiffChar extends DiffObject {
+  char: string;
+  oldIndex?: number; // Character index assuming a flattened line string.
+  newIndex?: number;
+  oldCharIndexInLine?: number; // Character index assuming new lines reset the character index to 0.
+  newCharIndexInLine?: number;
+  oldLineIndex?: number;
+  newLineIndex?: number;
 }
 
 export interface Problem {
