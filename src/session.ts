@@ -9,7 +9,9 @@ import os from "os";
  */
 function getSessionId(): string {
   // Use a combination of terminal session ID and process ID to ensure uniqueness
-  const terminalSession = process.env.TERM_SESSION_ID || 
+  // For tmux, use TMUX_PANE which is unique per pane
+  const terminalSession = process.env.TMUX_PANE || 
+                          process.env.TERM_SESSION_ID || 
                           process.env.SSH_TTY || 
                           process.env.TMUX || 
                           process.env.STY || 
