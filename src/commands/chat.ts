@@ -15,6 +15,7 @@ export interface ChatOptions {
   headless?: boolean;
   config?: string;
   resume?: boolean;
+  rule?: string[]; // Array of rule specifications
 }
 
 async function initializeChat(options: ChatOptions) {
@@ -56,7 +57,8 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         mcpService,
         prompt,
         options.resume,
-        options.config
+        options.config,
+        options.rule
       );
       return;
     }
@@ -83,7 +85,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // If no session loaded or not resuming, initialize with system message
     if (chatHistory.length === 0) {
       const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
-      const systemMessage = constructSystemMessage(rulesSystemMessage);
+      const systemMessage = constructSystemMessage(rulesSystemMessage, options.rule);
       if (systemMessage) {
         chatHistory.push({ role: "system", content: systemMessage });
       }

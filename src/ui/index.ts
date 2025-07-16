@@ -15,7 +15,8 @@ export async function startTUIChat(
   mcpService: MCPService,
   initialPrompt?: string,
   resume?: boolean,
-  configPath?: string
+  configPath?: string,
+  additionalRules?: string[]
 ) {
   // Show intro message before starting TUI
   introMessage(config, model, mcpService);
@@ -30,6 +31,7 @@ export async function startTUIChat(
       configPath,
       initialPrompt,
       resume,
+      additionalRules,
     })
   );
 

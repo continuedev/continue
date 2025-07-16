@@ -3,6 +3,7 @@ import * as fs from "fs";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 import * as path from "path";
+import { processRule } from "./args.js";
 const { WalkerSync } = pkg;
 
 /**
@@ -95,9 +96,10 @@ ${getGitStatus()}
 /**
  * Load and construct a comprehensive system message with base message and rules section
  * @param rulesSystemMessage - The rules system message from the assistant
+ * @param additionalRules - Additional rules from --rule flags
  * @returns The comprehensive system message with base message and rules section
  */
-export function constructSystemMessage(rulesSystemMessage: string): string {
+export function constructSystemMessage(rulesSystemMessage: string, additionalRules?: string[]): string {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
   let agentContent = "";
@@ -116,11 +118,24 @@ export function constructSystemMessage(rulesSystemMessage: string): string {
     console.warn("Warning: Could not read agent configuration file:", error);
   }
 
+  // Process additional rules from --rule flags
+  let processedRules: string[] = [];
+  if (additionalRules && additionalRules.length > 0) {
+    for (const ruleSpec of additionalRules) {
+      try {
+        const processedRule = processRule(ruleSpec);
+        processedRules.push(processedRule);
+      } catch (error: any) {
+        console.warn(`Warning: Failed to process rule "${ruleSpec}": ${error.message}`);
+      }
+    }
+  }
+
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
 
-  // Add rules section if we have either rules or agent content
-  if (rulesSystemMessage || agentContent) {
+  // Add rules section if we have any rules or agent content
+  if (rulesSystemMessage || agentContent || processedRules.length > 0) {
     systemMessage += '\n\n<context name="userRules">';
 
     if (rulesSystemMessage) {
@@ -130,6 +145,12 @@ export function constructSystemMessage(rulesSystemMessage: string): string {
     if (agentContent) {
       const separator = rulesSystemMessage ? "\n\n" : "\n";
       systemMessage += `${separator}${agentContent}`;
+    }
+
+    // Add processed rules from --rule flags
+    if (processedRules.length > 0) {
+      const separator = (rulesSystemMessage || agentContent) ? "\n\n" : "\n";
+      systemMessage += `${separator}${processedRules.join("\n\n")}`;
     }
 
     systemMessage += "\n</context>";

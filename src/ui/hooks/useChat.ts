@@ -22,6 +22,7 @@ interface UseChatProps {
   llmApi: BaseLlmApi;
   initialPrompt?: string;
   resume?: boolean;
+  additionalRules?: string[];
   onShowOrgSelector: () => void;
   onShowConfigSelector: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
@@ -34,6 +35,7 @@ export function useChat({
   llmApi,
   initialPrompt,
   resume,
+  additionalRules,
   onShowOrgSelector,
   onShowConfigSelector,
   onLoginPrompt,
@@ -54,7 +56,7 @@ export function useChat({
 
       if (history.length === 0) {
         const rulesSystemMessage = "";
-        const systemMessage = constructSystemMessage(rulesSystemMessage);
+        const systemMessage = constructSystemMessage(rulesSystemMessage, additionalRules);
         if (systemMessage) {
           history.push({ role: "system", content: systemMessage });
         }
@@ -348,7 +350,7 @@ export function useChat({
 
   const resetChatHistory = () => {
     const rulesSystemMessage = "";
-    const systemMessage = constructSystemMessage(rulesSystemMessage);
+    const systemMessage = constructSystemMessage(rulesSystemMessage, additionalRules);
     const newHistory = systemMessage
       ? [{ role: "system" as const, content: systemMessage }]
       : [];
