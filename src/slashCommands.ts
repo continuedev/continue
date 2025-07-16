@@ -18,7 +18,8 @@ export async function handleSlashCommands(
   newInput?: string;
   clear?: boolean;
 } | null> {
-  if (input.startsWith("/")) {
+  // Only trigger slash commands if slash is the very first character
+  if (input.startsWith("/") && input.trim().startsWith("/")) {
     const [command, ...args] = input.slice(1).split(" ");
     switch (command) {
       case "help":

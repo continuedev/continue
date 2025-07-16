@@ -80,20 +80,24 @@ const UserInput: React.FC<UserInputProps> = ({
 
   // Update slash command UI state based on input
   const updateSlashCommandState = (text: string, cursor: number) => {
-    // Check if we're in a slash command context
-    const beforeCursor = text.slice(0, cursor);
-    const lastSlashIndex = beforeCursor.lastIndexOf("/");
-
-    if (lastSlashIndex !== -1) {
-      // Check if there's any whitespace between the last slash and cursor
-      const afterSlash = beforeCursor.slice(lastSlashIndex + 1);
-
-      if (!afterSlash.includes(" ") && !afterSlash.includes("\n")) {
-        // We're in a slash command context
-        setShowSlashCommands(true);
-        setSlashCommandFilter(afterSlash);
-        setSelectedCommandIndex(0);
-        setShowFileSearch(false);
+    // Only show slash commands if slash is the very first character
+    if (text.trimStart().startsWith("/")) {
+      const trimmedText = text.trimStart();
+      const beforeCursor = trimmedText.slice(0, cursor - (text.length - trimmedText.length));
+      
+      // Only show if cursor is after the slash and before any whitespace
+      if (beforeCursor.length > 0 && beforeCursor.startsWith("/")) {
+        const afterSlash = beforeCursor.slice(1);
+        
+        if (!afterSlash.includes(" ") && !afterSlash.includes("\n")) {
+          // We're in a slash command context
+          setShowSlashCommands(true);
+          setSlashCommandFilter(afterSlash);
+          setSelectedCommandIndex(0);
+          setShowFileSearch(false);
+        } else {
+          setShowSlashCommands(false);
+        }
       } else {
         setShowSlashCommands(false);
       }
