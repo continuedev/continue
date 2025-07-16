@@ -181,7 +181,6 @@ export async function runNormalFlow(
   // Step 2: If user is logged in, look for first assistant in selected org
   if (isAuthenticated()) {
     try {
-      console.log(chalk.blue("✓ Loading your first assistant from Continue"));
       const result = await initialize(authConfig, undefined);
       return { ...result, wasOnboarded: true };
     } catch (error) {

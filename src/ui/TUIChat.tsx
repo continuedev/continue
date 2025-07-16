@@ -20,7 +20,6 @@ interface TUIChatProps {
   resume?: boolean;
 }
 
-
 const TUIChat: React.FC<TUIChatProps> = ({
   config: initialAssistant,
   model: initialModel,
@@ -35,6 +34,29 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [model, setModel] = useState(initialModel);
   const [llmApi, setLlmApi] = useState(initialLlmApi);
   const [mcpService, setMcpService] = useState(initialMcpService);
+
+  // State for login prompt handling
+  const [loginPrompt, setLoginPrompt] = useState<{
+    text: string;
+    resolve: (value: string) => void;
+  } | null>(null);
+  const [loginToken, setLoginToken] = useState("");
+
+  // Custom login prompt handler for TUI
+  const handleLoginPrompt = (promptText: string): Promise<string> => {
+    return new Promise((resolve) => {
+      setLoginPrompt({ text: promptText, resolve });
+    });
+  };
+
+  // Handle login token submission
+  const handleLoginTokenSubmit = (token: string) => {
+    if (loginPrompt) {
+      setLoginToken("");
+      loginPrompt.resolve(token);
+      setLoginPrompt(null);
+    }
+  };
 
   const {
     messages,
@@ -52,6 +74,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     onShowOrgSelector: () => showOrganizationSelector(),
+    onLoginPrompt: handleLoginPrompt,
   });
 
   const { renderMessage } = useMessageRenderer();
@@ -75,7 +98,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onChatReset: resetChatHistory,
   });
 
-
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -90,6 +112,31 @@ const TUIChat: React.FC<TUIChatProps> = ({
           <Box paddingX={1} flexDirection="row" gap={1}>
             <LoadingAnimation visible={isWaitingForResponse} />
             <Text color="gray">esc to interrupt</Text>
+          </Box>
+        )}
+
+        {/* Login prompt - shows above input when active */}
+        {loginPrompt && (
+          <Box
+            paddingX={1}
+            borderStyle="round"
+            borderColor="yellow"
+            flexDirection="column"
+            gap={1}
+          >
+            <Text color="yellow" bold>
+              Login Required
+            </Text>
+            <Text>{loginPrompt.text}</Text>
+            <UserInput
+              onSubmit={handleLoginTokenSubmit}
+              isWaitingForResponse={false}
+              inputMode={true}
+              assistant={assistant}
+              disabled={false}
+              placeholder="Enter your token..."
+              hideNormalUI={true}
+            />
           </Box>
         )}
 
@@ -109,7 +156,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onInterrupt={handleInterrupt}
           assistant={assistant}
           onFileAttached={handleFileAttached}
-          disabled={showOrgSelector}
+          disabled={showOrgSelector || !!loginPrompt}
         />
         <Box marginRight={2} justifyContent="flex-end">
           <Text color="gray">● Continue CLI</Text>

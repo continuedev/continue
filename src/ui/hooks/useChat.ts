@@ -22,6 +22,7 @@ interface UseChatProps {
   initialPrompt?: string;
   resume?: boolean;
   onShowOrgSelector: () => void;
+  onLoginPrompt?: (promptText: string) => Promise<string>;
 }
 
 export function useChat({
@@ -31,6 +32,7 @@ export function useChat({
   initialPrompt,
   resume,
   onShowOrgSelector,
+  onLoginPrompt,
 }: UseChatProps) {
   const { exit } = useApp();
 
@@ -94,7 +96,7 @@ export function useChat({
     }
 
     // Handle slash commands
-    const commandResult = await handleSlashCommands(message, assistant);
+    const commandResult = await handleSlashCommands(message, assistant, onLoginPrompt);
     if (commandResult) {
       if (commandResult.exit) {
         exit();
