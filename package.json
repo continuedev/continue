@@ -27,7 +27,7 @@
     "url": "https://github.com/continuedev/cli.git"
   },
   "bugs": {
-    "url": "https://github.com/continuedev/continuedev/issues"
+    "url": "https://github.com/continuedev/continue/issues"
   },
   "homepage": "https://continue.dev",
   "dependencies": {
