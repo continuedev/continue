@@ -1,4 +1,4 @@
-import { RequestOptions } from "@continuedev/config-types";
+import { RequestOptions, IdeProxySettings } from "@continuedev/config-types";
 import * as followRedirects from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -83,6 +83,7 @@ export async function fetchwithRequestOptions(
   url_: URL | string,
   init?: RequestInit,
   requestOptions?: RequestOptions,
+  ideProxySettings?: IdeProxySettings,
 ): Promise<Response> {
   const url = typeof url_ === "string" ? new URL(url_) : url_;
   if (url.host === "localhost") {
@@ -92,7 +93,8 @@ export async function fetchwithRequestOptions(
   const agentOptions = await getAgentOptions(requestOptions);
 
   // Get proxy from options or environment variables
-  const proxy = getProxy(url.protocol, requestOptions);
+  const proxy = getProxy(url.protocol, requestOptions, ideProxySettings);
+  console.log(`used proxy: ${proxy}`);
 
   // Check if should bypass proxy based on requestOptions or NO_PROXY env var
   const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);

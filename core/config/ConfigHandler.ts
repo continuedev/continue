@@ -1,5 +1,5 @@
 import { ConfigResult } from "@continuedev/config-yaml";
-
+import { IdeProxySettings } from "@continuedev/config-types";
 import { ControlPlaneClient } from "../control-plane/client.js";
 import {
   BrowserSerializedContinueConfig,
@@ -44,6 +44,7 @@ export class ConfigHandler {
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles;
+  ideProxySettings?: IdeProxySettings;
 
   constructor(
     private readonly ide: IDE,
@@ -318,6 +319,15 @@ export class ConfigHandler {
   // Ide settings change: refresh session and cascade refresh from the top
   async updateIdeSettings(ideSettings: IdeSettings) {
     this.ideSettingsPromise = Promise.resolve(ideSettings);
+    await this.cascadeInit();
+  }
+
+  async updateIdeProxySettings(ideProxySettings: IdeProxySettings) {
+    this.ideProxySettings = ideProxySettings;
+    // todo: just a debug. remove when PR is ready
+    console.log(
+      `updateIdeProxySettings ideProxySettings: ${JSON.stringify(this.ideProxySettings)}`,
+    );
     await this.cascadeInit();
   }
 

@@ -444,6 +444,7 @@ export abstract class BaseLLM implements ILLM {
           new URL(input as any),
           { ...init },
           { ...this.requestOptions },
+          // todo: proxy config is not available in BaseLLM (no ConfigHandler)
         );
 
         // Error mapping to be more helpful
