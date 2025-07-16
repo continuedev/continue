@@ -6,7 +6,6 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "continue-cli": "dist/index.js",
     "cn": "dist/index.js"
   },
   "scripts": {
@@ -34,7 +33,7 @@
   "dependencies": {
     "@continuedev/config-yaml": "^1.0.96",
     "@continuedev/openai-adapters": "1.0.46-beta",
-    "@continuedev/sdk": "file:../continue/packages/continue-sdk/typescript",
+    "@continuedev/sdk": "^0.0.13",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@types/react": "^19.1.8",
     "@types/turndown": "^5.0.5",
