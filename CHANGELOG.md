@@ -1,3 +1,11 @@
+## [1.3.5](https://github.com/continuedev/cli/compare/v1.3.4...v1.3.5) (2025-07-16)
+
+
+### Bug Fixes
+
+* package.json issues page ([91e1e2e](https://github.com/continuedev/cli/commit/91e1e2e004e86d6fb1df3bbfbbf94f6d46a4adb7))
+* update review.yaml config ([b49ab0d](https://github.com/continuedev/cli/commit/b49ab0d9e54edf8374b113af4752e1c6fba15738))
+
 ## [1.3.4](https://github.com/continuedev/cli/compare/v1.3.3...v1.3.4) (2025-07-16)
 
 
