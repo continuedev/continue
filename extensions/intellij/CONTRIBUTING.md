@@ -104,8 +104,9 @@ When using the `Run Continue` task, we automatically tail both prompt logs and I
 #### Viewing more IDE logs
 
 You can selectively increase the log granularity (e.g., debug-level logs) as follows:
-* Navigate to `Help | Diagnostic Tools | Debug Log Settings...`
-* Add a line in the format: `com.intellij.diagnostic:debug`
+
+- Navigate to `Help | Diagnostic Tools | Debug Log Settings...`
+- Add a line in the format: `com.intellij.diagnostic:debug`
 
 You can find more information about this feature in [official docs](https://youtrack.jetbrains.com/articles/SUPPORT-A-43/How-to-enable-debug-logging-in-IntelliJ-IDEA).
 
