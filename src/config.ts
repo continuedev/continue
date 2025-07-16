@@ -1,4 +1,8 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  RegistryClient,
+  unrollAssistant,
+} from "@continuedev/config-yaml";
 import {
   BaseLlmApi,
   constructLlmApi,
@@ -7,8 +11,12 @@ import {
 import {
   Configuration,
   DefaultApi,
+  DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
+import { dirname } from "node:path";
 import { AuthConfig } from "./auth/workos.js";
+import { CLIPlatformClient } from "./CLIPlatformClient.js";
+import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 
 export function getLlmApi(
@@ -58,10 +66,42 @@ export function getLlmApi(
   return [llmApi, model.model];
 }
 
+async function loadConfigYaml(
+  accessToken: string | undefined,
+  currentUserSlug: string,
+  filePath: string,
+  organizationId: string | null,
+  apiClient: DefaultApiInterface
+): Promise<AssistantUnrolled> {
+  const unrollResult = await unrollAssistant(
+    { filePath, uriType: "file" },
+    new RegistryClient({
+      accessToken,
+      apiBase: env.apiBase,
+      rootPath: dirname(filePath),
+    }),
+    {
+      currentUserSlug,
+      alwaysUseProxy: false,
+      orgScopeId: organizationId,
+      renderSecrets: true,
+      platformClient: new CLIPlatformClient(organizationId, apiClient),
+      onPremProxyUrl: null,
+    }
+  );
+
+  if (unrollResult.errors?.length || !unrollResult.config) {
+    const errorDetails = unrollResult.errors?.join("\n") ?? "Unknown error";
+    throw new Error(`Failed to load config file:\n${errorDetails}`);
+  }
+
+  return unrollResult.config;
+}
+
 export async function loadConfig(
   accessToken: string | undefined,
   config: string | undefined,
-  organizationId: string | undefined
+  organizationId: string | null
 ): Promise<AssistantUnrolled> {
   const apiClient = new DefaultApi(
     new Configuration({
@@ -73,7 +113,7 @@ export async function loadConfig(
     // Fall back to listing assistants and taking the first one
     const assistants = await apiClient.listAssistants({
       alwaysUseProxy: "false",
-      organizationId,
+      organizationId: organizationId ?? undefined,
     });
 
     const result = assistants[0].configResult;
@@ -84,8 +124,15 @@ export async function loadConfig(
     return result.config as AssistantUnrolled;
   } else if (config.startsWith(".") || config.startsWith("/")) {
     // Load from file
-    throw new Error("Loading from file is not supported yet.");
-    // return loadAssistantFromFile(config);
+    const configYaml = await loadConfigYaml(
+      accessToken,
+      "TODO", // TODO currentUserSlug
+      config,
+      organizationId,
+      apiClient
+    );
+
+    return configYaml;
   } else {
     // Load from slug
     const [ownerSlug, packageSlug] = config.split("/");
@@ -93,7 +140,7 @@ export async function loadConfig(
       ownerSlug,
       packageSlug,
       alwaysUseProxy: "false",
-      organizationId,
+      organizationId: organizationId ?? undefined,
     });
 
     const result = resp.configResult;
@@ -117,7 +164,7 @@ export async function initialize(
   const config = await loadConfig(
     authConfig.accessToken,
     configPath,
-    authConfig.organizationId ?? undefined
+    authConfig.organizationId ?? null
   );
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);
