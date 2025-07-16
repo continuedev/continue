@@ -60,6 +60,7 @@ const saveSubsetFilters = [
     "preferencesByProfileId",
     "selectedProfileId",
     "selectedOrganizationId",
+    "organizations",
   ]),
 ];
 

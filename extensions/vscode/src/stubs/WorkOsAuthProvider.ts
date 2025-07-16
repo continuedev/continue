@@ -103,7 +103,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
     // Immediately refresh any existing sessions
     this.attemptEmitter = new NodeEventEmitter();
-    this.hasAttemptedRefresh = new Promise((resolve) => {
+    WorkOsAuthProvider.hasAttemptedRefresh = new Promise((resolve) => {
       this.attemptEmitter.on("attempted", resolve);
     });
     void this.refreshSessions();
@@ -152,7 +152,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   public async getSessions(
     scopes?: string[],
   ): Promise<ContinueAuthenticationSession[]> {
-    await this.hasAttemptedRefresh;
+    // await this.hasAttemptedRefresh;
     const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
     if (!data) {
       return [];
@@ -188,7 +188,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return this.ideRedirectUri;
   }
 
-  private hasAttemptedRefresh: Promise<void>;
+  public static hasAttemptedRefresh: Promise<void>;
   private attemptEmitter: NodeEventEmitter;
   async refreshSessions() {
     // Prevent concurrent refresh operations
@@ -255,6 +255,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
+      this.attemptEmitter.emit("attempted");
       // Don't retry for auth errors
       if (
         error.message?.includes("401") ||
@@ -563,7 +564,7 @@ export async function getControlPlaneSessionInfo(
     if (useOnboarding) {
       WorkOsAuthProvider.useOnboardingUri = true;
     }
-
+    await WorkOsAuthProvider.hasAttemptedRefresh;
     const session = await authentication.getSession(
       controlPlaneEnv.AUTH_TYPE,
       [],

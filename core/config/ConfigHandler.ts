@@ -171,7 +171,8 @@ export class ConfigHandler {
   }
 
   private async getOrgs(): Promise<OrgWithProfiles[]> {
-    if (await this.controlPlaneClient.isSignedIn()) {
+    const isSignedIn = await this.controlPlaneClient.isSignedIn();
+    if (isSignedIn) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
       const orgs = await Promise.all([
         this.getPersonalHubOrg(),
