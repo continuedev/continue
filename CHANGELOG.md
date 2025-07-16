@@ -1,3 +1,10 @@
+## [1.3.6](https://github.com/continuedev/cli/compare/v1.3.5...v1.3.6) (2025-07-16)
+
+
+### Bug Fixes
+
+* update readme ([01329e4](https://github.com/continuedev/cli/commit/01329e4b4f66d97c93c98e0342f100792f626126))
+
 ## [1.3.5](https://github.com/continuedev/cli/compare/v1.3.4...v1.3.5) (2025-07-16)
 
 
