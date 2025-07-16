@@ -2,6 +2,9 @@ import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { Box, Text } from "ink";
 import React, { useState } from "react";
+import { loadAuthConfig } from "../auth/workos.js";
+import { initialize } from "../config.js";
+import { introMessage } from "../intro.js";
 import { MCPService } from "../mcp.js";
 import { useChat } from "./hooks/useChat.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
@@ -58,6 +61,37 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
   };
 
+  // Reload function for after login
+  const handleReload = async () => {
+    try {
+      // Reload auth config and reinitialize
+      const authConfig = loadAuthConfig();
+      const {
+        config: newAssistant,
+        llmApi: newLlmApi,
+        model: newModel,
+        mcpService: newMcpService,
+      } = await initialize(authConfig, configPath);
+
+      // Update all the state
+      setAssistant(newAssistant);
+      setModel(newModel);
+      setLlmApi(newLlmApi);
+      setMcpService(newMcpService);
+
+      // Reset chat history
+      resetChatHistory();
+
+      // Clear the screen completely
+      process.stdout.write("\x1b[2J\x1b[H");
+
+      // Show the new intro message
+      introMessage(newAssistant, newModel, newMcpService);
+    } catch (error: any) {
+      console.error(`Failed to reload after login: ${error.message}`);
+    }
+  };
+
   const {
     messages,
     setMessages,
@@ -75,6 +109,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     resume,
     onShowOrgSelector: () => showOrganizationSelector(),
     onLoginPrompt: handleLoginPrompt,
+    onReload: handleReload,
   });
 
   const { renderMessage } = useMessageRenderer();
