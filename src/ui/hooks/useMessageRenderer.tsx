@@ -61,7 +61,7 @@ export function useMessageRenderer() {
         <Text color={isUser ? "green" : "blue"}>●</Text>
         <Text> </Text>
         {isUser ? (
-          <Text>{message.content}</Text>
+          <Text color="gray">{message.content}</Text>
         ) : (
           <MarkdownRenderer content={message.content} />
         )}
