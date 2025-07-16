@@ -42,6 +42,7 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import setupNextEditWindowManager, {
   NextEditWindowManager,
 } from "../activation/NextEditWindowManager";
@@ -366,6 +367,19 @@ export class VsCodeExtension {
           this.configHandler.reloadConfig();
         }
       }
+    });
+
+    // TODO: check if next edit provider's chain id is cleared properly.
+    // Listen for editor changes to clean up decorations when editor closes.
+    vscode.window.onDidChangeVisibleTextEditors(async () => {
+      // If our active editor is no longer visible, clear decorations.
+      NextEditProvider.currentEditChainId = null;
+    });
+
+    // Listen for selection changes to hide tooltip when cursor moves.
+    vscode.window.onDidChangeTextEditorSelection(async (e) => {
+      // If the selection changed in our active editor, hide the tooltip.
+      NextEditProvider.currentEditChainId = null;
     });
 
     // Refresh index when branch is changed
