@@ -25,7 +25,7 @@ export function introMessage(
   console.info(chalk.cyan(CONTINUE_ASCII_ART));
 
   console.info(`\n${chalk.bold.blue(`Agent: ${config.name}\n`)}`);
-  console.info(`${chalk.yellow("Model:")} ${modelName}\n`);
+  console.info(`${chalk.yellow("Model:")} ${modelName.split("/").pop()}\n`);
 
   console.info(chalk.yellow("Tools:"));
   getAllTools().forEach((tool) => {
