@@ -17,6 +17,7 @@ import { dirname } from "node:path";
 import {
   AuthConfig,
   getAccessToken,
+  getAssistantSlug,
   getOrganizationId,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
@@ -116,19 +117,30 @@ export async function loadConfig(
   );
 
   if (!config) {
-    // Fall back to listing assistants and taking the first one
-    const assistants = await apiClient.listAssistants({
-      alwaysUseProxy: "false",
-      organizationId: organizationId ?? undefined,
-    });
+    // Check if there's a saved assistant slug in auth config
+    const assistantSlug = getAssistantSlug(authConfig);
+    if (assistantSlug) {
+      // Use the saved assistant slug
+      config = assistantSlug;
+    } else {
+      // Fall back to listing assistants and taking the first one
+      const assistants = await apiClient.listAssistants({
+        alwaysUseProxy: "false",
+        organizationId: organizationId ?? undefined,
+      });
 
-    const result = assistants[0].configResult;
-    if (result.errors?.length || !result.config) {
-      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
+      const result = assistants[0].configResult;
+      if (result.errors?.length || !result.config) {
+        throw new Error(
+          result.errors?.join("\n") ?? "Failed to load assistant."
+        );
+      }
+
+      return result.config as AssistantUnrolled;
     }
+  }
 
-    return result.config as AssistantUnrolled;
-  } else if (
+  if (
     config.startsWith(".") ||
     config.startsWith("/") ||
     config.startsWith("~")

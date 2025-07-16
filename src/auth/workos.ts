@@ -23,12 +23,14 @@ export interface AuthenticatedConfig {
   refreshToken: string;
   expiresAt: number;
   organizationId: string | null; // null means personal organization
+  assistantSlug?: string; // Optional assistant slug
 }
 
 // Represents configuration when using environment variable auth
 export interface EnvironmentAuthConfig {
   accessToken: string;
   organizationId: null; // Environment auth always uses personal organization
+  assistantSlug?: string; // Optional assistant slug
 }
 
 // Union type representing the possible authentication states
@@ -69,6 +71,14 @@ export function getOrganizationId(config: AuthConfig): string | null {
 }
 
 /**
+ * Gets the assistant slug from any auth config type
+ */
+export function getAssistantSlug(config: AuthConfig): string | null {
+  if (config === null) return null;
+  return config.assistantSlug || null;
+}
+
+/**
  * Loads the authentication configuration from disk
  */
 export function loadAuthConfig(): AuthConfig {
@@ -99,6 +109,7 @@ export function loadAuthConfig(): AuthConfig {
           refreshToken: data.refreshToken,
           expiresAt: data.expiresAt,
           organizationId: data.organizationId || null,
+          assistantSlug: data.assistantSlug || undefined,
         };
       } else {
         console.warn("Invalid auth config found, ignoring.");
@@ -131,6 +142,25 @@ export function saveAuthConfig(config: AuthenticatedConfig): void {
     fs.writeFileSync(AUTH_CONFIG_PATH, JSON.stringify(config, null, 2));
   } catch (error) {
     console.error(`Error saving auth config: ${error}`);
+  }
+}
+
+/**
+ * Updates the assistant slug in the authentication configuration
+ */
+export function updateAssistantSlug(assistantSlug: string | null): void {
+  // If using CONTINUE_API_KEY environment variable, don't save anything
+  if (process.env.CONTINUE_API_KEY) {
+    return;
+  }
+
+  const config = loadAuthConfig();
+  if (config && isAuthenticatedConfig(config)) {
+    const updatedConfig: AuthenticatedConfig = {
+      ...config,
+      assistantSlug: assistantSlug || undefined,
+    };
+    saveAuthConfig(updatedConfig);
   }
 }
 
@@ -232,6 +262,10 @@ async function refreshToken(
       organizationId: isAuthenticatedConfig(existingConfig)
         ? existingConfig.organizationId
         : null,
+      // Preserve existing assistantSlug if it exists
+      assistantSlug: isAuthenticatedConfig(existingConfig)
+        ? existingConfig.assistantSlug
+        : undefined,
     };
 
     // Save the config
@@ -331,6 +365,7 @@ export async function ensureOrganization(
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: null, // Default to personal organization
+      assistantSlug: authenticatedConfig.assistantSlug,
     };
     saveAuthConfig(updatedConfig);
     return updatedConfig;
@@ -355,6 +390,7 @@ export async function ensureOrganization(
         refreshToken: authenticatedConfig.refreshToken,
         expiresAt: authenticatedConfig.expiresAt,
         organizationId: null,
+        assistantSlug: authenticatedConfig.assistantSlug,
       };
       saveAuthConfig(updatedConfig);
       return updatedConfig;
@@ -371,6 +407,7 @@ export async function ensureOrganization(
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: selectedOrgId,
+      assistantSlug: authenticatedConfig.assistantSlug,
     };
 
     saveAuthConfig(updatedConfig);
@@ -388,6 +425,7 @@ export async function ensureOrganization(
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: null,
+      assistantSlug: authenticatedConfig.assistantSlug,
     };
     saveAuthConfig(updatedConfig);
     return updatedConfig;

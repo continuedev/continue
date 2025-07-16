@@ -1,6 +1,6 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { hasMultipleOrganizations } from "../auth/workos.js";
 import { InputHistory } from "../util/inputHistory.js";
 import FileSearchUI from "./FileSearchUI.js";
@@ -63,10 +63,18 @@ const UserInput: React.FC<UserInputProps> = ({
         name: "whoami",
         description: "Check who you're currently logged in as",
       },
-      ...(hasMultipleOrgs ? [{
-        name: "org",
-        description: "Switch organization",
-      }] : []),
+      {
+        name: "config",
+        description: "Switch configuration",
+      },
+      ...(hasMultipleOrgs
+        ? [
+            {
+              name: "org",
+              description: "Switch organization",
+            },
+          ]
+        : []),
     ];
 
     const assistantCommands =
@@ -386,7 +394,8 @@ const UserInput: React.FC<UserInputProps> = ({
   });
 
   const renderInputText = () => {
-    const placeholderText = placeholder || "Ask anything, @ for context, / for slash commands";
+    const placeholderText =
+      placeholder || "Ask anything, @ for context, / for slash commands";
     if (inputText.length === 0) {
       return (
         <>
