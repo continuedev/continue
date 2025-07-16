@@ -33,9 +33,6 @@ export function introMessage(
       `- ${chalk.green(tool.function.name)}: ${tool.function.description ?? ""}`
     );
   });
-  mcpTools.forEach((tool) => {
-    console.info(`- ${chalk.green(tool.name)}: ${tool.description}`);
-  });
   console.info("");
 
   console.info(chalk.yellow("Slash commands:"));
