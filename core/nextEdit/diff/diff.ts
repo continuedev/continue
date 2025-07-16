@@ -1,4 +1,6 @@
+import { Position } from "shiki";
 import { DiffLine } from "../..";
+import { myersDiff } from "../../diff/myers";
 
 /**
  * Given a diff of two editable regions, get the offset position at the last new line inside the editable region.
@@ -191,4 +193,35 @@ export function checkFim(
   } else {
     return { isFim, fimText: null };
   }
+}
+
+export function calculateFinalCursorPosition(
+  currCursorPos: Position,
+  editableRegionStartLine: number,
+  oldEditRangeSlice: string,
+  newEditRangeSlice: string,
+) {
+  // How far away is the current line from the start of the editable region?
+  const lineOffsetAtCursorPos = currCursorPos.line - editableRegionStartLine;
+
+  // How long is the line at the current cursor position?
+  const lineContentAtCursorPos =
+    newEditRangeSlice.split("\n")[lineOffsetAtCursorPos];
+
+  const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+
+  const offset = getOffsetPositionAtLastNewLine(
+    diffLines,
+    lineContentAtCursorPos,
+    lineOffsetAtCursorPos,
+  );
+
+  // Calculate the actual line number in the editor by adding the startPos offset
+  // to the line number from the diff calculation.
+  const finalCursorPos: Position = {
+    line: editableRegionStartLine + offset.line,
+    character: offset.character,
+  };
+
+  return finalCursorPos;
 }
