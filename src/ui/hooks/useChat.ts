@@ -22,6 +22,7 @@ interface UseChatProps {
   initialPrompt?: string;
   resume?: boolean;
   onShowOrgSelector: () => void;
+  onShowConfigSelector: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
 }
 
@@ -32,6 +33,7 @@ export function useChat({
   initialPrompt,
   resume,
   onShowOrgSelector,
+  onShowConfigSelector,
   onLoginPrompt,
 }: UseChatProps) {
   const { exit } = useApp();
@@ -95,11 +97,22 @@ export function useChat({
       return;
     }
 
+    // Special handling for /config command in TUI
+    if (message.trim() === "/config") {
+      onShowConfigSelector();
+      return;
+    }
+
     // Handle slash commands
     const commandResult = await handleSlashCommands(message, assistant, onLoginPrompt);
     if (commandResult) {
       if (commandResult.exit) {
         exit();
+        return;
+      }
+
+      if (commandResult.openConfigSelector) {
+        onShowConfigSelector();
         return;
       }
 

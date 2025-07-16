@@ -3,7 +3,9 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { Box, Text } from "ink";
 import React, { useState } from "react";
 import { MCPService } from "../mcp.js";
+import ConfigSelector from "./ConfigSelector.js";
 import { useChat } from "./hooks/useChat.js";
+import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import LoadingAnimation from "./LoadingAnimation.js";
@@ -74,6 +76,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     onShowOrgSelector: () => showOrganizationSelector(),
+    onShowConfigSelector: () => showConfigSelectorUI(),
     onLoginPrompt: handleLoginPrompt,
   });
 
@@ -85,6 +88,25 @@ const TUIChat: React.FC<TUIChatProps> = ({
     handleOrganizationCancel,
     showOrganizationSelector,
   } = useOrganizationSelector({
+    configPath,
+    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {
+      setAssistant(newAssistant);
+      setModel(newModel);
+      setLlmApi(newLlmApi);
+      setMcpService(newMcpService);
+    },
+    onMessage: (message) => {
+      setMessages((prev) => [...prev, message]);
+    },
+    onChatReset: resetChatHistory,
+  });
+
+  const {
+    showConfigSelector,
+    handleConfigSelect,
+    handleConfigCancel,
+    showConfigSelectorUI,
+  } = useConfigSelector({
     configPath,
     onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {
       setAssistant(newAssistant);
@@ -148,6 +170,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
           />
         )}
 
+        {/* Config selector - shows above input when active */}
+        {showConfigSelector && (
+          <ConfigSelector
+            onSelect={handleConfigSelect}
+            onCancel={handleConfigCancel}
+          />
+        )}
+
         {/* Input area - always at bottom */}
         <UserInput
           onSubmit={handleUserMessage}
@@ -156,7 +186,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onInterrupt={handleInterrupt}
           assistant={assistant}
           onFileAttached={handleFileAttached}
-          disabled={showOrgSelector || !!loginPrompt}
+          disabled={showOrgSelector || showConfigSelector || !!loginPrompt}
         />
         <Box marginRight={2} justifyContent="flex-end">
           <Text color="gray">● Continue CLI</Text>

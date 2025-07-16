@@ -17,6 +17,7 @@ export async function handleSlashCommands(
   exit?: boolean;
   newInput?: string;
   clear?: boolean;
+  openConfigSelector?: boolean;
 } | null> {
   if (input.startsWith("/")) {
     const [command, ...args] = input.slice(1).split(" ");
@@ -30,6 +31,8 @@ export async function handleSlashCommands(
           "/login - Authenticate with your account",
           "/logout - Sign out of your current session",
           "/whoami - Check who you're currently logged in as",
+          "/org - Switch organization",
+          "/config - Switch configuration",
           ...(assistant.prompts?.map(
             (prompt) => `/${prompt?.name} - ${prompt?.description}`
           ) ?? []),
@@ -39,6 +42,8 @@ export async function handleSlashCommands(
         return { clear: true, output: "Chat history cleared" };
       case "exit":
         return { exit: true, output: "Goodbye!" };
+      case "config":
+        return { openConfigSelector: true };
       case "login":
         login(false, onLoginPrompt)
           .then((config) => {

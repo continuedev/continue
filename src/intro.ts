@@ -47,6 +47,8 @@ export function introMessage(
   console.info(
     `- ${chalk.green("/whoami")}: Check who you're currently logged in as`
   );
+  console.info(`- ${chalk.green("/org")}: Switch organization`);
+  console.info(`- ${chalk.green("/config")}: Switch configuration`);
   for (const prompt of config.prompts ?? []) {
     console.info(`- /${prompt?.name}: ${prompt?.description}`);
   }
