@@ -139,7 +139,6 @@ function ParallelListeners() {
       if (!update) {
         return;
       }
-      console.log("Received config update");
       await handleConfigUpdate(false, update);
     },
     [handleConfigUpdate],
