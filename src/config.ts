@@ -75,7 +75,6 @@ export function getLlmApi(
 
 async function loadConfigYaml(
   accessToken: string | null,
-  currentUserSlug: string,
   filePath: string,
   organizationId: string | null,
   apiClient: DefaultApiInterface
@@ -88,7 +87,7 @@ async function loadConfigYaml(
       rootPath: dirname(filePath),
     }),
     {
-      currentUserSlug,
+      currentUserSlug: "",
       alwaysUseProxy: false,
       orgScopeId: organizationId,
       renderSecrets: true,
@@ -133,7 +132,6 @@ export async function loadConfig(
     // Load from file
     const configYaml = await loadConfigYaml(
       authConfig?.accessToken ?? null,
-      (authConfig as any)?.userSlug ?? "",
       config,
       organizationId,
       apiClient
