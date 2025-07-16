@@ -21,8 +21,9 @@ import {
   SessionMetadata,
   ThinkingChatMessage,
   Tool,
-  ToolCallState,
   ToolCallDelta,
+  ToolCallState,
+  WarningMessage,
 } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
@@ -223,6 +224,7 @@ type SessionState = {
   };
   newestToolbarPreviewForInput: Record<string, string>;
   hasReasoningEnabled?: boolean;
+  warningMessage?: WarningMessage;
 };
 
 const initialState: SessionState = {
@@ -424,6 +426,7 @@ export const sessionSlice = createSlice({
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
       state.history.splice(action.payload - 1, 2);
+      state.warningMessage = undefined;
     },
     updateHistoryItemAtIndex: (
       state,
@@ -889,6 +892,12 @@ export const sessionSlice = createSlice({
       state.newestToolbarPreviewForInput[payload.inputId] =
         payload.contextItemId;
     },
+    setWarningMessage: (
+      state,
+      action: PayloadAction<WarningMessage | undefined>,
+    ) => {
+      state.warningMessage = action.payload;
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -972,6 +981,7 @@ export const {
   setNewestToolbarPreviewForInput,
   setIsInEdit,
   setHasReasoningEnabled,
+  setWarningMessage,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;
