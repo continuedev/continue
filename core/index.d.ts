@@ -122,6 +122,7 @@ export interface ILLM
     messages: ChatMessage[],
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
@@ -129,6 +130,11 @@ export interface ILLM
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
+
+  compileChatMessages(
+    messages: ChatMessage[],
+    options: LLMFullCompletionOpeions,
+  ): CompiledChatMessagesReport;
 
   embed(chunks: string[]): Promise<number[][]>;
 
@@ -666,11 +672,24 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
-export type DiffLineType = "new" | "old" | "same";
+export type DiffType = "new" | "old" | "same";
 
-export interface DiffLine {
-  type: DiffLineType;
+export interface DiffObject {
+  type: DiffType;
+}
+
+export interface DiffLine extends DiffObject {
   line: string;
+}
+
+interface DiffChar extends DiffObject {
+  char: string;
+  oldIndex?: number; // Character index assuming a flattened line string.
+  newIndex?: number;
+  oldCharIndexInLine?: number; // Character index assuming new lines reset the character index to 0.
+  newCharIndexInLine?: number;
+  oldLineIndex?: number;
+  newLineIndex?: number;
 }
 
 export interface Problem {
@@ -1668,4 +1687,25 @@ export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;
   apiKey?: string;
+}
+
+export type PruningStatus = "deleted-last-input" | "pruned" | "not-pruned";
+
+export interface CompiledMessagesResult {
+  compiledChatMessages: ChatMessage[];
+  pruningStatus: PruningStatus;
+}
+
+export interface MessageOption {
+  precompiled: boolean;
+}
+
+export type WarningMessageLevel = "warning" | "fatal";
+
+export type WarningCategory = "exceeded-context-length" | "deleted-last-input";
+
+export interface WarningMessage {
+  message: string;
+  level: WarningMessageLevel;
+  category: WarningCategory;
 }

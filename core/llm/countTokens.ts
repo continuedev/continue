@@ -1,6 +1,13 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
-import { ChatMessage, MessageContent, MessagePart, Tool } from "../index.js";
+import {
+  ChatMessage,
+  CompiledMessagesResult,
+  MessageContent,
+  MessagePart,
+  PruningStatus,
+  Tool,
+} from "../index.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import {
   addSpaceToAnyEmptyMessages,
@@ -417,7 +424,7 @@ function compileChatMessages({
   maxTokens: number;
   supportsImages: boolean;
   tools?: Tool[];
-}): ChatMessage[] {
+}): CompiledMessagesResult {
   let msgsCopy: ChatMessage[] = msgs.map((m) => ({ ...m }));
 
   // If images not supported, convert MessagePart[] to string
@@ -446,14 +453,14 @@ function compileChatMessages({
     msgsCopy.pop();
   }
 
-  // Extract the tool sequence from the end of the message array
-  const toolSequence = extractToolSequence(msgsCopy);
+  // // Extract the tool sequence from the end of the message array
+  // const toolSequence = extractToolSequence(msgsCopy);
 
-  // Count tokens for all messages in the tool sequence
-  let lastMessagesTokens = 0;
-  for (const msg of toolSequence) {
-    lastMessagesTokens += countChatMessageTokens(modelName, msg);
-  }
+  // // Count tokens for all messages in the tool sequence
+  // let lastMessagesTokens = 0;
+  // for (const msg of toolSequence) {
+  //   lastMessagesTokens += countChatMessageTokens(modelName, msg);
+  // }
 
   // System message
   let systemMsgTokens = 0;
@@ -479,7 +486,7 @@ function compileChatMessages({
   // Non-negotiable messages
   inputTokensAvailable -= toolTokens;
   inputTokensAvailable -= systemMsgTokens;
-  inputTokensAvailable -= lastMessagesTokens;
+  // inputTokensAvailable -= lastMessagesTokens;
 
   // Make sure there's enough context for the non-excludable items
   if (inputTokensAvailable < 0) {
@@ -491,7 +498,6 @@ function compileChatMessages({
       - counting safety buffer: ${countingSafetyBuffer}
       - tools: ~${toolTokens}
       - system message: ~${systemMsgTokens}
-      - last user or tool + tool call message tokens: ~${lastMessagesTokens}
       - max output tokens: ${maxTokens}`,
     );
   }
@@ -507,9 +513,12 @@ function compileChatMessages({
     };
   });
 
+  let pruningStatus: PruningStatus = "not-pruned";
+
   while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
     const message = historyWithTokens.shift()!;
     currentTotal -= message.tokens;
+    pruningStatus = "pruned";
 
     // At this point make sure no latent tool response without corresponding call
     while (historyWithTokens[0]?.role === "tool") {
@@ -518,15 +527,18 @@ function compileChatMessages({
     }
   }
 
+  if (historyWithTokens.length === 0) {
+    pruningStatus = "deleted-last-input";
+  }
+
   // Now reassemble
   const reassembled: ChatMessage[] = [];
   if (systemMsg) {
     reassembled.push(systemMsg);
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
-  reassembled.push(...toolSequence);
 
-  return reassembled;
+  return { compiledChatMessages: reassembled, pruningStatus };
 }
 
 export {

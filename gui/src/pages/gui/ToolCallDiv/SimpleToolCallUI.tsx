@@ -89,7 +89,6 @@ export function SimpleToolCallUI({
             <ArgsToggleIcon
               isShowing={showingArgs}
               setIsShowing={setShowingArgs}
-              toolCallId={toolCallState.toolCallId}
             />
           ) : null}
         </div>
