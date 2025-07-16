@@ -1,0 +1,79 @@
+---
+title: Inception
+slug: ../inception
+---
+
+<Info>
+  You can get an API key from the [Inception
+  Dashboard](https://platform.inceptionlabs.ai/dashboard/api-keys).
+</Info>
+
+## Chat model
+
+We recommend configuring **Mercury Coder Small** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - uses: inceptionlabs/mercury-coder-small
+      with:
+        INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Mercury Coder Small",
+        "provider": "inception",
+        "model": "mercury-coder-small",
+        "apiKey": "<INCEPTION_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+We also recommend configuring **Mercury Coder Small** as your autocomplete model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - uses: inceptionlabs/mercury-coder-small
+      with:
+        INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": [
+      {
+        "title": "Mercury Coder Small",
+        "provider": "inception",
+        "model": "mercury-coder-small",
+        "apiKey": "<INCEPTION_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Embeddings model
+
+Inception currently does not offer any embeddings models.
+
+[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
+
+## Reranking model
+
+Inception currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
