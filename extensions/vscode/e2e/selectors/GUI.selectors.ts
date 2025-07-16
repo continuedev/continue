@@ -32,16 +32,14 @@ export class GUISelectors {
   }
 
   public static getAcceptToolCallButton(view: WebView) {
-    return SelectorUtils.getElementByDataTestId(
-      view,
-      "accept-tool-call-button",
+    return view.findWebElement(
+      By.css("[data-testid*='accept-tool-call-button']"),
     );
   }
 
   public static getRejectToolCallButton(view: WebView) {
-    return SelectorUtils.getElementByDataTestId(
-      view,
-      "reject-tool-call-button",
+    return view.findWebElement(
+      By.css("[data-testid*='reject-tool-call-button']"),
     );
   }
 
@@ -102,11 +100,9 @@ export class GUISelectors {
   }
 
   public static getNthMessageDeleteButton(view: WebView, index: number) {
-    const adjustedIndex = 1 + index * 2;
-
     return SelectorUtils.getElementByDataTestId(
       view,
-      `delete-button-${adjustedIndex}`,
+      `delete-button-${index}`,
     );
   }
 
