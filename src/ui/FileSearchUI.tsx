@@ -111,7 +111,10 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
 
       // Flatten and deduplicate results
       for (const matches of results) {
-        allMatches.push(...matches);
+        // Handle case where glob might return undefined
+        if (matches) {
+          allMatches.push(...matches);
+        }
       }
 
       const uniqueFiles = [...new Set(allMatches)];
@@ -190,7 +193,9 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
     // Limit cache size
     if (fileCache.size > 100) {
       const firstKey = fileCache.keys().next().value;
-      fileCache.delete(firstKey);
+      if (firstKey) {
+        fileCache.delete(firstKey);
+      }
     }
 
     return filteredFiles;
