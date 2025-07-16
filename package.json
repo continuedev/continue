@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/cli",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -40,6 +40,7 @@
     "@workos-inc/node": "^7.45.0",
     "axios": "^1.8.4",
     "chalk": "^5.4.1",
+    "commander": "^14.0.0",
     "diff": "^7.0.0",
     "dotenv": "^16.5.0",
     "glob": "^11.0.3",
