@@ -1,8 +1,12 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useState } from "react";
-import { initializeAssistant } from "../../assistant.js";
-import { loadAuthConfig, saveAuthConfig } from "../../auth/workos.js";
+import {
+  isAuthenticatedConfig,
+  loadAuthConfig,
+  saveAuthConfig,
+} from "../../auth/workos.js";
+import { initialize } from "../../config.js";
 import { introMessage } from "../../intro.js";
 import { MCPService } from "../../mcp.js";
 
@@ -38,6 +42,18 @@ export function useOrganizationSelector({
 
     // Update auth config
     const authConfig = loadAuthConfig();
+
+    // Only allow organization switching for authenticated users
+    if (!isAuthenticatedConfig(authConfig)) {
+      onMessage({
+        role: "system",
+        content:
+          "Organization switching not available for environment variable auth",
+        messageType: "system" as const,
+      });
+      return;
+    }
+
     const updatedConfig = {
       ...authConfig,
       organizationId,
@@ -58,7 +74,7 @@ export function useOrganizationSelector({
         llmApi: newLlmApi,
         model: newModel,
         mcpService: newMcpService,
-      } = await initializeAssistant(updatedConfig, configPath);
+      } = await initialize(updatedConfig, configPath);
 
       // Update assistant configuration
       onAssistantChange(config, newModel, newLlmApi, newMcpService);
