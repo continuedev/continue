@@ -206,9 +206,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     }
   }
 
+  // It is important that every path in this function emits the attempted event
+  // As config loading in core will be locked until refresh is attempted
   private async _refreshSessions(): Promise<void> {
     const sessions = await this.getSessions();
     if (!sessions.length) {
+      this.attemptEmitter.emit("attempted");
       return;
     }
 
