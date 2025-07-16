@@ -1,4 +1,6 @@
 // Mock for lowlight
+export const common = {};
+
 export function createLowlight() {
   return {
     register: () => {},

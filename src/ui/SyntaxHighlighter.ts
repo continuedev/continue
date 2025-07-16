@@ -1,45 +1,5 @@
-// @ts-ignore - Suppress deprecation warnings for highlight.js imports
-import bash from "highlight.js/lib/languages/bash.js";
-// @ts-ignore
-import c from "highlight.js/lib/languages/c.js";
-// @ts-ignore
-import cpp from "highlight.js/lib/languages/cpp.js";
-// @ts-ignore
-import csharp from "highlight.js/lib/languages/csharp.js";
-// @ts-ignore
-import css from "highlight.js/lib/languages/css.js";
-// @ts-ignore
-import go from "highlight.js/lib/languages/go.js";
-// @ts-ignore
-import java from "highlight.js/lib/languages/java.js";
-// @ts-ignore
-import js from "highlight.js/lib/languages/javascript.js";
-// @ts-ignore
-import json from "highlight.js/lib/languages/json.js";
-// @ts-ignore
-import kotlin from "highlight.js/lib/languages/kotlin.js";
-// @ts-ignore
-import markdown from "highlight.js/lib/languages/markdown.js";
-// @ts-ignore
-import php from "highlight.js/lib/languages/php.js";
-// @ts-ignore
-import python from "highlight.js/lib/languages/python.js";
-// @ts-ignore
-import ruby from "highlight.js/lib/languages/ruby.js";
-// @ts-ignore
-import rust from "highlight.js/lib/languages/rust.js";
-// @ts-ignore
-import sql from "highlight.js/lib/languages/sql.js";
-// @ts-ignore
-import swift from "highlight.js/lib/languages/swift.js";
-// @ts-ignore
-import ts from "highlight.js/lib/languages/typescript.js";
-// @ts-ignore
-import xml from "highlight.js/lib/languages/xml.js";
-// @ts-ignore
-import yaml from "highlight.js/lib/languages/yaml.js";
 import { Text } from "ink";
-import { createLowlight } from "lowlight";
+import { common, createLowlight } from "lowlight";
 import React from "react";
 
 export interface SyntaxHighlighterTheme {
@@ -125,31 +85,8 @@ export function highlightCode(
   theme: SyntaxHighlighterTheme = defaultTheme
 ): React.ReactNode[] {
   try {
-    // Create lowlight instance and register languages
-    const lowlight = createLowlight();
-    lowlight.register({
-      javascript: js,
-      typescript: ts,
-      python: python,
-      java: java,
-      c: c,
-      cpp: cpp,
-      csharp: csharp,
-      go: go,
-      rust: rust,
-      php: php,
-      ruby: ruby,
-      swift: swift,
-      kotlin: kotlin,
-      sql: sql,
-      json: json,
-      yaml: yaml,
-      bash: bash,
-      markdown: markdown,
-      css: css,
-      html: xml,
-      xml: xml,
-    });
+    // Create lowlight instance with common languages
+    const lowlight = createLowlight(common);
 
     const result = lowlight.highlight(language, code, { prefix: "" });
 
