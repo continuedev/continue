@@ -7,9 +7,15 @@ import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
 import { ProgressData } from "core/granite/commons/progressData";
 import { ServerState } from "core/granite/commons/serverState";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
-import { shouldRecommendLargeModel, SystemInfo } from "core/granite/commons/sysInfo";
+import {
+  shouldRecommendLargeModel,
+  SystemInfo,
+} from "core/granite/commons/sysInfo";
 import { formatSize } from "core/granite/commons/textUtils";
-import { checkMinimumServerVersion, MIN_OLLAMA_VERSION } from "core/granite/commons/versions";
+import {
+  checkMinimumServerVersion,
+  MIN_OLLAMA_VERSION,
+} from "core/granite/commons/versions";
 import {
   FINAL_STEP,
   MODELS_STEP,
@@ -120,9 +126,9 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     false,
   ]);
   const [serverState, setServerState] = useState<ServerState>({
-      status: ServerStatus.unknown,
-      version: undefined
-    });
+    status: ServerStatus.unknown,
+    version: undefined,
+  });
 
   const [statusByModel, setStatusByModel] = useState<Map<string, ModelStatus>>(
     new Map(),
@@ -188,7 +194,7 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
         isVisible,
         setVisible,
         isOllamaOutdated,
-        setOllamaOutdated
+        setOllamaOutdated,
       }}
     >
       {children}
@@ -240,7 +246,9 @@ const WizardStep: React.FC<StepProps> = ({
             style={{
               // For some reason, tailwind fails to resolve text-[var(--vscode-walkthrough-stepTitle\\.foreground)], so we fall back to good ole CSS
               // Also, why is it --vscode-walkthrough-stepTitle\\.foreground and not --vscode-walkthrough-stepTitle-foreground, like for native VS Code walkthroughs?
-              color: isActive ? "var(--vscode-walkthrough-stepTitle\\.foreground)" : "var(--vscode-descriptionForeground)"
+              color: isActive
+                ? "var(--vscode-walkthrough-stepTitle\\.foreground)"
+                : "var(--vscode-descriptionForeground)",
             }}
           >
             {title}
@@ -262,7 +270,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
     ollamaInstallationError,
     ollamaInstallationProgress,
     setOllamaInstallationProgress,
-    isOllamaOutdated
+    isOllamaOutdated,
   } = useWizardContext();
   const [systemErrors, setSystemErrors] = useState<string[] | undefined>();
   const serverStatus = serverState.status;
@@ -307,15 +315,15 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
     setOllamaInstallationProgress(0);
   };
 
-
-  const isDevspaces = installationModes.length > 0 && installationModes[0].id === "devspaces";
+  const isDevspaces =
+    installationModes.length > 0 && installationModes[0].id === "devspaces";
 
   let serverButton;
   if (
-    !isOllamaOutdated && (
-    serverStatus === ServerStatus.started ||
-    serverStatus === ServerStatus.stopped
-  )) {
+    !isOllamaOutdated &&
+    (serverStatus === ServerStatus.started ||
+      serverStatus === ServerStatus.stopped)
+  ) {
     serverButton = (
       <VSCodeButton variant="secondary" disabled>
         Complete!
@@ -349,7 +357,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
         disabled={isOffline}
         title={installationModes[0].label}
       >
-        Download and {isOllamaOutdated?"Update":"Install"} Ollama
+        Download and {isOllamaOutdated ? "Update" : "Install"} Ollama
       </VSCodeButton>
     );
   }
@@ -362,9 +370,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
           It is required by Granite.Code.
         </p>
         {isDevspaces && (
-          <p>
-            Follow the guide to install Ollama on Red Hat Dev Spaces.
-          </p>
+          <p>Follow the guide to install Ollama on Red Hat Dev Spaces.</p>
         )}
 
         {currentStatus !== WizardStatus.downloadingOllama && serverButton}
@@ -381,15 +387,24 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
         {!isDevspaces && installationModes.length > 0 && (
           <p>
             If you prefer, you can also
-            {!isOllamaOutdated &&
-             <a href="https://ollama.com/download"> install Ollama manually</a>}
-            {isOllamaOutdated &&
-            <a href="https://github.com/ollama/ollama/blob/main/docs/faq.md#how-can-i-upgrade-ollama"> update Ollama manually</a>
-            }.
+            {!isOllamaOutdated && (
+              <a href="https://ollama.com/download"> install Ollama manually</a>
+            )}
+            {isOllamaOutdated && (
+              <a href="https://github.com/ollama/ollama/blob/main/docs/faq.md#how-can-i-upgrade-ollama">
+                {" "}
+                update Ollama manually
+              </a>
+            )}
+            .
           </p>
         )}
         {systemErrors?.map((systemError) => (
-            <DiagnosticMessage key={systemError} message={systemError} type="error" />
+          <DiagnosticMessage
+            key={systemError}
+            message={systemError}
+            type="error"
+          />
         ))}
         {!isDevspaces && isOffline && (
           <DiagnosticMessage
@@ -415,7 +430,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     setModelInstallationError,
     systemInfo,
     statusByModel,
-    isOllamaOutdated
+    isOllamaOutdated,
   } = useWizardContext();
   const [systemErrors, setSystemErrors] = useState<string[] | undefined>();
 
@@ -475,8 +490,10 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
       {props.isActive && (
         <div className="mt-4">
           <p>
-            Setup will download Granite AI models.<br/>
-            Download size: {formatSize(getRequiredSpace(selectedModel, statusByModel))}.
+            Setup will download Granite AI models.
+            <br />
+            Download size:{" "}
+            {formatSize(getRequiredSpace(selectedModel, statusByModel))}.
           </p>
 
           <div className="mt-4 flex items-center gap-2">
@@ -511,7 +528,11 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
           </div>
 
           {systemErrors?.map((systemError) => (
-            <DiagnosticMessage key={systemError} message={systemError} type="error" />
+            <DiagnosticMessage
+              key={systemError}
+              message={systemError}
+              type="error"
+            />
           ))}
           {modelInstallationError && (
             <DiagnosticMessage message={modelInstallationError} type="error" />
@@ -543,9 +564,9 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
 
 const StartLocalAIStep: React.FC<StepProps> = (props) => {
   const handleShowTutorial = async () => {
-    console.log("show tutorial");
     vscode.postMessage({
-      command: "showTutorial",
+      command: "openUrl",
+      data: "https://docs.granitecode.ai/getting-started.html",
     });
   };
   return (
@@ -573,7 +594,6 @@ export const GraniteWizard: React.FC = () => {
 };
 
 const WizardContent: React.FC = () => {
-
   const {
     currentStatus,
     setCurrentStatus,
@@ -597,26 +617,26 @@ const WizardContent: React.FC = () => {
     setStatusByModel,
     isVisible,
     setVisible,
-    setOllamaOutdated
+    setOllamaOutdated,
   } = useWizardContext();
   const currentStatusRef = useRef(currentStatus);
   const isVisibleRef = useRef(isVisible);
   const modelInstallationStatusRef = useRef(modelInstallationStatus);
   const requestStatus = () => {
-    if(!isVisibleRef.current) {
+    if (!isVisibleRef.current) {
       return;
     }
 
     vscode.postMessage({
       command: "fetchStatus",
     });
-  }
+  };
 
   const init = () => {
     vscode.postMessage({
       command: "init",
     });
-  }
+  };
 
   // Update ref when currentStatus changes
   useEffect(() => {
@@ -667,17 +687,22 @@ const WizardContent: React.FC = () => {
           const data = payload.data;
           const newServerState = data.serverState;
           const newVersion: string | undefined = newServerState.version;
-          const isOllamaOutdated = newVersion !== undefined && !checkMinimumServerVersion(newVersion);
+          const isOllamaOutdated =
+            newVersion !== undefined && !checkMinimumServerVersion(newVersion);
           setOllamaOutdated(isOllamaOutdated);
           setServerState(newServerState);
 
-          const modelStatusMap = new Map<string, ModelStatus>(Object.entries(data.statusByModel));
+          const modelStatusMap = new Map<string, ModelStatus>(
+            Object.entries(data.statusByModel),
+          );
           setStatusByModel(modelStatusMap);
 
           const newStepStatuses = data.wizardState.stepStatuses as boolean[];
           setStepStatuses((prevStatuses) => {
-            const ollamaStepChanged = prevStatuses[OLLAMA_STEP] !== newStepStatuses[OLLAMA_STEP];
-            const modelsStepChanged = prevStatuses[MODELS_STEP] !== newStepStatuses[MODELS_STEP];
+            const ollamaStepChanged =
+              prevStatuses[OLLAMA_STEP] !== newStepStatuses[OLLAMA_STEP];
+            const modelsStepChanged =
+              prevStatuses[MODELS_STEP] !== newStepStatuses[MODELS_STEP];
 
             if (ollamaStepChanged) {
               if (!newStepStatuses[OLLAMA_STEP]) {
@@ -690,10 +715,17 @@ const WizardContent: React.FC = () => {
             if (newStepStatuses[MODELS_STEP]) {
               setModelInstallationProgress(100);
               setModelInstallationStatus("complete");
-              if (!newStepStatuses[FINAL_STEP] && modelsStepChanged && !isOllamaOutdated) {
+              if (
+                !newStepStatuses[FINAL_STEP] &&
+                modelsStepChanged &&
+                !isOllamaOutdated
+              ) {
                 setActiveStep(FINAL_STEP);
               }
-            } else if (modelsStepChanged && modelInstallationStatusRef.current === "complete") {
+            } else if (
+              modelsStepChanged &&
+              modelInstallationStatusRef.current === "complete"
+            ) {
               // Model installation was complete, and then some model was uninstalled
               // Reset the progress and status to allow the user to start the installation again
               setModelInstallationProgress(0);
@@ -704,7 +736,8 @@ const WizardContent: React.FC = () => {
             return newStepStatuses;
           });
           if (
-            (newStepStatuses[OLLAMA_STEP] && currStatus === WizardStatus.downloadingOllama) ||
+            (newStepStatuses[OLLAMA_STEP] &&
+              currStatus === WizardStatus.downloadingOllama) ||
             currStatus === WizardStatus.startingOllama
           ) {
             setCurrentStatus(WizardStatus.idle);
@@ -785,10 +818,10 @@ const WizardContent: React.FC = () => {
 
   return (
     <div className="h-full w-full text-[--vscode-foreground]" role="tablist">
-    {/* Style partially adapted from https://github.com/microsoft/vscode/blob/998fb692680cc20d70a805df8fa59cb1443bc897/src/vs/workbench/contrib/welcomeGettingStarted/browser/media/gettingStarted.css#L534
-      *  Copyright (c) Microsoft Corporation. All rights reserved.
-      *  Licensed under the MIT License. See License.txt in the project root for license information.
-    */}
+      {/* Style partially adapted from https://github.com/microsoft/vscode/blob/998fb692680cc20d70a805df8fa59cb1443bc897/src/vs/workbench/contrib/welcomeGettingStarted/browser/media/gettingStarted.css#L534
+       *  Copyright (c) Microsoft Corporation. All rights reserved.
+       *  Licensed under the MIT License. See License.txt in the project root for license information.
+       */}
       <style>{`
         .granite-wizard-container {
           display: grid;
@@ -835,21 +868,22 @@ const WizardContent: React.FC = () => {
         }
       `}</style>
       <div className="granite-wizard-container px-16 sm:px-8">
-        <div className="mb-6 granite-wizard-title">
-          <h2 className="mb-4 text-[40px] font-normal">
-            Granite.Code Setup
-          </h2>
+        <div className="granite-wizard-title mb-6">
+          <h2 className="mb-4 text-[40px] font-normal">Granite.Code Setup</h2>
           <div className="granite-wizard-description mb-[18px] mt-[18px]">
             <p className="mb-4">
-              Welcome to Granite.Code! Follow the steps below to start using local AI coding assistance.
+              Welcome to Granite.Code! Follow the steps below to start using
+              local AI coding assistance.
             </p>
             <p className="mb-4">
-              For a good experience, an Apple Silicon Mac or a GPU with at least 10&#x200A;GB of video memory is required.
+              For a good experience, an Apple Silicon Mac or a GPU with at least
+              10&#x200A;GB of video memory is required.
             </p>
           </div>
           {preselectedModel !== "large" && (
             <p className="mb-4 text-[--vscode-editorWarning-foreground]">
-              Warning : this device's hardware does not meet the minimum requirements.
+              Warning : this device's hardware does not meet the minimum
+              requirements.
             </p>
           )}
         </div>
@@ -889,17 +923,17 @@ function getRequiredSpace(
     selectedModel === "large"
       ? DEFAULT_GRANITE_MODEL_IDS_LARGE
       : DEFAULT_GRANITE_MODEL_IDS_SMALL;
-  let missingModels = models
-    .filter((model) => statusByModel.get(model) !== ModelStatus.installed);
+  let missingModels = models.filter(
+    (model) => statusByModel.get(model) !== ModelStatus.installed,
+  );
 
   // If the user clicks back to a skipped download step, we want to show entire download size, not 0B
   if (missingModels.length === 0) {
     missingModels = models;
   }
 
-  return missingModels
-    .reduce((sum, model) => {
-      const modelInfo = DEFAULT_MODEL_INFO.get(model); //FIXME get from registry
-      return sum + (modelInfo ? modelInfo.size : 0);
-    }, 0);
+  return missingModels.reduce((sum, model) => {
+    const modelInfo = DEFAULT_MODEL_INFO.get(model); //FIXME get from registry
+    return sum + (modelInfo ? modelInfo.size : 0);
+  }, 0);
 }
