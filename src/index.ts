@@ -21,23 +21,29 @@ const program = new Command();
 
 program
   .name("cn")
-  .description("Continue CLI - AI-powered development assistant")
+  .description(
+    "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output."
+  )
   .version(getVersion());
 
 // Root command - chat functionality (default)
 program
   .argument("[prompt]", "Optional prompt to send to the assistant")
-  .option("--headless", "Run in headless mode (non-interactive)")
+  .option("-p, --print", "Print response and exit (useful for pipes)")
   .option("--config <path>", "Path to configuration file")
   .option("--resume", "Resume from last session")
   .option("--readonly", "Only allow readonly tools")
   .option("--no-tools", "Disable all tools")
-  .option("--rule <rule>", "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.", 
+  .option(
+    "--rule <rule>",
+    "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
     (value: string, previous: string[] | undefined) => {
       const array = Array.isArray(previous) ? previous : [];
       array.push(value);
       return array;
-    }, [] as string[])
+    },
+    [] as string[]
+  )
   .action(async (prompt, options) => {
     await chat(prompt, options);
   });
