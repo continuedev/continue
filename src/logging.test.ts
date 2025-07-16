@@ -11,9 +11,9 @@ import { jest } from '@jest/globals';
 import chalk from 'chalk';
 
 describe('logging utilities', () => {
-  let consoleInfoSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
+  let consoleInfoSpy: jest.SpiedFunction<typeof console.info>;
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+  let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
 
   beforeEach(() => {
     // Reset logger state
