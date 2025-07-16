@@ -23,6 +23,7 @@ interface TUIChatProps {
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
+  additionalRules?: string[];
 }
 
 const TUIChat: React.FC<TUIChatProps> = ({
@@ -33,6 +34,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   configPath,
   initialPrompt,
   resume,
+  additionalRules,
 }) => {
   // Track current assistant configuration state
   const [assistant, setAssistant] = useState(initialAssistant);
@@ -109,6 +111,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     llmApi,
     initialPrompt,
     resume,
+    additionalRules,
     onShowOrgSelector: () => showOrganizationSelector(),
     onShowConfigSelector: () => showConfigSelectorUI(),
     onLoginPrompt: handleLoginPrompt,

@@ -32,6 +32,12 @@ program
   .option("--resume", "Resume from last session")
   .option("--readonly", "Only allow readonly tools")
   .option("--no-tools", "Disable all tools")
+  .option("--rule <rule>", "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.", 
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    }, [] as string[])
   .action(async (prompt, options) => {
     await chat(prompt, options);
   });
