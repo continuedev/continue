@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
-import { initializeAssistant } from "../assistant.js";
 import { ensureAuthenticated } from "../auth/ensureAuth.js";
 import { ensureOrganization, loadAuthConfig } from "../auth/workos.js";
+import { initializeAssistant } from "../config.js";
 import { introMessage } from "../intro.js";
 import { configureLogger } from "../logger.js";
 import { loadSession, saveSession } from "../session.js";

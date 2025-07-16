@@ -1,8 +1,8 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useState } from "react";
-import { initializeAssistant } from "../../assistant.js";
 import { loadAuthConfig, saveAuthConfig } from "../../auth/workos.js";
+import { initializeAssistant } from "../../config.js";
 import { introMessage } from "../../intro.js";
 import { MCPService } from "../../mcp.js";
 
