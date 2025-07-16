@@ -235,9 +235,7 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
-
-    await handleToolCallExecution(dispatch, getState);
-
     dispatch(setInactive());
+    await handleToolCallExecution(dispatch, getState);
   },
 );
