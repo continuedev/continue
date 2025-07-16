@@ -19,6 +19,7 @@ const AUTH_CONFIG_PATH = path.join(os.homedir(), ".continue", "auth.json");
 export interface AuthenticatedConfig {
   userId: string;
   userEmail: string;
+  userSlug: string;
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
@@ -88,6 +89,7 @@ export function loadAuthConfig(): AuthConfig {
       if (
         data.userId &&
         data.userEmail &&
+        data.userSlug &&
         data.accessToken &&
         data.refreshToken &&
         data.expiresAt
@@ -95,6 +97,7 @@ export function loadAuthConfig(): AuthConfig {
         return {
           userId: data.userId,
           userEmail: data.userEmail,
+          userSlug: data.userSlug,
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
           expiresAt: data.expiresAt,
@@ -222,6 +225,7 @@ async function refreshToken(
     const authConfig: AuthenticatedConfig = {
       userId: user.id,
       userEmail: user.email,
+      userSlug: user.slug,
       accessToken,
       refreshToken: newRefreshToken,
       expiresAt: tokenExpiresAt,
@@ -321,6 +325,7 @@ export async function ensureOrganization(
     const updatedConfig: AuthenticatedConfig = {
       userId: authenticatedConfig.userId,
       userEmail: authenticatedConfig.userEmail,
+      userSlug: authenticatedConfig.userSlug,
       accessToken: authenticatedConfig.accessToken,
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
@@ -345,6 +350,7 @@ export async function ensureOrganization(
       const updatedConfig: AuthenticatedConfig = {
         userId: authenticatedConfig.userId,
         userEmail: authenticatedConfig.userEmail,
+        userSlug: authenticatedConfig.userSlug,
         accessToken: authenticatedConfig.accessToken,
         refreshToken: authenticatedConfig.refreshToken,
         expiresAt: authenticatedConfig.expiresAt,
@@ -361,6 +367,7 @@ export async function ensureOrganization(
     const updatedConfig: AuthenticatedConfig = {
       userId: authenticatedConfig.userId,
       userEmail: authenticatedConfig.userEmail,
+      userSlug: authenticatedConfig.userSlug,
       accessToken: authenticatedConfig.accessToken,
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
@@ -378,6 +385,7 @@ export async function ensureOrganization(
     const updatedConfig: AuthenticatedConfig = {
       userId: authenticatedConfig.userId,
       userEmail: authenticatedConfig.userEmail,
+      userSlug: authenticatedConfig.userSlug,
       accessToken: authenticatedConfig.accessToken,
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,

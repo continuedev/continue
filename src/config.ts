@@ -106,13 +106,13 @@ async function loadConfigYaml(
 }
 
 export async function loadConfig(
-  accessToken: string | null,
+  authConfig: AuthConfig,
   config: string | undefined,
   organizationId: string | null
 ): Promise<AssistantUnrolled> {
   const apiClient = new DefaultApi(
     new Configuration({
-      accessToken: accessToken ?? undefined,
+      accessToken: authConfig?.accessToken ?? undefined,
     })
   );
 
@@ -132,8 +132,8 @@ export async function loadConfig(
   } else if (config.startsWith(".") || config.startsWith("/")) {
     // Load from file
     const configYaml = await loadConfigYaml(
-      accessToken,
-      "TODO", // TODO currentUserSlug
+      authConfig?.accessToken ?? null,
+      (authConfig as any)?.userSlug ?? "",
       config,
       organizationId,
       apiClient
@@ -171,7 +171,7 @@ export async function initialize(
   const accessToken = getAccessToken(authConfig);
   const organizationId = getOrganizationId(authConfig);
 
-  const config = await loadConfig(accessToken, configPath, organizationId);
+  const config = await loadConfig(authConfig, configPath, organizationId);
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);
 
