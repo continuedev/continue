@@ -1694,6 +1694,7 @@ export type PruningStatus = "deleted-last-input" | "pruned" | "not-pruned";
 export interface CompiledMessagesResult {
   compiledChatMessages: ChatMessage[];
   pruningStatus: PruningStatus;
+  contextPercentage: number;
 }
 
 export interface MessageOption {

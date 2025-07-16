@@ -87,6 +87,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   "llm/compileChat": {
     compiledChatMessages: [],
     pruningStatus: "not-pruned",
+    contextPercentage: 0.5,
   },
 };
 

@@ -538,7 +538,12 @@ function compileChatMessages({
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
 
-  return { compiledChatMessages: reassembled, pruningStatus };
+  const contextPercentage = currentTotal / contextLength;
+  return {
+    compiledChatMessages: reassembled,
+    pruningStatus,
+    contextPercentage,
+  };
 }
 
 export {
