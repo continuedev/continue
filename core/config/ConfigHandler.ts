@@ -431,7 +431,7 @@ export class ConfigHandler {
   async reloadConfig(reason: string) {
     const startTime = performance.now();
     this.totalConfigLoads += 1;
-    console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
+    // console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
       return {
         config: undefined,
