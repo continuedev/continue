@@ -269,7 +269,7 @@ export async function login(
 
     // Get auth URL using the direct implementation
     const authUrl = getAuthUrlForTokenPage(useOnboarding);
-    console.info(chalk.green(`Opening browser to sign in at: ${authUrl}`));
+    console.info(chalk.gray(`Opening browser to sign in at: ${authUrl}`));
     await open(authUrl);
 
     console.info(chalk.yellow("\nAfter signing in, you'll receive a token."));
