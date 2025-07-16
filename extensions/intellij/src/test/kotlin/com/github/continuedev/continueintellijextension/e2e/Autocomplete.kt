@@ -28,11 +28,15 @@ class Autocomplete {
 
     @BeforeEach
     fun waitForIde(remoteRobot: RemoteRobot) {
+        System.setProperty("continue.autocomplete.test.environment", "true")
         waitForIgnoringError(ofMinutes(3)) { remoteRobot.callJs("true") }
     }
 
     @AfterEach
-    fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
+    fun closeProject(remoteRobot: RemoteRobot) {
+        System.clearProperty("continue.autocomplete.test.environment")
+        CommonSteps(remoteRobot).closeProject()
+    }
 
     @Test
     @Video
