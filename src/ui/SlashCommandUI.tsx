@@ -1,6 +1,7 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { hasMultipleOrganizations } from "../auth/workos.js";
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
@@ -21,6 +22,12 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   selectedIndex,
   onSelect,
 }) => {
+  const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
+
+  useEffect(() => {
+    hasMultipleOrganizations().then(setHasMultipleOrgs);
+  }, []);
+
   // Get all available slash commands
   const getSlashCommands = (): SlashCommand[] => {
     const systemCommands: SlashCommand[] = [
@@ -42,6 +49,11 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
         description: "Check who you're currently logged in as",
         category: "system",
       },
+      ...(hasMultipleOrgs ? [{
+        name: "org",
+        description: "Switch organization",
+        category: "system" as const,
+      }] : []),
     ];
 
     const assistantCommands: SlashCommand[] =

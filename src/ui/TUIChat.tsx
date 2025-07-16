@@ -1,396 +1,80 @@
+import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ContinueClient } from "@continuedev/sdk";
-import { Box, Text, useApp } from "ink";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import path from "path";
-import React, { useEffect, useState } from "react";
-import { loadSession, saveSession } from "../session.js";
-import { handleSlashCommands } from "../slashCommands.js";
-import { StreamCallbacks, streamChatResponse } from "../streamChatResponse.js";
-import { constructSystemMessage } from "../systemMessage.js";
-import { getToolDisplayName } from "../tools.js";
+import { Box, Text } from "ink";
+import React, { useState } from "react";
+import { MCPService } from "../mcp.js";
+import { useChat } from "./hooks/useChat.js";
+import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
+import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import LoadingAnimation from "./LoadingAnimation.js";
-import MarkdownRenderer from "./MarkdownRenderer.js";
-import ToolResultSummary from "./ToolResultSummary.js";
+import OrganizationSelector from "./OrganizationSelector.js";
 import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
-  assistant: ContinueClient["assistant"];
+  config: AssistantUnrolled;
   model: string;
   llmApi: BaseLlmApi;
+  mcpService: MCPService;
+  configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
 }
 
-interface DisplayMessage {
-  role: string;
-  content: string;
-  isStreaming?: boolean;
-  messageType?: "tool-start" | "tool-result" | "tool-error" | "system";
-  toolName?: string;
-  toolResult?: string;
-}
 
 const TUIChat: React.FC<TUIChatProps> = ({
-  assistant,
-  model,
-  llmApi,
+  config: initialAssistant,
+  model: initialModel,
+  llmApi: initialLlmApi,
+  mcpService: initialMcpService,
+  configPath,
   initialPrompt,
   resume,
 }) => {
-  const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
-    () => {
-      let history: ChatCompletionMessageParam[] = [];
+  // Track current assistant configuration state
+  const [assistant, setAssistant] = useState(initialAssistant);
+  const [model, setModel] = useState(initialModel);
+  const [llmApi, setLlmApi] = useState(initialLlmApi);
+  const [mcpService, setMcpService] = useState(initialMcpService);
 
-      // Load previous session if --resume flag is used
-      if (resume) {
-        const savedHistory = loadSession();
-        if (savedHistory) {
-          history = savedHistory;
-        }
-      }
-
-      // If no session loaded or not resuming, initialize with system message
-      if (history.length === 0) {
-        const rulesSystemMessage = assistant.systemMessage;
-        const systemMessage = constructSystemMessage(rulesSystemMessage);
-        if (systemMessage) {
-          history.push({ role: "system", content: systemMessage });
-        }
-      }
-
-      return history;
-    }
-  );
-
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
-  const [messages, setMessages] = useState<DisplayMessage[]>(() => {
-    // Convert loaded chat history to display messages (excluding system messages)
-    if (resume) {
-      const savedHistory = loadSession();
-      if (savedHistory) {
-        return savedHistory
-          .filter((msg) => msg.role !== "system")
-          .map((msg) => ({
-            role: msg.role,
-            content: msg.content as string,
-          }));
-      }
-    }
-    return [];
+  const {
+    messages,
+    setMessages,
+    isWaitingForResponse,
+    inputMode,
+    handleUserMessage,
+    handleInterrupt,
+    handleFileAttached,
+    resetChatHistory,
+  } = useChat({
+    assistant,
+    model,
+    llmApi,
+    initialPrompt,
+    resume,
+    onShowOrgSelector: () => showOrganizationSelector(),
   });
-  const [inputMode, setInputMode] = useState(true);
-  const [abortController, setAbortController] =
-    useState<AbortController | null>(null);
-  const [attachedFiles, setAttachedFiles] = useState<
-    Array<{ path: string; content: string }>
-  >([]);
-  const { exit } = useApp();
 
-  // Handle initial prompt
-  useEffect(() => {
-    if (initialPrompt) {
-      handleUserMessage(initialPrompt);
-    }
-  }, [initialPrompt]);
+  const { renderMessage } = useMessageRenderer();
 
-  const handleUserMessage = async (message: string) => {
-    // Handle slash commands
-    const commandResult = handleSlashCommands(message, assistant.config);
-    if (commandResult) {
-      if (commandResult.exit) {
-        exit();
-        return;
-      }
+  const {
+    showOrgSelector,
+    handleOrganizationSelect,
+    handleOrganizationCancel,
+    showOrganizationSelector,
+  } = useOrganizationSelector({
+    configPath,
+    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {
+      setAssistant(newAssistant);
+      setModel(newModel);
+      setLlmApi(newLlmApi);
+      setMcpService(newMcpService);
+    },
+    onMessage: (message) => {
+      setMessages((prev) => [...prev, message]);
+    },
+    onChatReset: resetChatHistory,
+  });
 
-      if (commandResult.clear) {
-        // Clear chat history but keep system message
-        const systemMessage = chatHistory.find((msg) => msg.role === "system");
-        const newHistory = systemMessage ? [systemMessage] : [];
-        setChatHistory(newHistory);
-        setMessages([]);
-
-        // Add command output to messages
-        if (commandResult.output) {
-          setMessages([
-            {
-              role: "system",
-              content: commandResult.output!,
-              messageType: "system",
-            },
-          ]);
-        }
-        return;
-      }
-
-      // Add command output to messages
-      if (commandResult.output) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            content: commandResult.output!,
-            messageType: "system",
-          },
-        ]);
-      }
-
-      if (commandResult.newInput) {
-        message = commandResult.newInput;
-      } else {
-        return;
-      }
-    }
-
-    // Add user message to history and display
-    let messageContent = message;
-
-    // Prepend attached files to the message
-    if (attachedFiles.length > 0) {
-      const fileContents = attachedFiles
-        .map(
-          (file) => `\n\n<file path="${file.path}">\n${file.content}\n</file>`
-        )
-        .join("");
-      messageContent = `${message}${fileContents}`;
-
-      // Clear attached files after sending
-      setAttachedFiles([]);
-    }
-
-    const newUserMessage: ChatCompletionMessageParam = {
-      role: "user",
-      content: messageContent,
-    };
-    const newHistory = [...chatHistory, newUserMessage];
-    setChatHistory(newHistory);
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
-
-    // Start streaming response
-    const controller = new AbortController();
-    setAbortController(controller);
-    setIsWaitingForResponse(true);
-    setInputMode(false);
-
-    try {
-      let currentStreamingMessage: DisplayMessage | null = null;
-
-      // Create callbacks to handle streaming updates
-      const streamCallbacks: StreamCallbacks = {
-        onContent: (content: string) => {
-          // Buffer content but don't update UI until complete or tool call
-          if (!currentStreamingMessage) {
-            currentStreamingMessage = {
-              role: "assistant",
-              content: "",
-              isStreaming: true,
-            };
-          }
-          currentStreamingMessage.content += content;
-        },
-        onContentComplete: (content: string) => {
-          // Display the complete message
-          if (currentStreamingMessage) {
-            setMessages((prev) => [
-              ...prev,
-              { role: "assistant", content: content, isStreaming: false },
-            ]);
-            currentStreamingMessage = null;
-          }
-        },
-        onToolStart: (toolName: string, toolArgs?: any) => {
-          const formatToolCall = (name: string, args: any) => {
-            const displayName = getToolDisplayName(name);
-            if (!args) return displayName;
-
-            // Get the first parameter value for display
-            const firstValue = Object.values(args)[0];
-
-            // Convert absolute paths to relative paths from workspace root
-            const formatPath = (value: any) => {
-              if (typeof value === "string" && path.isAbsolute(value)) {
-                const workspaceRoot = process.cwd();
-                const relativePath = path.relative(workspaceRoot, value);
-                return relativePath || value;
-              }
-              return value;
-            };
-
-            return `${displayName}(${formatPath(firstValue) || ""})`;
-          };
-
-          // Display buffered content when tool starts
-          if (currentStreamingMessage && currentStreamingMessage.content) {
-            const messageContent = currentStreamingMessage.content;
-            setMessages((prev) => [
-              ...prev,
-              {
-                role: "assistant",
-                content: messageContent,
-                isStreaming: false,
-              },
-            ]);
-            currentStreamingMessage = null;
-          }
-
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: formatToolCall(toolName, toolArgs),
-              messageType: "tool-start",
-              toolName,
-            },
-          ]);
-        },
-        onToolResult: (result: string, toolName: string) => {
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            // Find the last tool-start message for this tool and replace it
-            for (let i = newMessages.length - 1; i >= 0; i--) {
-              if (
-                newMessages[i].messageType === "tool-start" &&
-                newMessages[i].toolName === toolName
-              ) {
-                newMessages[i] = {
-                  ...newMessages[i],
-                  messageType: "tool-result",
-                  toolResult: result, // Store the actual result separately
-                };
-                break;
-              }
-            }
-            return newMessages;
-          });
-        },
-        onToolError: (error: string, toolName?: string) => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: error,
-              messageType: "tool-error",
-              toolName,
-            },
-          ]);
-        },
-      };
-
-      await streamChatResponse(
-        newHistory,
-        model,
-        llmApi,
-        controller,
-        streamCallbacks
-      );
-
-      // Finalize any remaining streaming message
-      if (currentStreamingMessage && (currentStreamingMessage as any).content) {
-        const messageContent = (currentStreamingMessage as any).content;
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: messageContent, isStreaming: false },
-        ]);
-      }
-
-      // Save session after successful response
-      saveSession(newHistory);
-    } catch (error: any) {
-      const errorMessage = `Error: ${error.message}`;
-      setMessages((prev) => [
-        ...prev,
-        { role: "system", content: errorMessage, messageType: "system" },
-      ]);
-    } finally {
-      setAbortController(null);
-      setIsWaitingForResponse(false);
-      setInputMode(true);
-    }
-  };
-
-  const handleInterrupt = () => {
-    if (abortController && isWaitingForResponse) {
-      abortController.abort();
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: "[Interrupted by user]",
-          messageType: "system",
-        },
-      ]);
-    }
-  };
-
-  const handleFileAttached = (filePath: string, content: string) => {
-    setAttachedFiles((prev) => [...prev, { path: filePath, content }]);
-  };
-
-  const renderMessage = (message: DisplayMessage, index: number) => {
-    const isUser = message.role === "user";
-    const isSystem = message.role === "system";
-
-    if (isSystem) {
-      // Handle different types of system messages
-      switch (message.messageType) {
-        case "tool-start":
-          return (
-            <Box key={index} marginBottom={1}>
-              <Text color="white">○ {message.content}</Text>
-            </Box>
-          );
-
-        case "tool-result":
-          return (
-            <Box key={index} marginBottom={1} flexDirection="column">
-              <Box>
-                <Text color="green">●</Text>
-                <Text> {message.content}</Text>
-              </Box>
-              <Box marginLeft={2}>
-                <ToolResultSummary
-                  toolName={message.toolName}
-                  content={message.toolResult || ""}
-                />
-              </Box>
-            </Box>
-          );
-
-        case "tool-error":
-          return (
-            <Box key={index} marginBottom={1}>
-              <Text color="red" bold>
-                ✗{" "}
-              </Text>
-              <Text color="red">Tool error: {message.content}</Text>
-            </Box>
-          );
-
-        default:
-          // Regular system messages
-          return (
-            <Box key={index} marginBottom={1}>
-              <Text color="gray" italic>
-                {message.content}
-              </Text>
-            </Box>
-          );
-      }
-    }
-
-    return (
-      <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "green" : "blue"}>●</Text>
-        <Text> </Text>
-        {isUser ? (
-          <Text>{message.content}</Text>
-        ) : (
-          <MarkdownRenderer content={message.content} />
-        )}
-        {message.isStreaming && <Text color="gray">▋</Text>}
-      </Box>
-    );
-  };
 
   return (
     <Box flexDirection="column" height="100%">
@@ -409,14 +93,23 @@ const TUIChat: React.FC<TUIChatProps> = ({
           </Box>
         )}
 
+        {/* Organization selector - shows above input when active */}
+        {showOrgSelector && (
+          <OrganizationSelector
+            onSelect={handleOrganizationSelect}
+            onCancel={handleOrganizationCancel}
+          />
+        )}
+
         {/* Input area - always at bottom */}
         <UserInput
           onSubmit={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
           inputMode={inputMode}
           onInterrupt={handleInterrupt}
-          assistant={assistant.config}
+          assistant={assistant}
           onFileAttached={handleFileAttached}
+          disabled={showOrgSelector}
         />
         <Box marginRight={2} justifyContent="flex-end">
           <Text color="gray">● Continue CLI</Text>

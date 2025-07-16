@@ -1,23 +1,15 @@
 #!/usr/bin/env node
 
-import {
-  BaseLlmApi,
-  constructLlmApi,
-  LLMConfig,
-} from "@continuedev/openai-adapters";
-import { Assistant } from "@continuedev/sdk";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { parseArgs } from "./args.js";
+import { initializeAssistant } from "./assistant.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
-import { AuthConfig, loadAuthConfig } from "./auth/workos.js";
-import { initializeContinueSDK } from "./continueSDK.js";
+import { ensureOrganization, loadAuthConfig } from "./auth/workos.js";
 import { introMessage } from "./intro.js";
 import { configureLogger } from "./logger.js";
-import { MCPService } from "./mcp.js";
 import { loadSession, saveSession } from "./session.js";
-import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
 import { constructSystemMessage } from "./systemMessage.js";
 import { startTUIChat } from "./ui/index.js";
@@ -28,63 +20,7 @@ const args = parseArgs();
 // Configure logger based on headless mode
 configureLogger(args.isHeadless);
 
-function getLlmApi(
-  assistant: Assistant,
-  authConfig: AuthConfig
-): [BaseLlmApi, string] {
-  const model = assistant.config.models?.find((model) =>
-    model?.roles?.includes("chat")
-  );
-
-  if (!model) {
-    throw new Error(
-      "No models with the chat role found in the configured assistant"
-    );
-  }
-
-  const config: LLMConfig =
-    model.provider === "continue-proxy"
-      ? {
-          provider: model.provider,
-          requestOptions: model.requestOptions,
-          apiBase: model.apiBase,
-          apiKey: authConfig.accessToken,
-          env: {
-            apiKeyLocation: (model as any).apiKeyLocation,
-            // envSecretLocations: model.env,
-            orgScopeId: null, // TODO
-            proxyUrl: undefined, // TODO
-          },
-        }
-      : {
-          provider: model.provider as any,
-          apiKey: model.apiKey,
-          apiBase: model.apiBase,
-          requestOptions: model.requestOptions,
-          env: model.env,
-        };
-
-  const llmApi = constructLlmApi(config);
-
-  if (!llmApi) {
-    throw new Error(
-      "Failed to initialized LLM. Please check your configuration."
-    );
-  }
-
-  return [llmApi, model.model];
-}
-
-async function loadAssistant(
-  accessToken: string | undefined,
-  configPath: string
-): Promise<Assistant> {
-  const continueSdk = await initializeContinueSDK(accessToken, configPath);
-
-  return continueSdk.assistant;
-}
-
-async function chat() {
+async function initializeChat() {
   const isAuthenticated = await ensureAuthenticated(true);
 
   if (!isAuthenticated) {
@@ -94,57 +30,40 @@ async function chat() {
 
   const authConfig = loadAuthConfig();
 
-  // This was the previous default behavior, but currently the SDK
-  // only supports slugs, so we've disabled reading local assistant files
-
-  // if (fs.existsSync(args.assistantPath)) {
-  // // If it's a file, load it directly
-  // console.info(
-  //   chalk.yellow(`Loading assistant from file: ${args.assistantPath}`)
-  // );
-  // // We need to extract the assistant slug from the yaml to use with the SDK
-  // // For now, let's just use a placeholder slug and use the file content for assistant config
-  // // In a real implementation, we'd need to parse the YAML and extract the slug
-  // const assistantSlug = "default/assistant";
-  // try {
-  //   sdkClient = await initializeContinueSDK(
-  //     authConfig.accessToken,
-  //     assistantSlug
-  //   );
-  //   // Since we're using a file, we need to manually set the assistant config
-  //   assistant = JSON.parse(JSON.stringify(sdkClient.assistant.config));
-  // } catch (error) {
-  //   console.error(
-  //     chalk.red("Error initializing SDK with local file:"),
-  //     error
-  //   );
-  //   throw error;
-  // }
-  // }
+  // Ensure organization is selected
+  const authConfigWithOrg = await ensureOrganization(
+    authConfig,
+    args.isHeadless
+  );
 
   // Initialize ContinueSDK and MCPService once
-  const assistant = await loadAssistant(
-    authConfig.accessToken,
+  const { config, llmApi, model, mcpService } = await initializeAssistant(
+    authConfigWithOrg,
     args.configPath
   );
-  const [llmApi, model] = getLlmApi(assistant, authConfig);
-  const mcpService = await MCPService.create(assistant.config);
+
+  return { config, llmApi, model, mcpService };
+}
+
+async function chat() {
+  let { config, llmApi, model, mcpService } = await initializeChat();
 
   // If not in headless mode, start the TUI chat (default)
   if (!args.isHeadless) {
     await startTUIChat(
-      assistant,
+      config,
       llmApi,
       model,
       mcpService,
       args.prompt,
-      args.resume
+      args.resume,
+      args.configPath
     );
     return;
   }
 
   // Show intro message for headless mode
-  introMessage(assistant, mcpService);
+  introMessage(config, model, mcpService);
 
   // Rules
   let chatHistory: ChatCompletionMessageParam[] = [];
@@ -162,7 +81,7 @@ async function chat() {
 
   // If no session loaded or not resuming, initialize with system message
   if (chatHistory.length === 0) {
-    const rulesSystemMessage = assistant.systemMessage;
+    const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
     const systemMessage = constructSystemMessage(rulesSystemMessage);
     if (systemMessage) {
       chatHistory.push({ role: "system", content: systemMessage });
@@ -184,22 +103,6 @@ async function chat() {
 
     isFirstMessage = false;
 
-    // Handle slash commands
-    const commandResult = handleSlashCommands(userInput, assistant.config);
-    if (commandResult) {
-      if (commandResult.exit) {
-        break;
-      }
-
-      // Note that `console.log` is shown in headless mode, `console.info` is not
-      console.log(`\n${chalk.italic.gray(commandResult.output ?? "")}`);
-
-      if (commandResult.newInput) {
-        userInput = commandResult.newInput;
-      } else {
-        continue;
-      }
-    }
 
     // Add user message to history
     chatHistory.push({ role: "user", content: userInput });

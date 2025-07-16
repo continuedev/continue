@@ -7,15 +7,15 @@ import {
 } from "./auth/workos.js";
 import { type AssistantConfig } from "@continuedev/sdk";
 
-export function handleSlashCommands(
+export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig
-): {
+): Promise<{
   output?: string;
   exit?: boolean;
   newInput?: string;
   clear?: boolean;
-} | null {
+} | null> {
   if (input.startsWith("/")) {
     const [command, ...args] = input.slice(1).split(" ");
     switch (command) {

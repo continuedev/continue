@@ -1,5 +1,5 @@
+import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ContinueClient } from "@continuedev/sdk";
 import { render } from "ink";
 import React from "react";
 import { introMessage } from "../intro.js";
@@ -9,22 +9,25 @@ import TUIChat from "./TUIChat.js";
 export { default as MarkdownRenderer } from "./MarkdownRenderer.js";
 
 export async function startTUIChat(
-  assistant: ContinueClient["assistant"],
+  config: AssistantUnrolled,
   llmApi: BaseLlmApi,
   model: string,
   mcpService: MCPService,
   initialPrompt?: string,
-  resume?: boolean
+  resume?: boolean,
+  configPath?: string
 ) {
   // Show intro message before starting TUI
-  introMessage(assistant, mcpService);
+  introMessage(config, model, mcpService);
 
   // Start the TUI
   const { unmount } = render(
     React.createElement(TUIChat, {
-      assistant,
+      config: config,
       model,
       llmApi,
+      mcpService,
+      configPath,
       initialPrompt,
       resume,
     })
