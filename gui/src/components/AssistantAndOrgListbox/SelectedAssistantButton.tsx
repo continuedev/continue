@@ -9,7 +9,7 @@ import { ListboxButton } from "../ui";
 import { AssistantIcon } from "./AssistantIcon";
 
 interface SelectedAssistantButtonProps {
-  selectedProfile: ProfileDescription;
+  selectedProfile: ProfileDescription | null;
 }
 
 export function SelectedAssistantButton({
@@ -25,7 +25,9 @@ export function SelectedAssistantButton({
       style={{ fontSize: fontSize(-3) }}
     >
       <div className="flex flex-row items-center gap-1.5">
-        {configLoading ? (
+        {selectedProfile === null ? (
+          "Create your first assistant"
+        ) : configLoading ? (
           <span className="text-description flex flex-row items-center">
             <ArrowPathIcon
               className={cn(
