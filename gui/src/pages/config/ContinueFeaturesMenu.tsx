@@ -1,14 +1,10 @@
 import ToggleSwitch from "../../components/gui/Switch";
 interface ContinueFeaturesMenuProps {
-  logEditingData: boolean;
-  handleLogEditingDataToggle: (value: boolean) => void;
   optInNextEditFeature: boolean;
   handleOptInNextEditToggle: (value: boolean) => void;
 }
 
 export function ContinueFeaturesMenu({
-  logEditingData,
-  handleLogEditingDataToggle,
   optInNextEditFeature,
   handleOptInNextEditToggle,
 }: ContinueFeaturesMenuProps) {
