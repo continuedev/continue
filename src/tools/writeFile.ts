@@ -31,6 +31,7 @@ export const writeFileTool: Tool = {
       required: true,
     },
   },
+  readonly: false,
   run: async (args: { filepath: string; content: string }): Promise<string> => {
     try {
       const dirPath = path.dirname(args.filepath);

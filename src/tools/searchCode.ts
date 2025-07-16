@@ -26,6 +26,7 @@ export const searchCodeTool: Tool = {
       required: false,
     },
   },
+  readonly: true,
   run: async (args: {
     pattern: string;
     path?: string;

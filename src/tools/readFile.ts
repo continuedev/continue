@@ -12,6 +12,7 @@ export const readFileTool: Tool = {
       required: true,
     },
   },
+  readonly: true,
   run: async (args: { filepath: string }): Promise<string> => {
     try {
       if (!fs.existsSync(args.filepath)) {

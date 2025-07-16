@@ -15,6 +15,13 @@ import { chatCompletionStreamWithBackoff } from "./util/exponentialBackoff.js";
 dotenv.config();
 
 export function getAllTools() {
+  const args = parseArgs();
+  
+  // If no-tools mode is enabled, return empty array
+  if (args.noTools) {
+    return [];
+  }
+  
   const allTools: ChatCompletionTool[] = BUILTIN_TOOLS.map((tool) => ({
     type: "function" as const,
     function: {
@@ -35,6 +42,7 @@ export function getAllTools() {
     },
   }));
 
+  // Add MCP tools if not in no-tools mode
   const mcpTools = MCPService.getInstance()?.getTools() ?? [];
   allTools.push(
     ...mcpTools.map((tool) => ({
