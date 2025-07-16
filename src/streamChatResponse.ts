@@ -98,7 +98,7 @@ export async function streamChatResponse(
         chalk.red("Error in streamChatResponse:"),
         chalk.red(error.message)
       );
-      process.exit(1);
+      throw error;
     }
 
     let aiResponse = "";
@@ -106,87 +106,97 @@ export async function streamChatResponse(
     let currentToolCallId = "";
     let toolArguments = "";
 
-    for await (const chunk of stream) {
-      // Check if we should abort
-      if (abortController?.signal.aborted) {
-        break;
-      }
-
-      // Handle regular content
-      if (chunk.choices[0].delta.content) {
-        const content = chunk.choices[0].delta.content;
-        if (callbacks?.onContent) {
-          callbacks.onContent(content);
-        } else if (!isHeadless) {
-          process.stdout.write(chalk.white(content));
+    try {
+      for await (const chunk of stream) {
+        // Check if we should abort
+        if (abortController?.signal.aborted) {
+          break;
         }
-        aiResponse += content;
-        fullResponse += content;
-      }
 
-      // Handle tool calls
-      if (chunk.choices[0].delta.tool_calls) {
-        for (const toolCallDelta of chunk.choices[0].delta.tool_calls) {
-          // Initialize a new tool call if we get an index and id
-          if (toolCallDelta.index !== undefined && toolCallDelta.id) {
-            if (!currentToolCalls[toolCallDelta.index]) {
-              currentToolCalls[toolCallDelta.index] = {
-                id: toolCallDelta.id,
-                name: "",
-                arguments: {},
-                startNotified: false,
-              };
-            }
-            currentToolCallId = toolCallDelta.id;
+        // Handle regular content
+        if (chunk.choices[0].delta.content) {
+          const content = chunk.choices[0].delta.content;
+          if (callbacks?.onContent) {
+            callbacks.onContent(content);
+          } else if (!isHeadless) {
+            process.stdout.write(chalk.white(content));
           }
+          aiResponse += content;
+          fullResponse += content;
+        }
 
-          // Add function name if present
-          if (toolCallDelta.function?.name) {
-            const toolCall = currentToolCalls.find(
-              (tc) => tc.id === currentToolCallId
-            );
-            if (toolCall) {
-              if (!toolCall.name) {
-                toolCall.name = toolCallDelta.function.name;
-                toolCall.startNotified = false;
+        // Handle tool calls
+        if (chunk.choices[0].delta.tool_calls) {
+          for (const toolCallDelta of chunk.choices[0].delta.tool_calls) {
+            // Initialize a new tool call if we get an index and id
+            if (toolCallDelta.index !== undefined && toolCallDelta.id) {
+              if (!currentToolCalls[toolCallDelta.index]) {
+                currentToolCalls[toolCallDelta.index] = {
+                  id: toolCallDelta.id,
+                  name: "",
+                  arguments: {},
+                  startNotified: false,
+                };
               }
+              currentToolCallId = toolCallDelta.id;
             }
-          }
 
-          // Collect function arguments
-          if (toolCallDelta.function?.arguments) {
-            const toolCall = currentToolCalls.find(
-              (tc) => tc.id === currentToolCallId
-            );
-            if (toolCall) {
-              // Accumulate arguments as string to later parse as JSON
-              toolArguments += toolCallDelta.function.arguments;
-
-              try {
-                // Try to parse complete JSON
-                const parsed = JSON.parse(toolArguments);
-                toolCall.arguments = parsed;
-
-                // Notify start if we haven't already and have both name and args
-                if (toolCall.name && !toolCall.startNotified) {
-                  toolCall.startNotified = true;
-                  if (callbacks?.onToolStart) {
-                    callbacks.onToolStart(toolCall.name, toolCall.arguments);
-                  } else if (!isHeadless) {
-                    process.stdout.write(
-                      `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
-                        toolCall.name
-                      )}${chalk.yellow("]")}`
-                    );
-                  }
+            // Add function name if present
+            if (toolCallDelta.function?.name) {
+              const toolCall = currentToolCalls.find(
+                (tc) => tc.id === currentToolCallId
+              );
+              if (toolCall) {
+                if (!toolCall.name) {
+                  toolCall.name = toolCallDelta.function.name;
+                  toolCall.startNotified = false;
                 }
-              } catch (e) {
-                // Not complete JSON yet, continue collecting
+              }
+            }
+
+            // Collect function arguments
+            if (toolCallDelta.function?.arguments) {
+              const toolCall = currentToolCalls.find(
+                (tc) => tc.id === currentToolCallId
+              );
+              if (toolCall) {
+                // Accumulate arguments as string to later parse as JSON
+                toolArguments += toolCallDelta.function.arguments;
+
+                try {
+                  // Try to parse complete JSON
+                  const parsed = JSON.parse(toolArguments);
+                  toolCall.arguments = parsed;
+
+                  // Notify start if we haven't already and have both name and args
+                  if (toolCall.name && !toolCall.startNotified) {
+                    toolCall.startNotified = true;
+                    if (callbacks?.onToolStart) {
+                      callbacks.onToolStart(toolCall.name, toolCall.arguments);
+                    } else if (!isHeadless) {
+                      process.stdout.write(
+                        `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
+                          toolCall.name
+                        )}${chalk.yellow("]")}`
+                      );
+                    }
+                  }
+                } catch (e) {
+                  // Not complete JSON yet, continue collecting
+                }
               }
             }
           }
         }
       }
+    } catch (error: any) {
+      // Handle AbortError gracefully - this is expected when user cancels
+      if (error.name === 'AbortError' || abortController?.signal.aborted) {
+        // Stream was aborted, this is expected behavior
+        return fullResponse;
+      }
+      // For other errors, re-throw them
+      throw error;
     }
 
     if (!callbacks?.onContent && !isHeadless) {
