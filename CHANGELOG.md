@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/continuedev/cli/compare/v1.3.0...v1.3.1) (2025-07-16)
+
+
+### Bug Fixes
+
+* type err ([f5f1bca](https://github.com/continuedev/cli/commit/f5f1bca7c6a9f2c4f2842605847d55b765fd3499))
+
 # [1.3.0](https://github.com/continuedev/cli/compare/v1.2.0...v1.3.0) (2025-07-15)
 
 
