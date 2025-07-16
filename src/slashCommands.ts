@@ -63,7 +63,7 @@ export async function handleSlashCommands(
       case "logout":
         logout();
         return {
-          exit: false,
+          exit: true,
           output: "Logged out successfully",
         };
 
