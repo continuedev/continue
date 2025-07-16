@@ -51,6 +51,7 @@ const UserInput: React.FC<UserInputProps> = ({
   const getSlashCommands = () => {
     const systemCommands = [
       { name: "help", description: "Show help message" },
+      { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
       { name: "login", description: "Authenticate with your account" },
       { name: "logout", description: "Sign out of your current session" },

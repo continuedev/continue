@@ -34,6 +34,8 @@ export async function handleSlashCommands(
           ) ?? []),
         ].join("\n");
         return { output: helpMessage };
+      case "clear":
+        return { clear: true, output: "Chat history cleared" };
       case "exit":
         return { exit: true, output: "Goodbye!" };
       case "login":
