@@ -11,7 +11,8 @@ import {
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
-  onLoginPrompt?: (promptText: string) => Promise<string>
+  onLoginPrompt?: (promptText: string) => Promise<string>,
+  onReload?: () => Promise<void>
 ): Promise<{
   output?: string;
   exit?: boolean;
@@ -42,7 +43,7 @@ export async function handleSlashCommands(
         return { exit: true, output: "Goodbye!" };
       case "login":
         login(false, onLoginPrompt)
-          .then((config) => {
+          .then(async (config) => {
             if (config && isAuthenticatedConfig(config)) {
               console.info(
                 chalk.green(
@@ -51,6 +52,11 @@ export async function handleSlashCommands(
               );
             } else {
               console.info(chalk.green(`\nLogged in successfully`));
+            }
+            
+            // Reload everything after successful login
+            if (onReload) {
+              await onReload();
             }
           })
           .catch((error) => {
