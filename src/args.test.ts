@@ -50,6 +50,18 @@ describe('parseArgs', () => {
     expect(result.configPath).toBe('/path/to/config.yaml');
   });
 
+  it('should parse single rule from --rule flag', () => {
+    process.argv = ['node', 'script.js', '--rule', 'my-rule'];
+    const result = parseArgs();
+    expect(result.rules).toEqual(['my-rule']);
+  });
+
+  it('should parse multiple rules from multiple --rule flags', () => {
+    process.argv = ['node', 'script.js', '--rule', 'rule1', '--rule', 'rule2'];
+    const result = parseArgs();
+    expect(result.rules).toEqual(['rule1', 'rule2']);
+  });
+
   it('should parse prompt from last non-flag argument', () => {
     process.argv = ['node', 'script.js', 'Hello world'];
     const result = parseArgs();
@@ -75,6 +87,15 @@ describe('parseArgs', () => {
     });
   });
 
+  it('should handle rule flag with other flags', () => {
+    process.argv = ['node', 'script.js', '--rule', 'my-rule', '--headless'];
+    const result = parseArgs();
+    expect(result).toEqual({
+      isHeadless: true,
+      rules: ['my-rule'],
+    });
+  });
+
   it('should handle prompt with flags', () => {
     process.argv = ['node', 'script.js', '--headless', 'What is the weather?'];
     const result = parseArgs();
@@ -94,11 +115,22 @@ describe('parseArgs', () => {
     });
   });
 
-  it('should ignore config flag value when extracting prompt', () => {
-    process.argv = ['node', 'script.js', '--config', 'config.yaml', 'actual-prompt'];
+  it('should handle rule flag with prompt', () => {
+    process.argv = ['node', 'script.js', '--rule', 'my-rule', 'Test prompt'];
+    const result = parseArgs();
+    expect(result).toEqual({
+      isHeadless: false,
+      rules: ['my-rule'],
+      prompt: 'Test prompt',
+    });
+  });
+
+  it('should ignore config and rule flag values when extracting prompt', () => {
+    process.argv = ['node', 'script.js', '--config', 'config.yaml', '--rule', 'my-rule', 'actual-prompt'];
     const result = parseArgs();
     expect(result.prompt).toBe('actual-prompt');
     expect(result.configPath).toBe('config.yaml');
+    expect(result.rules).toEqual(['my-rule']);
   });
 
   it('should handle multiple non-flag arguments and use the last one as prompt', () => {
@@ -108,11 +140,12 @@ describe('parseArgs', () => {
   });
 
   it('should handle complex argument combinations', () => {
-    process.argv = ['node', 'script.js', '--headless', '--config', 'my-config.yaml', '--readonly', '--resume', 'Complex prompt with spaces'];
+    process.argv = ['node', 'script.js', '--headless', '--config', 'my-config.yaml', '--rule', 'rule1', '--rule', 'rule2', '--readonly', '--resume', 'Complex prompt with spaces'];
     const result = parseArgs();
     expect(result).toEqual({
       isHeadless: true,
       configPath: 'my-config.yaml',
+      rules: ['rule1', 'rule2'],
       readonly: true,
       resume: true,
       prompt: 'Complex prompt with spaces',
@@ -125,11 +158,24 @@ describe('parseArgs', () => {
     expect(result.configPath).toBeUndefined();
   });
 
+  it('should handle rule flag without value', () => {
+    process.argv = ['node', 'script.js', '--rule'];
+    const result = parseArgs();
+    expect(result.rules).toEqual([]);
+  });
+
   it('should handle config flag at the end without value', () => {
     process.argv = ['node', 'script.js', '--headless', '--config'];
     const result = parseArgs();
     expect(result.isHeadless).toBe(true);
     expect(result.configPath).toBeUndefined();
+  });
+
+  it('should handle rule flag at the end without value', () => {
+    process.argv = ['node', 'script.js', '--headless', '--rule'];
+    const result = parseArgs();
+    expect(result.isHeadless).toBe(true);
+    expect(result.rules).toEqual([]);
   });
 
   it('should handle empty arguments array', () => {
@@ -145,5 +191,11 @@ describe('parseArgs', () => {
     const result = parseArgs();
     expect(result.noTools).toBe(true);
     expect(result.readonly).toBe(true);
+  });
+
+  it('should handle multiple rules with complex combinations', () => {
+    process.argv = ['node', 'script.js', '--rule', 'file.txt', '--rule', 'owner/package', '--rule', 'direct string rule'];
+    const result = parseArgs();
+    expect(result.rules).toEqual(['file.txt', 'owner/package', 'direct string rule']);
   });
 });
