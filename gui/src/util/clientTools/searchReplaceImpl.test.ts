@@ -139,7 +139,7 @@ describe("searchReplaceToolImpl", () => {
       const startIndex = originalContent.indexOf(searchText);
       const endIndex = startIndex + searchText.length;
 
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex,
         endIndex,
         strategyName: "exactMatch",
@@ -197,7 +197,7 @@ describe("searchReplaceToolImpl", () => {
       const startIndex = originalContent.indexOf(searchText);
       const endIndex = startIndex + searchText.length;
 
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex,
         endIndex,
         strategyName: "exactMatch",
@@ -272,12 +272,12 @@ const c = 3;`;
 
       // Mock sequential search matches
       mockFindSearchMatch
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
           startIndex: firstStartIndex,
           endIndex: firstEndIndex,
           strategyName: "exactMatch",
         })
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
           startIndex: secondStartIndex,
           endIndex: secondEndIndex,
           strategyName: "exactMatch",
@@ -303,11 +303,23 @@ const c = 3;`;
         1,
         originalContent,
         "const a = 1;",
+        expect.objectContaining({
+          dispatch: expect.any(Function),
+          getState: expect.any(Function),
+          ideMessenger: mockIdeMessenger,
+          selectSelectedChatModel: expect.any(Function),
+        }),
       );
       expect(mockFindSearchMatch).toHaveBeenNthCalledWith(
         2,
         contentAfterFirstReplacement,
         "const b = 2;",
+        expect.objectContaining({
+          dispatch: expect.any(Function),
+          getState: expect.any(Function),
+          ideMessenger: mockIdeMessenger,
+          selectSelectedChatModel: expect.any(Function),
+        }),
       );
       // Verify final applyToFile call
       expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
@@ -368,12 +380,12 @@ const c = 3;`;
 
       // Mock sequential search matches
       mockFindSearchMatch
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
           startIndex: firstStartIndex,
           endIndex: firstEndIndex,
           strategyName: "exactMatch",
         })
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
           startIndex: secondStartIndex,
           endIndex: secondEndIndex,
           strategyName: "exactMatch",
@@ -435,7 +447,7 @@ keep this too`;
         },
       ]);
       mockIdeMessenger.ide.readFile.mockResolvedValue(originalContent);
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex: 10, // Position of "remove this line"
         endIndex: 26, // End of "remove this line"
         strategyName: "exactMatch",
@@ -475,7 +487,7 @@ keep this too`;
         },
       ]);
       mockIdeMessenger.ide.readFile.mockResolvedValue(originalContent);
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex: 6,
         endIndex: 11,
         strategyName: "exactMatch",
@@ -509,7 +521,7 @@ keep this too`;
         },
       ]);
       mockIdeMessenger.ide.readFile.mockResolvedValue("some file content");
-      mockFindSearchMatch.mockReturnValue(null); // Search content not found
+      mockFindSearchMatch.mockResolvedValue(null); // Search content not found
 
       await expect(
         searchReplaceToolImpl(
@@ -542,12 +554,12 @@ keep this too`;
 
       // First search succeeds, second fails
       mockFindSearchMatch
-        .mockReturnValueOnce({
+        .mockResolvedValueOnce({
           startIndex: 0,
           endIndex: 13,
           strategyName: "exactMatch",
         })
-        .mockReturnValueOnce(null); // Second search fails
+        .mockResolvedValueOnce(null); // Second search fails
 
       await expect(
         searchReplaceToolImpl(
@@ -582,7 +594,7 @@ keep this too`;
       ).rejects.toThrow("Failed to apply search and replace: File read error");
     });
 
-    it("should handle applyToFile errors", async () => {
+    it("should handle apply failures", async () => {
       mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
       mockParseAllSearchReplaceBlocks.mockReturnValue([
         {
@@ -592,7 +604,7 @@ keep this too`;
         },
       ]);
       mockIdeMessenger.ide.readFile.mockResolvedValue("content");
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex: 0,
         endIndex: 7,
         strategyName: "exactMatch",
@@ -623,7 +635,7 @@ keep this too`;
         },
       ]);
       mockIdeMessenger.ide.readFile.mockResolvedValue(originalContent);
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex: 0, // Empty search matches at beginning
         endIndex: 0,
         strategyName: "exactMatch",
@@ -658,7 +670,7 @@ keep this too`;
         },
       ]);
       mockIdeMessenger.ide.readFile.mockResolvedValue(originalContent);
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex: 0,
         endIndex: originalContent.length,
         strategyName: "exactMatch",
@@ -694,7 +706,7 @@ keep this too`;
         },
       ]);
       mockIdeMessenger.ide.readFile.mockResolvedValue(originalContent);
-      mockFindSearchMatch.mockReturnValue({
+      mockFindSearchMatch.mockResolvedValue({
         startIndex: 0,
         endIndex: 4,
         strategyName: "exactMatch",
@@ -718,7 +730,16 @@ keep this too`;
       expect(mockIdeMessenger.ide.readFile).toHaveBeenCalledWith(
         "/resolved/path/test.txt",
       );
-      expect(mockFindSearchMatch).toHaveBeenCalledWith(originalContent, "test");
+      expect(mockFindSearchMatch).toHaveBeenCalledWith(
+        originalContent,
+        "test",
+        expect.objectContaining({
+          dispatch: expect.any(Function),
+          getState: expect.any(Function),
+          ideMessenger: mockIdeMessenger,
+          selectSelectedChatModel: expect.any(Function),
+        }),
+      );
       expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
         text: "updated content",
         streamId: "test-stream-id",

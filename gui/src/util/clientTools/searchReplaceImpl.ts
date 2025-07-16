@@ -4,6 +4,7 @@ import { resolveRelativePathInDir } from "core/util/ideUtils";
 import posthog from "posthog-js";
 import { v4 as uuid } from "uuid";
 import { ClientToolImpl } from "./callClientTool";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 
 export const searchReplaceToolImpl: ClientToolImpl = async (
   args,
@@ -42,6 +43,7 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     throw new Error("No complete search/replace blocks found in any diffs");
   }
 
+  let strategyName = "";
   try {
     // Read the current file content
     const originalContent =
@@ -54,16 +56,12 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
       const { searchContent, replaceContent } = block;
 
       // Find the search content in the current state of the file
-      const match = findSearchMatch(currentContent, searchContent || "");
-
-      // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
-      // directly rather than using `CustomPostHogProvider`
-      if (allowAnonymousTelemetry) {
-        // Capture telemetry for tool calls
-        posthog.capture("find_replace_match_result", {
-          matchStrategy: match?.strategyName ?? "noMatch",
-        });
-      }
+      // Pass extras with selectSelectedChatModel function for AI matcher
+      const match = await findSearchMatch(currentContent, searchContent || "", {
+        ...extras,
+        selectSelectedChatModel,
+      });
+      strategyName = match?.strategyName ?? "noMatch";
 
       if (!match) {
         throw new Error(
@@ -96,8 +94,21 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
       output: undefined,
     };
   } catch (error) {
+    // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
+    // directly rather than using `CustomPostHogProvider`
+    if (allowAnonymousTelemetry) {
+      posthog.capture("find_replace_match_result:error", {
+        matchStrategy: strategyName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
     throw new Error(
       `Failed to apply search and replace: ${error instanceof Error ? error.message : String(error)}`,
     );
+  }
+  if (allowAnonymousTelemetry) {
+    posthog.capture("find_replace_match_result", {
+      matchStrategy: strategyName,
+    });
   }
 };

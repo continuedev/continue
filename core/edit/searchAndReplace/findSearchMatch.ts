@@ -22,15 +22,16 @@ export interface SearchMatchResult extends BasicMatchResult {
 type MatchStrategy = (
   fileContent: string,
   searchContent: string,
-) => BasicMatchResult | null;
+  extras?: any,
+) => Promise<BasicMatchResult | null>;
 
 /**
  * Exact string matching strategy
  */
-function exactMatch(
+async function exactMatch(
   fileContent: string,
   searchContent: string,
-): BasicMatchResult | null {
+): Promise<BasicMatchResult | null> {
   const exactIndex = fileContent.indexOf(searchContent);
   if (exactIndex !== -1) {
     return {
@@ -44,10 +45,10 @@ function exactMatch(
 /**
  * Trimmed content matching strategy
  */
-function trimmedMatch(
+async function trimmedMatch(
   fileContent: string,
   searchContent: string,
-): BasicMatchResult | null {
+): Promise<BasicMatchResult | null> {
   const trimmedSearchContent = searchContent.trim();
   const trimmedIndex = fileContent.indexOf(trimmedSearchContent);
   if (trimmedIndex !== -1) {
@@ -63,10 +64,10 @@ function trimmedMatch(
  * Whitespace-ignored matching strategy
  * Removes all whitespace from both content and search, then finds the match
  */
-function whitespaceIgnoredMatch(
+async function whitespaceIgnoredMatch(
   fileContent: string,
   searchContent: string,
-): BasicMatchResult | null {
+): Promise<BasicMatchResult | null> {
   // Remove all whitespace (spaces, tabs, newlines, etc.)
   const strippedFileContent = fileContent.replace(/\s/g, "");
   const strippedSearchContent = searchContent.replace(/\s/g, "");
@@ -195,11 +196,11 @@ function jaroWinklerSimilarity(
 /**
  * Find the best fuzzy match for search content in file content using Jaro-Winkler
  */
-function findFuzzyMatch(
+async function findFuzzyMatch(
   fileContent: string,
   searchContent: string,
   threshold: number = 0.9,
-): BasicMatchResult | null {
+): Promise<BasicMatchResult | null> {
   const searchLines = searchContent.split("\n");
   const fileLines = fileContent.split("\n");
 
@@ -272,6 +273,179 @@ function findFuzzyMatch(
 }
 
 /**
+ * AI-based range matching strategy for fuzzy multi-line content
+ */
+async function aiRangeMatch(
+  fileContent: string,
+  searchContent: string,
+  extras?: any,
+): Promise<BasicMatchResult | null> {
+  if (!extras) {
+    return null;
+  }
+
+  const lines = fileContent.split("\n");
+  const searchLines = searchContent.split("\n").length;
+
+  // Handle edge cases
+  if (lines.length === 0 || searchLines === 0) {
+    return null;
+  }
+
+  // Create numbered content for the AI to analyze
+  const numberedContent = lines
+    .map((line, index) => `${index + 1}: ${line}`)
+    .join("\n");
+
+  // Get the chat model
+  const state = extras.getState();
+  const selectedChatModel = extras.selectSelectedChatModel(state);
+  if (!selectedChatModel) {
+    return null;
+  }
+
+  const streamAborter = state.session.streamAborter;
+  const completionOptions = {};
+
+  const maxRetries = 2;
+  let retryCount = 0;
+  let lastError: any = null;
+
+  const RANGE_IDENTIFICATION_SYSTEM_MESSAGE = `
+You are a fuzzy range finder.
+
+You will be given two inputs as XML:
+- <file>: the main text with line number prefixes
+- <search>: the search text
+
+Your task is to find the range of consecutive lines in <file> that is the best fuzzy match to <search>, where the number of lines in the range is EXACTLY the same as the number of lines in <search>. "Best fuzzy match" means the lines are similar, but do not need to be identical. It must be the best match in the file.
+
+Output the result as JSON with two fields:
+- startLine: the 1-based index of the first line of the best match in <file>
+- endLine: the 1-based index of the last line of the best match in <file> (inclusive)
+
+If there is no reasonable match, return {"startLine": -1, "endLine": -1}.
+
+Consider anchors in <search> as you try to find the match. Anchors are the first line of significant complexity, the last line of significant complexity, and the most complex interior line. Anchors are very helpful.
+
+Only output the JSON result, and nothing else.
+`;
+
+  while (retryCount < maxRetries) {
+    let identificationPrompt = "";
+
+    if (retryCount > 0 && lastError) {
+      identificationPrompt = `
+<error>
+You selected ${lastError.selectedLines} lines but the search has ${searchLines} lines. Try again and select exactly ${searchLines} lines.
+</error>
+`;
+    }
+
+    identificationPrompt += `
+<file>
+${numberedContent}
+</file>
+
+<search>
+${searchContent}
+</search>
+`;
+
+    try {
+      const gen = extras.ideMessenger.llmStreamChat(
+        {
+          completionOptions,
+          title: selectedChatModel.title,
+          messages: [
+            {
+              role: "system",
+              content: RANGE_IDENTIFICATION_SYSTEM_MESSAGE,
+            },
+            {
+              role: "user",
+              content: identificationPrompt,
+            },
+          ],
+        },
+        streamAborter.signal,
+      );
+
+      let responseContent = "";
+
+      // Collect the AI response
+      for await (const chunks of gen) {
+        for (const chunk of chunks) {
+          if (chunk.role === "assistant" && chunk.content) {
+            responseContent += chunk.content;
+          }
+        }
+      }
+
+      // Parse the AI response to get line numbers
+      const jsonMatch = responseContent.match(/\{[^}]+\}/);
+      if (!jsonMatch) {
+        throw new Error("AI did not return valid JSON");
+      }
+
+      const parsedRange = JSON.parse(jsonMatch[0]);
+
+      // Validate the response
+      if (
+        !parsedRange.startLine ||
+        !parsedRange.endLine ||
+        parsedRange.startLine < 1 ||
+        parsedRange.endLine < 1 ||
+        parsedRange.endLine > lines.length ||
+        parsedRange.startLine > parsedRange.endLine
+      ) {
+        throw new Error(`Invalid line range: ${JSON.stringify(parsedRange)}`);
+      }
+
+      // Check if the number of lines matches
+      const selectedLines = parsedRange.endLine - parsedRange.startLine + 1;
+      if (selectedLines !== searchLines) {
+        lastError = {
+          selectedLines,
+          startLine: parsedRange.startLine,
+          endLine: parsedRange.endLine,
+        };
+        retryCount++;
+        continue; // Retry
+      }
+
+      // Convert line numbers to character indices
+      // Handle edge case where there are no lines before start
+      let startIndex = 0;
+      if (parsedRange.startLine > 1) {
+        startIndex = lines
+          .slice(0, parsedRange.startLine - 1)
+          .reduce((acc, line) => acc + line.length + 1, 0);
+      }
+
+      // Calculate end index
+      let endIndex = startIndex;
+      for (let i = parsedRange.startLine - 1; i < parsedRange.endLine; i++) {
+        endIndex += lines[i].length;
+        if (i < parsedRange.endLine - 1) {
+          endIndex += 1; // Add newline
+        }
+      }
+
+      return { startIndex, endIndex };
+    } catch (error) {
+      // On last retry, return null to fall back to error
+      if (retryCount === maxRetries - 1) {
+        return null;
+      }
+      retryCount++;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Ordered list of matching strategies to try with their names
  */
 const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
@@ -279,6 +453,7 @@ const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
   { strategy: trimmedMatch, name: "trimmedMatch" },
   { strategy: whitespaceIgnoredMatch, name: "whitespaceIgnoredMatch" },
   { strategy: findFuzzyMatch, name: "jaroWinklerFuzzyMatch" },
+  { strategy: aiRangeMatch, name: "aiRangeMatch" },
 ];
 
 /**
@@ -291,13 +466,14 @@ const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
  *
  * @param fileContent - The complete content of the file to search in
  * @param searchContent - The content to search for
- * @param config - Configuration options for matching behavior
+ * @param extras - Additional context needed by some matchers (AI matcher)
  * @returns Match result with character positions, or null if no match found
  */
-export function findSearchMatch(
+export async function findSearchMatch(
   fileContent: string,
   searchContent: string,
-): SearchMatchResult | null {
+  extras?: any,
+): Promise<SearchMatchResult | null> {
   const trimmedSearchContent = searchContent.trim();
 
   if (trimmedSearchContent === "") {
@@ -307,7 +483,7 @@ export function findSearchMatch(
 
   // Try each matching strategy in order
   for (const { strategy, name } of matchingStrategies) {
-    const result = strategy(fileContent, searchContent);
+    const result = await strategy(fileContent, searchContent, extras);
     if (result !== null) {
       return { ...result, strategyName: name };
     }
