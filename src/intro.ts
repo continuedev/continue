@@ -60,7 +60,7 @@ export function introMessage(
   // }
 
   if (config.mcpServers?.length) {
-    console.info(chalk.yellow("\nMCP Servers:"));
+    console.info(chalk.yellow("MCP Servers:"));
     config.mcpServers.forEach((server: any) => {
       console.info(`- ${chalk.cyan(server?.name)}`);
     });
