@@ -77,6 +77,21 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     );
   }
 
+  // Add this to BaseRetrievalPipeline.ts
+  protected async ensureLanceDbInitialized(): Promise<boolean> {
+    if (!this.lanceDbIndex) {
+      // Re-run the initialization logic
+      const embedModel = this.options.config.selectedModelByRole.embed;
+      if (!embedModel) {
+        return false;
+      }
+      this.lanceDbIndex = await LanceDbIndex.create(embedModel, (uri) =>
+        this.options.ide.readFile(uri),
+      );
+    }
+    return this.lanceDbIndex !== null;
+  }
+
   private getCleanedTrigrams(
     query: RetrievalPipelineRunArguments["query"],
   ): string[] {
@@ -163,12 +178,19 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     input: string,
     n: number,
   ): Promise<Chunk[]> {
-    if (!this.lanceDbIndex) {
+    const initialized = await this.ensureLanceDbInitialized();
+    if (!initialized || !this.lanceDbIndex) {
       console.warn(
         "LanceDB index not available, skipping embeddings retrieval",
       );
       return [];
     }
+    // if (!this.lanceDbIndex) {
+    //   console.warn(
+    //     "LanceDB index not available, skipping embeddings retrieval",
+    //   );
+    //   return [];
+    // }
 
     return this.lanceDbIndex.retrieve(
       input,

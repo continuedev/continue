@@ -16,6 +16,7 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
+import { getTopRelevantCodeChunks } from "../context/retrieval/pipelines/NextEditRetrievalPipeline.js";
 import { myersDiff } from "../diff/myers.js";
 import { PrefetchQueue } from "../util/PrefetchQueue.js";
 import { replaceEscapedCharacters } from "../util/text.js";
@@ -571,6 +572,19 @@ export class NextEditProvider {
         filepath: helper.filepath,
         position: helper.pos,
       });
+
+      const { config } = await this.configHandler.loadConfig();
+      const chunks = await getTopRelevantCodeChunks(
+        "pow(number, exponent) {\n  return number ** exponent;\n}",
+        {
+          ide: this.ide,
+          llm: llm,
+          config: config!,
+          tags: [],
+          // filterDirectory: getUriPathBasename(helper.workspaceUris[0]),
+        },
+      );
+      console.log("chunks:", JSON.stringify(chunks));
 
       this.prefetchQueue.loadResource(refQueue);
       await this.prefetchQueue.initialize();
