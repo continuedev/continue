@@ -15,6 +15,8 @@ interface UserInputProps {
   assistant: AssistantConfig;
   onFileAttached?: (filePath: string, content: string) => void;
   disabled?: boolean;
+  placeholder?: string;
+  hideNormalUI?: boolean;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -25,6 +27,8 @@ const UserInput: React.FC<UserInputProps> = ({
   assistant,
   onFileAttached,
   disabled = false,
+  placeholder,
+  hideNormalUI = false,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -379,7 +383,7 @@ const UserInput: React.FC<UserInputProps> = ({
   });
 
   const renderInputText = () => {
-    const placeholderText = "Ask anything, @ for context, / for slash commands";
+    const placeholderText = placeholder || "Ask anything, @ for context, / for slash commands";
     if (inputText.length === 0) {
       return (
         <>
@@ -467,7 +471,7 @@ const UserInput: React.FC<UserInputProps> = ({
       </Box>
 
       {/* Slash command UI */}
-      {showSlashCommands && inputMode && (
+      {showSlashCommands && inputMode && !hideNormalUI && (
         <SlashCommandUI
           assistant={assistant}
           filter={slashCommandFilter}
@@ -477,7 +481,7 @@ const UserInput: React.FC<UserInputProps> = ({
       )}
 
       {/* File search UI */}
-      {showFileSearch && inputMode && (
+      {showFileSearch && inputMode && !hideNormalUI && (
         <FileSearchUI
           filter={fileSearchFilter}
           selectedIndex={selectedFileIndex}

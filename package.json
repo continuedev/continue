@@ -27,7 +27,7 @@
     "url": "https://github.com/continuedev/cli.git"
   },
   "bugs": {
-    "url": "https://github.com/continuedev/continuedev/issues"
+    "url": "https://github.com/continuedev/continue/issues"
   },
   "homepage": "https://continue.dev",
   "dependencies": {
@@ -54,7 +54,8 @@
     "readline-sync": "^1.4.10",
     "turndown": "^7.2.0",
     "typescript": "^5.8.3",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

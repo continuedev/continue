@@ -251,7 +251,8 @@ async function refreshToken(
  * Authenticates using the Continue web flow
  */
 export async function login(
-  useOnboarding: boolean = false
+  useOnboarding: boolean = false,
+  onPrompt?: (promptText: string) => Promise<string>
 ): Promise<AuthConfig> {
   // If CONTINUE_API_KEY environment variable exists, use that instead
   if (process.env.CONTINUE_API_KEY) {
@@ -269,13 +270,15 @@ export async function login(
 
     // Get auth URL using the direct implementation
     const authUrl = getAuthUrlForTokenPage(useOnboarding);
-    console.info(chalk.green(`Opening browser to sign in at: ${authUrl}`));
+    console.info(chalk.gray(`Opening browser to sign in at: ${authUrl}`));
     await open(authUrl);
 
     console.info(chalk.yellow("\nAfter signing in, you'll receive a token."));
 
     // Get token from user
-    const token = await prompt(chalk.yellow("Paste your sign-in token here: "));
+    const token = onPrompt
+      ? await onPrompt(chalk.yellow("Paste your sign-in token here: "))
+      : await prompt(chalk.yellow("Paste your sign-in token here: "));
 
     console.info(chalk.cyan("Verifying token..."));
 

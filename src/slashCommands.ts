@@ -10,7 +10,8 @@ import {
 
 export async function handleSlashCommands(
   input: string,
-  assistant: AssistantConfig
+  assistant: AssistantConfig,
+  onLoginPrompt?: (promptText: string) => Promise<string>
 ): Promise<{
   output?: string;
   exit?: boolean;
@@ -39,7 +40,7 @@ export async function handleSlashCommands(
       case "exit":
         return { exit: true, output: "Goodbye!" };
       case "login":
-        login()
+        login(false, onLoginPrompt)
           .then((config) => {
             if (config && isAuthenticatedConfig(config)) {
               console.info(

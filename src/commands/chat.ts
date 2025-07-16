@@ -1,11 +1,10 @@
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
-import { ensureAuthenticated } from "../auth/ensureAuth.js";
 import { ensureOrganization, loadAuthConfig } from "../auth/workos.js";
-import { initialize } from "../config.js";
 import { introMessage } from "../intro.js";
 import { configureLogger } from "../logger.js";
+import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
@@ -18,28 +17,26 @@ export interface ChatOptions {
 }
 
 async function initializeChat(options: ChatOptions) {
-  const isAuthenticated = await ensureAuthenticated(true);
-
-  if (!isAuthenticated) {
-    console.error(chalk.red("Authentication failed. Exiting..."));
-    process.exit(1);
-  }
-
   const authConfig = loadAuthConfig();
 
-  // Ensure organization is selected
-  const authConfigWithOrg = await ensureOrganization(
-    authConfig,
-    options.headless ?? false
-  );
+  // Use onboarding flow for initialization
+  const result = await initializeWithOnboarding(authConfig, options.config);
 
-  // Initialize ContinueSDK and MCPService once
-  const { config, llmApi, model, mcpService } = await initialize(
-    authConfigWithOrg,
-    options.config
-  );
+  // Ensure organization is selected if authenticated
+  let finalAuthConfig = authConfig;
+  if (result.config && authConfig) {
+    finalAuthConfig = await ensureOrganization(
+      authConfig,
+      options.headless ?? false
+    );
+  }
 
-  return { config, llmApi, model, mcpService };
+  return {
+    config: result.config,
+    llmApi: result.llmApi,
+    model: result.model,
+    mcpService: result.mcpService,
+  };
 }
 
 export async function chat(prompt?: string, options: ChatOptions = {}) {
