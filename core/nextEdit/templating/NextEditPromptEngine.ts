@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { Position } from "../..";
+import { Position, RangeInFile } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
 import {
@@ -9,7 +9,9 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
   USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
+import { createDiff, DiffFormatType } from "../context/diffFormatting";
 import {
+  NextEditOutcome,
   NextEditTemplate,
   PromptMetadata,
   SystemPrompt,
@@ -49,6 +51,8 @@ function templateRendererOfModel(
 export function renderPrompt(
   helper: HelperVars,
   userEdits: string,
+  prevOutcome?: NextEditOutcome,
+  toApply?: RangeInFile,
 ): PromptMetadata {
   let modelName = helper.modelName as NextEditModelName;
 
@@ -80,10 +84,55 @@ export function renderPrompt(
   }
 
   const renderer = templateRendererOfModel(modelName);
-  const editedCodeWithTokens = insertTokens(
-    helper.fileContents.split("\n"),
-    helper.pos,
-  );
+  let editedCodeWithTokens = "";
+
+  // TODO: apply prevOutcome to existing content. we will need the line range.
+  // Also display the diff between existing content and applied content.
+  if (prevOutcome) {
+    console.log(
+      "beforeInsert:",
+      helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
+    );
+    console.log("toInsert: ", prevOutcome?.completion.split("\n"));
+    console.log(
+      "afterInsert:",
+      helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
+    );
+    let appliedContent = [
+      ...helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
+      ...(prevOutcome?.completion.split("\n") ?? []),
+      ...helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
+    ];
+    // console.log("helper.fileContents:", helper.fileContents);
+    // TODO: I'm not sure, but <|user_cursor_is_here|> is somehow being added to appliedContent.
+    // The individual parts don't contain this.
+    console.log("appliedContent:", appliedContent);
+    appliedContent = appliedContent.filter(
+      (line) => !line.includes(USER_CURSOR_IS_HERE_TOKEN),
+    );
+    // TODO: helper.pos is outdated.
+    // Given a previous response, we need to calculate where the cursor would be.
+    // I think it's a good idea to calculate this in the response.
+    editedCodeWithTokens = insertTokens(
+      appliedContent,
+      prevOutcome.finalCursorPosition,
+    );
+    console.log("new editedCodeWithTokens:", editedCodeWithTokens);
+    userEdits = createDiff({
+      beforeContent: helper.fileContents,
+      afterContent: appliedContent.join("\n"),
+      filePath: helper.filepath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 3,
+    });
+    userEdits = userEdits.replace(USER_CURSOR_IS_HERE_TOKEN, "");
+    console.log("new userDiff:", userEdits);
+  } else {
+    editedCodeWithTokens = insertTokens(
+      helper.fileContents.split("\n"),
+      helper.pos,
+    );
+  }
 
   const tv: TemplateVars = {
     userEdits,

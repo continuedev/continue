@@ -1,11 +1,12 @@
 import * as path from "path";
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { ChatMessage, IDE, ILLM } from "../index.js";
+import { ChatMessage, IDE, ILLM, Position, RangeInFile } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
 import { ContextRetrievalService } from "../autocomplete/context/ContextRetrievalService.js";
 
+import { randomUUID } from "crypto";
 import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
@@ -15,11 +16,17 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
+import { myersDiff } from "../diff/myers.js";
+import { PrefetchQueue } from "../util/PrefetchQueue.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "./constants.js";
+import {
+  calculateFinalCursorPosition,
+  getOffsetPositionAtLastNewLine,
+} from "./diff/diff.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import {
   renderDefaultSystemPrompt,
@@ -52,6 +59,21 @@ export class NextEditProvider {
   private endpointType: "default" | "fineTuned";
   private diffContext: string = "";
   private promptMetadata: PromptMetadata | null = null;
+  private prefetchQueue: PrefetchQueue<
+    NextEditOutcome,
+    RangeInFile,
+    {
+      helper: HelperVars;
+      diffContext: string;
+      llm: ILLM;
+      token: AbortSignal;
+      startTime: number;
+      newCursorPos: Position;
+    }
+  >;
+  // private refQueue: RangeInFile[] = [];
+  // TODO: This needs to be cleared globally on cancel.
+  public static currentEditChainId: string | null = null;
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -65,6 +87,121 @@ export class NextEditProvider {
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
     this.endpointType = endpointType;
     this.loggingService = NextEditLoggingService.getInstance();
+
+    const fetchFunction = async (
+      previousData: NextEditOutcome | undefined,
+      resource: RangeInFile | undefined,
+      other?: {
+        helper: HelperVars;
+        diffContext: string;
+        llm: ILLM;
+        token: AbortSignal;
+        startTime: number;
+        newCursorPos: Position;
+      },
+    ) => {
+      if (!other) return undefined;
+      // render prompt
+      // TODO: this has to set the editable region properly.
+      console.log("fetchfunction - previousData:", previousData?.completion);
+      const promptMetadata = renderPrompt(
+        other.helper,
+        other.diffContext,
+        previousData,
+        resource,
+      );
+      this.promptMetadata = promptMetadata;
+      // call llm.chat
+      const msg = await other.llm.chat([promptMetadata.prompt], other.token);
+      // built and return outcome
+      if (typeof msg.content === "string") {
+        if (msg.content === "") return undefined;
+        // TODO: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
+        const nextCompletion = replaceEscapedCharacters(
+          msg.content.split("<|editable_region_start|>\n")[1],
+        ).replace(/\n$/, "");
+
+        const currCursorPos = other.helper.pos;
+        const editableRegionStartLine = Math.max(
+          currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+          0,
+        );
+        const editableRegionEndLine = Math.min(
+          currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+          other.helper.fileLines.length - 1,
+        );
+        const oldEditRangeSlice = other.helper.fileContents
+          .split("\n")
+          .slice(editableRegionStartLine, editableRegionEndLine + 1)
+          .join("\n");
+
+        // How far away is the current line from the start of the editable region?
+        const lineOffsetAtCursorPos =
+          currCursorPos.line - editableRegionStartLine;
+
+        // How long is the line at the current cursor position?
+        const newEditRangeSlice = nextCompletion;
+        const lineContentAtCursorPos =
+          newEditRangeSlice.split("\n")[lineOffsetAtCursorPos];
+
+        const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+
+        const offset = getOffsetPositionAtLastNewLine(
+          diffLines,
+          lineContentAtCursorPos,
+          lineOffsetAtCursorPos,
+        );
+
+        // Calculate the actual line number in the editor by adding the startPos offset
+        // to the line number from the diff calculation.
+        const finalCursorPos: Position = {
+          line: editableRegionStartLine + offset.line,
+          character: offset.character,
+        };
+
+        const outcomeNext: NextEditOutcome = {
+          elapsed: Date.now() - other.startTime,
+          modelProvider: other.llm.underlyingProviderName,
+          modelName: other.llm.model + ":zetaDataset",
+          completionOptions: null,
+          // filepath: helper.filepath,
+          completionId: other.helper.input.completionId,
+          gitRepo: await this.ide.getRepoName(other.helper.filepath),
+          uniqueId: await this.ide.getUniqueId(),
+          timestamp: Date.now(),
+          fileUri: other.helper.filepath,
+          workspaceDirUri:
+            other.helper.workspaceUris[0] ??
+            path.dirname(other.helper.filepath),
+          prompt: this.promptMetadata!.prompt.content,
+          userEdits: this.promptMetadata!.userEdits,
+          userExcerpts: this.promptMetadata!.userExcerpts,
+          originalEditableRange: oldEditRangeSlice,
+          completion: nextCompletion,
+          cursorPosition: other.helper.pos,
+          finalCursorPosition: finalCursorPos,
+          editableRegionStartLine,
+          editableRegionEndLine,
+          ...other.helper.options,
+        };
+        return outcomeNext;
+      } else {
+        return undefined;
+      }
+    };
+
+    this.prefetchQueue = new PrefetchQueue<
+      NextEditOutcome,
+      RangeInFile,
+      {
+        helper: HelperVars;
+        diffContext: string;
+        llm: ILLM;
+        token: AbortSignal;
+        startTime: number;
+        newCursorPos: Position;
+      }
+    >(fetchFunction, [], undefined);
   }
 
   public static initialize(
@@ -247,6 +384,26 @@ export class NextEditProvider {
         prompts.push(promptMetadata.prompt);
       }
 
+      const editableRegionStartLine = Math.max(
+        helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+        0,
+      );
+      const editableRegionEndLine = Math.min(
+        helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+        helper.fileLines.length - 1,
+      );
+      const oldEditRangeSlice = helper.fileContents
+        .split("\n")
+        .slice(editableRegionStartLine, editableRegionEndLine + 1)
+        .join("\n");
+
+      const finalCursorPos = calculateFinalCursorPosition(
+        helper.pos,
+        editableRegionStartLine,
+        oldEditRangeSlice,
+        "",
+      );
+
       if (this.endpointType === "default") {
         const msg: ChatMessage = await llm.chat(prompts, token);
         if (typeof msg.content === "string") {
@@ -270,6 +427,9 @@ export class NextEditProvider {
             originalEditableRange: "",
             completion: nextCompletion,
             cursorPosition: helper.pos,
+            finalCursorPosition: finalCursorPos,
+            editableRegionStartLine: 0,
+            editableRegionEndLine: 0,
             ...helper.options,
           };
           return outcomeNext;
@@ -298,6 +458,13 @@ export class NextEditProvider {
             .slice(editableRegionStartLine, editableRegionEndLine + 1)
             .join("\n");
 
+          const finalCursorPos = calculateFinalCursorPosition(
+            helper.pos,
+            editableRegionStartLine,
+            oldEditRangeSlice,
+            "",
+          );
+
           const outcomeNext: NextEditOutcome = {
             elapsed: Date.now() - startTime,
             modelProvider: llm.underlyingProviderName,
@@ -317,6 +484,9 @@ export class NextEditProvider {
             originalEditableRange: oldEditRangeSlice,
             completion: nextCompletion,
             cursorPosition: helper.pos,
+            finalCursorPosition: finalCursorPos,
+            editableRegionStartLine,
+            editableRegionEndLine,
             ...helper.options,
           };
           return outcomeNext;
@@ -324,6 +494,87 @@ export class NextEditProvider {
           return undefined;
         }
       }
+    } catch (e: any) {
+      this.onError(e);
+    } finally {
+      this.loggingService.deleteAbortController(input.completionId);
+    }
+  }
+
+  public async provideNextEditPrediction(
+    input: AutocompleteInput,
+    token: AbortSignal | undefined,
+  ) {
+    try {
+      if (NextEditProvider.currentEditChainId) {
+        return await this.prefetchQueue.pop();
+      }
+
+      // Create abort signal if not given
+      if (!token) {
+        const controller = this.loggingService.createAbortController(
+          input.completionId,
+        );
+        token = controller.signal;
+      }
+      const startTime = Date.now();
+      const options = await this._getAutocompleteOptions();
+
+      // Debounce
+      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
+        return undefined;
+      }
+
+      const llm = await this._prepareLlm();
+      if (!llm) {
+        return undefined;
+      }
+
+      if (llm.promptTemplates?.autocomplete) {
+        options.template = llm.promptTemplates.autocomplete as string;
+      }
+
+      const helper = await HelperVars.create(
+        input,
+        options,
+        llm.model,
+        this.ide,
+      );
+
+      if (await shouldPrefilter(helper, this.ide)) {
+        return undefined;
+      }
+
+      NextEditProvider.currentEditChainId = randomUUID();
+
+      this.prefetchQueue.loadOther({
+        helper,
+        diffContext: this.diffContext,
+        llm,
+        token,
+        startTime,
+        newCursorPos: helper.pos,
+      });
+
+      const [snippetPayload, workspaceDirs] = await Promise.all([
+        getAllSnippetsWithoutRace({
+          helper,
+          ide: this.ide,
+          getDefinitionsFromLsp: this.getDefinitionsFromLsp,
+          contextRetrievalService: this.contextRetrievalService,
+        }),
+        this.ide.getWorkspaceDirs(),
+      ]);
+
+      // TODO: Get the references.
+      const refQueue = await this.ide.getReferences({
+        filepath: helper.filepath,
+        position: helper.pos,
+      });
+
+      this.prefetchQueue.loadResource(refQueue);
+      await this.prefetchQueue.initialize();
+      return await this.prefetchQueue.pop();
     } catch (e: any) {
       this.onError(e);
     } finally {
