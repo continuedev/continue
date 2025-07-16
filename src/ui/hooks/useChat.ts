@@ -12,6 +12,7 @@ import {
 } from "../../streamChatResponse.js";
 import { constructSystemMessage } from "../../systemMessage.js";
 import { getToolDisplayName } from "../../tools.js";
+import { formatError } from "../../util/formatError.js";
 
 import { DisplayMessage } from "../types.js";
 
@@ -296,7 +297,7 @@ export function useChat({
       // Save the updated history to session
       saveSession(finalHistory);
     } catch (error: any) {
-      const errorMessage = `Error: ${error.message}`;
+      const errorMessage = `Error: ${formatError(error)}`;
       setMessages((prev) => [
         ...prev,
         {

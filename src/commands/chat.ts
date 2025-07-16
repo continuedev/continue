@@ -9,6 +9,7 @@ import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { startTUIChat } from "../ui/index.js";
+import { formatError } from "../util/formatError.js";
 
 export interface ChatOptions {
   headless?: boolean;
@@ -128,7 +129,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         // Save session after each successful response
         saveSession(chatHistory);
       } catch (e: any) {
-        console.error(`\n${chalk.red(`Error: ${e.message}`)}`);
+        console.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
         if (!options.headless) {
           console.info(
             chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
@@ -137,7 +138,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       }
     }
   } catch (error: any) {
-    console.error(chalk.red(`Fatal error: ${error.message}`));
+    console.error(chalk.red(`Fatal error: ${formatError(error)}`));
     process.exit(1);
   }
 }
