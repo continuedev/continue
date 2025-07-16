@@ -128,7 +128,11 @@ export async function loadConfig(
     }
 
     return result.config as AssistantUnrolled;
-  } else if (config.startsWith(".") || config.startsWith("/")) {
+  } else if (
+    config.startsWith(".") ||
+    config.startsWith("/") ||
+    config.startsWith("~")
+  ) {
     // Load from file
     const configYaml = await loadConfigYaml(
       authConfig?.accessToken ?? null,
