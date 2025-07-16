@@ -12,6 +12,7 @@ import {
 } from "core/nextEdit/constants";
 import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { getThemeString } from "../util/getTheme";
 
 export interface TextApplier {
@@ -199,10 +200,10 @@ export class NextEditWindowManager {
     await NextEditWindowManager.freeTabAndEsc();
 
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
-    this.registerCommandSafely(
-      HIDE_NEXT_EDIT_SUGGESTION_COMMAND,
-      async () => await this.hideAllNextEditWindowsAndResetCompletionId(),
-    );
+    this.registerCommandSafely(HIDE_NEXT_EDIT_SUGGESTION_COMMAND, async () => {
+      NextEditProvider.currentEditChainId = null;
+      await this.hideAllNextEditWindowsAndResetCompletionId();
+    });
     this.registerCommandSafely(
       ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
       async () => await this.acceptNextEdit(),
@@ -317,6 +318,8 @@ export class NextEditWindowManager {
    * Hide all tooltips in all editors.
    */
   public async hideAllNextEditWindows() {
+    NextEditProvider.currentEditChainId = null;
+
     if (this.currentDecoration) {
       vscode.window.visibleTextEditors.forEach((editor) => {
         editor.setDecorations(this.currentDecoration!, []);
