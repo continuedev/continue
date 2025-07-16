@@ -137,6 +137,9 @@ function getAuthUrlForTokenPage(useOnboarding: boolean = false): string {
  */
 async function refreshToken(refreshToken: string): Promise<AuthConfig> {
   try {
+    // Load existing config to preserve organizationId and other fields
+    const existingConfig = loadAuthConfig();
+    
     const response = await axios.post(
       new URL("auth/refresh", env.apiBase).toString(),
       {
@@ -150,6 +153,7 @@ async function refreshToken(refreshToken: string): Promise<AuthConfig> {
     const tokenExpiresAt = Date.now() + 60 * 60 * 1000;
 
     const authConfig: AuthConfig = {
+      ...existingConfig, // Preserve existing fields like organizationId
       userId: user.id,
       userEmail: user.email,
       accessToken,
