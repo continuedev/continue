@@ -1,6 +1,6 @@
 # Continue CLI
 
-The Continue CLI is a customizable command line coding agent.
+The Continue CLI (`cn`) is a customizable command line coding agent.
 
 ## Installation
 
