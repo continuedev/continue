@@ -8,6 +8,7 @@ import {
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
+import { EventEmitter as NodeEventEmitter } from "node:events";
 import { v4 as uuidv4 } from "uuid";
 import {
   authentication,
@@ -101,8 +102,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     this.secretStorage = new SecretStorage(context);
 
     // Immediately refresh any existing sessions
-    this.initialRefreshAttempt = new Promise((resolve) => {
-      this.setHasAttemptedRefresh = resolve;
+    this.attemptEmitter = new NodeEventEmitter();
+    this.hasAttemptedRefresh = new Promise((resolve) => {
+      this.attemptEmitter.on("attempted", resolve);
     });
     void this.refreshSessions();
 
@@ -150,7 +152,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   public async getSessions(
     scopes?: string[],
   ): Promise<ContinueAuthenticationSession[]> {
-    await this.initialRefreshAttempt;
+    await this.hasAttemptedRefresh;
     const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
     if (!data) {
       return [];
@@ -186,8 +188,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return this.ideRedirectUri;
   }
 
-  private initialRefreshAttempt: Promise<void>;
-  private setHasAttemptedRefresh: () => void = () => undefined;
+  private hasAttemptedRefresh: Promise<void>;
+  private attemptEmitter: NodeEventEmitter;
   async refreshSessions() {
     // Prevent concurrent refresh operations
     if (this._isRefreshing) {
@@ -277,7 +279,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         }, delay);
       });
     } finally {
-      this.setHasAttemptedRefresh();
+      this.attemptEmitter.emit("attempted");
     }
   }
 

@@ -11,6 +11,7 @@ import {
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
+import EventEmitter from "node:events";
 import {
   AuthType,
   ControlPlaneSessionInfo,
@@ -46,10 +47,9 @@ export class ConfigHandler {
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles;
   totalConfigLoads: number = 0;
+
   public isInitialized: Promise<void>;
-  private setInitialized:
-    | undefined
-    | ((value: void | PromiseLike<void>) => void) = undefined;
+  private initter: EventEmitter;
 
   cascadeAbortController: AbortController;
   private abortCascade() {
@@ -91,8 +91,10 @@ export class ConfigHandler {
 
     this.currentOrg = personalOrg;
     this.organizations = [personalOrg];
+
+    this.initter = new EventEmitter();
     this.isInitialized = new Promise((resolve) => {
-      this.setInitialized = resolve;
+      this.initter.on("init", resolve);
     });
 
     this.cascadeAbortController = new AbortController();
@@ -144,9 +146,9 @@ export class ConfigHandler {
       }
 
       if (signal.aborted) {
-        return; // local only case, no fetch to throw abort error
+        return; // local only case, no`fetch to throw abort error
       }
-      this.setInitialized?.();
+      this.initter.emit("init");
 
       this.globalContext.update("lastSelectedOrgIdForWorkspace", {
         ...selectedOrgs,
@@ -162,7 +164,7 @@ export class ConfigHandler {
       if (e instanceof Error && e.message.includes("AbortError")) {
         return;
       } else {
-        this.setInitialized?.(); // Error case counts for initialization
+        this.initter.emit("init"); // Error case counts for initialization
         throw e;
       }
     }
@@ -171,11 +173,11 @@ export class ConfigHandler {
   private async getOrgs(): Promise<OrgWithProfiles[]> {
     if (await this.controlPlaneClient.isSignedIn()) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
-      const personalHubOrg = await this.getPersonalHubOrg();
-      const hubOrgs = await Promise.all(
-        orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
-      );
-      return [...hubOrgs, personalHubOrg];
+      const orgs = await Promise.all([
+        this.getPersonalHubOrg(),
+        ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+      ]);
+      return orgs;
     } else {
       return [await this.getLocalOrg()];
     }
@@ -428,7 +430,7 @@ export class ConfigHandler {
   async reloadConfig(reason: string) {
     const startTime = performance.now();
     this.totalConfigLoads += 1;
-    // console.log(`Reloading config (${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
+    console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
       return {
         config: undefined,

@@ -52,7 +52,7 @@ const saveSubsetFilters = [
     "lastNonEditSessionWasEmpty",
     "codeToEdit",
   ]),
-  createFilter("config", ["defaultModelTitle"]),
+  createFilter("config", []),
   createFilter("ui", ["toolSettings", "toolGroupSettings", "ruleSettings"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
@@ -60,7 +60,6 @@ const saveSubsetFilters = [
     "preferencesByProfileId",
     "selectedProfileId",
     "selectedOrganizationId",
-    "organizations",
   ]),
 ];
 
