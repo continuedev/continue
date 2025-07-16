@@ -97,10 +97,15 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
         // Remove duplicates and sort
         const uniqueFiles = [...new Set(allFiles)];
         
-        const fileItems: FileItem[] = uniqueFiles.map((path) => ({
-          path,
-          displayName: path.split('/').pop() || path,
-        }));
+        const fileItems: FileItem[] = uniqueFiles.map((path) => {
+          // Show the full path from workspace root
+          const displayName = path;
+          
+          return {
+            path,
+            displayName,
+          };
+        });
 
         // Filter files based on the current filter
         const filteredFiles = fileItems
@@ -116,28 +121,34 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
           })
           .sort((a, b) => {
             if (filter.length === 0) {
-              // When no filter, sort by file name
-              return a.displayName.localeCompare(b.displayName);
+              // When no filter, sort by file name (not full path)
+              const aFileName = a.path.split('/').pop() || a.path;
+              const bFileName = b.path.split('/').pop() || b.path;
+              return aFileName.localeCompare(bFileName);
             }
             
             const lowerFilter = filter.toLowerCase();
             
+            // Get file names for comparison
+            const aFileName = a.path.split('/').pop() || a.path;
+            const bFileName = b.path.split('/').pop() || b.path;
+            
             // Prioritize exact matches in file name
-            const aNameMatch = a.displayName.toLowerCase().includes(lowerFilter);
-            const bNameMatch = b.displayName.toLowerCase().includes(lowerFilter);
+            const aNameMatch = aFileName.toLowerCase().includes(lowerFilter);
+            const bNameMatch = bFileName.toLowerCase().includes(lowerFilter);
             
             if (aNameMatch && !bNameMatch) return -1;
             if (!aNameMatch && bNameMatch) return 1;
             
             // Then prioritize files that start with the filter
-            const aStartsWith = a.displayName.toLowerCase().startsWith(lowerFilter);
-            const bStartsWith = b.displayName.toLowerCase().startsWith(lowerFilter);
+            const aStartsWith = aFileName.toLowerCase().startsWith(lowerFilter);
+            const bStartsWith = bFileName.toLowerCase().startsWith(lowerFilter);
             
             if (aStartsWith && !bStartsWith) return -1;
             if (!aStartsWith && bStartsWith) return 1;
             
             // Finally, sort by file name
-            return a.displayName.localeCompare(b.displayName);
+            return aFileName.localeCompare(bFileName);
           })
           .slice(0, 10); // Limit to 10 results for screen space
 

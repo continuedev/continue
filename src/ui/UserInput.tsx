@@ -178,10 +178,9 @@ const UserInput: React.FC<UserInputProps> = ({
       const beforeAt = inputText.slice(0, lastAtIndex);
       const afterCursor = inputText.slice(cursorPosition);
 
-      // Replace the partial file reference with the full file name
-      const fileName = filePath.split("/").pop() || filePath;
-      const newText = beforeAt + "@" + fileName + " " + afterCursor;
-      const newCursorPos = lastAtIndex + 1 + fileName.length + 1;
+      // Replace the partial file reference with the full file path
+      const newText = beforeAt + "@" + filePath + " " + afterCursor;
+      const newCursorPos = lastAtIndex + 1 + filePath.length + 1;
 
       textBuffer.setText(newText);
       textBuffer.setCursor(newCursorPos);
