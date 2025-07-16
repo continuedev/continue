@@ -133,7 +133,6 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
-            "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
         )

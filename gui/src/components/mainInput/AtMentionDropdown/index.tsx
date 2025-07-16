@@ -5,7 +5,6 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import type { Editor } from "@tiptap/react";
-import type { RangeInFile } from "core";
 import {
   forwardRef,
   useContext,
@@ -178,87 +177,6 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
 
   const [allItems, setAllItems] = useState<ComboBoxItem[]>([]);
 
-  async function isItemTooBig(
-    name: string,
-    query: string,
-  ): Promise<[boolean, number]> {
-    const selectedCode: RangeInFile[] = [];
-    // Get context item from core
-    const contextResult = await ideMessenger.request(
-      "context/getContextItems",
-      {
-        name,
-        query,
-        fullInput: "",
-        selectedCode,
-        isInAgentMode,
-      },
-    );
-
-    if (contextResult.status === "error") {
-      return [false, -1];
-    }
-
-    const item = contextResult.content[0];
-
-    // Check if the context item exceeds the context length of the selected model
-    const result = await ideMessenger.request("isItemTooBig", {
-      item,
-    });
-
-    if (result.status === "error") {
-      return [false, -1];
-    }
-
-    const size = new Blob([item.content]).size;
-
-    return [result.content, size];
-  }
-
-  function handleItemTooBig(
-    fileExceeds: boolean,
-    fileSize: number,
-    item: ComboBoxItem,
-  ) {
-    if (fileExceeds) {
-      props.editor
-        .chain()
-        .focus()
-        .command(({ tr, state }) => {
-          const text = state.doc.textBetween(
-            0,
-            state.selection.from,
-            "\n",
-            "\n",
-          ); // Get the text before the cursor
-          const lastAtIndex = text.lastIndexOf("@");
-
-          if (lastAtIndex !== -1) {
-            // Delete text after the last "@"
-            tr.delete(lastAtIndex + 1, state.selection.from);
-            return true;
-          }
-          return false;
-        })
-        .run();
-
-      // Trigger warning message
-      ideMessenger.ide.showToast(
-        "warning",
-        fileSize > 0 ? "File exceeds context length" : "Can't load the file",
-        {
-          modal: true,
-          detail:
-            fileSize > 0
-              ? `'${item.title}' is ${formatFileSize(fileSize)} which exceeds the allowed context length and cannot be processed by the model`
-              : `'${item.title}' could not be loaded. Please check if the file exists and has the correct permissions.`,
-        },
-      );
-    } else {
-      props.command({ ...item, itemType: item.type });
-    }
-  }
-
   useEffect(() => {
     const items = [...props.items];
     if (subMenuTitle === "Type to search docs") {
@@ -365,13 +283,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
     }
 
     if (item) {
-      if (item.type === "file" && item.query) {
-        isItemTooBig(item.type, item.query).then(([fileExceeds, fileSize]) =>
-          handleItemTooBig(fileExceeds, fileSize, item),
-        );
-      } else {
-        props.command({ ...item, itemType: item.type });
-      }
+      props.command({ ...item, itemType: item.type });
     }
   };
 
