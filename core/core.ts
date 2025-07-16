@@ -152,7 +152,7 @@ export class Core {
     );
 
     MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig("MCP Connections refreshed");
 
       // Refresh @mention dropdown submenu items for MCP providers
       const mcpManager = MCPManagerSingleton.getInstance();
@@ -310,23 +310,31 @@ export class Core {
     on("config/addModel", (msg) => {
       const model = msg.data.model;
       addModel(model, msg.data.role);
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig(
+        "Model added (config/addModel message)",
+      );
     });
 
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig(
+        "Model removed (config/deleteModel message)",
+      );
     });
 
     on("config/newPromptFile", async (msg) => {
       const { config } = await this.configHandler.loadConfig();
       await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Prompt file created (config/newPromptFile message)",
+      );
     });
 
     on("config/addLocalWorkspaceBlock", async (msg) => {
       await createNewWorkspaceBlockFile(this.ide, msg.data.blockType);
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Local block created (config/addLocalWorkspaceBlock message)",
+      );
     });
 
     on("config/openProfile", async (msg) => {
@@ -334,7 +342,9 @@ export class Core {
     });
 
     on("config/reload", async (msg) => {
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig(
+        "Force reloaded (config/reload message)",
+      );
       return await this.configHandler.getSerializedConfig();
     });
 
@@ -354,7 +364,9 @@ export class Core {
 
     on("config/updateSharedConfig", async (msg) => {
       const newSharedConfig = this.globalContext.updateSharedConfig(msg.data);
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Shared config update (config/updateSharedConfig message)",
+      );
       return newSharedConfig;
     });
 
@@ -364,7 +376,9 @@ export class Core {
         msg.data.role,
         msg.data.title,
       );
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Selected model update (config/updateSelectedModel message)",
+      );
       return newSelectedModels;
     });
 
@@ -668,7 +682,7 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         if (hasRulesFiles(data.uris)) {
-          await this.configHandler.reloadConfig();
+          await this.configHandler.reloadConfig("Rules file created");
         }
 
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
@@ -690,7 +704,7 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         if (hasRulesFiles(data.uris)) {
-          await this.configHandler.reloadConfig();
+          await this.configHandler.reloadConfig("Rules file deleted");
         }
       }
     });
@@ -966,7 +980,7 @@ export class Core {
         ],
       }),
     );
-    void this.configHandler.reloadConfig();
+    void this.configHandler.reloadConfig("Autocomplete model added");
   }
 
   private async handleFilesChanged({
@@ -996,7 +1010,9 @@ export class Core {
               this.globalContext.update("showConfigUpdateToast", false);
             }
           }
-          await this.configHandler.reloadConfig();
+          await this.configHandler.reloadConfig(
+            "Current profile config file updated",
+          );
           continue;
         }
 
@@ -1012,7 +1028,9 @@ export class Core {
               uri.includes(`.continue\\${blockType}`),
           )
         ) {
-          await this.configHandler.reloadConfig();
+          await this.configHandler.reloadConfig(
+            "Config-related file updated: continuerc, prompt, local block, etc",
+          );
         } else if (
           uri.endsWith(".continueignore") ||
           uri.endsWith(".gitignore")
@@ -1094,7 +1112,7 @@ export class Core {
 
     editConfigFile((c) => c, editConfigYamlCallback);
 
-    void this.configHandler.reloadConfig();
+    void this.configHandler.reloadConfig("Onboarding completed");
   }
 
   private getContextItems = async (
