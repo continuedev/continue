@@ -32,6 +32,7 @@ export function loadAuthConfig(): AuthConfig {
   if (process.env.CONTINUE_API_KEY) {
     return {
       accessToken: process.env.CONTINUE_API_KEY,
+      organizationId: null,
     };
   }
 
@@ -139,7 +140,7 @@ async function refreshToken(refreshToken: string): Promise<AuthConfig> {
   try {
     // Load existing config to preserve organizationId and other fields
     const existingConfig = loadAuthConfig();
-    
+
     const response = await axios.post(
       new URL("auth/refresh", env.apiBase).toString(),
       {
@@ -221,7 +222,7 @@ export async function login(
 }
 
 /**
- * Ensures the user has selected an organization, prompting if necessary
+ * Ensures the user has selected an organization, automatically selecting the first one if available
  */
 export async function ensureOrganization(
   authConfig: AuthConfig,
@@ -259,9 +260,6 @@ export async function ensureOrganization(
     const organizations = resp.organizations;
 
     if (organizations.length === 0) {
-      console.info(
-        chalk.green("No organizations found. Using personal organization.")
-      );
       const updatedConfig = {
         ...authConfig,
         organizationId: null,
@@ -270,78 +268,10 @@ export async function ensureOrganization(
       return updatedConfig;
     }
 
-    if (organizations.length === 1) {
-      // Show choice between personal and the one organization
-      const org = organizations[0];
-      console.info(chalk.cyan("\nSelect an organization:"));
-      console.info(chalk.white(`1. Personal (default)`));
-      console.info(chalk.white(`2. ${org.name}`));
-
-      const selection = await prompt(
-        chalk.yellow("Enter your choice (number): ")
-      );
-      const selectedIndex = parseInt(selection) - 1;
-
-      if (selectedIndex < 0 || selectedIndex > 1) {
-        console.error(chalk.red("Invalid selection. Please try again."));
-        return await ensureOrganization(authConfig, isHeadless);
-      }
-
-      let selectedOrgId: string | null;
-      let selectedOrgName: string;
-
-      if (selectedIndex === 0) {
-        // Personal organization selected
-        selectedOrgId = null;
-        selectedOrgName = "Personal";
-      } else {
-        // The one organization selected
-        selectedOrgId = org.id;
-        selectedOrgName = org.name;
-      }
-
-      console.info(chalk.green(`Selected organization: ${selectedOrgName}`));
-
-      const updatedConfig = {
-        ...authConfig,
-        organizationId: selectedOrgId,
-      };
-
-      saveAuthConfig(updatedConfig);
-      return updatedConfig;
-    }
-
-    // Multiple organizations - show selection including personal
-    console.info(chalk.cyan("\nSelect an organization:"));
-    console.info(chalk.white(`1. Personal (default)`));
-    organizations.forEach((org, index) => {
-      console.info(chalk.white(`${index + 2}. ${org.name}`));
-    });
-
-    const selection = await prompt(
-      chalk.yellow("Enter your choice (number): ")
-    );
-    const selectedIndex = parseInt(selection) - 1;
-
-    if (selectedIndex < 0 || selectedIndex > organizations.length) {
-      console.error(chalk.red("Invalid selection. Please try again."));
-      return await ensureOrganization(authConfig, isHeadless);
-    }
-
-    let selectedOrgId: string | null;
-    let selectedOrgName: string;
-
-    if (selectedIndex === 0) {
-      // Personal organization selected
-      selectedOrgId = null;
-      selectedOrgName = "Personal";
-    } else {
-      // Regular organization selected
-      const selectedOrg = organizations[selectedIndex - 1];
-      selectedOrgId = selectedOrg.id;
-      selectedOrgName = selectedOrg.name;
-    }
-    console.info(chalk.green(`Selected organization: ${selectedOrgName}`));
+    // Automatically select the first organization if available, otherwise use personal
+    const selectedOrg = organizations[0];
+    const selectedOrgId = selectedOrg.id;
+    const selectedOrgName = selectedOrg.name;
 
     const updatedConfig = {
       ...authConfig,
@@ -356,7 +286,12 @@ export async function ensureOrganization(
       error.response?.data?.message || error.message || error
     );
     console.info(chalk.yellow("Continuing without organization selection."));
-    return authConfig;
+    const updatedConfig = {
+      ...authConfig,
+      organizationId: null,
+    };
+    saveAuthConfig(updatedConfig);
+    return updatedConfig;
   }
 }
 
