@@ -10,15 +10,17 @@ import {
 import { splitAtCodeblocksAndNewLines } from "./xmlToolUtils";
 
 /*
-    Function to intercept tool calls in XML format from a chat message stream
+    Function to intercept tool calls in markdown code blocks format from a chat message stream
     1. Skips non-assistant messages
-    2. Skips xml that doesn't have root "tool_call" tag
-    3. Intercepts text that contains a partial <tool_call> tag at the beginning, e.g. "<too" and simply adds to buffer
-    4. Once confirmed in tool call (buffer starts with <tool_call>), performs partial XML parsing
-    5. Successful partial parsing yields JSON tool call delta with previous partial parses removed
-    6. Failed partial parsing just adds to buffer and continues
-    7. Closes when closed </tool_call> tag is found
-    8. TERMINATES AFTER THE FIRST TOOL CALL - TODO - REMOVE THIS FOR PARALLEL SUPPORT
+    2. Intercepts text that looks like a tool call in a markdown code block format:
+    ```tool
+    TOOL_NAME: example_tool
+    BEGIN_ARG: arg1
+    value
+    END_ARG
+    ```
+    3. Parses tool calls line by line and generates proper tool call deltas
+    4. Once the tool call is complete, resets state for potential future tool calls
 */
 export async function* interceptSystemToolCalls(
   messageGenerator: AsyncGenerator<ChatMessage[], PromptLog | undefined>,
@@ -78,12 +80,12 @@ export async function* interceptSystemToolCalls(
               currentToolCallId = generateOpenAIToolCallId();
             }
             if (!parseState) {
-              parseState = DEFAULT_TOOL_CALL_PARSE_STATE;
+              parseState = { ...DEFAULT_TOOL_CALL_PARSE_STATE };
             }
 
             try {
               // Directly parse the accumulated buffer without storing a separate toolCallText
-              const { delta, done: toolCallDone } = handleToolCallBuffer(
+              const delta = handleToolCallBuffer(
                 buffer,
                 currentToolCallId,
                 parseState,
@@ -98,7 +100,7 @@ export async function* interceptSystemToolCalls(
                 ];
               }
 
-              if (toolCallDone) {
+              if (parseState.done) {
                 inToolCall = false;
                 currentToolCallId = undefined;
                 parseState = undefined;
@@ -111,7 +113,7 @@ export async function* interceptSystemToolCalls(
               yield [
                 {
                   ...message,
-                  content: buffer,
+                  content: [{ type: "text", text: buffer }],
                 },
               ];
               buffer = "";
@@ -121,7 +123,7 @@ export async function* interceptSystemToolCalls(
             yield [
               {
                 ...message,
-                content: buffer,
+                content: [{ type: "text", text: buffer }],
               },
             ];
             buffer = "";
