@@ -1,3 +1,10 @@
+## [1.3.4](https://github.com/continuedev/cli/compare/v1.3.3...v1.3.4) (2025-07-16)
+
+
+### Bug Fixes
+
+* add /clear command to clear chat history ([3782732](https://github.com/continuedev/cli/commit/378273239b32fce735266cb4835512f5c547a86d))
+
 ## [1.3.3](https://github.com/continuedev/cli/compare/v1.3.2...v1.3.3) (2025-07-16)
 
 
