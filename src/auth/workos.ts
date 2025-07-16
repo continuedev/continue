@@ -15,13 +15,57 @@ import { env } from "../env.js";
 // Config file path
 const AUTH_CONFIG_PATH = path.join(os.homedir(), ".continue", "auth.json");
 
-export interface AuthConfig {
-  userId?: string;
-  userEmail?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: number;
-  organizationId?: string | null;
+// Represents an authenticated user's configuration
+export interface AuthenticatedConfig {
+  userId: string;
+  userEmail: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+  organizationId: string | null; // null means personal organization
+}
+
+// Represents configuration when using environment variable auth
+export interface EnvironmentAuthConfig {
+  accessToken: string;
+  organizationId: null; // Environment auth always uses personal organization
+}
+
+// Union type representing the possible authentication states
+export type AuthConfig = AuthenticatedConfig | EnvironmentAuthConfig | null;
+
+/**
+ * Type guard to check if config is authenticated via file-based auth
+ */
+export function isAuthenticatedConfig(
+  config: AuthConfig
+): config is AuthenticatedConfig {
+  return config !== null && "userId" in config;
+}
+
+/**
+ * Type guard to check if config is authenticated via environment variable
+ */
+export function isEnvironmentAuthConfig(
+  config: AuthConfig
+): config is EnvironmentAuthConfig {
+  return config !== null && !("userId" in config);
+}
+
+/**
+ * Gets the access token from any auth config type
+ */
+export function getAccessToken(config: AuthConfig): string | null {
+  if (config === null) return null;
+  return config.accessToken;
+}
+
+/**
+ * Gets the organization ID from any auth config type
+ */
+export function getOrganizationId(config: AuthConfig): string | null {
+  if (config === null) return null;
+  return config.organizationId;
 }
 
 /**
@@ -38,18 +82,37 @@ export function loadAuthConfig(): AuthConfig {
 
   try {
     if (fs.existsSync(AUTH_CONFIG_PATH)) {
-      return JSON.parse(fs.readFileSync(AUTH_CONFIG_PATH, "utf8"));
+      const data = JSON.parse(fs.readFileSync(AUTH_CONFIG_PATH, "utf8"));
+
+      // Validate that we have all required fields for authenticated config
+      if (
+        data.userId &&
+        data.userEmail &&
+        data.accessToken &&
+        data.refreshToken &&
+        data.expiresAt
+      ) {
+        return {
+          userId: data.userId,
+          userEmail: data.userEmail,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          expiresAt: data.expiresAt,
+          organizationId: data.organizationId || null,
+        };
+      }
     }
   } catch (error) {
     console.error(`Error loading auth config: ${error}`);
   }
-  return {};
+
+  return null;
 }
 
 /**
  * Saves the authentication configuration to disk
  */
-export function saveAuthConfig(config: AuthConfig): void {
+export function saveAuthConfig(config: AuthenticatedConfig): void {
   // If using CONTINUE_API_KEY environment variable, don't save anything
   if (process.env.CONTINUE_API_KEY) {
     return;
@@ -72,21 +135,21 @@ export function saveAuthConfig(config: AuthConfig): void {
  * Checks if the user is authenticated and the token is valid
  */
 export function isAuthenticated(): boolean {
-  // If CONTINUE_API_KEY environment variable exists, user is authenticated
-  if (process.env.CONTINUE_API_KEY) {
-    return true;
-  }
-
   const config = loadAuthConfig();
 
-  if (!config.userId || !config.accessToken) {
+  if (config === null) {
     return false;
   }
 
-  // Check if token is expired (if we have an expiration)
-  if (config.expiresAt && Date.now() > config.expiresAt) {
+  // Environment auth is always valid
+  if (isEnvironmentAuthConfig(config)) {
+    return true;
+  }
+
+  // Check if token is expired
+  if (Date.now() > config.expiresAt) {
     // Try refreshing the token
-    refreshToken(config.refreshToken || "").catch(() => {
+    refreshToken(config.refreshToken).catch(() => {
       // If refresh fails, we're not authenticated
       return false;
     });
@@ -133,10 +196,13 @@ function getAuthUrlForTokenPage(useOnboarding: boolean = false): string {
 
   return url.toString();
 }
+
 /**
  * Refreshes the access token using a refresh token
  */
-async function refreshToken(refreshToken: string): Promise<AuthConfig> {
+async function refreshToken(
+  refreshToken: string
+): Promise<AuthenticatedConfig> {
   try {
     // Load existing config to preserve organizationId and other fields
     const existingConfig = loadAuthConfig();
@@ -153,13 +219,16 @@ async function refreshToken(refreshToken: string): Promise<AuthConfig> {
     // Calculate token expiration (assuming 1 hour validity)
     const tokenExpiresAt = Date.now() + 60 * 60 * 1000;
 
-    const authConfig: AuthConfig = {
-      ...existingConfig, // Preserve existing fields like organizationId
+    const authConfig: AuthenticatedConfig = {
       userId: user.id,
       userEmail: user.email,
       accessToken,
       refreshToken: newRefreshToken,
       expiresAt: tokenExpiresAt,
+      // Preserve existing organizationId if it exists, otherwise set to null
+      organizationId: isAuthenticatedConfig(existingConfig)
+        ? existingConfig.organizationId
+        : null,
     };
 
     // Save the config
@@ -188,6 +257,7 @@ export async function login(
     );
     return {
       accessToken: process.env.CONTINUE_API_KEY,
+      organizationId: null,
     };
   }
 
@@ -229,19 +299,31 @@ export async function ensureOrganization(
   isHeadless: boolean = false
 ): Promise<AuthConfig> {
   // If using CONTINUE_API_KEY environment variable, don't require organization selection
-  if (process.env.CONTINUE_API_KEY) {
+  if (isEnvironmentAuthConfig(authConfig)) {
     return authConfig;
   }
 
-  // If already have organization ID (including null for personal), return as-is
-  if (authConfig.organizationId !== undefined) {
+  // If not authenticated, return as-is
+  if (!isAuthenticatedConfig(authConfig)) {
     return authConfig;
+  }
+
+  // TypeScript now knows authConfig is AuthenticatedConfig
+  const authenticatedConfig = authConfig;
+
+  // If already have organization ID (including null for personal), return as-is
+  if (authenticatedConfig.organizationId !== undefined) {
+    return authenticatedConfig;
   }
 
   // In headless mode, default to personal organization if none saved
   if (isHeadless) {
-    const updatedConfig = {
-      ...authConfig,
+    const updatedConfig: AuthenticatedConfig = {
+      userId: authenticatedConfig.userId,
+      userEmail: authenticatedConfig.userEmail,
+      accessToken: authenticatedConfig.accessToken,
+      refreshToken: authenticatedConfig.refreshToken,
+      expiresAt: authenticatedConfig.expiresAt,
       organizationId: null, // Default to personal organization
     };
     saveAuthConfig(updatedConfig);
@@ -251,7 +333,7 @@ export async function ensureOrganization(
   // Need to select organization
   const apiClient = new DefaultApi(
     new Configuration({
-      accessToken: authConfig.accessToken,
+      accessToken: authenticatedConfig.accessToken,
     })
   );
 
@@ -260,8 +342,12 @@ export async function ensureOrganization(
     const organizations = resp.organizations;
 
     if (organizations.length === 0) {
-      const updatedConfig = {
-        ...authConfig,
+      const updatedConfig: AuthenticatedConfig = {
+        userId: authenticatedConfig.userId,
+        userEmail: authenticatedConfig.userEmail,
+        accessToken: authenticatedConfig.accessToken,
+        refreshToken: authenticatedConfig.refreshToken,
+        expiresAt: authenticatedConfig.expiresAt,
         organizationId: null,
       };
       saveAuthConfig(updatedConfig);
@@ -271,10 +357,13 @@ export async function ensureOrganization(
     // Automatically select the first organization if available, otherwise use personal
     const selectedOrg = organizations[0];
     const selectedOrgId = selectedOrg.id;
-    const selectedOrgName = selectedOrg.name;
 
-    const updatedConfig = {
-      ...authConfig,
+    const updatedConfig: AuthenticatedConfig = {
+      userId: authenticatedConfig.userId,
+      userEmail: authenticatedConfig.userEmail,
+      accessToken: authenticatedConfig.accessToken,
+      refreshToken: authenticatedConfig.refreshToken,
+      expiresAt: authenticatedConfig.expiresAt,
       organizationId: selectedOrgId,
     };
 
@@ -286,8 +375,12 @@ export async function ensureOrganization(
       error.response?.data?.message || error.message || error
     );
     console.info(chalk.yellow("Continuing without organization selection."));
-    const updatedConfig = {
-      ...authConfig,
+    const updatedConfig: AuthenticatedConfig = {
+      userId: authenticatedConfig.userId,
+      userEmail: authenticatedConfig.userEmail,
+      accessToken: authenticatedConfig.accessToken,
+      refreshToken: authenticatedConfig.refreshToken,
+      expiresAt: authenticatedConfig.expiresAt,
       organizationId: null,
     };
     saveAuthConfig(updatedConfig);
@@ -301,14 +394,14 @@ export async function ensureOrganization(
 export async function listUserOrganizations(): Promise<
   { id: string; name: string }[] | null
 > {
+  const authConfig = loadAuthConfig();
+
   // If using CONTINUE_API_KEY environment variable, organization switching is not supported
-  if (process.env.CONTINUE_API_KEY) {
+  if (isEnvironmentAuthConfig(authConfig)) {
     return null;
   }
 
-  const authConfig = loadAuthConfig();
-
-  if (!authConfig.accessToken) {
+  if (!isAuthenticatedConfig(authConfig)) {
     return null;
   }
 

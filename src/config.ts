@@ -14,7 +14,11 @@ import {
   DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
 import { dirname } from "node:path";
-import { AuthConfig } from "./auth/workos.js";
+import {
+  AuthConfig,
+  getAccessToken,
+  getOrganizationId,
+} from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
@@ -33,17 +37,20 @@ export function getLlmApi(
     );
   }
 
+  const accessToken = getAccessToken(authConfig);
+  const organizationId = getOrganizationId(authConfig);
+
   const config: LLMConfig =
     model.provider === "continue-proxy"
       ? {
           provider: model.provider,
           requestOptions: model.requestOptions,
           apiBase: model.apiBase,
-          apiKey: authConfig.accessToken,
+          apiKey: accessToken ?? undefined,
           env: {
             apiKeyLocation: (model as any).apiKeyLocation,
             // envSecretLocations: model.env,
-            orgScopeId: authConfig.organizationId ?? null,
+            orgScopeId: organizationId,
             proxyUrl: undefined, // TODO
           },
         }
@@ -67,7 +74,7 @@ export function getLlmApi(
 }
 
 async function loadConfigYaml(
-  accessToken: string | undefined,
+  accessToken: string | null,
   currentUserSlug: string,
   filePath: string,
   organizationId: string | null,
@@ -76,7 +83,7 @@ async function loadConfigYaml(
   const unrollResult = await unrollAssistant(
     { filePath, uriType: "file" },
     new RegistryClient({
-      accessToken,
+      accessToken: accessToken ?? undefined,
       apiBase: env.apiBase,
       rootPath: dirname(filePath),
     }),
@@ -99,13 +106,13 @@ async function loadConfigYaml(
 }
 
 export async function loadConfig(
-  accessToken: string | undefined,
+  accessToken: string | null,
   config: string | undefined,
   organizationId: string | null
 ): Promise<AssistantUnrolled> {
   const apiClient = new DefaultApi(
     new Configuration({
-      accessToken,
+      accessToken: accessToken ?? undefined,
     })
   );
 
@@ -161,11 +168,10 @@ export async function initialize(
   model: string;
   mcpService: MCPService;
 }> {
-  const config = await loadConfig(
-    authConfig.accessToken,
-    configPath,
-    authConfig.organizationId ?? null
-  );
+  const accessToken = getAccessToken(authConfig);
+  const organizationId = getOrganizationId(authConfig);
+
+  const config = await loadConfig(accessToken, configPath, organizationId);
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);
 
