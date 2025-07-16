@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/continuedev/cli/compare/v1.3.1...v1.3.2) (2025-07-16)
+
+
+### Bug Fixes
+
+* remove .js extensions from highlight.js language imports ([6426777](https://github.com/continuedev/cli/commit/6426777d659a2747681d22d4c78574d6e0686ba6))
+
 ## [1.3.1](https://github.com/continuedev/cli/compare/v1.3.0...v1.3.1) (2025-07-16)
 
 
