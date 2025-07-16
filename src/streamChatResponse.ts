@@ -10,6 +10,7 @@ import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
+import { chatCompletionStreamWithBackoff } from "./util/exponentialBackoff.js";
 
 dotenv.config();
 
@@ -84,7 +85,8 @@ export async function streamChatResponse(
       //   "chat.log",
       //   "---\n\n" + JSON.stringify(chatHistory, null, 2) + "\n\n"
       // );
-      stream = llmApi.chatCompletionStream(
+      stream = await chatCompletionStreamWithBackoff(
+        llmApi,
         {
           model,
           messages: chatHistory,
