@@ -53,7 +53,10 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   originalEditableRange: string;
   completion: string;
   cursorPosition: { line: number; character: number };
+  finalCursorPosition: { line: number; character: number };
   accepted?: boolean;
+  editableRegionStartLine: number;
+  editableRegionEndLine: number;
 }
 
 export interface PromptMetadata {
