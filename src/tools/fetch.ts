@@ -45,6 +45,7 @@ export const fetchTool: Tool = {
       required: false,
     },
   },
+  readonly: true,
   run: async (args: { url: string; timeout?: number }): Promise<string> => {
     const { url, timeout = 10000 } = args;
 

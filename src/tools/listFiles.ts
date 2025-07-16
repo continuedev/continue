@@ -14,6 +14,7 @@ export const listFilesTool: Tool = {
       required: true,
     },
   },
+  readonly: true,
   run: async (args: { dirpath: string }): Promise<string> => {
     try {
       if (!fs.existsSync(args.dirpath)) {

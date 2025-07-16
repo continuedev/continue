@@ -6,6 +6,7 @@ export const exitTool: Tool = {
   description:
     "Exit the current process with status code 1, indicating a failure or error",
   parameters: {},
+  readonly: false,
   run: async (args: { dirpath: string }): Promise<string> => {
     process.exit(1);
   },

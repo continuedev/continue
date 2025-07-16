@@ -7,13 +7,13 @@ import { logout } from "./commands/logout.js";
 import { getVersion } from "./version.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
   // Don't exit the process, just log the error
 });
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
   // Don't exit the process, just log the error
 });
 
@@ -30,6 +30,8 @@ program
   .option("--headless", "Run in headless mode (non-interactive)")
   .option("--config <path>", "Path to configuration file")
   .option("--resume", "Resume from last session")
+  .option("--readonly", "Only allow readonly tools")
+  .option("--no-tools", "Disable all tools")
   .action(async (prompt, options) => {
     await chat(prompt, options);
   });

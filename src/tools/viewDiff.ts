@@ -17,6 +17,7 @@ export const viewDiffTool: Tool = {
       required: false,
     },
   },
+  readonly: true,
   run: async (args: { path?: string }): Promise<string> => {
     try {
       const repoPath = args.path || process.cwd();

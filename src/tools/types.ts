@@ -13,4 +13,5 @@ export interface Tool {
   description: string;
   parameters: ToolParameters;
   run: (args: any) => Promise<string>;
+  readonly?: boolean; // Indicates if the tool is readonly
 }
