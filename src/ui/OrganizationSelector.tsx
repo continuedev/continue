@@ -1,6 +1,10 @@
 import { Box, Text, useInput } from "ink";
 import React, { useEffect, useState } from "react";
-import { loadAuthConfig, listUserOrganizations } from "../auth/workos.js";
+import {
+  getOrganizationId,
+  listUserOrganizations,
+  loadAuthConfig,
+} from "../auth/workos.js";
 
 interface Organization {
   id: string;
@@ -26,8 +30,8 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
     const loadOrganizations = async () => {
       try {
         const authConfig = loadAuthConfig();
-        setCurrentOrgId(authConfig.organizationId);
-        
+        setCurrentOrgId(getOrganizationId(authConfig));
+
         const organizations = await listUserOrganizations();
         if (organizations === null) {
           setError("Failed to load organizations");
@@ -128,7 +132,7 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
         {allOptions.map((option, index) => {
           const isSelected = index === selectedIndex;
           const isCurrent = option.isCurrent;
-          
+
           return (
             <Box key={option.id || "personal"}>
               <Text

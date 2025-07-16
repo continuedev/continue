@@ -1,11 +1,12 @@
+import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 import {
   isAuthenticated,
+  isAuthenticatedConfig,
   loadAuthConfig,
   login,
   logout,
 } from "./auth/workos.js";
-import { type AssistantConfig } from "@continuedev/sdk";
 
 export async function handleSlashCommands(
   input: string,
@@ -40,9 +41,15 @@ export async function handleSlashCommands(
       case "login":
         login()
           .then((config) => {
-            console.info(
-              chalk.green(`\nLogged in as ${config.userEmail || config.userId}`)
-            );
+            if (config && isAuthenticatedConfig(config)) {
+              console.info(
+                chalk.green(
+                  `\nLogged in as ${config.userEmail || config.userId}`
+                )
+              );
+            } else {
+              console.info(chalk.green(`\nLogged in successfully`));
+            }
           })
           .catch((error) => {
             console.error(chalk.red(`\nLogin failed: ${error.message}`));
@@ -62,10 +69,17 @@ export async function handleSlashCommands(
       case "whoami":
         if (isAuthenticated()) {
           const config = loadAuthConfig();
-          return {
-            exit: false,
-            output: `Logged in as ${config.userEmail || config.userId}`,
-          };
+          if (config && isAuthenticatedConfig(config)) {
+            return {
+              exit: false,
+              output: `Logged in as ${config.userEmail || config.userId}`,
+            };
+          } else {
+            return {
+              exit: false,
+              output: "Authenticated via environment variable",
+            };
+          }
         } else {
           return {
             exit: false,

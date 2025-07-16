@@ -1,4 +1,8 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  RegistryClient,
+  unrollAssistant,
+} from "@continuedev/config-yaml";
 import {
   BaseLlmApi,
   constructLlmApi,
@@ -7,8 +11,16 @@ import {
 import {
   Configuration,
   DefaultApi,
+  DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
-import { AuthConfig } from "./auth/workos.js";
+import { dirname } from "node:path";
+import {
+  AuthConfig,
+  getAccessToken,
+  getOrganizationId,
+} from "./auth/workos.js";
+import { CLIPlatformClient } from "./CLIPlatformClient.js";
+import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 
 export function getLlmApi(
@@ -25,17 +37,20 @@ export function getLlmApi(
     );
   }
 
+  const accessToken = getAccessToken(authConfig);
+  const organizationId = getOrganizationId(authConfig);
+
   const config: LLMConfig =
     model.provider === "continue-proxy"
       ? {
           provider: model.provider,
           requestOptions: model.requestOptions,
           apiBase: model.apiBase,
-          apiKey: authConfig.accessToken,
+          apiKey: accessToken ?? undefined,
           env: {
             apiKeyLocation: (model as any).apiKeyLocation,
             // envSecretLocations: model.env,
-            orgScopeId: authConfig.organizationId ?? null,
+            orgScopeId: organizationId,
             proxyUrl: undefined, // TODO
           },
         }
@@ -58,14 +73,45 @@ export function getLlmApi(
   return [llmApi, model.model];
 }
 
-export async function loadAssistant(
-  accessToken: string | undefined,
+async function loadConfigYaml(
+  accessToken: string | null,
+  filePath: string,
+  organizationId: string | null,
+  apiClient: DefaultApiInterface
+): Promise<AssistantUnrolled> {
+  const unrollResult = await unrollAssistant(
+    { filePath, uriType: "file" },
+    new RegistryClient({
+      accessToken: accessToken ?? undefined,
+      apiBase: env.apiBase,
+      rootPath: dirname(filePath),
+    }),
+    {
+      currentUserSlug: "",
+      alwaysUseProxy: false,
+      orgScopeId: organizationId,
+      renderSecrets: true,
+      platformClient: new CLIPlatformClient(organizationId, apiClient),
+      onPremProxyUrl: null,
+    }
+  );
+
+  if (unrollResult.errors?.length || !unrollResult.config) {
+    const errorDetails = unrollResult.errors?.join("\n") ?? "Unknown error";
+    throw new Error(`Failed to load config file:\n${errorDetails}`);
+  }
+
+  return unrollResult.config;
+}
+
+export async function loadConfig(
+  authConfig: AuthConfig,
   config: string | undefined,
-  organizationId: string | undefined
+  organizationId: string | null
 ): Promise<AssistantUnrolled> {
   const apiClient = new DefaultApi(
     new Configuration({
-      accessToken,
+      accessToken: authConfig?.accessToken ?? undefined,
     })
   );
 
@@ -73,7 +119,7 @@ export async function loadAssistant(
     // Fall back to listing assistants and taking the first one
     const assistants = await apiClient.listAssistants({
       alwaysUseProxy: "false",
-      organizationId,
+      organizationId: organizationId ?? undefined,
     });
 
     const result = assistants[0].configResult;
@@ -82,10 +128,20 @@ export async function loadAssistant(
     }
 
     return result.config as AssistantUnrolled;
-  } else if (config.startsWith(".") || config.startsWith("/")) {
+  } else if (
+    config.startsWith(".") ||
+    config.startsWith("/") ||
+    config.startsWith("~")
+  ) {
     // Load from file
-    throw new Error("Loading from file is not supported yet.");
-    // return loadAssistantFromFile(config);
+    const configYaml = await loadConfigYaml(
+      authConfig?.accessToken ?? null,
+      config,
+      organizationId,
+      apiClient
+    );
+
+    return configYaml;
   } else {
     // Load from slug
     const [ownerSlug, packageSlug] = config.split("/");
@@ -93,7 +149,7 @@ export async function loadAssistant(
       ownerSlug,
       packageSlug,
       alwaysUseProxy: "false",
-      organizationId,
+      organizationId: organizationId ?? undefined,
     });
 
     const result = resp.configResult;
@@ -105,7 +161,7 @@ export async function loadAssistant(
   }
 }
 
-export async function initializeAssistant(
+export async function initialize(
   authConfig: AuthConfig,
   configPath: string | undefined
 ): Promise<{
@@ -114,11 +170,10 @@ export async function initializeAssistant(
   model: string;
   mcpService: MCPService;
 }> {
-  const config = await loadAssistant(
-    authConfig.accessToken,
-    configPath,
-    authConfig.organizationId ?? undefined
-  );
+  const accessToken = getAccessToken(authConfig);
+  const organizationId = getOrganizationId(authConfig);
+
+  const config = await loadConfig(authConfig, configPath, organizationId);
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);
 

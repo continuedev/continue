@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/continuedev/cli/compare/v1.3.2...v1.3.3) (2025-07-16)
+
+
+### Bug Fixes
+
+* update chat history state after streaming and save complete conversation ([936786a](https://github.com/continuedev/cli/commit/936786aee08fcbdde2484896730a0c67f1ebafee))
+
 ## [1.3.2](https://github.com/continuedev/cli/compare/v1.3.1...v1.3.2) (2025-07-16)
 
 

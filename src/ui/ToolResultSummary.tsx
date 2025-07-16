@@ -42,6 +42,36 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     }
   }
 
+  // Handle terminal command output specially
+  if (toolName === "run_terminal_command") {
+    const isStderr = content.startsWith("Stderr:");
+    const actualOutput = isStderr ? content.slice(7).trim() : content;
+    const outputLines = actualOutput.split("\n").length;
+    
+    if (outputLines <= 16) {
+      // Show actual output for 16 lines or fewer
+      return (
+        <Box flexDirection="column">
+          <Box>
+            <Text color="gray">⎿ </Text>
+            <Text color="gray"> Terminal output:</Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text color={isStderr ? "red" : "white"}>{actualOutput}</Text>
+          </Box>
+        </Box>
+      );
+    } else {
+      // Show summary for more than 16 lines
+      return (
+        <Box>
+          <Text color="gray">⎿ </Text>
+          <Text color="gray"> Command output ({outputLines} lines)</Text>
+        </Box>
+      );
+    }
+  }
+
   // Handle all other cases with text summary
   const getSummary = () => {
     // Convert absolute paths to relative paths from workspace root
@@ -73,9 +103,6 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
       case "search_code":
         return `Found ${lines} ${lines === 1 ? "match" : "matches"}`;
-
-      case "run_terminal_command":
-        return `Command output (${lines} lines)`;
 
       case "view_diff":
         return `Diff output (${lines} lines)`;
