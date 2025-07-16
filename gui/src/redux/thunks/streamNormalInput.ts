@@ -192,22 +192,7 @@ export const streamNormalInput = createAsyncThunk<
     });
 
     if (precompiledRes.status === "error") {
-      throw new Error(precompiledRes.error);
-    }
-
-    const { compiledChatMessages, pruningStatus } = precompiledRes.content;
-
-    switch (pruningStatus) {
-      case "pruned":
-        dispatch(
-          setWarningMessage({
-            message: `Chat history exceeds model's context length (${state.config.config.selectedModelByRole.chat?.contextLength} tokens). Old messages will not be included.`,
-            level: "warning",
-            category: "exceeded-context-length",
-          }),
-        );
-        break;
-      case "deleted-last-input":
+      if (precompiledRes.error.includes("Not enough context ")) {
         dispatch(
           setWarningMessage({
             message:
@@ -218,6 +203,21 @@ export const streamNormalInput = createAsyncThunk<
         );
         dispatch(setInactive());
         return;
+      } else {
+        throw new Error(precompiledRes.error);
+      }
+    }
+
+    const { compiledChatMessages, didPrune } = precompiledRes.content;
+
+    if (didPrune) {
+      dispatch(
+        setWarningMessage({
+          message: `Chat history exceeds model's context length (${state.config.config.selectedModelByRole.chat?.contextLength} tokens). Old messages will not be included.`,
+          level: "warning",
+          category: "exceeded-context-length",
+        }),
+      );
     }
 
     // Send request and stream response

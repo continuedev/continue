@@ -1689,11 +1689,9 @@ export interface CompleteOnboardingPayload {
   apiKey?: string;
 }
 
-export type PruningStatus = "deleted-last-input" | "pruned" | "not-pruned";
-
 export interface CompiledMessagesResult {
   compiledChatMessages: ChatMessage[];
-  pruningStatus: PruningStatus;
+  didPrune: boolean;
   contextPercentage: number;
 }
 
