@@ -1,4 +1,4 @@
-import { DiffLine, DiffLineType } from "../index.js";
+import { DiffLine, DiffType } from "../index.js";
 
 import { LineStream, matchLine } from "./util.js";
 
@@ -33,7 +33,7 @@ export async function* streamDiff(
       seenIndentationMistake = true;
     }
 
-    let type: DiffLineType;
+    let type: DiffType;
 
     const isNewLine = matchIndex === -1;
 

@@ -69,7 +69,7 @@ const markFailedInGlobalContext = (siteIndexingConfig: SiteIndexingConfig) => {
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) => !siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d),
   );
   newFailedDocs.push(siteIndexingConfig);
   globalContext.update("failedDocs", newFailedDocs);
@@ -81,7 +81,7 @@ const removeFromFailedGlobalContext = (
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) => !siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d),
   );
   globalContext.update("failedDocs", newFailedDocs);
 };
@@ -89,32 +89,69 @@ const removeFromFailedGlobalContext = (
 const hasIndexingFailed = (siteIndexingConfig: SiteIndexingConfig) => {
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
-  return failedDocs.find((d) =>
-    siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+  return failedDocs.find((d) => docConfigsAreEqual(siteIndexingConfig, d));
+};
+
+export function embedModelsAreEqual(
+  llm1: ILLM | null | undefined,
+  llm2: ILLM | null | undefined,
+): boolean {
+  return (
+    llm1?.underlyingProviderName === llm2?.underlyingProviderName &&
+    llm1?.title === llm2?.title &&
+    llm1?.maxEmbeddingChunkSize === llm2?.maxEmbeddingChunkSize
+  );
+}
+
+const docConfigsAreEqual = (
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+) => {
+  return (
+    siteConfig1.faviconUrl === siteConfig2.faviconUrl &&
+    siteConfig1.title === siteConfig2.title &&
+    docConfigsAreEqualExceptTitleAndFavicon(siteConfig1, siteConfig2)
+  );
+};
+
+const docConfigsAreEqualExceptTitleAndFavicon = (
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+) => {
+  return (
+    siteConfig1.startUrl === siteConfig2.startUrl &&
+    siteConfig1.maxDepth === siteConfig2.maxDepth &&
+    siteConfig1.useLocalCrawling === siteConfig2.useLocalCrawling
   );
 };
 
 const siteIndexingConfigsAreEqual = (
-  config1: SiteIndexingConfig,
-  config2: SiteIndexingConfig,
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+  contConfig1: ContinueConfig | undefined,
+  contConfig2: ContinueConfig,
 ) => {
   return (
-    config1.startUrl === config2.startUrl &&
-    config1.faviconUrl === config2.faviconUrl &&
-    config1.title === config2.title &&
-    config1.maxDepth === config2.maxDepth &&
-    config1.useLocalCrawling === config2.useLocalCrawling
+    docConfigsAreEqual(siteConfig1, siteConfig2) &&
+    embedModelsAreEqual(
+      contConfig1?.selectedModelByRole.embed,
+      contConfig2.selectedModelByRole.embed,
+    )
   );
 };
 
 const siteIndexingConfigsAreEqualExceptTitleAndFavicon = (
-  config1: SiteIndexingConfig,
-  config2: SiteIndexingConfig,
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+  contConfig1: ContinueConfig | undefined,
+  contConfig2: ContinueConfig,
 ) => {
   return (
-    config1.startUrl === config2.startUrl &&
-    config1.maxDepth === config2.maxDepth &&
-    config1.useLocalCrawling === config2.useLocalCrawling
+    docConfigsAreEqualExceptTitleAndFavicon(siteConfig1, siteConfig2) &&
+    embedModelsAreEqual(
+      contConfig1?.selectedModelByRole.embed,
+      contConfig2.selectedModelByRole.embed,
+    )
   );
 };
 
@@ -968,7 +1005,6 @@ export default class DocsService {
 
       await db.exec("PRAGMA busy_timeout = 3000;");
 
-      await runSqliteMigrations(db);
       // First create the table if it doesn't exist
       await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -977,6 +1013,8 @@ export default class DocsService {
             favicon STRING,
             embeddingsProviderId STRING
         )`);
+
+      await runSqliteMigrations(db);
 
       this.sqliteDb = db;
     }
@@ -1036,12 +1074,22 @@ export default class DocsService {
           );
 
           // TODO: Changes to the docs config made while Continue isn't running won't be caught
-          if (oldConfigDoc && !siteIndexingConfigsAreEqual(oldConfigDoc, doc)) {
+          if (
+            oldConfigDoc &&
+            !siteIndexingConfigsAreEqual(
+              oldConfigDoc,
+              doc,
+              oldConfig,
+              newConfig,
+            )
+          ) {
             // When only the title or faviconUrl changed, Update the sqlite metadate instead of reindexing
             if (
               siteIndexingConfigsAreEqualExceptTitleAndFavicon(
                 oldConfigDoc,
                 doc,
+                oldConfig,
+                newConfig,
               )
             ) {
               await this.updateMetadataInSqlite(doc);
@@ -1261,7 +1309,7 @@ export default class DocsService {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
     const doesEquivalentDocExist = this.config.docs?.some((doc) =>
-      siteIndexingConfigsAreEqual(doc, siteIndexingConfig),
+      docConfigsAreEqual(doc, siteIndexingConfig),
     );
 
     if (!doesEquivalentDocExist) {
