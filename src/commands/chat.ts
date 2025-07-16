@@ -3,7 +3,7 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { ensureAuthenticated } from "../auth/ensureAuth.js";
 import { ensureOrganization, loadAuthConfig } from "../auth/workos.js";
-import { initializeAssistant } from "../config.js";
+import { initialize } from "../config.js";
 import { introMessage } from "../intro.js";
 import { configureLogger } from "../logger.js";
 import { loadSession, saveSession } from "../session.js";
@@ -34,7 +34,7 @@ async function initializeChat(options: ChatOptions) {
   );
 
   // Initialize ContinueSDK and MCPService once
-  const { config, llmApi, model, mcpService } = await initializeAssistant(
+  const { config, llmApi, model, mcpService } = await initialize(
     authConfigWithOrg,
     options.config
   );

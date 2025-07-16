@@ -2,7 +2,7 @@ import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useState } from "react";
 import { loadAuthConfig, saveAuthConfig } from "../../auth/workos.js";
-import { initializeAssistant } from "../../config.js";
+import { initialize } from "../../config.js";
 import { introMessage } from "../../intro.js";
 import { MCPService } from "../../mcp.js";
 
@@ -58,7 +58,7 @@ export function useOrganizationSelector({
         llmApi: newLlmApi,
         model: newModel,
         mcpService: newMcpService,
-      } = await initializeAssistant(updatedConfig, configPath);
+      } = await initialize(updatedConfig, configPath);
 
       // Update assistant configuration
       onAssistantChange(config, newModel, newLlmApi, newMcpService);

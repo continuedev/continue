@@ -58,7 +58,7 @@ export function getLlmApi(
   return [llmApi, model.model];
 }
 
-export async function loadAssistant(
+export async function loadConfig(
   accessToken: string | undefined,
   config: string | undefined,
   organizationId: string | undefined
@@ -105,7 +105,7 @@ export async function loadAssistant(
   }
 }
 
-export async function initializeAssistant(
+export async function initialize(
   authConfig: AuthConfig,
   configPath: string | undefined
 ): Promise<{
@@ -114,7 +114,7 @@ export async function initializeAssistant(
   model: string;
   mcpService: MCPService;
 }> {
-  const config = await loadAssistant(
+  const config = await loadConfig(
     authConfig.accessToken,
     configPath,
     authConfig.organizationId ?? undefined
