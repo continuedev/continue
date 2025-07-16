@@ -89,15 +89,15 @@ export function renderPrompt(
   // TODO: apply prevOutcome to existing content. we will need the line range.
   // Also display the diff between existing content and applied content.
   if (prevOutcome) {
-    console.log(
-      "beforeInsert:",
-      helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
-    );
-    console.log("toInsert: ", prevOutcome?.completion.split("\n"));
-    console.log(
-      "afterInsert:",
-      helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
-    );
+    // console.log(
+    //   "beforeInsert:",
+    //   helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
+    // );
+    // console.log("toInsert: ", prevOutcome?.completion.split("\n"));
+    // console.log(
+    //   "afterInsert:",
+    //   helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
+    // );
     let appliedContent = [
       ...helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
       ...(prevOutcome?.completion.split("\n") ?? []),
@@ -106,7 +106,7 @@ export function renderPrompt(
     // console.log("helper.fileContents:", helper.fileContents);
     // TODO: I'm not sure, but <|user_cursor_is_here|> is somehow being added to appliedContent.
     // The individual parts don't contain this.
-    console.log("appliedContent:", appliedContent);
+    // console.log("appliedContent:", appliedContent);
     appliedContent = appliedContent.filter(
       (line) => !line.includes(USER_CURSOR_IS_HERE_TOKEN),
     );
@@ -117,7 +117,7 @@ export function renderPrompt(
       appliedContent,
       prevOutcome.finalCursorPosition,
     );
-    console.log("new editedCodeWithTokens:", editedCodeWithTokens);
+    // console.log("new editedCodeWithTokens:", editedCodeWithTokens);
     userEdits = createDiff({
       beforeContent: helper.fileContents,
       afterContent: appliedContent.join("\n"),
@@ -126,7 +126,7 @@ export function renderPrompt(
       contextLines: 3,
     });
     userEdits = userEdits.replace(USER_CURSOR_IS_HERE_TOKEN, "");
-    console.log("new userDiff:", userEdits);
+    // console.log("new userDiff:", userEdits);
   } else {
     editedCodeWithTokens = insertTokens(
       helper.fileContents.split("\n"),

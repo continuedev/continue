@@ -241,10 +241,13 @@ export class ContinueCompletionProvider
 
       // Check if editChainId exists or needs to be refreshed.
       if (this.isNextEditActive) {
+        const st = performance.now();
         outcome = await this.nextEditProvider.provideNextEditPrediction(
           input,
           signal,
         );
+        console.log(performance.now() - st);
+        console.log(outcome?.elapsed);
       } else {
         outcome = await this.completionProvider.provideInlineCompletionItems(
           input,
@@ -269,10 +272,6 @@ export class ContinueCompletionProvider
       if (!outcome || !outcome.completion) {
         return null;
       }
-
-      console.log("======");
-      console.log(outcome.completion);
-      console.log("======");
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
       // We should first always make sure we have a valid completion, but if it goes wrong we

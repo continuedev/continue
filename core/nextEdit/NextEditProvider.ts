@@ -103,7 +103,7 @@ export class NextEditProvider {
       if (!other) return undefined;
       // render prompt
       // TODO: this has to set the editable region properly.
-      console.log("fetchfunction - previousData:", previousData?.completion);
+      // console.log("fetchfunction - previousData:", previousData?.completion);
       const promptMetadata = renderPrompt(
         other.helper,
         other.diffContext,
