@@ -173,7 +173,6 @@ export async function runNormalFlow(
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
   if (configPath) {
-    console.log(chalk.blue(`✓ Loading config from: ${configPath}`));
     const result = await initialize(authConfig, configPath);
     return { ...result, wasOnboarded: false };
   }
@@ -191,7 +190,6 @@ export async function runNormalFlow(
   // Step 3: Look for local ~/.continue/config.yaml
   if (fs.existsSync(CONFIG_PATH)) {
     try {
-      console.log(chalk.blue(`✓ Loading config from ${CONFIG_PATH}`));
       const result = await initialize(authConfig, CONFIG_PATH);
       return { ...result, wasOnboarded: true };
     } catch (error) {
