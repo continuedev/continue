@@ -236,22 +236,43 @@ export class ContinueCompletionProvider
 
       setupStatusBar(undefined, true);
 
+      // TODO: Consume next edit generator.
+      let outcome: AutocompleteOutcome | NextEditOutcome | undefined;
+
+      // Check if editChainId exists or needs to be refreshed.
+      if (this.isNextEditActive) {
+        outcome = await this.nextEditProvider.provideNextEditPrediction(
+          input,
+          signal,
+        );
+      } else {
+        outcome = await this.completionProvider.provideInlineCompletionItems(
+          input,
+          signal,
+          wasManuallyTriggered,
+        );
+      }
+
       // TODO: fix type of outcome to be a union between NextEditOutcome and AutocompleteOutcome.
-      const outcome: AutocompleteOutcome | NextEditOutcome | undefined = this
-        .isNextEditActive
-        ? await this.nextEditProvider.provideInlineCompletionItems(
-            input,
-            signal,
-          )
-        : await this.completionProvider.provideInlineCompletionItems(
-            input,
-            signal,
-            wasManuallyTriggered,
-          );
+      // const outcome: AutocompleteOutcome | NextEditOutcome | undefined = this
+      //   .isNextEditActive
+      //   ? await this.nextEditProvider.provideInlineCompletionItems(
+      //       input,
+      //       signal,
+      //     )
+      //   : await this.completionProvider.provideInlineCompletionItems(
+      //       input,
+      //       signal,
+      //       wasManuallyTriggered,
+      //     );
 
       if (!outcome || !outcome.completion) {
         return null;
       }
+
+      console.log("======");
+      console.log(outcome.completion);
+      console.log("======");
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
       // We should first always make sure we have a valid completion, but if it goes wrong we
