@@ -45,15 +45,23 @@ function loadRuleFromHub(slug: string): string {
  */
 export function processRule(ruleSpec: string): string {
   // If it looks like a hub slug (contains / but doesn't start with . or /)
-  if (ruleSpec.includes("/") && !ruleSpec.startsWith(".") && !ruleSpec.startsWith("/")) {
+  if (
+    ruleSpec.includes("/") &&
+    !ruleSpec.startsWith(".") &&
+    !ruleSpec.startsWith("/")
+  ) {
     return loadRuleFromHub(ruleSpec);
   }
-  
+
   // If it looks like a file path (contains . or / or ends with common file extensions)
-  if (ruleSpec.includes(".") || ruleSpec.includes("/") || ruleSpec.includes("\\")) {
+  if (
+    ruleSpec.includes(".") ||
+    ruleSpec.includes("/") ||
+    ruleSpec.includes("\\")
+  ) {
     return loadRuleFromFile(ruleSpec);
   }
-  
+
   // Otherwise, treat it as direct string content
   return ruleSpec;
 }
@@ -71,7 +79,7 @@ export function parseArgs(): CommandLineArgs {
   };
 
   // Parse flags
-  if (args.includes("--headless")) {
+  if (args.includes("--print") || args.includes("-p")) {
     result.isHeadless = true;
   }
 
@@ -114,7 +122,7 @@ export function parseArgs(): CommandLineArgs {
   const flagsWithValues = ["--config", "--rule"];
   const nonFlagArgs = args.filter((arg, index) => {
     // Skip flags (starting with --)
-    if (arg.startsWith("--")) return false;
+    if (arg.startsWith("--") || arg === "-p") return false;
 
     // Skip flag values
     const prevArg = index > 0 ? args[index - 1] : "";

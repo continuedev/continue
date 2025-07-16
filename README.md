@@ -17,7 +17,7 @@ cn
 ### Headless Mode
 
 ```bash
-cn --headless "Generate a conventional commit name for the current git changes."
+cn -p "Generate a conventional commit name for the current git changes."
 ```
 
 ### Session Management
@@ -38,12 +38,12 @@ Each terminal window maintains its own separate session, so you can have multipl
 cn --resume --config my-assistant
 
 # Resume session in headless mode
-cn --resume --headless
+cn --resume -p
 ```
 
 ## Command Line Options
 
-- `--headless`: Run in headless mode (no TUI)
+- `-p`: Run in headless mode (no TUI)
 - `--config <path>`: Specify assistant configuration path
 - `--resume`: Resume the last session for this terminal
 - `<prompt>`: Optional prompt to start with
@@ -51,8 +51,9 @@ cn --resume --headless
 ## Session Storage
 
 Sessions are stored in `~/.continue-cli/sessions/` and are automatically managed per terminal window using environment variables like:
+
 - `TERM_SESSION_ID`
-- `SSH_TTY` 
+- `SSH_TTY`
 - `TMUX`
 - `STY`
 

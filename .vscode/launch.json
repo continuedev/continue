@@ -65,7 +65,7 @@
       "program": "${workspaceFolder}/dist/index.js",
       "preLaunchTask": "npm: build",
       "args": [
-        "--headless",
+        "-p",
         "--config",
         "nate/default-assistant",
         "--prompt",
