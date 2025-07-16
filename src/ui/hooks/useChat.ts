@@ -266,8 +266,10 @@ export function useChat({
         },
       };
 
+      // Call streamChatResponse with the new history that includes the user message
+      const finalHistory = [...newHistory];
       await streamChatResponse(
-        newHistory,
+        finalHistory,
         model,
         llmApi,
         controller,
@@ -286,7 +288,11 @@ export function useChat({
         ]);
       }
 
-      saveSession(newHistory);
+      // Update the chat history with the complete conversation after streaming
+      setChatHistory(finalHistory);
+      
+      // Save the updated history to session
+      saveSession(finalHistory);
     } catch (error: any) {
       const errorMessage = `Error: ${error.message}`;
       setMessages((prev) => [
