@@ -46,15 +46,9 @@ export default function ResponseActions({
   };
 
   const onCompactConversation = () => {
-    window.postMessage(
-      {
-        messageType: "compactConversation",
-        data: {
-          index: index,
-        },
-      },
-      "*",
-    );
+    ideMessenger.post("compactConversation", {
+      index,
+    });
   };
 
   return (
