@@ -72,6 +72,7 @@ import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { messageAbortManager } from "./util/messageAbortManager";
 import { getUriPathBasename } from "./util/uri";
 import { NextEditProvider } from "./nextEdit/NextEditProvider";
 
@@ -93,19 +94,6 @@ export class Core {
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
-
-  private messageAbortControllers = new Map<string, AbortController>();
-  private addMessageAbortController(id: string): AbortController {
-    const controller = new AbortController();
-    this.messageAbortControllers.set(id, controller);
-    controller.signal.addEventListener("abort", () => {
-      this.messageAbortControllers.delete(id);
-    });
-    return controller;
-  }
-  private abortById(messageId: string) {
-    this.messageAbortControllers.get(messageId)?.abort();
-  }
 
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
@@ -272,7 +260,7 @@ export class Core {
     });
 
     on("abort", (msg) => {
-      this.abortById(msg.data ?? msg.messageId);
+      messageAbortManager.abortById(msg.data ?? msg.messageId);
     });
 
     on("ping", (msg) => {
@@ -479,13 +467,16 @@ export class Core {
     });
 
     on("llm/streamChat", (msg) => {
-      const abortController = this.addMessageAbortController(msg.messageId);
-      return llmStreamChat(
-        this.configHandler,
-        abortController,
-        msg,
-        this.ide,
-        this.messenger,
+      return messageAbortManager.runWithAbortController(
+        msg.messageId,
+        (abortController) =>
+          llmStreamChat(
+            this.configHandler,
+            abortController,
+            msg,
+            this.ide,
+            this.messenger,
+          ),
       );
     });
 
@@ -495,14 +486,16 @@ export class Core {
       if (!model) {
         throw new Error("No chat model selected");
       }
-      const abortController = this.addMessageAbortController(msg.messageId);
 
-      const completion = await model.complete(
-        msg.data.prompt,
-        abortController.signal,
-        msg.data.completionOptions,
+      return await messageAbortManager.runWithAbortController(
+        msg.messageId,
+        (abortController) =>
+          model.complete(
+            msg.data.prompt,
+            abortController.signal,
+            msg.data.completionOptions,
+          ),
       );
-      return completion;
     });
     on("llm/listModels", this.handleListModels.bind(this));
 
