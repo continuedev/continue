@@ -45,8 +45,9 @@ export function constructMessages(
   let filteredHistory = history;
 
   for (let i = history.length - 1; i >= 0; i--) {
-    if (history[i].conversationSummary) {
-      summaryContent = history[i].conversationSummary;
+    const summary = history[i].conversationSummary;
+    if (summary) {
+      summaryContent = summary;
       // Only include messages that come AFTER the message with the summary
       filteredHistory = history.slice(i + 1);
       break;
