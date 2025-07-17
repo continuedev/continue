@@ -4,7 +4,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
 import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
@@ -20,7 +19,6 @@ import {
 import {
   acceptToolCall,
   addContextItemsAtIndex,
-  selectCurrentToolCall,
   setHasReasoningEnabled,
   setIsSessionMetadataLoading,
   updateApplyState,
@@ -34,7 +32,7 @@ import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
-import { findToolCall, logToolUsage } from "../redux/util";
+import { findToolCallById, logToolUsage } from "../redux/util";
 import {
   setDocumentStylesFromLocalStorage,
   setDocumentStylesFromTheme,
@@ -49,15 +47,15 @@ function ParallelListeners() {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
-
   const hasDoneInitialConfigLoad = useRef(false);
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
+  const autoAcceptEditToolDiffs = useAppSelector(
+    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
   );
+  // Load symbols for chat on any session change
+  const sessionId = useAppSelector((state) => state.session.id);
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -103,8 +101,9 @@ function ParallelListeners() {
     [dispatch, hasDoneInitialConfigLoad],
   );
 
-  const initialLoadAuthAndConfig = useCallback(
-    async (initial: boolean) => {
+  // Load config from the IDE
+  useEffect(() => {
+    async function initialLoadConfig() {
       dispatch(setIsSessionMetadataLoading(true));
       dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
@@ -112,16 +111,11 @@ function ParallelListeners() {
         undefined,
       );
       if (result.status === "success") {
-        await handleConfigUpdate(initial, result.content);
+        await handleConfigUpdate(true, result.content);
       }
       dispatch(setConfigLoading(false));
-    },
-    [ideMessenger, handleConfigUpdate],
-  );
-
-  // Load config from the IDE
-  useEffect(() => {
-    void initialLoadAuthAndConfig(true);
+    }
+    void initialLoadConfig();
     const interval = setInterval(() => {
       if (hasDoneInitialConfigLoad.current) {
         // Init to run on initial config load
@@ -132,12 +126,12 @@ function ParallelListeners() {
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
       } else {
-        void initialLoadAuthAndConfig(true);
+        void initialLoadConfig();
       }
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [hasDoneInitialConfigLoad, initialLoadAuthAndConfig, ideMessenger]);
+  }, [hasDoneInitialConfigLoad, ideMessenger]);
 
   useWebviewListener(
     "configUpdate",
@@ -150,8 +144,6 @@ function ParallelListeners() {
     [handleConfigUpdate],
   );
 
-  // Load symbols for chat on any session change
-  const sessionId = useAppSelector((state) => state.session.id);
   useEffect(() => {
     if (sessionId) {
       void dispatch(updateFileSymbolsFromHistory());
@@ -250,10 +242,6 @@ function ParallelListeners() {
     dispatch(updateIndexingStatus(data));
   });
 
-  const autoAcceptEditToolDiffs = useAppSelector(
-    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
-  );
-  const currentToolCall = useAppSelector(selectCurrentToolCall);
   useWebviewListener(
     "updateApplyState",
     async (state) => {
@@ -261,7 +249,7 @@ function ParallelListeners() {
         dispatch(updateEditStateApplyState(state));
 
         if (state.status === "closed") {
-          const toolCallState = findToolCall(
+          const toolCallState = findToolCallById(
             store.getState().session.history,
             state.toolCallId!,
           );
@@ -274,11 +262,8 @@ function ParallelListeners() {
         // chat or agent
         dispatch(updateApplyState(state));
 
-        // Handle apply status updates that are associated with current tool call
-        if (
-          currentToolCallApplyState &&
-          currentToolCallApplyState.streamId === state.streamId
-        ) {
+        // Handle apply status updates - use toolCallId from event payload
+        if (state.toolCallId) {
           if (state.status === "done" && autoAcceptEditToolDiffs) {
             ideMessenger.post("acceptDiff", {
               streamId: state.streamId,
@@ -286,15 +271,20 @@ function ParallelListeners() {
             });
           }
           if (state.status === "closed") {
-            if (currentToolCall?.status !== "canceled") {
+            // Find the tool call to check if it was canceled
+            const toolCallState = findToolCallById(
+              store.getState().session.history,
+              state.toolCallId,
+            );
+            if (toolCallState && toolCallState.status !== "canceled") {
               dispatch(
                 acceptToolCall({
-                  toolCallId: currentToolCallApplyState.toolCallId!,
+                  toolCallId: state.toolCallId,
                 }),
               );
               void dispatch(
                 streamResponseAfterToolCall({
-                  toolCallId: currentToolCallApplyState.toolCallId!,
+                  toolCallId: state.toolCallId,
                 }),
               );
             }
@@ -308,12 +298,7 @@ function ParallelListeners() {
         }
       }
     },
-    [
-      currentToolCall,
-      currentToolCallApplyState,
-      autoAcceptEditToolDiffs,
-      ideMessenger,
-    ],
+    [autoAcceptEditToolDiffs, ideMessenger],
   );
 
   useEffect(() => {
