@@ -1,10 +1,12 @@
+import { ILLM } from "..";
+import { HistoryManager } from "./history";
 import { stripImages } from "./messageContent";
 
 export interface CompactionParams {
   sessionId: string;
   index: number;
-  historyManager: any;
-  currentModel: any;
+  historyManager: HistoryManager;
+  currentModel: ILLM;
 }
 
 /**
