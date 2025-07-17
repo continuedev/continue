@@ -188,8 +188,8 @@ aws_session_token = pqrstuvwxyz # Optional: means short term creds.
 
 You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication instead of a local credentials profile.
 
-<Tabs groupId="config-example">
-  <TabItem value="yaml" label="YAML">
+<Tabs>
+  <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
     - name: Claude 3.7 Sonnet
@@ -202,8 +202,8 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
       roles:
         - chat
   ```
-  </TabItem>
-  <TabItem value="json" label="JSON">
+  </Tab>
+  <Tab title="JSON">
   ```json title="config.json"
   {
     "models": [
@@ -218,7 +218,7 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
     ]
   }
   ```
-  </TabItem>
+  </Tab>
 </Tabs>
 
 ## Custom Imported Models
