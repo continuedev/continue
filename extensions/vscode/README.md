@@ -26,29 +26,31 @@
 
 <p></p>
 
+## Agent
+
+[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
+
+![agent](docs/images/agent.gif)
+
 ## Chat
 
-[Chat](https://continue.dev/docs/chat/how-to-use-it) makes it easy to ask for help from an LLM without needing to leave the IDE
+[Chat](https://continue.dev/docs/chat/how-to-use-it) makes it easy to ask for help from an LLM without needing to leave
+the IDE
 
-![chat](docs/static/img/chat.gif)
+![chat](docs/images/chat.gif)
 
 ## Autocomplete
 
 [Autocomplete](https://continue.dev/docs/autocomplete/how-to-use-it) provides inline code suggestions as you type
 
-![autocomplete](docs/static/img/autocomplete.gif)
+![autocomplete](docs/images/autocomplete.gif)
 
 ## Edit
 
-[Edit](https://continue.dev/docs/edit/how-to-use-it) is a convenient way to modify code without leaving your current file
+[Edit](https://continue.dev/docs/edit/how-to-use-it) is a convenient way to modify code without leaving your current
+file
 
-![edit](docs/static/img/edit.gif)
-
-## Agent
-
-[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
-
-![agent](docs/static/img/agent.gif)
+![edit](docs/images/edit.gif)
 
 </div>
 
