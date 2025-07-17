@@ -15,6 +15,7 @@ import { GlobalContextModelSelections } from "../util/GlobalContext";
 import {
   BrowserSerializedContinueConfig,
   ChatMessage,
+  CompiledMessagesResult,
   CompleteOnboardingPayload,
   ContextItem,
   ContextItemWithId,
@@ -25,6 +26,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MessageOption,
   ModelDescription,
   PromptLog,
   RangeInFile,
@@ -145,6 +147,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
+  "nextEdit/predict": [AutocompleteInput, string[]];
+  "nextEdit/reject": [{ completionId: string }, void];
+  "nextEdit/accept": [{ completionId: string }, void];
   "llm/complete": [
     {
       prompt: string;
@@ -159,6 +164,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
+      messageOptions?: MessageOption;
       legacySlashCommandData?: {
         command: SlashCommandDescWithSource;
         input: string;
@@ -170,6 +176,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
   streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
+  "llm/compileChat": [
+    { messages: ChatMessage[]; options: LLMFullCompletionOptions },
+    CompiledMessagesResult,
+  ];
   "chatDescriber/describe": [
     {
       text: string;
