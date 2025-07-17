@@ -1,5 +1,4 @@
 import type {
-  ContinueRcJson,
   FileStatsMap,
   FileType,
   IDE,
@@ -51,7 +50,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
   getDiff: [{ includeUnstaged: boolean }, string[]];
-  getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
   getDebugLocals: [{ threadIndex: number }, string];
   getTopLevelCallStackSources: [

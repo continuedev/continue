@@ -152,29 +152,6 @@ class IntelliJIDE(
         return workspaceDirectories().toList()
     }
 
-    override suspend fun getWorkspaceConfigs(): List<ContinueRcJson> {
-        val workspaceDirs = this.getWorkspaceDirs()
-
-        val configs = mutableListOf<String>()
-
-        for (workspaceDir in workspaceDirs) {
-            val dir = VirtualFileManager.getInstance().findFileByUrl(workspaceDir)
-            if (dir != null) {
-                val contents = dir.children.mapNotNull { it.toUriOrNull() }
-
-                // Find any .continuerc.json files
-                for (file in contents) {
-                    if (file.endsWith(".continuerc.json")) {
-                        val fileContent = UriUtils.uriToFile(file).readText()
-                        configs.add(fileContent)
-                    }
-                }
-            }
-        }
-
-        return configs as List<ContinueRcJson>
-    }
-
     override suspend fun fileExists(filepath: String): Boolean {
         val file = UriUtils.uriToFile(filepath)
         return file.exists()

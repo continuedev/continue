@@ -775,8 +775,6 @@ export interface IDE {
 
   getWorkspaceDirs(): Promise<string[]>;
 
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-
   fileExists(fileUri: string): Promise<boolean>;
 
   writeFile(path: string, contents: string): Promise<void>;
