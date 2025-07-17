@@ -527,8 +527,9 @@ export class Core {
 
       // Find the most recent conversation summary (excluding target if it has one)
       for (let i = searchHistory.length - 1; i >= 0; i--) {
-        if (searchHistory[i].conversationSummary) {
-          summaryContent = searchHistory[i].conversationSummary;
+        const summary = searchHistory[i].conversationSummary;
+        if (summary) {
+          summaryContent = summary;
           // Only include messages that come AFTER the message with the summary
           filteredHistory = historyUpToIndex.slice(i + 1);
           break;
