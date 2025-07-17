@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/continuedev/cli/compare/v1.3.6...v1.4.0) (2025-07-17)
+
+
+### Features
+
+* dim user msg text color ([b22429b](https://github.com/continuedev/cli/commit/b22429ba0a101f99b14313345a8a8894caff3081))
+
 ## [1.3.6](https://github.com/continuedev/cli/compare/v1.3.5...v1.3.6) (2025-07-16)
 
 
