@@ -53,6 +53,7 @@ import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
+import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
 import {
   setupLocalConfig,
   setupProviderConfig,
@@ -236,6 +237,15 @@ export class Core {
       (..._) => Promise.resolve([]),
     );
 
+    const codebaseRulesCache = CodebaseRulesCache.getInstance();
+    void codebaseRulesCache
+      .refresh(ide)
+      .catch((e) => console.error("Failed to initialize colocated rules cache"))
+      .then(() => {
+        void this.configHandler.reloadConfig(
+          "Initial codebase rules post-walkdir/load reload",
+        );
+      });
     this.nextEditProvider = NextEditProvider.initialize(
       this.configHandler,
       ide,
@@ -343,10 +353,12 @@ export class Core {
     });
 
     on("config/reload", async (msg) => {
+      // User force reloading will retrigger colocated rules
+      const codebaseRulesCache = CodebaseRulesCache.getInstance();
+      await codebaseRulesCache.refresh(this.ide);
       void this.configHandler.reloadConfig(
         "Force reloaded (config/reload message)",
       );
-      return await this.configHandler.getSerializedConfig();
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -705,9 +717,12 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         if (hasRulesFiles(data.uris)) {
+          const rulesCache = CodebaseRulesCache.getInstance();
+          await Promise.all(
+            data.uris.map((uri) => rulesCache.update(this.ide, uri)),
+          );
           await this.configHandler.reloadConfig("Rules file created");
         }
-
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
@@ -727,7 +742,9 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         if (hasRulesFiles(data.uris)) {
-          await this.configHandler.reloadConfig("Rules file deleted");
+          const rulesCache = CodebaseRulesCache.getInstance();
+          data.uris.forEach((uri) => rulesCache.remove(uri));
+          await this.configHandler.reloadConfig("Codebase rule file deleted");
         }
       }
     });
@@ -1043,17 +1060,24 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith(RULES_MARKDOWN_FILENAME) ||
-          BLOCK_TYPES.some(
-            (blockType) =>
-              uri.includes(`.continue/${blockType}`) ||
-              uri.includes(`.continue\\${blockType}`),
+          (uri.includes(".continue") &&
+            (uri.endsWith(".yaml") || uri.endsWith("yml"))) ||
+          BLOCK_TYPES.some((blockType) =>
+            uri.includes(`.continue/${blockType}`),
           )
         ) {
           await this.configHandler.reloadConfig(
             "Config-related file updated: continuerc, prompt, local block, etc",
           );
+        } else if (uri.endsWith(RULES_MARKDOWN_FILENAME)) {
+          try {
+            const codebaseRulesCache = CodebaseRulesCache.getInstance();
+            void codebaseRulesCache.update(this.ide, uri).then(() => {
+              void this.configHandler.reloadConfig("Codebase rule update");
+            });
+          } catch (e) {
+            console.error("Failed to update codebase rule", e);
+          }
         } else if (
           uri.endsWith(".continueignore") ||
           uri.endsWith(".gitignore")

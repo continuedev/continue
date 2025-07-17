@@ -37,7 +37,7 @@ import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
-import { loadCodebaseRules } from "../markdown/loadCodebaseRules";
+import { CodebaseRulesCache } from "../markdown/loadCodebaseRules";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
@@ -165,10 +165,9 @@ export default async function doLoadConfig(options: {
   }
 
   // Add rules from colocated rules.md files in the codebase
-  const { rules: codebaseRules, errors: codebaseRulesErrors } =
-    await loadCodebaseRules(ide);
-  newConfig.rules.unshift(...codebaseRules);
-  errors.push(...codebaseRulesErrors);
+  const codebaseRulesCache = CodebaseRulesCache.getInstance();
+  newConfig.rules.unshift(...codebaseRulesCache.rules);
+  errors.push(...codebaseRulesCache.errors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);

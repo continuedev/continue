@@ -93,7 +93,7 @@ export default function StepContainer(props: StepContainerProps) {
   return (
     <div>
       <div
-        className={`bg-background overflow-hidden p-1 px-1.5 ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+        className={`bg-background p-1 px-1.5 ${isBeforeLatestSummary ? "opacity-35" : ""}`}
       >
         {uiConfig?.displayRawMarkdown ? (
           <pre className="text-2xs max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4">

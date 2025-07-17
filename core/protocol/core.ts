@@ -91,7 +91,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
+  "config/reload": [undefined, void];
   "config/refreshProfiles": [
     (
       | undefined

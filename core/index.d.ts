@@ -712,6 +712,7 @@ export interface IdeInfo {
   version: string;
   remoteName: string;
   extensionVersion: string;
+  isPrerelease: boolean;
 }
 
 export interface BranchAndDir {
@@ -1664,6 +1665,7 @@ export type RuleSource =
   | "model-options-plan"
   | "model-options-agent"
   | "rules-block"
+  | "colocated-markdown"
   | "json-systemMessage"
   | ".continuerules";
 

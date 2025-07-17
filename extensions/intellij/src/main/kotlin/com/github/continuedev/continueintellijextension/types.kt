@@ -30,7 +30,8 @@ data class IdeInfo(
     val name: String,
     val version: String,
     val remoteName: String,
-    val extensionVersion: String
+    val extensionVersion: String,
+    val isPrerelease: Boolean
 )
 
 data class Problem(
