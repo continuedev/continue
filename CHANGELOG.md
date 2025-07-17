@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/continuedev/cli/compare/v1.4.1...v1.4.2) (2025-07-17)
+
+
+### Bug Fixes
+
+* remove warning ([31b3f67](https://github.com/continuedev/cli/commit/31b3f6707b0f42180c8ae56faf9dfb2f566be5c1))
+
 ## [1.4.1](https://github.com/continuedev/cli/compare/v1.4.0...v1.4.1) (2025-07-17)
 
 
