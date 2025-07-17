@@ -49,6 +49,7 @@ import setupNextEditWindowManager, {
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
 import { handleTextDocumentChange } from "../util/editLoggingUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { JumpManager } from "../activation/JumpManager";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -171,10 +172,14 @@ export class VsCodeExtension {
 
           this.activateNextEdit();
           await NextEditWindowManager.freeTabAndEsc();
+
+          JumpManager.getInstance();
         } else {
           NextEditWindowManager.clearInstance();
           this.deactivateNextEdit();
           await NextEditWindowManager.freeTabAndEsc();
+
+          JumpManager.clearInstance();
         }
 
         if (configLoadInterrupted) {
