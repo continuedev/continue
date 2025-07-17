@@ -5,6 +5,7 @@ export function messageHasToolCalls(msg: ChatMessage): boolean {
   return msg.role === "assistant" && !!msg.toolCalls;
 }
 
+<<<<<<< HEAD
 export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
   const flattened: ChatMessage[] = [];
 
@@ -36,6 +37,8 @@ export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
   return flattened;
 }
 
+=======
+>>>>>>> 989aeea2423856a0a0a1bda544f0075dc278612e
 export function messageIsEmpty(message: ChatMessage): boolean {
   if (typeof message.content === "string") {
     return message.content.trim() === "";

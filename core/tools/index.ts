@@ -6,7 +6,7 @@ import { editFileTool } from "./definitions/editFile";
 import { fetchUrlContentTool } from "./definitions/fetchUrlContent";
 import { globSearchTool } from "./definitions/globSearch";
 import { grepSearchTool } from "./definitions/grepSearch";
-import { lsTool } from "./definitions/lsTool";
+import { lsTool } from "./definitions/ls";
 import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
 import { readFileTool } from "./definitions/readFile";
 import { requestRuleTool } from "./definitions/requestRule";
@@ -52,3 +52,6 @@ export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>
   (await ide.isWorkspaceRemote())
     ? getBaseToolDefinitions()
     : [...getBaseToolDefinitions(), ...getLocalOnlyToolDefinitions()];
+
+export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
+export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";

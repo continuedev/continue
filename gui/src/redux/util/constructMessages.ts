@@ -10,16 +10,17 @@ import {
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
-import { convertToolCallStateToXmlCallsAndOutput } from "core/tools/systemMessageTools/textifyXmlTools";
+import {
+  CANCELLED_TOOL_CALL_MESSAGE,
+  NO_TOOL_CALL_OUTPUT_MESSAGE,
+} from "core/tools";
+import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/textifyXmlTools";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
-import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
-
-export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
-export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
+import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
 
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
@@ -80,11 +81,11 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
-      if (item.toolCallState && useSystemMessageTools) {
+      if (item.message.toolCalls?.length && useSystemMessageTools) {
         const { userMessage, assistantMessage } =
-          convertToolCallStateToXmlCallsAndOutput(
+          convertToolCallStatesToSystemCallsAndOutput(
             item.message,
-            item.toolCallState,
+            item.toolCallStates ?? [],
           );
         msgs.push({
           message: assistantMessage,
@@ -100,22 +101,25 @@ export function constructMessages(
           message: item.message,
         });
 
-        // If the assistant message has tool calls, insert tool messages for each call
-        // Or for system message tools add one user message with tool outputs
+        // Add a tool message for each tool call
         if (item.message.toolCalls?.length) {
+          // If the assistant message has tool calls, we need to insert tool messages
           for (const toolCall of item.message.toolCalls) {
             let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
-            // TODO parallel tool calls: toolCallState only supports one tool call per message for now
-            if (item.toolCallState?.status === "canceled") {
+
+            // Find the corresponding tool call state for this specific tool call
+            const toolCallState = item.toolCallStates?.find(
+              (state) => state.toolCallId === toolCall.id,
+            );
+
+            if (toolCallState?.status === "canceled") {
               content = CANCELLED_TOOL_CALL_MESSAGE;
-            } else if (
-              item.toolCallState?.toolCallId === toolCall.id &&
-              item.toolCallState?.output
-            ) {
-              content = renderContextItems(item.toolCallState.output);
+            } else if (toolCallState?.output) {
+              content = renderContextItems(toolCallState.output);
             }
+
             msgs.push({
-              ctxItems: toolCallStateToContextItems(item.toolCallState),
+              ctxItems: toolCallStateToContextItems(toolCallState),
               message: {
                 role: "tool",
                 content,
@@ -123,6 +127,19 @@ export function constructMessages(
               },
             });
           }
+        } else if (item.toolCallStates && item.toolCallStates.length > 0) {
+          // This case indicates a potential mismatch - we have tool call states but no message.toolCalls
+          console.error(
+            "ERROR constructMessages: Assistant message has toolCallStates but no message.toolCalls:",
+            {
+              toolCallStates: item.toolCallStates.length,
+              toolCallIds: item.toolCallStates.map((s) => s.toolCallId),
+              messageContent:
+                typeof item.message.content === "string"
+                  ? item.message.content?.substring(0, 50) + "..."
+                  : "Non-string content",
+            },
+          );
         }
       }
     }

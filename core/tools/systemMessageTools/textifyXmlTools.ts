@@ -1,3 +1,4 @@
+import { NO_TOOL_CALL_OUTPUT_MESSAGE } from "..";
 import {
   AssistantChatMessage,
   MessagePart,
@@ -17,27 +18,39 @@ function toolCallStateToSystemToolCall(state: ToolCallState): string {
       parts.push(JSON.stringify(state.parsedArgs[arg]));
       parts.push(`END_ARG`);
     }
-  } catch (e) {}
-  // TODO - include tool call id for parrallel. Confuses dumb models
+  } catch (e) {
+    console.log("Failed to stringify json args", state.parsedArgs);
+  }
+  // TODO - include tool call id for parallel. Confuses dumb models
   parts.push("```");
   return parts.join("\n");
 }
-export function convertToolCallStateToXmlCallsAndOutput(
+
+function toolCallStateToSystemToolOutput(state: ToolCallState): string {
+  let output = `Tool output for tool call ${state.toolCallId} (${state.toolCall.function.name}):\n\n`;
+  if (state.output?.length) {
+    output += renderContextItems(state.output);
+  } else {
+    output += NO_TOOL_CALL_OUTPUT_MESSAGE;
+  }
+  return output;
+}
+
+export function convertToolCallStatesToSystemCallsAndOutput(
   originalAssistantMessage: AssistantChatMessage,
-  toolCallState: ToolCallState,
+  toolCallStates: ToolCallState[],
 ): {
   assistantMessage: AssistantChatMessage;
   userMessage: UserChatMessage;
 } {
   const parts = normalizeToMessageParts(originalAssistantMessage);
-  if (toolCallState) {
-    const toolCallParts: MessagePart[] = [
-      {
-        type: "text",
-        text: toolCallStateToSystemToolCall(toolCallState),
-      },
-    ];
-    parts.push(...toolCallParts);
+  if (originalAssistantMessage.toolCalls) {
+    parts.push(
+      ...toolCallStates.map((state) => ({
+        type: "text" as const,
+        text: toolCallStateToSystemToolCall(state),
+      })),
+    );
   }
 
   // new message with tool calls moved to content
@@ -47,20 +60,25 @@ export function convertToolCallStateToXmlCallsAndOutput(
     toolCalls: undefined, // remove tool calls from the assistant message
   };
 
-  let toolResultContent = `Tool output for tool call ${toolCallState.toolCallId} (${toolCallState.toolCall.function.name}):\n\n`;
-  if (toolCallState.output?.length) {
-    toolResultContent += renderContextItems(toolCallState.output);
-  } else {
-    toolResultContent += "No output";
+  const userParts: MessagePart[] = [];
+  if (toolCallStates) {
+    for (const state of toolCallStates) {
+      userParts.push({
+        type: "text",
+        text: toolCallStateToSystemToolOutput(state),
+      });
+    }
   }
+  if (userParts.length === 0) {
+    userParts.push({
+      type: "text",
+      text: "Error: no tool output for tool calls",
+    });
+  }
+
   const userMessage: UserChatMessage = {
     role: "user",
-    content: [
-      {
-        type: "text",
-        text: toolResultContent,
-      },
-    ],
+    content: userParts,
   };
 
   return {

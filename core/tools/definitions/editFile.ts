@@ -1,7 +1,11 @@
 import { Tool } from "../..";
 import { EDIT_CODE_INSTRUCTIONS } from "../../llm/defaultSystemMessages";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+<<<<<<< HEAD
 import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
+=======
+import { NO_PARALLEL_TOOL_CALLING_INSRUCTION } from "./searchAndReplaceInFile";
+>>>>>>> 989aeea2423856a0a0a1bda544f0075dc278612e
 
 export interface EditToolArgs {
   filepath: string;
@@ -22,7 +26,7 @@ export const editFileTool: Tool = {
   isInstant: false,
   function: {
     name: BuiltInToolNames.EditExistingFile,
-    description: `Use this tool to edit an existing file. If you don't know the contents of the file, read it first.\n${EDIT_CODE_INSTRUCTIONS}`,
+    description: `Use this tool to edit an existing file. If you don't know the contents of the file, read it first.\n${EDIT_CODE_INSTRUCTIONS}\n${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`,
     parameters: {
       type: "object",
       required: ["filepath", "changes"],

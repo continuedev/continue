@@ -5,7 +5,7 @@ import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlTo
 
 export const lsTool: Tool = {
   type: "function",
-  displayTitle: "LS Tool",
+  displayTitle: "ls",
   wouldLikeTo: "list files and folders in {{{ dirPath }}}",
   isCurrently: "listing files and folders in {{{ dirPath }}}",
   hasAlready: "listed files and folders in {{{ dirPath }}}",
