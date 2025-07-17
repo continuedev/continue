@@ -3,7 +3,7 @@ import { ILLM } from "../../../index.js";
 import ContinueProxy from "./ContinueProxy.js";
 
 vi.mock("@continuedev/config-yaml", async (importOriginal) => {
-  const mod = await importOriginal();
+  const mod = (await importOriginal()) as any;
   return {
     ...mod,
     parseProxyModelName: vi.fn(() => ({
@@ -12,7 +12,6 @@ vi.mock("@continuedev/config-yaml", async (importOriginal) => {
       ownerSlug: "test-owner",
       packageSlug: "test-package",
     })),
-    decodeSecretLocation: vi.fn(),
   };
 });
 
@@ -30,35 +29,29 @@ interface LlmTestCase {
   mockStream?: any[];
 }
 
-async function runLlmTest(testCase: LlmTestCase) {
-  const {
-    llm,
-    methodToTest,
-    params,
-    expectedRequest,
-    mockResponse,
-    mockStream,
-  } = testCase;
+function createMockStream(mockStream: any[]) {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    start(controller) {
+      for (const chunk of mockStream) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${
+              typeof chunk === "string" ? chunk : JSON.stringify(chunk)
+            }\n\n`,
+          ),
+        );
+      }
+      controller.close();
+    },
+  });
+}
 
+function setupMockFetch(mockResponse?: any, mockStream?: any[]) {
   const mockFetch = vi.fn();
 
   if (mockStream) {
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      start(controller) {
-        for (const chunk of mockStream) {
-          controller.enqueue(
-            encoder.encode(
-              `data: ${
-                typeof chunk === "string" ? chunk : JSON.stringify(chunk)
-              }\n\n`,
-            ),
-          );
-        }
-        controller.close();
-      },
-    });
-
+    const stream = createMockStream(mockStream);
     mockFetch.mockResolvedValue(
       new Response(stream, {
         headers: {
@@ -74,6 +67,10 @@ async function runLlmTest(testCase: LlmTestCase) {
     );
   }
 
+  return mockFetch;
+}
+
+function setupReadableStreamPolyfill() {
   // This can be removed if https://github.com/nodejs/undici/issues/2888 is resolved
   // @ts-ignore
   const originalFrom = ReadableStream.from;
@@ -84,9 +81,13 @@ async function runLlmTest(testCase: LlmTestCase) {
     }
     return originalFrom(body);
   };
+}
 
-  (llm as any).fetch = mockFetch;
-
+async function executeLlmMethod(
+  llm: ILLM,
+  methodToTest: keyof ILLM,
+  params: any[],
+) {
   if (typeof (llm as any)[methodToTest] !== "function") {
     throw new Error(
       `Method ${String(methodToTest)} does not exist on the LLM instance.`,
@@ -98,7 +99,9 @@ async function runLlmTest(testCase: LlmTestCase) {
     for await (const _ of result) {
     }
   }
+}
 
+function assertFetchCall(mockFetch: any, expectedRequest: any) {
   expect(mockFetch).toHaveBeenCalledTimes(1);
   const [url, options] = mockFetch.mock.calls[0];
 
@@ -115,6 +118,25 @@ async function runLlmTest(testCase: LlmTestCase) {
     const actualBody = JSON.parse(options.body as string);
     expect(actualBody).toEqual(expectedRequest.body);
   }
+}
+
+async function runLlmTest(testCase: LlmTestCase) {
+  const {
+    llm,
+    methodToTest,
+    params,
+    expectedRequest,
+    mockResponse,
+    mockStream,
+  } = testCase;
+
+  const mockFetch = setupMockFetch(mockResponse, mockStream);
+  setupReadableStreamPolyfill();
+
+  (llm as any).fetch = mockFetch;
+
+  await executeLlmMethod(llm, methodToTest, params);
+  assertFetchCall(mockFetch, expectedRequest);
 }
 
 describe("ContinueProxy", () => {
@@ -382,10 +404,7 @@ describe("ContinueProxy", () => {
         },
       },
       mockResponse: {
-        data: [
-          { embedding: [0.1, 0.2, 0.3] },
-          { embedding: [0.4, 0.5, 0.6] },
-        ],
+        data: [{ embedding: [0.1, 0.2, 0.3] }, { embedding: [0.4, 0.5, 0.6] }],
       },
     });
   });
@@ -411,10 +430,7 @@ describe("ContinueProxy", () => {
         },
       },
       mockResponse: {
-        data: [
-          { id: "gpt-4" },
-          { id: "gpt-3.5-turbo" },
-        ],
+        data: [{ id: "gpt-4" }, { id: "gpt-3.5-turbo" }],
       },
     });
   });
@@ -484,7 +500,7 @@ describe("ContinueProxy", () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer test-api-key",
-              "api-key": "test-api-key",
+            "api-key": "test-api-key",
             "x-continue-unique-id": "NOT_UNIQUE",
           },
           body: {
@@ -587,10 +603,7 @@ describe("ContinueProxy", () => {
             },
           },
         },
-        mockStream: [
-          '{"choices": [{"delta": {"content": "42"}}]}',
-          "[DONE]",
-        ],
+        mockStream: ['{"choices": [{"delta": {"content": "42"}}]}', "[DONE]"],
       });
     });
 
@@ -684,7 +697,7 @@ describe("ContinueProxy", () => {
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer test-api-key",
-              "api-key": "test-api-key",
+            "api-key": "test-api-key",
             "x-continue-unique-id": "NOT_UNIQUE",
           },
           body: {
