@@ -9,7 +9,7 @@ const ContextStatus = () => {
   );
   const percent = Math.round((contextPercentage ?? 0) * 100);
   const isPruned = useAppSelector((state) => state.session.isPruned);
-  if (!isPruned && percent < 0.6) {
+  if (!isPruned && percent < 60) {
     return null;
   }
   return (
