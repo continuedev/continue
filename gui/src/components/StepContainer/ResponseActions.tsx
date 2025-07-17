@@ -1,4 +1,5 @@
 import {
+  ArrowsPointingInIcon,
   BarsArrowDownIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -6,11 +7,13 @@ import {
 import { ChatHistoryItem } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { renderChatMessage } from "core/util/messageContent";
-import { useMemo } from "react";
-import { useDispatch } from "react-redux";
-import { useAppSelector } from "../../redux/hooks";
+import { useContext, useMemo } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
+import { setCompactionLoading } from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { loadSession } from "../../redux/thunks/session";
 import { FeedbackButtons } from "../FeedbackButtons";
 import { GenerateRuleDialog } from "../GenerateRuleDialog";
 import { CopyIconButton } from "../gui/CopyIconButton";
@@ -33,7 +36,9 @@ export default function ResponseActions({
   onDelete,
   isLast,
 }: ResponseActionsProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+  const currentSessionId = useAppSelector((state) => state.session.id);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const ruleGenerationSupported = useMemo(() => {
     return selectedModel && modelSupportsTools(selectedModel);
@@ -42,6 +47,35 @@ export default function ResponseActions({
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
     dispatch(setDialogMessage(<GenerateRuleDialog />));
+  };
+
+  const onCompactConversation = async () => {
+    if (!currentSessionId) {
+      return;
+    }
+
+    try {
+      // Set loading state
+      dispatch(setCompactionLoading({ index, loading: true }));
+
+      await ideMessenger.request("conversation/compact", {
+        index,
+        sessionId: currentSessionId,
+      });
+
+      // Reload the current session to refresh the conversation state
+      dispatch(
+        loadSession({
+          sessionId: currentSessionId,
+          saveCurrentSession: false,
+        }),
+      );
+    } catch (error) {
+      console.error("Error compacting conversation:", error);
+    } finally {
+      // Clear loading state
+      dispatch(setCompactionLoading({ index, loading: false }));
+    }
   };
 
   return (
@@ -65,6 +99,15 @@ export default function ResponseActions({
           <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
         </HeaderButtonWithToolTip>
       )}
+
+      <HeaderButtonWithToolTip
+        testId={`compact-button-${index}`}
+        text="Compact conversation"
+        tabIndex={-1}
+        onClick={onCompactConversation}
+      >
+        <ArrowsPointingInIcon className="text-description-muted h-3.5 w-3.5" />
+      </HeaderButtonWithToolTip>
 
       <HeaderButtonWithToolTip
         testId={`delete-button-${index}`}
