@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/continuedev/cli/compare/v1.4.0...v1.4.1) (2025-07-17)
+
+
+### Bug Fixes
+
+* update readme ([0d45e14](https://github.com/continuedev/cli/commit/0d45e14b1be6557ace027cfeadfbf418061a28b0))
+
 # [1.4.0](https://github.com/continuedev/cli/compare/v1.3.6...v1.4.0) (2025-07-17)
 
 
