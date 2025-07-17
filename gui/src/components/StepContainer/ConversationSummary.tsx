@@ -53,7 +53,7 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
         </div>
         {open && (
           <>
-            <div className="border-0 border-t border-solid border-gray-600/60"></div>
+            <div className="border-0 border-t border-solid border-border"></div>
             <div className="max-h-[400px] overflow-y-auto px-3 pb-3 pt-2">
               <StyledMarkdownPreview
                 isRenderingInStepContainer
