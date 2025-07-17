@@ -1698,13 +1698,3 @@ export interface CompiledMessagesResult {
 export interface MessageOption {
   precompiled: boolean;
 }
-
-export type WarningMessageLevel = "warning" | "fatal";
-
-export type WarningCategory = "exceeded-context-length" | "deleted-last-input";
-
-export interface WarningMessage {
-  message: string;
-  level: WarningMessageLevel;
-  category: WarningCategory;
-}

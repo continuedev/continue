@@ -529,6 +529,7 @@ function compileChatMessages({
     reassembled.push(systemMsg);
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
+  reassembled.push(...toolSequence);
 
   const contextPercentage = currentTotal / contextLength;
   return {

@@ -23,7 +23,6 @@ import {
   Tool,
   ToolCallDelta,
   ToolCallState,
-  WarningMessage,
 } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
@@ -34,6 +33,7 @@ import {
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
+import { type InlineErrorMessageType } from "../../components/mainInput/InlineErrorMessage";
 import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
@@ -224,7 +224,9 @@ type SessionState = {
   };
   newestToolbarPreviewForInput: Record<string, string>;
   hasReasoningEnabled?: boolean;
-  warningMessage?: WarningMessage;
+  isPruned?: boolean;
+  contextPercentage?: number;
+  inlineErrorMessage?: InlineErrorMessageType;
 };
 
 const initialState: SessionState = {
@@ -244,6 +246,7 @@ const initialState: SessionState = {
   },
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
+  isPruned: false,
 };
 
 export const sessionSlice = createSlice({
@@ -421,12 +424,17 @@ export const sessionSlice = createSlice({
           },
           contextItems: [],
         });
+        state.inlineErrorMessage = undefined;
+        state.isPruned = false;
+        state.contextPercentage = undefined;
       }
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
       state.history.splice(action.payload - 1, 2);
-      state.warningMessage = undefined;
+      state.inlineErrorMessage = undefined;
+      state.isPruned = false;
+      state.contextPercentage = undefined;
     },
     updateHistoryItemAtIndex: (
       state,
@@ -636,6 +644,10 @@ export const sessionSlice = createSlice({
 
       state.isStreaming = false;
       state.symbols = {};
+
+      state.inlineErrorMessage = undefined;
+      state.isPruned = false;
+      state.contextPercentage = undefined;
 
       if (payload) {
         state.history = payload.history as any;
@@ -892,11 +904,17 @@ export const sessionSlice = createSlice({
       state.newestToolbarPreviewForInput[payload.inputId] =
         payload.contextItemId;
     },
-    setWarningMessage: (
+    setInlineErrorMessage: (
       state,
-      action: PayloadAction<WarningMessage | undefined>,
+      action: PayloadAction<SessionState["inlineErrorMessage"]>,
     ) => {
-      state.warningMessage = action.payload;
+      state.inlineErrorMessage = action.payload;
+    },
+    setIsPruned: (state, action: PayloadAction<boolean>) => {
+      state.isPruned = action.payload;
+    },
+    setContextPercentage: (state, action: PayloadAction<number>) => {
+      state.contextPercentage = action.payload;
     },
   },
   selectors: {
@@ -981,7 +999,9 @@ export const {
   setNewestToolbarPreviewForInput,
   setIsInEdit,
   setHasReasoningEnabled,
-  setWarningMessage,
+  setInlineErrorMessage,
+  setIsPruned,
+  setContextPercentage,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

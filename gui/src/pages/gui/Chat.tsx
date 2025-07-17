@@ -43,6 +43,7 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
+import ContextStatus from "../../components/mainInput/ContextStatus";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -409,22 +410,23 @@ export function Chat() {
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
               {history.length === 0 && lastSessionId && !isInEdit && (
-                <div className="xs:inline hidden">
-                  <NewSessionButton
-                    onClick={async () => {
-                      await dispatch(
-                        loadLastSession({
-                          saveCurrentSession: true,
-                        }),
-                      );
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeftIcon className="h-3 w-3" />
-                    <span className="text-xs">Last Session</span>
-                  </NewSessionButton>
-                </div>
+                <NewSessionButton
+                  onClick={async () => {
+                    await dispatch(
+                      loadLastSession({
+                        saveCurrentSession: true,
+                      }),
+                    );
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeftIcon className="h-3 w-3" />
+                  <span className="text-xs">Last Session</span>
+                </NewSessionButton>
               )}
+            </div>
+            <div>
+              <ContextStatus />
             </div>
           </div>
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
