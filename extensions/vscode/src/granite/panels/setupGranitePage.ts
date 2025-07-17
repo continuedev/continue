@@ -304,13 +304,12 @@ export class SetupGranitePage {
           case "installOllama":
             await this.installOllama(data.mode, panel);
             break;
-          case "openUrl":
-            await this.openUrl(data);
-            break;
           case "showTutorial":
             this.wizardState.stepStatuses[FINAL_STEP] = true;
             await this.publishStatus(webview);
-            await this.showTutorial();
+            await this.openUrl(
+              "https://docs.granitecode.ai/getting-started.html",
+            );
             break;
           case "cancelInstallation":
             const target = data.target;

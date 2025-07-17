@@ -565,8 +565,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
 const StartLocalAIStep: React.FC<StepProps> = (props) => {
   const handleShowTutorial = async () => {
     vscode.postMessage({
-      command: "openUrl",
-      data: "https://docs.granitecode.ai/getting-started.html",
+      command: "showTutorial",
     });
   };
   return (
