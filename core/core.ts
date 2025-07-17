@@ -694,6 +694,10 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         if (hasRulesFiles(data.uris)) {
+          const rulesCache = CodebaseRulesCache.getInstance();
+          await Promise.all(
+            data.uris.map((uri) => rulesCache.update(this.ide, uri)),
+          );
           await this.configHandler.reloadConfig("Rules file created");
         }
 
@@ -1046,7 +1050,7 @@ export class Core {
         } else if (uri.endsWith(RULES_MARKDOWN_FILENAME)) {
           try {
             const codebaseRulesCache = CodebaseRulesCache.getInstance();
-            codebaseRulesCache.update(this.ide, uri).then(() => {
+            void codebaseRulesCache.update(this.ide, uri).then(() => {
               this.configHandler.reloadConfig("Codebase rule update");
             });
           } catch (e) {
