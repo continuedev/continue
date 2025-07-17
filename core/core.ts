@@ -237,11 +237,11 @@ export class Core {
     );
 
     const codebaseRulesCache = CodebaseRulesCache.getInstance();
-    codebaseRulesCache
+    void codebaseRulesCache
       .refresh(ide)
       .catch((e) => console.error("Failed to initialize colocated rules cache"))
       .then(() => {
-        this.configHandler.reloadConfig(
+        void this.configHandler.reloadConfig(
           "Initial codebase rules post-walkdir/load reload",
         );
       });
@@ -700,7 +700,6 @@ export class Core {
           );
           await this.configHandler.reloadConfig("Rules file created");
         }
-
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
@@ -1051,7 +1050,7 @@ export class Core {
           try {
             const codebaseRulesCache = CodebaseRulesCache.getInstance();
             void codebaseRulesCache.update(this.ide, uri).then(() => {
-              this.configHandler.reloadConfig("Codebase rule update");
+              void this.configHandler.reloadConfig("Codebase rule update");
             });
           } catch (e) {
             console.error("Failed to update codebase rule", e);
