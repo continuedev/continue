@@ -258,7 +258,8 @@
             "pages": [
               "reference",
               "reference/json-reference",
-              "reference/yaml-migration"
+              "reference/yaml-migration",
+              "reference/continue-mcp"
             ]
           }
         ]
