@@ -50,7 +50,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % animationChars.length);
-    }, 150);
+    }, 300);
 
     return () => clearInterval(interval);
   }, [visible, animationChars.length]);
