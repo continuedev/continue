@@ -10,7 +10,7 @@ import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
-import { chatCompletionStreamWithBackoff } from "./util/exponentialBackoff.js";
+import { chatCompletionStreamWithBackoff, withExponentialBackoff } from "./util/exponentialBackoff.js";
 
 dotenv.config();
 
@@ -86,14 +86,9 @@ export async function streamChatResponse(
   let shouldContinueConversation = true;
 
   while (shouldContinueConversation) {
-    let stream;
-
-    try {
-      // fs.appendFileSync(
-      //   "chat.log",
-      //   "---\n\n" + JSON.stringify(chatHistory, null, 2) + "\n\n"
-      // );
-      stream = await chatCompletionStreamWithBackoff(
+    // Factory function to create the stream generator
+    const streamFactory = async () => {
+      return await chatCompletionStreamWithBackoff(
         llmApi,
         {
           model,
@@ -103,13 +98,7 @@ export async function streamChatResponse(
         },
         abortController.signal
       );
-    } catch (error: any) {
-      console.error(
-        chalk.red("Error in streamChatResponse:"),
-        chalk.red(error.message)
-      );
-      throw error;
-    }
+    };
 
     let aiResponse = "";
     currentToolCalls = [];
@@ -117,7 +106,13 @@ export async function streamChatResponse(
     let toolArguments = "";
 
     try {
-      for await (const chunk of stream) {
+      // Use the exponential backoff wrapper for the entire stream
+      const streamWithBackoff = withExponentialBackoff(
+        streamFactory,
+        abortController.signal
+      );
+
+      for await (const chunk of streamWithBackoff) {
         // Check if we should abort
         if (abortController?.signal.aborted) {
           break;
@@ -206,6 +201,10 @@ export async function streamChatResponse(
         return fullResponse;
       }
       // For other errors, re-throw them
+      console.error(
+        chalk.red("Error in streamChatResponse:"),
+        chalk.red(error.message)
+      );
       throw error;
     }
 
