@@ -14,14 +14,17 @@ export interface ExponentialBackoffOptions {
   backoffMultiplier?: number;
   /** Jitter factor to add randomness */
   jitter?: boolean;
+  /** Number of retries to hide from logging */
+  hiddenRetries?: number;
 }
 
 const DEFAULT_OPTIONS: Required<ExponentialBackoffOptions> = {
-  maxRetries: 9,
+  maxRetries: 10,
   initialDelay: 1000,
   maxDelay: 30000,
   backoffMultiplier: 1.6,
   jitter: true,
+  hiddenRetries: 2,
 };
 
 /**
@@ -117,11 +120,14 @@ export async function chatCompletionStreamWithBackoff(
 
       const delay = calculateDelay(attempt, opts);
 
-      warn(
-        `Retrying LLM API call (attempt ${attempt + 1}/${
-          opts.maxRetries + 1
-        }) after ${delay}ms delay. Error: ${err.message}`
-      );
+      // Only log retry attempts after the first hiddenRetries attempts
+      if (attempt >= opts.hiddenRetries) {
+        warn(
+          `Retrying LLM API call (attempt ${attempt + 1 - opts.hiddenRetries}/${
+            opts.maxRetries + 1 - opts.hiddenRetries
+          }) after ${delay}ms delay. Error: ${err.message}`
+        );
+      }
 
       // Wait before retrying
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -193,11 +199,14 @@ export async function* withExponentialBackoff<T>(
 
       const delay = calculateDelay(attempt, opts);
 
-      warn(
-        `Retrying request (${attempt + 1}/${
-          opts.maxRetries + 1
-        }). Error: ${formatError(err)}`
-      );
+      // Only log retry attempts after the first opts.hiddenRetries attempts
+      if (attempt >= opts.hiddenRetries) {
+        warn(
+          `Retrying request (${attempt + 1 - opts.hiddenRetries}/${
+            opts.maxRetries + 1 - opts.hiddenRetries
+          }). Error: ${formatError(err)}`
+        );
+      }
 
       // Wait before retrying
       await new Promise((resolve) => setTimeout(resolve, delay));
