@@ -13,6 +13,7 @@ export const ideSettingsPromise = testIde.getIdeSettings();
 export const testControlPlaneClient = new ControlPlaneClient(
   Promise.resolve(undefined),
   ideSettingsPromise,
+  testIde.getIdeInfo(),
 );
 
 export const testConfigHandler = new ConfigHandler(

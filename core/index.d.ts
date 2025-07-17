@@ -711,6 +711,7 @@ export interface IdeInfo {
   version: string;
   remoteName: string;
   extensionVersion: string;
+  isPrerelease: boolean;
 }
 
 export interface BranchAndDir {
