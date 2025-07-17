@@ -75,6 +75,19 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   applyToFile: undefined,
   acceptDiff: undefined,
   readFile: "File contents",
+  "tools/call": {
+    contextItems: [
+      {
+        content: "Tool call executed successfully",
+        name: "Tool Result",
+        description: "Mock tool result",
+      },
+    ],
+  },
+  "llm/compileChat": {
+    compiledChatMessages: [],
+    pruningStatus: "not-pruned",
+  },
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [

@@ -91,6 +91,17 @@ export const LlamastackConfigSchema = OpenAIConfigSchema.extend({
 });
 export type LlamastackConfig = z.infer<typeof LlamastackConfigSchema>;
 
+export const ContinueProxyConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("continue-proxy"),
+  env: z.object({
+    apiKeyLocation: z.string().optional(),
+    envSecretLocations: z.record(z.string(), z.string()).optional(),
+    orgScopeId: z.string().nullable(),
+    proxyUrl: z.string().optional(),
+  }),
+});
+export type ContinueProxyConfig = z.infer<typeof ContinueProxyConfigSchema>;
+
 export const MockConfigSchema = BasePlusConfig.extend({
   provider: z.literal("mock"),
 });
@@ -169,5 +180,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   MockConfigSchema,
   InceptionConfigSchema,
   LlamastackConfigSchema,
+  ContinueProxyConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

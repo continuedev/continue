@@ -39,6 +39,9 @@ export class CodebaseRulesCache {
       this.rules[matchIdx] = ruleWithSource;
     }
   }
+  remove(uri: string) {
+    this.rules = this.rules.filter((r) => r.ruleFile !== uri);
+  }
 }
 
 /**
