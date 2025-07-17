@@ -1,6 +1,13 @@
 import * as path from "path";
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { ChatMessage, IDE, ILLM, Position, RangeInFile } from "../index.js";
+import {
+  BranchAndDir,
+  ChatMessage,
+  IDE,
+  ILLM,
+  Position,
+  RangeInFile,
+} from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
@@ -574,17 +581,27 @@ export class NextEditProvider {
       });
 
       const { config } = await this.configHandler.loadConfig();
+      const branches = await Promise.all(
+        workspaceDirs.map((dir) => this.ide.getBranch(dir)),
+      );
+      const tags: BranchAndDir[] = workspaceDirs.map((directory, i) => ({
+        directory,
+        branch: branches[i],
+      }));
       const chunks = await getTopRelevantCodeChunks(
-        "pow(number, exponent) {\n  return number ** exponent;\n}",
+        `  add(number) {
+    this.result += number;
+    return this;
+  }`,
         {
           ide: this.ide,
           llm: llm,
           config: config!,
-          tags: [],
+          tags: tags,
           // filterDirectory: getUriPathBasename(helper.workspaceUris[0]),
         },
       );
-      console.log("chunks:", JSON.stringify(chunks));
+      console.log("chunks:", JSON.stringify(chunks, null, 2));
 
       this.prefetchQueue.loadResource(refQueue);
       await this.prefetchQueue.initialize();

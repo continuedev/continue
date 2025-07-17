@@ -8,25 +8,62 @@ export default class NextEditRetrievalPipeline extends BaseRetrievalPipeline {
     if (args.includeEmbeddings) {
       await this.ensureLanceDbInitialized();
     }
-    // Collect chunks from multiple sources.
+
+    // Try each retrieval method.
+    // Embeddings can fail if query.execute() goes wrong.
+    const embeddingPromise = async () => {
+      if (!args.includeEmbeddings) return [];
+      try {
+        return await this.retrieveEmbeddings(
+          args.query,
+          this.options.nRetrieve,
+        );
+      } catch (error) {
+        console.error("Error retrieving embeddings:", error);
+        return [];
+      }
+    };
+
+    const ftsPromise = async () => {
+      try {
+        return await this.retrieveFts(args, this.options.nRetrieve);
+      } catch (error) {
+        console.error("Error retrieving from full-text search:", error);
+        return [];
+      }
+    };
+
+    const recentFilesPromise = async () => {
+      try {
+        return await this.retrieveAndChunkRecentlyEditedFiles(
+          this.options.nRetrieve,
+        );
+      } catch (error) {
+        console.error("Error retrieving recently edited files:", error);
+        return [];
+      }
+    };
+
+    const toolsPromise = async () => {
+      try {
+        return await this.retrieveWithTools(args.query);
+      } catch (error) {
+        console.error("Error retrieving with tools:", error);
+        return [];
+      }
+    };
+
     const [embeddingChunks, ftsChunks, recentChunks, toolChunks] =
       await Promise.all([
-        // Get chunks using embeddings similarity (vector search).
-        args.includeEmbeddings
-          ? this.retrieveEmbeddings(args.query, this.options.nRetrieve)
-          : Promise.resolve([]),
-
-        // Get chunks using full-text search.
-        this.retrieveFts(args, this.options.nRetrieve),
-
-        // Get chunks from recently edited files.
-        this.retrieveAndChunkRecentlyEditedFiles(this.options.nRetrieve),
-
-        // Get chunks using LLM-guided tool selection.
-        this.retrieveWithTools(args.query),
+        embeddingPromise(),
+        ftsPromise(),
+        recentFilesPromise(),
+        toolsPromise(),
       ]);
 
-    // Combine all chunks.
+    //   console.log(`Retrieved chunks: ${embeddingChunks.length} from embeddings, ${ftsChunks.length} from FTS, ${recentChunks.length} from recent
+    // files, ${toolChunks.length} from tools`);
+
     let allChunks = [
       ...embeddingChunks,
       ...ftsChunks,
@@ -46,7 +83,10 @@ export default class NextEditRetrievalPipeline extends BaseRetrievalPipeline {
 
     // If we have too many chunks and embedding retrieval is available,
     // prioritize chunks from embedding search as they're likely more semantically relevant.
-    if (uniqueChunks.length > this.options.nFinal) {
+    if (
+      uniqueChunks.length > this.options.nFinal &&
+      embeddingChunks.length > 0
+    ) {
       // First include embedding chunks (most semantically relevant).
       const result: Chunk[] = [...embeddingChunks];
 
@@ -77,23 +117,28 @@ export async function getTopRelevantCodeChunks(
     filterDirectory?: string;
   },
 ): Promise<Chunk[]> {
-  const retrievalPipeline = new NextEditRetrievalPipeline({
-    llm: options.llm,
-    config: options.config,
-    ide: options.ide,
-    input: codeSnippet,
-    nRetrieve: 10, // retrieve more initially for better filtering
-    nFinal: 5, // return top 5
-    tags: options.tags,
-    filterDirectory: options.filterDirectory,
-  });
+  try {
+    const retrievalPipeline = new NextEditRetrievalPipeline({
+      llm: options.llm,
+      config: options.config,
+      ide: options.ide,
+      input: codeSnippet,
+      nRetrieve: 10, // retrieve more initially for better filtering
+      nFinal: 5, // return top 5
+      tags: options.tags,
+      filterDirectory: options.filterDirectory,
+    });
 
-  const chunks = await retrievalPipeline.run({
-    query: codeSnippet,
-    tags: options.tags,
-    filterDirectory: options.filterDirectory,
-    includeEmbeddings: true,
-  });
+    const chunks = await retrievalPipeline.run({
+      query: codeSnippet,
+      tags: options.tags,
+      filterDirectory: options.filterDirectory,
+      includeEmbeddings: !options.config.experimental?.codebaseToolCallingOnly,
+    });
 
-  return chunks;
+    return chunks;
+  } catch (error) {
+    console.error("Error getting relevant code chunks:", error);
+    return [];
+  }
 }
