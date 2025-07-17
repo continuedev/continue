@@ -208,23 +208,25 @@ const Layout = () => {
   useWebviewListener(
     "compactConversation",
     async (data: { index: number }) => {
-      if (!data || typeof data.index !== 'number' || !currentSessionId) {
+      if (!data || typeof data.index !== "number" || !currentSessionId) {
         return;
       }
       try {
         // Set loading state
         dispatch(setCompactionLoading({ index: data.index, loading: true }));
-        
+
         await ideMessenger.request("conversation/compact", {
           index: data.index,
           sessionId: currentSessionId,
         });
-        
+
         // Reload the current session to refresh the conversation state
-        dispatch(loadSession({
-          sessionId: currentSessionId,
-          saveCurrentSession: false,
-        }));
+        dispatch(
+          loadSession({
+            sessionId: currentSessionId,
+            saveCurrentSession: false,
+          }),
+        );
       } catch (error) {
         console.error("Error compacting conversation:", error);
       } finally {

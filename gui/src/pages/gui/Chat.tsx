@@ -285,7 +285,8 @@ export function Chat() {
 
       // Calculate once for the entire function
       const latestSummaryIndex = findLatestSummaryIndex(history);
-      const isBeforeLatestSummary = latestSummaryIndex !== -1 && index < latestSummaryIndex;
+      const isBeforeLatestSummary =
+        latestSummaryIndex !== -1 && index < latestSummaryIndex;
 
       if (message.role === "user") {
         return (
