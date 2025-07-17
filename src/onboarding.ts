@@ -182,9 +182,7 @@ export async function runNormalFlow(
     try {
       const result = await initialize(authConfig, undefined);
       return { ...result, wasOnboarded: true };
-    } catch (error) {
-      console.log(chalk.yellow("⚠ No assistants found in your organization"));
-    }
+    } catch (error) {}
   }
 
   // Step 3: Look for local ~/.continue/config.yaml
