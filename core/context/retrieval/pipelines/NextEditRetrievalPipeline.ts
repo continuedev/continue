@@ -1,4 +1,11 @@
-import { BranchAndDir, Chunk, ContinueConfig, IDE, ILLM } from "../../..";
+import {
+  BranchAndDir,
+  Chunk,
+  ContinueConfig,
+  IDE,
+  ILLM,
+  Position,
+} from "../../..";
 import BaseRetrievalPipeline, {
   RetrievalPipelineRunArguments,
 } from "./BaseRetrievalPipeline";
@@ -142,3 +149,103 @@ export async function getTopRelevantCodeChunks(
     return [];
   }
 }
+
+export async function retrieveRelevantSnippetsInFile(
+  query: string,
+  filepath: string,
+  cursorPosition: Position,
+  maxSnippets: number = 5,
+  snippetSize: number = 10, // lines per snippet
+  ide: IDE,
+): Promise<Chunk[]> {
+  try {
+    const fileContent = await ide.readFile(filepath);
+    const lines = fileContent.split("\n");
+
+    // Create smaller overlapping chunks around the cursor position.
+    const chunks: Chunk[] = [];
+    const totalLines = lines.length;
+
+    // If file is too small, skip chunking.
+    // Ideally we want to keep the chunk size smaller for jump purposes.
+    if (totalLines <= snippetSize * 2) {
+      return [];
+    }
+
+    // Use sliding window to create chunks in the file.
+    // Make sure to overlap the window while sliding.
+    for (
+      let startLine = 0;
+      startLine < totalLines - snippetSize;
+      startLine += Math.floor(snippetSize / 2)
+    ) {
+      // Skip the chunk that contains the cursor.
+      // NOTE: We might just include it.
+      if (
+        startLine <= cursorPosition.line &&
+        cursorPosition.line < startLine + snippetSize
+      ) {
+        continue;
+      }
+
+      const endLine = Math.min(startLine + snippetSize - 1, totalLines - 1);
+      const content = lines.slice(startLine, endLine + 1).join("\n");
+
+      chunks.push({
+        content,
+        startLine,
+        endLine,
+        digest: `${filepath}:${startLine}-${endLine}`,
+        filepath,
+        index: chunks.length,
+      });
+    }
+
+    // Calculate relevance score for each chunk.
+    // For now, we use simple keyword matching
+    // In the future we should use embeddings or cosine similarity.
+    const keywords = query
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((k) => k.length > 2);
+
+    const scoredChunks = chunks.map((chunk) => {
+      const lowerContent = chunk.content.toLowerCase();
+      const score = keywords.reduce((sum, keyword) => {
+        return sum + (lowerContent.includes(keyword) ? 1 : 0);
+      }, 0);
+
+      return { chunk, score };
+    });
+
+    // Sort by score desc.
+    return scoredChunks
+      .sort((a, b) => b.score - a.score)
+      .slice(0, maxSnippets)
+      .map((sc) => sc.chunk);
+  } catch (error) {
+    console.error("Error finding relevant in-file snippets:", error);
+    return [];
+  }
+}
+
+export function cosineSimilarity(a: number[], b: number[]): number {
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+// export async function getJumpDestinations(
+//   codeSnippet: string,
+//   cursorPosition: Position,
+//   filepath: string,
+// ): Promise<Chunk[]> {
+// }
