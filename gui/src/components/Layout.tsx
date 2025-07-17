@@ -11,8 +11,7 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { enterEdit, exitEdit } from "../redux/thunks/edit";
-import { loadSession, saveCurrentSession } from "../redux/thunks/session";
-import { setCompactionLoading } from "../redux/slices/sessionSlice";
+import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
@@ -203,38 +202,6 @@ const Layout = () => {
       dispatch(setDialogMessage(<GenerateRuleDialog />));
     },
     [],
-  );
-
-  useWebviewListener(
-    "compactConversation",
-    async (data: { index: number }) => {
-      if (!data || typeof data.index !== "number" || !currentSessionId) {
-        return;
-      }
-      try {
-        // Set loading state
-        dispatch(setCompactionLoading({ index: data.index, loading: true }));
-
-        await ideMessenger.request("conversation/compact", {
-          index: data.index,
-          sessionId: currentSessionId,
-        });
-
-        // Reload the current session to refresh the conversation state
-        dispatch(
-          loadSession({
-            sessionId: currentSessionId,
-            saveCurrentSession: false,
-          }),
-        );
-      } catch (error) {
-        console.error("Error compacting conversation:", error);
-      } finally {
-        // Clear loading state
-        dispatch(setCompactionLoading({ index: data.index, loading: false }));
-      }
-    },
-    [currentSessionId, dispatch],
   );
 
   useEffect(() => {

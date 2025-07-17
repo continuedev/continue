@@ -1,6 +1,7 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
 import { useState } from "react";
+import { AnimatedEllipsis } from "../";
 import { useAppSelector } from "../../redux/hooks";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
 
@@ -25,8 +26,8 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
       <div className="mx-1.5 mb-4 mt-2">
         <div className="bg-vsc-input-background rounded-md shadow-sm">
           <div className="text-description flex items-center justify-start px-3 py-2 text-xs">
-            <div className="bg-lightgray h-3 w-3 animate-pulse rounded-full"></div>
-            <span className="ml-2">Generating conversation summary...</span>
+            <span>Generating conversation summary</span>
+            <AnimatedEllipsis />
           </div>
         </div>
       </div>
@@ -38,22 +39,19 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
     <div className="mx-1.5 mb-4 mt-2">
       <div className="bg-vsc-input-background rounded-md shadow-sm">
         <div
-          className="text-description flex cursor-pointer items-center justify-between px-3 py-2 text-xs transition-colors duration-200 hover:brightness-105"
+          className="text-description flex cursor-pointer items-center gap-2 px-3 py-2 text-xs transition-colors duration-200 hover:brightness-105"
           onClick={() => setOpen(!open)}
         >
-          <div className="flex items-center gap-2">
-            <div className="bg-lightgray h-3 w-3 rounded-full"></div>
-            <span>Conversation Summary</span>
-          </div>
           {open ? (
             <ChevronUpIcon className="h-3 w-3" />
           ) : (
             <ChevronDownIcon className="h-3 w-3" />
           )}
+          <span>Conversation Summary</span>
         </div>
         {open && (
           <>
-            <div className="border-0 border-t border-solid border-border"></div>
+            <div className="border-border border-0 border-t border-solid"></div>
             <div className="max-h-[400px] overflow-y-auto px-3 pb-3 pt-2">
               <StyledMarkdownPreview
                 isRenderingInStepContainer

@@ -24,9 +24,9 @@ import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
+import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { stripImages } from "./util/messageContent";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import {
@@ -70,11 +70,11 @@ import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
 import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
+import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { getUriPathBasename } from "./util/uri";
-import { NextEditProvider } from "./nextEdit/NextEditProvider";
 
 const hasRulesFiles = (uris: string[]): boolean => {
   for (const uri of uris) {
@@ -546,71 +546,13 @@ export class Core {
         throw new Error("No chat model selected");
       }
 
-      // Get the current session
-      const session = historyManager.load(msg.data.sessionId);
-      const historyUpToIndex = session.history.slice(0, msg.data.index + 1);
-
-      // Apply the same filtering logic as in constructMessages, but exclude the target message
-      // if it already has a summary (we're re-compacting)
-      let summaryContent = "";
-      let filteredHistory = historyUpToIndex;
-
-      // First, check if the target message already has a summary and ignore it
-      const targetMessageHasSummary =
-        historyUpToIndex[msg.data.index].conversationSummary;
-      const searchHistory = targetMessageHasSummary
-        ? historyUpToIndex.slice(0, msg.data.index)
-        : historyUpToIndex;
-
-      // Find the most recent conversation summary (excluding target if it has one)
-      for (let i = searchHistory.length - 1; i >= 0; i--) {
-        const summary = searchHistory[i].conversationSummary;
-        if (summary) {
-          summaryContent = summary;
-          // Only include messages that come AFTER the message with the summary
-          filteredHistory = historyUpToIndex.slice(i + 1);
-          break;
-        }
-      }
-
-      // Create messages from filtered history
-      const messages = filteredHistory.map((item: any) => item.message);
-
-      // If there's a previous summary, include it as a user message at the beginning
-      if (summaryContent) {
-        messages.unshift({
-          role: "user",
-          content: `Previous conversation summary:\n\n${summaryContent}`,
-        });
-      }
-      const compactionPrompt = {
-        role: "user" as const,
-        content:
-          "Summarize the conversation above in third person, focusing on key points, decisions made, and important context. If there is a previous conversation summary included in the messages above, integrate it with the new conversation content to create a single condensed summary. Remove any redundant or outdated information while preserving essential context. Include specific technical details such as file names, paths, class names, function names, and any other identifiers that would help understand what was worked on. Write an impersonal summary that describes what the user requested and what was accomplished. Do not address the user directly. This summary will replace the conversation history to save tokens while preserving essential information.",
-      };
-
       try {
-        const response = await currentModel.chat(
-          [...messages, compactionPrompt],
-          new AbortController().signal,
-          {},
-        );
-
-        // Update the target message with the conversation summary
-        const updatedHistory = [...session.history];
-        updatedHistory[msg.data.index] = {
-          ...updatedHistory[msg.data.index],
-          conversationSummary: stripImages(response.content),
-        };
-
-        // Update the session with the new history
-        const updatedSession = {
-          ...session,
-          history: updatedHistory,
-        };
-
-        historyManager.save(updatedSession);
-
+        await compactConversation({
+          sessionId: msg.data.sessionId,
+          index: msg.data.index,
+          historyManager,
+          currentModel,
+        });
         return undefined;
       } catch (error) {
         console.error("Error compacting conversation:", error);

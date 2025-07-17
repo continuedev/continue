@@ -113,24 +113,11 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </div>
 
-      {/* Show compaction indicator for the latest summary */}
-      {isLatestSummary && (
-        <div className="mx-1.5 mb-2 mt-2">
-          <div className="flex items-center">
-            <div className="flex-1 border-t border-dashed border-gray-500"></div>
-            <span className="mx-3 text-xs text-gray-500">
-              Previous Conversation Compacted
-            </span>
-            <div className="flex-1 border-t border-dashed border-gray-500"></div>
-          </div>
-        </div>
-      )}
-
-      {/* ConversationSummary is outside the dimmed container so it's always at full opacity */}
-      <ConversationSummary item={props.item} index={props.index} />
       {shouldRenderResponseAction() && (
         // We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete
-        <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
+        <div
+          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+        >
           {!isStreaming && (
             <ResponseActions
               isTruncated={isTruncated}
@@ -143,6 +130,22 @@ export default function StepContainer(props: StepContainerProps) {
           )}
         </div>
       )}
+
+      {/* Show compaction indicator for the latest summary */}
+      {isLatestSummary && (
+        <div className="mx-1.5 my-5">
+          <div className="flex items-center">
+            <div className="border-border flex-1 border-t border-solid"></div>
+            <span className="text-description mx-3 text-xs">
+              Previous Conversation Compacted
+            </span>
+            <div className="border-border flex-1 border-t border-solid"></div>
+          </div>
+        </div>
+      )}
+
+      {/* ConversationSummary is outside the dimmed container so it's always at full opacity */}
+      <ConversationSummary item={props.item} index={props.index} />
     </div>
   );
 }
