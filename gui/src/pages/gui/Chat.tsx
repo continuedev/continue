@@ -44,6 +44,7 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import ContextStatus from "../../components/mainInput/ContextStatus";
+import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -389,6 +390,7 @@ export function Chat() {
             >
               {renderChatHistoryItem(item, index)}
             </ErrorBoundary>
+            {index === history.length - 1 && <InlineErrorMessage />}
           </div>
         ))}
       </StepsDiv>

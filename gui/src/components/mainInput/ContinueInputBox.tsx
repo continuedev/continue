@@ -7,7 +7,6 @@ import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
 import { RulesPeek } from "./belowMainInput/RulesPeek";
 import { GradientBorder } from "./GradientBorder";
-import InlineErrorMessage from "./InlineErrorMessage";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
@@ -120,7 +119,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           />
         </div>
       )}
-      {props.isLastUserInput && <InlineErrorMessage />}
     </div>
   );
 }

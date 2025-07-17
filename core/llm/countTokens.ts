@@ -444,13 +444,6 @@ function compileChatMessages({
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
-  while (msgsCopy.length > 1) {
-    if (isUserOrToolMsg(msgsCopy.at(-1))) {
-      break;
-    }
-    msgsCopy.pop();
-  }
-
   // Extract the tool sequence from the end of the message array
   const toolSequence = extractToolSequence(msgsCopy);
 
@@ -531,7 +524,11 @@ function compileChatMessages({
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
   reassembled.push(...toolSequence);
 
-  const contextPercentage = currentTotal / contextLength;
+  const inputTokens =
+    currentTotal + systemMsgTokens + toolTokens + lastMessagesTokens;
+  const availableTokens =
+    contextLength - countingSafetyBuffer - minOutputTokens;
+  const contextPercentage = inputTokens / availableTokens;
   return {
     compiledChatMessages: reassembled,
     didPrune,

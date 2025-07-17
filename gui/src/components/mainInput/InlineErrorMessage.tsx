@@ -1,10 +1,12 @@
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useAppSelector } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { setInlineErrorMessage } from "../../redux/slices/sessionSlice";
 
 export type InlineErrorMessageType = "out-of-context";
 
 export default function InlineErrorMessage() {
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const inlineErrorMessage = useAppSelector(
     (state) => state.session.inlineErrorMessage,
@@ -33,9 +35,7 @@ export default function InlineErrorMessage() {
           <span
             className="cursor-pointer text-xs hover:underline"
             onClick={() => {
-              ideMessenger.post("config/openProfile", {
-                profileId: undefined,
-              });
+              dispatch(setInlineErrorMessage(undefined));
             }}
           >
             Hide
