@@ -8,9 +8,8 @@ import { ChatHistoryItem } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { renderChatMessage } from "core/util/messageContent";
 import { useContext, useMemo } from "react";
-import { useDispatch } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useAppSelector } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setCompactionLoading } from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
@@ -37,7 +36,7 @@ export default function ResponseActions({
   onDelete,
   isLast,
 }: ResponseActionsProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const currentSessionId = useAppSelector((state) => state.session.id);
   const selectedModel = useAppSelector(selectSelectedChatModel);
