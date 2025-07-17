@@ -1,19 +1,18 @@
-import { ToolCallDelta, ToolCallState } from "core";
+import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { CreateFile } from "./CreateFile";
 import { EditFile } from "./EditFile";
 import { RunTerminalCommand } from "./RunTerminalCommand";
 
 function FunctionSpecificToolCallDiv({
-  toolCall,
   toolCallState,
   historyIndex,
 }: {
-  toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
   historyIndex: number;
 }) {
   const args = toolCallState.parsedArgs;
+  const toolCall = toolCallState.toolCall;
 
   switch (toolCall.function?.name) {
     case BuiltInToolNames.CreateNewFile:
@@ -37,7 +36,7 @@ function FunctionSpecificToolCallDiv({
       return (
         <EditFile
           relativeFilePath={args.filepath ?? ""}
-          changes={args.diff ?? ""}
+          changes={args.diffs ? args.diffs.join("\n\n---\n\n") : ""}
           toolCallId={toolCall.id}
           historyIndex={historyIndex}
         />

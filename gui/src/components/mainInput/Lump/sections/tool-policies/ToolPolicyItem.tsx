@@ -65,7 +65,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
     >
       <div className="flex flex-row items-center">
         <div
-          className={`hover:bg-list-active hover:text-list-active-foreground xs:gap-1.5 flex flex-1 cursor-pointer flex-row items-center gap-1 py-0.5 pl-1 pr-2`}
+          className={`hover:bg-badge hover:text-list-active-foreground xs:gap-1.5 flex flex-1 cursor-pointer flex-row items-center gap-1 rounded py-0.5 pl-1 pr-2`}
           onClick={() => setIsExpanded((val) => !val)}
         >
           <ChevronRightIcon
@@ -116,7 +116,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         </div>
 
         <div
-          className={`flex w-8 flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:bg-list-active hover:text-list-active-foreground cursor-pointer"}`}
+          className={`flex w-8 flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:text-list-active-foreground cursor-pointer hover:brightness-125"}`}
           data-testid={`tool-policy-item-${props.tool.function.name}`}
           onClick={
             disabled
