@@ -7,13 +7,11 @@ import {
 import { ChatHistoryItem } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { renderChatMessage } from "core/util/messageContent";
-import { useContext, useMemo } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { setCompactionLoading } from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { loadSession } from "../../redux/thunks/session";
+import { useCompactConversation } from "../../util/compactConversation";
 import { FeedbackButtons } from "../FeedbackButtons";
 import { GenerateRuleDialog } from "../GenerateRuleDialog";
 import { CopyIconButton } from "../gui/CopyIconButton";
@@ -37,8 +35,6 @@ export default function ResponseActions({
   isLast,
 }: ResponseActionsProps) {
   const dispatch = useAppDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
-  const currentSessionId = useAppSelector((state) => state.session.id);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const contextPercentage = useAppSelector(
     (state) => state.session.contextPercentage,
@@ -56,39 +52,13 @@ export default function ResponseActions({
 
   const showLabel = isLast && (isPruned || percent >= 60);
 
+  const compactConversation = useCompactConversation();
+
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
     dispatch(setDialogMessage(<GenerateRuleDialog />));
   };
 
-  const onCompactConversation = async () => {
-    if (!currentSessionId) {
-      return;
-    }
-
-    try {
-      // Set loading state
-      dispatch(setCompactionLoading({ index, loading: true }));
-
-      await ideMessenger.request("conversation/compact", {
-        index,
-        sessionId: currentSessionId,
-      });
-
-      // Reload the current session to refresh the conversation state
-      dispatch(
-        loadSession({
-          sessionId: currentSessionId,
-          saveCurrentSession: false,
-        }),
-      );
-    } catch (error) {
-      console.error("Error compacting conversation:", error);
-    } finally {
-      // Clear loading state
-      dispatch(setCompactionLoading({ index, loading: false }));
-    }
-  };
 
   return (
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
@@ -100,7 +70,7 @@ export default function ResponseActions({
             : "Compact conversation"
         }
         tabIndex={-1}
-        onClick={onCompactConversation}
+        onClick={() => compactConversation(index)}
       >
         <div className="flex items-center space-x-1">
           <ArrowsPointingInIcon
