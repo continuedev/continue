@@ -21,7 +21,7 @@ export function getPreferredShell(): string {
   }
 }
 
-export const PLATFORM_INFO = `Choose terminal commands and scripts optimized for ${os.platform} and ${os.arch} and shell ${getPreferredShell()}.`;
+export const PLATFORM_INFO = `Choose terminal commands and scripts optimized for ${os.platform()} and ${os.arch()} and shell ${getPreferredShell()}.`;
 
 const RUN_COMMAND_NOTES = `The shell is not stateful and will not remember any previous commands.\
       When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
