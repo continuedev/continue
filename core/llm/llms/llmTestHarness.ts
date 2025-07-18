@@ -50,12 +50,12 @@ export async function runLlmTest(testCase: LlmTestCase) {
       headers: new Headers({
         "Content-Type": "text/event-stream",
       }),
-    });
+    } as Response);
   } else {
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockResponse),
-    });
+    } as Response);
   }
 
   // @ts-ignore
@@ -78,7 +78,7 @@ export async function runLlmTest(testCase: LlmTestCase) {
   }
 
   expect(mockFetch).toHaveBeenCalledTimes(1);
-  const [url, options] = mockFetch.mock.calls[0];
+  const [url, options] = mockFetch.mock.calls[0] as [string, RequestInit];
 
   expect(url.toString()).toBe(expectedRequest.url);
   expect(options.method).toBe(expectedRequest.method);
