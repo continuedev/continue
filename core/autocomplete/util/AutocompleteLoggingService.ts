@@ -105,24 +105,27 @@ export class AutocompleteLoggingService {
     });
 
     const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
-    void Telemetry.capture(
-      "autocomplete",
-      {
-        accepted: restOfOutcome.accepted,
-        cacheHit: restOfOutcome.cacheHit,
-        completionId: restOfOutcome.completionId,
-        completionOptions: restOfOutcome.completionOptions,
-        debounceDelay: restOfOutcome.debounceDelay,
-        fileExtension: getUriFileExtension(restOfOutcome.filepath),
-        maxPromptTokens: restOfOutcome.maxPromptTokens,
-        modelName: restOfOutcome.modelName,
-        modelProvider: restOfOutcome.modelProvider,
-        multilineCompletions: restOfOutcome.multilineCompletions,
-        time: restOfOutcome.time,
-        useRecentlyEdited: restOfOutcome.useRecentlyEdited,
-        numLines: restOfOutcome.numLines,
-      },
-      true,
-    );
+    const toLog = {
+      accepted: restOfOutcome.accepted,
+      cacheHit: restOfOutcome.cacheHit,
+      completionId: restOfOutcome.completionId,
+      completionOptions: restOfOutcome.completionOptions,
+      debounceDelay: restOfOutcome.debounceDelay,
+      fileExtension: getUriFileExtension(restOfOutcome.filepath),
+      maxPromptTokens: restOfOutcome.maxPromptTokens,
+      modelName: restOfOutcome.modelName,
+      modelProvider: restOfOutcome.modelProvider,
+      multilineCompletions: restOfOutcome.multilineCompletions,
+      time: restOfOutcome.time,
+      useRecentlyEdited: restOfOutcome.useRecentlyEdited,
+      numLines: restOfOutcome.numLines,
+    };
+
+    outcome.enabledStaticContextualization
+      ? void Telemetry.capture("autocomplete", {
+          ...toLog,
+          enabledStaticContextualization: true,
+        })
+      : void Telemetry.capture("autocomplete", toLog);
   }
 }

@@ -13,6 +13,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "../..";
@@ -43,6 +44,14 @@ export class MessageIde implements IDE {
 
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return this.request("gotoDefinition", { location });
+  }
+
+  async gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    return this.request("gotoTypeDefinition", { location });
+  }
+
+  async getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    return this.request("getSignatureHelp", { location });
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {

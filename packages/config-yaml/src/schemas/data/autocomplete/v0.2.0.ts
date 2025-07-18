@@ -38,6 +38,9 @@ export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
   completionId: true,
   uniqueId: true,
 
+  // For static contextualization.
+  enabledStaticContextualization: true,
+
   // Note objects (completionOptions and disableInfiles) removed from 0.1.0 => 0.2.0
 });
 
