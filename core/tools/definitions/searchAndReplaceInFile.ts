@@ -1,66 +1,14 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
 
 export interface SearchAndReplaceInFileArgs {
   filepath: string;
   diffs: string[];
 }
 
-<<<<<<< HEAD
-export const SEARCH_AND_REPLACE_FORMAT = `
-\`\`\`
-------- SEARCH
-[exact content to find]
-=======
-[new content to replace with]
-+++++++ REPLACE
-\`\`\`
-`.trim();
-
-const CRITICAL_SEARCH_AND_REPLACE_RULES = `
-Critical rules:
-1. SEARCH content must match the associated file section to find EXACTLY:
-    * Match character-for-character including whitespace, indentation, line endings
-    * Include all comments, docstrings, etc.
-2. SEARCH/REPLACE blocks will ONLY replace the first match occurrence.
-    * Including multiple unique SEARCH/REPLACE blocks if you need to make multiple changes.
-    * Include *just* enough lines in each SEARCH section to uniquely match each set of lines that need to change.
-    * When using multiple SEARCH/REPLACE blocks, list them in the order they appear in the file.
-3. Keep SEARCH/REPLACE blocks concise:
-    * Break large SEARCH/REPLACE blocks into a series of smaller blocks that each change a small portion of the file.
-    * Include just the changing lines, and a few surrounding lines if needed for uniqueness.
-    * Do not include long runs of unchanging lines in SEARCH/REPLACE blocks.
-    * Each line must be complete. Never truncate lines mid-way through as this can cause matching failures.
-4. Splitting up tool calls:
-    * When making multiple closely related edits to the same file, you should try to use multiple SEARCH/REPLACE blocks in a single tool call, rather than making multiple separate tool calls
-    * If you need to make follow up edits or group your work into logical segments, it is okay to perform additional tool calls
-    * DO NOT make back-to-back tool calls. Instead interleave with brief explanation of what each will do. For example, instead of [explanation, tool call, tool call] you should do [explanation, tool call, explanation, tool call]
-5. Special operations:
-    * To move code: Use two SEARCH/REPLACE blocks (one to delete from original + one to insert at new location)
-    * To delete code: Use empty REPLACE section
-`.trim();
-
-const SEARCH_AND_REPLACE_EXAMPLE = `
-\`\`\`
-------- SEARCH
-[exact content to find]
-=======
-[new content to replace with]
-+++++++ REPLACE
-
-------- SEARCH
-[exact content to find]
-=======
-[new content to replace with]
-+++++++ REPLACE
-  \`\`\`
-`.trim();
-=======
 // Currently unsupported and filtered out in `gui/src/redux/slices/sessionSlice.ts`
 export const NO_PARALLEL_TOOL_CALLING_INSRUCTION =
   "Note this tool CANNOT be called in parallel.";
->>>>>>> 989aeea2423856a0a0a1bda544f0075dc278612e
 
 /**
  * This tool is in an experimental state.
@@ -87,18 +35,6 @@ export const searchAndReplaceInFileTool: Tool = {
           description:
             "The path of the file to modify, relative to the root of the workspace.",
         },
-<<<<<<< HEAD
-        diff: {
-          type: "string",
-          description: `One or more SEARCH/REPLACE blocks following this exact format:
-${SEARCH_AND_REPLACE_FORMAT}
-
-${CRITICAL_SEARCH_AND_REPLACE_RULES}
-
-Usage:
-${SEARCH_AND_REPLACE_EXAMPLE}
-`,
-=======
         diffs: {
           type: "array",
           items: {
@@ -151,21 +87,20 @@ Usage:
   \`\`\`
 
 Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and all will be applied sequentially in the order they appear.`,
->>>>>>> 989aeea2423856a0a0a1bda544f0075dc278612e
         },
       },
     },
   },
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.SearchAndReplaceInFile,
-    `To make targed edits by replacing sections of content in an existing file, use the ${BuiltInToolNames.SearchAndReplaceInFile} tool with a "diff" argument containing SEARCH/REPLACE blocks that define exact changes to specific parts of the file.
-Each block should follow this format:
-${SEARCH_AND_REPLACE_FORMAT}
+  //     systemMessageDescription: createSystemMessageExampleCall(
+  //     BuiltInToolNames.SearchAndReplaceInFile,
+  //     `To make targed edits by replacing sections of content in an existing file, use the ${BuiltInToolNames.SearchAndReplaceInFile} tool with a "diff" argument containing SEARCH/REPLACE blocks that define exact changes to specific parts of the file.
+  // Each block should follow this format:
+  // ${SEARCH_AND_REPLACE_FORMAT}
 
-For example, you could respond with:`,
-    [
-      ["filepath", "path/to/file.ts"],
-      ["diff", SEARCH_AND_REPLACE_EXAMPLE],
-    ],
-  ),
+  // For example, you could respond with:`,
+  //     [
+  //       ["filepath", "path/to/file.ts"],
+  //       ["diff", SEARCH_AND_REPLACE_EXAMPLE],
+  //     ],
+  //   ),
 };

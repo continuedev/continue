@@ -7,7 +7,7 @@ import {
   handleToolCallBuffer,
   ToolCallParseState,
 } from "./parseSystemToolCall";
-import { splitAtCodeblocksAndNewLines } from "./xmlToolUtils";
+import { splitAtCodeblocksAndNewLines } from "./systemToolUtils";
 
 /*
     Function to intercept tool calls in markdown code blocks format from a chat message stream

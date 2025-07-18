@@ -1,44 +1,9 @@
-import { ChatMessage, MessagePart } from "..";
-import { normalizeToMessageParts } from "../util/messageContent";
+import { ChatMessage } from "..";
 
 export function messageHasToolCalls(msg: ChatMessage): boolean {
   return msg.role === "assistant" && !!msg.toolCalls;
 }
 
-<<<<<<< HEAD
-export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
-  const flattened: ChatMessage[] = [];
-
-  for (let i = 0; i < msgs.length; i++) {
-    const msg = msgs[i];
-
-    if (
-      flattened.length > 0 &&
-      flattened[flattened.length - 1].role === msg.role &&
-      !messageHasToolCalls(msg) &&
-      !messageHasToolCalls(flattened[flattened.length - 1])
-    ) {
-      const previousParts = normalizeToMessageParts(
-        flattened[flattened.length - 1],
-      );
-      const currentParts: MessagePart[] = normalizeToMessageParts(msg);
-      if (previousParts.length > 0 && currentParts[0]?.type === "text") {
-        currentParts[0].text = `\n\n${currentParts[0].text.trimStart()}`;
-      }
-      flattened[flattened.length - 1].content = [
-        ...previousParts,
-        ...currentParts,
-      ];
-    } else {
-      flattened.push(msg);
-    }
-  }
-
-  return flattened;
-}
-
-=======
->>>>>>> 989aeea2423856a0a0a1bda544f0075dc278612e
 export function messageIsEmpty(message: ChatMessage): boolean {
   if (typeof message.content === "string") {
     return message.content.trim() === "";

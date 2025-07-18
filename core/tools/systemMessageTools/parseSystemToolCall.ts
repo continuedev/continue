@@ -6,12 +6,14 @@ const acceptableEndArgTags = ["end_arg", "endarg"];
 
 export type ToolCallParseState = {
   name: string;
-  args: Map<string, any>;
+  args: Map<string, string>;
   isOnArgBeginLine: boolean;
   currentArgName: string | undefined;
+  currentArgContent: string;
   currentLineIndex: number;
   lineChunks: string[][];
   done: boolean;
+  partialBuffer: string; // Buffer for handling partial tag matches
 };
 
 export const DEFAULT_TOOL_CALL_PARSE_STATE: ToolCallParseState = {
@@ -19,9 +21,11 @@ export const DEFAULT_TOOL_CALL_PARSE_STATE: ToolCallParseState = {
   args: new Map(),
   isOnArgBeginLine: false,
   currentArgName: undefined,
+  currentArgContent: "",
   currentLineIndex: 0,
   lineChunks: [],
   done: false,
+  partialBuffer: "",
 };
 
 function createDelta(name: string, args: string, id: string): ToolCallDelta {
@@ -35,6 +39,28 @@ function createDelta(name: string, args: string, id: string): ToolCallDelta {
   };
 }
 
+function tryParseValue(value: string): any {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  // Try JSON parsing first
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // Fallback to string
+    return trimmed;
+  }
+}
+
+function escapeJsonString(str: string): string {
+  return str
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t");
+}
+
 /*
   Efficiently applies chunks to a tool call state as they come in
   Expects chunks to be broken so that new lines and codeblocks are alone
@@ -44,131 +70,205 @@ export function handleToolCallBuffer(
   toolCallId: string,
   state: ToolCallParseState,
 ): ToolCallDelta | undefined {
-  // First, add the chunk to the line
-  const lineIndex = state.currentLineIndex;
-  const isOnArgBeginLine = state.isOnArgBeginLine;
+  // Skip the first chunk (```tool\n)
+  if (state.currentLineIndex === 0) {
+    state.currentLineIndex = 1;
+    return;
+  }
 
+  // Handle newlines
+  if (chunk === "\n") {
+    // Process any buffered partial content
+    if (state.partialBuffer) {
+      const result = processBufferedContent(
+        state.partialBuffer,
+        toolCallId,
+        state,
+      );
+      state.partialBuffer = "";
+      state.currentLineIndex++;
+      return result;
+    }
+
+    state.currentLineIndex++;
+
+    // If we were on an arg begin line, we're now starting the arg content
+    if (state.isOnArgBeginLine) {
+      state.isOnArgBeginLine = false;
+      if (!state.currentArgName) {
+        throw new Error("Missing arg name in Begin arg line");
+      }
+      return createDelta("", '":"', toolCallId);
+    }
+
+    return;
+  }
+
+  // Add chunk to current line
+  const lineIndex = state.currentLineIndex;
   if (!state.lineChunks[lineIndex]) {
     state.lineChunks[lineIndex] = [];
   }
   state.lineChunks[lineIndex].push(chunk);
 
-  // The first line will be skipped (```tool\n)
-  if (lineIndex === 0) {
-    state.currentLineIndex = 1;
+  const currentLine = state.lineChunks[lineIndex].join("");
+  const lowerCaseLine = currentLine.toLowerCase();
+
+  // Check for partial matches that might prevent streaming
+  const allTags = [
+    "```",
+    ...acceptableToolNameTags,
+    ...acceptableBeginArgTags,
+    ...acceptableEndArgTags,
+  ];
+  const hasPartialMatch = allTags.some(
+    (tag) => tag.startsWith(lowerCaseLine) && tag !== lowerCaseLine,
+  );
+
+  if (hasPartialMatch) {
+    state.partialBuffer += chunk;
+    return; // Wait for more chunks
+  }
+
+  // If we had a partial buffer but no match, process it
+  if (state.partialBuffer) {
+    const result = processBufferedContent(
+      state.partialBuffer,
+      toolCallId,
+      state,
+    );
+    state.partialBuffer = "";
+    if (result) return result;
+  }
+
+  return processCurrentChunk(
+    chunk,
+    currentLine,
+    lowerCaseLine,
+    lineIndex,
+    toolCallId,
+    state,
+  );
+}
+
+function processBufferedContent(
+  bufferedContent: string,
+  toolCallId: string,
+  state: ToolCallParseState,
+): ToolCallDelta | undefined {
+  // If we're in an arg, treat buffered content as arg content
+  if (state.currentArgName && !state.isOnArgBeginLine) {
+    state.currentArgContent += bufferedContent;
+    return createDelta("", escapeJsonString(bufferedContent), toolCallId);
+  }
+
+  // Otherwise, this was a false partial match, ignore it
+  return;
+}
+
+function processCurrentChunk(
+  chunk: string,
+  currentLine: string,
+  lowerCaseLine: string,
+  lineIndex: number,
+  toolCallId: string,
+  state: ToolCallParseState,
+): ToolCallDelta | undefined {
+  // TOOL_NAME line (line 1)
+  if (lineIndex === 1) {
+    if (acceptableToolNameTags.some((tag) => lowerCaseLine.startsWith(tag))) {
+      const nameMatch = currentLine.split(/tool_?name:\s*/i)[1] || "";
+      if (nameMatch && !state.name) {
+        state.name = nameMatch;
+        return createDelta(nameMatch, "", toolCallId);
+      } else if (nameMatch) {
+        const newPart = nameMatch.slice(state.name.length);
+        state.name = nameMatch;
+        return createDelta(newPart, "", toolCallId);
+      }
+    }
     return;
   }
 
-  // Increment line if relevant
-  if (chunk === "\n") {
-    state.currentLineIndex++;
+  // Check for end of tool call
+  if (lowerCaseLine === "```") {
+    // Close any open arg
+    if (state.currentArgName) {
+      const parsedValue = tryParseValue(state.currentArgContent);
+      let jsonValue: string;
 
-    if (state.isOnArgBeginLine) {
-      if (!state.currentArgName) {
-        throw new Error("Missing arg name in Begin arg line");
+      if (typeof parsedValue === "string") {
+        jsonValue = `"${escapeJsonString(parsedValue)}"`;
+      } else {
+        jsonValue = JSON.stringify(parsedValue);
       }
-      state.isOnArgBeginLine = false;
-      // Stream the Json chunk between arg and its value
-      return createDelta("", '":', toolCallId);
-    }
-  }
 
-  const currentLine = state.lineChunks[state.currentLineIndex].join("");
-  const lowerCaseLine = currentLine.toLowerCase();
-
-  // TOOL_NAME line
-  if (lineIndex === 1) {
-    if (state.name) {
-      state.name += chunk;
-      return createDelta(chunk, "", toolCallId);
-    } else {
-      if (acceptableToolNameTags.find((tag) => lowerCaseLine.startsWith(tag))) {
-        const nameMatch = currentLine.split(/tool_?name:/i)[1] ?? "";
-        state.name = nameMatch.trim();
-        if (state.name) {
-          return createDelta(state.name, "", toolCallId);
-        }
-      } else if (
-        !acceptableToolNameTags.find((tag) => tag.startsWith(lowerCaseLine))
-      ) {
-        throw new Error("Invalid tool name line: " + currentLine);
-      }
-      return;
-    }
-  } else if (!state.name) {
-    throw new Error("Missing tool call name");
-    // BEGIN_ARG line
-  } else if (isOnArgBeginLine) {
-    state.currentArgName = (currentLine.split(/begin_?arg:/i)[1] ?? "").trim();
-    return createDelta("", chunk, toolCallId);
-  } else if (state.currentArgName) {
-    // Check for escape from arg
-    if (acceptableEndArgTags.find((tag) => lowerCaseLine.startsWith(tag))) {
+      const closingDelta =
+        jsonValue.slice(state.currentArgContent.length) + "}";
       state.currentArgName = undefined;
-    }
-    // Check for partial escape from arg
-    else if (
-      acceptableEndArgTags.find((tag) => tag.startsWith(lowerCaseLine))
-    ) {
-      return;
+      state.currentArgContent = "";
+      state.done = true;
+      return createDelta("", closingDelta, toolCallId);
     }
 
-    const currentVal = state.args.get(state.currentArgName!);
-    const argsDelta = `${currentVal ? '"' : ""}${chunk}`;
-    if (currentVal) {
-      state.args.set(state.currentArgName!, currentVal + chunk);
-      return createDelta("", chunk, toolCallId);
-    } else {
-      state.args.set(state.currentArgName!, chunk);
-      return createDelta("", `"${chunk}`, toolCallId);
-    }
-    // // Add chunk to arg
-    // else if (state.currentArgName) {
-    //         if (state.currentArgName) {
-    //     const endValue = state.args.get(state.currentArgName);
-    //     if (!endValue) {
-    //       state.args.set(state.currentArgName, "");
-    //     } else if (endValue.toLowerCase() === "false") {
-    //       state.args.set(state.currentArgName, false);
-    //     } else if (endValue.toLowerCase() === "true") {
-    //       state.args.set(state.currentArgName, true);
-    //     } else {
-    //       const num = Number(endValue);
-    //       if (!isNaN(num)) {
-    //         state.args.set(state.currentArgName, num);
-    //       }
-    //     }
-    //   }
-    // }
-  } else {
-    // If not in arg, check for closing tags
-    if (lowerCaseLine === "```" || lowerCaseLine === "\n") {
-      // On completion, finish args JSON if applicable
-      if (state.args.size > 0) {
-        return createDelta("", '"}', toolCallId);
-      }
+    // Close args object if we have any args
+    if (state.args.size > 0) {
       state.done = true;
-      return;
+      return createDelta("", "}", toolCallId);
     }
-    // Check for begin arg tags
-    if (acceptableBeginArgTags.find((tag) => lowerCaseLine.startsWith(tag))) {
-      state.isOnArgBeginLine = true;
-      const argName = (currentLine.split(/begin_?arg:/i)[1] ?? "").trim();
-      if (argName) {
-        state.currentArgName = argName;
-      }
-      const argDelta = `${state.args.size === 0 ? "{" : ","}"${argName}`;
-      return createDelta("", argDelta, toolCallId);
-    }
-    // Handle partial begin/close tags
-    if (
-      lowerCaseLine &&
-      ["```", ...acceptableBeginArgTags].some((v) =>
-        v.startsWith(lowerCaseLine),
-      )
-    ) {
-      return;
-    }
-    throw new Error("Invalid/hanging line in tool call:\n" + lowerCaseLine);
+
+    state.done = true;
+    return;
   }
+
+  // Check for BEGIN_ARG
+  if (acceptableBeginArgTags.some((tag) => lowerCaseLine.startsWith(tag))) {
+    state.isOnArgBeginLine = true;
+    const argName = currentLine.split(/begin_?arg:\s*/i)[1]?.trim() || "";
+    if (argName) {
+      state.currentArgName = argName;
+    }
+
+    const prefix = state.args.size === 0 ? '{"' : ',"';
+    const argNamePart = argName || "";
+    state.args.set(argName, ""); // Mark that we've seen this arg
+
+    return createDelta("", prefix + argNamePart, toolCallId);
+  }
+
+  // Check for END_ARG
+  if (
+    state.currentArgName &&
+    acceptableEndArgTags.some((tag) => lowerCaseLine.startsWith(tag))
+  ) {
+    const parsedValue = tryParseValue(state.currentArgContent);
+    let jsonValue: string;
+
+    if (typeof parsedValue === "string") {
+      jsonValue = `"${escapeJsonString(parsedValue)}"`;
+    } else {
+      jsonValue = JSON.stringify(parsedValue);
+    }
+
+    // Stream the remaining part of the JSON value
+    const remainingJson = jsonValue.slice(state.currentArgContent.length);
+
+    state.currentArgName = undefined;
+    state.currentArgContent = "";
+
+    return createDelta("", remainingJson, toolCallId);
+  }
+
+  // If we're in an arg (not on begin line), add to arg content
+  if (state.currentArgName && !state.isOnArgBeginLine) {
+    state.currentArgContent += chunk;
+    return createDelta("", escapeJsonString(chunk), toolCallId);
+  }
+
+  // If we reach here and it's not an expected tag, it might be an error
+  if (currentLine.trim() && !state.currentArgName && !state.isOnArgBeginLine) {
+    throw new Error("Invalid/hanging line in tool call: " + currentLine);
+  }
+
+  return;
 }

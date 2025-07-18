@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { closeTag, splitAtCodeblocksAndNewLines } from "./xmlToolUtils";
+import { closeTag, splitAtCodeblocksAndNewLines } from "./systemToolUtils";
 
 describe("closeTag", () => {
   const testCases = [
