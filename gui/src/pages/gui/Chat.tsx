@@ -3,7 +3,7 @@ import {
   ChatBubbleOvalLeftIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
-import { InputModifiers, ChatHistoryItem } from "core";
+import { ChatHistoryItem, InputModifiers } from "core";
 import { renderChatMessage } from "core/util/messageContent";
 import {
   useCallback,
@@ -136,7 +136,6 @@ export function Chat() {
         !e.shiftKey
       ) {
         void dispatch(cancelStream());
-        if (isInEdit) ideMessenger.post("rejectDiff", {});
       }
     };
     window.addEventListener("keydown", listener);

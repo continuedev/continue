@@ -291,6 +291,7 @@ export const sessionSlice = createSlice({
       if (state.history.length < 2) {
         return;
       }
+
       const lastUserOrToolIdx = findLastIndex(
         state.history,
         (item) => item.message.role === "tool" || item.message.role === "user",
@@ -317,7 +318,14 @@ export const sessionSlice = createSlice({
       }
 
       if (validAssistantMessageIdx === -1) {
-        state.history = state.history.slice(0, lastUserOrToolIdx + 1);
+        const lastMsg = state.history[lastUserOrToolIdx];
+        const lastRole = lastMsg.message.role as "user" | "tool";
+        if (lastRole === "user") {
+          state.mainEditorContentTrigger = lastMsg.editorState;
+          state.history = state.history.slice(0, lastUserOrToolIdx);
+        } else {
+          state.history = state.history.slice(0, lastUserOrToolIdx + 1);
+        }
       } else {
         state.history = state.history.slice(0, validAssistantMessageIdx + 1);
       }
