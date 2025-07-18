@@ -114,6 +114,7 @@ class MessageTypes {
             "streamDiffLines",
             "chatDescriber/describe",
             "conversation/compact",
+            "conversation/deleteCompaction",
             "stats/getTokensPerDay",
             "stats/getTokensPerModel",
             // Codebase

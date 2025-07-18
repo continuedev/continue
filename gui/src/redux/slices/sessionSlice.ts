@@ -437,6 +437,16 @@ export const sessionSlice = createSlice({
       state.isPruned = false;
       state.contextPercentage = undefined;
     },
+    deleteCompaction: (state, action: PayloadAction<number>) => {
+      // Removes the conversation summary from the specified message
+      const historyItem = state.history[action.payload];
+      if (historyItem?.conversationSummary) {
+        state.history[action.payload] = {
+          ...historyItem,
+          conversationSummary: undefined,
+        };
+      }
+    },
     updateHistoryItemAtIndex: (
       state,
       {
@@ -992,6 +1002,7 @@ export const {
   clearDanglingMessages,
   setMainEditorContentTrigger,
   deleteMessage,
+  deleteCompaction,
   setIsGatheringContext,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
