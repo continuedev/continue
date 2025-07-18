@@ -4,12 +4,12 @@ import {
   InputBox,
   Key,
   TextEditor,
+  until,
   VSBrowser,
   WebDriver,
   WebElement,
   WebView,
   Workbench,
-  until,
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
@@ -47,10 +47,30 @@ describe("Keyboard Shortcuts", () => {
 
   afterEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL * 1000);
+    await cleanupChat();
     await view.switchBack();
     await editor.clearText();
     await new EditorView().closeAllEditors();
   });
+
+  async function cleanupChat(chatInput?: WebElement) {
+    try {
+      if (!chatInput) {
+        chatInput = await TestUtils.waitForSuccess(async () => {
+          return GUISelectors.getMessageInputFieldAtIndex(view, 0);
+        });
+      }
+      if (
+        chatInput &&
+        (await chatInput.isDisplayed()) &&
+        (await chatInput.isEnabled())
+      ) {
+        await chatInput.clear();
+      }
+    } catch (e) {
+      console.error(`Failed to clear chat: ${e}`);
+    }
+  }
 
   it("Should correctly undo and redo using keyboard shortcuts when writing a chat message", async () => {
     await GUIActions.executeFocusContinueInputShortcut(driver);
@@ -105,10 +125,8 @@ describe("Keyboard Shortcuts", () => {
     );
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it("Should not create a code block when Cmd+L is pressed without text highlighted", async () => {
-    const text = "Hello, world!";
-
-    await editor.setText(text);
+  it("Should not create a code block when Cmd+L is pressed on an empty document", async () => {
+    expect((await editor.getText()).trim()).to.equal("");
 
     await GUIActions.executeFocusContinueInputShortcut(driver);
 
@@ -174,6 +192,9 @@ describe("Keyboard Shortcuts", () => {
 
     await driver.wait(until.elementIsNotVisible(textInput), DEFAULT_TIMEOUT.XS);
     expect(await textInput.isDisplayed()).to.equal(false);
+
+    // Make sure the view is visible again, so it can be cleared in afterEach()
+    await GUIActions.executeFocusContinueInputShortcut(driver);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Should create a code block when Cmd+L is pressed with text highlighted", async () => {
@@ -196,5 +217,45 @@ describe("Keyboard Shortcuts", () => {
     expect(codeblockContent).to.equal(text);
 
     await GUIActions.executeFocusContinueInputShortcut(driver);
+  }).timeout(DEFAULT_TIMEOUT.XL);
+
+  it("Should create a code block with the whole file when Cmd+L is pressed on an empty line", async () => {
+    const text = "Hello,\n\n\nworld!";
+
+    await editor.setText(text);
+    await editor.moveCursor(2, 1); //Move cursor to an empty line
+
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    ({ view } = await GUIActions.switchToReactIframe());
+
+    const codeBlock = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getInputBoxCodeBlockAtIndex(view, 0),
+    );
+    const codeblockContent = await codeBlock.getAttribute(
+      "data-codeblockcontent",
+    );
+
+    expect(codeblockContent).to.equal(text);
+  });
+
+  it("Should create a code block when Cmd+L is pressed on a non-empty line", async () => {
+    const text = "Hello, world!";
+
+    await editor.setText(text);
+    await editor.moveCursor(1, 7); //Move cursor to the 1st space
+
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    ({ view } = await GUIActions.switchToReactIframe());
+
+    const codeBlock = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getInputBoxCodeBlockAtIndex(view, 0),
+    );
+    const codeblockContent = await codeBlock.getAttribute(
+      "data-codeblockcontent",
+    );
+
+    expect(codeblockContent).to.equal(text);
   }).timeout(DEFAULT_TIMEOUT.XL);
 });
