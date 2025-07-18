@@ -1,7 +1,7 @@
 import { Tool } from "../..";
 
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const lsTool: Tool = {
   type: "function",

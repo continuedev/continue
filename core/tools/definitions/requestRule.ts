@@ -1,6 +1,6 @@
 import { ConfigDependentToolParams, GetTool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildXmlToolsSystemMessage";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export interface RequestRuleArgs {
   name: string;

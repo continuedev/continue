@@ -44,7 +44,6 @@ export function handleToolCallBuffer(
   state: ToolCallParseState,
 ): ToolCallDelta | undefined {
   // Add chunks
-  debugger;
   const lineIndex = state.currentLineIndex;
   if (!state.lineChunks[lineIndex]) {
     state.lineChunks[lineIndex] = [];

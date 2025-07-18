@@ -1,19 +1,10 @@
 let boundaryTypeIndex = 0;
 
 // Poor models are really bad at following instructions
-// Here are some examples of what they often start the tool call with
+// Give some leeway in how the initiate
 const acceptedToolStarts: [string, string][] = [
   ["```tool\n", "```tool\n"],
   ["tool_name:", "```tool\ntool_name:"],
-  // ["<tool_call>", "<tool_call>"],
-  // ["<tool_call>", "<tool_call>"],
-  // ["```xml\n<tool_call>", "<tool_call>"],
-  // ["```\n<tool_call>", "<tool_call>"],
-  // ["```tool_call>\n", "<tool_call>"],
-  // ["```tool_call\n", "<tool_call>"],
-  // ["```xml\n<tool_name>", "<tool_call>\n<tool_name>"],
-  // ["\n\n<tool_name>", "<tool_call>\n<tool_name>"],
-  // ["```xml\n<name>", "<tool_call>\n<name>"],
 ];
 
 export function detectToolCallStart(buffer: string) {
@@ -44,22 +35,3 @@ export function detectToolCallStart(buffer: string) {
     modifiedBuffer,
   };
 }
-
-const acceptedToolEnds = ["END_ARG\n```", ""];
-
-// export function detectToolCallEnd(toolCallText: string): {
-//   hasEnd: boolean
-//   extraText?: string
-// } {
-
-// const END_TAG = "END_ARG\n```";
-//             const endTagIdx = toolCallText.indexOf(END_TAG);
-//             if (endTagIdx !== -1) {
-//               leaveToolCall()
-//               done = true;
-//               // buffer = toolCallText.slice(endTagIdx + END_TAG.length)
-//             }
-// return {
-//   hasEnd: false
-// }
-// }

@@ -4,7 +4,7 @@ import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildXmlToolsSystemMessage";
+import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -131,7 +131,7 @@ export const streamNormalInput = createAsyncThunk<
   async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
-
+    debugger;
     if (!selectedChatModel) {
       throw new Error("No chat model selected");
     }

@@ -26,6 +26,7 @@ export async function* interceptSystemToolCalls(
   messageGenerator: AsyncGenerator<ChatMessage[], PromptLog | undefined>,
   abortController: AbortController,
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
+  debugger;
   let hasSeenToolCall = false;
   let inToolCall = false;
   let currentToolCallId: string | undefined = undefined;
