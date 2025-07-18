@@ -60,7 +60,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new LlamastackApi(config);
     case "continue-proxy":
       return new ContinueProxyApi(config);
-    case "x-ai":
+    case "xAI":
       return openAICompatible("https://api.x.ai/v1/", config);
     case "voyage":
       return openAICompatible("https://api.voyageai.com/v1/", config);

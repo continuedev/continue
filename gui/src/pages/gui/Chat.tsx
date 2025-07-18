@@ -3,7 +3,7 @@ import {
   ChatBubbleOvalLeftIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
-import { InputModifiers } from "core";
+import { InputModifiers, ChatHistoryItem } from "core";
 import { renderChatMessage } from "core/util/messageContent";
 import {
   useCallback,
@@ -47,6 +47,16 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
+
+// Helper function to find the index of the latest conversation summary
+function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].conversationSummary) {
+      return i;
+    }
+  }
+  return -1; // No summary found
+}
 
 const StepsDiv = styled.div`
   position: relative;
@@ -273,19 +283,26 @@ export function Chat() {
         toolCallStates,
       } = item;
 
+      // Calculate once for the entire function
+      const latestSummaryIndex = findLatestSummaryIndex(history);
+      const isBeforeLatestSummary =
+        latestSummaryIndex !== -1 && index < latestSummaryIndex;
+
       if (message.role === "user") {
         return (
-          <ContinueInputBox
-            onEnter={(editorState, modifiers) =>
-              sendInput(editorState, modifiers, index)
-            }
-            isLastUserInput={isLastUserInput(index)}
-            isMainInput={false}
-            editorState={editorState}
-            contextItems={contextItems}
-            appliedRules={appliedRules}
-            inputId={message.id}
-          />
+          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
+            <ContinueInputBox
+              onEnter={(editorState, modifiers) =>
+                sendInput(editorState, modifiers, index)
+              }
+              isLastUserInput={isLastUserInput(index)}
+              isMainInput={false}
+              editorState={editorState}
+              contextItems={contextItems}
+              appliedRules={appliedRules}
+              inputId={message.id}
+            />
+          </div>
         );
       }
 
@@ -314,6 +331,7 @@ export function Chat() {
                   index={index}
                   isLast={index === history.length - 1}
                   item={item}
+                  latestSummaryIndex={latestSummaryIndex}
                 />
               </TimelineItem>
             </div>
@@ -330,14 +348,16 @@ export function Chat() {
 
       if (message.role === "thinking") {
         return (
-          <ThinkingBlockPeek
-            content={renderChatMessage(message)}
-            redactedThinking={message.redactedThinking}
-            index={index}
-            prevItem={index > 0 ? history[index - 1] : null}
-            inProgress={index === history.length - 1}
-            signature={message.signature}
-          />
+          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
+            <ThinkingBlockPeek
+              content={renderChatMessage(message)}
+              redactedThinking={message.redactedThinking}
+              index={index}
+              prevItem={index > 0 ? history[index - 1] : null}
+              inProgress={index === history.length - 1}
+              signature={message.signature}
+            />
+          </div>
         );
       }
 
@@ -356,6 +376,7 @@ export function Chat() {
               index={index}
               isLast={index === history.length - 1}
               item={item}
+              latestSummaryIndex={latestSummaryIndex}
             />
           </TimelineItem>
         </div>

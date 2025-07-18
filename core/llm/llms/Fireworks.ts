@@ -5,7 +5,7 @@ import OpenAI from "./OpenAI.js";
 class Fireworks extends OpenAI {
   static providerName = "fireworks";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.fireworks.ai/inference/v1",
+    apiBase: "https://api.fireworks.ai/inference/v1/",
   };
 
   private static modelConversion: { [key: string]: string } = {

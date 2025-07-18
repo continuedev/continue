@@ -129,7 +129,7 @@ describe("GUI Test", () => {
       expect(isInViewport).to.eq(true);
     }).timeout(DEFAULT_TIMEOUT.XL * 1000);
 
-    it("Open chat and send message → press arrow up and arrow down to cycle through messages → submit another message → press arrow up and arrow down to cycle through messages", async () => {
+     it("Open chat and send message → press arrow up and arrow down to cycle through messages → submit another message → press arrow up and arrow down to cycle through messages", async () => {
       await GUIActions.sendMessage({
         view,
         message: "MESSAGE 1",
@@ -185,7 +185,7 @@ describe("GUI Test", () => {
       await driver.wait(until.elementTextIs(input2, ""), DEFAULT_TIMEOUT.SM);
     }).timeout(DEFAULT_TIMEOUT.XL);
 
-    it("Open chat and type → open history → press new session button → chat opens, empty and in focus", async () => {
+   it("Open chat and type → open history → press new session button → chat opens, empty and in focus", async () => {
       const originalTextInput = await GUISelectors.getMessageInputFieldAtIndex(
         view,
         0,
@@ -215,7 +215,7 @@ describe("GUI Test", () => {
       expect(textInputValue).to.equal("");
     }).timeout(DEFAULT_TIMEOUT.XL);
 
-    it("chat → history → chat", async () => {
+   it("chat → history → chat", async () => {
       const messagePair1 = TestUtils.generateTestMessagePair(1);
       await GUIActions.sendMessage({
         view,
@@ -590,4 +590,3 @@ describe("GUI Test", () => {
       });
     }).timeout(DEFAULT_TIMEOUT.MD);
   });
-});
