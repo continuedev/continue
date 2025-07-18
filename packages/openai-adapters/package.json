@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "vitest",
     "build": "tsc"
   },
   "author": "Nate Sesti and Ty Dunn",
@@ -30,6 +30,7 @@
     "@types/json-schema": "^7.0.15",
     "cross-env": "^7.0.3",
     "ts-jest": "^29.2.3",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "vitest": "^1.6.1"
   }
 }
