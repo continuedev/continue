@@ -1,15 +1,19 @@
 import { expect } from "chai";
 import { Key } from "vscode-extension-tester";
 
-import { access, constants } from 'fs/promises';
+import { access, constants } from "fs/promises";
 import * as path from "path";
 import { DEFAULT_TIMEOUT } from "./constants";
 
 export class TestUtils {
   public static CONTINUE_GLOBAL_DIR = process.env.CONTINUE_GLOBAL_DIR ?? "";
-  
+
   public static getGlobalContextFilePath(): string {
-    return path.join(TestUtils.CONTINUE_GLOBAL_DIR, "index", "globalContext.json");
+    return path.join(
+      TestUtils.CONTINUE_GLOBAL_DIR,
+      "index",
+      "globalContext.json",
+    );
   }
 
   public static async fileExists(path: string): Promise<boolean> {

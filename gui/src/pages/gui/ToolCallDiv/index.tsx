@@ -6,7 +6,7 @@ import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
-import { ToolCallDisplay } from "./ToolCall";
+import { ToolCallDisplay } from "./ToolCallDisplay";
 import { getStatusIcon, toolCallIcons } from "./utils";
 
 interface ToolCallDivProps {
@@ -103,10 +103,7 @@ export function ToolCallDiv({
   }
 
   return toolCallStates.map((toolCallState) => (
-    <div
-      className="border-border rounded-lg border p-3"
-      key={toolCallState.toolCallId}
-    >
+    <div className="p-4 pb-1" key={toolCallState.toolCallId}>
       {renderToolCall(toolCallState)}
     </div>
   ));

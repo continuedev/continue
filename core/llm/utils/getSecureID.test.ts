@@ -1,4 +1,4 @@
-import { getSecureID } from "../getSecureID";
+import { getSecureID } from "./getSecureID";
 
 // Mock the crypto.randomUUID function
 const mockRandomUUID = jest.fn();

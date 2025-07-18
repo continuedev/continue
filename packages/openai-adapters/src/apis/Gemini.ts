@@ -3,6 +3,7 @@ import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
+  ChatCompletionContentPartImage,
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
@@ -75,7 +76,9 @@ export class GeminiApi implements BaseLlmApi {
         return {
           inlineData: {
             mimeType: "image/jpeg",
-            data: part.image_url?.url.split(",")[1],
+            data: (part as ChatCompletionContentPartImage).image_url?.url.split(
+              ",",
+            )[1],
           },
         };
     }

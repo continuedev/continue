@@ -1,5 +1,22 @@
+import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import util from "node:util";
+// Automatically decode the buffer according to the platform to avoid garbled Chinese
+function getDecodedOutput(data: Buffer): string {
+  if (process.platform === "win32") {
+    try {
+      let out = iconv.decode(data, "utf-8");
+      if (/�/.test(out)) {
+        out = iconv.decode(data, "gbk");
+      }
+      return out;
+    } catch {
+      return iconv.decode(data, "gbk");
+    }
+  } else {
+    return data.toString();
+  }
+}
 
 import { fileURLToPath } from "node:url";
 import { ToolImpl } from ".";
@@ -77,7 +94,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
 
-                const newOutput = data.toString();
+                const newOutput = getDecodedOutput(data);
                 terminalOutput += newOutput;
 
                 // Send partial output to UI
@@ -103,7 +120,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
 
-                const newOutput = data.toString();
+                const newOutput = getDecodedOutput(data);
                 terminalOutput += newOutput;
 
                 // Send partial output to UI, status is not required

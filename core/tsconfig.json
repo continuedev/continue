@@ -16,6 +16,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "noEmitOnError": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "types": ["jest", "node"]
   },
   "include": ["./**/*.ts", "./**/*.js", "./**/*.d.ts"],

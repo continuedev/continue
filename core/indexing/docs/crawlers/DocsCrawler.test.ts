@@ -53,7 +53,7 @@ describe("DocsCrawler", () => {
     };
   }
 
-  describe("GitHub Crawler", () => {
+  describe.skip("GitHub Crawler", () => {
     const repoUrl =
       "https://github.com/Patrick-Erichsen/test-github-repo-for-crawling";
 

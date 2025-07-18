@@ -68,7 +68,28 @@ export class GlobalContext {
       try {
         parsed = JSON.parse(data);
       } catch (e: any) {
-        console.warn(`Error updating global context: ${e}`);
+        console.warn(
+          `Error updating global context, deleting corrupted file: ${e}`,
+        );
+        // Delete the corrupted file and recreate it fresh
+        try {
+          fs.unlinkSync(filepath);
+        } catch (deleteError) {
+          console.warn(
+            `Error deleting corrupted global context file: ${deleteError}`,
+          );
+        }
+        // Recreate the file with just the new value
+        fs.writeFileSync(
+          filepath,
+          JSON.stringify(
+            {
+              [key]: value,
+            },
+            null,
+            2,
+          ),
+        );
         return;
       }
 
@@ -90,7 +111,17 @@ export class GlobalContext {
       const parsed = JSON.parse(data);
       return parsed[key];
     } catch (e: any) {
-      console.warn(`Error parsing global context: ${e}`);
+      console.warn(
+        `Error parsing global context, deleting corrupted file: ${e}`,
+      );
+      // Delete the corrupted file so it can be recreated fresh
+      try {
+        fs.unlinkSync(filepath);
+      } catch (deleteError) {
+        console.warn(
+          `Error deleting corrupted global context file: ${deleteError}`,
+        );
+      }
       return undefined;
     }
   }

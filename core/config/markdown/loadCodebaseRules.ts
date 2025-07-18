@@ -7,6 +7,43 @@ import { walkDirs } from "../../indexing/walkDir";
 import { RULES_MARKDOWN_FILENAME } from "../../llm/rules/constants";
 import { getUriPathBasename } from "../../util/uri";
 
+export class CodebaseRulesCache {
+  private static instance: CodebaseRulesCache | null = null;
+  private constructor() {}
+
+  public static getInstance(): CodebaseRulesCache {
+    if (CodebaseRulesCache.instance === null) {
+      CodebaseRulesCache.instance = new CodebaseRulesCache();
+    }
+    return CodebaseRulesCache.instance;
+  }
+  rules: RuleWithSource[] = [];
+  errors: ConfigValidationError[] = [];
+  async refresh(ide: IDE) {
+    const { rules, errors } = await loadCodebaseRules(ide);
+    this.rules = rules;
+    this.errors = errors;
+  }
+  async update(ide: IDE, uri: string) {
+    const content = await ide.readFile(uri);
+    const rule = markdownToRule(content, { uriType: "file", filePath: uri });
+    const ruleWithSource: RuleWithSource = {
+      ...rule,
+      source: "colocated-markdown",
+      ruleFile: uri,
+    };
+    const matchIdx = this.rules.findIndex((r) => r.ruleFile === uri);
+    if (matchIdx === -1) {
+      this.rules.push(ruleWithSource);
+    } else {
+      this.rules[matchIdx] = ruleWithSource;
+    }
+  }
+  remove(uri: string) {
+    this.rules = this.rules.filter((r) => r.ruleFile !== uri);
+  }
+}
+
 /**
  * Loads rules from rules.md files colocated in the codebase
  */
@@ -33,7 +70,11 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
         const content = await ide.readFile(filePath);
         const rule = markdownToRule(content, { uriType: "file", filePath });
 
-        rules.push({ ...rule, source: "rules-block", ruleFile: filePath });
+        rules.push({
+          ...rule,
+          source: "colocated-markdown",
+          ruleFile: filePath,
+        });
       } catch (e) {
         errors.push({
           fatal: false,

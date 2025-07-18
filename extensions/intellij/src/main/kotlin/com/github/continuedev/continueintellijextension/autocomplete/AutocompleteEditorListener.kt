@@ -1,5 +1,8 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.nextEdit.NextEditService
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -37,6 +40,16 @@ class AutocompleteCaretListener : CaretListener {
 class AutocompleteDocumentListener(private val editorManager: FileEditorManager, private val editor: Editor) :
     DocumentListener {
     override fun documentChanged(event: DocumentEvent) {
+        // Ignore empty changes or changes where content didn't actually change.
+        if (event.newFragment.isEmpty() && event.oldFragment.isEmpty()) {
+            return
+        }
+
+        // Make sure this is an actual text modification event.
+        if (!event.isWholeTextReplaced && event.offset == 0 && event.oldLength == 0 && event.newLength == 0) {
+            return
+        }
+
         if (editor != editorManager.selectedTextEditor) {
             return
         }
@@ -46,12 +59,55 @@ class AutocompleteDocumentListener(private val editorManager: FileEditorManager,
             return
         }
 
-        // Invoke later is important, otherwise the completion will be triggered before the document is updated
-        // causing the old caret offset to be used
-        // TODO: concurrency
-        invokeLater {
-            service.triggerCompletion(editor)
+        val nextEditService = editor.project?.service<NextEditService>() ?: return
+
+        // Check if we're in a test environment based on some property or condition
+        val isAutocompleteTestEnvironment = System.getProperty("continue.autocomplete.test.environment") == "true"
+        val isNextEditTestEnvironment = System.getProperty("continue.nextEdit.test.environment") == "true"
+
+        if (isAutocompleteTestEnvironment) {
+            invokeLater {
+                service.triggerCompletion(editor)
+            }
+            return
+        } else if (isNextEditTestEnvironment) {
+            invokeLater {
+                nextEditService.triggerNextEdit(editor)
+            }
+            return
         }
+
+        // Check settings to see if next edit is enabled, and then trigger either autocomplete or next exit.
+        val continuePluginService = editor.project?.service<ContinuePluginService>()
+        if (continuePluginService == null) {
+            return
+        }
+
+        continuePluginService.coreMessenger?.request(
+            "config/getSerializedProfileInfo",
+            null,
+            null,
+            ({ response ->
+                val optInNextEditFeature = response.castNestedOrNull<Boolean>(
+                    "content",
+                    "result",
+                    "config",
+                    "experimental",
+                    "optInNextEditFeature"
+                ) ?: false
+
+                invokeLater {
+                    if (optInNextEditFeature) {
+                        nextEditService.triggerNextEdit(editor)
+                    } else {
+                        // Invoke later is important, otherwise the completion will be triggered before the document is updated
+                        // causing the old caret offset to be used
+                        // TODO: concurrency
+                        service.triggerCompletion(editor)
+                    }
+                }
+            })
+        )
     }
 }
 

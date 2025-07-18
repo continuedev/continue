@@ -100,10 +100,7 @@ export class GUISelectors {
   }
 
   public static getNthMessageDeleteButton(view: WebView, index: number) {
-    return SelectorUtils.getElementByDataTestId(
-      view,
-      `delete-button-${index}`,
-    );
+    return SelectorUtils.getElementByDataTestId(view, `delete-button-${index}`);
   }
 
   public static getModelDropdownOption(view: WebView, option: string) {

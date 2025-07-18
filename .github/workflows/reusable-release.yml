@@ -14,6 +14,24 @@ on:
         required: true
       SEMANTIC_RELEASE_NPM_TOKEN:
         required: true
+      OPENAI_API_KEY:
+        required: false
+      ANTHROPIC_API_KEY:
+        required: false
+      GEMINI_API_KEY:
+        required: false
+      MISTRAL_API_KEY:
+        required: false
+      AZURE_OPENAI_API_KEY:
+        required: false
+      AZURE_FOUNDRY_CODESTRAL_API_KEY:
+        required: false
+      AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY:
+        required: false
+      AZURE_OPENAI_GPT41_API_KEY:
+        required: false
+      VOYAGE_API_KEY:
+        required: false
 
 permissions:
   contents: write
@@ -46,6 +64,16 @@ jobs:
 
       - name: Run tests
         run: npm test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_FOUNDRY_CODESTRAL_API_KEY: ${{ secrets.AZURE_FOUNDRY_CODESTRAL_API_KEY }}
+          AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
+          AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
 
       - name: Release
         env:

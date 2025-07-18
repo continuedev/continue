@@ -19,7 +19,6 @@ export const sharedConfigSchema = z
     readResponseTTS: z.boolean(),
     promptPath: z.string(),
     useCurrentFileAsContext: z.boolean(),
-    logEditingData: z.boolean(),
     optInNextEditFeature: z.boolean(),
     enableExperimentalTools: z.boolean(),
     codebaseToolCallingOnly: z.boolean(),
@@ -180,9 +179,6 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.useCurrentFileAsContext !== undefined) {
     configCopy.experimental.useCurrentFileAsContext =
       sharedConfig.useCurrentFileAsContext;
-  }
-  if (sharedConfig.logEditingData !== undefined) {
-    configCopy.experimental.logEditingData = sharedConfig.logEditingData;
   }
   if (sharedConfig.optInNextEditFeature !== undefined) {
     configCopy.experimental.optInNextEditFeature =

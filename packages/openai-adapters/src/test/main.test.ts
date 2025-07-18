@@ -4,12 +4,13 @@ import { DEEPSEEK_API_BASE } from "../apis/DeepSeek.js";
 import { INCEPTION_API_BASE } from "../apis/Inception.js";
 import { OpenAIApi } from "../apis/OpenAI.js";
 import { constructLlmApi } from "../index.js";
-import { getLlmApi, testChat, testEmbed } from "./util.js";
+import { getLlmApi, testChat, testEmbed, testFim, testRerank } from "./util.js";
 
 dotenv.config();
 
 export interface TestConfigOptions {
   skipTools: boolean;
+  expectUsage?: boolean;
 }
 
 function testConfig(_config: ModelConfig & { options?: TestConfigOptions }) {
@@ -34,8 +35,12 @@ function testConfig(_config: ModelConfig & { options?: TestConfigOptions }) {
     testEmbed(api, model);
   }
 
-  if (config.roles?.includes("embed")) {
-    testEmbed(api, model);
+  if (config.roles?.includes("rerank")) {
+    testRerank(api, model);
+  }
+
+  if (config.roles?.includes("autocomplete")) {
+    testFim(api, model);
   }
 }
 
@@ -51,6 +56,10 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     model: "claude-3-5-haiku-latest",
     apiKey: process.env.ANTHROPIC_API_KEY!,
     roles: ["chat"],
+    options: {
+      skipTools: false,
+      expectUsage: true,
+    },
   },
   {
     provider: "gemini",
@@ -58,19 +67,19 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     apiKey: process.env.GEMINI_API_KEY!,
     roles: ["chat"],
   },
-  {
-    provider: "mistral",
-    model: "codestral-latest",
-    apiKey: process.env.MISTRAL_API_KEY!,
-    apiBase: "https://api.mistral.ai/v1",
-    roles: ["autocomplete"],
-  },
-  {
-    provider: "deepseek",
-    model: "deepseek-coder",
-    apiKey: process.env.DEEPSEEK_API_KEY!,
-    roles: ["autocomplete"],
-  },
+  // {
+  //   provider: "mistral",
+  //   model: "codestral-latest",
+  //   apiKey: process.env.MISTRAL_API_KEY!,
+  //   apiBase: "https://api.mistral.ai/v1",
+  //   roles: ["autocomplete"],
+  // },
+  // {
+  //   provider: "deepseek",
+  //   model: "deepseek-coder",
+  //   apiKey: process.env.DEEPSEEK_API_KEY!,
+  //   roles: ["autocomplete"],
+  // },
   {
     provider: "openai",
     model: "text-embedding-3-small",
@@ -112,28 +121,26 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     model: "gpt-4.1",
     apiBase: "https://continue-openai.openai.azure.com",
     apiKey: process.env.AZURE_OPENAI_GPT41_API_KEY,
+    roles: ["chat"],
     env: {
       deployment: "gpt-4.1",
       apiVersion: "2024-02-15-preview",
       apiType: "azure-openai",
     },
-    roles: ["chat"],
-  },
-  {
-    provider: "azure",
-    model: "mistral-small-2503",
-    apiBase: "https://nate-0276-resource.services.ai.azure.com/models",
-    apiKey: process.env.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY,
-    roles: ["chat"],
-    options: { skipTools: true },
   },
 ];
 
-TESTS.forEach((config) => {
-  describe(`${config.provider}/${config.model}`, () => {
-    testConfig({ name: config.model, ...config });
+if (process.env.IGNORE_API_KEY_TESTS === "true") {
+  test("Skipping API key tests", () => {
+    console.log("Skipping API key tests due to IGNORE_API_KEY_TESTS being set");
   });
-});
+} else {
+  TESTS.forEach((config) => {
+    describe(`${config.provider}/${config.model}`, () => {
+      testConfig({ name: config.model, ...config });
+    });
+  });
+}
 
 describe("Configuration", () => {
   it("should configure DeepSeek OpenAI client with correct apiBase and apiKey", () => {

@@ -1,7 +1,6 @@
 // core/util/GlobalContext.test.ts
-import { GlobalContext, GlobalContextType } from "./GlobalContext";
 import fs from "node:fs";
-import path from "path";
+import { GlobalContext } from "./GlobalContext";
 import { getGlobalContextFilePath } from "./paths";
 
 describe("GlobalContext", () => {
@@ -69,8 +68,35 @@ describe("GlobalContext", () => {
     const value = globalContext.get("indexingPaused");
     expect(value).toBeUndefined();
     expect(consoleWarnMock).toHaveBeenCalledWith(
-      expect.stringContaining("Error parsing global context"),
+      expect.stringContaining(
+        "Error parsing global context, deleting corrupted file",
+      ),
     );
+
+    // Clean up
+    consoleWarnMock.mockRestore();
+  });
+
+  it("should delete corrupted file on get and allow fresh start", () => {
+    // Write invalid JSON to the file
+    fs.writeFileSync(globalContextFilePath, "{ invalid json }");
+    expect(fs.existsSync(globalContextFilePath)).toBe(true);
+
+    const consoleWarnMock = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+
+    // Try to get a value - this should delete the corrupted file
+    const value = globalContext.get("indexingPaused");
+    expect(value).toBeUndefined();
+
+    // File should be deleted after corruption is detected
+    expect(fs.existsSync(globalContextFilePath)).toBe(false);
+
+    // Now we should be able to update and get values normally
+    globalContext.update("indexingPaused", true);
+    const newValue = globalContext.get("indexingPaused");
+    expect(newValue).toBe(true);
 
     // Clean up
     consoleWarnMock.mockRestore();
@@ -87,14 +113,44 @@ describe("GlobalContext", () => {
     // Attempt to update
     globalContext.update("indexingPaused", true);
 
-    // The update should have been skipped due to JSON parsing error
-    // So attempting to get the value should return undefined
-    const value = globalContext.get("indexingPaused");
-    expect(value).toBeUndefined();
-
     expect(consoleWarnMock).toHaveBeenCalledWith(
-      expect.stringContaining("Error updating global context"),
+      expect.stringContaining(
+        "Error updating global context, deleting corrupted file",
+      ),
     );
+
+    // The update should have recreated the file with just the new value
+    const value = globalContext.get("indexingPaused");
+    expect(value).toBe(true);
+
+    // Clean up
+    consoleWarnMock.mockRestore();
+  });
+
+  it("should delete and recreate corrupted file on update", () => {
+    // Write invalid JSON to the file
+    fs.writeFileSync(globalContextFilePath, "{ invalid json }");
+    expect(fs.existsSync(globalContextFilePath)).toBe(true);
+
+    const consoleWarnMock = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+
+    // Try to update - this should delete the corrupted file and recreate it
+    globalContext.update("indexingPaused", true);
+
+    // File should still exist but with valid JSON now
+    expect(fs.existsSync(globalContextFilePath)).toBe(true);
+
+    // Should be able to read the value
+    const value = globalContext.get("indexingPaused");
+    expect(value).toBe(true);
+
+    // Should be able to add more values
+    globalContext.update("hasAlreadyCreatedAPromptFile", false);
+    expect(globalContext.get("hasAlreadyCreatedAPromptFile")).toBe(false);
+    // Original value should still be there
+    expect(globalContext.get("indexingPaused")).toBe(true);
 
     // Clean up
     consoleWarnMock.mockRestore();

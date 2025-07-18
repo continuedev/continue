@@ -1,3 +1,4 @@
+
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.*
@@ -88,7 +89,8 @@ class IntelliJIDE(
             name = ideName,
             version = ideVersion,
             remoteName = remoteName,
-            extensionVersion = extensionVersion
+            extensionVersion = extensionVersion,
+            isPrerelease = false // TODO: Implement prerelease detection for JetBrains
         )
     }
 
@@ -709,4 +711,3 @@ class IntelliJIDE(
     }
 
 }
-

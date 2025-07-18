@@ -101,8 +101,9 @@ function ParallelListeners() {
     [dispatch, hasDoneInitialConfigLoad],
   );
 
-  const initialLoadAuthAndConfig = useCallback(
-    async (initial: boolean) => {
+  // Load config from the IDE
+  useEffect(() => {
+    async function initialLoadConfig() {
       dispatch(setIsSessionMetadataLoading(true));
       dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
@@ -110,16 +111,11 @@ function ParallelListeners() {
         undefined,
       );
       if (result.status === "success") {
-        await handleConfigUpdate(initial, result.content);
+        await handleConfigUpdate(true, result.content);
       }
       dispatch(setConfigLoading(false));
-    },
-    [ideMessenger, handleConfigUpdate],
-  );
-
-  // Load config from the IDE
-  useEffect(() => {
-    void initialLoadAuthAndConfig(true);
+    }
+    void initialLoadConfig();
     const interval = setInterval(() => {
       if (hasDoneInitialConfigLoad.current) {
         // Init to run on initial config load
@@ -130,12 +126,12 @@ function ParallelListeners() {
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
       } else {
-        void initialLoadAuthAndConfig(true);
+        void initialLoadConfig();
       }
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [hasDoneInitialConfigLoad, initialLoadAuthAndConfig, ideMessenger]);
+  }, [hasDoneInitialConfigLoad, ideMessenger]);
 
   useWebviewListener(
     "configUpdate",

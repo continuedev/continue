@@ -84,6 +84,10 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     ],
   },
+  "llm/compileChat": {
+    compiledChatMessages: [],
+    pruningStatus: "not-pruned",
+  },
 };
 
 const DEFAULT_CHAT_RESPONSE: ChatMessage[] = [

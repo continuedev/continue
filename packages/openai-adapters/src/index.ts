@@ -4,6 +4,7 @@ import { AnthropicApi } from "./apis/Anthropic.js";
 import { AzureApi } from "./apis/Azure.js";
 import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
+import { ContinueProxyApi } from "./apis/ContinueProxy.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
@@ -57,7 +58,9 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new WatsonXApi(config);
     case "llamastack":
       return new LlamastackApi(config);
-    case "x-ai":
+    case "continue-proxy":
+      return new ContinueProxyApi(config);
+    case "xAI":
       return openAICompatible("https://api.x.ai/v1/", config);
     case "voyage":
       return openAICompatible("https://api.voyageai.com/v1/", config);

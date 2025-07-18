@@ -11,6 +11,7 @@ import OpenAI from "../OpenAI.js";
 
 import type { Chunk, LLMOptions } from "../../../index.js";
 import { LLMConfigurationStatuses } from "../../constants.js";
+import { LlmApiRequestType } from "../../openaiTypeConverters.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
@@ -22,6 +23,8 @@ class ContinueProxy extends OpenAI {
       ).toString();
     }
   }
+
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [];
 
   // The apiKey and apiBase are set to the values for the proxy,
   // but we need to keep track of the actual values that the proxy will use

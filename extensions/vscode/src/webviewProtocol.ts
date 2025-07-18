@@ -152,7 +152,7 @@ export class VsCodeWebviewProtocol
     this._webviewListener = this._webview.onDidReceiveMessage(handleMessage);
   }
 
-  constructor(private readonly reloadConfig: () => void) {}
+  constructor() {}
 
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,

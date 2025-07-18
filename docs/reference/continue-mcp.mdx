@@ -4,25 +4,34 @@ description: Set up an MCP server to search Continue documentation
 keywords: [mcp, documentation, search, mintlify, reference]
 ---
 
-# Continue Documentation MCP Server
-
-The Continue Documentation MCP Server allows you to search and retrieve information from the Continue documentation directly within your agent conversations. This is powered by Mintlify's MCP server generation.
+The continue-docs MCP Server allows you to search and retrieve information from the Continue documentation directly within your agent conversations. This is powered by Mintlify's MCP server generation.
 
 ## Installation
 
 ### Step 1: Install the MCP Server
 
-Run the following command to install the Continue documentation MCP server:
+Run the following command to install the continue-docs MCP server:
 
 ```bash
-npx mint-mcp add continue-docs
+npx mint-mcp add docs.continue.dev
 ```
 
-This will:
+When prompted, select "All" from the selection menu:
+
+![mintlify cli selection tree](/images/mintlify-cli-selection-tree.png)
+
+This command will:
 
 - Download and install the MCP server locally
 - Set up the search tool for Continue documentation
 - Create the necessary configuration files
+
+<Info>
+Take note of the installation path displayed after running the command above. You'll need to replace in the configuration below with your actual installation path.
+
+It will look like this: `/path/to/user/.mcp/docs.continue.dev/src/index.js`
+
+</Info>
 
 ### Step 2: Configure Continue
 
@@ -30,19 +39,17 @@ This will:
 2. Add a file called `continue-docs-mcp.yaml` to this folder
 3. Write the following contents and save:
 
+````yaml title=".continue/mcpServers/continue-docs-mcp.yaml"
 ```yaml title=".continue/mcpServers/continue-docs-mcp.yaml"
 name: Continue Documentation MCP
 version: 0.0.1
 schema: v1
 mcpServers:
   - name: Continue Docs Search
-    type: stdio
-    command: npx
+    command: node
     args:
-      - mint-mcp
-      - add
-      - continue-docs
-```
+      - "/path/to/user/.mcp/docs.continue.dev/src/index.js"
+````
 
 ### Step 3: Enable Agent Mode
 

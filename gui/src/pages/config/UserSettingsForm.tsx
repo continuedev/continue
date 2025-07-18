@@ -67,10 +67,6 @@ export function UserSettingsForm() {
     });
   };
 
-  const handleLogEditingDataToggle = (value: boolean) => {
-    handleUpdate({ logEditingData: value });
-  };
-
   const handleOptInNextEditToggle = (value: boolean) => {
     handleUpdate({ optInNextEditFeature: value });
   };
@@ -86,7 +82,6 @@ export function UserSettingsForm() {
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const autoAcceptEditToolDiffs = config.ui?.autoAcceptEditToolDiffs ?? false;
-  const logEditingData = config.experimental?.logEditingData ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
@@ -436,8 +431,6 @@ export function UserSettingsForm() {
 
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
-                    logEditingData={logEditingData}
-                    handleLogEditingDataToggle={handleLogEditingDataToggle}
                     optInNextEditFeature={optInNextEditFeature}
                     handleOptInNextEditToggle={handleOptInNextEditToggle}
                   />

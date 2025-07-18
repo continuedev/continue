@@ -10,7 +10,7 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IdeSettings, ModelDescription } from "../index.js";
+import { IdeInfo, IdeSettings, ModelDescription } from "../index.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
@@ -40,6 +40,7 @@ export class ControlPlaneClient {
       ControlPlaneSessionInfo | undefined
     >,
     private readonly ideSettingsPromise: Promise<IdeSettings>,
+    private readonly ideInfoPromise: Promise<IdeInfo>,
   ) {}
 
   async resolveFQSNs(
@@ -86,11 +87,17 @@ export class ControlPlaneClient {
 
     const env = await getControlPlaneEnv(this.ideSettingsPromise);
     const url = new URL(path, env.CONTROL_PLANE_URL).toString();
+    const ideInfo = await this.ideInfoPromise;
+
     const resp = await fetch(url, {
       ...init,
       headers: {
         ...init.headers,
         Authorization: `Bearer ${accessToken}`,
+        ...{
+          "x-extension-version": ideInfo.extensionVersion,
+          "x-is-prerelease": String(ideInfo.isPrerelease),
+        },
       },
     });
 
