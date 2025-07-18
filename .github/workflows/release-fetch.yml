@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "packages/fetch/**"
+      - ".github/workflows/release-fetch.yml"
+      - ".github/workflows/reusable-release.yml"
 
 permissions:
   contents: write

@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "packages/openai-adapters/**"
+      - ".github/workflows/release-openai-adapters.yml"
+      - ".github/workflows/reusable-release.yml"
 
 permissions:
   contents: write
