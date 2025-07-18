@@ -1,9 +1,4 @@
 import * as vscode from "vscode";
-// TODO:
-// Checks for current viewport range.
-// Creates and saves the Tab to Jump SVG decoration.
-// Given the range to replace, determines whether to display the SVG or not.
-// When SVG is displayed, reserve Tab and Esc for jumping.
 
 export class JumpManager {
   private static _instance: JumpManager | undefined;
@@ -37,7 +32,7 @@ export class JumpManager {
     this._disposables = [];
   }
 
-  private async suggestJump(nextJumpLocation: vscode.Position) {
+  public async suggestJump(nextJumpLocation: vscode.Position) {
     const editor = vscode.window.activeTextEditor;
 
     if (editor) {
