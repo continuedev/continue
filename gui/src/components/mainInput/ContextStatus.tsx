@@ -33,22 +33,31 @@ const ContextStatus = () => {
         clickable
       >
         <div className="flex flex-col gap-0">
-          <span> {`${percent}% of context filled`}</span>
-          {isPruned && <span>Old messages are being removed</span>}
-          {history.length > 0 && (
-            <span
-              className="cursor-pointer underline"
-              onClick={() => {
-                dispatch(
-                  saveCurrentSession({
-                    openNewSession: true,
-                    generateTitle: false,
-                  }),
-                );
-              }}
-            >
-              New Session
+          <span className="inline-block">
+            {`${percent}% of context filled`}
+          </span>
+          {isPruned && (
+            <span className="inline-block">
+              {`Oldest messages are being removed`}
             </span>
+          )}
+          {history.length > 0 && (
+            <div>
+              <span className="inline-block">Start a</span>{" "}
+              <span
+                className="inline-block cursor-pointer underline"
+                onClick={() => {
+                  dispatch(
+                    saveCurrentSession({
+                      openNewSession: true,
+                      generateTitle: false,
+                    }),
+                  );
+                }}
+              >
+                New Session
+              </span>
+            </div>
           )}
         </div>
       </Tooltip>
@@ -56,7 +65,6 @@ const ContextStatus = () => {
         data-tooltip-id="context-status"
         className="border-description-muted relative h-[10px] w-[5px] rounded-[1px] border-[0.5px] border-solid"
       >
-        {/* <div className="absolute bottom-full left-1/4 h-[1px] w-1/2 border-[0.5px] border-solid" /> */}
         <div
           className={`transition-height absolute bottom-0 left-0 w-full duration-300 ease-in-out ${barColorClass}`}
           style={{ height: `${percent}%` }}
