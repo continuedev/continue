@@ -1,4 +1,5 @@
 import * as path from "path";
+import { v4 as uuidv4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import {
   BranchAndDir,
@@ -13,7 +14,6 @@ import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
 import { ContextRetrievalService } from "../autocomplete/context/ContextRetrievalService.js";
 
-import { randomUUID } from "crypto";
 import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
@@ -69,8 +69,8 @@ export class NextEditProvider {
   private promptMetadata: PromptMetadata | null = null;
   private prefetchQueue: NextEditPrefetchQueue;
   // private refQueue: RangeInFile[] = [];
-  // TODO: This needs to be cleared globally on cancel.
-  public static currentEditChainId: string | null = null;
+  private currentEditChainId: string | null = null;
+  private previousCompletions: string[] = [];
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -318,6 +318,27 @@ export class NextEditProvider {
     return options;
   }
 
+  public chainExists(): boolean {
+    return this.currentEditChainId !== null;
+  }
+
+  public getPreviousCompletion(): string | null {
+    return this.previousCompletions[0];
+  }
+
+  public deleteChain(): void {
+    this.currentEditChainId = null;
+    this.previousCompletions = [];
+  }
+
+  public startChain(id?: string) {
+    this.currentEditChainId = id ?? uuidv4();
+  }
+
+  public isStartOfChain() {
+    return this.previousCompletions.length === 1;
+  }
+
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
@@ -444,6 +465,8 @@ export class NextEditProvider {
             msg.content.split("<|editable_region_start|>\n")[1],
           ).replace(/\n$/, "");
 
+          this.previousCompletions.push(nextCompletion);
+
           const currCursorPos = helper.pos;
           const editableRegionStartLine = Math.max(
             currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
@@ -462,7 +485,8 @@ export class NextEditProvider {
             helper.pos,
             editableRegionStartLine,
             oldEditRangeSlice,
-            "",
+            // "",
+            nextCompletion,
           );
 
           const outcomeNext: NextEditOutcome = {
@@ -506,7 +530,7 @@ export class NextEditProvider {
     token: AbortSignal | undefined,
   ) {
     try {
-      if (NextEditProvider.currentEditChainId) {
+      if (this.currentEditChainId) {
         return await this.prefetchQueue.pop();
       }
 
@@ -545,7 +569,7 @@ export class NextEditProvider {
         return undefined;
       }
 
-      NextEditProvider.currentEditChainId = randomUUID();
+      // this.currentEditChainId = randomUUID();
 
       this.prefetchQueue.loadOther({
         helper,
