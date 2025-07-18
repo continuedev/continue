@@ -46,6 +46,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
     init {
       System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
       System.setProperty("ide.browser.jcef.contextMenu.devTools.enabled", "true")
+      System.setProperty("ide.browser.jcef.out-of-process.enabled", "false")
     }
 
     val browser: ContinueBrowser by lazy {

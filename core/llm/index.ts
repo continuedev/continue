@@ -20,6 +20,7 @@ import {
   ILLMLogger,
   LLMFullCompletionOptions,
   LLMOptions,
+  MessageOption,
   ModelCapability,
   ModelInstaller,
   PromptLog,
@@ -157,6 +158,7 @@ export abstract class BaseLLM implements ILLM {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -174,6 +176,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
   profile?: string | undefined;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -249,6 +253,7 @@ export abstract class BaseLLM implements ILLM {
 
     // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
+    this.envSecretLocations = options.envSecretLocations;
     this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
 
@@ -273,6 +278,8 @@ export abstract class BaseLLM implements ILLM {
     this.region = options.region;
     this.projectId = options.projectId;
     this.profile = options.profile;
+    this.accessKeyId = options.accessKeyId;
+    this.secretAccessKey = options.secretAccessKey;
 
     this.openaiAdapter = this.createOpenAiAdapter();
 
@@ -878,6 +885,23 @@ export abstract class BaseLLM implements ILLM {
     return { role: "assistant" as const, content: completion };
   }
 
+  compileChatMessages(
+    message: ChatMessage[],
+    options: LLMFullCompletionOptions,
+  ) {
+    let { completionOptions } = this._parseCompletionOptions(options);
+    completionOptions = this._modifyCompletionOptions(completionOptions);
+
+    return compileChatMessages({
+      modelName: completionOptions.model,
+      msgs: message,
+      contextLength: this.contextLength,
+      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+      supportsImages: this.supportsImages(),
+      tools: options.tools,
+    });
+  }
+
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
   ): ChatCompletionCreateParams {
@@ -902,6 +926,7 @@ export abstract class BaseLLM implements ILLM {
     _messages: ChatMessage[],
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
+    messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
@@ -912,14 +937,21 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = compileChatMessages({
-      modelName: completionOptions.model,
-      msgs: _messages,
-      contextLength: this.contextLength,
-      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
-      supportsImages: this.supportsImages(),
-      tools: options.tools,
-    });
+    let messages = _messages;
+
+    // If not precompiled, compile the chat messages
+    if (!messageOptions || messageOptions.precompiled === false) {
+      const { compiledChatMessages } = compileChatMessages({
+        modelName: completionOptions.model,
+        msgs: _messages,
+        contextLength: this.contextLength,
+        maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+        supportsImages: this.supportsImages(),
+        tools: options.tools,
+      });
+
+      messages = compiledChatMessages;
+    }
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)

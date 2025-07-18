@@ -21,6 +21,7 @@ import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
+import MermaidBlock from "./MermaidBlock";
 import { rehypeHighlightPlugin } from "./rehypeHighlightPlugin";
 import { StepContainerPreToolbar } from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
@@ -333,6 +334,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               }
             }
           }
+          if (codeProps.className?.includes("language-mermaid")) {
+            const codeText = String(codeProps.children || "");
+            return <MermaidBlock code={codeText} />;
+          }
           return <code {...codeProps}>{codeProps.children}</code>;
         },
       },
@@ -350,7 +355,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
     <StyledMarkdown
-      contentEditable="false"
       fontSize={getFontSize()}
       whiteSpace={codeWrapState}
       bgColor={props.useParentBackgroundColor ? "" : vscBackground}

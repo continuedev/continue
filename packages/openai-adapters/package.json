@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.44",
+  "version": "1.0.46",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,13 +12,15 @@
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.842.0",
+    "@aws-sdk/credential-providers": "^3.840.0",
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/config-yaml": "^1.0.51",
     "@continuedev/fetch": "^1.0.15",
     "dotenv": "^16.5.0",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",
-    "openai": "^4.76.0",
+    "openai": "^4.104.0",
     "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },

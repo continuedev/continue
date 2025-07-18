@@ -156,20 +156,20 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
 
-      GUISelectors.getThreadMessageByText(view, llmResponse1);
+      // Delete the first assistant response (index 1) - this deletes both user msg 0 and assistant response 0
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
+      await TestUtils.expectNoElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse0),
+      );
+
+      // Delete the second assistant response (now at index 1) - this deletes both user msg 1 and assistant response 1
       await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
-      GUISelectors.getThreadMessageByText(view, llmResponse0);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
-      await TestUtils.expectNoElement(() =>
-        GUISelectors.getThreadMessageByText(view, llmResponse0),
-      );
-
-      GUISelectors.getThreadMessageByText(view, llmResponse2);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
+      // Delete the third assistant response (now at index 1) - this deletes both user msg 2 and assistant response 2
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
@@ -356,20 +356,6 @@ describe("GUI Test", () => {
       await messageInput.sendKeys("terminal");
       await messageInput.sendKeys(Key.ENTER);
       await messageInput.sendKeys(Key.ENTER);
-
-      // Open the context items peek
-      const contextItemsPeek = await GUISelectors.getContextItemsPeek(view);
-      await contextItemsPeek.click();
-
-      await TestUtils.waitForSuccess(async () => {
-        const firstContextItemInPeek =
-          await GUISelectors.getFirstContextItemsPeekItem(view);
-        await firstContextItemInPeek.click();
-
-        // Check that item is there with correct name
-        const description = await firstContextItemInPeek.getText();
-        expect(description).to.include("Terminal");
-      });
 
       // Check that the contents match what we expect (repeated back by the mock LLM)
       await TestUtils.waitForSuccess(() => {

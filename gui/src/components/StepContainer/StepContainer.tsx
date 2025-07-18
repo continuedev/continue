@@ -2,13 +2,11 @@ import { ChatHistoryItem } from "core";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import styled from "styled-components";
-import { vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
-import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
+import ConversationSummary from "./ConversationSummary";
 import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
@@ -17,17 +15,8 @@ interface StepContainerProps {
   item: ChatHistoryItem;
   index: number;
   isLast: boolean;
+  latestSummaryIndex?: number;
 }
-
-const ContentDiv = styled.div<{ fontSize?: number }>`
-  padding: 4px;
-  padding-left: 6px;
-  padding-right: 6px;
-
-  background-color: ${vscBackground};
-  font-size: ${getFontSize()}px;
-  overflow: hidden;
-`;
 
 export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
@@ -36,12 +25,34 @@ export default function StepContainer(props: StepContainerProps) {
   const historyItemAfterThis = useAppSelector(
     (state) => state.session.history[props.index + 1],
   );
+  const warningMessage = useAppSelector(
+    (state) => state.session.warningMessage,
+  );
   const uiConfig = useAppSelector(selectUIConfig);
 
-  const hideActionSpace =
+  // Calculate dimming and indicator state based on latest summary index
+  const latestSummaryIndex = props.latestSummaryIndex ?? -1;
+  const isBeforeLatestSummary =
+    latestSummaryIndex !== -1 && props.index <= latestSummaryIndex;
+  const isLatestSummary =
+    latestSummaryIndex !== -1 && props.index === latestSummaryIndex;
+
+  const isNextMsgAssistantOrThinking =
     historyItemAfterThis?.message.role === "assistant" ||
-    historyItemAfterThis?.message.role === "thinking";
-  const hideActions = hideActionSpace || (isStreaming && props.isLast);
+    historyItemAfterThis?.message.role === "thinking" ||
+    historyItemAfterThis?.message.role === "tool";
+
+  const shouldRenderResponseAction = () => {
+    if (isNextMsgAssistantOrThinking) {
+      return false;
+    }
+
+    if (!historyItemAfterThis) {
+      return !props.item.toolCallStates;
+    }
+
+    return true;
+  };
 
   useEffect(() => {
     if (!isStreaming) {
@@ -81,12 +92,11 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div>
-      <ContentDiv>
+      <div
+        className={`bg-background p-1 px-1.5 ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+      >
         {uiConfig?.displayRawMarkdown ? (
-          <pre
-            className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4"
-            style={{ fontSize: getFontSize() - 2 }}
-          >
+          <pre className="text-2xs max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4">
             {renderChatMessage(props.item.message)}
           </pre>
         ) : (
@@ -101,11 +111,14 @@ export default function StepContainer(props: StepContainerProps) {
           </>
         )}
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
-      </ContentDiv>
-      {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete */}
-      {!hideActionSpace && (
-        <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
-          {!hideActions && (
+      </div>
+
+      {shouldRenderResponseAction() && (
+        // We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete
+        <div
+          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+        >
+          {!isStreaming && (
             <ResponseActions
               isTruncated={isTruncated}
               onDelete={onDelete}
@@ -117,6 +130,22 @@ export default function StepContainer(props: StepContainerProps) {
           )}
         </div>
       )}
+
+      {/* Show compaction indicator for the latest summary */}
+      {isLatestSummary && (
+        <div className="mx-1.5 my-5">
+          <div className="flex items-center">
+            <div className="border-border flex-1 border-t border-solid"></div>
+            <span className="text-description mx-3 text-xs">
+              Previous Conversation Compacted
+            </span>
+            <div className="border-border flex-1 border-t border-solid"></div>
+          </div>
+        </div>
+      )}
+
+      {/* ConversationSummary is outside the dimmed container so it's always at full opacity */}
+      <ConversationSummary item={props.item} index={props.index} />
     </div>
   );
 }

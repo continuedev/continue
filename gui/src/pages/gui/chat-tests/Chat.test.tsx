@@ -10,14 +10,26 @@ import { Chat } from "../Chat";
 
 test("should render input box", async () => {
   await renderWithProviders(<Chat />);
-  await getElementByTestId("continue-input-box");
+  await getElementByTestId("continue-input-box-main-editor-input");
 });
 
 test("should be able to toggle modes", async () => {
   await renderWithProviders(<Chat />);
-  await getElementByText("Chat");
+  await getElementByText("Agent");
 
   // Simulate cmd+. keyboard shortcut to toggle modes
+  act(() => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: ".",
+        metaKey: true, // cmd key on Mac
+      }),
+    );
+  });
+
+  // Check that it switched to Chat mode
+  await getElementByText("Chat");
+
   act(() => {
     document.dispatchEvent(
       new KeyboardEvent("keydown", {
@@ -39,19 +51,7 @@ test("should be able to toggle modes", async () => {
     );
   });
 
-  // Check that it switched to Agent mode
   await getElementByText("Agent");
-
-  act(() => {
-    document.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: ".",
-        metaKey: true, // cmd key on Mac
-      }),
-    );
-  });
-
-  await getElementByText("Chat");
 });
 
 test("should send a message and receive a response", async () => {
