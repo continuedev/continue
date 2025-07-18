@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import { useCompactConversation } from "../../util/compactConversation";
 import { ToolTip } from "../gui/Tooltip";
 
 const ContextStatus = () => {
@@ -10,6 +11,8 @@ const ContextStatus = () => {
   const history = useAppSelector((state) => state.session.history);
   const percent = Math.round((contextPercentage ?? 0) * 100);
   const isPruned = useAppSelector((state) => state.session.isPruned);
+
+  const compactConversation = useCompactConversation();
   if (!isPruned && percent < 60) {
     return null;
   }
@@ -32,7 +35,7 @@ const ContextStatus = () => {
         }}
         clickable
       >
-        <div className="flex flex-col gap-0">
+        <div className="flex flex-col gap-0 text-xs">
           <span className="inline-block">
             {`${percent}% of context filled`}
           </span>
@@ -42,21 +45,30 @@ const ContextStatus = () => {
             </span>
           )}
           {history.length > 0 && (
-            <div>
-              <span className="inline-block">Start a</span>{" "}
-              <span
-                className="inline-block cursor-pointer underline"
-                onClick={() => {
-                  void dispatch(
-                    saveCurrentSession({
-                      openNewSession: true,
-                      generateTitle: false,
-                    }),
-                  );
-                }}
-              >
-                New Session
-              </span>
+            <div className="flex flex-col gap-1 whitespace-pre">
+              <div>
+                <span
+                  className="inline-block cursor-pointer underline"
+                  onClick={() => compactConversation(history.length - 1)}
+                >
+                  Compact conversation
+                </span>
+                {"\n"}
+                <span className="inline-block">or</span> {"\n"}
+                <span
+                  className="inline-block cursor-pointer underline"
+                  onClick={() => {
+                    dispatch(
+                      saveCurrentSession({
+                        openNewSession: true,
+                        generateTitle: false,
+                      }),
+                    );
+                  }}
+                >
+                  Start a new session
+                </span>
+              </div>
             </div>
           )}
         </div>
