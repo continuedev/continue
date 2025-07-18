@@ -40,9 +40,21 @@ export default function ResponseActions({
   const ideMessenger = useContext(IdeMessengerContext);
   const currentSessionId = useAppSelector((state) => state.session.id);
   const selectedModel = useAppSelector(selectSelectedChatModel);
+  const contextPercentage = useAppSelector(
+    (state) => state.session.contextPercentage,
+  );
+  const isPruned = useAppSelector((state) => state.session.isPruned);
   const ruleGenerationSupported = useMemo(() => {
     return selectedModel && modelSupportsTools(selectedModel);
   }, [selectedModel]);
+
+  const percent = Math.round((contextPercentage ?? 0) * 100);
+  const buttonColorClass =
+    isLast && (isPruned || percent > 80)
+      ? "text-warning"
+      : "text-description-muted";
+
+  const showLabel = isLast && (isPruned || percent >= 60);
 
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
@@ -82,11 +94,26 @@ export default function ResponseActions({
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
       <HeaderButtonWithToolTip
         testId={`compact-button-${index}`}
-        text="Compact conversation"
+        text={
+          showLabel
+            ? "Summarize conversation to reduce context length"
+            : "Compact conversation"
+        }
         tabIndex={-1}
         onClick={onCompactConversation}
       >
-        <ArrowsPointingInIcon className="text-description-muted h-3.5 w-3.5" />
+        <div className="flex items-center space-x-1">
+          <ArrowsPointingInIcon
+            className={`h-3.5 w-3.5 ${buttonColorClass || "text-description-muted"}`}
+          />
+          {showLabel && (
+            <span
+              className={`text-xs ${buttonColorClass || "text-description-muted"}`}
+            >
+              Compact conversation
+            </span>
+          )}
+        </div>
       </HeaderButtonWithToolTip>
 
       {isLast && ruleGenerationSupported && (
