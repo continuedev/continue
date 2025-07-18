@@ -8,13 +8,13 @@ import {
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
-import { renderChatMessage } from "core/util/messageContent";
-import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
-  constructMessages,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
-} from "./constructMessages";
+} from "core/tools";
+import { renderChatMessage } from "core/util/messageContent";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { constructMessages } from "./constructMessages";
 
 // For these tests we will mock the rules to simulate different scenarios
 const CONTEXT_RULE: RuleWithSource = {
