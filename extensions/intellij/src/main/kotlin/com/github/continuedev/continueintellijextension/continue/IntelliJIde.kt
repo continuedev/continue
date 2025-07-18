@@ -27,12 +27,13 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
+import org.jetbrains.plugins.terminal.ShellTerminalWidget
+import org.jetbrains.plugins.terminal.TerminalView
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.BufferedReader
@@ -54,7 +55,7 @@ class IntelliJIDE(
     init {
         try {
             val os = getOS()
-            
+
             if (os == OS.LINUX || os == OS.MAC) {
                 val file = File(ripgrep)
                 if (!file.canExecute()) {
@@ -135,7 +136,30 @@ class IntelliJIDE(
     }
 
     override suspend fun getTerminalContents(): String {
-        return ""
+        return withContext(Dispatchers.EDT) {
+            try {
+                val terminalView = TerminalView.getInstance(project)
+                // Find the first terminal widget available, whatever its state.
+                val widget =
+                    terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull { it.isEnabled }
+
+                if (widget != null) {
+                    val textBuffer = widget.terminalTextBuffer
+                    val stringBuilder = StringBuilder()
+                    // Iterate through all lines in the buffer (history + screen)
+                    for (i in 0 until textBuffer.historyLinesCount + textBuffer.screenLinesCount) {
+                        stringBuilder.append(textBuffer.getLine(i).text).append('\n')
+                    }
+                    stringBuilder.toString()
+                } else {
+                    "" // Return empty if no terminal is available
+                }
+            } catch (e: Exception) {
+                println("Error getting terminal contents: ${e.message}")
+                e.printStackTrace()
+                "" // Return empty on error
+            }
+        }
     }
 
     override suspend fun getDebugLocals(threadIndex: Int): String {
@@ -343,7 +367,7 @@ class IntelliJIDE(
                 }
 
                 val command = GeneralCommandLine(commandArgs)
-    
+
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
                 return results.split("\n")
@@ -357,11 +381,12 @@ class IntelliJIDE(
             throw NotImplementedError("Ripgrep not supported, this workspace is remote")
         }
     }
+
     override suspend fun getSearchResults(query: String, maxResults: Int?): String {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                 val commandArgs = mutableListOf(
+                val commandArgs = mutableListOf(
                     ripgrep,
                     "-i",
                     "--ignore-file",
@@ -372,20 +397,20 @@ class IntelliJIDE(
                     "2",
                     "--heading"
                 )
-                
+
                 // Conditionally add maxResults flag
                 if (maxResults != null) {
                     commandArgs.add("-m")
                     commandArgs.add(maxResults.toString())
                 }
-                
+
                 // Add the search query and path
                 commandArgs.add("-e")
                 commandArgs.add(query)
                 commandArgs.add(".")
 
                 val command = GeneralCommandLine(commandArgs)
-    
+
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
             } catch (exception: Exception) {
