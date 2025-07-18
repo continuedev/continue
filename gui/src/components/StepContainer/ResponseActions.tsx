@@ -59,7 +59,6 @@ export default function ResponseActions({
     dispatch(setDialogMessage(<GenerateRuleDialog />));
   };
 
-
   return (
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
       <HeaderButtonWithToolTip

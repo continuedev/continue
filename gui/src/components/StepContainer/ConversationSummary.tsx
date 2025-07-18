@@ -59,7 +59,7 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
               deleteCompaction(props.index);
             }}
           >
-            <TrashIcon className="h-3 w-3 text-description-muted" />
+            <TrashIcon className="text-description-muted h-3 w-3" />
           </HeaderButtonWithToolTip>
         </div>
         {open && (

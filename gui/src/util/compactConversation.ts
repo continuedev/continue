@@ -1,7 +1,10 @@
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setCompactionLoading, deleteCompaction } from "../redux/slices/sessionSlice";
+import {
+  setCompactionLoading,
+  deleteCompaction,
+} from "../redux/slices/sessionSlice";
 import { loadSession } from "../redux/thunks/session";
 
 export const useCompactConversation = () => {

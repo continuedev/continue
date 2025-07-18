@@ -108,10 +108,10 @@ export async function deleteCompaction({
 }: DeleteCompactionParams): Promise<void> {
   // Get the current session
   const session = historyManager.load(sessionId);
-  
+
   // Create a copy of the history
   const updatedHistory = [...session.history];
-  
+
   // Remove the conversation summary from the specified message
   if (updatedHistory[index]?.conversationSummary) {
     updatedHistory[index] = {
@@ -119,12 +119,12 @@ export async function deleteCompaction({
       conversationSummary: undefined,
     };
   }
-  
+
   // Update the session with the modified history
   const updatedSession = {
     ...session,
     history: updatedHistory,
   };
-  
+
   historyManager.save(updatedSession);
 }

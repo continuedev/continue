@@ -24,7 +24,10 @@ import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
-import { compactConversation, deleteCompaction } from "./util/conversationCompaction";
+import {
+  compactConversation,
+  deleteCompaction,
+} from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
