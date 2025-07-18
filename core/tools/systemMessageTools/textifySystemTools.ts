@@ -1,4 +1,3 @@
-import { NO_TOOL_CALL_OUTPUT_MESSAGE } from "..";
 import {
   AssistantChatMessage,
   MessagePart,
@@ -9,6 +8,10 @@ import {
   normalizeToMessageParts,
   renderContextItems,
 } from "../../util/messageContent";
+import {
+  CANCELLED_TOOL_CALL_MESSAGE,
+  NO_TOOL_CALL_OUTPUT_MESSAGE,
+} from "../constants";
 function toolCallStateToSystemToolCall(state: ToolCallState): string {
   let parts = ["```tool"];
   parts.push(`TOOL_NAME: ${state.toolCall.function.name}`);
@@ -27,8 +30,12 @@ function toolCallStateToSystemToolCall(state: ToolCallState): string {
 }
 
 function toolCallStateToSystemToolOutput(state: ToolCallState): string {
-  let output = `Tool output for tool call ${state.toolCallId} (${state.toolCall.function.name}):\n\n`;
-  if (state.output?.length) {
+  let output = `Tool output for ${state.toolCall.function.name} tool call:\n\n`;
+  // TODO - include tool call id for parallel. Confuses dumb models
+  // let output = `Tool output for tool call ${state.toolCallId} (${state.toolCall.function.name}):\n\n`;
+  if (state.status === "canceled") {
+    output += CANCELLED_TOOL_CALL_MESSAGE;
+  } else if (state.output?.length) {
     output += renderContextItems(state.output);
   } else {
     output += NO_TOOL_CALL_OUTPUT_MESSAGE;

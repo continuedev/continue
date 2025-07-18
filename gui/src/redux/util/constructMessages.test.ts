@@ -11,7 +11,7 @@ import {
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
-} from "core/tools";
+} from "core/tools/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { constructMessages } from "./constructMessages";

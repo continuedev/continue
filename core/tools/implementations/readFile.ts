@@ -5,6 +5,9 @@ import { ToolImpl } from ".";
 import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
+  if (!args.filepath) {
+    throw new Error("Missing filepath argument in tool call");
+  }
   const firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
     extras.ide,

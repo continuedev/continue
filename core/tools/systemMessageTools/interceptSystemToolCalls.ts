@@ -26,6 +26,7 @@ export async function* interceptSystemToolCalls(
   messageGenerator: AsyncGenerator<ChatMessage[], PromptLog | undefined>,
   abortController: AbortController,
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
+  let hasSeenToolCall = false;
   let inToolCall = false;
   let currentToolCallId: string | undefined = undefined;
   let buffer = "";
@@ -83,13 +84,13 @@ export async function* interceptSystemToolCalls(
             }
 
             try {
-              // Directly parse the accumulated buffer without storing a separate toolCallText
               const delta = handleToolCallBuffer(
                 buffer,
                 currentToolCallId,
                 parseState,
               );
               if (delta) {
+                hasSeenToolCall = true;
                 yield [
                   {
                     ...message,
@@ -108,6 +109,11 @@ export async function* interceptSystemToolCalls(
               console.error("Error while parsing system tool call", e);
             }
           } else {
+            // Prevent content after tool calls for now
+            if (hasSeenToolCall) {
+              continue;
+            }
+
             // Yield normal assistant message
             yield [
               {

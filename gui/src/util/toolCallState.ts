@@ -54,7 +54,7 @@ export function addToolCallDeltaToState(
   }
 
   const [_, parsedArgs] = incrementalParseJson(mergedArgs || "{}");
-
+  debugger;
   return {
     status: "generating",
     toolCall: {

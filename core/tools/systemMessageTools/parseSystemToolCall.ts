@@ -44,6 +44,7 @@ export function handleToolCallBuffer(
   state: ToolCallParseState,
 ): ToolCallDelta | undefined {
   // Add chunks
+  debugger;
   const lineIndex = state.currentLineIndex;
   if (!state.lineChunks[lineIndex]) {
     state.lineChunks[lineIndex] = [];
@@ -86,7 +87,7 @@ export function handleToolCallBuffer(
         }
       } else if (state.currentArgName) {
         if (isNewLine) {
-          const isEndArgTag = line.match(/end_?arg:/i);
+          const isEndArgTag = line.match(/end_?arg/i);
           if (isEndArgTag) {
             const trimmedValue = state.currentArgLines.join("").trim();
             state.currentArgLines.length = 0;
@@ -117,7 +118,7 @@ export function handleToolCallBuffer(
           state.done = true;
           // finish args JSON if applicable
           if (state.processedArgNames.size > 0) {
-            return createDelta("", '"}', toolCallId);
+            return createDelta("", "}", toolCallId);
           }
         }
       }
