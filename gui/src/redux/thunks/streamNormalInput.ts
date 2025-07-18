@@ -13,9 +13,11 @@ import {
   addPromptCompletionPair,
   setActive,
   setAppliedRulesAtIndex,
+  setContextPercentage,
   setInactive,
+  setInlineErrorMessage,
+  setIsPruned,
   setToolGenerated,
-  setWarningMessage,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
@@ -192,41 +194,28 @@ export const streamNormalInput = createAsyncThunk<
     );
 
     dispatch(setActive());
-    // Remove the warning message before each compileChat call
-    dispatch(setWarningMessage(undefined));
+    dispatch(setInlineErrorMessage(undefined));
+
     const precompiledRes = await extra.ideMessenger.request("llm/compileChat", {
       messages,
       options: completionOptions,
     });
 
     if (precompiledRes.status === "error") {
-      throw new Error(precompiledRes.error);
-    }
-
-    const { compiledChatMessages, pruningStatus } = precompiledRes.content;
-
-    switch (pruningStatus) {
-      case "pruned":
-        dispatch(
-          setWarningMessage({
-            message: `Chat history exceeds model's context length (${state.config.config.selectedModelByRole.chat?.contextLength} tokens). Old messages will not be included.`,
-            level: "warning",
-            category: "exceeded-context-length",
-          }),
-        );
-        break;
-      case "deleted-last-input":
-        dispatch(
-          setWarningMessage({
-            message:
-              "The provided context items are too large. Please trim the context item to fit the model's context length or increase the model's context length by editing the configuration.",
-            level: "fatal",
-            category: "deleted-last-input",
-          }),
-        );
+      if (precompiledRes.error.includes("Not enough context")) {
+        dispatch(setInlineErrorMessage("out-of-context"));
         dispatch(setInactive());
         return;
+      } else {
+        throw new Error(precompiledRes.error);
+      }
     }
+
+    const { compiledChatMessages, didPrune, contextPercentage } =
+      precompiledRes.content;
+
+    dispatch(setIsPruned(didPrune));
+    dispatch(setContextPercentage(contextPercentage));
 
     // Send request and stream response
     const streamAborter = state.session.streamAborter;

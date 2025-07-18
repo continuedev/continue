@@ -218,7 +218,7 @@ function ModelSelect() {
             {modelSelectTitle(selectedModel) || "Select model"}
           </span>
           <ChevronDownIcon
-            className="h-2 w-2 flex-shrink-0 hover:brightness-110"
+            className="hidden h-2 w-2 flex-shrink-0 hover:brightness-110 min-[200px]:flex"
             aria-hidden="true"
           />
         </ListboxButton>

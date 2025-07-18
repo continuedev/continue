@@ -1714,23 +1714,12 @@ export interface CompleteOnboardingPayload {
   apiKey?: string;
 }
 
-export type PruningStatus = "deleted-last-input" | "pruned" | "not-pruned";
-
 export interface CompiledMessagesResult {
   compiledChatMessages: ChatMessage[];
-  pruningStatus: PruningStatus;
+  didPrune: boolean;
+  contextPercentage: number;
 }
 
 export interface MessageOption {
   precompiled: boolean;
-}
-
-export type WarningMessageLevel = "warning" | "fatal";
-
-export type WarningCategory = "exceeded-context-length" | "deleted-last-input";
-
-export interface WarningMessage {
-  message: string;
-  level: WarningMessageLevel;
-  category: WarningCategory;
 }
