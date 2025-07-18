@@ -127,6 +127,12 @@ export async function runAdapterTest(testCase: AdapterTestCase) {
   // Mock fetch globally before constructing the API
   vi.stubGlobal('fetch', mockFetch);
 
+  // For non-OpenAI adapters, mock the fetch package
+  const fetchPackage = await import("@continuedev/fetch");
+  if (fetchPackage.fetchwithRequestOptions) {
+    vi.mocked(fetchPackage.fetchwithRequestOptions).mockImplementation(mockFetch as any);
+  }
+
   const api = constructLlmApi(config);
   if (!api) {
     throw new Error(`Failed to construct API for provider: ${config.provider}`);
