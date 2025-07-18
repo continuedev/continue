@@ -9,6 +9,7 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  clearSuggestionQueue,
   setActive,
   setAppliedRulesAtIndex,
   setInactive,
@@ -173,6 +174,49 @@ export const streamNormalInput = createAsyncThunk<
       state.config.config.rules,
       state.ui.ruleSettings,
     );
+
+    // Prepend queued suggestions to messages
+    const suggestionQueue = state.session.suggestionQueue;
+    if (suggestionQueue.length > 0 && messages.length > 0) {
+      // Find the last user or tool message to prepend suggestions to
+      let targetIndex = messages.length - 1;
+      while (
+        targetIndex >= 0 &&
+        messages[targetIndex].role !== "user" &&
+        messages[targetIndex].role !== "tool"
+      ) {
+        targetIndex--;
+      }
+
+      if (targetIndex >= 0) {
+        const targetMessage = messages[targetIndex];
+        const suggestionsText =
+          suggestionQueue
+            .map((s) => `<suggestion>${s}</suggestion>`)
+            .join("\n") + "\n\n";
+
+        if (typeof targetMessage.content === "string") {
+          targetMessage.content = suggestionsText + targetMessage.content;
+        } else if (Array.isArray(targetMessage.content)) {
+          // Prepend to the first text part
+          const firstTextPart = targetMessage.content.find(
+            (part) => part.type === "text",
+          );
+          if (firstTextPart) {
+            firstTextPart.text = suggestionsText + firstTextPart.text;
+          } else {
+            // Add as new text part at beginning
+            targetMessage.content.unshift({
+              type: "text",
+              text: suggestionsText,
+            });
+          }
+        }
+      }
+
+      // Clear the suggestion queue after using them
+      dispatch(clearSuggestionQueue());
+    }
 
     // TODO parallel tool calls will cause issues with this
     // because there will be multiple tool messages, so which one should have applied rules?

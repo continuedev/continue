@@ -262,6 +262,7 @@ export interface Session {
   title: string;
   workspaceDirectory: string;
   history: ChatHistoryItem[];
+  // TODO: todo state maybe goes here
 }
 
 export interface SessionMetadata {

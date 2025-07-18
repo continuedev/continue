@@ -15,6 +15,8 @@ import { readFileImpl } from "./implementations/readFile";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
+import { todoReadImpl } from "./implementations/todoRead";
+import { todoWriteImpl } from "./implementations/todoWrite";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
@@ -173,6 +175,10 @@ export async function callBuiltInTool(
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
       return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.TodoRead:
+      return await todoReadImpl(args, extras);
+    case BuiltInToolNames.TodoWrite:
+      return await todoWriteImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

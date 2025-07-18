@@ -2,6 +2,7 @@
 import DOMPurify from "dompurify";
 import { useMemo } from "react";
 import { themeIcons } from "seti-file-icons";
+import { Bars3BottomLeftIcon } from "@heroicons/react/24/outline";
 
 export interface FileIconProps {
   height: `${number}px`;
@@ -19,6 +20,20 @@ export default function FileIcon({ filename, height, width }: FileIconProps) {
       return filename;
     }
   }, [filename]);
+
+  // Special case for TODO.md files
+  if (file.endsWith("TODO.md") || file === "TODO.md") {
+    return (
+      <Bars3BottomLeftIcon
+        style={{
+          width: width,
+          height: height,
+          flexShrink: 0,
+          display: "flex",
+        }}
+      />
+    );
+  }
 
   const getIcon = themeIcons({
     blue: "#268bd2",

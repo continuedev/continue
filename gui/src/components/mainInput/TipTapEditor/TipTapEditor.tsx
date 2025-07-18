@@ -7,6 +7,7 @@ import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectSelectedChatModel } from "../../../redux/slices/configSlice";
+import { addSuggestion } from "../../../redux/slices/sessionSlice";
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
 import { DragOverlay } from "./components/DragOverlay";
@@ -49,6 +50,9 @@ export function TipTapEditor(props: TipTapEditorProps) {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const suggestionQueue = useAppSelector(
+    (state) => state.session.suggestionQueue,
+  );
 
   const { editor, onEnterRef } = createEditorConfig({
     props,
@@ -71,7 +75,12 @@ export function TipTapEditor(props: TipTapEditorProps) {
     if (!editor) {
       return;
     }
-    const placeholder = getPlaceholderText(props.placeholder, historyLength);
+    const placeholder = getPlaceholderText(
+      props.placeholder,
+      historyLength,
+      isStreaming,
+      props.isMainInput,
+    );
 
     editor.extensionManager.extensions.filter(
       (extension) => extension.name === "placeholder",
@@ -266,6 +275,12 @@ export function TipTapEditor(props: TipTapEditorProps) {
           }}
           disabled={isStreaming}
         />
+        {isStreaming && suggestionQueue.length > 0 && props.isMainInput && (
+          <div className="px-2 py-1 text-xs text-gray-500">
+            {suggestionQueue.length} suggestion
+            {suggestionQueue.length > 1 ? "s" : ""} queued
+          </div>
+        )}
       </div>
 
       {showDragOverMsg &&

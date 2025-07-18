@@ -225,6 +225,7 @@ type SessionState = {
   newestToolbarPreviewForInput: Record<string, string>;
   hasReasoningEnabled?: boolean;
   warningMessage?: WarningMessage;
+  suggestionQueue: string[];
 };
 
 const initialState: SessionState = {
@@ -244,6 +245,7 @@ const initialState: SessionState = {
   },
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
+  suggestionQueue: [],
 };
 
 export const sessionSlice = createSlice({
@@ -272,6 +274,12 @@ export const sessionSlice = createSlice({
     },
     setActive: (state) => {
       state.isStreaming = true;
+    },
+    addSuggestion: (state, { payload }: PayloadAction<string>) => {
+      state.suggestionQueue.push(payload);
+    },
+    clearSuggestionQueue: (state) => {
+      state.suggestionQueue = [];
     },
     setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
       const curMessage = state.history.at(-1);
@@ -982,6 +990,8 @@ export const {
   setIsInEdit,
   setHasReasoningEnabled,
   setWarningMessage,
+  addSuggestion,
+  clearSuggestionQueue,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

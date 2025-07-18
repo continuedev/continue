@@ -265,7 +265,7 @@ export function StepContainerPreToolbar({
   return (
     <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mb-2 mt-2 flex min-w-0 flex-col outline outline-1">
       <div
-        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "border-command-border border-b" : ""}`}
+        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 rounded-lg px-1.5 py-1 ${isExpanded ? "border-command-border border-b" : ""}`}
         style={{ fontSize: `${getFontSize() - 2}px` }}
       >
         <div className="flex max-w-[50%] flex-row items-center">

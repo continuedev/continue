@@ -39,6 +39,20 @@ export function ToolCallDiv({
     const functionName = toolCallState.toolCall.function?.name;
     const icon = functionName && toolCallIcons[functionName];
 
+    // Check for specific function names first, before checking for icons
+    if (
+      functionName === BuiltInToolNames.SearchAndReplaceInFile ||
+      functionName === BuiltInToolNames.TodoWrite ||
+      functionName === BuiltInToolNames.TodoRead
+    ) {
+      return (
+        <FunctionSpecificToolCallDiv
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        />
+      );
+    }
+
     if (icon) {
       return (
         <SimpleToolCallUI

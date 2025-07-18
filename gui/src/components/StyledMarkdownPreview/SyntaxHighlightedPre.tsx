@@ -15,19 +15,26 @@ const generateThemeStyles = (theme: any) => {
     .join("");
 };
 
-const StyledPre = styled.pre<{ theme: any }>`
+const StyledPre = styled.pre<{ theme: any; hasHeader?: boolean }>`
   & .hljs {
     color: ${vscForeground};
   }
 
   margin-top: 0;
   margin-bottom: 0;
-  border-radius: 0 0 ${defaultBorderRadius} ${defaultBorderRadius} !important;
+  border-radius: ${(props) =>
+    props.hasHeader
+      ? `0 0 ${defaultBorderRadius} ${defaultBorderRadius}`
+      : defaultBorderRadius} !important;
 
   ${(props) => generateThemeStyles(props.theme)}
 `;
 
 export const SyntaxHighlightedPre = (props: any) => {
   const currentTheme = useContext(VscThemeContext);
-  return <StyledPre {...props} theme={currentTheme.theme} />;
+  // Check if this pre is inside a container with header by looking for parent with border
+  const hasHeader = props.className?.includes("has-toolbar-header") ?? true;
+  return (
+    <StyledPre {...props} theme={currentTheme.theme} hasHeader={hasHeader} />
+  );
 };

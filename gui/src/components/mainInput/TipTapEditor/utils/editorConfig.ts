@@ -18,6 +18,7 @@ import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
+import { addSuggestion } from "../../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
@@ -32,14 +33,18 @@ import { handleImageFile } from "./imageUtils";
 export function getPlaceholderText(
   placeholder: TipTapEditorProps["placeholder"],
   historyLength: number,
+  isStreaming: boolean = false,
+  isMainInput: boolean = false,
 ) {
   if (placeholder) {
     return placeholder;
   }
 
-  return historyLength === 0
-    ? "Ask anything, '/' for prompts, '@' to add context"
-    : "Ask a follow-up";
+  if (historyLength === 0) {
+    return "Ask anything, '/' for prompts, '@' to add context";
+  }
+
+  return "Ask a follow-up";
 }
 
 /**
@@ -190,6 +195,8 @@ export function createEditorConfig(options: {
         placeholder: getPlaceholderText(
           props.placeholder,
           historyLengthRef.current,
+          isStreamingRef.current,
+          props.isMainInput,
         ),
       }),
       Paragraph.extend({
@@ -348,14 +355,27 @@ export function createEditorConfig(options: {
       if (!editor) {
         return;
       }
-      if (isStreaming || (codeToEdit.length === 0 && isInEdit)) {
-        return;
-      }
 
       const json = editor.getJSON();
 
       // Don't do anything if input box doesn't have valid content
       if (!hasValidEditorContent(json)) {
+        return;
+      }
+
+      // Handle suggestions when streaming
+      if (isStreaming && props.isMainInput) {
+        // Extract text content from editor
+        const textContent = editor.getText().trim();
+        if (textContent) {
+          dispatch(addSuggestion(textContent));
+          // Clear the editor after adding suggestion
+          editor.commands.clearContent();
+        }
+        return;
+      }
+
+      if (codeToEdit.length === 0 && isInEdit) {
         return;
       }
 
@@ -365,7 +385,15 @@ export function createEditorConfig(options: {
 
       props.onEnter(json, modifiers, editor);
     },
-    [props.onEnter, editor, props.isMainInput, codeToEdit, isInEdit],
+    [
+      props.onEnter,
+      editor,
+      props.isMainInput,
+      codeToEdit,
+      isInEdit,
+      isStreaming,
+      dispatch,
+    ],
   );
 
   return { editor, onEnterRef };

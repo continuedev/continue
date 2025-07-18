@@ -64,6 +64,8 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
       [BuiltInToolNames.RequestRule]: "disabled",
       [BuiltInToolNames.SearchAndReplaceInFile]: "allowedWithPermission",
+      [BuiltInToolNames.TodoRead]: "allowedWithoutPermission",
+      [BuiltInToolNames.TodoWrite]: "allowedWithoutPermission",
     },
     toolGroupSettings: {
       [BUILT_IN_GROUP_NAME]: "include",

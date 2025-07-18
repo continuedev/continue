@@ -82,6 +82,8 @@ export const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.ViewRepoMap]: MapIcon,
   [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
   [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
+  [BuiltInToolNames.TodoRead]: DocumentTextIcon,
+  [BuiltInToolNames.TodoWrite]: PencilIcon,
 };
 
 export function getStatusIcon(state: ToolStatus) {

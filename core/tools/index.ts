@@ -13,6 +13,8 @@ import { requestRuleTool } from "./definitions/requestRule";
 import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchAndReplaceInFileTool } from "./definitions/searchAndReplaceInFile";
 import { searchWebTool } from "./definitions/searchWeb";
+import { todoReadTool } from "./definitions/todoRead";
+import { todoWriteTool } from "./definitions/todoWrite";
 import { viewDiffTool } from "./definitions/viewDiff";
 import { viewRepoMapTool } from "./definitions/viewRepoMap";
 import { viewSubdirectoryTool } from "./definitions/viewSubdirectory";
@@ -33,6 +35,8 @@ const getBaseToolDefinitions = () => [
   lsTool,
   createRuleBlock,
   fetchUrlContentTool,
+  todoReadTool,
+  todoWriteTool,
 ];
 
 export const getConfigDependentToolDefinitions = (
