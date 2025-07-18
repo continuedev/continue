@@ -61,7 +61,10 @@ export function handleToolCallBuffer(
     // The first line will be skipped (e.g. ```tool\n)
     case 0:
       state.currentLineIndex = 1;
-      return;
+      if (!line.toLowerCase().includes("name")) {
+        return;
+      }
+    // tool_name alternate start case
     // Tool name line - process once line 2 is reached
     case 1:
       if (isNewLine) {

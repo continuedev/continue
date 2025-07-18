@@ -135,7 +135,7 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
   }
 
   prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool descriptions`;
-  prompt += `\nThen send the \`\`\`tool codeblock (YOU call the tool, not the user).`;
+  prompt += `\nThen send the \`\`\`tool codeblock (YOU call the tool, not the user). Always start the codeblock on a new line.`;
   prompt += `\nDo not perform actions with/for hypothetical files. Ask the user or use tools to deduce which files are relevant.`;
   prompt += `\nYou can only call ONE tool at at time. The tool codeblock should be the last thing you say; stop your response after the tool codeblock.`;
 
