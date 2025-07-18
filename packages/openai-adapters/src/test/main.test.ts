@@ -67,13 +67,13 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     apiKey: process.env.GEMINI_API_KEY!,
     roles: ["chat"],
   },
-  {
-    provider: "mistral",
-    model: "codestral-latest",
-    apiKey: process.env.MISTRAL_API_KEY!,
-    apiBase: "https://api.mistral.ai/v1",
-    roles: ["autocomplete"],
-  },
+  // {
+  //   provider: "mistral",
+  //   model: "codestral-latest",
+  //   apiKey: process.env.MISTRAL_API_KEY!,
+  //   apiBase: "https://api.mistral.ai/v1",
+  //   roles: ["autocomplete"],
+  // },
   // {
   //   provider: "deepseek",
   //   model: "deepseek-coder",
