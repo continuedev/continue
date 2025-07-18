@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "packages/config-yaml/**"
+      - ".github/workflows/release-config-yaml.yml"
+      - ".github/workflows/reusable-release.yml"
 
 permissions:
   contents: write
