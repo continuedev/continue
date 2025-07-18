@@ -136,8 +136,8 @@ export function checkFim(
       isFim: false;
       fimText: null;
     } {
-  console.log("oldEditRange", oldEditRange);
-  console.log("newEditRange", newEditRange);
+  // console.log("oldEditRange", oldEditRange);
+  // console.log("newEditRange", newEditRange);
   // Find the common prefix.
   let prefixLength = 0;
   while (
