@@ -103,6 +103,9 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
+            "nextEdit/predict",
+            "nextEdit/reject",
+            "nextEdit/accept",
             "tts/kill",
             "llm/complete",
             "llm/streamChat",
@@ -110,6 +113,7 @@ class MessageTypes {
             "llm/compileChat",
             "streamDiffLines",
             "chatDescriber/describe",
+            "conversation/compact",
             "stats/getTokensPerDay",
             "stats/getTokensPerModel",
             // Codebase

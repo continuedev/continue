@@ -21,7 +21,7 @@ function safeParseArray<T>(
   }
 }
 
-class HistoryManager {
+export class HistoryManager {
   list(options: ListHistoryOptions): SessionMetadata[] {
     const filepath = getSessionsListPath();
     if (!fs.existsSync(filepath)) {

@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   ChatCompletion,
   ChatCompletionChunk,
+  ChatCompletionContentPartImage,
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
@@ -120,7 +121,9 @@ export class BedrockApi implements BaseLlmApi {
       case "image_url":
       default:
         try {
-          const [mimeType, base64Data] = part.image_url.url.split(",");
+          const [mimeType, base64Data] = (
+            part as ChatCompletionContentPartImage
+          ).image_url.url.split(",");
           const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
           if (
             format === ImageFormat.JPEG ||

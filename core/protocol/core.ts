@@ -91,7 +91,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
+  "config/reload": [undefined, void];
   "config/refreshProfiles": [
     (
       | undefined
@@ -147,6 +147,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
+  "nextEdit/predict": [AutocompleteInput, string[]];
+  "nextEdit/reject": [{ completionId: string }, void];
+  "nextEdit/accept": [{ completionId: string }, void];
   "llm/complete": [
     {
       prompt: string;
@@ -180,6 +183,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "chatDescriber/describe": [
     {
       text: string;
+    },
+    string | undefined,
+  ];
+  "conversation/compact": [
+    {
+      index: number;
+      sessionId: string;
     },
     string | undefined,
   ];

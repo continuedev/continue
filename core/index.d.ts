@@ -369,10 +369,32 @@ export interface ThinkingChatMessage {
   toolCalls?: ToolCallDelta[];
 }
 
+/**
+ * This is meant to be equivalent to the OpenAI [usage object](https://platform.openai.com/docs/api-reference/chat/object#chat/object-usage)
+ * but potentially with additional information that is needed for other providers.
+ */
+export interface Usage {
+  completionTokens: number;
+  promptTokens: number;
+  promptTokensDetails?: {
+    cachedTokens?: number;
+    /** This an Anthropic-specific property */
+    cacheWriteTokens?: number;
+    audioTokens?: number;
+  };
+  completionTokensDetails?: {
+    acceptedPredictionTokens?: number;
+    reasoningTokens?: number;
+    rejectedPredictionTokens?: number;
+    audioTokens?: number;
+  };
+}
+
 export interface AssistantChatMessage {
   role: "assistant";
   content: MessageContent;
   toolCalls?: ToolCallDelta[];
+  usage?: Usage;
 }
 
 export interface SystemChatMessage {
@@ -472,6 +494,7 @@ export interface ChatHistoryItem {
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
   appliedRules?: RuleWithSource[];
+  conversationSummary?: string;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -490,12 +513,14 @@ export interface LLMInteractionStartChat extends LLMInteractionBase {
   kind: "startChat";
   messages: ChatMessage[];
   options: CompletionOptions;
+  provider: string;
 }
 
 export interface LLMInteractionStartComplete extends LLMInteractionBase {
   kind: "startComplete";
   prompt: string;
   options: CompletionOptions;
+  provider: string;
 }
 
 export interface LLMInteractionStartFim extends LLMInteractionBase {
@@ -503,6 +528,7 @@ export interface LLMInteractionStartFim extends LLMInteractionBase {
   prefix: string;
   suffix: string;
   options: CompletionOptions;
+  provider: string;
 }
 
 export interface LLMInteractionChunk extends LLMInteractionBase {
@@ -519,6 +545,7 @@ export interface LLMInteractionEnd extends LLMInteractionBase {
   promptTokens: number;
   generatedTokens: number;
   thinkingTokens: number;
+  usage: Usage | undefined;
 }
 
 export interface LLMInteractionSuccess extends LLMInteractionEnd {
@@ -711,6 +738,7 @@ export interface IdeInfo {
   version: string;
   remoteName: string;
   extensionVersion: string;
+  isPrerelease: boolean;
 }
 
 export interface BranchAndDir {
@@ -1288,7 +1316,6 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
   showSessionTabs?: boolean;
   autoAcceptEditToolDiffs?: boolean;
-  logEditingData?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1440,11 +1467,6 @@ export interface ExperimentalConfig {
    * If enabled, will add the current file as context.
    */
   useCurrentFileAsContext?: boolean;
-
-  /**
-   * If enabled, will save data on the user's editing processes
-   */
-  logEditingData?: boolean;
 
   /**
    * If enabled, will enable next edit in place of autocomplete
@@ -1669,6 +1691,7 @@ export type RuleSource =
   | "model-options-plan"
   | "model-options-agent"
   | "rules-block"
+  | "colocated-markdown"
   | "json-systemMessage"
   | ".continuerules";
 

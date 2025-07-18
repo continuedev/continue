@@ -227,6 +227,7 @@ type SessionState = {
   isPruned?: boolean;
   contextPercentage?: number;
   inlineErrorMessage?: InlineErrorMessageType;
+  compactionLoading: Record<number, boolean>; // Track compaction loading by message index
 };
 
 const initialState: SessionState = {
@@ -246,7 +247,7 @@ const initialState: SessionState = {
   },
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
-  isPruned: false,
+  compactionLoading: {},
 };
 
 export const sessionSlice = createSlice({
@@ -904,6 +905,17 @@ export const sessionSlice = createSlice({
       state.newestToolbarPreviewForInput[payload.inputId] =
         payload.contextItemId;
     },
+    setCompactionLoading: (
+      state,
+      action: PayloadAction<{ index: number; loading: boolean }>,
+    ) => {
+      const { index, loading } = action.payload;
+      if (loading) {
+        state.compactionLoading[index] = true;
+      } else {
+        delete state.compactionLoading[index];
+      }
+    },
     setInlineErrorMessage: (
       state,
       action: PayloadAction<SessionState["inlineErrorMessage"]>,
@@ -1002,6 +1014,7 @@ export const {
   setInlineErrorMessage,
   setIsPruned,
   setContextPercentage,
+  setCompactionLoading,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;
