@@ -7,13 +7,11 @@ import {
 import { ChatHistoryItem } from "core";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { renderChatMessage } from "core/util/messageContent";
-import { useContext, useMemo } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { setCompactionLoading } from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { loadSession } from "../../redux/thunks/session";
+import { useCompactConversation } from "../../util/compactConversation";
 import { FeedbackButtons } from "../FeedbackButtons";
 import { GenerateRuleDialog } from "../GenerateRuleDialog";
 import { CopyIconButton } from "../gui/CopyIconButton";
@@ -37,49 +35,56 @@ export default function ResponseActions({
   isLast,
 }: ResponseActionsProps) {
   const dispatch = useAppDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
-  const currentSessionId = useAppSelector((state) => state.session.id);
   const selectedModel = useAppSelector(selectSelectedChatModel);
+  const contextPercentage = useAppSelector(
+    (state) => state.session.contextPercentage,
+  );
+  const isPruned = useAppSelector((state) => state.session.isPruned);
   const ruleGenerationSupported = useMemo(() => {
     return selectedModel && modelSupportsNativeTools(selectedModel);
   }, [selectedModel]);
+
+  const percent = Math.round((contextPercentage ?? 0) * 100);
+  const buttonColorClass =
+    isLast && (isPruned || percent > 80)
+      ? "text-warning"
+      : "text-description-muted";
+
+  const showLabel = isLast && (isPruned || percent >= 60);
+
+  const compactConversation = useCompactConversation();
 
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
     dispatch(setDialogMessage(<GenerateRuleDialog />));
   };
 
-  const onCompactConversation = async () => {
-    if (!currentSessionId) {
-      return;
-    }
-
-    try {
-      // Set loading state
-      dispatch(setCompactionLoading({ index, loading: true }));
-
-      await ideMessenger.request("conversation/compact", {
-        index,
-        sessionId: currentSessionId,
-      });
-
-      // Reload the current session to refresh the conversation state
-      dispatch(
-        loadSession({
-          sessionId: currentSessionId,
-          saveCurrentSession: false,
-        }),
-      );
-    } catch (error) {
-      console.error("Error compacting conversation:", error);
-    } finally {
-      // Clear loading state
-      dispatch(setCompactionLoading({ index, loading: false }));
-    }
-  };
-
   return (
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
+      <HeaderButtonWithToolTip
+        testId={`compact-button-${index}`}
+        text={
+          showLabel
+            ? "Summarize conversation to reduce context length"
+            : "Compact conversation"
+        }
+        tabIndex={-1}
+        onClick={() => compactConversation(index)}
+      >
+        <div className="flex items-center space-x-1">
+          <ArrowsPointingInIcon
+            className={`h-3.5 w-3.5 ${buttonColorClass || "text-description-muted"}`}
+          />
+          {showLabel && (
+            <span
+              className={`text-xs ${buttonColorClass || "text-description-muted"}`}
+            >
+              Compact conversation
+            </span>
+          )}
+        </div>
+      </HeaderButtonWithToolTip>
+
       {isLast && ruleGenerationSupported && (
         <HeaderButtonWithToolTip
           tabIndex={-1}
@@ -99,15 +104,6 @@ export default function ResponseActions({
           <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
         </HeaderButtonWithToolTip>
       )}
-
-      <HeaderButtonWithToolTip
-        testId={`compact-button-${index}`}
-        text="Compact conversation"
-        tabIndex={-1}
-        onClick={onCompactConversation}
-      >
-        <ArrowsPointingInIcon className="text-description-muted h-3.5 w-3.5" />
-      </HeaderButtonWithToolTip>
 
       <HeaderButtonWithToolTip
         testId={`delete-button-${index}`}
