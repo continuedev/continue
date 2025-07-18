@@ -404,13 +404,23 @@ export class ContinueCompletionProvider
             (outcome as NextEditOutcome).editableRegionStartLine,
             0,
           );
-          await this.jumpManager.suggestJump(jumpPosition, {
-            completionId: input.completionId,
-            outcome: outcome as NextEditOutcome,
-          });
+
+          await this.jumpManager.suggestJump(jumpPosition);
+
+          // If a jump was just suggested, don't show ghost text yet.
+          if (this.jumpManager.isJumpInProgress()) {
+            // Store this completion for later use when jump is complete.
+            this.jumpManager.setCompletionAfterJump({
+              completionId: input.completionId,
+              outcome: outcome as NextEditOutcome,
+            });
+
+            return undefined; // Don't show anything yet!
+          }
 
           return undefined;
         }
+
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
           return undefined;

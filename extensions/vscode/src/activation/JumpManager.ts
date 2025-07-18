@@ -8,6 +8,9 @@ export class JumpManager {
   private _jumpDecorationVisible = false;
   private _disposables: vscode.Disposable[] = [];
 
+  private _jumpInProgress: boolean = false;
+  private _completionAfterJump: any = null;
+
   private constructor() {}
 
   initialize() {}
@@ -32,10 +35,9 @@ export class JumpManager {
     this._disposables = [];
   }
 
-  public async suggestJump(
-    nextJumpLocation: vscode.Position,
-    nextEditData?: any,
-  ) {
+  public async suggestJump(nextJumpLocation: vscode.Position) {
+    this._jumpInProgress = true;
+
     const editor = vscode.window.activeTextEditor;
 
     if (editor) {
@@ -68,7 +70,6 @@ export class JumpManager {
             decorationLine,
             nextJumpLocation,
           );
-          // return;
         }
 
         // Scroll to show the jump location.
@@ -79,34 +80,27 @@ export class JumpManager {
       }
     }
 
-    if (nextEditData) {
-      this.pendingNextEditData = nextEditData;
+    // Set up a way to detect when the jump is complete.
+    const disposable = vscode.window.onDidChangeTextEditorSelection(() => {
+      this._jumpInProgress = false;
+      disposable.dispose();
 
-      const disposable = vscode.window.onDidChangeTextEditorSelection((e) => {
-        const editor = vscode.window.activeTextEditor;
-        if (editor && e.textEditor === editor) {
-          const currentPosition = editor.selection.active;
+      // If there's a completion waiting to be shown after the jump,
+      // execute the command to show it.
+      if (this._completionAfterJump) {
+        vscode.commands.executeCommand(
+          "continue.showNextEditAfterJump",
+          this._completionAfterJump,
+        );
+        this._completionAfterJump = null;
+      }
+    });
 
-          if (Math.abs(currentPosition.line - nextJumpLocation.line) <= 1) {
-            disposable.dispose();
-
-            vscode.commands.executeCommand("continue.showNextEditAfterJump", {
-              ...this.pendingNextEditData,
-              currentPosition,
-            });
-
-            this.pendingNextEditData = undefined;
-          }
-        }
-      });
-
-      setTimeout(() => {
-        if (this.pendingNextEditData) {
-          disposable.dispose();
-          this.pendingNextEditData = undefined;
-        }
-      }, 10000);
-    }
+    // Clean up after timeout if no jump has been made.
+    setTimeout(() => {
+      this._jumpInProgress = false;
+      disposable.dispose();
+    }, 5000);
   }
 
   private async renderTabToJumpDecoration(
@@ -196,5 +190,13 @@ export class JumpManager {
 
     // This allows us to dispose the command after a jump is completed.
     this._disposables.push(acceptJumpCommand, rejectJumpCommand);
+  }
+
+  isJumpInProgress(): boolean {
+    return this._jumpInProgress;
+  }
+
+  setCompletionAfterJump(completionData: any): void {
+    this._completionAfterJump = completionData;
   }
 }
