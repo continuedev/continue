@@ -24,6 +24,7 @@ import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditOutcome } from "core/nextEdit/types";
+import { JumpManager } from "../activation/JumpManager";
 import { NextEditWindowManager } from "../activation/NextEditWindowManager";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
@@ -66,6 +67,7 @@ export class ContinueCompletionProvider
   private completionProvider: CompletionProvider;
   private nextEditProvider: NextEditProvider;
   private nextEditLoggingService: NextEditLoggingService;
+  private jumpManager: JumpManager;
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -111,6 +113,8 @@ export class ContinueCompletionProvider
       getDefinitionsFromLsp,
       "fineTuned",
     );
+
+    this.jumpManager = JumpManager.getInstance();
 
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
@@ -366,6 +370,12 @@ export class ContinueCompletionProvider
       (autocompleteCompletionItem as any).completeBracketPairs = true;
 
       if (this.isNextEditActive) {
+        this.jumpManager.suggestJump(
+          new vscode.Position(
+            (outcome as NextEditOutcome).editableRegionStartLine,
+            0,
+          ),
+        );
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
           return undefined;
