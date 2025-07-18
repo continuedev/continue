@@ -45,7 +45,7 @@ describe("Anthropic Adapter Tests", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
           "anthropic-version": "2023-06-01",
           "x-api-key": "test-api-key",
         },
@@ -99,7 +99,7 @@ describe("Anthropic Adapter Tests", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
           "anthropic-version": "2023-06-01",
           "x-api-key": "test-api-key",
         },
@@ -154,7 +154,7 @@ describe("Anthropic Adapter Tests", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
           "anthropic-version": "2023-06-01",
           "x-api-key": "test-api-key",
         },
@@ -190,12 +190,12 @@ describe("Anthropic Adapter Tests", () => {
       provider: "anthropic",
       apiKey: "test-api-key",
     });
-    
+
     await expect(
       api!.embed({
         model: "text-embedding-ada-002",
         input: ["Hello", "World"],
-      })
+      }),
     ).rejects.toThrow("Method not implemented.");
   });
 });

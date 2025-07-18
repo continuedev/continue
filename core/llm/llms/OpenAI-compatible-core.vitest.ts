@@ -137,7 +137,7 @@ async function runLlmTest(testCase: LlmTestCase) {
   setupReadableStreamPolyfill();
 
   (llm as any).fetch = mockFetch;
-  
+
   // Disable OpenAI adapter to use our custom fetch mock
   (llm as any).useOpenAIAdapterFor = [];
 
@@ -160,7 +160,10 @@ describe("OpenAI", () => {
     await runLlmTest({
       llm: openai,
       methodToTest: "streamChat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      ],
       expectedRequest: {
         url: "https://api.openai.com/v1/chat/completions",
         method: "POST",
@@ -202,7 +205,8 @@ createOpenAISubclassTests(Fireworks, {
   modelConversions: {
     "starcoder-7b": "accounts/fireworks/models/starcoder-7b",
   },
-  modelConversionContent: "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\n",
+  modelConversionContent:
+    "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\n",
 });
 
 createOpenAISubclassTests(Together, {
@@ -257,13 +261,15 @@ createOpenAISubclassTests(Cerebras, {
     "llama3.1-8b": "llama3.1-8b",
     "llama3.1-70b": "llama3.1-70b",
   },
-  modelConversionContent: "<|start_header_id|>user<|end_header_id|>\nhello<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n",
+  modelConversionContent:
+    "<|start_header_id|>user<|end_header_id|>\nhello<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n",
 });
 
 createOpenAISubclassTests(DeepInfra, {
   providerName: "deepinfra",
   defaultApiBase: "https://api.deepinfra.com/v1/openai/",
-  customEmbeddingsUrl: "https://api.deepinfra.com/v1/inference/text-embedding-ada-002",
+  customEmbeddingsUrl:
+    "https://api.deepinfra.com/v1/inference/text-embedding-ada-002",
   customEmbeddingsHeaders: {
     Authorization: "bearer test-api-key",
   },

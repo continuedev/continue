@@ -83,7 +83,7 @@ async function executeAdapterMethod(
   }
 
   const result = await (api as any)[methodToTest](...params);
-  
+
   // If it's a generator/async iterator, consume it to trigger the HTTP request
   if (result?.next) {
     for await (const _ of result) {
@@ -125,12 +125,14 @@ export async function runAdapterTest(testCase: AdapterTestCase) {
   setupReadableStreamPolyfill();
 
   // Mock fetch globally before constructing the API
-  vi.stubGlobal('fetch', mockFetch);
+  vi.stubGlobal("fetch", mockFetch);
 
   // For non-OpenAI adapters, mock the fetch package
   const fetchPackage = await import("@continuedev/fetch");
   if (fetchPackage.fetchwithRequestOptions) {
-    vi.mocked(fetchPackage.fetchwithRequestOptions).mockImplementation(mockFetch as any);
+    vi.mocked(fetchPackage.fetchwithRequestOptions).mockImplementation(
+      mockFetch as any,
+    );
   }
 
   const api = constructLlmApi(config);

@@ -7,5 +7,6 @@ createOpenAISubclassTests(Fireworks, {
   modelConversions: {
     "starcoder-7b": "accounts/fireworks/models/starcoder-7b",
   },
-  modelConversionContent: "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\n",
+  modelConversionContent:
+    "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\n",
 });

@@ -143,7 +143,11 @@ export interface OpenAISubclassConfig {
   customBodyOptions?: any;
 }
 
-function getExpectedUrl(config: OpenAISubclassConfig, endpoint: string, model: string = "gpt-4") {
+function getExpectedUrl(
+  config: OpenAISubclassConfig,
+  endpoint: string,
+  model: string = "gpt-4",
+) {
   let baseUrl = config.defaultApiBase || "https://api.openai.com/v1/";
   if (config.providerName === "azure") {
     return `${baseUrl}openai/deployments/${model}/${endpoint}?api-version=2023-07-01-preview`;
@@ -168,7 +172,9 @@ export const createOpenAISubclassTests = (
 
     if (config.defaultApiBase) {
       test("should have correct default API base", () => {
-        expect(ProviderClass.defaultOptions?.apiBase).toBe(config.defaultApiBase);
+        expect(ProviderClass.defaultOptions?.apiBase).toBe(
+          config.defaultApiBase,
+        );
       });
     }
 
@@ -258,26 +264,32 @@ export const createOpenAISubclassTests = (
         methodToTest: "streamComplete",
         params: ["Hello", new AbortController().signal],
         expectedRequest: {
-          url: getExpectedUrl(config, config.customStreamCompleteEndpoint || "chat/completions"),
+          url: getExpectedUrl(
+            config,
+            config.customStreamCompleteEndpoint || "chat/completions",
+          ),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer test-api-key",
             "api-key": "test-api-key",
           },
-          body: config.customStreamCompleteEndpoint === "completions" ? {
-            model: "gpt-4",
-            prompt: "Hello",
-            stream: true,
-            max_tokens: 2048,
-            ...config.customBodyOptions,
-          } : {
-            model: "gpt-4",
-            messages: [{ role: "user", content: "Hello" }],
-            stream: true,
-            max_tokens: 2048,
-            ...config.customBodyOptions,
-          },
+          body:
+            config.customStreamCompleteEndpoint === "completions"
+              ? {
+                  model: "gpt-4",
+                  prompt: "Hello",
+                  stream: true,
+                  max_tokens: 2048,
+                  ...config.customBodyOptions,
+                }
+              : {
+                  model: "gpt-4",
+                  messages: [{ role: "user", content: "Hello" }],
+                  stream: true,
+                  max_tokens: 2048,
+                  ...config.customBodyOptions,
+                },
         },
         mockStream: [
           { choices: [{ delta: { content: "Hello" } }] },
@@ -349,7 +361,13 @@ export const createOpenAISubclassTests = (
             },
             body: {
               model: expectedModel,
-              messages: [{ role: "user", content: config.modelConversionContent || "[INST] hello [/INST]" }],
+              messages: [
+                {
+                  role: "user",
+                  content:
+                    config.modelConversionContent || "[INST] hello [/INST]",
+                },
+              ],
               stream: true,
               max_tokens: config.modelConversionMaxTokens || 4096,
               ...config.customBodyOptions,
@@ -372,7 +390,9 @@ export const createOpenAISubclassTests = (
         methodToTest: "embed",
         params: [["Hello", "World"]],
         expectedRequest: {
-          url: config.customEmbeddingsUrl || `${config.defaultApiBase || "https://api.openai.com/v1/"}embeddings`,
+          url:
+            config.customEmbeddingsUrl ||
+            `${config.defaultApiBase || "https://api.openai.com/v1/"}embeddings`,
           method: "POST",
           headers: config.customEmbeddingsHeaders || {
             Authorization: "Bearer test-api-key",

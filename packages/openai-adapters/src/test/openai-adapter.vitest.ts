@@ -20,9 +20,9 @@ describe("OpenAI Adapter Tests", () => {
     },
     expectedApiBase: "https://api.openai.com/v1/",
     customHeaders: {
-      "authorization": "Bearer test-api-key",
+      authorization: "Bearer test-api-key",
       "content-type": "application/json",
-      "accept": "application/json",
+      accept: "application/json",
     },
   });
 });

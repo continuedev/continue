@@ -121,7 +121,7 @@ async function runLlmTest(testCase: LlmTestCase) {
   setupReadableStreamPolyfill();
 
   (llm as any).fetch = mockFetch;
-  
+
   // Disable OpenAI adapter to use our custom fetch mock
   (llm as any).useOpenAIAdapterFor = [];
 
@@ -144,7 +144,10 @@ describe("OpenAI", () => {
     await runLlmTest({
       llm: openai,
       methodToTest: "streamChat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      ],
       expectedRequest: {
         url: "https://api.openai.com/v1/chat/completions",
         method: "POST",
@@ -177,7 +180,10 @@ describe("OpenAI", () => {
     await runLlmTest({
       llm: openai,
       methodToTest: "chat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      ],
       expectedRequest: {
         url: "https://api.openai.com/v1/chat/completions",
         method: "POST",
@@ -276,7 +282,11 @@ describe("OpenAI", () => {
     await runLlmTest({
       llm: openai,
       methodToTest: "chat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal, { maxTokens: 100 }],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { maxTokens: 100 },
+      ],
       expectedRequest: {
         url: "https://api.openai.com/v1/chat/completions",
         method: "POST",
@@ -291,9 +301,7 @@ describe("OpenAI", () => {
           stream: true,
         },
       },
-      mockStream: [
-        { choices: [{ delta: { content: "Hello world" } }] },
-      ],
+      mockStream: [{ choices: [{ delta: { content: "Hello world" } }] }],
     });
   });
 
@@ -318,7 +326,11 @@ describe("OpenAI", () => {
     await runLlmTest({
       llm: openai,
       methodToTest: "chat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal, { tools }],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { tools },
+      ],
       expectedRequest: {
         url: "https://api.openai.com/v1/chat/completions",
         method: "POST",
@@ -345,9 +357,7 @@ describe("OpenAI", () => {
           parallel_tool_calls: false,
         },
       },
-      mockStream: [
-        { choices: [{ delta: { content: "I'll help you" } }] },
-      ],
+      mockStream: [{ choices: [{ delta: { content: "I'll help you" } }] }],
     });
   });
 
@@ -361,7 +371,11 @@ describe("OpenAI", () => {
     await runLlmTest({
       llm: openai,
       methodToTest: "chat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal, { maxTokens: 500 }],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { maxTokens: 500 },
+      ],
       expectedRequest: {
         url: "https://api.openai.com/v1/chat/completions",
         method: "POST",
@@ -377,9 +391,7 @@ describe("OpenAI", () => {
           max_tokens: 500,
         },
       },
-      mockStream: [
-        { choices: [{ delta: { content: "Hello" } }] },
-      ],
+      mockStream: [{ choices: [{ delta: { content: "Hello" } }] }],
     });
   });
 
@@ -408,10 +420,7 @@ describe("OpenAI", () => {
         },
       },
       mockResponse: {
-        data: [
-          { embedding: [0.1, 0.2, 0.3] },
-          { embedding: [0.4, 0.5, 0.6] },
-        ],
+        data: [{ embedding: [0.1, 0.2, 0.3] }, { embedding: [0.4, 0.5, 0.6] }],
       },
     });
   });

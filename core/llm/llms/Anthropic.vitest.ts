@@ -141,7 +141,10 @@ describe("Anthropic", () => {
     await runLlmTest({
       llm: anthropic,
       methodToTest: "streamChat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      ],
       expectedRequest: {
         url: "https://api.anthropic.com/v1/messages",
         method: "POST",
@@ -181,7 +184,10 @@ describe("Anthropic", () => {
     await runLlmTest({
       llm: anthropic,
       methodToTest: "chat",
-      params: [[{ role: "user", content: "hello" }], new AbortController().signal],
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      ],
       expectedRequest: {
         url: "https://api.anthropic.com/v1/messages",
         method: "POST",
@@ -386,7 +392,9 @@ describe("Anthropic", () => {
             messages: [
               {
                 role: "user",
-                content: [{ type: "text", text: "What's the weather in New York?" }],
+                content: [
+                  { type: "text", text: "What's the weather in New York?" },
+                ],
               },
             ],
             tools: [
@@ -470,7 +478,10 @@ describe("Anthropic", () => {
         runLlmTest({
           llm: anthropic,
           methodToTest: "streamChat",
-          params: [[{ role: "user", content: "hello" }], new AbortController().signal],
+          params: [
+            [{ role: "user", content: "hello" }],
+            new AbortController().signal,
+          ],
           expectedRequest: {
             url: "https://api.anthropic.com/v1/messages",
             method: "POST",
