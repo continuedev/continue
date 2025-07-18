@@ -3,7 +3,7 @@ import { normalizeToMessageParts } from "../../util/messageContent";
 import { detectToolCallStart } from "./detectToolCallStart";
 import { generateOpenAIToolCallId } from "./openAiToolCallId";
 import {
-  DEFAULT_TOOL_CALL_PARSE_STATE,
+  getInitialTooLCallParseState,
   handleToolCallBuffer,
   ToolCallParseState,
 } from "./parseSystemToolCall";
@@ -61,7 +61,6 @@ export async function* interceptSystemToolCalls(
 
         for (const chunk of chunks) {
           buffer += chunk;
-          debugger;
           if (!inToolCall) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
               detectToolCallStart(buffer);
@@ -80,7 +79,7 @@ export async function* interceptSystemToolCalls(
               currentToolCallId = generateOpenAIToolCallId();
             }
             if (!parseState) {
-              parseState = { ...DEFAULT_TOOL_CALL_PARSE_STATE };
+              parseState = getInitialTooLCallParseState();
             }
 
             try {
@@ -105,18 +104,8 @@ export async function* interceptSystemToolCalls(
                 currentToolCallId = undefined;
                 parseState = undefined;
               }
-
-              // Reset the buffer after successful parsing
-              buffer = "";
             } catch (e) {
-              console.error("Failed to parse system tool call", e);
-              yield [
-                {
-                  ...message,
-                  content: [{ type: "text", text: buffer }],
-                },
-              ];
-              buffer = "";
+              console.error("Error while parsing system tool call", e);
             }
           } else {
             // Yield normal assistant message
@@ -126,8 +115,8 @@ export async function* interceptSystemToolCalls(
                 content: [{ type: "text", text: buffer }],
               },
             ];
-            buffer = "";
           }
+          buffer = "";
         }
       }
     }
