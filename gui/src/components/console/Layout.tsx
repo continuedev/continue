@@ -19,14 +19,14 @@ export default function Layout() {
   ) : (
     <div className="flex h-full w-full">
       <div className="flex h-full w-full flex-col">
-        <div className="flex-shrink-0 border-b border-[color:var(--vscode-panel-border)] p-3">
+        {/* <div className="flex-shrink-0 border-b border-[color:var(--vscode-panel-border)] p-3">
           <button
             onClick={() => setShowTotalUsage(true)}
             className="float-right cursor-pointer border-none bg-transparent text-sm text-[color:var(--vscode-textLink-foreground)] underline hover:text-[color:var(--vscode-textLink-activeForeground)]"
           >
             View Total Usage Summary
           </button>
-        </div>
+        </div> */}
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <List
             llmLog={llmLog}
