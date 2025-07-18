@@ -32,8 +32,7 @@ describe("splitAtCodeblocks", () => {
   test("splits at codeblocks", () => {
     expect(splitAtCodeblocksAndNewLines("```<one>middle```<two>")).toEqual([
       "```",
-      "<one>",
-      "middle",
+      "<one>middle",
       "```",
       "<two>",
     ]);
