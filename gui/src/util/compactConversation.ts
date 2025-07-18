@@ -48,9 +48,11 @@ export const useDeleteCompaction = () => {
   return (index: number) => {
     // Update local state and save to persistence
     dispatch(deleteCompaction(index));
-    dispatch(saveCurrentSession({
-      openNewSession: false,
-      generateTitle: false,
-    }));
+    dispatch(
+      saveCurrentSession({
+        openNewSession: false,
+        generateTitle: false,
+      }),
+    );
   };
 };
