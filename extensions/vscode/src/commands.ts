@@ -17,7 +17,14 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
+import { myersDiff } from "core/diff/myers";
+import {
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "core/nextEdit/constants";
+import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
+import { NextEditWindowManager } from "./activation/NextEditWindowManager";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -806,13 +813,107 @@ const getCommandsMap: (
       );
     },
     "continue.showNextEditAfterJump": async (data) => {
-      const { completionId, outcome, currCursorPos } = data;
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) return;
+      // NOTE: This could use some cleanup or abstraction.
+      // The logic is largely similar to that of completionProvider.ts
+      // but we don't have access to the class.
 
-      // This would be the same logic as in the renderNextEditSuggestion method
-      // from my first suggestion
-      // ...
+      const { completionId, outcome, currentPosition } = data;
+
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        console.log("No active editor when trying to show next edit");
+        return;
+      }
+
+      // Calculate the editable region boundaries around the current cursor position/
+      const editableRegionStartLine = Math.max(
+        currentPosition.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+        0,
+      );
+      const editableRegionEndLine = Math.min(
+        currentPosition.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+        editor.document.lineCount - 1,
+      );
+
+      // Get the current text in the editable region.
+      const oldEditRangeSlice = editor.document
+        .getText()
+        .split("\n")
+        .slice(editableRegionStartLine, editableRegionEndLine + 1)
+        .join("\n");
+
+      // Get the suggested new text from the completion outcome.
+      const newEditRangeSlice = outcome.completion;
+
+      // Skip showing edit if the suggestion is empty.
+      if (newEditRangeSlice === "") {
+        const loggingService = NextEditLoggingService.getInstance();
+        loggingService.cancelRejectionTimeout(completionId);
+        return;
+      }
+
+      // Skip showing edit if the suggestion is identical to current text.
+      if (oldEditRangeSlice === newEditRangeSlice) {
+        const loggingService = NextEditLoggingService.getInstance();
+        loggingService.cancelRejectionTimeout(completionId);
+        return;
+      }
+
+      // Check if this is a simple "fill in middle" (FIM) type edit.
+      const { isFim, fimText } = checkFim(
+        oldEditRangeSlice,
+        newEditRangeSlice,
+        currentPosition,
+      );
+
+      if (isFim) {
+        // For FIM edits, create an inline completion item.
+        const nextEditCompletionItem = new vscode.InlineCompletionItem(
+          fimText,
+          new vscode.Range(
+            new vscode.Position(
+              currentPosition.line,
+              currentPosition.character,
+            ),
+            new vscode.Position(
+              currentPosition.line,
+              currentPosition.character,
+            ),
+          ),
+          {
+            title: "Log Next Edit Outcome",
+            command: "continue.logNextEditOutcomeAccept",
+            arguments: [completionId, NextEditLoggingService.getInstance()],
+          },
+        );
+
+        // Show the ghost text using VS Code's inline completion API.
+        // We need to trigger this manually since we're not in the completion provider.
+        await vscode.commands.executeCommand(
+          "editor.action.inlineCompletions.showNext",
+          {
+            completions: [nextEditCompletionItem],
+            position: currentPosition,
+          },
+        );
+      } else {
+        // For more complex edits, we display a diff inside a window.
+        const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+
+        if (NextEditWindowManager.isInstantiated()) {
+          const windowManager = NextEditWindowManager.getInstance();
+          windowManager.updateCurrentCompletionId(completionId);
+
+          await windowManager.showNextEditWindow(
+            editor,
+            currentPosition,
+            editableRegionStartLine,
+            oldEditRangeSlice,
+            newEditRangeSlice,
+            diffLines,
+          );
+        }
+      }
     },
   };
 };
