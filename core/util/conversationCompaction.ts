@@ -9,12 +9,6 @@ export interface CompactionParams {
   currentModel: ILLM;
 }
 
-export interface DeleteCompactionParams {
-  sessionId: string;
-  index: number;
-  historyManager: HistoryManager;
-}
-
 /**
  * Compacts conversation history up to a specified index by generating a summary.
  * This helper function extracts the compaction logic from the main core handler.
@@ -86,41 +80,6 @@ export async function compactConversation({
   };
 
   // Update the session with the new history
-  const updatedSession = {
-    ...session,
-    history: updatedHistory,
-  };
-
-  historyManager.save(updatedSession);
-}
-
-/**
- * Deletes a conversation summary from a specific message in the history.
- * This function removes the conversationSummary property from the specified message.
- *
- * @param params - Object containing sessionId, index, and historyManager
- * @returns Promise<void> - Updates the session with the conversation summary removed
- */
-export async function deleteCompaction({
-  sessionId,
-  index,
-  historyManager,
-}: DeleteCompactionParams): Promise<void> {
-  // Get the current session
-  const session = historyManager.load(sessionId);
-
-  // Create a copy of the history
-  const updatedHistory = [...session.history];
-
-  // Remove the conversation summary from the specified message
-  if (updatedHistory[index]?.conversationSummary) {
-    updatedHistory[index] = {
-      ...updatedHistory[index],
-      conversationSummary: undefined,
-    };
-  }
-
-  // Update the session with the modified history
   const updatedSession = {
     ...session,
     history: updatedHistory,

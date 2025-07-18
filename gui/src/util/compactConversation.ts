@@ -5,7 +5,7 @@ import {
   setCompactionLoading,
   deleteCompaction,
 } from "../redux/slices/sessionSlice";
-import { loadSession } from "../redux/thunks/session";
+import { loadSession, saveCurrentSession } from "../redux/thunks/session";
 
 export const useCompactConversation = () => {
   const dispatch = useAppDispatch();
@@ -44,40 +44,13 @@ export const useCompactConversation = () => {
 
 export const useDeleteCompaction = () => {
   const dispatch = useAppDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
-  const currentSessionId = useAppSelector((state) => state.session.id);
 
-  return async (index: number) => {
-    if (!currentSessionId) {
-      return;
-    }
-
-    try {
-      // Update local state immediately
-      dispatch(deleteCompaction(index));
-
-      // Communicate with core to persist the change
-      await ideMessenger.request("conversation/deleteCompaction", {
-        index,
-        sessionId: currentSessionId,
-      });
-
-      // Reload the current session to refresh the conversation state
-      dispatch(
-        loadSession({
-          sessionId: currentSessionId,
-          saveCurrentSession: false,
-        }),
-      );
-    } catch (error) {
-      console.error("Error deleting compaction:", error);
-      // Optionally reload session to revert optimistic update
-      dispatch(
-        loadSession({
-          sessionId: currentSessionId,
-          saveCurrentSession: false,
-        }),
-      );
-    }
+  return (index: number) => {
+    // Update local state and save to persistence
+    dispatch(deleteCompaction(index));
+    dispatch(saveCurrentSession({
+      openNewSession: false,
+      generateTitle: false,
+    }));
   };
 };

@@ -193,13 +193,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     string | undefined,
   ];
-  "conversation/deleteCompaction": [
-    {
-      index: number;
-      sessionId: string;
-    },
-    void,
-  ];
   "stats/getTokensPerDay": [
     undefined,
     { day: string; promptTokens: number; generatedTokens: number }[],
