@@ -21,19 +21,24 @@ import {
 import { EMPTY_CHAT_COMPLETION } from "../util/emptyChatCompletion.js";
 import { safeParseArgs } from "../util/parseArgs.js";
 import {
+  CACHING_STRATEGIES,
+  CachingStrategyName,
+} from "./AnthropicCachingStrategies.js";
+import {
   BaseLlmApi,
   CreateRerankResponse,
   FimCreateParamsStreaming,
   RerankCreateParams,
 } from "./base.js";
 
-/**
- * Anthropic implementation of ILLM
- */
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
 
-  constructor(protected config: AnthropicConfig) {
+  constructor(
+    protected config: AnthropicConfig & {
+      cachingStrategy?: CachingStrategyName;
+    },
+  ) {
     this.apiBase = config.apiBase ?? this.apiBase;
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
@@ -41,6 +46,16 @@ export class AnthropicApi implements BaseLlmApi {
   }
 
   private _convertBody(oaiBody: ChatCompletionCreateParams) {
+    // Step 1: Convert to clean Anthropic body (no caching)
+    const cleanBody = this._convertToCleanAnthropicBody(oaiBody);
+
+    // Step 2: Apply caching strategy
+    const cachingStrategy =
+      CACHING_STRATEGIES[this.config.cachingStrategy ?? "systemAndTools"];
+    return cachingStrategy(cleanBody);
+  }
+
+  private _convertToCleanAnthropicBody(oaiBody: ChatCompletionCreateParams) {
     let stop = undefined;
     if (oaiBody.stop && Array.isArray(oaiBody.stop)) {
       stop = oaiBody.stop.filter((x) => x.trim() !== "");
@@ -61,7 +76,6 @@ export class AnthropicApi implements BaseLlmApi {
             {
               type: "text",
               text: systemMessage,
-              cache_control: { type: "ephemeral" },
             },
           ]
         : systemMessage,
@@ -164,6 +178,7 @@ export class AnthropicApi implements BaseLlmApi {
           "Content-Type": "application/json",
           Accept: "application/json",
           "anthropic-version": "2023-06-01",
+          "anthropic-beta": "prompt-caching-2024-07-31",
           "x-api-key": this.config.apiKey,
         },
         body: JSON.stringify(this._convertBody(body)),
@@ -186,6 +201,9 @@ export class AnthropicApi implements BaseLlmApi {
           completion.usage.input_tokens + completion.usage.output_tokens,
         completion_tokens: completion.usage.output_tokens,
         prompt_tokens: completion.usage.input_tokens,
+        prompt_tokens_details: {
+          cached_tokens: completion.usage.cache_read_input_tokens || 0,
+        },
       },
       choices: [
         {
@@ -214,6 +232,7 @@ export class AnthropicApi implements BaseLlmApi {
           "Content-Type": "application/json",
           Accept: "application/json",
           "anthropic-version": "2023-06-01",
+          "anthropic-beta": "prompt-caching-2024-07-31",
           "x-api-key": this.config.apiKey,
         },
         body: JSON.stringify(this._convertBody(body)),
@@ -241,7 +260,7 @@ export class AnthropicApi implements BaseLlmApi {
         case "message_start":
           usage.prompt_tokens = value.message.usage.input_tokens;
           usage.prompt_tokens_details = {
-            cached_tokens: value.message.usage.cache_read_input_tokens,
+            cached_tokens: value.message.usage.cache_read_input_tokens || 0,
           };
           break;
         case "message_delta":
