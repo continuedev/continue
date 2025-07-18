@@ -14,6 +14,22 @@ on:
         required: true
       SEMANTIC_RELEASE_NPM_TOKEN:
         required: true
+      OPENAI_API_KEY:
+        required: false
+      ANTHROPIC_API_KEY:
+        required: false
+      GEMINI_API_KEY:
+        required: false
+      MISTRAL_API_KEY:
+        required: false
+      AZURE_OPENAI_API_KEY:
+        required: false
+      AZURE_FOUNDRY_CODESTRAL_API_KEY:
+        required: false
+      AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY:
+        required: false
+      AZURE_OPENAI_GPT41_API_KEY:
+        required: false
 
 permissions:
   contents: write
