@@ -1,5 +1,5 @@
+import { expect, jest } from "@jest/globals";
 import { ILLM } from "../../index.js";
-import { jest, expect } from "@jest/globals";
 
 export interface LlmTestCase {
   llm: ILLM;
@@ -30,24 +30,31 @@ export async function runLlmTest(testCase: LlmTestCase) {
   if (mockStream) {
     const encoder = new TextEncoder();
     let streamIndex = 0;
-    mockFetch.mockResolvedValue(new Response(new ReadableStream({
-      start(controller) {
-        mockStream.forEach(chunk => {
-          controller.enqueue(new TextEncoder().encode(chunk));
-        });
-        controller.close();
-      }
-    }), {
-      headers: {
-        "Content-Type": "text/event-stream"
-      }
-    }));
+    mockFetch.mockResolvedValue(
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            mockStream.forEach((chunk) => {
+              controller.enqueue(new TextEncoder().encode(chunk));
+            });
+            controller.close();
+          },
+        }),
+        {
+          headers: {
+            "Content-Type": "text/event-stream",
+          },
+        },
+      ),
+    );
   } else {
-    mockFetch.mockResolvedValue(new Response(JSON.stringify(mockResponse), {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    }));
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(mockResponse), {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
   }
 
   // @ts-ignore
