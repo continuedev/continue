@@ -136,6 +136,8 @@ export function checkFim(
       isFim: false;
       fimText: null;
     } {
+  console.log("oldEditRange", oldEditRange);
+  console.log("newEditRange", newEditRange);
   // Find the common prefix.
   let prefixLength = 0;
   while (
@@ -224,4 +226,36 @@ export function calculateFinalCursorPosition(
   };
 
   return finalCursorPos;
+}
+
+/**
+ * Applies a completion to file content by replacing lines starting from a specific line number
+ *
+ * @param fileContent The original file content
+ * @param completion The completion text to apply
+ * @param startLineNumber The line number (0-based) where replacement should start
+ * @param linesToReplace Optional number of lines to replace; if not provided, will replace the same number of lines as in the completion
+ * @returns The file content with the completion applied
+ */
+export function applyCompletionToFile(
+  fileContent: string,
+  completion: string,
+  startLineNumber: number,
+  linesToReplace?: number,
+): string {
+  const lines = fileContent.split("\n");
+  const completionLines = completion.split("\n");
+
+  // Determine how many lines to replace
+  const numLinesToReplace =
+    linesToReplace !== undefined ? linesToReplace : completionLines.length;
+
+  // Replace the lines
+  const newLines = [
+    ...lines.slice(0, startLineNumber),
+    ...completionLines,
+    ...lines.slice(startLineNumber + numLinesToReplace),
+  ];
+
+  return newLines.join("\n");
 }
