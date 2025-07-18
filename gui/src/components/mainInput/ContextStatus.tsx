@@ -1,6 +1,6 @@
-import { Tooltip } from "react-tooltip";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import { ToolTip } from "../gui/Tooltip";
 
 const ContextStatus = () => {
   const dispatch = useAppDispatch();
@@ -22,7 +22,7 @@ const ContextStatus = () => {
 
   return (
     <div>
-      <Tooltip
+      <ToolTip
         id="context-status"
         closeEvents={{
           // blur: false,
@@ -47,7 +47,7 @@ const ContextStatus = () => {
               <span
                 className="inline-block cursor-pointer underline"
                 onClick={() => {
-                  dispatch(
+                  void dispatch(
                     saveCurrentSession({
                       openNewSession: true,
                       generateTitle: false,
@@ -60,10 +60,10 @@ const ContextStatus = () => {
             </div>
           )}
         </div>
-      </Tooltip>
+      </ToolTip>
       <div
         data-tooltip-id="context-status"
-        className="border-description-muted relative h-[10px] w-[5px] rounded-[1px] border-[0.5px] border-solid"
+        className="border-description-muted relative h-[14px] w-[7px] rounded-[1px] border-[0.5px] border-solid md:h-[10px] md:w-[5px]"
       >
         <div
           className={`transition-height absolute bottom-0 left-0 w-full duration-300 ease-in-out ${barColorClass}`}
