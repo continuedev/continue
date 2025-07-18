@@ -248,8 +248,46 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun runCommand(command: String) {
-        throw NotImplementedError("runCommand not implemented in IntelliJ")
+    override suspend fun runCommand(command: String, options: TerminalOptions) {
+        println("Continue-Debug: runCommand called with command: $command")
+        ApplicationManager.getApplication().invokeLater {
+            try {
+                println("Continue-Debug: Activating Terminal tool window.")
+                val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
+                toolWindow?.activate({
+                    try {
+                        val terminalView = TerminalView.getInstance(project)
+                        println("Continue-Debug: Searching for an existing, non-busy terminal widget.")
+
+                        var widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                            .firstOrNull { !it.hasRunningCommands() }
+
+                        if (widget == null) {
+                            println("Continue-Debug: No non-busy widget found. Creating a new one.")
+                            widget = terminalView.createLocalShellWidget(project.basePath, "Continue Terminal", true)
+                        } else {
+                            println("Continue-Debug: Found an existing widget. Bringing it to the front.")
+                            val contentManager = toolWindow.contentManager
+                            val content = contentManager.getContent(widget)
+                            if (content != null) {
+                                contentManager.setSelectedContent(content, true)
+                            }
+                        }
+
+                        println("Continue-Debug: Writing command to terminal: $command")
+                        widget.ttyConnector?.write(command)
+                        println("Continue-Debug: Command successfully written to terminal.")
+
+                    } catch (e: Exception) {
+                        println("Continue-Debug: Error during terminal widget handling: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }, true)
+            } catch (e: Exception) {
+                println("Continue-Debug: Error activating terminal tool window: ${e.message}")
+                e.printStackTrace()
+            }
+        }
     }
 
     override suspend fun saveFile(filepath: String) {
