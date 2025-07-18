@@ -117,6 +117,7 @@ const TESTS: Omit<ModelConfig & { options?: TestConfigOptions }, "name">[] = [
     model: "gpt-4.1",
     apiBase: "https://continue-openai.openai.azure.com",
     apiKey: process.env.AZURE_OPENAI_GPT41_API_KEY,
+    roles: ["chat"],
     env: {
       deployment: "gpt-4.1",
       apiVersion: "2024-02-15-preview",
