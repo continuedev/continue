@@ -6,7 +6,7 @@ import OpenAI from "./OpenAI.js";
 class NCompass extends OpenAI {
   static providerName = "ncompass";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.ncompass.tech/v1",
+    apiBase: "https://api.ncompass.tech/v1/",
   };
   static embeddingsApiEndpoint: "https://api.gcp.ncompass.tech/v1/embeddings";
 

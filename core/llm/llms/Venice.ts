@@ -6,7 +6,7 @@ import OpenAI from "./OpenAI";
 class Venice extends OpenAI {
   static providerName = "venice";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.venice.ai/api/v1",
+    apiBase: "https://api.venice.ai/api/v1/",
   };
 
   protected _convertArgs(

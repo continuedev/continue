@@ -17,7 +17,7 @@ import OpenAI from "./OpenAI.js";
 class Docker extends OpenAI implements ModelInstaller {
   static providerName = "docker";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:12434/engines/v1",
+    apiBase: "http://localhost:11434/v1/",
     model: "gemma3-4B-F4", // Default model
   };
 
@@ -70,7 +70,7 @@ class Docker extends OpenAI implements ModelInstaller {
   private async ensureModelRunnerEnabled(): Promise<void> {
     try {
       // Check if the Model Runner service is running on the expected port
-      const isRunning = await this.isPortBound(12434);
+      const isRunning = await this.isPortBound(11434);
 
       if (!isRunning) {
         console.log(
@@ -81,9 +81,9 @@ class Docker extends OpenAI implements ModelInstaller {
           "enable",
           "model-runner",
           "--tcp",
-          "12434",
+          "11434",
         ]);
-        console.log("Docker Model Runner has been enabled on port 12434");
+        console.log("Docker Model Runner has been enabled on port 11434");
       }
     } catch (error) {
       console.warn("Failed to enable Docker Model Runner:", error);

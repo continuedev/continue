@@ -5,7 +5,7 @@ import OpenAI from "./OpenAI";
 class Kindo extends OpenAI {
   static providerName = "kindo";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://llm.kindo.ai/v1",
+    apiBase: "https://llm-router.kindo.ai/",
     requestOptions: {
       headers: {
         "kindo-token-transaction-type": "CONTINUE",

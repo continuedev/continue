@@ -18,7 +18,7 @@ import OpenAI from "./OpenAI.js";
 class Inception extends OpenAI {
   static providerName = "inception";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.inceptionlabs.ai/v1/",
+    apiBase: "https://api.inception.ai/v1/",
     model: "mercury-coder-small",
     completionOptions: {
       temperature: 0.0,
