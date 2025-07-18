@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension
 
-import com.github.continuedev.continueintellijextension.editor.RangeInFileWithContents
 import com.google.gson.JsonElement
 
 enum class ToastType(val value: String) {
@@ -90,6 +89,11 @@ data class ContinueRcJson(
     val mergeBehavior: ConfigMergeType
 )
 
+data class TerminalOptions(
+    val reuseTerminal: Boolean,
+    val terminalName: String,
+    val waitForCompletion: Boolean
+)
 
 interface IDE {
     suspend fun getIdeInfo(): IdeInfo
@@ -133,7 +137,7 @@ interface IDE {
 
     suspend fun openUrl(url: String)
 
-    suspend fun runCommand(command: String)
+    suspend fun runCommand(command: String, options: TerminalOptions)
 
     suspend fun saveFile(filepath: String)
 
