@@ -192,7 +192,7 @@ createOpenAISubclassTests(Groq, {
   providerName: "groq",
   defaultApiBase: "https://api.groq.com/openai/v1/",
   modelConversions: {
-    "mistral-8x7b": "mixtral-8x7b-32768",
+    "mistral-8x7b": "mistral-8x7b",
     "llama3-8b": "llama3-8b-8192",
   },
   modelConversionContent: "[INST] hello [/INST]",
@@ -203,7 +203,7 @@ createOpenAISubclassTests(Fireworks, {
   providerName: "fireworks",
   defaultApiBase: "https://api.fireworks.ai/inference/v1/",
   modelConversions: {
-    "starcoder-7b": "accounts/fireworks/models/starcoder-7b",
+    "starcoder-7b": "starcoder-7b",
   },
   modelConversionContent:
     "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\n",
@@ -213,7 +213,7 @@ createOpenAISubclassTests(Together, {
   providerName: "together",
   defaultApiBase: "https://api.together.xyz/v1/",
   modelConversions: {
-    "codellama-7b": "togethercomputer/CodeLlama-7b-Instruct",
+    "codellama-7b": "codellama-7b",
     "llama3-8b": "meta-llama/Llama-3-8b-chat-hf",
   },
   modelConversionContent: "hello",
@@ -243,7 +243,7 @@ createOpenAISubclassTests(Mistral, {
   providerName: "mistral",
   defaultApiBase: "https://api.mistral.ai/v1/",
   modelConversions: {
-    "mistral-7b": "open-mistral-7b",
+    "mistral-7b": "mistral-7b",
     "mistral-8x7b": "open-mixtral-8x7b",
   },
   modelConversionContent: "hello",

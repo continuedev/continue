@@ -241,7 +241,7 @@ createOpenAISubclassTests(Groq, {
   providerName: "groq",
   defaultApiBase: "https://api.groq.com/openai/v1/",
   modelConversions: {
-    "mistral-8x7b": "mixtral-8x7b-32768",
+    "mistral-8x7b": "mistral-8x7b",
     "llama3-8b": "llama3-8b-8192",
     "llama3-70b": "llama3-70b-8192",
   },
@@ -251,9 +251,9 @@ createOpenAISubclassTests(Groq, {
 
 createOpenAISubclassTests(Fireworks, {
   providerName: "fireworks",
-  defaultApiBase: "https://api.fireworks.ai/inference/v1",
+  defaultApiBase: "https://api.fireworks.ai/inference/v1/",
   modelConversions: {
-    "starcoder-7b": "accounts/fireworks/models/starcoder-7b",
+    "starcoder-7b": "starcoder-7b",
   },
   modelConversionContent:
     "<|im_start|>user\nhello<|im_end|>\n<|im_start|>assistant\n",
@@ -263,7 +263,7 @@ createOpenAISubclassTests(Together, {
   providerName: "together",
   defaultApiBase: "https://api.together.xyz/v1/",
   modelConversions: {
-    "codellama-7b": "togethercomputer/CodeLlama-7b-Instruct",
+    "codellama-7b": "codellama-7b",
     "llama3-8b": "meta-llama/Llama-3-8b-chat-hf",
     "mistral-8x7b": "mistralai/Mixtral-8x7B-Instruct-v0.1",
   },
@@ -294,7 +294,7 @@ createOpenAISubclassTests(Mistral, {
   providerName: "mistral",
   defaultApiBase: "https://api.mistral.ai/v1/",
   modelConversions: {
-    "mistral-7b": "open-mistral-7b",
+    "mistral-7b": "mistral-7b",
     "mistral-8x7b": "open-mixtral-8x7b",
   },
   modelConversionContent: "hello",
@@ -356,7 +356,7 @@ createOpenAISubclassTests(Scaleway, {
 
 createOpenAISubclassTests(Venice, {
   providerName: "venice",
-  defaultApiBase: "https://api.venice.ai/api/v1",
+  defaultApiBase: "https://api.venice.ai/api/v1/",
 });
 
 createOpenAISubclassTests(Moonshot, {
@@ -377,7 +377,7 @@ createOpenAISubclassTests(SiliconFlow, {
 
 createOpenAISubclassTests(Kindo, {
   providerName: "kindo",
-  defaultApiBase: "https://llm.kindo.ai/v1",
+  defaultApiBase: "https://llm.kindo.ai/v1/",
 });
 
 createOpenAISubclassTests(Azure, {
@@ -396,7 +396,7 @@ createOpenAISubclassTests(Inception, {
 
 createOpenAISubclassTests(Docker, {
   providerName: "docker",
-  defaultApiBase: "http://localhost:12434/engines/v1",
+  defaultApiBase: "http://localhost:12434/engines/v1/",
 });
 
 createOpenAISubclassTests(Voyage, {
@@ -425,7 +425,7 @@ createOpenAISubclassTests(FunctionNetwork, {
 
 createOpenAISubclassTests(NCompass, {
   providerName: "ncompass",
-  defaultApiBase: "https://api.ncompass.tech/v1",
+  defaultApiBase: "https://api.ncompass.tech/v1/",
   customEmbeddingsUrl: "https://api.gcp.ncompass.tech/v1/embeddings",
   customEmbeddingsHeaders: {
     Authorization: "Bearer test-api-key",

@@ -385,6 +385,11 @@ export const createOpenAISubclassTests = (
         apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
       });
 
+      // Skip test if provider doesn't support embeddings (e.g., ncompass with undefined endpoint)
+      if (config.providerName === "ncompass" && !config.customEmbeddingsUrl) {
+        return;
+      }
+
       await runLlmTest({
         llm: provider,
         methodToTest: "embed",
