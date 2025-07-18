@@ -138,6 +138,10 @@ export function testChat(
     );
     let completion = "";
     for await (const result of stream) {
+      // Skip usage chunks that have empty choices array
+      if (result.choices.length === 0) {
+        continue;
+      }
       completion += result.choices[0].delta.content ?? "";
 
       expect(result.choices.length).toBeGreaterThan(0);
@@ -262,6 +266,10 @@ export function testChat(
         },
         new AbortController().signal,
       )) {
+        // Skip usage chunks that have empty choices array
+        if (chunk.choices.length === 0) {
+          continue;
+        }
         const toolCall = chunk.choices[0].delta.tool_calls?.[0];
         if (!toolCall) {
           continue;
@@ -333,6 +341,10 @@ export function testChat(
         },
         new AbortController().signal,
       )) {
+        // Skip usage chunks that have empty choices array
+        if (chunk.choices.length === 0) {
+          continue;
+        }
         response += chunk.choices[0].delta.content ?? "";
       }
 
