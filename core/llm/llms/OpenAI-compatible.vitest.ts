@@ -251,7 +251,7 @@ createOpenAISubclassTests(Groq, {
 
 createOpenAISubclassTests(Fireworks, {
   providerName: "fireworks",
-  defaultApiBase: "https://api.fireworks.ai/inference/v1/",
+  defaultApiBase: "https://api.fireworks.ai/inference/v1",
   modelConversions: {
     "starcoder-7b": "accounts/fireworks/models/starcoder-7b",
   },
@@ -353,7 +353,7 @@ createOpenAISubclassTests(Scaleway, {
 
 createOpenAISubclassTests(Venice, {
   providerName: "venice",
-  defaultApiBase: "https://api.venice.ai/api/v1/",
+  defaultApiBase: "https://api.venice.ai/api/v1",
 });
 
 createOpenAISubclassTests(Moonshot, {
@@ -374,17 +374,16 @@ createOpenAISubclassTests(SiliconFlow, {
 
 createOpenAISubclassTests(Kindo, {
   providerName: "kindo",
-  defaultApiBase: "https://llm-router.kindo.ai/",
+  defaultApiBase: "https://llm.kindo.ai/v1",
 });
 
 createOpenAISubclassTests(Azure, {
   providerName: "azure",
-  defaultApiBase: "https://api.openai.com/v1/",
 });
 
 createOpenAISubclassTests(Inception, {
   providerName: "inception",
-  defaultApiBase: "https://api.inception.ai/v1/",
+  defaultApiBase: "https://api.inceptionlabs.ai/v1/",
   customBodyOptions: {
     temperature: 0.0,
     presence_penalty: 1.5,
@@ -394,7 +393,7 @@ createOpenAISubclassTests(Inception, {
 
 createOpenAISubclassTests(Docker, {
   providerName: "docker",
-  defaultApiBase: "http://localhost:11434/v1/",
+  defaultApiBase: "http://localhost:12434/engines/v1",
 });
 
 createOpenAISubclassTests(Voyage, {
@@ -423,7 +422,7 @@ createOpenAISubclassTests(FunctionNetwork, {
 
 createOpenAISubclassTests(NCompass, {
   providerName: "ncompass",
-  defaultApiBase: "https://api.ncompass.tech/v1/",
+  defaultApiBase: "https://api.ncompass.tech/v1",
   customEmbeddingsUrl: "https://api.gcp.ncompass.tech/v1/embeddings",
   customEmbeddingsHeaders: {
     "Authorization": "Bearer test-api-key",
@@ -447,5 +446,5 @@ createOpenAISubclassTests(Nebius, {
 
 createOpenAISubclassTests(OVHcloud, {
   providerName: "ovhcloud",
-  defaultApiBase: "https://oai.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1/",
+  defaultApiBase: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/",
 });

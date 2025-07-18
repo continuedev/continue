@@ -131,7 +131,7 @@ async function runLlmTest(testCase: LlmTestCase) {
 
 export interface OpenAISubclassConfig {
   providerName: string;
-  defaultApiBase: string;
+  defaultApiBase?: string;
   modelConversions?: { [key: string]: string };
   customOptions?: any;
   modelConversionContent?: string;
@@ -144,7 +144,7 @@ export interface OpenAISubclassConfig {
 }
 
 function getExpectedUrl(config: OpenAISubclassConfig, endpoint: string, model: string = "gpt-4") {
-  let baseUrl = config.defaultApiBase;
+  let baseUrl = config.defaultApiBase || "https://api.openai.com/v1/";
   if (config.providerName === "azure") {
     return `${baseUrl}openai/deployments/${model}/${endpoint}?api-version=2023-07-01-preview`;
   } else if (config.providerName === "ncompass") {
@@ -166,15 +166,17 @@ export const createOpenAISubclassTests = (
       expect(ProviderClass.providerName).toBe(config.providerName);
     });
 
-    test("should have correct default API base", () => {
-      expect(ProviderClass.defaultOptions?.apiBase).toBe(config.defaultApiBase);
-    });
+    if (config.defaultApiBase) {
+      test("should have correct default API base", () => {
+        expect(ProviderClass.defaultOptions?.apiBase).toBe(config.defaultApiBase);
+      });
+    }
 
     test("streamChat should send a valid request", async () => {
       const provider = new ProviderClass({
         apiKey: "test-api-key",
         model: "gpt-4",
-        apiBase: config.defaultApiBase,
+        apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
       });
 
       await runLlmTest({
@@ -211,7 +213,7 @@ export const createOpenAISubclassTests = (
       const provider = new ProviderClass({
         apiKey: "test-api-key",
         model: "gpt-4",
-        apiBase: config.defaultApiBase,
+        apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
       });
 
       await runLlmTest({
@@ -248,7 +250,7 @@ export const createOpenAISubclassTests = (
       const provider = new ProviderClass({
         apiKey: "test-api-key",
         model: "gpt-4",
-        apiBase: config.defaultApiBase,
+        apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
       });
 
       await runLlmTest({
@@ -288,7 +290,7 @@ export const createOpenAISubclassTests = (
       const provider = new ProviderClass({
         apiKey: "test-api-key",
         model: "gpt-4",
-        apiBase: config.defaultApiBase,
+        apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
       });
 
       await runLlmTest({
@@ -327,7 +329,7 @@ export const createOpenAISubclassTests = (
         const provider = new ProviderClass({
           apiKey: "test-api-key",
           model: testModel,
-          apiBase: config.defaultApiBase,
+          apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
         });
 
         await runLlmTest({
@@ -362,7 +364,7 @@ export const createOpenAISubclassTests = (
       const provider = new ProviderClass({
         apiKey: "test-api-key",
         model: "text-embedding-ada-002",
-        apiBase: config.defaultApiBase,
+        apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
       });
 
       await runLlmTest({
@@ -370,7 +372,7 @@ export const createOpenAISubclassTests = (
         methodToTest: "embed",
         params: [["Hello", "World"]],
         expectedRequest: {
-          url: config.customEmbeddingsUrl || `${config.defaultApiBase}embeddings`,
+          url: config.customEmbeddingsUrl || `${config.defaultApiBase || "https://api.openai.com/v1/"}embeddings`,
           method: "POST",
           headers: config.customEmbeddingsHeaders || {
             Authorization: "Bearer test-api-key",

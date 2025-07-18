@@ -13,7 +13,6 @@ class Azure extends OpenAI {
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [];
 
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.openai.com/v1/",
     apiVersion: "2024-02-15-preview",
     apiType: "azure-openai",
   };

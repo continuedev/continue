@@ -136,7 +136,6 @@ class OpenAI extends BaseLLM {
   ): ChatCompletionCreateParams {
     const finalOptions = toChatBody(messages, options);
 
-    finalOptions.model = this._convertModelName(finalOptions.model);
     finalOptions.stop = options.stop?.slice(0, this.getMaxStopWords());
 
     // OpenAI o1-preview and o1-mini or o3-mini:
@@ -339,7 +338,7 @@ class OpenAI extends BaseLLM {
       return;
     }
 
-    const body = this.modifyChatBody(this._convertArgs(options, messages));
+    const body = this._convertArgs(options, messages);
 
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
