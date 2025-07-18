@@ -267,6 +267,7 @@ createOpenAISubclassTests(Together, {
     "mistral-8x7b": "mistralai/Mixtral-8x7B-Instruct-v0.1",
   },
   modelConversionContent: "hello",
+  customStreamCompleteEndpoint: "completions",
 });
 
 createOpenAISubclassTests(Deepseek, {
@@ -316,11 +317,28 @@ createOpenAISubclassTests(Cerebras, {
 createOpenAISubclassTests(DeepInfra, {
   providerName: "deepinfra",
   defaultApiBase: "https://api.deepinfra.com/v1/openai/",
+  customEmbeddingsUrl: "https://api.deepinfra.com/v1/inference/text-embedding-ada-002",
+  customEmbeddingsHeaders: {
+    "Authorization": "bearer test-api-key",
+  },
+  customEmbeddingsBody: {
+    inputs: ["Hello", "World"],
+  },
 });
 
 createOpenAISubclassTests(Nvidia, {
   providerName: "nvidia",
   defaultApiBase: "https://integrate.api.nvidia.com/v1/",
+  customEmbeddingsHeaders: {
+    "Authorization": "Bearer test-api-key",
+    "Content-Type": "application/json",
+  },
+  customEmbeddingsBody: {
+    input: ["Hello", "World"],
+    model: "text-embedding-ada-002",
+    input_type: "passage",
+    truncate: "END",
+  },
 });
 
 createOpenAISubclassTests(SambaNova, {
@@ -346,6 +364,7 @@ createOpenAISubclassTests(Moonshot, {
 createOpenAISubclassTests(Novita, {
   providerName: "novita",
   defaultApiBase: "https://api.novita.ai/v3/openai/",
+  customStreamCompleteEndpoint: "completions",
 });
 
 createOpenAISubclassTests(SiliconFlow, {
@@ -366,6 +385,11 @@ createOpenAISubclassTests(Azure, {
 createOpenAISubclassTests(Inception, {
   providerName: "inception",
   defaultApiBase: "https://api.inception.ai/v1/",
+  customBodyOptions: {
+    temperature: 0.0,
+    presence_penalty: 1.5,
+    stop: ["<|endoftext|>"],
+  },
 });
 
 createOpenAISubclassTests(Docker, {
@@ -391,11 +415,24 @@ createOpenAISubclassTests(TextGenWebUI, {
 createOpenAISubclassTests(FunctionNetwork, {
   providerName: "function-network",
   defaultApiBase: "https://api.function.network/v1/",
+  customEmbeddingsHeaders: {
+    "Authorization": "Bearer test-api-key",
+    "Content-Type": "application/json",
+  },
 });
 
 createOpenAISubclassTests(NCompass, {
   providerName: "ncompass",
-  defaultApiBase: "https://api.ncompass.tech/v1",
+  defaultApiBase: "https://api.ncompass.tech/v1/",
+  customEmbeddingsUrl: "https://api.gcp.ncompass.tech/v1/embeddings",
+  customEmbeddingsHeaders: {
+    "Authorization": "Bearer test-api-key",
+    "Content-Type": "application/json",
+  },
+  customEmbeddingsBody: {
+    input: ["Hello", "World"],
+    model: "text-embedding-ada-002",
+  },
 });
 
 createOpenAISubclassTests(LlamaStack, {

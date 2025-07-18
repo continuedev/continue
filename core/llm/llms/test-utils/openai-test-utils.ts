@@ -140,6 +140,17 @@ export interface OpenAISubclassConfig {
   customEmbeddingsUrl?: string;
   customEmbeddingsHeaders?: { [key: string]: string };
   customEmbeddingsBody?: any;
+  customBodyOptions?: any;
+}
+
+function getExpectedUrl(config: OpenAISubclassConfig, endpoint: string, model: string = "gpt-4") {
+  let baseUrl = config.defaultApiBase;
+  if (config.providerName === "azure") {
+    return `${baseUrl}openai/deployments/${model}/${endpoint}?api-version=2023-07-01-preview`;
+  } else if (config.providerName === "ncompass") {
+    return `${baseUrl}${endpoint}`;
+  }
+  return `${baseUrl}${endpoint}`;
 }
 
 export const createOpenAISubclassTests = (
@@ -174,7 +185,7 @@ export const createOpenAISubclassTests = (
           new AbortController().signal,
         ],
         expectedRequest: {
-          url: `${config.defaultApiBase}chat/completions`,
+          url: getExpectedUrl(config, "chat/completions"),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -186,6 +197,7 @@ export const createOpenAISubclassTests = (
             messages: [{ role: "user", content: "hello" }],
             stream: true,
             max_tokens: 2048,
+            ...config.customBodyOptions,
           },
         },
         mockStream: [
@@ -210,7 +222,7 @@ export const createOpenAISubclassTests = (
           new AbortController().signal,
         ],
         expectedRequest: {
-          url: `${config.defaultApiBase}chat/completions`,
+          url: getExpectedUrl(config, "chat/completions"),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -222,6 +234,7 @@ export const createOpenAISubclassTests = (
             messages: [{ role: "user", content: "hello" }],
             stream: true,
             max_tokens: 2048,
+            ...config.customBodyOptions,
           },
         },
         mockStream: [
@@ -243,7 +256,7 @@ export const createOpenAISubclassTests = (
         methodToTest: "streamComplete",
         params: ["Hello", new AbortController().signal],
         expectedRequest: {
-          url: `${config.defaultApiBase}${config.customStreamCompleteEndpoint || "chat/completions"}`,
+          url: getExpectedUrl(config, config.customStreamCompleteEndpoint || "chat/completions"),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -255,11 +268,13 @@ export const createOpenAISubclassTests = (
             prompt: "Hello",
             stream: true,
             max_tokens: 2048,
+            ...config.customBodyOptions,
           } : {
             model: "gpt-4",
             messages: [{ role: "user", content: "Hello" }],
             stream: true,
             max_tokens: 2048,
+            ...config.customBodyOptions,
           },
         },
         mockStream: [
@@ -281,7 +296,7 @@ export const createOpenAISubclassTests = (
         methodToTest: "complete",
         params: ["Hello", new AbortController().signal],
         expectedRequest: {
-          url: `${config.defaultApiBase}chat/completions`,
+          url: getExpectedUrl(config, "chat/completions"),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -293,6 +308,7 @@ export const createOpenAISubclassTests = (
             messages: [{ role: "user", content: "Hello" }],
             stream: true,
             max_tokens: 2048,
+            ...config.customBodyOptions,
           },
         },
         mockStream: [
@@ -322,7 +338,7 @@ export const createOpenAISubclassTests = (
             new AbortController().signal,
           ],
           expectedRequest: {
-            url: `${config.defaultApiBase}chat/completions`,
+            url: getExpectedUrl(config, "chat/completions", testModel),
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -334,6 +350,7 @@ export const createOpenAISubclassTests = (
               messages: [{ role: "user", content: config.modelConversionContent || "[INST] hello [/INST]" }],
               stream: true,
               max_tokens: config.modelConversionMaxTokens || 4096,
+              ...config.customBodyOptions,
             },
           },
           mockStream: [{ choices: [{ delta: { content: "Hello" } }] }],
