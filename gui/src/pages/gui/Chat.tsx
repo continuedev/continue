@@ -43,7 +43,6 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
-import ContextStatus from "../../components/mainInput/ContextStatus";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
@@ -426,9 +425,6 @@ export function Chat() {
                   <span className="text-xs">Last Session</span>
                 </NewSessionButton>
               )}
-            </div>
-            <div>
-              <ContextStatus />
             </div>
           </div>
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
