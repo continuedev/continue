@@ -1,4 +1,5 @@
 import { ILLM } from "../../index.js";
+import { jest, expect } from "@jest/globals";
 
 export interface LlmTestCase {
   llm: ILLM;
