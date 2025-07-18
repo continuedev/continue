@@ -1,19 +1,22 @@
-import { RangeInFile } from "..";
+import { Chunk, ChunkWithoutID, ILLM, RangeInFile } from "..";
 import { cosineSimilarity } from "../context/retrieval/pipelines/NextEditRetrievalPipeline";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
+  Rerank = "rerank",
   Model = "model",
   Sliding = "sliding",
 }
 
-export function getNextEditableRegion(
+export async function getNextEditableRegion(
   strategy: EditableRegionStrategy,
   ctx: any,
-): RangeInFile | null {
+): Promise<RangeInFile | null> {
   switch (strategy) {
     case EditableRegionStrategy.Naive:
       return naiveJump(ctx);
+    case EditableRegionStrategy.Rerank:
+      return await rerankJump(ctx);
     case EditableRegionStrategy.Model:
       return modelJump(ctx);
     case EditableRegionStrategy.Sliding:
@@ -24,6 +27,7 @@ export function getNextEditableRegion(
 }
 
 // Naive assumes that the entire file is editable.
+// This relies on the next edit model to figure out where to jump next.
 function naiveJump(ctx: any): RangeInFile | null {
   const { fileLines, filepath } = ctx;
   if (!fileLines || !filepath) {
@@ -41,6 +45,67 @@ function naiveJump(ctx: any): RangeInFile | null {
       },
     },
   };
+}
+
+// A rerank jump splits the current file into chunks.
+// Then it uses a rerank model to get the most relevant chunks and their positions.
+async function rerankJump(ctx: {
+  fileContent: string;
+  query: string;
+  filepath: string;
+  reranker: ILLM;
+  chunkSize: number;
+}): Promise<RangeInFile | null> {
+  try {
+    const { fileContent, query, filepath, reranker, chunkSize = 5 } = ctx;
+
+    if (!fileContent || !query || !filepath || !reranker) {
+      console.warn("Missing required context for rerank jump");
+      return null;
+    }
+
+    const lines = fileContent.split("\n");
+    const chunks: Array<Chunk> = [];
+
+    // Create chunks from the file.
+    for (let i = 0; i < lines.length; i += Math.floor(chunkSize / 2)) {
+      const endLine = Math.min(i + chunkSize - 1, lines.length - 1);
+      const chunkContent = lines.slice(i, endLine + 1).join("\n");
+      chunks.push({
+        content: chunkContent,
+        startLine: i,
+        endLine: endLine,
+        digest: `chunk-${i}-${endLine}`,
+        filepath: filepath,
+        index: i,
+      });
+    }
+
+    // Use the reranker to score each chunk against the query.
+    const scores = await reranker.rerank(query, chunks);
+
+    // Sort by score in descending order and get the highest scoring chunk.
+    chunks.sort(
+      (a, b) => scores[chunks.indexOf(b)] - scores[chunks.indexOf(a)],
+    );
+
+    const mostRelevantChunk = chunks[0];
+
+    // Return the range of the most relevant chunk.
+    return {
+      filepath,
+      range: {
+        start: { line: mostRelevantChunk.startLine, character: 0 },
+        end: {
+          line: mostRelevantChunk.endLine,
+          character: lines[mostRelevantChunk.endLine].length,
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Error in rerank jump:", error);
+    return null;
+  }
 }
 
 // A naive jump uses the next edit model to predict edits for the entire file.
@@ -191,65 +256,6 @@ function slidingJump(ctx: any): RangeInFile | null {
     };
   } catch (error) {
     console.error("Error in sliding jump:", error);
-    return null;
-  }
-}
-
-// A rerank jump splits the current file into chunks.
-// Then it uses a rerank model to get the most relevant chunks and their positions.
-function rerankJump(ctx: any): RangeInFile | null {
-  try {
-    const { fileContent, query, filepath, reranker, chunkSize = 10 } = ctx;
-
-    if (!fileContent || !query || !filepath || !reranker) {
-      console.warn("Missing required context for rerank jump");
-      return null;
-    }
-
-    const lines = fileContent.split("\n");
-    const chunks: Array<{
-      content: string;
-      startLine: number;
-      endLine: number;
-    }> = [];
-
-    // Create chunks from the file
-    for (let i = 0; i < lines.length; i += Math.floor(chunkSize / 2)) {
-      const endLine = Math.min(i + chunkSize - 1, lines.length - 1);
-      const chunkContent = lines.slice(i, endLine + 1).join("\n");
-      chunks.push({
-        content: chunkContent,
-        startLine: i,
-        endLine: endLine,
-      });
-    }
-
-    // Use the reranker to score each chunk against the query
-    const scoredChunks = chunks.map((chunk) => ({
-      ...chunk,
-      score: reranker.rerank(query, [{ content: chunk.content }])[0],
-    }));
-
-    // Sort by score in descending order and get the highest scoring chunk
-    const mostRelevantChunk = scoredChunks.sort((a, b) => b.score - a.score)[0];
-
-    if (!mostRelevantChunk) {
-      return null;
-    }
-
-    // Return the range of the most relevant chunk
-    return {
-      filepath,
-      range: {
-        start: { line: mostRelevantChunk.startLine, character: 0 },
-        end: {
-          line: mostRelevantChunk.endLine,
-          character: lines[mostRelevantChunk.endLine].length,
-        },
-      },
-    };
-  } catch (error) {
-    console.error("Error in rerank jump:", error);
     return null;
   }
 }
