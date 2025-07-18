@@ -6,6 +6,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Attachment
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.ui.jcef.JBCefApp
 import io.sentry.Hint
 import io.sentry.Sentry
@@ -26,6 +27,8 @@ class ContinueErrorService {
             config.setTag("ide_version", ApplicationInfo.getInstance().build.asString())
             config.setTag("jcef_supported", JBCefApp.isSupported().toString())
             config.setTag("plugin_version", PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID))?.version)
+            config.setTag("system", SystemInfo.OS_NAME)
+            config.setTag("system_version", SystemInfo.OS_VERSION)
         }
     }
 
@@ -39,7 +42,14 @@ class ContinueErrorService {
         sentryEvent.message = Message().apply { this.message = message }
         val hint = Hint.withAttachments(attachments?.map { SentryAttachment(it.bytes, it.path) })
         Sentry.captureEvent(sentryEvent, hint)
-        log.warn("Problem sent to Sentry: $message", throwable)
+        log.warn("Exception sent to Sentry: $message", throwable)
+    }
+
+    fun reportMessage(
+        message: String,
+    ) {
+        Sentry.captureMessage(message)
+        log.warn("Message sent to Sentry: $message")
     }
 
     private companion object {
