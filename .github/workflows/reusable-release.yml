@@ -46,6 +46,8 @@ jobs:
 
       - name: Run tests
         run: npm test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Release
         env:
