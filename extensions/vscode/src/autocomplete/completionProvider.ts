@@ -240,18 +240,17 @@ export class ContinueCompletionProvider
 
       setupStatusBar(undefined, true);
 
-      // TODO: Consume next edit generator.
       let outcome: AutocompleteOutcome | NextEditOutcome | undefined;
 
       // Check if editChainId exists or needs to be refreshed.
       if (this.isNextEditActive) {
         const st = performance.now();
-        outcome = await this.nextEditProvider.provideNextEditPrediction(
+        outcome = await this.nextEditProvider.provideInlineCompletionItems(
           input,
           signal,
         );
-        console.log(performance.now() - st);
-        console.log(outcome?.elapsed);
+        // console.log(performance.now() - st);
+        // console.log(outcome?.elapsed);
       } else {
         outcome = await this.completionProvider.provideInlineCompletionItems(
           input,
