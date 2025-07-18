@@ -1,4 +1,4 @@
-import { Chunk, ChunkWithoutID, ILLM, RangeInFile } from "..";
+import { Chunk, ILLM, RangeInFile } from "..";
 import { cosineSimilarity } from "../context/retrieval/pipelines/NextEditRetrievalPipeline";
 
 export enum EditableRegionStrategy {
@@ -60,17 +60,26 @@ async function rerankJump(ctx: {
     const { fileContent, query, filepath, reranker, chunkSize = 5 } = ctx;
 
     if (!fileContent || !query || !filepath || !reranker) {
-      console.warn("Missing required context for rerank jump");
+      console.warn(
+        "Missing required context for rerank jump:",
+        !fileContent,
+        !query,
+        !filepath,
+        !reranker,
+      );
       return null;
     }
 
+    console.log("reranker", reranker);
+
     const lines = fileContent.split("\n");
-    const chunks: Array<Chunk> = [];
+    const chunks: Chunk[] = [];
 
     // Create chunks from the file.
     for (let i = 0; i < lines.length; i += Math.floor(chunkSize / 2)) {
       const endLine = Math.min(i + chunkSize - 1, lines.length - 1);
       const chunkContent = lines.slice(i, endLine + 1).join("\n");
+      if (chunkContent === "") continue; // Voyager throws an error if there are empty strings in its document field in the body.
       chunks.push({
         content: chunkContent,
         startLine: i,
@@ -92,6 +101,9 @@ async function rerankJump(ctx: {
     const mostRelevantChunk = chunks[0];
 
     // Return the range of the most relevant chunk.
+    // NOTE: It might be better to return a list of chunks,
+    // because it's very difficult to gauge when to stop the model.
+    // We could argue that we should always try to jump until the user says no.
     return {
       filepath,
       range: {
