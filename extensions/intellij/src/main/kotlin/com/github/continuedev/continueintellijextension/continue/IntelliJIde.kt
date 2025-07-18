@@ -29,6 +29,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
@@ -138,10 +139,13 @@ class IntelliJIDE(
     override suspend fun getTerminalContents(): String {
         return withContext(Dispatchers.EDT) {
             try {
+                val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
+
                 val terminalView = TerminalView.getInstance(project)
-                // Find the first terminal widget available, whatever its state.
-                val widget =
-                    terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull { it.isEnabled }
+                // Find the first terminal widget selected, whatever its state, running command or not.
+                val widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                    toolWindow?.getContentManager()?.getContent(it)?.isSelected ?: false
+                }
 
                 if (widget != null) {
                     val textBuffer = widget.terminalTextBuffer
