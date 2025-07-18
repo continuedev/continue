@@ -11,6 +11,10 @@ import {
 } from "../constants";
 import { createDiff, DiffFormatType } from "../context/diffFormatting";
 import {
+  EditableRegionStrategy,
+  getNextEditableRegion,
+} from "../NextEditEditableRegionCarver";
+import {
   NextEditOutcome,
   NextEditTemplate,
   PromptMetadata,
@@ -51,6 +55,7 @@ function templateRendererOfModel(
 export function renderPrompt(
   helper: HelperVars,
   userEdits: string,
+  editableRegionStrategy: EditableRegionStrategy,
   prevOutcome?: NextEditOutcome,
   toApply?: RangeInFile,
 ): PromptMetadata {
@@ -89,6 +94,7 @@ export function renderPrompt(
   // TODO: apply prevOutcome to existing content. we will need the line range.
   // Also display the diff between existing content and applied content.
   if (prevOutcome) {
+    // console.log("renderPrompt prevOutcome:", prevOutcome.completion);
     // console.log(
     //   "beforeInsert:",
     //   helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
@@ -104,18 +110,27 @@ export function renderPrompt(
       ...helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
     ];
     // console.log("helper.fileContents:", helper.fileContents);
-    // TODO: I'm not sure, but <|user_cursor_is_here|> is somehow being added to appliedContent.
+    // NOTE: I'm not sure, but <|user_cursor_is_here|> is somehow being added to appliedContent.
     // The individual parts don't contain this.
     // console.log("appliedContent:", appliedContent);
     appliedContent = appliedContent.filter(
       (line) => !line.includes(USER_CURSOR_IS_HERE_TOKEN),
     );
-    // TODO: helper.pos is outdated.
     // Given a previous response, we need to calculate where the cursor would be.
     // I think it's a good idea to calculate this in the response.
+
+    const editableRegion = getNextEditableRegion(editableRegionStrategy, {
+      fileLines: appliedContent,
+      filepath: helper.filepath,
+    });
+
+    // console.log("appliedContent:", appliedContent);
+    // console.log("startLine:", editableRegion?.range.start.line);
     editedCodeWithTokens = insertTokens(
       appliedContent,
       prevOutcome.finalCursorPosition,
+      editableRegion?.range.start.line ?? undefined,
+      editableRegion?.range.end.line ?? undefined,
     );
     // console.log("new editedCodeWithTokens:", editedCodeWithTokens);
     userEdits = createDiff({
@@ -313,9 +328,19 @@ export function renderDefaultUserPrompt(
 //   }
 // }
 
-function insertTokens(lines: string[], cursorPos: Position) {
+function insertTokens(
+  lines: string[],
+  cursorPos: Position,
+  editableRegionStart?: number,
+  editableRegionEnd?: number,
+) {
   const a = insertCursorToken(lines, cursorPos);
-  const b = insertEditableRegionTokensWithStaticRange(a, cursorPos);
+  const b = insertEditableRegionTokensWithStaticRange(
+    a,
+    cursorPos,
+    editableRegionStart,
+    editableRegionEnd,
+  );
   return b.join("\n");
 }
 
@@ -339,20 +364,28 @@ function insertCursorToken(lines: string[], cursorPos: Position) {
 function insertEditableRegionTokensWithStaticRange(
   lines: string[],
   cursorPos: Position,
+  editableRegionStart?: number,
+  editableRegionEnd?: number,
 ) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
 
   // Ensure editable regions are within bounds.
-  const editableRegionStart = Math.max(
-    cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-    0,
-  );
-  const editableRegionEnd = Math.min(
-    cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-    lines.length - 1, // Line numbers should be zero-indexed.
-  );
+  if (editableRegionStart === undefined) {
+    editableRegionStart = Math.max(
+      cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+      0,
+    );
+  }
+  if (editableRegionEnd === undefined) {
+    editableRegionEnd = Math.min(
+      cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+      lines.length - 1, // Line numbers should be zero-indexed.
+    );
+  }
+
+  // console.log("editableRegionStart:", editableRegionStart);
 
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),
