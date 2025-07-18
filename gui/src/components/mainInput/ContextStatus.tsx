@@ -35,7 +35,7 @@ const ContextStatus = () => {
         }}
         clickable
       >
-        <div className="flex flex-col gap-0">
+        <div className="flex flex-col gap-0 text-xs">
           <span className="inline-block">
             {`${percent}% of context filled`}
           </span>
