@@ -90,9 +90,9 @@ data class ContinueRcJson(
 )
 
 data class TerminalOptions(
-    val reuseTerminal: Boolean,
-    val terminalName: String,
-    val waitForCompletion: Boolean
+    val reuseTerminal: Boolean?,
+    val terminalName: String?,
+    val waitForCompletion: Boolean?
 )
 
 interface IDE {
@@ -137,7 +137,7 @@ interface IDE {
 
     suspend fun openUrl(url: String)
 
-    suspend fun runCommand(command: String, options: TerminalOptions)
+    suspend fun runCommand(command: String, options: TerminalOptions?)
 
     suspend fun saveFile(filepath: String)
 
