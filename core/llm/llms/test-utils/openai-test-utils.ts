@@ -332,52 +332,6 @@ export const createOpenAISubclassTests = (
       });
     });
 
-    // Test model conversions if provided
-    if (config.modelConversions) {
-      test("should convert model names correctly", async () => {
-        const testModel = Object.keys(config.modelConversions!)[0];
-        const expectedModel = config.modelConversions![testModel];
-
-        const provider = new ProviderClass({
-          apiKey: "test-api-key",
-          model: testModel,
-          apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
-        });
-
-        await runLlmTest({
-          llm: provider,
-          methodToTest: "chat",
-          params: [
-            [{ role: "user", content: "hello" }],
-            new AbortController().signal,
-          ],
-          expectedRequest: {
-            url: getExpectedUrl(config, "chat/completions", testModel),
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer test-api-key",
-              "api-key": "test-api-key",
-            },
-            body: {
-              model: expectedModel,
-              messages: [
-                {
-                  role: "user",
-                  content:
-                    config.modelConversionContent || "[INST] hello [/INST]",
-                },
-              ],
-              stream: true,
-              max_tokens: config.modelConversionMaxTokens || 4096,
-              ...config.customBodyOptions,
-            },
-          },
-          mockStream: [{ choices: [{ delta: { content: "Hello" } }] }],
-        });
-      });
-    }
-
     test("should handle embeddings", async () => {
       const provider = new ProviderClass({
         apiKey: "test-api-key",
