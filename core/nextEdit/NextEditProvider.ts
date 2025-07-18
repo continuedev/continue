@@ -23,9 +23,7 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
-import { getTopRelevantCodeChunks } from "../context/retrieval/pipelines/NextEditRetrievalPipeline.js";
 import { myersDiff } from "../diff/myers.js";
-import { PrefetchQueue } from "../util/PrefetchQueue.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
@@ -35,7 +33,9 @@ import {
   calculateFinalCursorPosition,
   getOffsetPositionAtLastNewLine,
 } from "./diff/diff.js";
+import { EditableRegionStrategy } from "./NextEditEditableRegionCarver.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
+import { NextEditPrefetchQueue } from "./NextEditPrefetchQueue.js";
 import {
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
@@ -67,18 +67,7 @@ export class NextEditProvider {
   private endpointType: "default" | "fineTuned";
   private diffContext: string = "";
   private promptMetadata: PromptMetadata | null = null;
-  private prefetchQueue: PrefetchQueue<
-    NextEditOutcome,
-    RangeInFile,
-    {
-      helper: HelperVars;
-      diffContext: string;
-      llm: ILLM;
-      token: AbortSignal;
-      startTime: number;
-      newCursorPos: Position;
-    }
-  >;
+  private prefetchQueue: NextEditPrefetchQueue;
   // private refQueue: RangeInFile[] = [];
   // TODO: This needs to be cleared globally on cancel.
   public static currentEditChainId: string | null = null;
@@ -106,25 +95,29 @@ export class NextEditProvider {
         token: AbortSignal;
         startTime: number;
         newCursorPos: Position;
+        editableRegionStrategy: EditableRegionStrategy;
       },
     ) => {
       if (!other) return undefined;
+      // console.log("previousData:", previousData?.completion);
       // render prompt
       // TODO: this has to set the editable region properly.
       // console.log("fetchfunction - previousData:", previousData?.completion);
       const promptMetadata = renderPrompt(
         other.helper,
         other.diffContext,
+        other.editableRegionStrategy,
         previousData,
         resource,
       );
       this.promptMetadata = promptMetadata;
+      // console.log("prompt:", promptMetadata.prompt);
       // call llm.chat
       const msg = await other.llm.chat([promptMetadata.prompt], other.token);
       // built and return outcome
       if (typeof msg.content === "string") {
         if (msg.content === "") return undefined;
-        // TODO: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
+        // NOTE: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
         const nextCompletion = replaceEscapedCharacters(
           msg.content.split("<|editable_region_start|>\n")[1],
         ).replace(/\n$/, "");
@@ -167,6 +160,8 @@ export class NextEditProvider {
           character: offset.character,
         };
 
+        // TODO: if editable region strategy is naive, then we need to split the prediction up into regions. Also potentially filling up the prefetch queue.
+
         const outcomeNext: NextEditOutcome = {
           elapsed: Date.now() - other.startTime,
           modelProvider: other.llm.underlyingProviderName,
@@ -198,18 +193,11 @@ export class NextEditProvider {
       }
     };
 
-    this.prefetchQueue = new PrefetchQueue<
-      NextEditOutcome,
-      RangeInFile,
-      {
-        helper: HelperVars;
-        diffContext: string;
-        llm: ILLM;
-        token: AbortSignal;
-        startTime: number;
-        newCursorPos: Position;
-      }
-    >(fetchFunction, [], undefined);
+    this.prefetchQueue = new NextEditPrefetchQueue(
+      fetchFunction,
+      [],
+      undefined,
+    );
   }
 
   public static initialize(
@@ -387,7 +375,11 @@ export class NextEditProvider {
         prompts.push(renderDefaultSystemPrompt());
         prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
       } else {
-        const promptMetadata = renderPrompt(helper, this.diffContext);
+        const promptMetadata = renderPrompt(
+          helper,
+          this.diffContext,
+          EditableRegionStrategy.Naive,
+        );
         this.promptMetadata = promptMetadata;
         prompts.push(promptMetadata.prompt);
       }
@@ -562,6 +554,7 @@ export class NextEditProvider {
         token,
         startTime,
         newCursorPos: helper.pos,
+        editableRegionStrategy: EditableRegionStrategy.Naive,
       });
 
       const [snippetPayload, workspaceDirs] = await Promise.all([
@@ -588,20 +581,20 @@ export class NextEditProvider {
         directory,
         branch: branches[i],
       }));
-      const chunks = await getTopRelevantCodeChunks(
-        `  add(number) {
-    this.result += number;
-    return this;
-  }`,
-        {
-          ide: this.ide,
-          llm: llm,
-          config: config!,
-          tags: tags,
-          // filterDirectory: getUriPathBasename(helper.workspaceUris[0]),
-        },
-      );
-      console.log("chunks:", JSON.stringify(chunks, null, 2));
+      //     const chunks = await getTopRelevantCodeChunks(
+      //       `  add(number) {
+      //   this.result += number;
+      //   return this;
+      // }`,
+      //       {
+      //         ide: this.ide,
+      //         llm: llm,
+      //         config: config!,
+      //         tags: tags,
+      //         // filterDirectory: getUriPathBasename(helper.workspaceUris[0]),
+      //       },
+      //     );
+      //     console.log("chunks:", JSON.stringify(chunks, null, 2));
 
       this.prefetchQueue.loadResource(refQueue);
       await this.prefetchQueue.initialize();
