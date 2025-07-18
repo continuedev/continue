@@ -131,7 +131,7 @@ export const streamNormalInput = createAsyncThunk<
   async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
-    debugger;
+
     if (!selectedChatModel) {
       throw new Error("No chat model selected");
     }

@@ -26,7 +26,6 @@ export async function* interceptSystemToolCalls(
   messageGenerator: AsyncGenerator<ChatMessage[], PromptLog | undefined>,
   abortController: AbortController,
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
-  debugger;
   let hasSeenToolCall = false;
   let inToolCall = false;
   let currentToolCallId: string | undefined = undefined;
@@ -84,30 +83,26 @@ export async function* interceptSystemToolCalls(
               parseState = getInitialTooLCallParseState();
             }
 
-            try {
-              const delta = handleToolCallBuffer(
-                buffer,
-                currentToolCallId,
-                parseState,
-              );
-              if (delta) {
-                hasSeenToolCall = true;
-                yield [
-                  {
-                    ...message,
-                    content: "",
-                    toolCalls: [delta],
-                  },
-                ];
-              }
+            const delta = handleToolCallBuffer(
+              buffer,
+              currentToolCallId,
+              parseState,
+            );
+            if (delta) {
+              hasSeenToolCall = true;
+              yield [
+                {
+                  ...message,
+                  content: "",
+                  toolCalls: [delta],
+                },
+              ];
+            }
 
-              if (parseState.done) {
-                inToolCall = false;
-                currentToolCallId = undefined;
-                parseState = undefined;
-              }
-            } catch (e) {
-              console.error("Error while parsing system tool call", e);
+            if (parseState.done) {
+              inToolCall = false;
+              currentToolCallId = undefined;
+              parseState = undefined;
             }
           } else {
             // Prevent content after tool calls for now
