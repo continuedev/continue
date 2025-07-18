@@ -27,6 +27,9 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
+/**
+ * Anthropic implementation of ILLM
+ */
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
 
