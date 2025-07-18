@@ -805,6 +805,15 @@ const getCommandsMap: (
         "editor.action.inlineSuggest.trigger",
       );
     },
+    "continue.showNextEditAfterJump": async (data) => {
+      const { completionId, outcome, currCursorPos } = data;
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) return;
+
+      // This would be the same logic as in the renderNextEditSuggestion method
+      // from my first suggestion
+      // ...
+    },
   };
 };
 

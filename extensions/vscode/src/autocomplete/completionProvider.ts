@@ -400,12 +400,16 @@ export class ContinueCompletionProvider
 
       if (this.isNextEditActive) {
         if (!this.nextEditProvider.isStartOfChain()) {
-          await this.jumpManager.suggestJump(
-            new vscode.Position(
-              (outcome as NextEditOutcome).editableRegionStartLine,
-              0,
-            ),
+          const jumpPosition = new vscode.Position(
+            (outcome as NextEditOutcome).editableRegionStartLine,
+            0,
           );
+          await this.jumpManager.suggestJump(jumpPosition, {
+            completionId: input.completionId,
+            outcome: outcome as NextEditOutcome,
+          });
+
+          return undefined;
         }
         const editor = vscode.window.activeTextEditor;
         if (!editor) {

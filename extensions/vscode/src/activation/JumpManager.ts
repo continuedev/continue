@@ -32,7 +32,10 @@ export class JumpManager {
     this._disposables = [];
   }
 
-  public async suggestJump(nextJumpLocation: vscode.Position) {
+  public async suggestJump(
+    nextJumpLocation: vscode.Position,
+    nextEditData?: any,
+  ) {
     const editor = vscode.window.activeTextEditor;
 
     if (editor) {
@@ -74,6 +77,35 @@ export class JumpManager {
           vscode.TextEditorRevealType.InCenter,
         );
       }
+    }
+
+    if (nextEditData) {
+      this.pendingNextEditData = nextEditData;
+
+      const disposable = vscode.window.onDidChangeTextEditorSelection((e) => {
+        const editor = vscode.window.activeTextEditor;
+        if (editor && e.textEditor === editor) {
+          const currentPosition = editor.selection.active;
+
+          if (Math.abs(currentPosition.line - nextJumpLocation.line) <= 1) {
+            disposable.dispose();
+
+            vscode.commands.executeCommand("continue.showNextEditAfterJump", {
+              ...this.pendingNextEditData,
+              currentPosition,
+            });
+
+            this.pendingNextEditData = undefined;
+          }
+        }
+      });
+
+      setTimeout(() => {
+        if (this.pendingNextEditData) {
+          disposable.dispose();
+          this.pendingNextEditData = undefined;
+        }
+      }, 10000);
     }
   }
 
