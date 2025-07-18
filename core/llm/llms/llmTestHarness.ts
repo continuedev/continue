@@ -30,32 +30,24 @@ export async function runLlmTest(testCase: LlmTestCase) {
   if (mockStream) {
     const encoder = new TextEncoder();
     let streamIndex = 0;
-    mockFetch.mockResolvedValue({
-      ok: true,
-      body: {
-        getReader: () => ({
-          read: () => {
-            if (streamIndex >= mockStream.length) {
-              return Promise.resolve({ done: true, value: undefined });
-            }
-            const chunk = mockStream[streamIndex++];
-            const encoded = encoder.encode(chunk);
-            return Promise.resolve({
-              done: false,
-              value: encoded,
-            });
-          },
-        }),
-      },
-      headers: new Headers({
-        "Content-Type": "text/event-stream",
-      }),
-    } as Response);
+    mockFetch.mockResolvedValue(new Response(new ReadableStream({
+      start(controller) {
+        mockStream.forEach(chunk => {
+          controller.enqueue(new TextEncoder().encode(chunk));
+        });
+        controller.close();
+      }
+    }), {
+      headers: {
+        "Content-Type": "text/event-stream"
+      }
+    }));
   } else {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockResponse),
-    } as Response);
+    mockFetch.mockResolvedValue(new Response(JSON.stringify(mockResponse), {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }));
   }
 
   // @ts-ignore
