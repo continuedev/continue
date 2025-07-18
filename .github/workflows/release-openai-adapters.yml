@@ -7,6 +7,11 @@ on:
     paths:
       - "packages/openai-adapters/**"
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   release:
     uses: ./.github/workflows/reusable-release.yml
