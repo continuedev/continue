@@ -6,6 +6,14 @@ describe("patchNestedMarkdown", () => {
     expect(patchNestedMarkdown(source)).toBe(source);
   });
 
+  it("should handle nested blocks without a type", () => {
+    const source =
+      "```markdown README.md\n# Project Structure\n\n```\n.\n├── AdvancedPage.tsx\n├── Calculator.java\n├── Dockerfile\n├── calculator_test/\n│   ├── Calculator.java\n│   └── Main.java\n├── data.json\n├── example.ipynb\n├── logs/\n├── nested-folder/\n│   ├── helloNested.py\n│   ├── package.json\n│   └── rules.md\n├── program.cs\n├── query.sql\n├── react-calculator/\n├── readme.md\n├── requirements.txt\n├── test.css\n├── test.html\n├── test.js\n├── test.kt\n├── test.php\n├── test.py\n├── test.rb\n├── test.rs\n├── test.sh\n└── test.ts\n```\n```";
+    const expected =
+      "~~~markdown README.md\n# Project Structure\n\n```\n.\n├── AdvancedPage.tsx\n├── Calculator.java\n├── Dockerfile\n├── calculator_test/\n│   ├── Calculator.java\n│   └── Main.java\n├── data.json\n├── example.ipynb\n├── logs/\n├── nested-folder/\n│   ├── helloNested.py\n│   ├── package.json\n│   └── rules.md\n├── program.cs\n├── query.sql\n├── react-calculator/\n├── readme.md\n├── requirements.txt\n├── test.css\n├── test.html\n├── test.js\n├── test.kt\n├── test.php\n├── test.py\n├── test.rb\n├── test.rs\n├── test.sh\n└── test.ts\n```\n~~~";
+    expect(patchNestedMarkdown(source)).toBe(expected);
+  });
+
   it("should replace backticks with tildes for markdown codeblocks", () => {
     const source = "```markdown\n# Header\nSome text\n```";
     const expected = "~~~markdown\n# Header\nSome text\n~~~";

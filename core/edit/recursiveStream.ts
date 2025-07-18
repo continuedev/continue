@@ -63,7 +63,8 @@ export async function* recursiveStream(
     }
   } else {
     const generator = llm.streamChat(prompt, abortController.signal, {
-      prediction,
+      raw: true,
+      prediction: undefined,
       reasoning: false,
     });
 
