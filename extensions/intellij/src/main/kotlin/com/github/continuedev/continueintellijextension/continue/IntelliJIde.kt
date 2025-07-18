@@ -248,43 +248,62 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun runCommand(command: String, options: TerminalOptions) {
-        println("Continue-Debug: runCommand called with command: $command")
+    override suspend fun runCommand(command: String, options: TerminalOptions?) {
+        val terminalOptions =
+            options ?: TerminalOptions(reuseTerminal = true, terminalName = null, waitForCompletion = false)
+
         ApplicationManager.getApplication().invokeLater {
             try {
-                println("Continue-Debug: Activating Terminal tool window.")
                 val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
                 toolWindow?.activate({
                     try {
                         val terminalView = TerminalView.getInstance(project)
-                        println("Continue-Debug: Searching for an existing, non-busy terminal widget.")
+                        var widget: ShellTerminalWidget? = null
 
-                        var widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
-                            .firstOrNull { !it.hasRunningCommands() }
-
-                        if (widget == null) {
-                            println("Continue-Debug: No non-busy widget found. Creating a new one.")
-                            widget = terminalView.createLocalShellWidget(project.basePath, "Continue Terminal", true)
-                        } else {
-                            println("Continue-Debug: Found an existing widget. Bringing it to the front.")
-                            val contentManager = toolWindow.contentManager
-                            val content = contentManager.getContent(widget)
-                            if (content != null) {
-                                contentManager.setSelectedContent(content, true)
+                        // 1. Handle reuseTerminal option
+                        if (terminalOptions.reuseTerminal == true && terminalView.getWidgets().isNotEmpty()) {
+                            // 2. Find by terminalName if provided
+                            if (terminalOptions.terminalName != null) {
+                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                    .firstOrNull {
+                                        toolWindow.contentManager.getContent(it).tabName == terminalOptions.terminalName
+                                                && !it.hasRunningCommands()
+                                    }
+                            } else {
+                                // 3. Find active terminal, or fall back to the first one
+                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                    .firstOrNull { toolWindow.contentManager.getContent(it).isSelected }
+                                    ?: terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                                        !it.hasRunningCommands()
+                                    }
                             }
                         }
 
-                        println("Continue-Debug: Writing command to terminal: $command")
+                        // 4. Create a new terminal if needed
+                        if (widget == null) {
+                            widget = terminalView.createLocalShellWidget(
+                                project.basePath,
+                                terminalOptions.terminalName,
+                                true
+                            )
+                        } else {
+                            // Ensure the found widget is visible
+                            val content = toolWindow.contentManager.getContent(widget)
+                            if (content != null) {
+                                toolWindow.contentManager.setSelectedContent(content, true)
+                            }
+                        }
+
+                        // 5. Show and send text
                         widget.ttyConnector?.write(command)
-                        println("Continue-Debug: Command successfully written to terminal.")
 
                     } catch (e: Exception) {
-                        println("Continue-Debug: Error during terminal widget handling: ${e.message}")
+                        println("Error during terminal widget handling: ${e.message}")
                         e.printStackTrace()
                     }
                 }, true)
             } catch (e: Exception) {
-                println("Continue-Debug: Error activating terminal tool window: ${e.message}")
+                println("Error activating terminal tool window: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -666,7 +685,7 @@ class IntelliJIDE(
     }
 
     private fun setFileOpen(filepath: String, open: Boolean = true) {
-        val file = LocalFileSystem.getInstance().findFileByPath(UriUtils.uriToFile(filepath).path)
+        val file = LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path)
 
         file?.let {
             if (open) {
