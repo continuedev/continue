@@ -60,7 +60,12 @@ export class JumpManager {
           );
         } else {
           // No suggestion is made when the decoration is within visibleRange.
-          return;
+          await this.renderTabToJumpDecoration(
+            editor,
+            decorationLine,
+            nextJumpLocation,
+          );
+          // return;
         }
 
         // Scroll to show the jump location.
@@ -92,8 +97,14 @@ export class JumpManager {
     });
 
     // Apply the decoration.
+    const lastIndexOfLine = editor.document.lineAt(lineToRenderOn).text.length;
     editor.setDecorations(this._jumpDecoration, [
-      new vscode.Range(lineToRenderOn, 0, lineToRenderOn, 0),
+      new vscode.Range(
+        lineToRenderOn,
+        lastIndexOfLine,
+        lineToRenderOn,
+        lastIndexOfLine,
+      ),
     ]);
 
     // Set the context key to enable tab/esc shortcuts.
