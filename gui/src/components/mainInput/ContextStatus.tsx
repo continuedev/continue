@@ -14,7 +14,11 @@ const ContextStatus = () => {
     return null;
   }
 
-  const barColorClass = percent > 80 ? "bg-warning" : "bg-description";
+  const barColorClass = isPruned
+    ? "bg-error"
+    : percent > 80
+      ? "bg-warning"
+      : "bg-description";
 
   return (
     <div>
