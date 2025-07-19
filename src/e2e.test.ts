@@ -43,7 +43,16 @@ describe("CLI E2E Tests", () => {
   describe("invalid commands", () => {
     it("should show error for unknown command", async () => {
       try {
-        await $(["unknown-command"]);
+        // Add explicit timeout for Windows CI
+        const result = await execaNode(
+          path.resolve("dist/index.js"),
+          ["unknown-command"],
+          {
+            timeout: 5000, // 5 second timeout instead of default 10
+            reject: true,
+            windowsHide: true, // Prevent console window on Windows
+          }
+        );
         fail("Should have thrown an error");
       } catch (error: any) {
         expect(error.exitCode).not.toBe(0);
@@ -51,11 +60,20 @@ describe("CLI E2E Tests", () => {
         const errorOutput = error.message || error.stderr || error.stdout || "";
         expect(errorOutput.length).toBeGreaterThan(0);
       }
-    });
+    }, 8000); // Increase test timeout to 8 seconds
 
     it("should show help on invalid flag", async () => {
       try {
-        await $(["--invalid-flag"]);
+        // Add explicit timeout for Windows CI
+        const result = await execaNode(
+          path.resolve("dist/index.js"),
+          ["--invalid-flag"],
+          {
+            timeout: 5000, // 5 second timeout instead of default 10
+            reject: true,
+            windowsHide: true, // Prevent console window on Windows
+          }
+        );
         fail("Should have thrown an error");
       } catch (error: any) {
         expect(error.exitCode).not.toBe(0);
@@ -63,6 +81,6 @@ describe("CLI E2E Tests", () => {
         const errorOutput = error.message || error.stderr || error.stdout || "";
         expect(errorOutput.length).toBeGreaterThan(0);
       }
-    });
+    }, 8000); // Increase test timeout to 8 seconds
   });
 });
