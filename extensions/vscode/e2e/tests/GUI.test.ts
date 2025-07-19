@@ -287,8 +287,8 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
 
     it("should render tool call", async () => {
-      // all tool's toolSettings here defaults to "allowedWithPermission"
-      await GUIActions.toggleToolPolicy(view, "view_diff", 1);
+      // all tool's toolSettings here defaults to ?
+      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -307,7 +307,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD * 100);
 
     it("should call tool after approval", async () => {
-      // all tool's toolSettings here defaults to "allowedWithPermission"
+      // all tool's toolSettings here defaults to ?
       // await GUIActions.toggleToolPolicy(view, "view_diff", 1);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
@@ -329,7 +329,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
 
     it("should cancel tool", async () => {
-      // all tool's toolSettings here defaults to "allowedWithPermission"
+      // all tool's toolSettings here defaults to ?
       // await GUIActions.toggleToolPolicy(view, "view_diff", 1);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
