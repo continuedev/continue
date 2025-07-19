@@ -15,7 +15,6 @@ import { GUIActions } from "../actions/GUI.actions";
 import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
-import { BuiltInToolNames } from "../../../../core/tools/builtIn";
 
 describe("GUI Test", () => {
   let view: WebView;
@@ -289,7 +288,7 @@ describe("GUI Test", () => {
 
     it("should render tool call", async () => {
       // all tool's toolSettings here defaults to ?
-      await GUIActions.toggleToolPolicy(view, BuiltInToolNames.ViewDiff, 1);
+      await GUIActions.toggleToolPolicy(view, "view_diff", 1);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
