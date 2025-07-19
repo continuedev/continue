@@ -103,7 +103,7 @@ export class NextEditProvider {
       // render prompt
       // TODO: this has to set the editable region properly.
       // console.log("fetchfunction - previousData:", previousData?.completion);
-      const promptMetadata = renderPrompt(
+      const promptMetadata = await renderPrompt(
         other.helper,
         other.diffContext,
         other.editableRegionStrategy,
@@ -335,6 +335,10 @@ export class NextEditProvider {
     this.currentEditChainId = id ?? uuidv4();
   }
 
+  public getChain() {
+    return this.previousCompletions;
+  }
+
   public isStartOfChain() {
     return this.previousCompletions.length === 1;
   }
@@ -396,7 +400,7 @@ export class NextEditProvider {
         prompts.push(renderDefaultSystemPrompt());
         prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
       } else {
-        const promptMetadata = renderPrompt(
+        const promptMetadata = await renderPrompt(
           helper,
           this.diffContext,
           EditableRegionStrategy.Naive,
