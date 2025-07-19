@@ -189,7 +189,7 @@ describe("processEditorContent", () => {
     expect(result.parts).toEqual([
       {
         type: "text",
-        text: "Check this code:\n\n```js example.js\nfunction test() {\n  return 'hello';\n}\n```\n",
+        text: "Check this code:\n\n```js example.js a description\nfunction test() {\n  return 'hello';\n}\n```\n",
       },
     ]);
     expect(result.selectedCode).toHaveLength(1);
@@ -347,7 +347,7 @@ describe("processEditorContent", () => {
     expect(result.parts).toEqual([
       {
         type: "text",
-        text: "Please explain this code and also check @related\n\n```ts script.ts\nconst x = 42;\n```\n\nWhat does this constant do?",
+        text: "Please explain this code and also check @related\n\n```ts script.ts a description\nconst x = 42;\n```\n\nWhat does this constant do?",
       },
       {
         type: "imageUrl",
