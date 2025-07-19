@@ -11,6 +11,7 @@ describe("TUIChat - @ File Search Tests", () => {
     stdin.write("@");
 
     const indexingFrame = lastFrame()!;
+    await new Promise((resolve) => setTimeout(resolve, 100));
     expect(indexingFrame).toContain("Indexing files...");
 
     // Wait until indexing is complete
@@ -39,10 +40,14 @@ describe("TUIChat - @ File Search Tests", () => {
     // Type @ followed by READ to filter files
     stdin.write("@READ");
 
-    // Wait for file search to filter and display results
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for indexing to complete
+    let frame;
+    do {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      frame = lastFrame()!;
+    } while (frame.includes("Indexing files..."));
 
-    const frame = lastFrame()!;
+    // Should show files containing "READ"
 
     // Should show files containing "READ" - likely README.md if it exists in the actual filesystem
     // If not available, should at least show the @ character and navigation instructions
@@ -60,10 +65,14 @@ describe("TUIChat - @ File Search Tests", () => {
     // Type @ to trigger file search
     stdin.write("@");
 
-    // Wait for file search UI
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for indexing to complete
+    let frame;
+    do {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      frame = lastFrame()!;
+    } while (frame.includes("Indexing files..."));
 
-    const frame = lastFrame();
+    // Navigation instructions should be visible
 
     // Should show navigation instructions
     expect(frame).toContain(
@@ -77,10 +86,14 @@ describe("TUIChat - @ File Search Tests", () => {
     // Type @ to trigger file search
     stdin.write("@");
 
-    // Wait for file search UI
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for indexing to complete
+    let frame;
+    do {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      frame = lastFrame()!;
+    } while (frame.includes("Indexing files..."));
 
-    const frame = lastFrame()!;
+    // Check for files with @ prefix
 
     // Files should be displayed with @ prefix as per FileSearchUI component
     // Check for any file with @ prefix from the actual output
@@ -97,10 +110,14 @@ describe("TUIChat - @ File Search Tests", () => {
     // Type just @
     stdin.write("@");
 
-    // Wait for file search UI
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for indexing to complete
+    let frame;
+    do {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      frame = lastFrame()!;
+    } while (frame.includes("Indexing files..."));
 
-    const frame = lastFrame()!;
+    // Check results with empty filter
 
     // Should show some files even with empty filter (first 10 sorted files)
     expect(frame).toContain("@");
