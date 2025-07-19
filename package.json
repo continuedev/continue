@@ -71,6 +71,7 @@
     "@types/uuid": "^9.0.8",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "cross-env": "^7.0.3",
+    "execa": "^9.6.0",
     "ink-testing-library": "^4.0.0",
     "jest": "^29.7.0",
     "semantic-release": "^24.2.7",

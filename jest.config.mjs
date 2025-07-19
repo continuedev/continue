@@ -21,6 +21,7 @@ export default {
   testTimeout: 10000,
   testEnvironment: "node",
   testPathIgnorePatterns: ["<rootDir>/dist/"],
+  modulePathIgnorePatterns: ["<rootDir>/dist/"],
   transformIgnorePatterns: ["node_modules/(?!(highlight.js|lowlight)/)"],
   globals: {
     __dirname: path.dirname(fileURLToPath(import.meta.url)),
