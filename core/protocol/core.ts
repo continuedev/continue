@@ -250,7 +250,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { vsCodeUriScheme?: string },
     { url: string } | null,
   ];
-  isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
     void,
