@@ -70,8 +70,6 @@ async function rerankJump(ctx: {
       return null;
     }
 
-    console.log("reranker", reranker);
-
     const lines = fileContent.split("\n");
     const chunks: Chunk[] = [];
 
