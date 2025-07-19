@@ -1080,6 +1080,7 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
+  systemMessageDescription?: string;
 }
 
 interface ToolChoice {
@@ -1443,6 +1444,7 @@ export interface ExperimentalConfig {
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
   enableExperimentalTools?: boolean;
+  onlyUseSystemMessageTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
@@ -1692,7 +1694,6 @@ export type RuleSource =
   | "model-options-agent"
   | "rules-block"
   | "colocated-markdown"
-  | "json-systemMessage"
   | ".continuerules";
 
 export interface RuleWithSource {

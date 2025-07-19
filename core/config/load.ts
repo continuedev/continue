@@ -262,7 +262,10 @@ async function intermediateToFinalConfig({
     config.models.map(async (desc) => {
       if ("title" in desc) {
         const llm = await llmFromDescription(
-          desc,
+          {
+            ...desc,
+            systemMessage: desc.systemMessage ?? config.systemMessage,
+          },
           ide.readFile.bind(ide),
           getUriFromPath,
           uniqueId,
@@ -284,6 +287,7 @@ async function intermediateToFinalConfig({
                     ...desc,
                     model: modelName,
                     title: modelName,
+                    systemMessage: desc.systemMessage ?? config.systemMessage,
                   },
                   ide.readFile.bind(ide),
                   getUriFromPath,
@@ -558,13 +562,6 @@ async function intermediateToFinalConfig({
         source: "config-ts-slash-command",
       });
     }
-  }
-
-  if (config.systemMessage) {
-    continueConfig.rules.unshift({
-      rule: config.systemMessage,
-      source: "json-systemMessage",
-    });
   }
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)

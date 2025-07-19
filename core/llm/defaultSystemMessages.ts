@@ -62,6 +62,8 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
   You are in agent mode.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
+
+  When making changes to files, use provided tools, do not write codeblocks directly.
 </important_rules>`;
 
 // The note about read-only tools is for MCP servers

@@ -34,8 +34,6 @@ const getSourceLabel = (rule: RuleWithSource): string => {
       } else {
         return "rules.md";
       }
-    case "json-systemMessage":
-      return "System Message";
     case ".continuerules":
       return "Project Rules";
     default:

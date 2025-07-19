@@ -43,8 +43,10 @@ export function normalizeToMessageParts(message: ChatMessage): MessagePart[] {
     case "system":
       return Array.isArray(message.content)
         ? message.content
-        : [{ type: "text", text: message.content }];
+        : message.content
+          ? [{ type: "text", text: message.content }]
+          : [];
     case "tool":
-      return [{ type: "text", text: message.content }];
+      return message.content ? [{ type: "text", text: message.content }] : [];
   }
 }

@@ -16,7 +16,7 @@ import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
+import { NATIVE_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
 import { withLLMRetry } from "../utils/retry.js";
 
@@ -288,7 +288,7 @@ class Bedrock extends BaseLLM {
     // First get tools
     const supportsTools =
       (this.capabilities?.tools ||
-        PROVIDER_TOOL_SUPPORT.bedrock?.(options.model)) ??
+        NATIVE_TOOL_SUPPORT.bedrock?.(options.model)) ??
       false;
 
     let toolConfig: undefined | ToolConfiguration = undefined;

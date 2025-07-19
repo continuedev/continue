@@ -2,29 +2,25 @@ import {
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
-  ModelDescription,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
-import {
-  DEFAULT_AGENT_SYSTEM_MESSAGE,
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
-  DEFAULT_PLAN_SYSTEM_MESSAGE,
-} from "core/llm/defaultSystemMessages";
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import {
+  CANCELLED_TOOL_CALL_MESSAGE,
+  NO_TOOL_CALL_OUTPUT_MESSAGE,
+} from "core/tools/constants";
+import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/textifySystemTools";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
-
-export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
-export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
 
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
@@ -35,6 +31,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
+  useSystemMessageTools = false,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
@@ -98,50 +95,66 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
-      msgs.push({
-        ctxItems: item.contextItems,
-        message: item.message,
-      });
-
-      // Add a tool message for each tool call
-      if (item.message.toolCalls?.length) {
-        // If the assistant message has tool calls, we need to insert tool messages
-        for (const toolCall of item.message.toolCalls) {
-          let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
-
-          // Find the corresponding tool call state for this specific tool call
-          const toolCallState = item.toolCallStates?.find(
-            (state) => state.toolCallId === toolCall.id,
+      if (item.toolCallStates?.length && useSystemMessageTools) {
+        const { userMessage, assistantMessage } =
+          convertToolCallStatesToSystemCallsAndOutput(
+            item.message,
+            item.toolCallStates ?? [],
           );
+        msgs.push({
+          message: assistantMessage,
+          ctxItems: [],
+        });
+        msgs.push({
+          message: userMessage,
+          ctxItems: [],
+        });
+      } else {
+        msgs.push({
+          ctxItems: item.contextItems,
+          message: item.message,
+        });
 
-          if (toolCallState?.status === "canceled") {
-            content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (toolCallState?.output) {
-            content = renderContextItems(toolCallState.output);
+        // Add a tool message for each tool call
+        if (item.message.toolCalls?.length) {
+          // If the assistant message has tool calls, we need to insert tool messages
+          for (const toolCall of item.message.toolCalls) {
+            let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
+
+            // Find the corresponding tool call state for this specific tool call
+            const toolCallState = item.toolCallStates?.find(
+              (state) => state.toolCallId === toolCall.id,
+            );
+
+            if (toolCallState?.status === "canceled") {
+              content = CANCELLED_TOOL_CALL_MESSAGE;
+            } else if (toolCallState?.output) {
+              content = renderContextItems(toolCallState.output);
+            }
+
+            msgs.push({
+              ctxItems: toolCallStateToContextItems(toolCallState),
+              message: {
+                role: "tool",
+                content,
+                toolCallId: toolCall.id!,
+              },
+            });
           }
-
-          msgs.push({
-            ctxItems: toolCallStateToContextItems(toolCallState),
-            message: {
-              role: "tool",
-              content,
-              toolCallId: toolCall.id!,
+        } else if (item.toolCallStates && item.toolCallStates.length > 0) {
+          // This case indicates a potential mismatch - we have tool call states but no message.toolCalls
+          console.error(
+            "ERROR constructMessages: Assistant message has toolCallStates but no message.toolCalls:",
+            {
+              toolCallStates: item.toolCallStates.length,
+              toolCallIds: item.toolCallStates.map((s) => s.toolCallId),
+              messageContent:
+                typeof item.message.content === "string"
+                  ? item.message.content?.substring(0, 50) + "..."
+                  : "Non-string content",
             },
-          });
+          );
         }
-      } else if (item.toolCallStates && item.toolCallStates.length > 0) {
-        // This case indicates a potential mismatch - we have tool call states but no message.toolCalls
-        console.error(
-          "ERROR constructMessages: Assistant message has toolCallStates but no message.toolCalls:",
-          {
-            toolCallStates: item.toolCallStates.length,
-            toolCallIds: item.toolCallStates.map((s) => s.toolCallId),
-            messageContent:
-              typeof item.message.content === "string"
-                ? item.message.content?.substring(0, 50) + "..."
-                : "Non-string content",
-          },
-        );
       }
     }
   }
@@ -198,17 +211,4 @@ export function constructMessages(
     appliedRules,
     appliedRuleIndex,
   };
-}
-
-export function getBaseSystemMessage(
-  messageMode: string,
-  model: ModelDescription,
-): string {
-  if (messageMode === "agent") {
-    return model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
-  } else if (messageMode === "plan") {
-    return model.basePlanSystemMessage ?? DEFAULT_PLAN_SYSTEM_MESSAGE;
-  } else {
-    return model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
-  }
 }

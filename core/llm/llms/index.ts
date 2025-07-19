@@ -140,8 +140,6 @@ export async function llmFromDescription(
 
   let baseChatSystemMessage: string | undefined = undefined;
   if (desc.systemMessage !== undefined) {
-    // baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
-    // baseChatSystemMessage += "\n\n";
     baseChatSystemMessage = await renderTemplatedString(
       Handlebars,
       desc.systemMessage,
