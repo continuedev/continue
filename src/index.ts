@@ -49,6 +49,11 @@ program
   .action(async (prompt, options) => {
     if (options.verbose) {
       logger.setLevel('debug');
+      const logPath = logger.getLogPath();
+      const sessionId = logger.getSessionId();
+      console.log(`Verbose logging enabled (session: ${sessionId})`);
+      console.log(`Logs: ${logPath}`);
+      console.log(`Filter this session: grep '\\[${sessionId}\\]' ${logPath}`);
       logger.debug('Verbose logging enabled');
     }
     await chat(prompt, options);

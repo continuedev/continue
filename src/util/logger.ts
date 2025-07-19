@@ -1,10 +1,36 @@
 import winston from 'winston';
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
+import crypto from 'crypto';
 
-const { combine, timestamp, printf, colorize, errors } = winston.format;
+const { combine, timestamp, printf, errors } = winston.format;
 
-// Custom format for console output
-const consoleFormat = printf(({ level, message, timestamp, stack, ...metadata }) => {
-  let msg = `${timestamp} [${level}]: ${message}`;
+// Generate a unique session ID for this process
+const SESSION_ID = crypto.randomBytes(4).toString('hex');
+
+// Get log directory
+function getLogDir(): string {
+  const homeDir = os.homedir();
+  const logDir = path.join(homeDir, '.continue', 'logs');
+  
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
+  
+  return logDir;
+}
+
+// Get current log file path
+function getLogFilePath(): string {
+  const logDir = getLogDir();
+  return path.join(logDir, 'cn.log');
+}
+
+// Custom format for log output
+const logFormat = printf(({ level, message, timestamp, stack, ...metadata }) => {
+  let msg = `${timestamp} [${SESSION_ID}] [${level}]: ${message}`;
   
   // Add metadata if present
   if (Object.keys(metadata).length > 0) {
@@ -25,13 +51,14 @@ const logger = winston.createLogger({
   format: combine(
     errors({ stack: true }),
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+    logFormat
   ),
   transports: [
-    new winston.transports.Console({
-      format: combine(
-        colorize(),
-        consoleFormat
-      ),
+    // File transport for all logs
+    new winston.transports.File({
+      filename: getLogFilePath(),
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 5,
     }),
   ],
 });
@@ -56,4 +83,6 @@ export default {
     }
   },
   setLevel: setLogLevel,
+  getLogPath: getLogFilePath,
+  getSessionId: () => SESSION_ID,
 };
