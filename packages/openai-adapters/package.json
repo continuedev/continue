@@ -38,6 +38,6 @@
     "semantic-release": "^24.2.7",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
-    "vitest": "^1.6.1"
+    "vitest": "^3.2.4"
   }
 }
