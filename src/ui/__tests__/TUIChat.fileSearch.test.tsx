@@ -11,7 +11,7 @@ describe("TUIChat - @ File Search Tests", () => {
     stdin.write("@");
 
     const indexingFrame = lastFrame()!;
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     expect(indexingFrame).toContain("Indexing files...");
 
     // Wait until indexing is complete
@@ -30,7 +30,6 @@ describe("TUIChat - @ File Search Tests", () => {
       frame.includes("@.gitignore") ||
       frame.includes("@AGENTS.md") ||
       frame.includes("@CHANGELOG.md");
-    console.log("FRAME: ", frame);
     expect(hasActualFiles).toBe(true);
   });
 
