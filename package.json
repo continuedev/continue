@@ -53,6 +53,8 @@
     "readline-sync": "^1.4.10",
     "turndown": "^7.2.0",
     "typescript": "^5.8.3",
+    "uuid": "^9.0.1",
+    "winston": "^3.17.0",
     "yaml": "^2.8.0"
   },
   "devDependencies": {
