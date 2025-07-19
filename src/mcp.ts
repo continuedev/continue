@@ -1,6 +1,7 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import logger from "./util/logger.js";
 
 export class MCPService {
   private readonly connections: MCPConnection[] = [];
@@ -20,11 +21,13 @@ export class MCPService {
     const service = new MCPService(assistant);
 
     if (assistant.mcpServers?.length) {
+      logger.debug('Creating MCP connections', { serverCount: assistant.mcpServers.length });
       const connectionPromises = assistant.mcpServers.map((server) =>
         MCPConnection.create(server)
       );
       const connections = await Promise.all(connectionPromises);
       service.connections.push(...connections);
+      logger.debug('MCP connections established', { connectionCount: connections.length });
     }
 
     // Store the instance and return it
@@ -93,8 +96,10 @@ export class MCPConnection {
 
     // Connect and get all prompts and tools
     const connection = new MCPConnection(client);
+    logger.debug('Connecting to MCP server', { command: config.command });
     await client.connect(transport);
     const capabilities = client.getServerCapabilities();
+    logger.debug('MCP server capabilities', { hasPrompts: !!capabilities?.prompts, hasTools: !!capabilities?.tools });
 
     if (capabilities?.prompts) {
       connection.prompts = (await client.listPrompts()).prompts;

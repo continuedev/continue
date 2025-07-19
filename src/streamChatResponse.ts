@@ -11,6 +11,7 @@ import { MCPService } from "./mcp.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
 import { chatCompletionStreamWithBackoff, withExponentialBackoff } from "./util/exponentialBackoff.js";
+import logger from "./util/logger.js";
 
 dotenv.config();
 
@@ -86,8 +87,10 @@ export async function streamChatResponse(
   let shouldContinueConversation = true;
 
   while (shouldContinueConversation) {
+    logger.debug('Starting new conversation iteration', { hasToolCalls: currentToolCalls.length > 0 });
     // Factory function to create the stream generator
     const streamFactory = async () => {
+      logger.debug('Creating chat completion stream', { model, messageCount: chatHistory.length, toolCount: toolsForRequest.length });
       return await chatCompletionStreamWithBackoff(
         llmApi,
         {
@@ -113,6 +116,7 @@ export async function streamChatResponse(
       );
 
       for await (const chunk of streamWithBackoff) {
+        logger.debug('Received stream chunk', { hasContent: !!chunk.choices[0].delta.content, hasToolCalls: !!chunk.choices[0].delta.tool_calls });
         // Check if we should abort
         if (abortController?.signal.aborted) {
           break;
@@ -201,15 +205,15 @@ export async function streamChatResponse(
         return fullResponse;
       }
       // For other errors, re-throw them
-      console.error(
+      logger.error(
         chalk.red("Error in streamChatResponse:"),
-        chalk.red(error.message)
+        error
       );
       throw error;
     }
 
     if (!callbacks?.onContent && !isHeadless) {
-      console.info(); // Add a newline after the response
+      logger.info(""); // Add a newline after the response
     }
 
     // Notify that content is complete if we have content and are about to process tool calls

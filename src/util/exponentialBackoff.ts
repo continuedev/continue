@@ -2,6 +2,7 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
 import { error, warn } from "../logging.js";
 import { formatError } from "./formatError.js";
+import logger from "./logger.js";
 
 export interface ExponentialBackoffOptions {
   /** Maximum number of retry attempts */
@@ -198,6 +199,7 @@ export async function* withExponentialBackoff<T>(
       }
 
       const delay = calculateDelay(attempt, opts);
+      logger.debug('Retry attempt', { attempt, delay, error: err.message });
 
       // Only log retry attempts after the first opts.hiddenRetries attempts
       if (attempt >= opts.hiddenRetries) {
@@ -209,6 +211,7 @@ export async function* withExponentialBackoff<T>(
       }
 
       // Wait before retrying
+      logger.debug('Waiting before retry', { delayMs: delay });
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
