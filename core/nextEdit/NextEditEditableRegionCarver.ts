@@ -96,7 +96,11 @@ async function rerankJump(ctx: {
       (a, b) => scores[chunks.indexOf(b)] - scores[chunks.indexOf(a)],
     );
 
-    const mostRelevantChunk = chunks[0];
+    // const mostRelevantChunk = chunks[0];
+    // Get the third most relevant chunk if there are enough chunks,
+    // otherwise fallback to second or first.
+    const chunkIndex = Math.min(2, chunks.length - 1);
+    const mostRelevantChunk = chunks[chunkIndex];
 
     // Return the range of the most relevant chunk.
     // NOTE: It might be better to return a list of chunks,
