@@ -137,7 +137,7 @@ const STATIC_FADE = [
 ];
 
 // Linear (same speed throughout)
-const STATIC_FADE_LINEAR = generateEasedStaticFade([2, 2, 2, 2, 2, 2, 2, 2]);
+const STATIC_FADE_LINEAR = generateEasedStaticFade([2, 2, 2, 2, 2, 2, 2, 2, 2]);
 
 const STARS = "·+✣✤✻✽❊❈❈❈❈❊✽✻✤✣+";
 
