@@ -24,6 +24,8 @@ import {
 } from "core/nextEdit/constants";
 import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { CompletionDataForAfterJump } from "./activation/JumpManager";
 import { NextEditWindowManager } from "./activation/NextEditWindowManager";
 import {
   getAutocompleteStatusBarDescription,
@@ -812,7 +814,9 @@ const getCommandsMap: (
         "editor.action.inlineSuggest.trigger",
       );
     },
-    "continue.showNextEditAfterJump": async (data) => {
+    "continue.showNextEditAfterJump": async (
+      data: CompletionDataForAfterJump,
+    ) => {
       // NOTE: This could use some cleanup or abstraction.
       // The logic is largely similar to that of completionProvider.ts
       // but we don't have access to the class.
@@ -867,6 +871,10 @@ const getCommandsMap: (
       );
 
       if (isFim) {
+        if (!fimText) {
+          console.log("deleteChain from commands.ts: !fimText");
+          NextEditProvider.getInstance().deleteChain();
+        }
         // For FIM edits, create an inline completion item.
         const nextEditCompletionItem = new vscode.InlineCompletionItem(
           fimText,
@@ -899,6 +907,11 @@ const getCommandsMap: (
       } else {
         // For more complex edits, we display a diff inside a window.
         const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+        if (diffLines.length === 0) {
+          console.log("deleteChain from commands.ts: diffLines.length === 0");
+          NextEditProvider.getInstance().deleteChain();
+        }
+        console.log("number of difflines:", diffLines.length);
 
         if (NextEditWindowManager.isInstantiated()) {
           const windowManager = NextEditWindowManager.getInstance();
