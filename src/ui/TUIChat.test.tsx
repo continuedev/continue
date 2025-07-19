@@ -40,11 +40,17 @@ class MockMCPService {
 // Mock Assistant config
 const mockAssistant: AssistantUnrolled = {
   name: "test-assistant",
-  model: "test-model",
+  models: [
+    {
+      provider: "openai",
+      name: "test-model", 
+      model: "test-model"
+    }
+  ],
   systemMessage: "You are a helpful assistant",
   tools: [],
   mcpServers: []
-};
+} as any;
 
 describe("TUIChat - Simple UI Tests", () => {
   const createProps = (overrides: any = {}) => ({
@@ -125,7 +131,7 @@ describe("TUIChat - Simple UI Tests", () => {
       
       const frame = lastFrame();
       // The input might be in a different format, let's be more flexible
-      expect(frame.toLowerCase()).toMatch(/testing|123|ask anything/);
+      expect(frame ? frame.toLowerCase() : "").toMatch(/testing|123|ask anything/);
     });
 
     it("clears input field after pressing Enter", () => {
@@ -228,7 +234,7 @@ describe("TUIChat - Simple UI Tests", () => {
       expect(frame).toMatch(/[│─╭╮╰╯]/);
       
       // Should have multiple lines
-      const lines = frame.split('\n');
+      const lines = frame ? frame.split('\n') : [];
       expect(lines.length).toBeGreaterThan(1);
     });
   });
