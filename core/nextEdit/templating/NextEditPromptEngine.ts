@@ -52,13 +52,13 @@ function templateRendererOfModel(
   };
 }
 
-export function renderPrompt(
+export async function renderPrompt(
   helper: HelperVars,
   userEdits: string,
   editableRegionStrategy: EditableRegionStrategy,
   prevOutcome?: NextEditOutcome,
   toApply?: RangeInFile,
-): PromptMetadata {
+): Promise<PromptMetadata> {
   let modelName = helper.modelName as NextEditModelName;
 
   if (modelName === "this field is not used") {
@@ -119,7 +119,7 @@ export function renderPrompt(
     // Given a previous response, we need to calculate where the cursor would be.
     // I think it's a good idea to calculate this in the response.
 
-    const editableRegion = getNextEditableRegion(editableRegionStrategy, {
+    const editableRegion = await getNextEditableRegion(editableRegionStrategy, {
       fileLines: appliedContent,
       filepath: helper.filepath,
     });
