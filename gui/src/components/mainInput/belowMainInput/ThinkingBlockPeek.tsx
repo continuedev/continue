@@ -4,8 +4,10 @@ import { ChevronUpIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+
 import { defaultBorderRadius, lightGray, vscBackground } from "../..";
 import { getFontSize } from "../../../util";
+import { AnimatedEllipsis } from "../../AnimatedEllipsis";
 import StyledMarkdownPreview from "../../StyledMarkdownPreview";
 
 const SpoilerButton = styled.div`
@@ -36,34 +38,11 @@ const ButtonContent = styled.div`
   gap: 6px;
 `;
 
-export const ThinkingText = styled.span`
-  position: relative;
-  padding-right: 12px;
+const ThinkingTextContainer = styled.span`
+  display: inline-block;
+  min-width: fit-content;
 
-  &:after {
-    content: "...";
-    position: absolute;
-    animation: ellipsis 1s steps(4, end) infinite;
-    width: 0px;
-    display: inline-block;
-    overflow: hidden;
-  }
-
-  @keyframes ellipsis {
-    0%,
-    100% {
-      width: 0px;
-    }
-    33% {
-      width: 8px;
-    }
-    66% {
-      width: 16px;
-    }
-    90% {
-      width: 24px;
-    }
-  }
+  padding-right: 1em; /* Reserve space for the ellipsis animation */
 `;
 
 const MarkdownWrapper = styled.div`
@@ -120,12 +99,13 @@ function ThinkingBlockPeek({
           className="flex items-center justify-start pl-2 text-xs text-gray-300"
           data-testid="thinking-block-peek"
         >
-          <SpoilerButton onClick={() => setOpen((prev) => !prev)}>
+          <SpoilerButton onClick={() => setOpen(!open)}>
             <ButtonContent>
               {inProgress ? (
-                <ThinkingText>
+                <span>
                   {redactedThinking ? "Redacted Thinking" : "Thinking"}
-                </ThinkingText>
+                  <AnimatedEllipsis />
+                </span>
               ) : redactedThinking ? (
                 "Redacted Thinking"
               ) : (
@@ -141,7 +121,6 @@ function ThinkingBlockPeek({
             </ButtonContent>
           </SpoilerButton>
         </div>
-
         <div
           className={`ml-2 mt-2 overflow-y-auto transition-none duration-300 ease-in-out ${
             open ? "mb-2 mt-5 opacity-100" : "max-h-0 border-0 opacity-0"
