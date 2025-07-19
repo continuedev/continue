@@ -38,7 +38,6 @@
     "@types/react": "^19.1.8",
     "@types/turndown": "^5.0.5",
     "@workos-inc/node": "^7.45.0",
-    "axios": "^1.8.4",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "diff": "^7.0.0",
@@ -54,7 +53,6 @@
     "readline-sync": "^1.4.10",
     "turndown": "^7.2.0",
     "typescript": "^5.8.3",
-    "uuid": "^9.0.1",
     "yaml": "^2.8.0"
   },
   "devDependencies": {
@@ -68,7 +66,6 @@
     "@types/ink-testing-library": "^1.0.4",
     "@types/jest": "^29.5.14",
     "@types/readline-sync": "^1.4.8",
-    "@types/uuid": "^9.0.8",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "cross-env": "^7.0.3",
     "ink-testing-library": "^4.0.0",
