@@ -89,10 +89,6 @@ export class ReverseMessageIde {
       return this.ide.getUniqueId();
     });
 
-    this.on("getWorkspaceConfigs", () => {
-      return this.ide.getWorkspaceConfigs();
-    });
-
     this.on("getIdeSettings", () => {
       return this.ide.getIdeSettings();
     });
