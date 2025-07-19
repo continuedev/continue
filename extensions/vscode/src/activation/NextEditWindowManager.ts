@@ -201,7 +201,10 @@ export class NextEditWindowManager {
 
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
     this.registerCommandSafely(HIDE_NEXT_EDIT_SUGGESTION_COMMAND, async () => {
-      NextEditProvider.currentEditChainId = null;
+      console.log(
+        "deleteChain from NextEditWindowManager.ts: hide next edit command",
+      );
+      NextEditProvider.getInstance().deleteChain();
       await this.hideAllNextEditWindowsAndResetCompletionId();
     });
     this.registerCommandSafely(
@@ -318,8 +321,6 @@ export class NextEditWindowManager {
    * Hide all tooltips in all editors.
    */
   public async hideAllNextEditWindows() {
-    NextEditProvider.currentEditChainId = null;
-
     if (this.currentDecoration) {
       vscode.window.visibleTextEditors.forEach((editor) => {
         editor.setDecorations(this.currentDecoration!, []);
@@ -847,6 +848,10 @@ export class NextEditWindowManager {
 
     // If all else fails, return a reasonable default
     return SVG_CONFIG.fontSize * 0.6;
+  }
+
+  public hasAccepted() {
+    return this.accepted;
   }
 }
 
