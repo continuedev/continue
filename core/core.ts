@@ -24,6 +24,7 @@ import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
+import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
@@ -52,6 +53,7 @@ import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
+import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
 import { generateCommitMessage } from "./commands/slash/built-in-legacy/commit";
 import {
   setupLocalConfig,
@@ -70,6 +72,7 @@ import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
 import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
+import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -89,6 +92,7 @@ export class Core {
   configHandler: ConfigHandler;
   codeBaseIndexer: CodebaseIndexer;
   completionProvider: CompletionProvider;
+  nextEditProvider: NextEditProvider;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
@@ -151,7 +155,7 @@ export class Core {
     );
 
     MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig("MCP Connections refreshed");
 
       // Refresh @mention dropdown submenu items for MCP providers
       const mcpManager = MCPManagerSingleton.getInstance();
@@ -234,6 +238,24 @@ export class Core {
       (..._) => Promise.resolve([]),
     );
 
+    const codebaseRulesCache = CodebaseRulesCache.getInstance();
+    void codebaseRulesCache
+      .refresh(ide)
+      .catch((e) => console.error("Failed to initialize colocated rules cache"))
+      .then(() => {
+        void this.configHandler.reloadConfig(
+          "Initial codebase rules post-walkdir/load reload",
+        );
+      });
+    this.nextEditProvider = NextEditProvider.initialize(
+      this.configHandler,
+      ide,
+      getLlm,
+      (e) => {},
+      (..._) => Promise.resolve([]),
+      "fineTuned",
+    );
+
     this.registerMessageHandlers(ideSettingsPromise);
   }
 
@@ -300,23 +322,31 @@ export class Core {
     on("config/addModel", (msg) => {
       const model = msg.data.model;
       addModel(model, msg.data.role);
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig(
+        "Model added (config/addModel message)",
+      );
     });
 
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig(
+        "Model removed (config/deleteModel message)",
+      );
     });
 
     on("config/newPromptFile", async (msg) => {
       const { config } = await this.configHandler.loadConfig();
       await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Prompt file created (config/newPromptFile message)",
+      );
     });
 
     on("config/addLocalWorkspaceBlock", async (msg) => {
       await createNewWorkspaceBlockFile(this.ide, msg.data.blockType);
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Local block created (config/addLocalWorkspaceBlock message)",
+      );
     });
 
     on("config/openProfile", async (msg) => {
@@ -324,8 +354,12 @@ export class Core {
     });
 
     on("config/reload", async (msg) => {
-      void this.configHandler.reloadConfig();
-      return await this.configHandler.getSerializedConfig();
+      // User force reloading will retrigger colocated rules
+      const codebaseRulesCache = CodebaseRulesCache.getInstance();
+      await codebaseRulesCache.refresh(this.ide);
+      void this.configHandler.reloadConfig(
+        "Force reloaded (config/reload message)",
+      );
     });
 
     on("config/ideSettingsUpdate", async (msg) => {
@@ -344,7 +378,9 @@ export class Core {
 
     on("config/updateSharedConfig", async (msg) => {
       const newSharedConfig = this.globalContext.updateSharedConfig(msg.data);
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Shared config update (config/updateSharedConfig message)",
+      );
       return newSharedConfig;
     });
 
@@ -354,7 +390,9 @@ export class Core {
         msg.data.role,
         msg.data.title,
       );
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Selected model update (config/updateSelectedModel message)",
+      );
       return newSelectedModels;
     });
 
@@ -482,6 +520,18 @@ export class Core {
     });
     on("llm/listModels", this.handleListModels.bind(this));
 
+    on("llm/compileChat", async (msg) => {
+      const { messages, options } = msg.data;
+      const model = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!model) {
+        throw new Error("No chat model selected");
+      }
+
+      return model.compileChatMessages(messages, options);
+    });
+
     // Provide messenger to utils so they can interact with GUI + state
     TTS.messenger = this.messenger;
     ChatDescriber.messenger = this.messenger;
@@ -501,6 +551,28 @@ export class Core {
       return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
 
+    on("conversation/compact", async (msg) => {
+      const currentModel = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!currentModel) {
+        throw new Error("No chat model selected");
+      }
+
+      try {
+        await compactConversation({
+          sessionId: msg.data.sessionId,
+          index: msg.data.index,
+          historyManager,
+          currentModel,
+        });
+        return undefined;
+      } catch (error) {
+        console.error("Error compacting conversation:", error);
+        return undefined;
+      }
+    });
+
     // Autocomplete
     on("autocomplete/complete", async (msg) => {
       const outcome =
@@ -515,6 +587,21 @@ export class Core {
     });
     on("autocomplete/cancel", async (msg) => {
       this.completionProvider.cancel();
+    });
+
+    // Next Edit
+    on("nextEdit/predict", async (msg) => {
+      const outcome = await this.nextEditProvider.provideInlineCompletionItems(
+        msg.data,
+        undefined,
+      );
+      return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
+    });
+    on("nextEdit/accept", async (msg) => {
+      this.nextEditProvider.accept(msg.data.completionId);
+    });
+    on("nextEdit/reject", async (msg) => {
+      this.nextEditProvider.reject(msg.data.completionId);
     });
 
     on("streamDiffLines", async (msg) => {
@@ -631,9 +718,12 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         if (hasRulesFiles(data.uris)) {
-          await this.configHandler.reloadConfig();
+          const rulesCache = CodebaseRulesCache.getInstance();
+          await Promise.all(
+            data.uris.map((uri) => rulesCache.update(this.ide, uri)),
+          );
+          await this.configHandler.reloadConfig("Rules file created");
         }
-
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         let localAssistantCreated = false;
         for (const uri of data.uris) {
@@ -653,7 +743,9 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         if (hasRulesFiles(data.uris)) {
-          await this.configHandler.reloadConfig();
+          const rulesCache = CodebaseRulesCache.getInstance();
+          data.uris.forEach((uri) => rulesCache.remove(uri));
+          await this.configHandler.reloadConfig("Codebase rule file deleted");
         }
       }
     });
@@ -974,7 +1066,7 @@ export class Core {
         ],
       }),
     );
-    void this.configHandler.reloadConfig();
+    void this.configHandler.reloadConfig("Autocomplete model added");
   }
 
   private async handleFilesChanged({
@@ -1004,7 +1096,9 @@ export class Core {
               this.globalContext.update("showConfigUpdateToast", false);
             }
           }
-          await this.configHandler.reloadConfig();
+          await this.configHandler.reloadConfig(
+            "Current profile config file updated",
+          );
           continue;
         }
 
@@ -1012,15 +1106,24 @@ export class Core {
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
           uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-          (uri.includes(".continue") && uri.endsWith(".yaml")) ||
-          uri.endsWith(RULES_MARKDOWN_FILENAME) ||
-          BLOCK_TYPES.some(
-            (blockType) =>
-              uri.includes(`.continue/${blockType}`) ||
-              uri.includes(`.continue\\${blockType}`),
+          (uri.includes(".continue") &&
+            (uri.endsWith(".yaml") || uri.endsWith("yml"))) ||
+          BLOCK_TYPES.some((blockType) =>
+            uri.includes(`.continue/${blockType}`),
           )
         ) {
-          await this.configHandler.reloadConfig();
+          await this.configHandler.reloadConfig(
+            "Config-related file updated: continuerc, prompt, local block, etc",
+          );
+        } else if (uri.endsWith(RULES_MARKDOWN_FILENAME)) {
+          try {
+            const codebaseRulesCache = CodebaseRulesCache.getInstance();
+            void codebaseRulesCache.update(this.ide, uri).then(() => {
+              void this.configHandler.reloadConfig("Codebase rule update");
+            });
+          } catch (e) {
+            console.error("Failed to update codebase rule", e);
+          }
         } else if (
           uri.endsWith(".continueignore") ||
           uri.endsWith(".gitignore")
@@ -1102,7 +1205,7 @@ export class Core {
 
     editConfigFile((c) => c, editConfigYamlCallback);
 
-    void this.configHandler.reloadConfig();
+    void this.configHandler.reloadConfig("Onboarding completed");
   }
 
   private getContextItems = async (
