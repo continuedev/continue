@@ -109,20 +109,6 @@ describe("TUIChat - Simple UI Tests", () => {
       expect(frame).toContain("Continue CLI");
     });
 
-    it("displays single user message correctly", () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
-
-      // Type and submit a message
-      stdin.write("Hello world");
-      stdin.write("\r");
-
-      const frame = lastFrame();
-
-      // Should show something changed after submitting
-      // The UI might not immediately show the message
-      expect(frame).toBeDefined();
-    });
-
     it("displays messages in correct order", () => {
       // Use component with initial chat history
       const chatHistory: ChatCompletionMessageParam[] = [
@@ -140,15 +126,6 @@ describe("TUIChat - Simple UI Tests", () => {
       const frame = lastFrame();
       expect(frame).toContain("Ask anything");
     });
-
-    it("displays system messages with correct styling", () => {
-      // System messages would typically come from the chat history
-      // This test would need the component to support initial messages
-      const { lastFrame } = render(<TUIChat {...createProps()} />);
-
-      const frame = lastFrame();
-      expect(frame).toBeDefined();
-    });
   });
 
   describe("User Input Tests", () => {
@@ -164,7 +141,7 @@ describe("TUIChat - Simple UI Tests", () => {
       );
     });
 
-    it("clears input field after pressing Enter", () => {
+    it("clears input field after pressing Enter", async () => {
       const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
 
       stdin.write("Test message");
@@ -172,10 +149,17 @@ describe("TUIChat - Simple UI Tests", () => {
 
       stdin.write("\r");
 
-      // After enter, the view should change
+      // Wait for the UI to update after pressing enter
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
       const afterEnter = lastFrame();
-      expect(afterEnter).toBeDefined();
-      // Could check that frames are different, but that's implementation-specific
+
+      // After pressing enter, the message should appear in the chat history
+      expect(afterEnter).toContain("Test message");
+
+      // The input field should be cleared (no longer showing "Ask anything" with typed text)
+      // The UI should show the message was submitted
+      expect(beforeEnter).not.toEqual(afterEnter);
     });
 
     it("handles special characters in input", () => {
@@ -184,8 +168,12 @@ describe("TUIChat - Simple UI Tests", () => {
       stdin.write("Special chars: !@#$%^&*()");
 
       const frame = lastFrame();
-      // Just verify the component still renders
-      expect(frame).toBeDefined();
+
+      // Should handle special characters without crashing
+      expect(frame).not.toBe("");
+
+      // The special characters should be visible in the input or UI
+      expect(frame).toMatch(/[!@#$%^&*()]/);
     });
 
     it("shows custom input prompt", () => {
@@ -199,8 +187,13 @@ describe("TUIChat - Simple UI Tests", () => {
       );
 
       const frame = lastFrame();
-      // Just verify the component renders
+
+      // Should show the default prompt
       expect(frame).toContain("Ask anything");
+
+      // Should potentially show or reference the custom assistant name
+      // (This might appear in the UI title or header)
+      expect(frame).toMatch(/(custom-bot|test-assistant|Continue CLI)/);
     });
   });
 
@@ -235,11 +228,17 @@ describe("TUIChat - Simple UI Tests", () => {
       stdin.write("test");
       stdin.write("\r");
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const frame = lastFrame();
-      // Should show some loading indicator
-      expect(frame).toBeDefined();
+
+      // Should show the submitted message
+      expect(frame).toContain("test");
+
+      // Should show placeholder message rather than text in input box
+      expect(frame).toContain(
+        "Ask anything, @ for context, / for slash commands"
+      );
     });
   });
 
@@ -270,7 +269,7 @@ describe("TUIChat - Simple UI Tests", () => {
   });
 
   describe("Slash Commands Tests", () => {
-    it.only("filters slash commands when typing /log", async () => {
+    it("filters slash commands when typing /log", async () => {
       const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
 
       // Type /log to trigger slash command filtering
