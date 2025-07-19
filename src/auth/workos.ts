@@ -10,6 +10,12 @@ import * as path from "path";
 import { createInterface } from "readline";
 import { env } from "../env.js";
 
+// Polyfill fetch for Node < 18
+import nodeFetch from "node-fetch";
+if (!globalThis.fetch) {
+  globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
+}
+
 // Config file path
 const AUTH_CONFIG_PATH = path.join(os.homedir(), ".continue", "auth.json");
 
@@ -408,10 +414,7 @@ async function refreshToken(
 /**
  * Authenticates using the WorkOS device flow
  */
-export async function login(
-  useOnboarding: boolean = false,
-  onPrompt?: (promptText: string) => Promise<string>
-): Promise<AuthConfig> {
+export async function login(): Promise<AuthConfig> {
   // If CONTINUE_API_KEY environment variable exists, use that instead
   if (process.env.CONTINUE_API_KEY) {
     console.info(
