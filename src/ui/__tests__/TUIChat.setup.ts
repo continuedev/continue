@@ -103,3 +103,11 @@ export const createProps = (overrides: any = {}) => ({
   additionalRules: [],
   ...overrides,
 });
+
+// Add a dummy test to satisfy Jest requirement
+describe("TUIChat setup", () => {
+  test("setup should export required functions", () => {
+    expect(createProps).toBeDefined();
+    expect(mockAssistant).toBeDefined();
+  });
+});
