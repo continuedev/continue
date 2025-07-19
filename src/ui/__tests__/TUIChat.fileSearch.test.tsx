@@ -10,10 +10,15 @@ describe("TUIChat - @ File Search Tests", () => {
     // Type the @ character to trigger file search
     stdin.write("@");
 
-    // Wait for file search to initialize and display files
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const indexingFrame = lastFrame()!;
+    expect(indexingFrame).toContain("Indexing files...");
 
-    const frame = lastFrame()!;
+    // Wait until indexing is complete
+    let frame;
+    do {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      frame = lastFrame()!;
+    } while (frame.includes("Indexing files..."));
 
     // Should show file search UI with files
     expect(frame).toContain("@");
