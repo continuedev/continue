@@ -1,7 +1,7 @@
 import { execaNode, type Subprocess } from "execa";
-import path from "path";
 import fs from "fs/promises";
 import os from "os";
+import path from "path";
 
 export interface CLITestContext {
   cliPath: string;
@@ -31,7 +31,7 @@ export interface CLIRunResult {
 export async function createTestContext(): Promise<CLITestContext> {
   const cliPath = path.resolve("dist/index.js");
   const testDir = await fs.mkdtemp(path.join(os.tmpdir(), "cn-test-"));
-  
+
   return {
     cliPath,
     testDir,
@@ -41,7 +41,9 @@ export async function createTestContext(): Promise<CLITestContext> {
 /**
  * Cleans up test context
  */
-export async function cleanupTestContext(context: CLITestContext): Promise<void> {
+export async function cleanupTestContext(
+  context: CLITestContext
+): Promise<void> {
   try {
     await fs.rm(context.testDir, { recursive: true, force: true });
   } catch (error) {
@@ -56,7 +58,13 @@ export async function runCLI(
   context: CLITestContext,
   options: CLIRunOptions = {}
 ): Promise<CLIRunResult> {
-  const { args = [], input, env = {}, timeout = 10000, expectError = false } = options;
+  const {
+    args = [],
+    input,
+    env = {},
+    timeout = 10000,
+    expectError = false,
+  } = options;
 
   const execOptions = {
     cwd: context.testDir,
@@ -64,6 +72,13 @@ export async function runCLI(
       ...process.env,
       CONTINUE_CLI_TEST: "true",
       HOME: context.testDir,
+      // Windows-specific home directory variables
+      USERPROFILE: context.testDir,
+      HOMEDRIVE: path.parse(context.testDir).root,
+      HOMEPATH: path.relative(
+        path.parse(context.testDir).root,
+        context.testDir
+      ),
       ...env,
     },
     timeout,
@@ -73,7 +88,7 @@ export async function runCLI(
 
   try {
     const result = await execaNode(context.cliPath, args, execOptions);
-    
+
     return {
       stdout: result.stdout,
       stderr: result.stderr,
@@ -83,7 +98,7 @@ export async function runCLI(
     if (!expectError) {
       throw error;
     }
-    
+
     return {
       stdout: error.stdout || "",
       stderr: error.stderr || "",
@@ -101,11 +116,12 @@ export async function createTestConfig(
   config: any
 ): Promise<string> {
   const configPath = path.join(context.testDir, "test-config.yaml");
-  const configContent = typeof config === "string" ? config : JSON.stringify(config, null, 2);
-  
+  const configContent =
+    typeof config === "string" ? config : JSON.stringify(config, null, 2);
+
   await fs.writeFile(configPath, configContent);
   context.configPath = configPath;
-  
+
   return configPath;
 }
 
@@ -125,20 +141,22 @@ export async function createTestRule(
 /**
  * Reads the session file if it exists
  */
-export async function readSession(context: CLITestContext): Promise<any | null> {
+export async function readSession(
+  context: CLITestContext
+): Promise<any | null> {
   try {
     const sessionDir = path.join(context.testDir, ".continue", "sessions");
     const files = await fs.readdir(sessionDir);
-    
+
     if (files.length === 0) {
       return null;
     }
-    
+
     // Get the most recent session file
     const sessionFile = files.sort().pop()!;
     const sessionPath = path.join(sessionDir, sessionFile);
     const content = await fs.readFile(sessionPath, "utf-8");
-    
+
     return JSON.parse(content);
   } catch (error) {
     return null;
@@ -154,20 +172,20 @@ export async function createMockSession(
 ): Promise<string> {
   const sessionDir = path.join(context.testDir, ".continue", "sessions");
   await fs.mkdir(sessionDir, { recursive: true });
-  
+
   const sessionId = `test-session-${Date.now()}`;
   const sessionPath = path.join(sessionDir, `${sessionId}.json`);
-  
+
   const session = {
     id: sessionId,
     timestamp: new Date().toISOString(),
     messages,
     config: {},
   };
-  
+
   await fs.writeFile(sessionPath, JSON.stringify(session, null, 2));
   context.sessionPath = sessionPath;
-  
+
   return sessionPath;
 }
 
@@ -188,8 +206,11 @@ export function waitForPattern(
 
     const checkOutput = (data: string) => {
       output += data;
-      const match = typeof pattern === "string" ? output.includes(pattern) : pattern.test(output);
-      
+      const match =
+        typeof pattern === "string"
+          ? output.includes(pattern)
+          : pattern.test(output);
+
       if (match) {
         clearTimeout(timer);
         resolve(output);
@@ -215,6 +236,13 @@ export async function withInteractiveInput(
       ...process.env,
       CONTINUE_CLI_TEST: "true",
       HOME: context.testDir,
+      // Windows-specific home directory variables
+      USERPROFILE: context.testDir,
+      HOMEDRIVE: path.parse(context.testDir).root,
+      HOMEPATH: path.relative(
+        path.parse(context.testDir).root,
+        context.testDir
+      ),
     },
   });
 
@@ -231,7 +259,7 @@ export async function withInteractiveInput(
 
   // Send inputs sequentially
   for (const input of inputs) {
-    await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+    await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
     proc.stdin?.write(input + "\n");
   }
 
