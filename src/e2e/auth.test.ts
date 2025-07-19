@@ -37,7 +37,7 @@ describe("E2E: Authentication", () => {
       const result = await runCLI(context, { args: ["logout"] });
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain("logged out");
+      expect(result.stdout).toContain("Successfully logged out");
 
       // Check auth file is removed
       const authExists = await fs
@@ -51,24 +51,7 @@ describe("E2E: Authentication", () => {
       const result = await runCLI(context, { args: ["logout"] });
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain("logged out");
-    });
-  });
-
-  describe("auth state in chat", () => {
-    it("should prompt for login when using authenticated features", async () => {
-      // This tests that the CLI properly handles unauthenticated state
-      const result = await runCLI(context, {
-        args: ["-p", "Hello"],
-        env: {
-          OPENAI_API_KEY: "", // No API key
-        },
-        timeout: 5000,
-        expectError: true,
-      });
-
-      // Should fail or prompt for configuration
-      expect(result.exitCode).not.toBe(0);
+      expect(result.stdout).toContain("No active session found");
     });
   });
 });

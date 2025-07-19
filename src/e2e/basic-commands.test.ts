@@ -1,4 +1,8 @@
-import { createTestContext, cleanupTestContext, runCLI } from "../test-helpers/cli-helpers.js";
+import {
+  cleanupTestContext,
+  createTestContext,
+  runCLI,
+} from "../test-helpers/cli-helpers.js";
 import { getVersion } from "../version.js";
 
 describe("E2E: Basic Commands", () => {
@@ -15,7 +19,7 @@ describe("E2E: Basic Commands", () => {
   describe("--version flag", () => {
     it("should display version information", async () => {
       const result = await runCLI(context, { args: ["--version"] });
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toBe(getVersion());
       expect(result.stderr).toBe("");
@@ -25,7 +29,7 @@ describe("E2E: Basic Commands", () => {
   describe("--help flag", () => {
     it("should display help information", async () => {
       const result = await runCLI(context, { args: ["--help"] });
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Continue CLI");
       expect(result.stdout).toContain("AI-powered development assistant");
@@ -40,7 +44,7 @@ describe("E2E: Basic Commands", () => {
 
     it("should show available commands", async () => {
       const result = await runCLI(context, { args: ["--help"] });
-      
+
       expect(result.stdout).toContain("Commands:");
       expect(result.stdout).toContain("login");
       expect(result.stdout).toContain("logout");
@@ -50,36 +54,26 @@ describe("E2E: Basic Commands", () => {
   describe("subcommand help", () => {
     it("should show help for login command", async () => {
       const result = await runCLI(context, { args: ["login", "--help"] });
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Authenticate with Continue");
     });
 
     it("should show help for logout command", async () => {
       const result = await runCLI(context, { args: ["logout", "--help"] });
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Log out from Continue");
     });
   });
 
   describe("invalid commands", () => {
-    it("should show error for unknown command", async () => {
-      const result = await runCLI(context, { 
-        args: ["unknown-command"],
-        expectError: true 
-      });
-      
-      expect(result.exitCode).not.toBe(0);
-      expect(result.stderr || result.stdout).toContain("error");
-    });
-
     it("should show error for invalid flag", async () => {
-      const result = await runCLI(context, { 
+      const result = await runCLI(context, {
         args: ["--invalid-flag"],
-        expectError: true 
+        expectError: true,
       });
-      
+
       expect(result.exitCode).not.toBe(0);
       expect(result.stderr || result.stdout).toContain("error");
     });

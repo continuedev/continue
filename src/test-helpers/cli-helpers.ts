@@ -1,4 +1,4 @@
-import { execaNode, ExecaChildProcess } from "execa";
+import { execaNode, type Subprocess } from "execa";
 import path from "path";
 import fs from "fs/promises";
 import os from "os";
@@ -77,7 +77,7 @@ export async function runCLI(
     return {
       stdout: result.stdout,
       stderr: result.stderr,
-      exitCode: result.exitCode,
+      exitCode: result.exitCode ?? 0,
     };
   } catch (error: any) {
     if (!expectError) {
@@ -87,7 +87,7 @@ export async function runCLI(
     return {
       stdout: error.stdout || "",
       stderr: error.stderr || "",
-      exitCode: error.exitCode || 1,
+      exitCode: error.exitCode ?? 1,
       error,
     };
   }
@@ -175,7 +175,7 @@ export async function createMockSession(
  * Waits for a pattern in the output
  */
 export function waitForPattern(
-  proc: ExecaChildProcess,
+  proc: Subprocess,
   pattern: RegExp | string,
   timeout: number = 5000
 ): Promise<string> {
@@ -243,13 +243,13 @@ export async function withInteractiveInput(
     return {
       stdout,
       stderr,
-      exitCode: result.exitCode,
+      exitCode: result.exitCode ?? 0,
     };
   } catch (error: any) {
     return {
       stdout,
       stderr,
-      exitCode: error.exitCode || 1,
+      exitCode: error.exitCode ?? 1,
       error,
     };
   }

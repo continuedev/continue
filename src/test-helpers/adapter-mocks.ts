@@ -1,8 +1,4 @@
 import { jest } from "@jest/globals";
-import { vi } from "vitest";
-
-// Check if we're using Jest or Vitest
-const testFramework = typeof jest !== 'undefined' ? 'jest' : 'vitest';
 
 /**
  * Mock the constructLlmApi function to return a mock LLM API
@@ -40,19 +36,11 @@ export function mockLLMResponse(response: string) {
     completion: async () => response,
   };
 
-  if (testFramework === 'jest') {
-    jest.doMock("@continuedev/openai-adapters", () => ({
-      constructLlmApi: () => mockApi,
-      BaseLlmApi: class {},
-      LLMConfig: {}
-    }));
-  } else {
-    vi.doMock("@continuedev/openai-adapters", () => ({
-      constructLlmApi: () => mockApi,
-      BaseLlmApi: class {},
-      LLMConfig: {}
-    }));
-  }
+  jest.doMock("@continuedev/openai-adapters", () => ({
+    constructLlmApi: () => mockApi,
+    BaseLlmApi: class {},
+    LLMConfig: {}
+  }));
   
   return mockApi;
 }
@@ -92,19 +80,11 @@ export function mockLLMStreamResponse(chunks: string[]) {
     completion: async () => chunks.join(""),
   };
 
-  if (testFramework === 'jest') {
-    jest.doMock("@continuedev/openai-adapters", () => ({
-      constructLlmApi: () => mockApi,
-      BaseLlmApi: class {},
-      LLMConfig: {}
-    }));
-  } else {
-    vi.doMock("@continuedev/openai-adapters", () => ({
-      constructLlmApi: () => mockApi,
-      BaseLlmApi: class {},
-      LLMConfig: {}
-    }));
-  }
+  jest.doMock("@continuedev/openai-adapters", () => ({
+    constructLlmApi: () => mockApi,
+    BaseLlmApi: class {},
+    LLMConfig: {}
+  }));
   
   return mockApi;
 }
@@ -131,19 +111,11 @@ export function mockLLMError(errorMessage: string) {
     },
   };
 
-  if (testFramework === 'jest') {
-    jest.doMock("@continuedev/openai-adapters", () => ({
-      constructLlmApi: () => mockApi,
-      BaseLlmApi: class {},
-      LLMConfig: {}
-    }));
-  } else {
-    vi.doMock("@continuedev/openai-adapters", () => ({
-      constructLlmApi: () => mockApi,
-      BaseLlmApi: class {},
-      LLMConfig: {}
-    }));
-  }
+  jest.doMock("@continuedev/openai-adapters", () => ({
+    constructLlmApi: () => mockApi,
+    BaseLlmApi: class {},
+    LLMConfig: {}
+  }));
   
   return mockApi;
 }
@@ -152,9 +124,5 @@ export function mockLLMError(errorMessage: string) {
  * Clear all LLM mocks
  */
 export function clearLLMMocks() {
-  if (testFramework === 'jest') {
-    jest.dontMock("@continuedev/openai-adapters");
-  } else {
-    vi.unmock("@continuedev/openai-adapters");
-  }
+  jest.dontMock("@continuedev/openai-adapters");
 }
