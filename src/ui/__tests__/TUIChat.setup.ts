@@ -77,17 +77,20 @@ export const mockAssistant: AssistantUnrolled = {
   mcpServers: [],
 } as any;
 
-// Mock glob function
+// Mock glob function with files that actually exist in the repository
 jest.mock("glob", () => ({
   glob: jest
     .fn<any>()
     .mockResolvedValue([
+      ".env.example",
+      ".gitignore",
+      "AGENTS.md",
+      "CHANGELOG.md",
       "README.md",
       "package.json",
       "src/index.ts",
       "src/types.ts",
       "LICENSE",
-      "CHANGELOG.md",
       "test-file.txt",
     ]),
 }));
