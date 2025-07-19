@@ -1061,6 +1061,11 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
+export type ToolPolicy =
+  | "allowedWithPermission"
+  | "allowedWithoutPermission"
+  | "disabled";
+
 export interface Tool {
   type: "function";
   function: {
@@ -1080,6 +1085,7 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
+  toolPolicy?: ToolPolicy;
 }
 
 interface ToolChoice {

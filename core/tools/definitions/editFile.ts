@@ -37,4 +37,5 @@ export const editFileTool: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithPermission",
 };

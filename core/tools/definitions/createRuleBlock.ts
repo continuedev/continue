@@ -51,4 +51,5 @@ export const createRuleBlock: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithPermission",
 };

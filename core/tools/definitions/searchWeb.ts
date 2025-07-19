@@ -25,4 +25,5 @@ export const searchWebTool: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithoutPermission",
 };

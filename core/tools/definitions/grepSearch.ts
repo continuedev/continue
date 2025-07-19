@@ -26,4 +26,5 @@ export const grepSearchTool: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithoutPermission",
 };

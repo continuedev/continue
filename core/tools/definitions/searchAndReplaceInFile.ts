@@ -91,4 +91,5 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       },
     },
   },
+  toolPolicy: "allowedWithPermission",
 };

@@ -2,9 +2,9 @@ import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   clearToolPolicy,
   setToolPolicy,
-  ToolPolicy,
 } from "../redux/slices/uiSlice";
 import { AppDispatch } from "../redux/store";
+import { ToolPolicy } from "core";
 
 const validPolicyValues: ToolPolicy[] = [
   "allowedWithPermission",

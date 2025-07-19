@@ -31,4 +31,5 @@ export const lsTool: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithoutPermission",
 };
