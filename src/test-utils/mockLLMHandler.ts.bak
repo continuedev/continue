@@ -1,0 +1,189 @@
+import type { ChatCompletionMessageParam } from "openai/resources/index.js";
+import type { MockResponse } from "./chatHistoryTestUtils.js";
+
+export interface MockLLMHandler {
+  handleRequest: (
+    messages: ChatCompletionMessageParam[],
+    onContent?: (content: string) => void,
+    onContentComplete?: (content: string) => void,
+    onToolStart?: (toolName: string, toolArgs?: any) => void,
+    onToolResult?: (result: string, toolName: string) => void,
+    onToolError?: (error: string, toolName?: string) => void
+  ) => Promise<ChatCompletionMessageParam[]>;
+}
+
+export class StaticMockLLMHandler implements MockLLMHandler {
+  private mockResponses: MockResponse[];
+  private responseIndex = 0;
+
+  constructor(mockResponses: MockResponse[]) {
+    this.mockResponses = mockResponses;
+  }
+
+  async handleRequest(
+    messages: ChatCompletionMessageParam[],
+    onContent?: (content: string) => void,
+    onContentComplete?: (content: string) => void,
+    onToolStart?: (toolName: string, toolArgs?: any) => void,
+    onToolResult?: (result: string, toolName: string) => void,
+    onToolError?: (error: string, toolName?: string) => void
+  ): Promise<ChatCompletionMessageParam[]> {
+    const lastUserMessage = messages
+      .slice()
+      .reverse()
+      .find((m) => m.role === "user");
+
+    if (!lastUserMessage) {
+      throw new Error("No user message found in chat history");
+    }
+
+    const mockResponse = this.findMockResponse(lastUserMessage.content as string);
+    if (!mockResponse) {
+      throw new Error(
+        `No mock response configured for message: "${lastUserMessage.content}"`
+      );
+    }
+
+    const responses = Array.isArray(mockResponse.response)
+      ? mockResponse.response
+      : [mockResponse.response];
+
+    const resultMessages: ChatCompletionMessageParam[] = [];
+
+    for (const response of responses) {
+      if (mockResponse.delay) {
+        await new Promise((resolve) => setTimeout(resolve, mockResponse.delay));
+      }
+
+      if (response.role === "assistant" && response.content) {
+        if (mockResponse.stream && onContent) {
+          // Simulate streaming by chunking the content
+          const chunks = this.chunkContent(response.content);
+          for (const chunk of chunks) {
+            onContent(chunk);
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+        }
+        if (onContentComplete) {
+          onContentComplete(response.content);
+        }
+        resultMessages.push(response);
+      } else if (response.role === "assistant" && response.tool_calls) {
+        // Handle tool calls
+        for (const toolCall of response.tool_calls) {
+          if (toolCall.type === "function") {
+            const toolName = toolCall.function.name;
+            const toolArgs = JSON.parse(toolCall.function.arguments);
+            
+            if (onToolStart) {
+              onToolStart(toolName, toolArgs);
+            }
+
+            // Simulate tool execution
+            const toolResult = await this.simulateToolExecution(toolName, toolArgs);
+            
+            if (onToolResult) {
+              onToolResult(toolResult, toolName);
+            }
+
+            // Add the tool call and result to messages
+            resultMessages.push(response);
+            resultMessages.push({
+              role: "tool",
+              content: toolResult,
+              tool_call_id: toolCall.id,
+            });
+          }
+        }
+      } else {
+        resultMessages.push(response);
+      }
+    }
+
+    return resultMessages;
+  }
+
+  private findMockResponse(userMessage: string): MockResponse | undefined {
+    return this.mockResponses.find((mr) => userMessage.includes(mr.forMessage));
+  }
+
+  private chunkContent(content: string): string[] {
+    const words = content.split(" ");
+    const chunks: string[] = [];
+    let currentChunk = "";
+
+    for (const word of words) {
+      if (currentChunk.length + word.length > 20) {
+        chunks.push(currentChunk + " ");
+        currentChunk = word;
+      } else {
+        currentChunk += (currentChunk ? " " : "") + word;
+      }
+    }
+
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+
+    return chunks;
+  }
+
+  private async simulateToolExecution(toolName: string, args: any): Promise<string> {
+    // Simulate some basic tool responses
+    switch (toolName) {
+      case "listFiles":
+        return JSON.stringify({
+          files: ["file1.ts", "file2.ts", "file3.ts"],
+        });
+      case "readFile":
+        return `Content of ${args.filePath}:\nconsole.log("Hello, world!");`;
+      case "writeFile":
+        return `File written successfully to ${args.filePath}`;
+      case "searchCode":
+        return JSON.stringify({
+          results: [
+            { file: "src/index.ts", line: 10, content: "function main() {" },
+          ],
+        });
+      default:
+        return `Tool ${toolName} executed successfully`;
+    }
+  }
+}
+
+export class DynamicMockLLMHandler implements MockLLMHandler {
+  private responseGenerator: (
+    messages: ChatCompletionMessageParam[]
+  ) => Promise<ChatCompletionMessageParam[]>;
+
+  constructor(
+    responseGenerator: (
+      messages: ChatCompletionMessageParam[]
+    ) => Promise<ChatCompletionMessageParam[]>
+  ) {
+    this.responseGenerator = responseGenerator;
+  }
+
+  async handleRequest(
+    messages: ChatCompletionMessageParam[],
+    onContent?: (content: string) => void,
+    onContentComplete?: (content: string) => void,
+    onToolStart?: (toolName: string, toolArgs?: any) => void,
+    onToolResult?: (result: string, toolName: string) => void,
+    onToolError?: (error: string, toolName?: string) => void
+  ): Promise<ChatCompletionMessageParam[]> {
+    const responses = await this.responseGenerator(messages);
+    
+    // Process responses through callbacks
+    for (const response of responses) {
+      if (response.role === "assistant" && response.content && onContent) {
+        onContent(response.content);
+        if (onContentComplete) {
+          onContentComplete(response.content);
+        }
+      }
+    }
+
+    return responses;
+  }
+}

@@ -1,0 +1,119 @@
+import type { ChatCompletionMessageParam } from "openai/resources/index.js";
+import type { DisplayMessage } from "../ui/types.js";
+
+export interface ChatHistoryTestStep {
+  description: string;
+  message?: ChatCompletionMessageParam;
+  expectedMessages: DisplayMessage[];
+  validate?: (messages: DisplayMessage[]) => void;
+}
+
+export interface ChatHistoryTestScenario {
+  name: string;
+  description: string;
+  initialHistory?: ChatCompletionMessageParam[];
+  steps: ChatHistoryTestStep[];
+  mockResponses?: MockResponse[];
+}
+
+export interface MockResponse {
+  forMessage: string;
+  response: ChatCompletionMessageParam | ChatCompletionMessageParam[];
+  stream?: boolean;
+  delay?: number;
+}
+
+export function createTestMessage(
+  role: "user" | "assistant" | "system",
+  content: string
+): ChatCompletionMessageParam {
+  return { role, content };
+}
+
+export function createToolCallMessage(
+  toolName: string,
+  args: any,
+  id: string = "test-tool-call-1"
+): ChatCompletionMessageParam {
+  return {
+    role: "assistant",
+    content: null,
+    tool_calls: [
+      {
+        id,
+        type: "function",
+        function: {
+          name: toolName,
+          arguments: JSON.stringify(args),
+        },
+      },
+    ],
+  };
+}
+
+export function createToolResultMessage(
+  toolCallId: string,
+  result: any
+): ChatCompletionMessageParam {
+  return {
+    role: "tool",
+    content: typeof result === "string" ? result : JSON.stringify(result),
+    tool_call_id: toolCallId,
+  };
+}
+
+export function validateMessageCount(
+  messages: DisplayMessage[],
+  expectedCount: number
+): void {
+  if (messages.length !== expectedCount) {
+    throw new Error(
+      `Expected ${expectedCount} messages, but got ${messages.length}`
+    );
+  }
+}
+
+export function validateMessageContent(
+  messages: DisplayMessage[],
+  index: number,
+  expectedContent: string
+): void {
+  if (!messages[index]) {
+    throw new Error(`No message at index ${index}`);
+  }
+  if (!messages[index].content.includes(expectedContent)) {
+    throw new Error(
+      `Expected message at index ${index} to contain "${expectedContent}", but got "${messages[index].content}"`
+    );
+  }
+}
+
+export function validateMessageType(
+  messages: DisplayMessage[],
+  index: number,
+  expectedType: DisplayMessage["messageType"]
+): void {
+  if (!messages[index]) {
+    throw new Error(`No message at index ${index}`);
+  }
+  if (messages[index].messageType !== expectedType) {
+    throw new Error(
+      `Expected message at index ${index} to have type "${expectedType}", but got "${messages[index].messageType}"`
+    );
+  }
+}
+
+export function validateMessageRole(
+  messages: DisplayMessage[],
+  index: number,
+  expectedRole: string
+): void {
+  if (!messages[index]) {
+    throw new Error(`No message at index ${index}`);
+  }
+  if (messages[index].role !== expectedRole) {
+    throw new Error(
+      `Expected message at index ${index} to have role "${expectedRole}", but got "${messages[index].role}"`
+    );
+  }
+}

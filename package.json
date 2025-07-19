@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
