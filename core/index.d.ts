@@ -1694,7 +1694,6 @@ export type RuleSource =
   | "model-options-agent"
   | "rules-block"
   | "colocated-markdown"
-  | "json-systemMessage"
   | ".continuerules";
 
 export interface RuleWithSource {

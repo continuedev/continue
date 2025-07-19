@@ -126,7 +126,6 @@ export async function llmFromDescription(
   ideSettings: IdeSettings,
   llmLogger: ILLMLogger,
   completionOptions?: BaseCompletionOptions,
-  globalSystemMessage?: string,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMClasses.find((llm) => llm.providerName === desc.provider);
 
@@ -140,10 +139,10 @@ export async function llmFromDescription(
   };
 
   let baseChatSystemMessage: string | undefined = undefined;
-  if (desc.systemMessage !== undefined || globalSystemMessage !== undefined) {
+  if (desc.systemMessage !== undefined) {
     baseChatSystemMessage = await renderTemplatedString(
       Handlebars,
-      (desc.systemMessage ?? globalSystemMessage)!,
+      desc.systemMessage,
       {},
       [],
       readFile,

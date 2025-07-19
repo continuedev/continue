@@ -80,8 +80,6 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
         return "Default chat system message";
       } else if (rule.source === "default-agent") {
         return "Default agent system message";
-      } else if (rule.source === "json-systemMessage") {
-        return "JSON systemMessage)";
       } else if (rule.source === "model-options-agent") {
         return "Base System Agent Message";
       } else if (rule.source === "model-options-plan") {
