@@ -1,4 +1,12 @@
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { NextEditOutcome } from "core/nextEdit/types";
 import * as vscode from "vscode";
+
+export interface CompletionDataForAfterJump {
+  completionId: string;
+  outcome: NextEditOutcome;
+  currentPosition: vscode.Position;
+}
 
 export class JumpManager {
   private static _instance: JumpManager | undefined;
@@ -9,7 +17,8 @@ export class JumpManager {
   private _disposables: vscode.Disposable[] = [];
 
   private _jumpInProgress: boolean = false;
-  private _completionAfterJump: any = null;
+  private _completionAfterJump: CompletionDataForAfterJump | null = null;
+  private _oldCursorPosition: vscode.Position | undefined;
 
   private constructor() {}
 
@@ -35,8 +44,84 @@ export class JumpManager {
     this._disposables = [];
   }
 
-  public async suggestJump(nextJumpLocation: vscode.Position) {
+  public async suggestJump(
+    currentPosition: vscode.Position,
+    nextJumpLocation: vscode.Position,
+    completionContent?: string,
+  ) {
+    // Deduplication logic.
+    // If the content at the next jump location is
+    // identical to the completion content,
+    // then we don't have to jump.
+    if (completionContent !== undefined) {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        try {
+          const completionLines = completionContent.split("\n");
+
+          // Get document content at jump location spanning multiple lines.
+          const document = editor.document;
+          const startLine = nextJumpLocation.line;
+          const endLine = Math.min(
+            startLine + completionLines.length - 1,
+            document.lineCount - 1,
+          );
+
+          // Check if we have enough lines in the document to compare.
+          if (endLine - startLine + 1 < completionLines.length) {
+            // Not enough lines in document, so content can't be identical.
+            // Proceed to jump!
+          } else {
+            // Check the first line first for early exit.
+            const firstLineText = document.lineAt(startLine).text;
+            const firstLineSubstring = firstLineText.substring(
+              nextJumpLocation.character,
+            );
+            const firstCompletionLine = completionLines[0];
+
+            if (!firstLineSubstring.startsWith(firstCompletionLine)) {
+              // First line doesn't match, so proceed to jump.
+            } else {
+              // Check remaining lines if there are any.
+              if (completionLines.length > 1) {
+                let fullMatch = true;
+
+                // Process remaining lines.
+                for (let i = 1; i < completionLines.length; i++) {
+                  const documentLine = startLine + i;
+                  if (documentLine <= endLine) {
+                    const lineText = document.lineAt(documentLine).text;
+                    if (lineText !== completionLines[i]) {
+                      fullMatch = false;
+                      break;
+                    }
+                  }
+                }
+
+                if (fullMatch) {
+                  console.log(
+                    "Skipping jump as content is identical at jump location",
+                  );
+                  return; // Exit early, don't suggest jump.
+                }
+              } else {
+                // Only one line and it matches.
+                console.log(
+                  "Skipping jump as content is identical at jump location",
+                );
+                return; // Exit early, don't suggest jump.
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error checking content at jump location:", error);
+          // Continue with jump even if there's an error checking content.
+        }
+      }
+    }
+
     this._jumpInProgress = true;
+    this._oldCursorPosition = currentPosition;
 
     const editor = vscode.window.activeTextEditor;
 
@@ -114,12 +199,11 @@ export class JumpManager {
     // Create a decoration for jump.
     this._jumpDecoration = vscode.window.createTextEditorDecorationType({
       before: {
-        contentText: "📌 Press Tab to jump, Esc to cancel",
+        contentText: "🦘 Press Tab to jump, Esc to cancel",
         color: new vscode.ThemeColor("editorInfo.foreground"),
         backgroundColor: new vscode.ThemeColor("editorInfo.background"),
-        margin: "0 0 0 0",
+        margin: `0 0 0 4px`,
       },
-      isWholeLine: true,
     });
 
     // Apply the decoration.
@@ -183,20 +267,52 @@ export class JumpManager {
       "continue.rejectJump",
       async () => {
         if (this._jumpDecorationVisible) {
+          console.log(
+            "deleteChain from JumpManager.ts: rejectJump and decoration visible",
+          );
+          NextEditProvider.getInstance().deleteChain();
           await this.clearJumpDecoration();
         }
       },
     );
 
+    // Add a selection change listener to the editor to reject jump when cursor moves.
+    const selectionChangeListener =
+      vscode.window.onDidChangeTextEditorSelection((e) => {
+        // If jump decoration isn't visible, nothing to do.
+        if (!this._jumpDecorationVisible) {
+          return;
+        }
+
+        const currentPosition = e.selections[0].active;
+
+        // If cursor moved to jump position, this is likely the result of acceptJump.
+        if (currentPosition.isEqual(jumpPosition)) {
+          return;
+        }
+
+        // If cursor position changed for any other reason, reject the jump.
+        if (
+          this._oldCursorPosition &&
+          !currentPosition.isEqual(this._oldCursorPosition)
+        ) {
+          vscode.commands.executeCommand("continue.rejectJump");
+        }
+      });
+
     // This allows us to dispose the command after a jump is completed.
-    this._disposables.push(acceptJumpCommand, rejectJumpCommand);
+    this._disposables.push(
+      acceptJumpCommand,
+      rejectJumpCommand,
+      selectionChangeListener,
+    );
   }
 
   isJumpInProgress(): boolean {
     return this._jumpInProgress;
   }
 
-  setCompletionAfterJump(completionData: any): void {
+  setCompletionAfterJump(completionData: CompletionDataForAfterJump): void {
     this._completionAfterJump = completionData;
   }
 }
