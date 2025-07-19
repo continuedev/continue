@@ -90,7 +90,7 @@ export const uiSlice = createSlice({
     // Tools
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
-        action.payload.toolPolicy ?? "allowedWithPermission";
+        action.payload.toolPolicy ?? DEFAULT_TOOL_SETTING;
     },
     setToolPolicy: (
       state,
