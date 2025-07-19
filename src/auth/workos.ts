@@ -2,14 +2,12 @@ import {
   Configuration,
   DefaultApi,
 } from "@continuedev/sdk/dist/api/dist/index.js";
-import axios from "axios";
 import chalk from "chalk";
 import * as fs from "fs";
 import open from "open";
 import * as os from "os";
 import * as path from "path";
 import { createInterface } from "readline";
-import { v4 as uuidv4 } from "uuid";
 import { env } from "../env.js";
 
 // Config file path
@@ -209,25 +207,146 @@ function prompt(question: string): Promise<string> {
 }
 
 /**
- * Gets the auth URL for the token page
+ * Device authorization response from WorkOS
  */
-function getAuthUrlForTokenPage(useOnboarding: boolean = false): string {
-  const url = new URL("https://api.workos.com/user_management/authorize");
-  const params = {
-    response_type: "code",
-    client_id: env.workOsClientId,
-    redirect_uri: `${env.appUrl}/tokens/${
-      useOnboarding ? "onboarding-" : ""
-    }callback/cli`,
-    state: uuidv4(),
-    provider: "authkit",
-  };
+interface DeviceAuthorizationResponse {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  verification_uri_complete: string;
+  expires_in: number;
+  interval: number;
+}
 
-  Object.keys(params).forEach((key) =>
-    url.searchParams.append(key, params[key as keyof typeof params])
-  );
+/**
+ * Request device authorization from WorkOS
+ */
+async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse> {
+  try {
+    const params = new URLSearchParams({
+      client_id: env.workOsClientId,
+    });
 
-  return url.toString();
+    // Use WorkOS User Management device authorization endpoint
+    const response = await fetch(
+      "https://api.workos.com/user_management/authorize/device",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error(
+      chalk.red("Device authorization error:"),
+      error.message || error
+    );
+    throw error;
+  }
+}
+
+/**
+ * Poll for device authorization completion
+ */
+async function pollForDeviceToken(
+  deviceCode: string,
+  interval: number,
+  expiresIn: number
+): Promise<AuthenticatedConfig> {
+  const startTime = Date.now();
+  const expirationTime = startTime + expiresIn * 1000;
+  let currentInterval = interval;
+
+  while (Date.now() < expirationTime) {
+    try {
+      const params = new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        device_code: deviceCode,
+        client_id: env.workOsClientId,
+      });
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/x-www-form-urlencoded",
+      };
+
+      // Poll WorkOS User Management token endpoint
+      const response = await fetch(
+        "https://api.workos.com/user_management/authenticate",
+        {
+          method: "POST",
+          headers,
+          body: params,
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const { access_token, refresh_token, user } = data;
+
+        // Calculate token expiration (assuming 1 hour validity)
+        const tokenExpiresAt = Date.now() + 60 * 60 * 1000;
+
+        const authConfig: AuthenticatedConfig = {
+          userId: user.id,
+          userEmail: user.email,
+          accessToken: access_token,
+          refreshToken: refresh_token,
+          expiresAt: tokenExpiresAt,
+          organizationId: null,
+        };
+
+        // Save the config
+        saveAuthConfig(authConfig);
+
+        return authConfig;
+      } else {
+        // Handle HTTP error responses
+        const errorData = await response.json().catch(() => ({}));
+        const errorCode = errorData.error;
+
+        // Log response details for debugging
+        if (response.status === 401) {
+          throw new Error(
+            "Oops! We had trouble authenticating. Please try again and reach out if the error persists."
+          );
+        }
+
+        if (errorCode === "authorization_pending") {
+          // Continue polling
+          await new Promise((resolve) =>
+            setTimeout(resolve, currentInterval * 1000)
+          );
+          continue;
+        } else if (errorCode === "slow_down") {
+          // Increase polling interval
+          currentInterval += 5;
+          await new Promise((resolve) =>
+            setTimeout(resolve, currentInterval * 1000)
+          );
+          continue;
+        } else if (errorCode === "access_denied") {
+          throw new Error("User denied access");
+        } else if (errorCode === "expired_token") {
+          throw new Error("Device code has expired");
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+    } catch (error: any) {
+      console.error(chalk.red("Token polling error:"), error.message || error);
+      throw error;
+    }
+  }
+
+  throw new Error("Device authorization timeout");
 }
 
 /**
@@ -240,14 +359,22 @@ async function refreshToken(
     // Load existing config to preserve organizationId and other fields
     const existingConfig = loadAuthConfig();
 
-    const response = await axios.post(
-      new URL("auth/refresh", env.apiBase).toString(),
-      {
+    const response = await fetch(new URL("auth/refresh", env.apiBase), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         refreshToken,
-      }
-    );
+      }),
+    });
 
-    const { accessToken, refreshToken: newRefreshToken, user } = response.data;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const { accessToken, refreshToken: newRefreshToken, user } = data;
 
     // Calculate token expiration (assuming 1 hour validity)
     const tokenExpiresAt = Date.now() + 60 * 60 * 1000;
@@ -273,16 +400,13 @@ async function refreshToken(
 
     return authConfig;
   } catch (error: any) {
-    console.error(
-      chalk.red("Token refresh error:"),
-      error.response?.data?.message || error.message || error
-    );
+    console.error(chalk.red("Token refresh error:"), error.message || error);
     throw error;
   }
 }
 
 /**
- * Authenticates using the Continue web flow
+ * Authenticates using the WorkOS device flow
  */
 export async function login(
   useOnboarding: boolean = false,
@@ -302,31 +426,41 @@ export async function login(
   try {
     console.info(chalk.cyan("\nStarting authentication with Continue..."));
 
-    // Get auth URL using the direct implementation
-    const authUrl = getAuthUrlForTokenPage(useOnboarding);
-    console.info(chalk.gray(`Opening browser to sign in at: ${authUrl}`));
-    await open(authUrl);
+    // Request device authorization
+    const deviceAuth = await requestDeviceAuthorization();
 
-    console.info(chalk.yellow("\nAfter signing in, you'll receive a token."));
+    console.info(
+      chalk.yellow(
+        `Your authentication code: ${chalk.bold(deviceAuth.user_code)}`
+      )
+    );
+    console.info(
+      chalk.dim(
+        `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`
+      )
+    );
 
-    // Get token from user
-    const token = onPrompt
-      ? await onPrompt(chalk.yellow("Paste your sign-in token here: "))
-      : await prompt(chalk.yellow("Paste your sign-in token here: "));
+    // Try to open the complete verification URL in browser
+    try {
+      await open(deviceAuth.verification_uri_complete);
+    } catch (error) {
+      console.info(chalk.yellow("Unable to open browser automatically"));
+    }
 
-    console.info(chalk.cyan("Verifying token..."));
+    console.info(chalk.cyan("\nWaiting for confirmation..."));
 
-    // Exchange token for session
-    const response = await refreshToken(token);
+    // Poll for token
+    const authConfig = await pollForDeviceToken(
+      deviceAuth.device_code,
+      deviceAuth.interval,
+      deviceAuth.expires_in
+    );
 
     console.info(chalk.green("\nAuthentication successful!"));
 
-    return response;
+    return authConfig;
   } catch (error: any) {
-    console.error(
-      chalk.red("Authentication error:"),
-      error.response?.data?.message || error.message || error
-    );
+    console.error(chalk.red("Authentication error:"), error.message || error);
     throw error;
   }
 }
