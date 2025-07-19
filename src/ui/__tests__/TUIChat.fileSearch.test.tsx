@@ -24,6 +24,7 @@ describe("TUIChat - @ File Search Tests", () => {
       frame.includes("@.gitignore") ||
       frame.includes("@AGENTS.md") ||
       frame.includes("@CHANGELOG.md");
+    console.log("FRAME: ", frame);
     expect(hasActualFiles).toBe(true);
   });
 
