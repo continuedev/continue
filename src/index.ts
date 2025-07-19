@@ -75,4 +75,17 @@ program
     await logout();
   });
 
-program.parse();
+// Handle unknown commands
+program.on("command:*", () => {
+  console.error(`Error: Unknown command '${program.args.join(" ")}'\n`);
+  program.outputHelp();
+  process.exit(1);
+});
+
+// Parse arguments and handle errors
+try {
+  program.parse();
+} catch (error) {
+  console.error(error);
+  process.exit(1);
+}
