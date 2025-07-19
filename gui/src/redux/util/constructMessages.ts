@@ -95,7 +95,7 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
-      if (item.message.toolCalls?.length && useSystemMessageTools) {
+      if (item.toolCallStates?.length && useSystemMessageTools) {
         const { userMessage, assistantMessage } =
           convertToolCallStatesToSystemCallsAndOutput(
             item.message,

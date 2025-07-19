@@ -271,15 +271,15 @@ export const NATIVE_TOOL_SUPPORT: Record<string, (model: string) => boolean> = {
       "arcee-ai/caller-large",
       "nousresearch/hermes-3-llama-3.1-70b",
     ];
-    for (const model of specificModels) {
-      if (model.toLowerCase() === model) {
+    for (const m of specificModels) {
+      if (m.toLowerCase() === model) {
         return true;
       }
     }
 
     const supportedContains = ["llama-3.1"];
-    for (const model of supportedContains) {
-      if (model.toLowerCase().includes(model)) {
+    for (const m of supportedContains) {
+      if (m.toLowerCase().includes(model)) {
         return true;
       }
     }

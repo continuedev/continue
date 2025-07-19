@@ -33,7 +33,7 @@ test("getBaseSystemMessage should return the correct system message based on mod
     DEFAULT_AGENT_SYSTEM_MESSAGE,
   );
 
-  // Test agent mode with default message
+  // Test plan mode with default message
   expect(getBaseSystemMessage("plan", {} as ModelDescription)).toBe(
     DEFAULT_PLAN_SYSTEM_MESSAGE,
   );

@@ -16,7 +16,7 @@ function toolCallStateToSystemToolCall(state: ToolCallState): string {
   let parts = ["```tool"];
   parts.push(`TOOL_NAME: ${state.toolCall.function.name}`);
   try {
-    for (const arg of state.parsedArgs) {
+    for (const arg in state.parsedArgs) {
       parts.push(`BEGIN_ARG: ${arg}`);
       parts.push(JSON.stringify(state.parsedArgs[arg]));
       parts.push(`END_ARG`);
