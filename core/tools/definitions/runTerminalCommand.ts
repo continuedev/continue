@@ -55,4 +55,5 @@ export const runTerminalCommandTool: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithPermission",
 };

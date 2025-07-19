@@ -1,9 +1,6 @@
+import { ToolPolicy } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import {
-  clearToolPolicy,
-  setToolPolicy,
-  ToolPolicy,
-} from "../redux/slices/uiSlice";
+import { clearToolPolicy, setToolPolicy } from "../redux/slices/uiSlice";
 import { AppDispatch } from "../redux/store";
 
 const validPolicyValues: ToolPolicy[] = [

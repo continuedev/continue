@@ -10,7 +10,10 @@ import { generateToolCallButtonTestId } from "../../../components/mainInput/Lump
 import { waitFor } from "@testing-library/dom";
 import { act } from "@testing-library/react";
 import { ChatMessage } from "core";
-import { toggleToolSetting } from "../../../redux/slices/uiSlice";
+import {
+  setToolPolicy,
+  toggleToolSetting,
+} from "../../../redux/slices/uiSlice";
 import {
   getElementByTestId,
   getElementByText,
@@ -173,7 +176,12 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
   addAndSelectMockLlm(store, ideMessenger);
 
   // Enable automatic edit and yolo mode
-  store.dispatch(toggleToolSetting(BuiltInToolNames.EditExistingFile));
+  store.dispatch(
+    setToolPolicy({
+      toolName: BuiltInToolNames.EditExistingFile,
+      policy: "allowedWithoutPermission",
+    }),
+  );
   triggerConfigUpdate({
     store,
     ideMessenger,
