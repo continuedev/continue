@@ -31,7 +31,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
-  useSystemMessageTools: Boolean,
+  useSystemMessageTools?: boolean,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
