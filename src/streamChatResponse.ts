@@ -10,7 +10,7 @@ import type {
 } from "openai/resources.mjs";
 import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
-import { telemetryService } from "./telemetry.js";
+import telemetryService from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";

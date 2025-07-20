@@ -9,7 +9,7 @@ import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
-import { telemetryService } from "../telemetry.js";
+import telemetryService from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";

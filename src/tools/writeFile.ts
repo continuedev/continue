@@ -1,7 +1,7 @@
 import { createTwoFilesPatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
-import { telemetryService } from "../telemetry.js";
+import telemetryService from "../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
@@ -79,11 +79,6 @@ export const writeFileTool: Tool = {
         const diff = generateDiff(oldContent, args.content, args.filepath);
 
         // Record file operation
-        telemetryService.recordFileOperation(
-          "write",
-          "success",
-          path.extname(args.filepath).substring(1) || "unknown"
-        );
 
         return `Successfully wrote to file: ${args.filepath}\n\nDiff:\n${diff}`;
       } else {
@@ -97,25 +92,11 @@ export const writeFileTool: Tool = {
           language
         );
 
-        // Record file operation
-        telemetryService.recordFileOperation(
-          "write",
-          "success",
-          path.extname(args.filepath).substring(1) || "unknown"
-        );
-
         return `Successfully created file: ${args.filepath}`;
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-
-      // Record failed file operation
-      telemetryService.recordFileOperation(
-        "write",
-        "error",
-        path.extname(args.filepath).substring(1) || "unknown"
-      );
 
       return `Error writing to file: ${errorMessage}`;
     }

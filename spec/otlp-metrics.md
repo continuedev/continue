@@ -246,23 +246,6 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 **Implementation:** Track in `src/auth/workos.ts`
 
-### Tool-Specific Metrics
-
-#### ✅ `continue.cli.tools.terminal_commands`
-
-**Type:** Counter  
-**Unit:** `{command}`  
-**Description:** Terminal commands executed (more granular than commit/PR counts)
-
-**Labels:**
-
-- All [standard attributes](#standard-attributes)
-- `command_type`: First word of command (e.g., `git`, `npm`, `ls`)
-- `result`: `success` | `error`
-- `exit_code`: Command exit code
-
-**Implementation:** Track in `src/tools/runTerminalCommand.ts`
-
 ### MCP Integration Metrics
 
 #### ❌ `continue.cli.mcp.connections`

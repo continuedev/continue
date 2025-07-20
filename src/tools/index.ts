@@ -1,6 +1,6 @@
 import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
-import { telemetryService } from "../telemetry.js";
+import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
