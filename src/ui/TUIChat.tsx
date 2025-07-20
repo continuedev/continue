@@ -379,10 +379,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
               model={model}
               onTransitionStateChange={setIsShowingFreeTrialTransition}
             />
-            <UpdateNotification />
           </Box>
           <Box marginRight={2}>
-            <Text color="gray">● Continue CLI</Text>
+            <UpdateNotification />
           </Box>
         </Box>
       </Box>

@@ -94,7 +94,7 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
 
   // Only show the normal status text - transition UI is handled by parent
   return (
-    <Text color="gray">
+    <Text color="dim">
       {chatUsed}/{chatLimit} free trial
     </Text>
   );

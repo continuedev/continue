@@ -27,7 +27,7 @@ const UpdateNotification: React.FC = () => {
   }, [currentVersion]);
 
   if (!updateAvailable) {
-    return null;
+    return <Text color="gray">● Continue CLI</Text>;
   }
 
   return (
