@@ -1,6 +1,12 @@
 import { ToolImpl } from ".";
 
 export const requestRuleImpl: ToolImpl = async (args, extras) => {
+  if (!args?.name) {
+    throw new Error(
+      "`name` argument is required to request a rule, and cannot be empty",
+    );
+  }
+
   // Find the rule by name in the config
   const rule = extras.config.rules.find((r) => r.name === args.name);
 

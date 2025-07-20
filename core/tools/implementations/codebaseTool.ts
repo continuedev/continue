@@ -3,14 +3,8 @@ import { RangeInFile } from "../..";
 import { retrieveContextItemsFromEmbeddings } from "../../context/retrieval/retrieval";
 
 export const codebaseToolImpl: ToolImpl = async (args, extras) => {
-  if (!args.query || args.query.trim() === "") {
-    return [
-      {
-        name: "Error",
-        description: "Codebase search error",
-        content: "Query parameter is required and cannot be empty.",
-      },
-    ];
+  if (!args?.query || args.query.trim() === "") {
+    throw new Error("`query` parameter is required and cannot be empty.");
   }
 
   try {

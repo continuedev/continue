@@ -2,7 +2,13 @@ import { ToolImpl } from ".";
 import { ContextItem } from "../..";
 
 const MAX_AGENT_GLOB_RESULTS = 100;
+
 export const fileGlobSearchImpl: ToolImpl = async (args, extras) => {
+  if (!args?.pattern) {
+    throw new Error(
+      "`pattern` argument is required for a glob search, and cannot be empty",
+    );
+  }
   const results = await extras.ide.getFileResults(
     args.pattern,
     MAX_AGENT_GLOB_RESULTS,

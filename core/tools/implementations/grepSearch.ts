@@ -41,6 +41,12 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
 }
 
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
+  if (!args?.query) {
+    throw new Error(
+      "`query` argument is required for a grep search, and cannot be empty",
+    );
+  }
+
   const results = await extras.ide.getSearchResults(
     args.query,
     DEFAULT_GREP_SEARCH_RESULTS_LIMIT,

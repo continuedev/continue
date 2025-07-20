@@ -4,6 +4,10 @@ import { getUrlContextItems } from "../../context/providers/URLContextProvider";
 const DEFAULT_FETCH_URL_CHAR_LIMIT = 20000;
 
 export const fetchUrlContentImpl: ToolImpl = async (args, extras) => {
+  if (!args?.url) {
+    throw new Error("`url` argument is required and cannot be empty");
+  }
+
   const contextItems = await getUrlContextItems(args.url, extras.fetch);
 
   // Track truncated content

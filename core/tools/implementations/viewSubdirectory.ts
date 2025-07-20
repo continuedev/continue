@@ -4,7 +4,13 @@ import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { ToolImpl } from ".";
 
 export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
+  if (!args?.directory_path) {
+    throw new Error(
+      "`directory_path` argument is required to view a map of a subdirectory, and cannot be empty",
+    );
+  }
   const { directory_path } = args;
+
   const uri = await resolveRelativePathInDir(directory_path, extras.ide);
 
   if (!uri) {

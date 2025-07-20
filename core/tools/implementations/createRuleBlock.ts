@@ -13,6 +13,11 @@ export const createRuleBlockImpl: ToolImpl = async (
   { name, rule, ...otherArgs }: CreateRuleBlockArgs,
   extras,
 ) => {
+  if (!name || !rule) {
+    throw new Error(
+      "`name` and `rule` arguments are required to create a rule.",
+    );
+  }
   const fileContent = createRuleMarkdown(name, rule, otherArgs);
 
   const [localContinueDir] = await extras.ide.getWorkspaceDirs();

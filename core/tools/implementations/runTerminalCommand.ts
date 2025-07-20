@@ -50,6 +50,12 @@ const ENABLED_FOR_REMOTES = [
 ];
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
+  if (!args?.command) {
+    throw new Error(
+      "`command` argument is required to run a terminal command, and cannot be empty",
+    );
+  }
+
   // Default to waiting for completion if not specified
   const waitForCompletion = args.waitForCompletion !== false;
   const ideInfo = await extras.ide.getIdeInfo();

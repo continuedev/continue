@@ -4,6 +4,14 @@ import { ToolImpl } from ".";
 import { getCleanUriPath, getUriPathBasename } from "../../util/uri";
 
 export const createNewFileImpl: ToolImpl = async (args, extras) => {
+  if (!args?.filepath) {
+    throw new Error("`filepath` argument is required and cannot be empty.");
+  }
+  if (args?.contents === undefined) {
+    throw new Error(
+      "`contents` argument is required to create a new file (can be empty).",
+    );
+  }
   const resolvedFileUri = await inferResolvedUriFromRelativePath(
     args.filepath,
     extras.ide,

@@ -5,6 +5,12 @@ import { ToolImpl } from ".";
 import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
+  if (!args?.filepath) {
+    throw new Error(
+      "`filepath` argument is required to read a file, and cannot be empty",
+    );
+  }
+
   const firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
     extras.ide,
