@@ -20,6 +20,7 @@ import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import LoadingAnimation from "./LoadingAnimation.js";
 import OrganizationSelector from "./OrganizationSelector.js";
 import Timer from "./Timer.js";
+import UpdateNotification from "./UpdateNotification.js";
 import UserInput from "./UserInput.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
@@ -378,6 +379,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
               model={model}
               onTransitionStateChange={setIsShowingFreeTrialTransition}
             />
+            <UpdateNotification />
           </Box>
           <Box marginRight={2}>
             <Text color="gray">● Continue CLI</Text>

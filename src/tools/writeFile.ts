@@ -1,9 +1,18 @@
+import { createTwoFilesPatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
-import { createTwoFilesPatch } from "diff";
+import telemetryService from "../telemetry/telemetryService.js";
+import {
+  calculateLinesOfCodeDiff,
+  getLanguageFromFilePath,
+} from "../telemetry/utils.js";
 import { Tool } from "./types.js";
 
-function generateDiff(oldContent: string, newContent: string, filePath: string): string {
+function generateDiff(
+  oldContent: string,
+  newContent: string,
+  filePath: string
+): string {
   return createTwoFilesPatch(
     filePath,
     filePath,
@@ -40,23 +49,56 @@ export const writeFileTool: Tool = {
       }
 
       // Read existing file content if it exists
-      let oldContent = '';
+      let oldContent = "";
       if (fs.existsSync(args.filepath)) {
         oldContent = fs.readFileSync(args.filepath, "utf-8");
       }
 
       // Write new content
       fs.writeFileSync(args.filepath, args.content, "utf-8");
-      
-      // Generate diff if file existed before
+
+      // Track lines of code changes if file existed before
       if (oldContent) {
+        const { added, removed } = calculateLinesOfCodeDiff(
+          oldContent,
+          args.content
+        );
+        const language = getLanguageFromFilePath(args.filepath);
+
+        if (added > 0) {
+          telemetryService.recordLinesOfCodeModified("added", added, language);
+        }
+        if (removed > 0) {
+          telemetryService.recordLinesOfCodeModified(
+            "removed",
+            removed,
+            language
+          );
+        }
+
         const diff = generateDiff(oldContent, args.content, args.filepath);
+
+        // Record file operation
+
         return `Successfully wrote to file: ${args.filepath}\n\nDiff:\n${diff}`;
       } else {
+        // New file creation - count all lines as added
+        const lineCount = args.content.split("\n").length;
+        const language = getLanguageFromFilePath(args.filepath);
+
+        telemetryService.recordLinesOfCodeModified(
+          "added",
+          lineCount,
+          language
+        );
+
         return `Successfully created file: ${args.filepath}`;
       }
     } catch (error) {
-      return `Error writing to file: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      return `Error writing to file: ${errorMessage}`;
     }
   },
 };
