@@ -46,8 +46,6 @@ class TelemetryService {
   private codeEditDecisionCounter: any = null;
   private activeTimeCounter: any = null;
   private authAttemptsCounter: any = null;
-  private fileOperationsCounter: any = null;
-  private terminalCommandsCounter: any = null;
   private mcpConnectionsGauge: any = null;
   private startupTimeHistogram: any = null;
   private responseTimeHistogram: any = null;
@@ -60,7 +58,13 @@ class TelemetryService {
   }
 
   private loadConfig(): TelemetryConfig {
-    const enabled = process.env.CONTINUE_CLI_ENABLE_TELEMETRY === "1";
+    const hasOtelConfig = !!(
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+      process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ||
+      process.env.OTEL_METRICS_EXPORTER
+    );
+    const enabled =
+      process.env.CONTINUE_CLI_ENABLE_TELEMETRY !== "0" && hasOtelConfig;
     const sessionId = uuidv4();
 
     return {
@@ -225,22 +229,6 @@ class TelemetryService {
       {
         description: "Authentication attempts",
         unit: "{attempt}",
-      }
-    );
-
-    this.fileOperationsCounter = this.meter.createCounter(
-      "continue.cli.tools.file_operations",
-      {
-        description: "File operations performed",
-        unit: "{operation}",
-      }
-    );
-
-    this.terminalCommandsCounter = this.meter.createCounter(
-      "continue.cli.tools.terminal_commands",
-      {
-        description: "Terminal commands executed",
-        unit: "{command}",
       }
     );
 
