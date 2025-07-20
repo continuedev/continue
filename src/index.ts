@@ -3,7 +3,9 @@
 // Add immediate logging to debug Windows CI issues
 // Only log on Windows when DEBUG_CLI_TESTS is set
 if (process.env.DEBUG_CLI_TESTS === "1" && process.platform === "win32") {
-  console.error(`[CLI_START] Node ${process.version} on ${process.platform} ${process.arch}`);
+  console.error(
+    `[CLI_START] Node ${process.version} on ${process.platform} ${process.arch}`
+  );
   console.error(`[CLI_START] Args: ${JSON.stringify(process.argv)}`);
   console.error(`[CLI_START] CWD: ${process.cwd()}`);
   console.error(`[CLI_START] __dirname: ${import.meta.url}`);
@@ -13,8 +15,9 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
-import { getVersion } from "./version.js";
+import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import logger from "./util/logger.js";
+import { getVersion } from "./version.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
@@ -56,21 +59,28 @@ program
     [] as string[]
   )
   .action(async (prompt, options) => {
+    // Configure console overrides FIRST, before any other logging
+    const isHeadless = options.print;
+    configureConsoleForHeadless(isHeadless);
+
     if (options.verbose) {
-      logger.setLevel('debug');
+      logger.setLevel("debug");
       const logPath = logger.getLogPath();
       const sessionId = logger.getSessionId();
-      console.log(`Verbose logging enabled (session: ${sessionId})`);
-      console.log(`Logs: ${logPath}`);
-      console.log(`Filter this session: grep '\\[${sessionId}\\]' ${logPath}`);
-      logger.debug('Verbose logging enabled');
+      // In headless mode, suppress these verbose logs
+      if (!isHeadless) {
+        console.log(`Verbose logging enabled (session: ${sessionId})`);
+        console.log(`Logs: ${logPath}`);
+        console.log(
+          `Filter this session: grep '\\[${sessionId}\\]' ${logPath}`
+        );
+      }
+      logger.debug("Verbose logging enabled");
     }
-    // Map CLI options to chat options
-    const chatOptions = {
-      ...options,
-      headless: options.print, // Map --print to headless mode
-    };
-    await chat(prompt, chatOptions);
+    // Map --print to headless mode
+    options.headless = options.print;
+    options.print = undefined;
+    await chat(prompt, options);
   });
 
 // Login subcommand
@@ -105,12 +115,14 @@ async function main() {
     console.error("[CLI_ERROR] Message:", error.message);
     console.error("[CLI_ERROR] Stack:", error.stack);
     console.error("[CLI_ERROR] Code:", error.code);
-    
+
     // More specific error messages
-    if (error.code === 'MODULE_NOT_FOUND') {
-      console.error("[CLI_ERROR] Missing module. This might be a build or path issue.");
+    if (error.code === "MODULE_NOT_FOUND") {
+      console.error(
+        "[CLI_ERROR] Missing module. This might be a build or path issue."
+      );
     }
-    
+
     process.exit(1);
   }
 }

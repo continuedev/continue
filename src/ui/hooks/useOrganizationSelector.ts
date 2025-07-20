@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useState } from "react";
 import {
@@ -14,7 +14,7 @@ interface UseOrganizationSelectorProps {
   configPath?: string;
   onAssistantChange: (
     assistant: AssistantUnrolled,
-    model: string,
+    model: ModelConfig,
     llmApi: BaseLlmApi,
     mcpService: MCPService
   ) => void;

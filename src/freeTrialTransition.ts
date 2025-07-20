@@ -1,0 +1,181 @@
+import chalk from "chalk";
+import { spawn } from "child_process";
+import * as fs from "fs";
+import open from "open";
+import * as os from "os";
+import * as path from "path";
+import * as readlineSync from "readline-sync";
+import * as YAML from "yaml";
+import { env } from "./env.js";
+
+const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+
+/**
+ * Creates or updates the local config with Anthropic API key
+ */
+async function createOrUpdateConfig(apiKey: string): Promise<void> {
+  const configDir = path.dirname(CONFIG_PATH);
+
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+
+  const newModel = {
+    uses: "anthropic/claude-4-sonnet",
+    with: {
+      ANTHROPIC_API_KEY: apiKey,
+    },
+  };
+
+  if (fs.existsSync(CONFIG_PATH)) {
+    const existingContent = fs.readFileSync(CONFIG_PATH, "utf8");
+    let config;
+
+    try {
+      config = YAML.parse(existingContent);
+
+      // Make sure models array exists
+      if (!config.models) {
+        config.models = [];
+      }
+
+      // Check if model already exists
+      const existingModelIndex = config.models.findIndex(
+        (model: any) => model.uses === "anthropic/claude-4-sonnet"
+      );
+
+      if (existingModelIndex >= 0) {
+        // Update existing model
+        config.models[existingModelIndex].with.ANTHROPIC_API_KEY = apiKey;
+      } else {
+        // Add new model
+        config.models.push(newModel);
+      }
+    } catch (error) {
+      // If parsing fails, create a new config
+      config = {
+        name: "Local Config",
+        version: "1.0.0",
+        schema: "v1",
+        models: [newModel],
+      };
+    }
+
+    // Write back to file
+    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
+  } else {
+    // Create new config file
+    const config = {
+      name: "Local Config",
+      version: "1.0.0",
+      schema: "v1",
+      models: [newModel],
+    };
+
+    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
+  }
+}
+
+/**
+ * Handles the free trial transition flow for users who have maxed out their free trial
+ * This function provides a specialized flow that:
+ * 1. Assumes the user is already authenticated
+ * 2. Provides two specific options for continuing
+ * 3. Returns to the chat without restarting the entire CLI
+ */
+export async function handleMaxedOutFreeTrial(): Promise<void> {
+  // Clear the screen but don't show ASCII art - keep it minimal since we're resuming a conversation
+  console.clear();
+
+  console.log(chalk.yellow("🚀 Free trial limit reached!\n"));
+  console.log("Choose how you'd like to Continue:");
+  console.log(chalk.white("1. 💳 Sign up for models add-on"));
+  console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
+
+  const choice = readlineSync.question(chalk.yellow("\nEnter choice (1): "), {
+    limit: ["1", "2", ""],
+    limitMessage: chalk.dim("Please enter 1 or 2"),
+  });
+
+  if (choice === "1" || choice === "") {
+    // Option 1: Open models setup page
+    const modelsUrl = new URL("setup-models", env.appUrl).toString();
+    console.log(chalk.blue(`Opening ${modelsUrl}...`));
+
+    try {
+      await open(modelsUrl);
+      console.log(chalk.green("\n✓ Browser opened successfully!"));
+      console.log(
+        chalk.dim(
+          "After setting up your models subscription, restart the CLI to continue."
+        )
+      );
+    } catch (error) {
+      console.log(chalk.yellow("\n⚠ Could not open browser automatically"));
+      console.log(chalk.white(`Please visit: ${modelsUrl}`));
+      console.log(
+        chalk.dim(
+          "After setting up your models subscription, restart the CLI to continue."
+        )
+      );
+    }
+
+    // Wait for user to acknowledge
+    readlineSync.question(chalk.dim("\nPress Enter to exit..."));
+    process.exit(0);
+  } else if (choice === "2") {
+    // Option 2: Enter Anthropic API key
+    const apiKey = readlineSync.question(
+      chalk.white("\nEnter your Anthropic API key: "),
+      {
+        limit: /^sk-ant-.+$/, // Must start with "sk-ant-" and have additional characters
+        limitMessage: chalk.dim(
+          "Please enter a valid Anthropic key that starts with 'sk-ant'"
+        ),
+        hideEchoBack: true,
+      }
+    );
+
+    if (!apiKey || !apiKey.startsWith("sk-ant-")) {
+      console.log(
+        chalk.red(
+          "❌ Invalid Anthropic API key. Please make sure it starts with 'sk-ant'"
+        )
+      );
+      process.exit(1);
+    }
+
+    try {
+      await createOrUpdateConfig(apiKey);
+      console.log(chalk.green(`✓ API key saved successfully!`));
+    } catch (error) {
+      console.log(chalk.red(`❌ Error saving API key: ${error}`));
+      process.exit(1);
+    }
+  }
+
+  // After setup completes, restart the CLI to resume the conversation
+  console.log(
+    chalk.green("\n🔄 Restarting Continue CLI to resume your conversation...\n")
+  );
+
+  // Get the path to the current script
+  const scriptPath = path.resolve(process.argv[1]);
+
+  // Restart the CLI with the same arguments, except for the first two (node and script path)
+  // Use spawn instead of spawnSync, since we want to exit this process
+  const child = spawn(
+    process.execPath,
+    [scriptPath, ...process.argv.slice(2)],
+    {
+      stdio: "inherit",
+      detached: true,
+    }
+  );
+
+  // Unref the child to allow the parent process to exit
+  child.unref();
+
+  // Exit the current process
+  process.exit(0);
+}

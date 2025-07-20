@@ -1,28 +1,35 @@
+import { CompletionOptions, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 import type {
+  ChatCompletionCreateParamsStreaming,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from "openai/resources.mjs";
 import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
+import telemetryService from "./telemetry/telemetryService.js";
+import { calculateTokenCost } from "./telemetry/utils.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
-import { chatCompletionStreamWithBackoff, withExponentialBackoff } from "./util/exponentialBackoff.js";
+import {
+  chatCompletionStreamWithBackoff,
+  withExponentialBackoff,
+} from "./util/exponentialBackoff.js";
 import logger from "./util/logger.js";
 
 dotenv.config();
 
 export function getAllTools() {
   const args = parseArgs();
-  
+
   // If no-tools mode is enabled, return empty array
   if (args.noTools) {
     return [];
   }
-  
+
   const allTools: ChatCompletionTool[] = BUILTIN_TOOLS.map((tool) => ({
     type: "function" as const,
     function: {
@@ -59,8 +66,6 @@ export function getAllTools() {
   return allTools;
 }
 
-type TODO = any;
-
 export interface StreamCallbacks {
   onContent?: (content: string) => void;
   onContentComplete?: (content: string) => void;
@@ -69,199 +74,343 @@ export interface StreamCallbacks {
   onToolError?: (error: string, toolName?: string) => void;
 }
 
-// Define a function to handle streaming responses with tool calling
+interface ToolCall {
+  id: string;
+  name: string;
+  arguments: any;
+  argumentsStr: string;
+  startNotified: boolean;
+}
+
+function getDefaultCompletionOptions(
+  opts?: CompletionOptions
+): Partial<ChatCompletionCreateParamsStreaming> {
+  if (!opts) return {};
+  return {
+    max_tokens: opts.maxTokens,
+    temperature: opts.temperature,
+    frequency_penalty: opts.frequencyPenalty,
+    presence_penalty: opts.presencePenalty,
+    top_p: opts.topP,
+  };
+}
+
+// Process a single streaming response and return whether we need to continue
+async function processStreamingResponse(
+  chatHistory: ChatCompletionMessageParam[],
+  model: ModelConfig,
+  llmApi: BaseLlmApi,
+  abortController: AbortController,
+  callbacks?: StreamCallbacks,
+  isHeadless?: boolean,
+  tools?: ChatCompletionTool[]
+): Promise<{
+  content: string;
+  toolCalls: ToolCall[];
+  shouldContinue: boolean;
+}> {
+  const requestStartTime = Date.now();
+
+  const streamFactory = async () => {
+    logger.debug("Creating chat completion stream", {
+      model,
+      messageCount: chatHistory.length,
+      toolCount: tools?.length || 0,
+    });
+    return await chatCompletionStreamWithBackoff(
+      llmApi,
+      {
+        model: model.model,
+        messages: chatHistory,
+        stream: true,
+        tools,
+        ...getDefaultCompletionOptions(model.defaultCompletionOptions),
+      },
+      abortController.signal
+    );
+  };
+
+  let aiResponse = "";
+  const toolCallsMap = new Map<string, ToolCall>();
+  let firstTokenTime: number | null = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  try {
+    const streamWithBackoff = withExponentialBackoff(
+      streamFactory,
+      abortController.signal
+    );
+
+    let chunkCount = 0;
+    for await (const chunk of streamWithBackoff) {
+      chunkCount++;
+
+      logger.debug("Received chunk", { chunkCount, chunk });
+
+      // Track first token time
+      if (
+        firstTokenTime === null &&
+        (chunk.choices[0].delta.content || chunk.choices[0].delta.tool_calls)
+      ) {
+        firstTokenTime = Date.now();
+        telemetryService.recordResponseTime(
+          firstTokenTime - requestStartTime,
+          model.model,
+          "time_to_first_token",
+          (tools?.length || 0) > 0
+        );
+      }
+
+      // Track token usage if available
+      if (chunk.usage) {
+        inputTokens = chunk.usage.prompt_tokens || 0;
+        outputTokens = chunk.usage.completion_tokens || 0;
+      }
+
+      // Check if we should abort
+      if (abortController?.signal.aborted) {
+        logger.debug("Stream aborted");
+        break;
+      }
+
+      // Safety check: ensure chunk has the expected structure
+      if (!chunk.choices || !chunk.choices[0]) {
+        logger.warn("Malformed chunk received - missing choices", { chunk });
+        continue;
+      }
+
+      const choice = chunk.choices[0];
+      if (!choice.delta) {
+        logger.warn("Malformed chunk received - missing delta", { chunk });
+        continue;
+      }
+
+      // Handle regular content
+      if (choice.delta.content) {
+        const content = choice.delta.content;
+        if (callbacks?.onContent) {
+          callbacks.onContent(content);
+        } else if (!isHeadless) {
+          process.stdout.write(chalk.white(content));
+        }
+        aiResponse += content;
+      }
+
+      // Handle tool calls
+      if (choice.delta.tool_calls) {
+        for (const toolCallDelta of choice.delta.tool_calls) {
+          // Get or create tool call
+          if (toolCallDelta.id) {
+            if (!toolCallsMap.has(toolCallDelta.id)) {
+              toolCallsMap.set(toolCallDelta.id, {
+                id: toolCallDelta.id,
+                name: "",
+                arguments: null,
+                argumentsStr: "",
+                startNotified: false,
+              });
+            }
+          }
+
+          const toolCall = toolCallsMap.get(toolCallDelta.id || "");
+          if (!toolCall) continue;
+
+          // Update name
+          if (toolCallDelta.function?.name) {
+            toolCall.name = toolCallDelta.function.name;
+          }
+
+          // Accumulate arguments
+          if (toolCallDelta.function?.arguments) {
+            toolCall.argumentsStr += toolCallDelta.function.arguments;
+
+            // Try to parse when we might have complete JSON
+            try {
+              toolCall.arguments = JSON.parse(toolCall.argumentsStr);
+
+              // Notify on first successful parse
+              if (!toolCall.startNotified && toolCall.name) {
+                toolCall.startNotified = true;
+                if (callbacks?.onToolStart) {
+                  callbacks.onToolStart(toolCall.name, toolCall.arguments);
+                } else if (!isHeadless) {
+                  process.stdout.write(
+                    `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
+                      toolCall.name
+                    )}${chalk.yellow("]")}`
+                  );
+                }
+              }
+            } catch (e) {
+              // JSON not complete yet, continue
+            }
+          }
+        }
+      }
+    }
+
+    const responseEndTime = Date.now();
+    const totalDuration = responseEndTime - requestStartTime;
+
+    // Record API request metrics
+    const cost = calculateTokenCost(inputTokens, outputTokens, model.model);
+
+    telemetryService.recordTokenUsage(inputTokens, "input", model.model);
+    telemetryService.recordTokenUsage(outputTokens, "output", model.model);
+    telemetryService.recordCost(cost, model.model);
+
+    telemetryService.recordResponseTime(
+      totalDuration,
+      model.model,
+      "total_response_time",
+      (tools?.length || 0) > 0
+    );
+
+    // Log API request event
+    telemetryService.logApiRequest(
+      model.model,
+      totalDuration,
+      true, // success
+      undefined, // no error
+      inputTokens,
+      outputTokens,
+      cost
+    );
+
+    logger.debug("Stream complete", {
+      chunkCount,
+      responseLength: aiResponse.length,
+      toolCallsCount: toolCallsMap.size,
+      inputTokens,
+      outputTokens,
+      cost,
+      duration: totalDuration,
+    });
+  } catch (error: any) {
+    const errorDuration = Date.now() - requestStartTime;
+
+    // Log failed API request
+    telemetryService.logApiRequest(
+      model.model,
+      errorDuration,
+      false, // failed
+      error.message || String(error)
+    );
+
+    if (error.name === "AbortError" || abortController?.signal.aborted) {
+      logger.debug("Stream aborted by user");
+      return { content: aiResponse, toolCalls: [], shouldContinue: false };
+    }
+    throw error;
+  }
+
+  const toolCalls = Array.from(toolCallsMap.values());
+
+  // Validate tool calls have complete arguments
+  const validToolCalls = toolCalls.filter((tc) => {
+    if (!tc.arguments || !tc.name) {
+      logger.error("Incomplete tool call", {
+        id: tc.id,
+        name: tc.name,
+        hasArguments: !!tc.arguments,
+        argumentsStr: tc.argumentsStr,
+      });
+      return false;
+    }
+    return true;
+  });
+
+  return {
+    content: aiResponse,
+    toolCalls: validToolCalls,
+    shouldContinue: validToolCalls.length > 0,
+  };
+}
+
+// Main function that handles the conversation loop
 export async function streamChatResponse(
   chatHistory: ChatCompletionMessageParam[],
-  model: string,
+  model: ModelConfig,
   llmApi: BaseLlmApi,
   abortController: AbortController,
   callbacks?: StreamCallbacks
 ) {
+  logger.debug("streamChatResponse called", {
+    model,
+    historyLength: chatHistory.length,
+    hasCallbacks: !!callbacks,
+  });
+
   const args = parseArgs();
   const isHeadless = args.isHeadless;
-  // Prepare tools for the API call
-  const toolsForRequest = getAllTools();
+  const tools = getAllTools();
+
+  logger.debug("Tools prepared", {
+    toolCount: tools.length,
+    toolNames: tools.map((t) => t.function.name),
+  });
 
   let fullResponse = "";
-  let currentToolCalls: TODO[] = [];
-  let shouldContinueConversation = true;
 
-  while (shouldContinueConversation) {
-    logger.debug('Starting new conversation iteration', { hasToolCalls: currentToolCalls.length > 0 });
-    // Factory function to create the stream generator
-    const streamFactory = async () => {
-      logger.debug('Creating chat completion stream', { model, messageCount: chatHistory.length, toolCount: toolsForRequest.length });
-      return await chatCompletionStreamWithBackoff(
+  while (true) {
+    logger.debug("Starting conversation iteration");
+
+    // Get response from LLM
+    const { content, toolCalls, shouldContinue } =
+      await processStreamingResponse(
+        chatHistory,
+        model,
         llmApi,
-        {
-          model,
-          messages: chatHistory,
-          stream: true,
-          tools: toolsForRequest,
-        },
-        abortController.signal
-      );
-    };
-
-    let aiResponse = "";
-    currentToolCalls = [];
-    let currentToolCallId = "";
-    let toolArguments = "";
-
-    try {
-      // Use the exponential backoff wrapper for the entire stream
-      const streamWithBackoff = withExponentialBackoff(
-        streamFactory,
-        abortController.signal
+        abortController,
+        callbacks,
+        isHeadless,
+        tools
       );
 
-      for await (const chunk of streamWithBackoff) {
-        logger.debug('Received stream chunk', { hasContent: !!chunk.choices[0].delta.content, hasToolCalls: !!chunk.choices[0].delta.tool_calls });
-        // Check if we should abort
-        if (abortController?.signal.aborted) {
-          break;
-        }
+    fullResponse += content;
 
-        // Handle regular content
-        if (chunk.choices[0].delta.content) {
-          const content = chunk.choices[0].delta.content;
-          if (callbacks?.onContent) {
-            callbacks.onContent(content);
-          } else if (!isHeadless) {
-            process.stdout.write(chalk.white(content));
-          }
-          aiResponse += content;
-          fullResponse += content;
-        }
-
-        // Handle tool calls
-        if (chunk.choices[0].delta.tool_calls) {
-          for (const toolCallDelta of chunk.choices[0].delta.tool_calls) {
-            // Initialize a new tool call if we get an index and id
-            if (toolCallDelta.index !== undefined && toolCallDelta.id) {
-              if (!currentToolCalls[toolCallDelta.index]) {
-                currentToolCalls[toolCallDelta.index] = {
-                  id: toolCallDelta.id,
-                  name: "",
-                  arguments: {},
-                  startNotified: false,
-                };
-              }
-              currentToolCallId = toolCallDelta.id;
-            }
-
-            // Add function name if present
-            if (toolCallDelta.function?.name) {
-              const toolCall = currentToolCalls.find(
-                (tc) => tc.id === currentToolCallId
-              );
-              if (toolCall) {
-                if (!toolCall.name) {
-                  toolCall.name = toolCallDelta.function.name;
-                  toolCall.startNotified = false;
-                }
-              }
-            }
-
-            // Collect function arguments
-            if (toolCallDelta.function?.arguments) {
-              const toolCall = currentToolCalls.find(
-                (tc) => tc.id === currentToolCallId
-              );
-              if (toolCall) {
-                // Accumulate arguments as string to later parse as JSON
-                toolArguments += toolCallDelta.function.arguments;
-
-                try {
-                  // Try to parse complete JSON
-                  const parsed = JSON.parse(toolArguments);
-                  toolCall.arguments = parsed;
-
-                  // Notify start if we haven't already and have both name and args
-                  if (toolCall.name && !toolCall.startNotified) {
-                    toolCall.startNotified = true;
-                    if (callbacks?.onToolStart) {
-                      callbacks.onToolStart(toolCall.name, toolCall.arguments);
-                    } else if (!isHeadless) {
-                      process.stdout.write(
-                        `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
-                          toolCall.name
-                        )}${chalk.yellow("]")}`
-                      );
-                    }
-                  }
-                } catch (e) {
-                  // Not complete JSON yet, continue collecting
-                }
-              }
-            }
-          }
-        }
-      }
-    } catch (error: any) {
-      // Handle AbortError gracefully - this is expected when user cancels
-      if (error.name === 'AbortError' || abortController?.signal.aborted) {
-        // Stream was aborted, this is expected behavior
-        return fullResponse;
-      }
-      // For other errors, re-throw them
-      logger.error(
-        chalk.red("Error in streamChatResponse:"),
-        error
-      );
-      throw error;
+    // Add newline after content if needed
+    if (!callbacks?.onContent && !isHeadless && content) {
+      logger.info("");
     }
 
-    if (!callbacks?.onContent && !isHeadless) {
-      logger.info(""); // Add a newline after the response
+    // Notify content complete
+    if (content && callbacks?.onContentComplete) {
+      callbacks.onContentComplete(content);
     }
 
-    // Notify that content is complete if we have content and are about to process tool calls
-    if (
-      aiResponse.trim() &&
-      currentToolCalls.length > 0 &&
-      callbacks?.onContentComplete
-    ) {
-      callbacks.onContentComplete(aiResponse);
-    }
-
-    // Add the assistant's response to chat history if there's content or tool calls
-    if (currentToolCalls.length > 0) {
-      const toolCalls: ChatCompletionMessageToolCall[] = currentToolCalls.map(
-        (tc) => ({
+    // Add assistant message to history
+    if (toolCalls.length > 0) {
+      const toolCallsForHistory: ChatCompletionMessageToolCall[] =
+        toolCalls.map((tc) => ({
           id: tc.id,
           type: "function",
           function: {
             name: tc.name,
             arguments: JSON.stringify(tc.arguments),
           },
-        })
-      );
+        }));
+
       chatHistory.push({
         role: "assistant",
-        content: aiResponse,
-        tool_calls: toolCalls,
+        content: content || null,
+        tool_calls: toolCallsForHistory,
       });
-    } else if (aiResponse.trim()) {
-      // Only add assistant response if there's actual content
-      chatHistory.push({ role: "assistant", content: aiResponse });
-      // Also notify content complete for standalone messages
-      if (callbacks?.onContentComplete) {
-        callbacks.onContentComplete(aiResponse);
-      }
-    }
 
-    // If we have tool calls, execute them
-    if (currentToolCalls.length > 0) {
-      for (const toolCall of currentToolCalls) {
+      // Execute tool calls
+      for (const toolCall of toolCalls) {
         try {
-          // Execute the tool
+          logger.debug("Executing tool", {
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
+
           const toolResult = await executeToolCall({
             name: toolCall.name,
             arguments: toolCall.arguments,
           });
 
-          // Add tool result to chat history
           chatHistory.push({
             role: "tool",
             tool_call_id: toolCall.id,
@@ -277,30 +426,45 @@ export async function streamChatResponse(
           const errorMessage = `Error executing tool ${toolCall.name}: ${
             error instanceof Error ? error.message : String(error)
           }`;
+
+          logger.error("Tool execution failed", {
+            name: toolCall.name,
+            error: errorMessage,
+          });
+
           chatHistory.push({
             role: "tool",
             tool_call_id: toolCall.id,
             content: errorMessage,
           });
+
           if (callbacks?.onToolError) {
             callbacks.onToolError(errorMessage, toolCall.name);
           } else if (!isHeadless) {
             console.info(
               `${chalk.red("[Tool error:")} ${chalk.red(
                 errorMessage
-              )}${chalk.red(")")}`
+              )}${chalk.red("]")}`
             );
           }
         }
       }
+    } else if (content) {
+      // Just content, no tools
+      chatHistory.push({ role: "assistant", content });
+    }
 
-      // Continue the conversation with the tool results
-      shouldContinueConversation = true;
-    } else {
-      // No more tool calls, end the conversation
-      shouldContinueConversation = false;
+    // Check if we should continue
+    if (!shouldContinue) {
+      logger.debug("Conversation complete - no more tool calls");
+      break;
     }
   }
+
+  logger.debug("streamChatResponse complete", {
+    totalResponseLength: fullResponse.length,
+    totalMessages: chatHistory.length,
+  });
 
   return fullResponse;
 }

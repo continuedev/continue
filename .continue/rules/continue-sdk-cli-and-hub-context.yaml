@@ -13,9 +13,9 @@ rules:
       - Continue SDK: Experimental package in early development, subject to
       breaking changes
 
-      - Continue Hub: Registry for custom AI code assistants
+      - Continue Hub: Registry for custom AI code agent
 
-      - Hub functionality: Manages assistant building blocks (models, rules,
+      - Hub functionality: Manages agent building blocks (models, rules,
       context providers, prompts, docs, etc.)
 
       - Governance: Allows central configuration for organizations

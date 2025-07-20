@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
@@ -11,6 +11,7 @@ import {
   streamChatResponse,
 } from "../../streamChatResponse.js";
 import { constructSystemMessage } from "../../systemMessage.js";
+import telemetryService from "../../telemetry/telemetryService.js";
 import { getToolDisplayName } from "../../tools.js";
 import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
@@ -19,7 +20,7 @@ import { DisplayMessage } from "../types.js";
 
 interface UseChatProps {
   assistant: AssistantUnrolled;
-  model: string;
+  model: ModelConfig;
   llmApi: BaseLlmApi;
   initialPrompt?: string;
   resume?: boolean;
@@ -57,8 +58,19 @@ export function useChat({
 
       if (history.length === 0) {
         const rulesSystemMessage = "";
-        const systemMessage = constructSystemMessage(rulesSystemMessage, additionalRules);
-        if (systemMessage) {
+        const systemMessage = constructSystemMessage(
+          rulesSystemMessage,
+          additionalRules
+        );
+        if (systemMessage instanceof Promise) {
+          // Handle the promise case - we'll need to initialize this asynchronously
+          systemMessage.then((resolvedMessage) => {
+            if (resolvedMessage) {
+              history.push({ role: "system", content: resolvedMessage });
+              setChatHistory([...history]);
+            }
+          });
+        } else if (systemMessage) {
           history.push({ role: "system", content: systemMessage });
         }
       }
@@ -83,12 +95,34 @@ export function useChat({
   });
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+  const [responseStartTime, setResponseStartTime] = useState<number | null>(
+    null
+  );
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ path: string; content: string }>
   >([]);
+
+  useEffect(() => {
+    // Initialize system message asynchronously
+    const initializeSystemMessage = async () => {
+      if (chatHistory.length === 0 || !chatHistory.some(msg => msg.role === "system")) {
+        const rulesSystemMessage = "";
+        const systemMessage = await constructSystemMessage(
+          rulesSystemMessage,
+          additionalRules
+        );
+        if (systemMessage) {
+          const newHistory = [{ role: "system" as const, content: systemMessage }];
+          setChatHistory(newHistory);
+        }
+      }
+    };
+
+    initializeSystemMessage();
+  }, []);
 
   useEffect(() => {
     if (initialPrompt) {
@@ -110,7 +144,12 @@ export function useChat({
     }
 
     // Handle slash commands
-    const commandResult = await handleSlashCommands(message, assistant, onLoginPrompt, onReload);
+    const commandResult = await handleSlashCommands(
+      message,
+      assistant,
+      onLoginPrompt,
+      onReload
+    );
     if (commandResult) {
       if (commandResult.exit) {
         exit();
@@ -160,6 +199,12 @@ export function useChat({
       }
     }
 
+    // Start active time tracking for telemetry
+    telemetryService.startActiveTime();
+
+    // Track user prompt
+    telemetryService.logUserPrompt(message.length, message);
+
     // Add user message to history and display
     let messageContent = message;
 
@@ -185,8 +230,12 @@ export function useChat({
     const controller = new AbortController();
     setAbortController(controller);
     setIsWaitingForResponse(true);
+    setResponseStartTime(Date.now());
     setInputMode(false);
-    logger.debug('Starting chat response stream', { messageLength: message.length, historyLength: newHistory.length });
+    logger.debug("Starting chat response stream", {
+      messageLength: message.length,
+      historyLength: newHistory.length,
+    });
 
     try {
       let currentStreamingMessage: DisplayMessage | null = null;
@@ -312,12 +361,14 @@ export function useChat({
 
       // Update the chat history with the complete conversation after streaming
       setChatHistory(finalHistory);
-      logger.debug('Chat history updated', { finalHistoryLength: finalHistory.length });
-      
+      logger.debug("Chat history updated", {
+        finalHistoryLength: finalHistory.length,
+      });
+
       // Save the updated history to session
-      logger.debug('Saving session', { historyLength: finalHistory.length });
+      logger.debug("Saving session", { historyLength: finalHistory.length });
       saveSession(finalHistory);
-      logger.debug('Session saved');
+      logger.debug("Session saved");
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
       setMessages((prev) => [
@@ -329,8 +380,12 @@ export function useChat({
         },
       ]);
     } finally {
+      // Stop active time tracking
+      telemetryService.stopActiveTime();
+      
       setAbortController(null);
       setIsWaitingForResponse(false);
+      setResponseStartTime(null);
       setInputMode(true);
     }
   };
@@ -353,9 +408,12 @@ export function useChat({
     setAttachedFiles((prev) => [...prev, { path: filePath, content }]);
   };
 
-  const resetChatHistory = () => {
+  const resetChatHistory = async () => {
     const rulesSystemMessage = "";
-    const systemMessage = constructSystemMessage(rulesSystemMessage, additionalRules);
+    const systemMessage = await constructSystemMessage(
+      rulesSystemMessage,
+      additionalRules
+    );
     const newHistory = systemMessage
       ? [{ role: "system" as const, content: systemMessage }]
       : [];
@@ -369,6 +427,7 @@ export function useChat({
     chatHistory,
     setChatHistory,
     isWaitingForResponse,
+    responseStartTime,
     inputMode,
     attachedFiles,
     handleUserMessage,

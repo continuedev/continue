@@ -1,7 +1,3 @@
-import {
-  Configuration,
-  DefaultApi,
-} from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 import * as fs from "fs";
 import open from "open";
@@ -12,6 +8,7 @@ import { env } from "../env.js";
 
 // Polyfill fetch for Node < 18
 import nodeFetch from "node-fetch";
+import { getApiClient } from "../config.js";
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
@@ -231,6 +228,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
   try {
     const params = new URLSearchParams({
       client_id: env.workOsClientId,
+      screen_hint: "sign-up",
     });
 
     // Use WorkOS User Management device authorization endpoint
@@ -426,46 +424,39 @@ export async function login(): Promise<AuthConfig> {
     };
   }
 
+  console.info(chalk.white("\nSigning in with Continue..."));
+
+  // Request device authorization
+  const deviceAuth = await requestDeviceAuthorization();
+
+  console.info(
+    chalk.white(`Your authentication code: ${chalk.bold(deviceAuth.user_code)}`)
+  );
+  console.info(
+    chalk.dim(
+      `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`
+    )
+  );
+
+  // Try to open the complete verification URL in browser
   try {
-    console.info(chalk.cyan("\nStarting authentication with Continue..."));
-
-    // Request device authorization
-    const deviceAuth = await requestDeviceAuthorization();
-
-    console.info(
-      chalk.yellow(
-        `Your authentication code: ${chalk.bold(deviceAuth.user_code)}`
-      )
-    );
-    console.info(
-      chalk.dim(
-        `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`
-      )
-    );
-
-    // Try to open the complete verification URL in browser
-    try {
-      await open(deviceAuth.verification_uri_complete);
-    } catch (error) {
-      console.info(chalk.yellow("Unable to open browser automatically"));
-    }
-
-    console.info(chalk.cyan("\nWaiting for confirmation..."));
-
-    // Poll for token
-    const authConfig = await pollForDeviceToken(
-      deviceAuth.device_code,
-      deviceAuth.interval,
-      deviceAuth.expires_in
-    );
-
-    console.info(chalk.green("\nAuthentication successful!"));
-
-    return authConfig;
-  } catch (error: any) {
-    console.error(chalk.red("Authentication error:"), error.message || error);
-    throw error;
+    await open(deviceAuth.verification_uri_complete);
+  } catch (error) {
+    console.info(chalk.yellow("Unable to open browser automatically"));
   }
+
+  console.info(chalk.dim("\nWaiting for confirmation..."));
+
+  // Poll for token
+  const authConfig = await pollForDeviceToken(
+    deviceAuth.device_code,
+    deviceAuth.interval,
+    deviceAuth.expires_in
+  );
+
+  console.info(chalk.white("✅ Success!"));
+
+  return authConfig;
 }
 
 /**
@@ -509,11 +500,7 @@ export async function ensureOrganization(
   }
 
   // Need to select organization
-  const apiClient = new DefaultApi(
-    new Configuration({
-      accessToken: authenticatedConfig.accessToken,
-    })
-  );
+  const apiClient = getApiClient(authenticatedConfig.accessToken);
 
   try {
     const resp = await apiClient.listOrganizations();
@@ -586,11 +573,7 @@ export async function listUserOrganizations(): Promise<
     return null;
   }
 
-  const apiClient = new DefaultApi(
-    new Configuration({
-      accessToken: authConfig.accessToken,
-    })
-  );
+  const apiClient = getApiClient(authConfig.accessToken);
 
   try {
     const resp = await apiClient.listOrganizations();

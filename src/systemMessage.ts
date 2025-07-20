@@ -99,7 +99,10 @@ ${getGitStatus()}
  * @param additionalRules - Additional rules from --rule flags
  * @returns The comprehensive system message with base message and rules section
  */
-export function constructSystemMessage(rulesSystemMessage: string, additionalRules?: string[]): string {
+export async function constructSystemMessage(
+  rulesSystemMessage: string,
+  additionalRules?: string[]
+): Promise<string> {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
   let agentContent = "";
@@ -123,10 +126,12 @@ export function constructSystemMessage(rulesSystemMessage: string, additionalRul
   if (additionalRules && additionalRules.length > 0) {
     for (const ruleSpec of additionalRules) {
       try {
-        const processedRule = processRule(ruleSpec);
+        const processedRule = await processRule(ruleSpec);
         processedRules.push(processedRule);
       } catch (error: any) {
-        console.warn(`Warning: Failed to process rule "${ruleSpec}": ${error.message}`);
+        console.warn(
+          `Warning: Failed to process rule "${ruleSpec}": ${error.message}`
+        );
       }
     }
   }
@@ -149,7 +154,7 @@ export function constructSystemMessage(rulesSystemMessage: string, additionalRul
 
     // Add processed rules from --rule flags
     if (processedRules.length > 0) {
-      const separator = (rulesSystemMessage || agentContent) ? "\n\n" : "\n";
+      const separator = rulesSystemMessage || agentContent ? "\n\n" : "\n";
       systemMessage += `${separator}${processedRules.join("\n\n")}`;
     }
 

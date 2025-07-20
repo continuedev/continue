@@ -1,72 +1,25 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
-import React, { useEffect, useState } from "react";
-import { hasMultipleOrganizations } from "../auth/workos.js";
+import React, { useMemo } from "react";
+
+import { getAllSlashCommands } from "../commands/commands.js";
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
   filter: string;
   selectedIndex: number;
-  onSelect: (command: string) => void;
-}
-
-interface SlashCommand {
-  name: string;
-  description: string;
-  category: "system" | "assistant";
 }
 
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
-  onSelect,
 }) => {
-  const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
-
-  useEffect(() => {
-    hasMultipleOrganizations().then(setHasMultipleOrgs);
-  }, []);
-
-  // Get all available slash commands
-  const getSlashCommands = (): SlashCommand[] => {
-    const systemCommands: SlashCommand[] = [
-      { name: "help", description: "Show help message", category: "system" },
-      { name: "clear", description: "Clear the chat history", category: "system" },
-      { name: "exit", description: "Exit the chat", category: "system" },
-      {
-        name: "login",
-        description: "Authenticate with your account",
-        category: "system",
-      },
-      {
-        name: "logout",
-        description: "Sign out of your current session",
-        category: "system",
-      },
-      {
-        name: "whoami",
-        description: "Check who you're currently logged in as",
-        category: "system",
-      },
-      ...(hasMultipleOrgs ? [{
-        name: "org",
-        description: "Switch organization",
-        category: "system" as const,
-      }] : []),
-    ];
-
-    const assistantCommands: SlashCommand[] =
-      assistant.prompts?.map((prompt) => ({
-        name: prompt?.name || "",
-        description: prompt?.description || "",
-        category: "assistant" as const,
-      })) || [];
-
-    return [...systemCommands, ...assistantCommands];
-  };
-
-  const allCommands = getSlashCommands();
+  // Memoize the slash commands to prevent excessive re-renders
+  // Only recalculate when assistant.prompts changes
+  const allCommands = useMemo(() => {
+    return getAllSlashCommands(assistant);
+  }, [assistant.prompts]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands

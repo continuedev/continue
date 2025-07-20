@@ -1,10 +1,12 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as readlineSync from "readline-sync";
+import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { MCPService } from "./mcp.js";
@@ -14,8 +16,9 @@ const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 export interface OnboardingResult {
   config: AssistantUnrolled;
   llmApi: BaseLlmApi;
-  model: string;
+  model: ModelConfig;
   mcpService: MCPService;
+  apiClient: DefaultApiInterface;
   wasOnboarded: boolean;
 }
 
@@ -103,48 +106,35 @@ export async function runOnboardingFlow(
   configPath: string | undefined,
   authConfig: AuthConfig
 ): Promise<OnboardingResult> {
-  console.log(chalk.cyan("\n🚀 Welcome to Continue CLI!"));
-
   // Step 1: Check if --config flag is provided
   if (configPath) {
     const result = await initialize(authConfig, configPath);
     return { ...result, wasOnboarded: false };
   }
 
-  // Step 2: Check if user has ~/.continue/config.yaml with acceptable model
-  if (await checkHasAcceptableModel(CONFIG_PATH)) {
-    console.log(chalk.blue(`✓ Using existing ${CONFIG_PATH}`));
-    const result = await initialize(authConfig, CONFIG_PATH);
+  // Step 2: Present user with two options
+  console.log(chalk.yellow("How do you want to get started?"));
+  console.log(chalk.white("1. ⏩ Log in with Continue"));
+  console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
+
+  const choice = readlineSync.question(chalk.yellow("\nEnter choice (1): "), {
+    limit: ["1", "2", ""],
+    limitMessage: chalk.dim("Please enter 1 or 2"),
+  });
+
+  if (choice === "1" || choice === "") {
+    const newAuthConfig = await login();
+
+    const result = await initialize(newAuthConfig, undefined);
     return { ...result, wasOnboarded: true };
-  }
-
-  // Step 3: Present user with two options
-  console.log(chalk.yellow("Choose how you'd like to set up your agent:"));
-  console.log(chalk.white("1. Log in with Continue"));
-  console.log(chalk.white("2. Enter your Anthropic API key"));
-
-  const choice = readlineSync.question(
-    chalk.green("\nSelect option (1 or 2): ")
-  );
-
-  if (choice === "1") {
-    console.log(chalk.cyan("\n🔐 Logging in with Continue..."));
-    try {
-      const newAuthConfig = await login();
-
-      const result = await initialize(newAuthConfig, undefined);
-      return { ...result, wasOnboarded: true };
-    } catch (error) {
-      console.error(
-        chalk.red("❌ Login failed. Please try again or use option 2.")
-      );
-      throw error;
-    }
   } else if (choice === "2") {
-    console.log(chalk.cyan("\n🔑 Setting up with Anthropic API key..."));
     const apiKey = readlineSync.question(
-      chalk.green("Enter your Anthropic API key: "),
+      chalk.white("\nEnter your Anthropic API key: "),
       {
+        limit: /^sk-ant-.+$/, // Must start with "sk-ant-" and have additional characters
+        limitMessage: chalk.dim(
+          "Please enter a valid Anthropic key that starts with 'sk-ant'"
+        ),
         hideEchoBack: true,
       }
     );
@@ -181,7 +171,7 @@ export async function runNormalFlow(
   if (isAuthenticated()) {
     try {
       const result = await initialize(authConfig, undefined);
-      return { ...result, wasOnboarded: true };
+      return { ...result, wasOnboarded: false };
     } catch (error) {}
   }
 
@@ -189,7 +179,7 @@ export async function runNormalFlow(
   if (fs.existsSync(CONFIG_PATH)) {
     try {
       const result = await initialize(authConfig, CONFIG_PATH);
-      return { ...result, wasOnboarded: true };
+      return { ...result, wasOnboarded: false };
     } catch (error) {
       console.log(chalk.yellow("⚠ Invalid config file found"));
     }
@@ -201,7 +191,7 @@ export async function runNormalFlow(
     await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
     console.log(chalk.gray(`  Config saved to: ${CONFIG_PATH}`));
     const result = await initialize(authConfig, CONFIG_PATH);
-    return { ...result, wasOnboarded: true };
+    return { ...result, wasOnboarded: false };
   }
 
   // Step 5: Fall back to onboarding flow
@@ -225,9 +215,60 @@ export async function markOnboardingComplete(): Promise<void> {
   fs.writeFileSync(flagPath, new Date().toISOString());
 }
 
+/**
+ * Process rules and inject them into the assistant config
+ * @param config - The assistant config to modify
+ * @param rules - Array of rule specifications to process and inject
+ * @returns The modified config with injected rules
+ */
+async function injectRulesIntoConfig(
+  config: AssistantUnrolled,
+  rules: string[]
+): Promise<AssistantUnrolled> {
+  if (!rules || rules.length === 0) {
+    return config;
+  }
+
+  let processedRules: string[] = [];
+  for (const ruleSpec of rules) {
+    try {
+      const processedRule = await processRule(ruleSpec);
+      processedRules.push(processedRule);
+    } catch (error: any) {
+      console.warn(
+        chalk.yellow(
+          `Warning: Failed to process rule "${ruleSpec}": ${error.message}`
+        )
+      );
+    }
+  }
+
+  if (processedRules.length === 0) {
+    return config;
+  }
+
+  // Clone the config to avoid mutating the original
+  const modifiedConfig = { ...config };
+
+  // Combine processed rules with existing system message if the config has one
+  const existingSystemMessage = (modifiedConfig as any).systemMessage || "";
+  const rulesSection = processedRules.join("\n\n");
+
+  if (existingSystemMessage) {
+    (
+      modifiedConfig as any
+    ).systemMessage = `${existingSystemMessage}\n\n${rulesSection}`;
+  } else {
+    (modifiedConfig as any).systemMessage = rulesSection;
+  }
+
+  return modifiedConfig;
+}
+
 export async function initializeWithOnboarding(
   authConfig: AuthConfig,
-  configPath: string | undefined
+  configPath: string | undefined,
+  rules?: string[]
 ): Promise<OnboardingResult> {
   const firstTime = await isFirstTime();
 
@@ -240,6 +281,11 @@ export async function initializeWithOnboarding(
     }
   } else {
     result = await runNormalFlow(configPath, authConfig);
+  }
+
+  // Inject rules into the config if provided
+  if (rules && rules.length > 0) {
+    result.config = await injectRulesIntoConfig(result.config, rules);
   }
 
   return result;

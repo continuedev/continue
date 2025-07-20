@@ -1,16 +1,24 @@
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
-import { ensureOrganization, loadAuthConfig } from "../auth/workos.js";
+import { CONTINUE_ASCII_ART } from "../asciiArt.js";
+import {
+  ensureOrganization,
+  getOrganizationId,
+  loadAuthConfig,
+} from "../auth/workos.js";
 import { introMessage } from "../intro.js";
 import { configureLogger } from "../logger.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
+import telemetryService from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
+import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { getVersion } from "../version.js";
 
 export interface ChatOptions {
   headless?: boolean;
@@ -23,7 +31,15 @@ async function initializeChat(options: ChatOptions) {
   const authConfig = loadAuthConfig();
 
   // Use onboarding flow for initialization
-  const result = await initializeWithOnboarding(authConfig, options.config);
+  if (!options.headless) {
+    console.log(chalk.white(CONTINUE_ASCII_ART));
+    console.info(chalk.gray(`v${getVersion()}\n`));
+  }
+  const result = await initializeWithOnboarding(
+    authConfig,
+    options.config,
+    options.rule
+  );
 
   // Ensure organization is selected if authenticated
   let finalAuthConfig = authConfig;
@@ -32,6 +48,14 @@ async function initializeChat(options: ChatOptions) {
       authConfig,
       options.headless ?? false
     );
+
+    // Update telemetry with organization info
+    if (finalAuthConfig) {
+      const organizationId = getOrganizationId(finalAuthConfig);
+      if (organizationId) {
+        telemetryService.updateOrganization(organizationId);
+      }
+    }
   }
 
   return {
@@ -39,6 +63,7 @@ async function initializeChat(options: ChatOptions) {
     llmApi: result.llmApi,
     model: result.model,
     mcpService: result.mcpService,
+    apiClient: result.apiClient,
   };
 }
 
@@ -47,7 +72,15 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   configureLogger(options.headless ?? false);
 
   try {
-    let { config, llmApi, model, mcpService } = await initializeChat(options);
+    let { config, llmApi, model, mcpService, apiClient } = await initializeChat(
+      options
+    );
+
+    // Record session start
+    telemetryService.recordSessionStart();
+
+    // Start active time tracking
+    telemetryService.startActiveTime();
 
     // If not in headless mode, start the TUI chat (default)
     if (!options.headless) {
@@ -56,6 +89,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         llmApi,
         model,
         mcpService,
+        apiClient,
         prompt,
         options.resume,
         options.config,
@@ -86,7 +120,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // If no session loaded or not resuming, initialize with system message
     if (chatHistory.length === 0) {
       const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
-      const systemMessage = constructSystemMessage(rulesSystemMessage, options.rule);
+      const systemMessage = await constructSystemMessage(
+        rulesSystemMessage,
+        options.rule
+      );
       if (systemMessage) {
         chatHistory.push({ role: "system", content: systemMessage });
       }
@@ -107,6 +144,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
       isFirstMessage = false;
 
+      // Track user prompt
+      telemetryService.logUserPrompt(userInput.length, userInput);
+
       // Add user message to history
       chatHistory.push({ role: "user", content: userInput });
 
@@ -124,9 +164,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
           abortController
         );
 
-        // In headless mode, only print the final response
+        // In headless mode, only print the final response using safe stdout
         if (options.headless && finalResponse.trim()) {
-          console.log(finalResponse);
+          safeStdout(finalResponse + "\n");
         }
 
         // Save session after each successful response
@@ -143,5 +183,8 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   } catch (error: any) {
     logger.error(chalk.red(`Fatal error: ${formatError(error)}`));
     process.exit(1);
+  } finally {
+    // Stop active time tracking
+    telemetryService.stopActiveTime();
   }
 }
