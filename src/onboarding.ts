@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
 import * as fs from "fs";
@@ -14,7 +14,7 @@ const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 export interface OnboardingResult {
   config: AssistantUnrolled;
   llmApi: BaseLlmApi;
-  model: string;
+  model: ModelConfig;
   mcpService: MCPService;
   wasOnboarded: boolean;
 }

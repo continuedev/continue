@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { Box, Text } from "ink";
 import React, { useState } from "react";
@@ -18,7 +18,7 @@ import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
   config: AssistantUnrolled;
-  model: string;
+  model: ModelConfig;
   llmApi: BaseLlmApi;
   mcpService: MCPService;
   configPath?: string;

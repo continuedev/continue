@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 import { getAllSlashCommands } from "./commands/commands.js";
@@ -15,7 +15,7 @@ export function loadSystemMessage(
 
 export async function introMessage(
   config: AssistantUnrolled,
-  modelName: string,
+  model: ModelConfig,
   mcpService: MCPService
 ) {
   const mcpTools = mcpService.getTools() ?? [];
@@ -25,7 +25,7 @@ export async function introMessage(
   const allCommands = getAllSlashCommands(config);
 
   console.info(`\n${chalk.bold.yellow(`Agent: ${config.name}\n`)}`);
-  console.info(`${chalk.blue("Model:")} ${modelName.split("/").pop()}\n`);
+  console.info(`${chalk.blue("Model:")} ${model.name.split("/").pop()}\n`);
 
   // console.info(chalk.blue("Tools:"));
   // BUILTIN_TOOLS.forEach((tool) => {

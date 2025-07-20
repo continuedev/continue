@@ -1,7 +1,9 @@
+import { CompletionOptions, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 import type {
+  ChatCompletionCreateParamsStreaming,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
@@ -78,10 +80,23 @@ interface ToolCall {
   startNotified: boolean;
 }
 
+function getDefaultCompletionOptions(
+  opts?: CompletionOptions
+): Partial<ChatCompletionCreateParamsStreaming> {
+  if (!opts) return {};
+  return {
+    max_tokens: opts.maxTokens,
+    temperature: opts.temperature,
+    frequency_penalty: opts.frequencyPenalty,
+    presence_penalty: opts.presencePenalty,
+    top_p: opts.topP,
+  };
+}
+
 // Process a single streaming response and return whether we need to continue
 async function processStreamingResponse(
   chatHistory: ChatCompletionMessageParam[],
-  model: string,
+  model: ModelConfig,
   llmApi: BaseLlmApi,
   abortController: AbortController,
   callbacks?: StreamCallbacks,
@@ -101,10 +116,11 @@ async function processStreamingResponse(
     return await chatCompletionStreamWithBackoff(
       llmApi,
       {
-        model,
+        model: model.model,
         messages: chatHistory,
         stream: true,
         tools,
+        ...getDefaultCompletionOptions(model.defaultCompletionOptions),
       },
       abortController.signal
     );
@@ -234,7 +250,7 @@ async function processStreamingResponse(
 // Main function that handles the conversation loop
 export async function streamChatResponse(
   chatHistory: ChatCompletionMessageParam[],
-  model: string,
+  model: ModelConfig,
   llmApi: BaseLlmApi,
   abortController: AbortController,
   callbacks?: StreamCallbacks

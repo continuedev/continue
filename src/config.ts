@@ -1,5 +1,6 @@
 import {
   AssistantUnrolled,
+  ModelConfig,
   RegistryClient,
   unrollAssistant,
 } from "@continuedev/config-yaml";
@@ -28,7 +29,7 @@ import { MCPService } from "./mcp.js";
 export function getLlmApi(
   assistant: AssistantUnrolled,
   authConfig: AuthConfig
-): [BaseLlmApi, string] {
+): [BaseLlmApi, ModelConfig] {
   const model = assistant.models?.find((model) =>
     model?.roles?.includes("chat")
   );
@@ -72,7 +73,7 @@ export function getLlmApi(
     );
   }
 
-  return [llmApi, model.model];
+  return [llmApi, model];
 }
 
 async function loadConfigYaml(
@@ -186,7 +187,7 @@ export async function initialize(
 ): Promise<{
   config: AssistantUnrolled;
   llmApi: BaseLlmApi;
-  model: string;
+  model: ModelConfig;
   mcpService: MCPService;
 }> {
   const organizationId = getOrganizationId(authConfig);
