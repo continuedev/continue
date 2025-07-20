@@ -2,7 +2,11 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
-import { ensureOrganization, loadAuthConfig, getOrganizationId } from "../auth/workos.js";
+import {
+  ensureOrganization,
+  getOrganizationId,
+  loadAuthConfig,
+} from "../auth/workos.js";
 import { introMessage } from "../intro.js";
 import { configureLogger } from "../logger.js";
 import { initializeWithOnboarding } from "../onboarding.js";
@@ -59,6 +63,7 @@ async function initializeChat(options: ChatOptions) {
     llmApi: result.llmApi,
     model: result.model,
     mcpService: result.mcpService,
+    apiClient: result.apiClient,
   };
 }
 
@@ -67,10 +72,12 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   configureLogger(options.headless ?? false);
 
   try {
+    let { config, llmApi, model, mcpService, apiClient } = await initializeChat(
+      options
+    );
+
     // Record session start
     telemetryService.recordSessionStart();
-
-    let { config, llmApi, model, mcpService } = await initializeChat(options);
 
     // Start active time tracking
     telemetryService.startActiveTime();
@@ -82,6 +89,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         llmApi,
         model,
         mcpService,
+        apiClient,
         prompt,
         options.resume,
         options.config,

@@ -44,10 +44,9 @@ async function loadRuleFromHub(slug: string): Promise<string> {
   }
 
   const [ownerSlug, ruleSlug] = parts;
-  const hubUrl = env.apiBase;
   const downloadUrl = new URL(
     `v0/${ownerSlug}/${ruleSlug}/latest/download`,
-    hubUrl
+    env.apiBase
   );
 
   try {

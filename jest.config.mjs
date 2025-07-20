@@ -15,6 +15,8 @@ export default {
       "<rootDir>/node_modules/ink-testing-library/build/index.js",
     "^./SyntaxHighlighter\\.js$":
       "<rootDir>/src/ui/__mocks__/SyntaxHighlighter.ts",
+    "^./FreeTrialStatus\\.js$":
+      "<rootDir>/src/ui/__mocks__/FreeTrialStatus.tsx",
   },
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   preset: "ts-jest/presets/default-esm",
@@ -23,6 +25,7 @@ export default {
   testPathIgnorePatterns: ["<rootDir>/dist/"],
   modulePathIgnorePatterns: ["<rootDir>/dist/"],
   transformIgnorePatterns: ["node_modules/(?!(highlight.js|lowlight)/)"],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   globals: {
     __dirname: path.dirname(fileURLToPath(import.meta.url)),
     __filename: path.resolve(fileURLToPath(import.meta.url)),

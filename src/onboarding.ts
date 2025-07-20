@@ -1,5 +1,6 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 import * as fs from "fs";
 import * as os from "os";
@@ -17,6 +18,7 @@ export interface OnboardingResult {
   llmApi: BaseLlmApi;
   model: ModelConfig;
   mcpService: MCPService;
+  apiClient: DefaultApiInterface;
   wasOnboarded: boolean;
 }
 
@@ -251,9 +253,11 @@ async function injectRulesIntoConfig(
   // Combine processed rules with existing system message if the config has one
   const existingSystemMessage = (modifiedConfig as any).systemMessage || "";
   const rulesSection = processedRules.join("\n\n");
-  
+
   if (existingSystemMessage) {
-    (modifiedConfig as any).systemMessage = `${existingSystemMessage}\n\n${rulesSection}`;
+    (
+      modifiedConfig as any
+    ).systemMessage = `${existingSystemMessage}\n\n${rulesSection}`;
   } else {
     (modifiedConfig as any).systemMessage = rulesSection;
   }

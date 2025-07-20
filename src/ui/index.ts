@@ -1,5 +1,6 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { render } from "ink";
 import React from "react";
 import { introMessage } from "../intro.js";
@@ -13,6 +14,7 @@ export async function startTUIChat(
   llmApi: BaseLlmApi,
   model: ModelConfig,
   mcpService: MCPService,
+  apiClient?: DefaultApiInterface,
   initialPrompt?: string,
   resume?: boolean,
   configPath?: string,
@@ -28,6 +30,7 @@ export async function startTUIChat(
       model,
       llmApi,
       mcpService,
+      apiClient,
       configPath,
       initialPrompt,
       resume,

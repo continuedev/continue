@@ -1,7 +1,3 @@
-import {
-  Configuration,
-  DefaultApi,
-} from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 import * as fs from "fs";
 import open from "open";
@@ -12,6 +8,7 @@ import { env } from "../env.js";
 
 // Polyfill fetch for Node < 18
 import nodeFetch from "node-fetch";
+import { getApiClient } from "../config.js";
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
@@ -503,11 +500,7 @@ export async function ensureOrganization(
   }
 
   // Need to select organization
-  const apiClient = new DefaultApi(
-    new Configuration({
-      accessToken: authenticatedConfig.accessToken,
-    })
-  );
+  const apiClient = getApiClient(authenticatedConfig.accessToken);
 
   try {
     const resp = await apiClient.listOrganizations();
@@ -580,11 +573,7 @@ export async function listUserOrganizations(): Promise<
     return null;
   }
 
-  const apiClient = new DefaultApi(
-    new Configuration({
-      accessToken: authConfig.accessToken,
-    })
-  );
+  const apiClient = getApiClient(authConfig.accessToken);
 
   try {
     const resp = await apiClient.listOrganizations();

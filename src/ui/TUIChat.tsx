@@ -1,6 +1,9 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { Box, Text } from "ink";
+import * as os from "node:os";
+import * as path from "node:path";
 import React, { useEffect, useState } from "react";
 import { loadAuthConfig } from "../auth/workos.js";
 import { initialize } from "../config.js";
@@ -8,6 +11,8 @@ import { introMessage } from "../intro.js";
 import { MCPService } from "../mcp.js";
 import ConfigSelector from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
+import FreeTrialStatus from "./FreeTrialStatus.js";
+import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
@@ -18,11 +23,14 @@ import Timer from "./Timer.js";
 import UpdateNotification from "./UpdateNotification.js";
 import UserInput from "./UserInput.js";
 
+const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+
 interface TUIChatProps {
   config: AssistantUnrolled;
   model: ModelConfig;
   llmApi: BaseLlmApi;
   mcpService: MCPService;
+  apiClient?: DefaultApiInterface;
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
@@ -34,6 +42,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   model: initialModel,
   llmApi: initialLlmApi,
   mcpService: initialMcpService,
+  apiClient,
   configPath,
   initialPrompt,
   resume,
@@ -51,6 +60,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
     resolve: (value: string) => void;
   } | null>(null);
   const [loginToken, setLoginToken] = useState("");
+
+  // State for free trial transition
+  const [isShowingFreeTrialTransition, setIsShowingFreeTrialTransition] =
+    useState(false);
 
   // Start file indexing as soon as the component mounts
   useEffect(() => {
@@ -76,7 +89,37 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
   };
 
-  // Reload function for after login
+  // Full reload function - clears history and reinitializes (for models subscription)
+  const handleFullReload = async () => {
+    try {
+      // Reload auth config and reinitialize
+      const authConfig = loadAuthConfig();
+      const {
+        config: newAssistant,
+        llmApi: newLlmApi,
+        model: newModel,
+        mcpService: newMcpService,
+      } = await initialize(authConfig, configPath);
+
+      // Update all the state
+      setAssistant(newAssistant);
+      setModel(newModel);
+      setLlmApi(newLlmApi);
+      setMcpService(newMcpService);
+
+      // Clear the screen completely
+      process.stdout.write("\x1b[2J\x1b[H");
+
+      // Show the new intro message
+      introMessage(newAssistant, newModel, newMcpService);
+    } catch (error: any) {
+      console.error(
+        `Failed to reload after models subscription: ${error.message}`
+      );
+    }
+  };
+
+  // Partial reload function - preserves history (for login or other config changes)
   const handleReload = async () => {
     try {
       // Reload auth config and reinitialize
@@ -103,7 +146,56 @@ const TUIChat: React.FC<TUIChatProps> = ({
       // Show the new intro message
       introMessage(newAssistant, newModel, newMcpService);
     } catch (error: any) {
-      console.error(`Failed to reload after login: ${error.message}`);
+      console.error(
+        `Failed to reload after configuration change: ${error.message}`
+      );
+    }
+  };
+
+  // Switch to local config - preserves chat history unlike handleReload
+  const handleSwitchToLocalConfig = async () => {
+    try {
+      // Reload auth config and reinitialize with local config path
+      const authConfig = loadAuthConfig();
+      const {
+        config: newAssistant,
+        llmApi: newLlmApi,
+        model: newModel,
+        mcpService: newMcpService,
+      } = await initialize(authConfig, CONFIG_PATH);
+
+      // Update configuration state but preserve chat history
+      setAssistant(newAssistant);
+      setModel(newModel);
+      setLlmApi(newLlmApi);
+      setMcpService(newMcpService);
+
+      // Add a system message to indicate the configuration switch
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content:
+            "✓ Switched to local configuration with your Anthropic API key",
+          messageType: "system" as const,
+        },
+      ]);
+
+      // Don't clear screen or reset chat history - just continue the conversation!
+    } catch (error: any) {
+      console.error(
+        `Failed to switch to local configuration: ${error.message}`
+      );
+
+      // Show error message in chat but don't break the flow
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: `❌ Error switching to local configuration: ${error.message}`,
+          messageType: "system" as const,
+        },
+      ]);
     }
   };
 
@@ -170,6 +262,29 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onChatReset: resetChatHistory,
   });
 
+  // Handle free trial transition completion
+  const handleFreeTrialTransitionComplete = () => {
+    setIsShowingFreeTrialTransition(false);
+    handleReload();
+  };
+
+  const handleFreeTrialSwitchToLocal = () => {
+    setIsShowingFreeTrialTransition(false);
+    handleSwitchToLocalConfig();
+  };
+
+  const handleFreeTrialFullReload = () => {
+    setIsShowingFreeTrialTransition(false);
+    handleFullReload();
+  };
+
+  // Determine if input should be disabled
+  const isInputDisabled =
+    showOrgSelector ||
+    showConfigSelector ||
+    !!loginPrompt ||
+    isShowingFreeTrialTransition;
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -230,26 +345,44 @@ const TUIChat: React.FC<TUIChatProps> = ({
           />
         )}
 
-        {/* Input area - always at bottom */}
-        <UserInput
-          onSubmit={handleUserMessage}
-          isWaitingForResponse={isWaitingForResponse}
-          inputMode={inputMode}
-          onInterrupt={handleInterrupt}
-          assistant={assistant}
-          onFileAttached={handleFileAttached}
-          disabled={showOrgSelector || showConfigSelector || !!loginPrompt}
-        />
+        {/* Free trial transition UI - replaces input when active */}
+        {isShowingFreeTrialTransition && (
+          <FreeTrialTransitionUI
+            onComplete={handleFreeTrialTransitionComplete}
+            onSwitchToLocalConfig={handleFreeTrialSwitchToLocal}
+            onFullReload={handleFreeTrialFullReload}
+          />
+        )}
+
+        {/* Input area - only show when not showing free trial transition */}
+        {!isShowingFreeTrialTransition && (
+          <UserInput
+            onSubmit={handleUserMessage}
+            isWaitingForResponse={isWaitingForResponse}
+            inputMode={inputMode}
+            onInterrupt={handleInterrupt}
+            assistant={assistant}
+            onFileAttached={handleFileAttached}
+            disabled={isInputDisabled}
+          />
+        )}
+
+        {/* Free trial status and Continue CLI info - always show */}
         <Box
-          marginRight={2}
-          justifyContent="space-between"
           flexDirection="row"
-          marginLeft={2}
+          justifyContent="space-between"
+          alignItems="center"
         >
           <Box>
+            <FreeTrialStatus
+              apiClient={apiClient}
+              model={model}
+              onTransitionStateChange={setIsShowingFreeTrialTransition}
+            />
+          </Box>
+          <Box marginRight={2}>
             <UpdateNotification />
           </Box>
-          <Text color="gray">● Continue CLI</Text>
         </Box>
       </Box>
     </Box>

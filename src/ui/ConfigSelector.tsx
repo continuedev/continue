@@ -1,7 +1,3 @@
-import {
-  Configuration,
-  DefaultApi,
-} from "@continuedev/sdk/dist/api/dist/index.js";
 import * as fs from "fs";
 import { Box, Text, useInput } from "ink";
 import * as os from "os";
@@ -12,6 +8,7 @@ import {
   getOrganizationId,
   loadAuthConfig,
 } from "../auth/workos.js";
+import { getApiClient } from "../config.js";
 
 interface ConfigOption {
   id: string;
@@ -56,11 +53,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
 
         // Add assistants from current organization if authenticated
         if (accessToken) {
-          const apiClient = new DefaultApi(
-            new Configuration({
-              accessToken,
-            })
-          );
+          const apiClient = getApiClient(accessToken);
 
           try {
             const assistants = await apiClient.listAssistants({
@@ -69,13 +62,13 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
             });
 
             for (const assistant of assistants) {
-              // Use packageSlug as the slug and create a display name from ownerSlug/packageSlug
+              // Use full ownerSlug/packageSlug as the slug and create a display name from ownerSlug/packageSlug
               const displayName = `${assistant.ownerSlug}/${assistant.packageSlug}`;
               options.push({
                 id: assistant.packageSlug,
                 name: displayName,
                 type: "assistant",
-                slug: assistant.packageSlug,
+                slug: `${assistant.ownerSlug}/${assistant.packageSlug}`,
               });
             }
           } catch (err) {
