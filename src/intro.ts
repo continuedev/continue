@@ -1,9 +1,9 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
+import { getAllSlashCommands } from "./commands/commands.js";
 import { MCPService } from "./mcp.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
-import { getAllSlashCommands } from "./commands/commands.js";
 
 export function loadSystemMessage(
   assistant: AssistantConfig
@@ -21,9 +21,9 @@ export async function introMessage(
 ) {
   const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
-  
+
   // Get all slash commands from central definition
-  const allCommands = await getAllSlashCommands(config);
+  const allCommands = getAllSlashCommands(config);
 
   console.info(`\n${chalk.bold.yellow(`Agent: ${config.name}\n`)}`);
   console.info(`${chalk.blue("Model:")} ${modelName.split("/").pop()}\n`);
@@ -37,14 +37,14 @@ export async function introMessage(
   console.info("");
 
   console.info(chalk.blue("Slash commands:"));
-  
+
   // Display all commands from central definition
   for (const command of allCommands) {
     console.info(
       `- ${chalk.white("/" + command.name)}: ${chalk.dim(command.description)}`
     );
   }
-  
+
   // Display MCP prompts separately since they're not part of our central definition
   for (const prompt of mcpPrompts) {
     console.info(

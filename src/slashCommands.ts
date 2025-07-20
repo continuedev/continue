@@ -26,10 +26,10 @@ export async function handleSlashCommands(
     const [command, ...args] = input.slice(1).split(" ");
     switch (command) {
       case "help":
-        const allCommands = await getAllSlashCommands(assistant);
+        const allCommands = getAllSlashCommands(assistant);
         const helpMessage = [
           "Available commands:",
-          ...allCommands.map(cmd => `/${cmd.name} - ${cmd.description}`)
+          ...allCommands.map((cmd) => `/${cmd.name} - ${cmd.description}`),
         ].join("\n");
         return { output: helpMessage };
       case "clear":
@@ -50,7 +50,7 @@ export async function handleSlashCommands(
             } else {
               console.info(chalk.green(`\nLogged in successfully`));
             }
-            
+
             // Reload everything after successful login
             if (onReload) {
               await onReload();

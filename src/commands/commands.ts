@@ -1,5 +1,4 @@
 import { type AssistantConfig } from "@continuedev/sdk";
-import { hasMultipleOrganizations } from "../auth/workos.js";
 
 export interface SlashCommand {
   name: string;
@@ -20,13 +19,13 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "clear", 
+    name: "clear",
     description: "Clear the chat history",
     category: "system",
   },
   {
     name: "exit",
-    description: "Exit the chat", 
+    description: "Exit the chat",
     category: "system",
   },
   {
@@ -35,7 +34,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "logout", 
+    name: "logout",
     description: "Sign out of your current session",
     category: "system",
   },
@@ -60,42 +59,33 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
 /**
  * Get all available slash commands including system commands and assistant prompts
  */
-export async function getAllSlashCommands(assistant: AssistantConfig): Promise<SlashCommand[]> {
-  const hasMultipleOrgs = await hasMultipleOrganizations();
-  
+export function getAllSlashCommands(
+  assistant: AssistantConfig
+): SlashCommand[] {
   // Filter system commands based on requirements
-  const systemCommands = SYSTEM_SLASH_COMMANDS.filter(command => 
-    !command.requiresMultipleOrgs || hasMultipleOrgs
-  );
-
+  const systemCommands = SYSTEM_SLASH_COMMANDS;
   // Get assistant prompt commands
-  const assistantCommands: SlashCommand[] = assistant.prompts?.map((prompt) => ({
-    name: prompt?.name || "",
-    description: prompt?.description || "",
-    category: "assistant" as const,
-  })) || [];
+  const assistantCommands: SlashCommand[] =
+    assistant.prompts?.map((prompt) => ({
+      name: prompt?.name || "",
+      description: prompt?.description || "",
+      category: "assistant" as const,
+    })) || [];
 
   return [...systemCommands, ...assistantCommands];
 }
 
 /**
- * Get system slash commands only
- */
-export async function getSystemSlashCommands(): Promise<SystemCommand[]> {
-  const hasMultipleOrgs = await hasMultipleOrganizations();
-  
-  return SYSTEM_SLASH_COMMANDS.filter(command => 
-    !command.requiresMultipleOrgs || hasMultipleOrgs
-  );
-}
-
-/**
  * Get assistant prompt commands only
  */
-export function getAssistantSlashCommands(assistant: AssistantConfig): SlashCommand[] {
-  return assistant.prompts?.map((prompt) => ({
-    name: prompt?.name || "",
-    description: prompt?.description || "",
-    category: "assistant" as const,
-  })) || [];
+export function getAssistantSlashCommands(
+  assistant: AssistantConfig
+): SlashCommand[] {
+  return (
+    assistant.prompts?.map((prompt) => ({
+      name: prompt?.name || "",
+      description: prompt?.description || "",
+      category: "assistant" as const,
+    })) || []
+  );
 }

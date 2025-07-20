@@ -1,7 +1,10 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
 import React, { useEffect, useState } from "react";
-import { getAllSlashCommands, type SlashCommand } from "../commands/commands.js";
+import {
+  getAllSlashCommands,
+  type SlashCommand,
+} from "../commands/commands.js";
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
@@ -19,7 +22,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   const [allCommands, setAllCommands] = useState<SlashCommand[]>([]);
 
   useEffect(() => {
-    getAllSlashCommands(assistant).then(setAllCommands);
+    setAllCommands(getAllSlashCommands(assistant));
   }, [assistant]);
 
   // Filter commands based on the current filter
