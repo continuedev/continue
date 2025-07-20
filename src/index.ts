@@ -6,6 +6,7 @@ import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { getVersion } from "./version.js";
 import logger from "./util/logger.js";
+import { safeExit } from "./util/exit-handler.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
@@ -81,10 +82,10 @@ program
   });
 
 // Handle unknown commands
-program.on("command:*", () => {
+program.on("command:*", async () => {
   console.error(`Error: Unknown command '${program.args.join(" ")}'\n`);
   program.outputHelp();
-  process.exit(1);
+  await safeExit(1);
 });
 
 // Parse arguments and handle errors
@@ -92,5 +93,5 @@ try {
   program.parse();
 } catch (error) {
   console.error(error);
-  process.exit(1);
+  await safeExit(1);
 }

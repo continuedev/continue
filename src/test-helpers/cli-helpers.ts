@@ -84,10 +84,18 @@ export async function runCLI(
     timeout,
     reject: false,
     input,
+    // Ensure proper buffering
+    buffer: true,
+    stripFinalNewline: false,
   };
 
   try {
     const result = await execaNode(context.cliPath, args, execOptions);
+
+    // Add a small delay on Windows to ensure output is captured
+    if (process.platform === "win32") {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
 
     return {
       stdout: result.stdout,

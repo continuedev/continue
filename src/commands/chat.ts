@@ -11,6 +11,7 @@ import { constructSystemMessage } from "../systemMessage.js";
 import { startTUIChat } from "../ui/index.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { safeExit } from "../util/exit-handler.js";
 
 export interface ChatOptions {
   headless?: boolean;
@@ -126,7 +127,15 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
         // In headless mode, only print the final response
         if (options.headless && finalResponse.trim()) {
-          console.log(finalResponse);
+          // Write to stdout and ensure it's flushed
+          await new Promise<void>((resolve) => {
+            const output = finalResponse + '\n';
+            if (process.stdout.write(output)) {
+              resolve();
+            } else {
+              process.stdout.once('drain', resolve);
+            }
+          });
         }
 
         // Save session after each successful response
@@ -140,8 +149,13 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         }
       }
     }
+    
+    // Ensure proper exit in headless mode
+    if (options.headless) {
+      await safeExit(0);
+    }
   } catch (error: any) {
     logger.error(chalk.red(`Fatal error: ${formatError(error)}`));
-    process.exit(1);
+    await safeExit(1);
   }
 }

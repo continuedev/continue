@@ -248,7 +248,7 @@ export async function cleanupMockLLMServer(
       }
     };
 
-    // Force close all connections if method exists
+    // Force close all connections if method exists (Node 18.2+)
     if (typeof mockServer.server.closeAllConnections === "function") {
       mockServer.server.closeAllConnections();
     }
@@ -266,6 +266,6 @@ export async function cleanupMockLLMServer(
     }
 
     // Fallback timeout to ensure cleanup doesn't hang
-    setTimeout(resolveOnce, 500);
+    setTimeout(resolveOnce, 200);
   });
 }
