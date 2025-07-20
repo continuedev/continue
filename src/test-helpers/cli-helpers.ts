@@ -111,6 +111,25 @@ export async function runCLI(
         script: context.cliPath,
         args: args,
       });
+      
+      // Check if dist/index.js exists and is readable
+      try {
+        const distIndexPath = path.resolve(context.cliPath);
+        const stats = await fs.stat(distIndexPath);
+        console.log("CLI file stats:", {
+          exists: true,
+          size: stats.size,
+          isFile: stats.isFile(),
+          mode: stats.mode.toString(8),
+        });
+        
+        // Read first few lines to check for shebang issues
+        const content = await fs.readFile(distIndexPath, 'utf8');
+        const firstLines = content.split('\n').slice(0, 5).join('\n');
+        console.log("First lines of CLI file:", firstLines);
+      } catch (checkError) {
+        console.error("Failed to check CLI file:", checkError);
+      }
     }
 
     const result = await execaNode(context.cliPath, args, execOptions);
@@ -150,12 +169,44 @@ export async function runCLI(
         cwd: execOptions.cwd,
         cliPath: context.cliPath,
         args,
+        // Add more Windows-specific debugging info
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        // Include the full error object for debugging
+        fullError: {
+          name: error.name,
+          stack: error.stack,
+          code: error.code,
+          signal: error.signal,
+          killed: error.killed,
+          timedOut: error.timedOut,
+        }
       };
       console.error("CLI execution failed:", errorDetails);
       
       // On Windows, if we get empty output, it might be a Node.js path issue
       if (process.platform === "win32" && !stdout && !stderr) {
         console.error("Windows: No output captured. This might be a Node.js execution issue.");
+        console.error("Attempting direct node execution for diagnostics...");
+        
+        // Try to run with node directly to see if we get better error info
+        try {
+          const { execSync } = require('child_process');
+          const directResult = execSync(`${process.execPath} "${context.cliPath}" --version`, {
+            cwd: context.testDir,
+            encoding: 'utf8',
+            stdio: 'pipe'
+          });
+          console.error("Direct execution succeeded:", directResult);
+        } catch (directError: any) {
+          console.error("Direct execution also failed:", {
+            message: directError.message,
+            stdout: directError.stdout?.toString(),
+            stderr: directError.stderr?.toString(),
+            status: directError.status,
+          });
+        }
       }
       
       throw error;

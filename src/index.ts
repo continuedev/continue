@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+// Add immediate logging to debug Windows CI issues
+if (process.env.DEBUG_CLI_TESTS || (process.platform === "win32" && process.env.CI)) {
+  console.error(`[CLI_START] Node ${process.version} on ${process.platform} ${process.arch}`);
+  console.error(`[CLI_START] Args: ${JSON.stringify(process.argv)}`);
+  console.error(`[CLI_START] CWD: ${process.cwd()}`);
+  console.error(`[CLI_START] __dirname: ${import.meta.url}`);
+}
+
 import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
@@ -87,10 +95,32 @@ program.on("command:*", () => {
   process.exit(1);
 });
 
-// Parse arguments and handle errors
+// Wrap everything in a try-catch for Windows CI debugging
+async function main() {
+  try {
+    await program.parseAsync();
+  } catch (error: any) {
+    console.error("[CLI_ERROR] Fatal error during execution:");
+    console.error("[CLI_ERROR] Message:", error.message);
+    console.error("[CLI_ERROR] Stack:", error.stack);
+    console.error("[CLI_ERROR] Code:", error.code);
+    
+    // More specific error messages
+    if (error.code === 'MODULE_NOT_FOUND') {
+      console.error("[CLI_ERROR] Missing module. This might be a build or path issue.");
+    }
+    
+    process.exit(1);
+  }
+}
+
+// Catch any synchronous errors during startup
 try {
-  program.parse();
-} catch (error) {
-  console.error(error);
+  main().catch((error) => {
+    console.error("[CLI_ERROR] Unhandled async error:", error);
+    process.exit(1);
+  });
+} catch (error: any) {
+  console.error("[CLI_ERROR] Synchronous startup error:", error);
   process.exit(1);
 }
