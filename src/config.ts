@@ -13,6 +13,7 @@ import {
   DefaultApi,
   DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
+import chalk from "chalk";
 import { dirname } from "node:path";
 import {
   AuthConfig,
@@ -97,9 +98,15 @@ async function loadConfigYaml(
     }
   );
 
-  if (unrollResult.errors?.length || !unrollResult.config) {
-    const errorDetails = unrollResult.errors?.join("\n") ?? "Unknown error";
+  const errorDetails = unrollResult.errors;
+  if (!unrollResult.config) {
     throw new Error(`Failed to load config file:\n${errorDetails}`);
+  } else if (errorDetails?.length) {
+    const warnings =
+      errorDetails?.length > 1
+        ? errorDetails.map((d) => `\n- ${d.message}`)
+        : errorDetails[0].message;
+    console.warn(chalk.dim(`Warning: ${warnings}`));
   }
 
   return unrollResult.config;

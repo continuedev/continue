@@ -132,6 +132,7 @@ export async function runOnboardingFlow(
         limitMessage: chalk.dim(
           "Please enter a valid Anthropic key that starts with 'sk-ant'"
         ),
+        hideEchoBack: true,
       }
     );
 
