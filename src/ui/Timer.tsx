@@ -14,7 +14,7 @@ const Timer: React.FC<TimerProps> = ({ startTime, color = "gray" }) => {
       const now = Date.now();
       const elapsedSeconds = Math.floor((now - startTime) / 1000);
       setElapsed(elapsedSeconds);
-    }, 100); // Update every 100ms for smooth display
+    }, 1000); // Update every 1000ms for efficient display
 
     return () => clearInterval(interval);
   }, [startTime]);
