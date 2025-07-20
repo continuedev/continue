@@ -16,14 +16,35 @@ import * as path from "path";
 describe("E2E: Headless Mode with Dynamic Responses", () => {
   let context: any;
   let mockServer: MockLLMServer;
+  let extraServers: MockLLMServer[] = [];
+
+  beforeEach(async () => {
+    context = undefined;
+    mockServer = undefined as any;
+    extraServers = [];
+  });
 
   afterEach(async () => {
+    // Clean up all extra servers first
+    if (extraServers.length > 0) {
+      await Promise.all(extraServers.map(server => cleanupMockLLMServer(server)));
+      extraServers = [];
+    }
+    
+    // Clean up main server
     if (mockServer) {
       await cleanupMockLLMServer(mockServer);
+      mockServer = undefined as any;
     }
+    
+    // Clean up context last
     if (context) {
       await cleanupTestContext(context);
+      context = undefined;
     }
+    
+    // Small delay to ensure cleanup completes
+    await new Promise(resolve => setTimeout(resolve, 50));
   });
 
   it("should respond dynamically based on prompt content", async () => {
@@ -87,14 +108,16 @@ describe("E2E: Headless Mode with Dynamic Responses", () => {
   it("should handle multiple mock servers for different models", async () => {
     context = await createTestContext();
     
-    // Create two different mock servers
+    // Create two different mock servers and track them for cleanup
     const gpt4Server = await createMockLLMServer({
       response: "Response from GPT-4",
     });
+    extraServers.push(gpt4Server);
     
     const claudeServer = await createMockLLMServer({
       response: "Response from Claude",
     });
+    extraServers.push(claudeServer);
     
     // Create a config with multiple models
     const configContent = `name: Multi-Model Assistant
@@ -134,9 +157,7 @@ models:
     expect(gpt4Server.requests).toHaveLength(1);
     expect(claudeServer.requests).toHaveLength(0);
     
-    // Clean up extra servers
-    await cleanupMockLLMServer(gpt4Server);
-    await cleanupMockLLMServer(claudeServer);
+    // Servers will be cleaned up in afterEach
   });
 
   it("should allow custom request handling", async () => {
