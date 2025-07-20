@@ -18,25 +18,19 @@ interface FileItem {
 const fileCache = new Map<string, FileItem[]>();
 let allFiles: FileItem[] = [];
 let cacheInitialized = false;
+let cacheInitializationPromise: Promise<void> | null = null;
 
-const FileSearchUI: React.FC<FileSearchUIProps> = ({
-  filter,
-  selectedIndex,
-  onSelect,
-  onFilesUpdated,
-}) => {
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const initializingRef = useRef(false);
-
-  // Initialize cache once
-  const initializeCache = async () => {
-    if (cacheInitialized || initializingRef.current) {
-      return;
-    }
-    
-    initializingRef.current = true;
-    
+// Initialize cache once
+const initializeCache = async (): Promise<void> => {
+  if (cacheInitialized) {
+    return;
+  }
+  
+  if (cacheInitializationPromise) {
+    return cacheInitializationPromise;
+  }
+  
+  cacheInitializationPromise = (async () => {
     try {
       // Use a single, more efficient pattern
       const patterns = [
@@ -127,79 +121,94 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
       cacheInitialized = true;
     } catch (error) {
       console.error("Error initializing file cache:", error);
-    } finally {
-      initializingRef.current = false;
     }
-  };
+  })();
+  
+  return cacheInitializationPromise;
+};
 
-  // Filter files from cache
-  const filterFiles = (filterText: string): FileItem[] => {
-    if (!cacheInitialized) {
-      return [];
-    }
+// Export function to start indexing proactively
+export const startFileIndexing = (): Promise<void> => {
+  return initializeCache();
+};
 
-    if (filterText.length === 0) {
-      // Show most recently modified files when no filter
-      return allFiles
-        .sort((a, b) => {
-          const aFileName = a.path.split('/').pop() || a.path;
-          const bFileName = b.path.split('/').pop() || b.path;
-          return aFileName.localeCompare(bFileName);
-        })
-        .slice(0, 10);
-    }
+// Filter files from cache
+const filterFiles = (filterText: string): FileItem[] => {
+  if (!cacheInitialized) {
+    return [];
+  }
 
-    const lowerFilter = filterText.toLowerCase();
-    
-    // Check cache first
-    const cacheKey = lowerFilter;
-    if (fileCache.has(cacheKey)) {
-      return fileCache.get(cacheKey)!;
-    }
-
-    const filteredFiles = allFiles
-      .filter((file) => {
-        return (
-          file.displayName.toLowerCase().includes(lowerFilter) ||
-          file.path.toLowerCase().includes(lowerFilter)
-        );
-      })
+  if (filterText.length === 0) {
+    // Show most recently modified files when no filter
+    return allFiles
       .sort((a, b) => {
         const aFileName = a.path.split('/').pop() || a.path;
         const bFileName = b.path.split('/').pop() || b.path;
-        
-        // Prioritize exact matches in file name
-        const aNameMatch = aFileName.toLowerCase().includes(lowerFilter);
-        const bNameMatch = bFileName.toLowerCase().includes(lowerFilter);
-        
-        if (aNameMatch && !bNameMatch) return -1;
-        if (!aNameMatch && bNameMatch) return 1;
-        
-        // Then prioritize files that start with the filter
-        const aStartsWith = aFileName.toLowerCase().startsWith(lowerFilter);
-        const bStartsWith = bFileName.toLowerCase().startsWith(lowerFilter);
-        
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
-        
-        // Finally, sort by file name
         return aFileName.localeCompare(bFileName);
       })
       .slice(0, 10);
+  }
 
-    // Cache the result
-    fileCache.set(cacheKey, filteredFiles);
-    
-    // Limit cache size
-    if (fileCache.size > 100) {
-      const firstKey = fileCache.keys().next().value;
-      if (firstKey) {
-        fileCache.delete(firstKey);
-      }
+  const lowerFilter = filterText.toLowerCase();
+  
+  // Check cache first
+  const cacheKey = lowerFilter;
+  if (fileCache.has(cacheKey)) {
+    return fileCache.get(cacheKey)!;
+  }
+
+  const filteredFiles = allFiles
+    .filter((file) => {
+      return (
+        file.displayName.toLowerCase().includes(lowerFilter) ||
+        file.path.toLowerCase().includes(lowerFilter)
+      );
+    })
+    .sort((a, b) => {
+      const aFileName = a.path.split('/').pop() || a.path;
+      const bFileName = b.path.split('/').pop() || b.path;
+      
+      // Prioritize exact matches in file name
+      const aNameMatch = aFileName.toLowerCase().includes(lowerFilter);
+      const bNameMatch = bFileName.toLowerCase().includes(lowerFilter);
+      
+      if (aNameMatch && !bNameMatch) return -1;
+      if (!aNameMatch && bNameMatch) return 1;
+      
+      // Then prioritize files that start with the filter
+      const aStartsWith = aFileName.toLowerCase().startsWith(lowerFilter);
+      const bStartsWith = bFileName.toLowerCase().startsWith(lowerFilter);
+      
+      if (aStartsWith && !bStartsWith) return -1;
+      if (!aStartsWith && bStartsWith) return 1;
+      
+      // Finally, sort by file name
+      return aFileName.localeCompare(bFileName);
+    })
+    .slice(0, 10);
+
+  // Cache the result
+  fileCache.set(cacheKey, filteredFiles);
+  
+  // Limit cache size
+  if (fileCache.size > 100) {
+    const firstKey = fileCache.keys().next().value;
+    if (firstKey) {
+      fileCache.delete(firstKey);
     }
+  }
 
-    return filteredFiles;
-  };
+  return filteredFiles;
+};
+
+const FileSearchUI: React.FC<FileSearchUIProps> = ({
+  filter,
+  selectedIndex,
+  onSelect,
+  onFilesUpdated,
+}) => {
+  const [files, setFiles] = useState<FileItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const searchFiles = async () => {
