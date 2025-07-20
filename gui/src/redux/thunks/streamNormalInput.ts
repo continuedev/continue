@@ -18,13 +18,11 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
-import {
-  constructMessages,
-  getBaseSystemMessage,
-} from "../util/constructMessages";
+import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 
 /**
