@@ -27,27 +27,43 @@ export function introMessage(
   console.info(chalk.yellow("Tools:"));
   BUILTIN_TOOLS.forEach((tool) => {
     console.info(
-      `- ${chalk.green(tool.displayName)}: ${tool.description ?? ""}`
+      `- ${chalk.white(tool.displayName)}: ${chalk.dim(tool.description ?? "")}`
     );
   });
   console.info("");
 
   console.info(chalk.yellow("Slash commands:"));
-  console.info(`- ${chalk.green("/exit")}: Exit the chat`);
-  console.info(`- ${chalk.green("/clear")}: Clear the chat history`);
-  console.info(`- ${chalk.green("/help")}: Show help message`);
-  console.info(`- ${chalk.green("/login")}: Authenticate with your account`);
-  console.info(`- ${chalk.green("/logout")}: Sign out of your current session`);
+  console.info(`- ${chalk.white("/exit")}: ${chalk.dim("Exit the chat")}`);
   console.info(
-    `- ${chalk.green("/whoami")}: Check who you're currently logged in as`
+    `- ${chalk.white("/clear")}: ${chalk.dim("Clear the chat history")}`
   );
-  console.info(`- ${chalk.green("/org")}: Switch organization`);
-  console.info(`- ${chalk.green("/config")}: Switch configuration`);
+  console.info(`- ${chalk.white("/help")}: ${chalk.dim("Show help message")}`);
+  console.info(
+    `- ${chalk.white("/login")}: ${chalk.dim("Authenticate with your account")}`
+  );
+  console.info(
+    `- ${chalk.white("/logout")}: ${chalk.dim(
+      "Sign out of your current session"
+    )}`
+  );
+  console.info(
+    `- ${chalk.white("/whoami")}: ${chalk.dim(
+      "Check who you're currently logged in as"
+    )}`
+  );
+  console.info(`- ${chalk.white("/org")}: ${chalk.dim("Switch organization")}`);
+  console.info(
+    `- ${chalk.white("/config")}: ${chalk.dim("Switch configuration")}`
+  );
   for (const prompt of config.prompts ?? []) {
-    console.info(`- /${prompt?.name}: ${prompt?.description}`);
+    console.info(
+      `- ${chalk.white("/" + prompt?.name)}: ${chalk.dim(prompt?.description)}`
+    );
   }
   for (const prompt of mcpPrompts) {
-    console.info(`- /${prompt.name}: ${prompt.description}`);
+    console.info(
+      `- ${chalk.white("/" + prompt.name)}: ${chalk.dim(prompt.description)}`
+    );
   }
   console.info("");
 
