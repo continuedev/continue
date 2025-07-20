@@ -91,12 +91,15 @@ const UserInput: React.FC<UserInputProps> = ({
     // Only show slash commands if slash is the very first character
     if (text.trimStart().startsWith("/")) {
       const trimmedText = text.trimStart();
-      const beforeCursor = trimmedText.slice(0, cursor - (text.length - trimmedText.length));
-      
+      const beforeCursor = trimmedText.slice(
+        0,
+        cursor - (text.length - trimmedText.length)
+      );
+
       // Only show if cursor is after the slash and before any whitespace
       if (beforeCursor.length > 0 && beforeCursor.startsWith("/")) {
         const afterSlash = beforeCursor.slice(1);
-        
+
         if (!afterSlash.includes(" ") && !afterSlash.includes("\n")) {
           // We're in a slash command context
           setShowSlashCommands(true);
@@ -488,7 +491,6 @@ const UserInput: React.FC<UserInputProps> = ({
           assistant={assistant}
           filter={slashCommandFilter}
           selectedIndex={selectedCommandIndex}
-          onSelect={selectSlashCommand}
         />
       )}
 

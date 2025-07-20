@@ -10,14 +10,12 @@ interface SlashCommandUIProps {
   assistant: AssistantConfig;
   filter: string;
   selectedIndex: number;
-  onSelect: (command: string) => void;
 }
 
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
-  onSelect,
 }) => {
   const [allCommands, setAllCommands] = useState<SlashCommand[]>([]);
 
