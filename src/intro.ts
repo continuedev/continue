@@ -1,8 +1,24 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
+import { readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { MCPService } from "./mcp.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+function getVersion(): string {
+  try {
+    const packagePath = join(__dirname, "..", "package.json");
+    const packageJson = JSON.parse(readFileSync(packagePath, "utf-8"));
+    return packageJson.version;
+  } catch (error) {
+    return "unknown";
+  }
+}
 
 export function loadSystemMessage(
   assistant: AssistantConfig

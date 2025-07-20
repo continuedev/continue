@@ -4,8 +4,9 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
-import { getVersion } from "./version.js";
+import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import logger from "./util/logger.js";
+import { getVersion } from "./version.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
@@ -47,15 +48,26 @@ program
     [] as string[]
   )
   .action(async (prompt, options) => {
+    // Configure console overrides FIRST, before any other logging
+    const isHeadless = options.print;
+    configureConsoleForHeadless(isHeadless);
+
     if (options.verbose) {
-      logger.setLevel('debug');
+      logger.setLevel("debug");
       const logPath = logger.getLogPath();
       const sessionId = logger.getSessionId();
-      console.log(`Verbose logging enabled (session: ${sessionId})`);
-      console.log(`Logs: ${logPath}`);
-      console.log(`Filter this session: grep '\\[${sessionId}\\]' ${logPath}`);
-      logger.debug('Verbose logging enabled');
+      // In headless mode, suppress these verbose logs
+      if (!isHeadless) {
+        console.log(`Verbose logging enabled (session: ${sessionId})`);
+        console.log(`Logs: ${logPath}`);
+        console.log(
+          `Filter this session: grep '\\[${sessionId}\\]' ${logPath}`
+        );
+      }
+      logger.debug("Verbose logging enabled");
     }
+    options.headless = options.print;
+    options.print = undefined;
     await chat(prompt, options);
   });
 

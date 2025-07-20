@@ -231,6 +231,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
   try {
     const params = new URLSearchParams({
       client_id: env.workOsClientId,
+      screen_hint: "sign-up",
     });
 
     // Use WorkOS User Management device authorization endpoint
@@ -426,46 +427,39 @@ export async function login(): Promise<AuthConfig> {
     };
   }
 
+  console.info(chalk.white("\nSigning in with Continue..."));
+
+  // Request device authorization
+  const deviceAuth = await requestDeviceAuthorization();
+
+  console.info(
+    chalk.white(`Your authentication code: ${chalk.bold(deviceAuth.user_code)}`)
+  );
+  console.info(
+    chalk.dim(
+      `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`
+    )
+  );
+
+  // Try to open the complete verification URL in browser
   try {
-    console.info(chalk.white("\nSigning in with Continue..."));
-
-    // Request device authorization
-    const deviceAuth = await requestDeviceAuthorization();
-
-    console.info(
-      chalk.white(
-        `Your authentication code: ${chalk.bold(deviceAuth.user_code)}`
-      )
-    );
-    console.info(
-      chalk.dim(
-        `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`
-      )
-    );
-
-    // Try to open the complete verification URL in browser
-    try {
-      await open(deviceAuth.verification_uri_complete);
-    } catch (error) {
-      console.info(chalk.yellow("Unable to open browser automatically"));
-    }
-
-    console.info(chalk.dim("\nWaiting for confirmation..."));
-
-    // Poll for token
-    const authConfig = await pollForDeviceToken(
-      deviceAuth.device_code,
-      deviceAuth.interval,
-      deviceAuth.expires_in
-    );
-
-    console.info(chalk.white("✅ Success!"));
-
-    return authConfig;
-  } catch (error: any) {
-    console.error(chalk.red("Authentication error:"), error.message || error);
-    throw error;
+    await open(deviceAuth.verification_uri_complete);
+  } catch (error) {
+    console.info(chalk.yellow("Unable to open browser automatically"));
   }
+
+  console.info(chalk.dim("\nWaiting for confirmation..."));
+
+  // Poll for token
+  const authConfig = await pollForDeviceToken(
+    deviceAuth.device_code,
+    deviceAuth.interval,
+    deviceAuth.expires_in
+  );
+
+  console.info(chalk.white("✅ Success!"));
+
+  return authConfig;
 }
 
 /**

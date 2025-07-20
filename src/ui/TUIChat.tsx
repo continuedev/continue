@@ -1,12 +1,13 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { Box, Text } from "ink";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { loadAuthConfig } from "../auth/workos.js";
 import { initialize } from "../config.js";
 import { introMessage } from "../intro.js";
 import { MCPService } from "../mcp.js";
 import ConfigSelector from "./ConfigSelector.js";
+import { startFileIndexing } from "./FileSearchUI.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
@@ -49,6 +50,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
     resolve: (value: string) => void;
   } | null>(null);
   const [loginToken, setLoginToken] = useState("");
+
+  // Start file indexing as soon as the component mounts
+  useEffect(() => {
+    // Start indexing files in the background immediately
+    startFileIndexing().catch((error) => {
+      console.error("Failed to start file indexing:", error);
+    });
+  }, []);
 
   // Custom login prompt handler for TUI
   const handleLoginPrompt = (promptText: string): Promise<string> => {
