@@ -4,10 +4,14 @@ import * as path from "path";
 import { logout as workosLogout } from "../auth/workos.js";
 
 export async function logout() {
+  const onboardingFlagPath = path.join(
+    os.homedir(),
+    ".continue",
+    ".onboarding_complete"
+  );
   workosLogout();
-  
+
   // Remove onboarding completion flag so user will go through onboarding again
-  const onboardingFlagPath = path.join(os.homedir(), ".continue", ".onboarding_complete");
   if (fs.existsSync(onboardingFlagPath)) {
     fs.unlinkSync(onboardingFlagPath);
   }

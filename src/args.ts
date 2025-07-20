@@ -1,5 +1,7 @@
 import * as fs from "fs";
+import JSZip from "jszip";
 import * as path from "path";
+import { env } from "./env.js";
 
 export interface CommandLineArgs {
   isHeadless: boolean;
@@ -29,13 +31,53 @@ function loadRuleFromFile(filePath: string): string {
 }
 
 /**
- * Load rule content from hub.continue.dev (not yet implemented)
+ * Load rule content from hub.continue.dev
  * @param slug - The slug in format "owner/package"
  * @returns The rule content from the hub
  */
-function loadRuleFromHub(slug: string): string {
-  // TODO: Implement hub integration
-  throw new Error(`Hub rules not yet supported: ${slug}`);
+async function loadRuleFromHub(slug: string): Promise<string> {
+  const parts = slug.split("/");
+  if (parts.length !== 2) {
+    throw new Error(
+      `Invalid hub slug format. Expected "owner/package", got: ${slug}`
+    );
+  }
+
+  const [ownerSlug, ruleSlug] = parts;
+  const hubUrl = env.apiBase;
+  const downloadUrl = new URL(
+    `v0/${ownerSlug}/${ruleSlug}/latest/download`,
+    hubUrl
+  );
+
+  try {
+    const response = await fetch(downloadUrl);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // The API returns a zip file, so we need to extract the rule content
+    const arrayBuffer = await response.arrayBuffer();
+    const zip = new JSZip();
+    const zipContents = await zip.loadAsync(arrayBuffer);
+
+    // Find the first .md or .txt file (rule content)
+    const ruleFiles = Object.keys(zipContents.files).filter(
+      (filename) => filename.endsWith(".md") && !zipContents.files[filename].dir
+    );
+
+    if (ruleFiles.length === 0) {
+      throw new Error("No rule content found in downloaded zip file");
+    }
+
+    // Use the first rule file found - TODO support multiple rules and parse frontmatter
+    const ruleFile = zipContents.files[ruleFiles[0]];
+    const content = await ruleFile.async("text");
+    return content;
+  } catch (error: any) {
+    throw new Error(`Failed to load rule from hub "${slug}": ${error.message}`);
+  }
 }
 
 /**
@@ -43,14 +85,14 @@ function loadRuleFromHub(slug: string): string {
  * @param ruleSpec - Can be a file path, hub slug, or direct string content
  * @returns The processed rule content
  */
-export function processRule(ruleSpec: string): string {
+export async function processRule(ruleSpec: string): Promise<string> {
   // If it looks like a hub slug (contains / but doesn't start with . or /)
   if (
     ruleSpec.includes("/") &&
     !ruleSpec.startsWith(".") &&
     !ruleSpec.startsWith("/")
   ) {
-    return loadRuleFromHub(ruleSpec);
+    return await loadRuleFromHub(ruleSpec);
   }
 
   // If it looks like a file path (contains . or / or ends with common file extensions)

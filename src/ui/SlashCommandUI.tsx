@@ -1,10 +1,8 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
-import React, { useEffect, useState } from "react";
-import {
-  getAllSlashCommands,
-  type SlashCommand,
-} from "../commands/commands.js";
+import React, { useMemo } from "react";
+
+import { getAllSlashCommands } from "../commands/commands.js";
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
@@ -17,11 +15,11 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   filter,
   selectedIndex,
 }) => {
-  const [allCommands, setAllCommands] = useState<SlashCommand[]>([]);
-
-  useEffect(() => {
-    setAllCommands(getAllSlashCommands(assistant));
-  }, [assistant]);
+  // Memoize the slash commands to prevent excessive re-renders
+  // Only recalculate when assistant.prompts changes
+  const allCommands = useMemo(() => {
+    return getAllSlashCommands(assistant);
+  }, [assistant.prompts]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands
