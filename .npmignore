@@ -7,3 +7,6 @@ test
 AGENTS.md
 jest.config.mjs
 tsconfig.json
+tsconfig.build.json
+TESTING_STRATEGY.md
+.env.example
