@@ -84,25 +84,67 @@ export async function runCLI(
     timeout,
     reject: false,
     input,
+    // Force Windows to use the correct stdout/stderr handling
+    windowsVerbatimArguments: true,
+    // Ensure proper encoding
+    encoding: 'utf8' as const,
+    // Increase buffer size for Windows
+    maxBuffer: 10 * 1024 * 1024, // 10MB
   };
 
   try {
     const result = await execaNode(context.cliPath, args, execOptions);
 
+    // Ensure stdout/stderr are always strings
+    const stdout = result.stdout ?? "";
+    const stderr = result.stderr ?? "";
+    
+    // Log for debugging Windows issues
+    if (process.env.DEBUG_CLI_TESTS) {
+      console.log("CLI Result:", {
+        stdout: stdout.substring(0, 200),
+        stderr: stderr.substring(0, 200),
+        exitCode: result.exitCode,
+      });
+    }
+
     return {
-      stdout: result.stdout,
-      stderr: result.stderr,
+      stdout,
+      stderr,
       exitCode: result.exitCode ?? 0,
     };
   } catch (error: any) {
+    // Always capture stdout/stderr even on error
+    const stdout = error.stdout ?? "";
+    const stderr = error.stderr ?? "";
+    const exitCode = error.exitCode ?? 1;
+    
     if (!expectError) {
+      // Include more details in error for debugging
+      const errorDetails = {
+        message: error.message,
+        stdout: stdout.substring(0, 500),
+        stderr: stderr.substring(0, 500),
+        exitCode,
+        command: error.command,
+        cwd: execOptions.cwd,
+        cliPath: context.cliPath,
+        args,
+      };
+      console.error("CLI execution failed:", errorDetails);
+      
+      // On Windows, if we get empty output, it might be a Node.js path issue
+      if (process.platform === "win32" && !stdout && !stderr) {
+        console.error("Windows: No output captured. This might be a Node.js execution issue.");
+      }
+      
       throw error;
     }
 
     return {
-      stdout: error.stdout || "",
-      stderr: error.stderr || "",
-      exitCode: error.exitCode ?? 1,
+      stdout,
+      stderr,
+      exitCode,
       error,
     };
   }
