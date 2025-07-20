@@ -21,10 +21,10 @@ export function introMessage(
   const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
 
-  console.info(`\n${chalk.bold.blue(`Agent: ${config.name}\n`)}`);
-  console.info(`${chalk.yellow("Model:")} ${modelName.split("/").pop()}\n`);
+  console.info(`\n${chalk.bold.yellow(`Agent: ${config.name}\n`)}`);
+  console.info(`${chalk.blue("Model:")} ${modelName.split("/").pop()}\n`);
 
-  console.info(chalk.yellow("Tools:"));
+  console.info(chalk.blue("Tools:"));
   BUILTIN_TOOLS.forEach((tool) => {
     console.info(
       `- ${chalk.white(tool.displayName)}: ${chalk.dim(tool.description ?? "")}`
@@ -32,7 +32,7 @@ export function introMessage(
   });
   console.info("");
 
-  console.info(chalk.yellow("Slash commands:"));
+  console.info(chalk.blue("Slash commands:"));
   console.info(`- ${chalk.white("/exit")}: ${chalk.dim("Exit the chat")}`);
   console.info(
     `- ${chalk.white("/clear")}: ${chalk.dim("Clear the chat history")}`
