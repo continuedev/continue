@@ -51,6 +51,11 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
     // Initial fetch
     fetchStatus();
 
+    // Don't poll in test environment
+    if (process.env.NODE_ENV === "test") {
+      return;
+    }
+
     // Poll every 5 seconds
     const interval = setInterval(fetchStatus, 5000);
 
