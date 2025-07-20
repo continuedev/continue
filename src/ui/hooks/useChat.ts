@@ -83,6 +83,7 @@ export function useChat({
   });
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+  const [responseStartTime, setResponseStartTime] = useState<number | null>(null);
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
@@ -185,6 +186,7 @@ export function useChat({
     const controller = new AbortController();
     setAbortController(controller);
     setIsWaitingForResponse(true);
+    setResponseStartTime(Date.now());
     setInputMode(false);
     logger.debug('Starting chat response stream', { messageLength: message.length, historyLength: newHistory.length });
 
@@ -331,6 +333,7 @@ export function useChat({
     } finally {
       setAbortController(null);
       setIsWaitingForResponse(false);
+      setResponseStartTime(null);
       setInputMode(true);
     }
   };
@@ -369,6 +372,7 @@ export function useChat({
     chatHistory,
     setChatHistory,
     isWaitingForResponse,
+    responseStartTime,
     inputMode,
     attachedFiles,
     handleUserMessage,
