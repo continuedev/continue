@@ -175,7 +175,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             <LoadingAnimation visible={isWaitingForResponse} />
             <Text color="gray">(</Text>
             <Timer startTime={responseStartTime} />
-            <Text color="gray"> • esc to interrupt )</Text>
+            <Text color="gray">• esc to interrupt )</Text>
           </Box>
         )}
 
