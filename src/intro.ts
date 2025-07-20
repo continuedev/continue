@@ -1,9 +1,25 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { MCPService } from "./mcp.js";
 import { getAllTools } from "./streamChatResponse.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+function getVersion(): string {
+  try {
+    const packagePath = join(__dirname, "..", "package.json");
+    const packageJson = JSON.parse(readFileSync(packagePath, "utf-8"));
+    return packageJson.version;
+  } catch (error) {
+    return "unknown";
+  }
+}
 
 export function loadSystemMessage(
   assistant: AssistantConfig
@@ -23,8 +39,9 @@ export function introMessage(
   const mcpPrompts = mcpService.getPrompts() ?? [];
 
   console.info(chalk.cyan(CONTINUE_ASCII_ART));
+  console.info(chalk.gray(`v${getVersion()}\n`));
 
-  console.info(`\n${chalk.bold.blue(`Agent: ${config.name}\n`)}`);
+  console.info(`${chalk.bold.blue(`Agent: ${config.name}\n`)}`);
   console.info(`${chalk.yellow("Model:")} ${modelName.split("/").pop()}\n`);
 
   console.info(chalk.yellow("Tools:"));
