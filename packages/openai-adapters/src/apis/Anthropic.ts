@@ -81,7 +81,7 @@ export class AnthropicApi implements BaseLlmApi {
         : systemMessage,
       top_p: oaiBody.top_p,
       temperature: oaiBody.temperature,
-      max_tokens: oaiBody.max_tokens ?? 4096, // max_tokens is required
+      max_tokens: oaiBody.max_tokens ?? 32_000, // max_tokens is required
       model: oaiBody.model,
       stop_sequences: stop,
       stream: oaiBody.stream,
