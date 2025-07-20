@@ -10,19 +10,22 @@ import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
-import { chatCompletionStreamWithBackoff, withExponentialBackoff } from "./util/exponentialBackoff.js";
+import {
+  chatCompletionStreamWithBackoff,
+  withExponentialBackoff,
+} from "./util/exponentialBackoff.js";
 import logger from "./util/logger.js";
 
 dotenv.config();
 
 export function getAllTools() {
   const args = parseArgs();
-  
+
   // If no-tools mode is enabled, return empty array
   if (args.noTools) {
     return [];
   }
-  
+
   const allTools: ChatCompletionTool[] = BUILTIN_TOOLS.map((tool) => ({
     type: "function" as const,
     function: {
@@ -77,20 +80,38 @@ export async function streamChatResponse(
   abortController: AbortController,
   callbacks?: StreamCallbacks
 ) {
+  logger.debug("streamChatResponse called", {
+    model,
+    historyLength: chatHistory.length,
+    hasCallbacks: !!callbacks,
+  });
   const args = parseArgs();
   const isHeadless = args.isHeadless;
   // Prepare tools for the API call
   const toolsForRequest = getAllTools();
+  logger.debug("Tools prepared", {
+    toolCount: toolsForRequest.length,
+    toolNames: toolsForRequest.map((t) => t.function.name),
+  });
 
   let fullResponse = "";
   let currentToolCalls: TODO[] = [];
   let shouldContinueConversation = true;
 
   while (shouldContinueConversation) {
-    logger.debug('Starting new conversation iteration', { hasToolCalls: currentToolCalls.length > 0 });
+    logger.debug("Starting new conversation iteration", {
+      iterationNumber:
+        chatHistory.filter((m) => m.role === "assistant").length + 1,
+      hasToolCalls: currentToolCalls.length > 0,
+      previousToolCount: currentToolCalls.length,
+    });
     // Factory function to create the stream generator
     const streamFactory = async () => {
-      logger.debug('Creating chat completion stream', { model, messageCount: chatHistory.length, toolCount: toolsForRequest.length });
+      logger.debug("Creating chat completion stream", {
+        model,
+        messageCount: chatHistory.length,
+        toolCount: toolsForRequest.length,
+      });
       return await chatCompletionStreamWithBackoff(
         llmApi,
         {
@@ -107,6 +128,7 @@ export async function streamChatResponse(
     currentToolCalls = [];
     let currentToolCallId = "";
     let toolArguments = "";
+    logger.debug("Initialized iteration variables");
 
     try {
       // Use the exponential backoff wrapper for the entire stream
@@ -115,10 +137,19 @@ export async function streamChatResponse(
         abortController.signal
       );
 
+      let chunkCount = 0;
       for await (const chunk of streamWithBackoff) {
-        logger.debug('Received stream chunk', { hasContent: !!chunk.choices[0].delta.content, hasToolCalls: !!chunk.choices[0].delta.tool_calls });
+        chunkCount++;
+        logger.debug("Received stream chunk", {
+          chunkNumber: chunkCount,
+          hasContent: !!chunk.choices[0].delta.content,
+          contentLength: chunk.choices[0].delta.content?.length || 0,
+          hasToolCalls: !!chunk.choices[0].delta.tool_calls,
+          toolCallCount: chunk.choices[0].delta.tool_calls?.length || 0,
+        });
         // Check if we should abort
         if (abortController?.signal.aborted) {
+          logger.debug("Stream aborted");
           break;
         }
 
@@ -140,6 +171,10 @@ export async function streamChatResponse(
             // Initialize a new tool call if we get an index and id
             if (toolCallDelta.index !== undefined && toolCallDelta.id) {
               if (!currentToolCalls[toolCallDelta.index]) {
+                logger.debug("Initializing new tool call", {
+                  index: toolCallDelta.index,
+                  id: toolCallDelta.id,
+                });
                 currentToolCalls[toolCallDelta.index] = {
                   id: toolCallDelta.id,
                   name: "",
@@ -157,6 +192,10 @@ export async function streamChatResponse(
               );
               if (toolCall) {
                 if (!toolCall.name) {
+                  logger.debug("Setting tool name", {
+                    toolId: currentToolCallId,
+                    name: toolCallDelta.function.name,
+                  });
                   toolCall.name = toolCallDelta.function.name;
                   toolCall.startNotified = false;
                 }
@@ -176,6 +215,10 @@ export async function streamChatResponse(
                   // Try to parse complete JSON
                   const parsed = JSON.parse(toolArguments);
                   toolCall.arguments = parsed;
+                  logger.debug("Successfully parsed tool arguments", {
+                    toolName: toolCall.name,
+                    argumentKeys: Object.keys(parsed),
+                  });
 
                   // Notify start if we haven't already and have both name and args
                   if (toolCall.name && !toolCall.startNotified) {
@@ -192,23 +235,29 @@ export async function streamChatResponse(
                   }
                 } catch (e) {
                   // Not complete JSON yet, continue collecting
+                  logger.debug("Tool arguments not yet complete JSON", {
+                    arguments: toolArguments,
+                  });
                 }
               }
             }
           }
         }
       }
+      logger.debug("Stream iteration complete", {
+        totalChunks: chunkCount,
+        responseLength: aiResponse.length,
+        toolCallsCollected: currentToolCalls.length,
+      });
     } catch (error: any) {
       // Handle AbortError gracefully - this is expected when user cancels
-      if (error.name === 'AbortError' || abortController?.signal.aborted) {
+      if (error.name === "AbortError" || abortController?.signal.aborted) {
+        logger.debug("Stream aborted by user");
         // Stream was aborted, this is expected behavior
         return fullResponse;
       }
       // For other errors, re-throw them
-      logger.error(
-        chalk.red("Error in streamChatResponse:"),
-        error
-      );
+      logger.error(chalk.red("Error in streamChatResponse:"), error);
       throw error;
     }
 
@@ -227,6 +276,11 @@ export async function streamChatResponse(
 
     // Add the assistant's response to chat history if there's content or tool calls
     if (currentToolCalls.length > 0) {
+      logger.debug("Adding assistant response with tool calls", {
+        toolCount: currentToolCalls.length,
+        toolNames: currentToolCalls.map((tc) => tc.name),
+        hasContent: !!aiResponse.trim(),
+      });
       const toolCalls: ChatCompletionMessageToolCall[] = currentToolCalls.map(
         (tc) => ({
           id: tc.id,
@@ -244,21 +298,37 @@ export async function streamChatResponse(
       });
     } else if (aiResponse.trim()) {
       // Only add assistant response if there's actual content
+      logger.debug("Adding assistant response without tool calls", {
+        contentLength: aiResponse.length,
+      });
       chatHistory.push({ role: "assistant", content: aiResponse });
       // Also notify content complete for standalone messages
       if (callbacks?.onContentComplete) {
         callbacks.onContentComplete(aiResponse);
       }
+    } else {
+      logger.debug("No content or tool calls to add to history");
     }
 
     // If we have tool calls, execute them
     if (currentToolCalls.length > 0) {
+      logger.debug("Executing tool calls", {
+        count: currentToolCalls.length,
+      });
       for (const toolCall of currentToolCalls) {
         try {
+          logger.debug("Executing tool", {
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
           // Execute the tool
           const toolResult = await executeToolCall({
             name: toolCall.name,
             arguments: toolCall.arguments,
+          });
+          logger.debug("Tool execution complete", {
+            name: toolCall.name,
+            resultLength: toolResult.length,
           });
 
           // Add tool result to chat history
@@ -277,6 +347,10 @@ export async function streamChatResponse(
           const errorMessage = `Error executing tool ${toolCall.name}: ${
             error instanceof Error ? error.message : String(error)
           }`;
+          logger.debug("Tool execution failed", {
+            name: toolCall.name,
+            error: errorMessage,
+          });
           chatHistory.push({
             role: "tool",
             tool_call_id: toolCall.id,
@@ -296,11 +370,17 @@ export async function streamChatResponse(
 
       // Continue the conversation with the tool results
       shouldContinueConversation = true;
+      logger.debug("Continuing conversation after tool execution");
     } else {
       // No more tool calls, end the conversation
       shouldContinueConversation = false;
+      logger.debug("Ending conversation - no more tool calls");
     }
   }
 
+  logger.debug("streamChatResponse complete", {
+    totalResponseLength: fullResponse.length,
+    totalMessages: chatHistory.length,
+  });
   return fullResponse;
 }

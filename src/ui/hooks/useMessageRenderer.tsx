@@ -58,7 +58,7 @@ export function useMessageRenderer() {
 
     return (
       <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "green" : "blue"}>●</Text>
+        <Text color={isUser ? "green" : "magenta"}>●</Text>
         <Text> </Text>
         {isUser ? (
           <Text color="gray">{message.content}</Text>
