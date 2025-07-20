@@ -75,6 +75,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     let { config, llmApi, model, mcpService, apiClient } = await initializeChat(
       options
     );
+
     // Record session start
     telemetryService.recordSessionStart();
 
