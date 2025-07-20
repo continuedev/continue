@@ -1,7 +1,15 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
+<<<<<<< Updated upstream
 import React, { useEffect, useState } from "react";
 import { hasMultipleOrganizations } from "../auth/workos.js";
+=======
+import React, { useMemo } from "react";
+import {
+  getAllSlashCommands,
+  type SlashCommand,
+} from "../commands/commands.js";
+>>>>>>> Stashed changes
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
@@ -22,6 +30,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   selectedIndex,
   onSelect,
 }) => {
+<<<<<<< Updated upstream
   const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
 
   useEffect(() => {
@@ -67,6 +76,13 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   };
 
   const allCommands = getSlashCommands();
+=======
+  // Memoize the slash commands to prevent excessive re-renders
+  // Only recalculate when assistant.prompts changes
+  const allCommands = useMemo(() => {
+    return getAllSlashCommands(assistant);
+  }, [assistant.prompts]);
+>>>>>>> Stashed changes
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands
