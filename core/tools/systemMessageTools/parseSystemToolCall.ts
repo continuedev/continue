@@ -1,6 +1,8 @@
 import { ToolCallDelta } from "../..";
+import { createDelta, generateOpenAIToolCallId } from "./systemToolUtils";
 
 export type ToolCallParseState = {
+  toolCallId: string;
   isOnArgBeginLine: boolean;
   currentArgName: string | undefined;
   currentArgLines: string[];
@@ -11,6 +13,7 @@ export type ToolCallParseState = {
 };
 
 export const getInitialTooLCallParseState = (): ToolCallParseState => ({
+  toolCallId: generateOpenAIToolCallId(),
   isOnArgBeginLine: false,
   currentArgName: undefined,
   currentArgLines: [],
@@ -19,17 +22,6 @@ export const getInitialTooLCallParseState = (): ToolCallParseState => ({
   lineChunks: [],
   done: false,
 });
-
-function createDelta(name: string, args: string, id: string): ToolCallDelta {
-  return {
-    type: "function",
-    function: {
-      name,
-      arguments: args,
-    },
-    id,
-  };
-}
 
 /*
   Efficiently applies chunks to a tool call state as they come in
@@ -40,7 +32,6 @@ function createDelta(name: string, args: string, id: string): ToolCallDelta {
 */
 export function handleToolCallBuffer(
   chunk: string,
-  toolCallId: string,
   state: ToolCallParseState,
 ): ToolCallDelta | undefined {
   // Add chunks
@@ -60,11 +51,16 @@ export function handleToolCallBuffer(
   switch (lineIndex) {
     // The first line will be skipped (e.g. ```tool\n)
     case 0:
-      state.currentLineIndex = 1;
-      if (!line.toLowerCase().includes("name")) {
-        return;
+      // non-standard start sequences will sometimes include stuff in the tool_name line
+      const splitBuffer = line.split("\n");
+      if (splitBuffer[0]) {
+        state.lineChunks[0] = [splitBuffer[0], "\n"];
       }
-    // tool_name alternate start case
+      if (splitBuffer[1]) {
+        state.lineChunks[1] = [splitBuffer[1]];
+      }
+
+      state.currentLineIndex = 1;
     // Tool name line - process once line 2 is reached
     case 1:
       if (isNewLine) {
@@ -72,7 +68,7 @@ export function handleToolCallBuffer(
         if (!name) {
           throw new Error("Invalid tool name");
         }
-        return createDelta(name, "", toolCallId);
+        return createDelta(name, "", state.toolCallId);
       }
       return;
     default:
@@ -85,7 +81,7 @@ export function handleToolCallBuffer(
           state.currentArgName = argName;
           state.isOnArgBeginLine = false;
           const argPrefix = state.processedArgNames.size === 0 ? "{" : ",";
-          return createDelta("", `${argPrefix}"${argName}":`, toolCallId);
+          return createDelta("", `${argPrefix}"${argName}":`, state.toolCallId);
         }
       } else if (state.currentArgName) {
         if (isNewLine) {
@@ -99,10 +95,10 @@ export function handleToolCallBuffer(
             try {
               const parsed = JSON.parse(trimmedValue);
               const stringifiedArg = JSON.stringify(parsed);
-              return createDelta("", stringifiedArg, toolCallId);
+              return createDelta("", stringifiedArg, state.toolCallId);
             } catch (e) {
               const stringifiedArg = JSON.stringify(trimmedValue);
-              return createDelta("", stringifiedArg, toolCallId);
+              return createDelta("", stringifiedArg, state.toolCallId);
             }
           } else {
             state.currentArgLines.push(line);
@@ -120,7 +116,7 @@ export function handleToolCallBuffer(
           state.done = true;
           // finish args JSON if applicable
           if (state.processedArgNames.size > 0) {
-            return createDelta("", "}", toolCallId);
+            return createDelta("", "}", state.toolCallId);
           }
         }
       }

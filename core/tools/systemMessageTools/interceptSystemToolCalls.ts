@@ -6,10 +6,7 @@ import {
   handleToolCallBuffer,
   ToolCallParseState,
 } from "./parseSystemToolCall";
-import {
-  generateOpenAIToolCallId,
-  splitAtCodeblocksAndNewLines,
-} from "./systemToolUtils";
+import { createDelta, splitAtCodeblocksAndNewLines } from "./systemToolUtils";
 
 /*
     Function to intercept tool calls in markdown code blocks format from a chat message stream
@@ -28,16 +25,23 @@ export async function* interceptSystemToolCalls(
   messageGenerator: AsyncGenerator<ChatMessage[], PromptLog | undefined>,
   abortController: AbortController,
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
-  let hasSeenToolCall = false;
-  let inToolCall = false;
-  let currentToolCallId: string | undefined = undefined;
   let buffer = "";
-
   let parseState: ToolCallParseState | undefined;
 
   while (true) {
     const result = await messageGenerator.next();
     if (result.done) {
+      // Case: non-standard tool termination causes hanging args
+      if (parseState && !parseState.done && parseState.processedArgNames.size) {
+        yield [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [createDelta("", "}", parseState.toolCallId)],
+          },
+        ];
+      }
+
       return result.value;
     } else {
       for await (const message of result.value) {
@@ -64,7 +68,7 @@ export async function* interceptSystemToolCalls(
 
         for (const chunk of chunks) {
           buffer += chunk;
-          if (!inToolCall) {
+          if (!parseState) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
               detectToolCallStart(buffer);
 
@@ -72,26 +76,14 @@ export async function* interceptSystemToolCalls(
               continue;
             }
             if (isInToolCall) {
-              inToolCall = true;
+              parseState = getInitialTooLCallParseState();
               buffer = modifiedBuffer;
             }
           }
 
-          if (inToolCall) {
-            if (!currentToolCallId) {
-              currentToolCallId = generateOpenAIToolCallId();
-            }
-            if (!parseState) {
-              parseState = getInitialTooLCallParseState();
-            }
-
-            const delta = handleToolCallBuffer(
-              buffer,
-              currentToolCallId,
-              parseState,
-            );
+          if (parseState && !parseState.done) {
+            const delta = handleToolCallBuffer(buffer, parseState);
             if (delta) {
-              hasSeenToolCall = true;
               yield [
                 {
                   ...message,
@@ -100,15 +92,9 @@ export async function* interceptSystemToolCalls(
                 },
               ];
             }
-
-            if (parseState.done) {
-              inToolCall = false;
-              currentToolCallId = undefined;
-              parseState = undefined;
-            }
           } else {
             // Prevent content after tool calls for now
-            if (hasSeenToolCall) {
+            if (parseState) {
               continue;
             }
 

@@ -1,3 +1,5 @@
+import { ToolCallDelta } from "../..";
+
 export function closeTag(openingTag: string): string {
   return `</${openingTag.slice(1)}`;
 }
@@ -18,4 +20,19 @@ function randomLettersAndNumbers(length: number): string {
 
 export function generateOpenAIToolCallId(): string {
   return `call_${randomLettersAndNumbers(24)}`;
+}
+
+export function createDelta(
+  name: string,
+  args: string,
+  id: string,
+): ToolCallDelta {
+  return {
+    type: "function",
+    function: {
+      name,
+      arguments: args,
+    },
+    id,
+  };
 }

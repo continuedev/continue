@@ -4,7 +4,7 @@ let boundaryTypeIndex = 0;
 // Give some leeway in how the initiate
 const acceptedToolStarts: [string, string][] = [
   ["```tool\n", "```tool\n"],
-  ["tool_name:", "```tool\ntool_name:"],
+  ["tool_name:", "```tool\nTOOL_NAME:"],
 ];
 
 export function detectToolCallStart(buffer: string) {
@@ -13,15 +13,11 @@ export function detectToolCallStart(buffer: string) {
   let isInPartialStart = false;
   const lowerCaseBuffer = buffer.toLowerCase();
   for (let i = 0; i < acceptedToolStarts.length; i++) {
-    const [start, _] = acceptedToolStarts[i];
+    const [start, replacement] = acceptedToolStarts[i];
     if (lowerCaseBuffer.startsWith(start)) {
-      boundaryTypeIndex = i;
       // for non-standard cases like no ```tool codeblock, etc, replace before adding to buffer, case insensitive
-      if (boundaryTypeIndex !== 0) {
-        modifiedBuffer = buffer.replace(
-          new RegExp(start, "i"),
-          acceptedToolStarts[boundaryTypeIndex][1],
-        );
+      if (i !== 0) {
+        modifiedBuffer = buffer.replace(new RegExp(start, "i"), replacement);
       }
       isInToolCall = true;
       break;
