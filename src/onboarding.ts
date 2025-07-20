@@ -111,14 +111,7 @@ export async function runOnboardingFlow(
     return { ...result, wasOnboarded: false };
   }
 
-  // Step 2: Check if user has ~/.continue/config.yaml with acceptable model
-  if (await checkHasAcceptableModel(CONFIG_PATH)) {
-    console.log(chalk.blue(`✓ Using existing ${CONFIG_PATH}`));
-    const result = await initialize(authConfig, CONFIG_PATH);
-    return { ...result, wasOnboarded: true };
-  }
-
-  // Step 3: Present user with two options
+  // Step 2: Present user with two options (no longer auto-load config.yaml)
   console.log(chalk.yellow("Choose how you'd like to set up your agent:"));
   console.log(chalk.white("1. Log in with Continue"));
   console.log(chalk.white("2. Enter your Anthropic API key"));
@@ -181,7 +174,7 @@ export async function runNormalFlow(
   if (isAuthenticated()) {
     try {
       const result = await initialize(authConfig, undefined);
-      return { ...result, wasOnboarded: true };
+      return { ...result, wasOnboarded: false };
     } catch (error) {}
   }
 
@@ -189,7 +182,7 @@ export async function runNormalFlow(
   if (fs.existsSync(CONFIG_PATH)) {
     try {
       const result = await initialize(authConfig, CONFIG_PATH);
-      return { ...result, wasOnboarded: true };
+      return { ...result, wasOnboarded: false };
     } catch (error) {
       console.log(chalk.yellow("⚠ Invalid config file found"));
     }
@@ -201,7 +194,7 @@ export async function runNormalFlow(
     await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
     console.log(chalk.gray(`  Config saved to: ${CONFIG_PATH}`));
     const result = await initialize(authConfig, CONFIG_PATH);
-    return { ...result, wasOnboarded: true };
+    return { ...result, wasOnboarded: false };
   }
 
   // Step 5: Fall back to onboarding flow
