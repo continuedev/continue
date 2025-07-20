@@ -427,13 +427,13 @@ export async function login(): Promise<AuthConfig> {
   }
 
   try {
-    console.info(chalk.cyan("\nStarting authentication with Continue..."));
+    console.info(chalk.white("\nSigning in with Continue..."));
 
     // Request device authorization
     const deviceAuth = await requestDeviceAuthorization();
 
     console.info(
-      chalk.yellow(
+      chalk.white(
         `Your authentication code: ${chalk.bold(deviceAuth.user_code)}`
       )
     );
@@ -450,7 +450,7 @@ export async function login(): Promise<AuthConfig> {
       console.info(chalk.yellow("Unable to open browser automatically"));
     }
 
-    console.info(chalk.cyan("\nWaiting for confirmation..."));
+    console.info(chalk.dim("\nWaiting for confirmation..."));
 
     // Poll for token
     const authConfig = await pollForDeviceToken(
@@ -459,7 +459,7 @@ export async function login(): Promise<AuthConfig> {
       deviceAuth.expires_in
     );
 
-    console.info(chalk.green("\nAuthentication successful!"));
+    console.info(chalk.white("✅ Success!"));
 
     return authConfig;
   } catch (error: any) {

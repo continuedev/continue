@@ -1,13 +1,13 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { useState } from "react";
 import { exec } from "child_process";
+import * as os from "os";
+import * as path from "path";
+import { useState } from "react";
 import { loadAuthConfig, updateAssistantSlug } from "../../auth/workos.js";
 import { initialize } from "../../config.js";
 import { introMessage } from "../../intro.js";
 import { MCPService } from "../../mcp.js";
-import * as path from "path";
-import * as os from "os";
 
 interface ConfigOption {
   id: string;
@@ -20,7 +20,7 @@ interface UseConfigSelectorProps {
   configPath?: string;
   onAssistantChange: (
     assistant: AssistantUnrolled,
-    model: string,
+    model: ModelConfig,
     llmApi: BaseLlmApi,
     mcpService: MCPService
   ) => void;
@@ -48,7 +48,7 @@ export function useConfigSelector({
     if (config.type === "create") {
       // Open the web browser to create new assistant
       const url = "https://hub.continue.dev/new?type=assistant";
-      
+
       try {
         let command: string;
         if (process.platform === "darwin") {
@@ -58,13 +58,13 @@ export function useConfigSelector({
         } else {
           command = `xdg-open "${url}"`;
         }
-        
+
         exec(command, (error) => {
           if (error) {
             console.error("Failed to open browser:", error);
           }
         });
-        
+
         onMessage({
           role: "system",
           content: `Opening ${url} in your browser to create a new assistant...`,

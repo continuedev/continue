@@ -32,7 +32,6 @@ cn --resume
 ## Command Line Options
 
 - `-p`: Run in headless mode (no TUI)
-- `--config <path>`: Specify assistant configuration path
+- `--config <path>`: Specify agent configuration path
 - `--resume`: Resume the last session for this terminal
 - `<prompt>`: Optional prompt to start with
-

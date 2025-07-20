@@ -91,14 +91,31 @@ const UserInput: React.FC<UserInputProps> = ({
     // Only show slash commands if slash is the very first character
     if (text.trimStart().startsWith("/")) {
       const trimmedText = text.trimStart();
-      const beforeCursor = trimmedText.slice(0, cursor - (text.length - trimmedText.length));
-      
+      const beforeCursor = trimmedText.slice(
+        0,
+        cursor - (text.length - trimmedText.length)
+      );
+
       // Only show if cursor is after the slash and before any whitespace
       if (beforeCursor.length > 0 && beforeCursor.startsWith("/")) {
         const afterSlash = beforeCursor.slice(1);
-        
+
         if (!afterSlash.includes(" ") && !afterSlash.includes("\n")) {
-          // We're in a slash command context
+          // We're in a slash command context - check if it's a complete command
+          const allCommands = getSlashCommands();
+          const exactMatch = allCommands.find(cmd => cmd.name === afterSlash);
+          
+          // Hide selector if we have an exact match and there's more content after the cursor
+          if (exactMatch) {
+            const restOfText = text.slice(cursor);
+            // If there's a space immediately after cursor, or we're at end of line/text, hide selector
+            if (restOfText.startsWith(" ") || restOfText === "" || restOfText.startsWith("\n")) {
+              setShowSlashCommands(false);
+              return;
+            }
+          }
+          
+          // Show selector for partial matches
           setShowSlashCommands(true);
           setSlashCommandFilter(afterSlash);
           setSelectedCommandIndex(0);
@@ -488,7 +505,6 @@ const UserInput: React.FC<UserInputProps> = ({
           assistant={assistant}
           filter={slashCommandFilter}
           selectedIndex={selectedCommandIndex}
-          onSelect={selectSlashCommand}
         />
       )}
 

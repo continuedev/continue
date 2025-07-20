@@ -1,5 +1,5 @@
-import { Tool } from "./types.js";
 import TurndownService from "turndown";
+import { Tool } from "./types.js";
 
 const turndownService = new TurndownService({
   headingStyle: "atx",
@@ -31,7 +31,7 @@ turndownService.addRule("pre", {
 
 export const fetchTool: Tool = {
   name: "fetch",
-  displayName: "Fetch URL",
+  displayName: "Fetch",
   description: "Fetches content from a URL and converts it to markdown format",
   parameters: {
     url: {
@@ -64,7 +64,8 @@ export const fetchTool: Tool = {
         signal: controller.signal,
         headers: {
           "User-Agent": "Continue-CLI/1.0 (https://continue.dev)",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "en-US,en;q=0.5",
           "Accept-Encoding": "gzip, deflate",
           "Cache-Control": "no-cache",
@@ -78,7 +79,7 @@ export const fetchTool: Tool = {
       }
 
       const contentType = response.headers.get("content-type") || "";
-      
+
       // Handle different content types
       if (contentType.includes("application/json")) {
         const json = await response.json();
@@ -96,10 +97,10 @@ export const fetchTool: Tool = {
 
       // Process HTML content
       const html = await response.text();
-      
+
       // Convert HTML to markdown
       const markdown = turndownService.turndown(html);
-      
+
       // Clean up the markdown
       const cleanedMarkdown = markdown
         .replace(/\n\s*\n\s*\n/g, "\n\n") // Remove excessive newlines
@@ -108,7 +109,6 @@ export const fetchTool: Tool = {
         .replace(/\\\]/g, "]");
 
       return `# Content from ${url}\n\n${cleanedMarkdown}`;
-
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         return `Error: Failed to fetch URL "${url}". Please check the URL and try again.`;
