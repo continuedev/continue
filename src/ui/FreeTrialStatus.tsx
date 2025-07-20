@@ -1,31 +1,33 @@
+import { ModelConfig } from "@continuedev/config-yaml";
 import {
   DefaultApiInterface,
   GetFreeTrialStatus200Response,
 } from "@continuedev/sdk/dist/api/dist/index.js";
 import { Text } from "ink";
 import React, { useEffect, useState } from "react";
-import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
+
+export function isModelUsingFreeTrial(model: ModelConfig): boolean {
+  return (
+    model.provider === "continue-proxy" &&
+    (model as any).apiKeyLocation.startsWith("free_trial:")
+  );
+}
 
 interface FreeTrialStatusProps {
   apiClient?: DefaultApiInterface;
-  onTransitionComplete?: () => void;
   onTransitionStateChange?: (isShowingTransition: boolean) => void;
-  onSwitchToLocalConfig?: () => void;
-  onFullReload?: () => void;
+  model: ModelConfig;
 }
 
 const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
   apiClient,
-  onTransitionComplete,
   onTransitionStateChange,
-  onSwitchToLocalConfig,
-  onFullReload,
+  model,
 }) => {
   const [status, setStatus] = useState<GetFreeTrialStatus200Response | null>(
     null
   );
   const [loading, setLoading] = useState(true);
-  const [showTransition, setShowTransition] = useState(false);
 
   const fetchStatus = async () => {
     try {
@@ -55,9 +57,13 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Check if user has maxed out their free trial
+  // Check if user has maxed out their free trial and notify parent
   useEffect(() => {
     if (!status || !status.optedInToFreeTrial || loading) {
+      // No transition needed
+      if (onTransitionStateChange) {
+        onTransitionStateChange(false);
+      }
       return;
     }
 
@@ -65,62 +71,28 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
     const chatLimit = status.chatLimit;
 
     // Check if user has maxed out their free trial
-    if (true) {
-      // if (chatUsed >= chatLimit) {
-      setShowTransition(true);
-    }
-  }, [status, loading]);
+    const shouldShowTransition =
+      chatUsed >= chatLimit && isModelUsingFreeTrial(model);
 
-  // Notify parent when transition state changes
-  useEffect(() => {
     if (onTransitionStateChange) {
-      onTransitionStateChange(showTransition);
+      onTransitionStateChange(shouldShowTransition);
     }
-  }, [showTransition, onTransitionStateChange]);
-
-  const handleTransitionComplete = () => {
-    setShowTransition(false);
-    // Optionally refetch status to check if they now have access
-    fetchStatus();
-    if (onTransitionComplete) {
-      onTransitionComplete();
-    }
-  };
-
-  const handleSwitchToLocalConfig = () => {
-    setShowTransition(false);
-    if (onSwitchToLocalConfig) {
-      onSwitchToLocalConfig();
-    }
-  };
-
-  const handleFullReload = () => {
-    setShowTransition(false);
-    if (onFullReload) {
-      onFullReload();
-    }
-  };
-
-  // Show transition UI if free trial is maxed out
-  if (showTransition) {
-    return (
-      <FreeTrialTransitionUI
-        onComplete={handleTransitionComplete}
-        onSwitchToLocalConfig={handleSwitchToLocalConfig}
-        onFullReload={handleFullReload}
-      />
-    );
-  }
+  }, [status, loading, onTransitionStateChange, model]);
 
   // Don't render anything while loading or if no status
-  if (loading || !status || !status.optedInToFreeTrial) {
+  if (
+    loading ||
+    !status ||
+    !status.optedInToFreeTrial ||
+    !isModelUsingFreeTrial(model)
+  ) {
     return null;
   }
 
   const chatUsed = status.chatCount ?? 0;
   const chatLimit = status.chatLimit;
 
-  // Show normal status for active free trial
+  // Only show the normal status text - transition UI is handled by parent
   return (
     <Text color="gray">
       {chatUsed}/{chatLimit} free trial

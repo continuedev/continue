@@ -12,6 +12,7 @@ import { MCPService } from "../mcp.js";
 import ConfigSelector from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
 import FreeTrialStatus from "./FreeTrialStatus.js";
+import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
@@ -260,6 +261,22 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onChatReset: resetChatHistory,
   });
 
+  // Handle free trial transition completion
+  const handleFreeTrialTransitionComplete = () => {
+    setIsShowingFreeTrialTransition(false);
+    handleReload();
+  };
+
+  const handleFreeTrialSwitchToLocal = () => {
+    setIsShowingFreeTrialTransition(false);
+    handleSwitchToLocalConfig();
+  };
+
+  const handleFreeTrialFullReload = () => {
+    setIsShowingFreeTrialTransition(false);
+    handleFullReload();
+  };
+
   // Determine if input should be disabled
   const isInputDisabled =
     showOrgSelector ||
@@ -327,18 +344,29 @@ const TUIChat: React.FC<TUIChatProps> = ({
           />
         )}
 
-        {/* Input area - always at bottom */}
-        <UserInput
-          onSubmit={handleUserMessage}
-          isWaitingForResponse={isWaitingForResponse}
-          inputMode={inputMode}
-          onInterrupt={handleInterrupt}
-          assistant={assistant}
-          onFileAttached={handleFileAttached}
-          disabled={isInputDisabled}
-        />
+        {/* Free trial transition UI - replaces input when active */}
+        {isShowingFreeTrialTransition && (
+          <FreeTrialTransitionUI
+            onComplete={handleFreeTrialTransitionComplete}
+            onSwitchToLocalConfig={handleFreeTrialSwitchToLocal}
+            onFullReload={handleFreeTrialFullReload}
+          />
+        )}
 
-        {/* Free trial status and Continue CLI info */}
+        {/* Input area - only show when not showing free trial transition */}
+        {!isShowingFreeTrialTransition && (
+          <UserInput
+            onSubmit={handleUserMessage}
+            isWaitingForResponse={isWaitingForResponse}
+            inputMode={inputMode}
+            onInterrupt={handleInterrupt}
+            assistant={assistant}
+            onFileAttached={handleFileAttached}
+            disabled={isInputDisabled}
+          />
+        )}
+
+        {/* Free trial status and Continue CLI info - always show */}
         <Box
           flexDirection="row"
           justifyContent="space-between"
@@ -347,10 +375,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
           <Box>
             <FreeTrialStatus
               apiClient={apiClient}
-              onTransitionComplete={handleReload}
+              model={model}
               onTransitionStateChange={setIsShowingFreeTrialTransition}
-              onSwitchToLocalConfig={handleSwitchToLocalConfig}
-              onFullReload={handleFullReload}
             />
           </Box>
           <Box marginRight={2}>
