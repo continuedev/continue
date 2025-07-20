@@ -66,17 +66,6 @@ export async function runCLI(
     expectError = false,
   } = options;
 
-  // Windows CI diagnostics
-  if (process.platform === "win32" && process.env.CI) {
-    console.log("Windows CI Diagnostics:");
-    console.log("- CLI Path:", context.cliPath);
-    console.log("- Absolute CLI Path:", path.resolve(context.cliPath));
-    console.log("- File exists:", await fs.access(context.cliPath).then(() => true).catch(() => false));
-    console.log("- Working dir:", context.testDir);
-    console.log("- Node version:", process.version);
-    console.log("- Process platform:", process.platform);
-  }
-
   const execOptions = {
     cwd: context.testDir,
     env: {
@@ -95,127 +84,25 @@ export async function runCLI(
     timeout,
     reject: false,
     input,
-    // Ensure proper encoding
-    encoding: 'utf8' as const,
-    // Increase buffer size for Windows
-    maxBuffer: 10 * 1024 * 1024, // 10MB
-    // Let execa handle Windows argument escaping automatically
-    windowsHide: true,
   };
 
   try {
-    // On Windows CI, log the actual command being executed
-    if (process.platform === "win32" && process.env.CI) {
-      console.log("Executing command:", {
-        node: process.execPath,
-        script: context.cliPath,
-        args: args,
-      });
-      
-      // Check if dist/index.js exists and is readable
-      try {
-        const distIndexPath = path.resolve(context.cliPath);
-        const stats = await fs.stat(distIndexPath);
-        console.log("CLI file stats:", {
-          exists: true,
-          size: stats.size,
-          isFile: stats.isFile(),
-          mode: stats.mode.toString(8),
-        });
-        
-        // Read first few lines to check for shebang issues
-        const content = await fs.readFile(distIndexPath, 'utf8');
-        const firstLines = content.split('\n').slice(0, 5).join('\n');
-        console.log("First lines of CLI file:", firstLines);
-      } catch (checkError) {
-        console.error("Failed to check CLI file:", checkError);
-      }
-    }
-
     const result = await execaNode(context.cliPath, args, execOptions);
 
-    // Ensure stdout/stderr are always strings
-    const stdout = result.stdout ?? "";
-    const stderr = result.stderr ?? "";
-    
-    // Log for debugging Windows issues
-    if (process.env.DEBUG_CLI_TESTS && process.platform === "win32") {
-      console.log("CLI Result:", {
-        stdout: stdout.substring(0, 200),
-        stderr: stderr.substring(0, 200),
-        exitCode: result.exitCode,
-      });
-    }
-
     return {
-      stdout,
-      stderr,
+      stdout: result.stdout,
+      stderr: result.stderr,
       exitCode: result.exitCode ?? 0,
     };
   } catch (error: any) {
-    // Always capture stdout/stderr even on error
-    const stdout = error.stdout ?? "";
-    const stderr = error.stderr ?? "";
-    const exitCode = error.exitCode ?? 1;
-    
     if (!expectError) {
-      // Include more details in error for debugging
-      const errorDetails = {
-        message: error.message,
-        stdout: stdout.substring(0, 500),
-        stderr: stderr.substring(0, 500),
-        exitCode,
-        command: error.command,
-        cwd: execOptions.cwd,
-        cliPath: context.cliPath,
-        args,
-        // Add more Windows-specific debugging info
-        nodeVersion: process.version,
-        platform: process.platform,
-        arch: process.arch,
-        // Include the full error object for debugging
-        fullError: {
-          name: error.name,
-          stack: error.stack,
-          code: error.code,
-          signal: error.signal,
-          killed: error.killed,
-          timedOut: error.timedOut,
-        }
-      };
-      console.error("CLI execution failed:", errorDetails);
-      
-      // On Windows, if we get empty output, it might be a Node.js path issue
-      if (process.platform === "win32" && !stdout && !stderr) {
-        console.error("Windows: No output captured. This might be a Node.js execution issue.");
-        console.error("Attempting direct node execution for diagnostics...");
-        
-        // Try to run with node directly to see if we get better error info
-        try {
-          const { execSync } = require('child_process');
-          const directResult = execSync(`${process.execPath} "${context.cliPath}" --version`, {
-            cwd: context.testDir,
-            encoding: 'utf8',
-            stdio: 'pipe'
-          });
-          console.error("Direct execution succeeded:", directResult);
-        } catch (directError: any) {
-          console.error("Direct execution also failed:", {
-            message: directError.message,
-            stdout: directError.stdout?.toString(),
-            stderr: directError.stderr?.toString(),
-            status: directError.status,
-          });
-        }
-      }
-      
       throw error;
     }
 
     return {
-      stdout,
-      stderr,
-      exitCode,
+      stdout: error.stdout || "",
+      stderr: error.stderr || "",
+      exitCode: error.exitCode ?? 1,
       error,
     };
   }
