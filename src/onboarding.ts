@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as readlineSync from "readline-sync";
+import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { MCPService } from "./mcp.js";
@@ -212,9 +213,58 @@ export async function markOnboardingComplete(): Promise<void> {
   fs.writeFileSync(flagPath, new Date().toISOString());
 }
 
+/**
+ * Process rules and inject them into the assistant config
+ * @param config - The assistant config to modify
+ * @param rules - Array of rule specifications to process and inject
+ * @returns The modified config with injected rules
+ */
+async function injectRulesIntoConfig(
+  config: AssistantUnrolled,
+  rules: string[]
+): Promise<AssistantUnrolled> {
+  if (!rules || rules.length === 0) {
+    return config;
+  }
+
+  let processedRules: string[] = [];
+  for (const ruleSpec of rules) {
+    try {
+      const processedRule = await processRule(ruleSpec);
+      processedRules.push(processedRule);
+    } catch (error: any) {
+      console.warn(
+        chalk.yellow(
+          `Warning: Failed to process rule "${ruleSpec}": ${error.message}`
+        )
+      );
+    }
+  }
+
+  if (processedRules.length === 0) {
+    return config;
+  }
+
+  // Clone the config to avoid mutating the original
+  const modifiedConfig = { ...config };
+
+  // Combine processed rules with existing system message if the config has one
+  const existingSystemMessage = (modifiedConfig as any).systemMessage || "";
+  const rulesSection = processedRules.join("\n\n");
+  
+  if (existingSystemMessage) {
+    (modifiedConfig as any).systemMessage = `${existingSystemMessage}\n\n${rulesSection}`;
+  } else {
+    (modifiedConfig as any).systemMessage = rulesSection;
+  }
+
+  return modifiedConfig;
+}
+
 export async function initializeWithOnboarding(
   authConfig: AuthConfig,
-  configPath: string | undefined
+  configPath: string | undefined,
+  rules?: string[]
 ): Promise<OnboardingResult> {
   const firstTime = await isFirstTime();
 
@@ -227,6 +277,11 @@ export async function initializeWithOnboarding(
     }
   } else {
     result = await runNormalFlow(configPath, authConfig);
+  }
+
+  // Inject rules into the config if provided
+  if (rules && rules.length > 0) {
+    result.config = await injectRulesIntoConfig(result.config, rules);
   }
 
   return result;

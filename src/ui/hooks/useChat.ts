@@ -61,7 +61,15 @@ export function useChat({
           rulesSystemMessage,
           additionalRules
         );
-        if (systemMessage) {
+        if (systemMessage instanceof Promise) {
+          // Handle the promise case - we'll need to initialize this asynchronously
+          systemMessage.then((resolvedMessage) => {
+            if (resolvedMessage) {
+              history.push({ role: "system", content: resolvedMessage });
+              setChatHistory([...history]);
+            }
+          });
+        } else if (systemMessage) {
           history.push({ role: "system", content: systemMessage });
         }
       }
@@ -95,6 +103,25 @@ export function useChat({
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ path: string; content: string }>
   >([]);
+
+  useEffect(() => {
+    // Initialize system message asynchronously
+    const initializeSystemMessage = async () => {
+      if (chatHistory.length === 0 || !chatHistory.some(msg => msg.role === "system")) {
+        const rulesSystemMessage = "";
+        const systemMessage = await constructSystemMessage(
+          rulesSystemMessage,
+          additionalRules
+        );
+        if (systemMessage) {
+          const newHistory = [{ role: "system" as const, content: systemMessage }];
+          setChatHistory(newHistory);
+        }
+      }
+    };
+
+    initializeSystemMessage();
+  }, []);
 
   useEffect(() => {
     if (initialPrompt) {
@@ -371,9 +398,9 @@ export function useChat({
     setAttachedFiles((prev) => [...prev, { path: filePath, content }]);
   };
 
-  const resetChatHistory = () => {
+  const resetChatHistory = async () => {
     const rulesSystemMessage = "";
-    const systemMessage = constructSystemMessage(
+    const systemMessage = await constructSystemMessage(
       rulesSystemMessage,
       additionalRules
     );

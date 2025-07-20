@@ -29,7 +29,7 @@ async function initializeChat(options: ChatOptions) {
     console.log(chalk.white(CONTINUE_ASCII_ART));
     console.info(chalk.gray(`v${getVersion()}\n`));
   }
-  const result = await initializeWithOnboarding(authConfig, options.config);
+  const result = await initializeWithOnboarding(authConfig, options.config, options.rule);
 
   // Ensure organization is selected if authenticated
   let finalAuthConfig = authConfig;
@@ -92,7 +92,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // If no session loaded or not resuming, initialize with system message
     if (chatHistory.length === 0) {
       const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
-      const systemMessage = constructSystemMessage(
+      const systemMessage = await constructSystemMessage(
         rulesSystemMessage,
         options.rule
       );
