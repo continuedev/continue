@@ -14,3 +14,46 @@ export function getVersion(): string {
     return "unknown";
   }
 }
+
+export async function getLatestVersion(): Promise<string | null> {
+  try {
+    const response = await fetch(
+      "https://registry.npmjs.org/@continuedev/cli/latest"
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.version;
+  } catch (error) {
+    console.warn("Warning: Could not fetch latest version from npm registry");
+    return null;
+  }
+}
+
+export function compareVersions(
+  current: string,
+  latest: string
+): "newer" | "same" | "older" {
+  if (current === "unknown" || latest === "unknown") {
+    return "same";
+  }
+
+  // Simple semantic version comparison
+  const parseVersion = (version: string) => {
+    const parts = version.replace(/^v/, "").split(".").map(part => parseInt(part, 10));
+    return { major: parts[0] || 0, minor: parts[1] || 0, patch: parts[2] || 0 };
+  };
+
+  const currentParts = parseVersion(current);
+  const latestParts = parseVersion(latest);
+
+  if (currentParts.major > latestParts.major) return "newer";
+  if (currentParts.major < latestParts.major) return "older";
+  if (currentParts.minor > latestParts.minor) return "newer";
+  if (currentParts.minor < latestParts.minor) return "older";
+  if (currentParts.patch > latestParts.patch) return "newer";
+  if (currentParts.patch < latestParts.patch) return "older";
+
+  return "same";
+}

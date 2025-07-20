@@ -1,7 +1,7 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { Box, Text } from "ink";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { loadAuthConfig } from "../auth/workos.js";
 import { initialize } from "../config.js";
 import { introMessage } from "../intro.js";
@@ -15,6 +15,7 @@ import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import LoadingAnimation from "./LoadingAnimation.js";
 import OrganizationSelector from "./OrganizationSelector.js";
 import Timer from "./Timer.js";
+import UpdateNotification from "./UpdateNotification.js";
 import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
@@ -239,7 +240,15 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onFileAttached={handleFileAttached}
           disabled={showOrgSelector || showConfigSelector || !!loginPrompt}
         />
-        <Box marginRight={2} justifyContent="flex-end">
+        <Box
+          marginRight={2}
+          justifyContent="space-between"
+          flexDirection="row"
+          marginLeft={2}
+        >
+          <Box>
+            <UpdateNotification />
+          </Box>
           <Text color="gray">● Continue CLI</Text>
         </Box>
       </Box>
