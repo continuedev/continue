@@ -41,7 +41,7 @@ export function compareVersions(
 
   // Simple semantic version comparison
   const parseVersion = (version: string) => {
-    const parts = version.replace(/^v/, "").split(".").map(Number);
+    const parts = version.replace(/^v/, "").split(".").map(part => parseInt(part, 10));
     return { major: parts[0] || 0, minor: parts[1] || 0, patch: parts[2] || 0 };
   };
 
