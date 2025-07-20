@@ -3,7 +3,6 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { MCPService } from "./mcp.js";
-import { BUILTIN_TOOLS } from "./tools/index.js";
 
 export function loadSystemMessage(
   assistant: AssistantConfig
@@ -28,13 +27,13 @@ export async function introMessage(
   console.info(`\n${chalk.bold.yellow(`Agent: ${config.name}\n`)}`);
   console.info(`${chalk.blue("Model:")} ${modelName.split("/").pop()}\n`);
 
-  console.info(chalk.blue("Tools:"));
-  BUILTIN_TOOLS.forEach((tool) => {
-    console.info(
-      `- ${chalk.white(tool.displayName)}: ${chalk.dim(tool.description ?? "")}`
-    );
-  });
-  console.info("");
+  // console.info(chalk.blue("Tools:"));
+  // BUILTIN_TOOLS.forEach((tool) => {
+  //   console.info(
+  //     `- ${chalk.white(tool.displayName)}: ${chalk.dim(tool.description ?? "")}`
+  //   );
+  // });
+  // console.info("");
 
   console.info(chalk.blue("Slash commands:"));
 
