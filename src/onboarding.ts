@@ -168,7 +168,7 @@ export async function runNormalFlow(
   if (isAuthenticated()) {
     try {
       const result = await initialize(authConfig, undefined);
-      return { ...result, wasOnboarded: true };
+      return { ...result, wasOnboarded: false };
     } catch (error) {}
   }
 
@@ -176,7 +176,7 @@ export async function runNormalFlow(
   if (fs.existsSync(CONFIG_PATH)) {
     try {
       const result = await initialize(authConfig, CONFIG_PATH);
-      return { ...result, wasOnboarded: true };
+      return { ...result, wasOnboarded: false };
     } catch (error) {
       console.log(chalk.yellow("⚠ Invalid config file found"));
     }
@@ -188,7 +188,7 @@ export async function runNormalFlow(
     await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
     console.log(chalk.gray(`  Config saved to: ${CONFIG_PATH}`));
     const result = await initialize(authConfig, CONFIG_PATH);
-    return { ...result, wasOnboarded: true };
+    return { ...result, wasOnboarded: false };
   }
 
   // Step 5: Fall back to onboarding flow
