@@ -2,7 +2,7 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
-import { ensureOrganization, loadAuthConfig } from "../auth/workos.js";
+import { ensureOrganization, loadAuthConfig, getOrganizationId } from "../auth/workos.js";
 import { introMessage } from "../intro.js";
 import { configureLogger } from "../logger.js";
 import { initializeWithOnboarding } from "../onboarding.js";
@@ -46,10 +46,11 @@ async function initializeChat(options: ChatOptions) {
     );
 
     // Update telemetry with organization info
-    if (finalAuthConfig.selectedOrganization?.id) {
-      telemetryService.updateOrganization(
-        finalAuthConfig.selectedOrganization.id
-      );
+    if (finalAuthConfig) {
+      const organizationId = getOrganizationId(finalAuthConfig);
+      if (organizationId) {
+        telemetryService.updateOrganization(organizationId);
+      }
     }
   }
 

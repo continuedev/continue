@@ -9,10 +9,11 @@ export async function logout() {
     ".continue",
     ".onboarding_complete"
   );
-  workosLogout();
 
   // Remove onboarding completion flag so user will go through onboarding again
   if (fs.existsSync(onboardingFlagPath)) {
     fs.unlinkSync(onboardingFlagPath);
   }
+
+  workosLogout();
 }

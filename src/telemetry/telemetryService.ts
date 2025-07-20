@@ -1,5 +1,6 @@
 import { metrics } from "@opentelemetry/api";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
   ConsoleMetricExporter,
   MeterProvider,
@@ -77,7 +78,7 @@ class TelemetryService {
   private initialize() {
     try {
       // Create resource
-      const resource = new Resource({
+      const resource = resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: "continue-cli",
         [SEMRESATTRS_SERVICE_VERSION]: getVersion(),
         [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]:
