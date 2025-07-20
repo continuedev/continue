@@ -1,12 +1,11 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 import { readFileSync } from "fs";
-import { join, dirname } from "path";
+import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { CONTINUE_ASCII_ART } from "./asciiArt.js";
+import { getAllSlashCommands } from "./commands/commands.js";
 import { MCPService } from "./mcp.js";
-import { getAllTools } from "./streamChatResponse.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,44 +29,42 @@ export function loadSystemMessage(
     .join("\n");
 }
 
-export function introMessage(
+export async function introMessage(
   config: AssistantUnrolled,
-  modelName: string,
+  model: ModelConfig,
   mcpService: MCPService
 ) {
   const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
 
-  console.info(chalk.cyan(CONTINUE_ASCII_ART));
-  console.info(chalk.gray(`v${getVersion()}\n`));
+  // Get all slash commands from central definition
+  const allCommands = getAllSlashCommands(config);
 
-  console.info(`${chalk.bold.blue(`Agent: ${config.name}\n`)}`);
-  console.info(`${chalk.yellow("Model:")} ${modelName.split("/").pop()}\n`);
+  console.info(`\n${chalk.bold.yellow(`Agent: ${config.name}\n`)}`);
+  console.info(`${chalk.blue("Model:")} ${model.name.split("/").pop()}\n`);
 
-  console.info(chalk.yellow("Tools:"));
-  getAllTools().forEach((tool) => {
+  // console.info(chalk.blue("Tools:"));
+  // BUILTIN_TOOLS.forEach((tool) => {
+  //   console.info(
+  //     `- ${chalk.white(tool.displayName)}: ${chalk.dim(tool.description ?? "")}`
+  //   );
+  // });
+  // console.info("");
+
+  console.info(chalk.blue("Slash commands:"));
+
+  // Display all commands from central definition
+  for (const command of allCommands) {
     console.info(
-      `- ${chalk.green(tool.function.name)}: ${tool.function.description ?? ""}`
+      `- ${chalk.white("/" + command.name)}: ${chalk.dim(command.description)}`
     );
-  });
-  console.info("");
-
-  console.info(chalk.yellow("Slash commands:"));
-  console.info(`- ${chalk.green("/exit")}: Exit the chat`);
-  console.info(`- ${chalk.green("/clear")}: Clear the chat history`);
-  console.info(`- ${chalk.green("/help")}: Show help message`);
-  console.info(`- ${chalk.green("/login")}: Authenticate with your account`);
-  console.info(`- ${chalk.green("/logout")}: Sign out of your current session`);
-  console.info(
-    `- ${chalk.green("/whoami")}: Check who you're currently logged in as`
-  );
-  console.info(`- ${chalk.green("/org")}: Switch organization`);
-  console.info(`- ${chalk.green("/config")}: Switch configuration`);
-  for (const prompt of config.prompts ?? []) {
-    console.info(`- /${prompt?.name}: ${prompt?.description}`);
   }
+
+  // Display MCP prompts separately since they're not part of our central definition
   for (const prompt of mcpPrompts) {
-    console.info(`- /${prompt.name}: ${prompt.description}`);
+    console.info(
+      `- ${chalk.white("/" + prompt.name)}: ${chalk.dim(prompt.description)}`
+    );
   }
   console.info("");
 

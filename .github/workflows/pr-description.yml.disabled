@@ -53,7 +53,7 @@ jobs:
       - name: Analyze PR with Continue
         id: analyze
         run: |
-          continue-cli -p --assistant "starter/nextjs-assistant" "$(cat prompt.txt)" > analysis.txt
+          continue-cli -p --config "starter/nextjs-assistant" "$(cat prompt.txt)" > analysis.txt
           echo "analysis_file=analysis.txt" >> $GITHUB_OUTPUT
         env:
           ## TODO: This needs to be set on the repo

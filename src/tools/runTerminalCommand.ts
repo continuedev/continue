@@ -1,10 +1,10 @@
-import { Tool } from "./types.js";
 import { exec } from "child_process";
+import { Tool } from "./types.js";
 
 export const runTerminalCommandTool: Tool = {
   name: "run_terminal_command",
-  displayName: "Terminal",
-  description: "Executes a terminal command and returns the output.",
+  displayName: "Bash",
+  description: "Executes a terminal command and returns the output",
   parameters: {
     command: {
       type: "string",

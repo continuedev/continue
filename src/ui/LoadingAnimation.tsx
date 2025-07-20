@@ -150,7 +150,7 @@ interface LoadingAnimationProps {
 
 const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
   visible = true,
-  color = "blue",
+  color = "magenta",
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const animationChars =

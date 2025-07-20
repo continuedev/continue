@@ -1,5 +1,6 @@
 import {
   AssistantUnrolled,
+  ModelConfig,
   RegistryClient,
   unrollAssistant,
 } from "@continuedev/config-yaml";
@@ -13,6 +14,7 @@ import {
   DefaultApi,
   DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
+import chalk from "chalk";
 import { dirname } from "node:path";
 import {
   AuthConfig,
@@ -27,7 +29,7 @@ import { MCPService } from "./mcp.js";
 export function getLlmApi(
   assistant: AssistantUnrolled,
   authConfig: AuthConfig
-): [BaseLlmApi, string] {
+): [BaseLlmApi, ModelConfig] {
   const model = assistant.models?.find((model) =>
     model?.roles?.includes("chat")
   );
@@ -71,7 +73,7 @@ export function getLlmApi(
     );
   }
 
-  return [llmApi, model.model];
+  return [llmApi, model];
 }
 
 async function loadConfigYaml(
@@ -97,9 +99,15 @@ async function loadConfigYaml(
     }
   );
 
-  if (unrollResult.errors?.length || !unrollResult.config) {
-    const errorDetails = unrollResult.errors?.join("\n") ?? "Unknown error";
+  const errorDetails = unrollResult.errors;
+  if (!unrollResult.config) {
     throw new Error(`Failed to load config file:\n${errorDetails}`);
+  } else if (errorDetails?.length) {
+    const warnings =
+      errorDetails?.length > 1
+        ? errorDetails.map((d) => `\n- ${d.message}`)
+        : errorDetails[0].message;
+    console.warn(chalk.dim(`Warning: ${warnings}`));
   }
 
   return unrollResult.config;
@@ -179,12 +187,10 @@ export async function initialize(
 ): Promise<{
   config: AssistantUnrolled;
   llmApi: BaseLlmApi;
-  model: string;
+  model: ModelConfig;
   mcpService: MCPService;
 }> {
-  const accessToken = getAccessToken(authConfig);
   const organizationId = getOrganizationId(authConfig);
-
   const config = await loadConfig(authConfig, configPath, organizationId);
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);

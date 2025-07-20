@@ -1,29 +1,19 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
-import {
-  getAllSlashCommands,
-  type SlashCommand,
-} from "../commands/commands.js";
+
+import { getAllSlashCommands } from "../commands/commands.js";
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
   filter: string;
   selectedIndex: number;
-  onSelect: (command: string) => void;
-}
-
-interface SlashCommand {
-  name: string;
-  description: string;
-  category: "system" | "assistant";
 }
 
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
-  onSelect,
 }) => {
   // Memoize the slash commands to prevent excessive re-renders
   // Only recalculate when assistant.prompts changes

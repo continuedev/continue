@@ -1,5 +1,6 @@
 import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
+import logger from "../util/logger.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
@@ -7,9 +8,7 @@ import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
 import { type Tool, type ToolParameters } from "./types.js";
-import { viewDiffTool } from "./viewDiff.js";
 import { writeFileTool } from "./writeFile.js";
-import logger from "../util/logger.js";
 
 export type { Tool, ToolParameters };
 
@@ -17,7 +16,6 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
   listFilesTool,
-  viewDiffTool,
   searchCodeTool,
   runTerminalCommandTool,
   fetchTool,
@@ -165,9 +163,15 @@ export async function executeToolCall(toolCall: {
   }
 
   try {
-    logger.debug('Executing tool', { toolName: toolCall.name, arguments: toolCall.arguments });
+    logger.debug("Executing tool", {
+      toolName: toolCall.name,
+      arguments: toolCall.arguments,
+    });
     const result = await tool.run(toolCall.arguments);
-    logger.debug('Tool execution completed', { toolName: toolCall.name, resultLength: result?.length || 0 });
+    logger.debug("Tool execution completed", {
+      toolName: toolCall.name,
+      resultLength: result?.length || 0,
+    });
     return result;
   } catch (error) {
     return `Error executing tool "${toolCall.name}": ${

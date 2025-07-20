@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { Box, Text } from "ink";
 import React, { useState, useEffect } from "react";
@@ -14,11 +14,12 @@ import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import LoadingAnimation from "./LoadingAnimation.js";
 import OrganizationSelector from "./OrganizationSelector.js";
+import Timer from "./Timer.js";
 import UserInput from "./UserInput.js";
 
 interface TUIChatProps {
   config: AssistantUnrolled;
-  model: string;
+  model: ModelConfig;
   llmApi: BaseLlmApi;
   mcpService: MCPService;
   configPath?: string;
@@ -109,6 +110,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     messages,
     setMessages,
     isWaitingForResponse,
+    responseStartTime,
     inputMode,
     handleUserMessage,
     handleInterrupt,
@@ -177,10 +179,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
       {/* Fixed bottom section */}
       <Box flexDirection="column" flexShrink={0}>
         {/* Status */}
-        {isWaitingForResponse && (
+        {isWaitingForResponse && responseStartTime && (
           <Box paddingX={1} flexDirection="row" gap={1}>
             <LoadingAnimation visible={isWaitingForResponse} />
-            <Text color="gray">esc to interrupt</Text>
+            <Text color="gray">(</Text>
+            <Timer startTime={responseStartTime} />
+            <Text color="gray">• esc to interrupt )</Text>
           </Box>
         )}
 

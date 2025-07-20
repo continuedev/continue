@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { render } from "ink";
 import React from "react";
@@ -11,7 +11,7 @@ export { default as MarkdownRenderer } from "./MarkdownRenderer.js";
 export async function startTUIChat(
   config: AssistantUnrolled,
   llmApi: BaseLlmApi,
-  model: string,
+  model: ModelConfig,
   mcpService: MCPService,
   initialPrompt?: string,
   resume?: boolean,

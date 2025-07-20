@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
+import { CONTINUE_ASCII_ART } from "../asciiArt.js";
 import { ensureOrganization, loadAuthConfig } from "../auth/workos.js";
 import { introMessage } from "../intro.js";
 import { configureLogger } from "../logger.js";
@@ -23,6 +24,9 @@ async function initializeChat(options: ChatOptions) {
   const authConfig = loadAuthConfig();
 
   // Use onboarding flow for initialization
+  if (!options.headless) {
+    console.log(chalk.white(CONTINUE_ASCII_ART));
+  }
   const result = await initializeWithOnboarding(authConfig, options.config);
 
   // Ensure organization is selected if authenticated
@@ -86,7 +90,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // If no session loaded or not resuming, initialize with system message
     if (chatHistory.length === 0) {
       const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
-      const systemMessage = constructSystemMessage(rulesSystemMessage, options.rule);
+      const systemMessage = constructSystemMessage(
+        rulesSystemMessage,
+        options.rule
+      );
       if (systemMessage) {
         chatHistory.push({ role: "system", content: systemMessage });
       }
