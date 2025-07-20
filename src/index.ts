@@ -4,9 +4,22 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
+import { initializeTelemetry } from "./telemetry.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import logger from "./util/logger.js";
 import { getVersion } from "./version.js";
+
+// Initialize telemetry early (async)
+(async () => {
+  await initializeTelemetry({
+    serviceName: "cn",
+    serviceVersion: getVersion(),
+    // Remove hardcoded fallback - let telemetry.ts handle environment variables
+    enabled: process.env.TELEMETRY_ENABLED !== "false",
+  });
+})().catch((err) => {
+  logger.error("Failed to initialize telemetry:", err);
+});
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
