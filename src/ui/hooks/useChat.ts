@@ -13,6 +13,7 @@ import {
 import { constructSystemMessage } from "../../systemMessage.js";
 import { getToolDisplayName } from "../../tools.js";
 import { formatError } from "../../util/formatError.js";
+import logger from "../../util/logger.js";
 
 import { DisplayMessage } from "../types.js";
 
@@ -185,6 +186,7 @@ export function useChat({
     setAbortController(controller);
     setIsWaitingForResponse(true);
     setInputMode(false);
+    logger.debug('Starting chat response stream', { messageLength: message.length, historyLength: newHistory.length });
 
     try {
       let currentStreamingMessage: DisplayMessage | null = null;
@@ -310,9 +312,12 @@ export function useChat({
 
       // Update the chat history with the complete conversation after streaming
       setChatHistory(finalHistory);
+      logger.debug('Chat history updated', { finalHistoryLength: finalHistory.length });
       
       // Save the updated history to session
+      logger.debug('Saving session', { historyLength: finalHistory.length });
       saveSession(finalHistory);
+      logger.debug('Session saved');
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
       setMessages((prev) => [

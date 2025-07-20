@@ -9,6 +9,7 @@ import { searchCodeTool } from "./searchCode.js";
 import { type Tool, type ToolParameters } from "./types.js";
 import { viewDiffTool } from "./viewDiff.js";
 import { writeFileTool } from "./writeFile.js";
+import logger from "../util/logger.js";
 
 export type { Tool, ToolParameters };
 
@@ -87,7 +88,7 @@ export function extractToolCalls(
         });
       }
     } catch (e) {
-      console.error("Failed to parse tool call:", match[1]);
+      logger.error("Failed to parse tool call:", { toolCall: match[1] });
     }
   }
 
@@ -164,7 +165,10 @@ export async function executeToolCall(toolCall: {
   }
 
   try {
-    return await tool.run(toolCall.arguments);
+    logger.debug('Executing tool', { toolName: toolCall.name, arguments: toolCall.arguments });
+    const result = await tool.run(toolCall.arguments);
+    logger.debug('Tool execution completed', { toolName: toolCall.name, resultLength: result?.length || 0 });
+    return result;
   } catch (error) {
     return `Error executing tool "${toolCall.name}": ${
       error instanceof Error ? error.message : String(error)

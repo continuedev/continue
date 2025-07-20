@@ -10,6 +10,7 @@ import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { startTUIChat } from "../ui/index.js";
 import { formatError } from "../util/formatError.js";
+import logger from "../util/logger.js";
 
 export interface ChatOptions {
   headless?: boolean;
@@ -74,9 +75,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       const savedHistory = loadSession();
       if (savedHistory) {
         chatHistory = savedHistory;
-        console.log(chalk.yellow("Resuming previous session..."));
+        logger.info(chalk.yellow("Resuming previous session..."));
       } else {
-        console.log(
+        logger.info(
           chalk.yellow("No previous session found, starting fresh...")
         );
       }
@@ -125,22 +126,22 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
         // In headless mode, only print the final response
         if (options.headless && finalResponse.trim()) {
-          console.log(finalResponse);
+          logger.info(finalResponse);
         }
 
         // Save session after each successful response
         saveSession(chatHistory);
       } catch (e: any) {
-        console.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
+        logger.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
         if (!options.headless) {
-          console.info(
+          logger.info(
             chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
           );
         }
       }
     }
   } catch (error: any) {
-    console.error(chalk.red(`Fatal error: ${formatError(error)}`));
+    logger.error(chalk.red(`Fatal error: ${formatError(error)}`));
     process.exit(1);
   }
 }

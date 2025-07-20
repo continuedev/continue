@@ -2,6 +2,7 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import logger from "./util/logger.js";
 
 /**
  * Get a unique session identifier for the current terminal session
@@ -60,7 +61,7 @@ export function saveSession(chatHistory: ChatCompletionMessageParam[]): void {
     
     fs.writeFileSync(sessionFilePath, JSON.stringify(sessionData, null, 2));
   } catch (error) {
-    console.error('Error saving session:', error);
+    logger.error('Error saving session:', error);
   }
 }
 
@@ -78,7 +79,7 @@ export function loadSession(): ChatCompletionMessageParam[] | null {
     const sessionData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf8'));
     return sessionData.chatHistory || null;
   } catch (error) {
-    console.error('Error loading session:', error);
+    logger.error('Error loading session:', error);
     return null;
   }
 }
@@ -93,7 +94,7 @@ export function clearSession(): void {
       fs.unlinkSync(sessionFilePath);
     }
   } catch (error) {
-    console.error('Error clearing session:', error);
+    logger.error('Error clearing session:', error);
   }
 }
 

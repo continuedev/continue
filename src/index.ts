@@ -5,15 +5,16 @@ import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { getVersion } from "./version.js";
+import logger from "./util/logger.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  logger.error("Unhandled Rejection at:", { promise, reason });
   // Don't exit the process, just log the error
 });
 
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  logger.error("Uncaught Exception:", error);
   // Don't exit the process, just log the error
 });
 
@@ -34,6 +35,7 @@ program
   .option("--resume", "Resume from last session")
   .option("--readonly", "Only allow readonly tools")
   .option("--no-tools", "Disable all tools")
+  .option("-v, --verbose", "Enable verbose logging")
   .option(
     "--rule <rule>",
     "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
@@ -45,6 +47,15 @@ program
     [] as string[]
   )
   .action(async (prompt, options) => {
+    if (options.verbose) {
+      logger.setLevel('debug');
+      const logPath = logger.getLogPath();
+      const sessionId = logger.getSessionId();
+      console.log(`Verbose logging enabled (session: ${sessionId})`);
+      console.log(`Logs: ${logPath}`);
+      console.log(`Filter this session: grep '\\[${sessionId}\\]' ${logPath}`);
+      logger.debug('Verbose logging enabled');
+    }
     await chat(prompt, options);
   });
 
@@ -64,4 +75,17 @@ program
     await logout();
   });
 
-program.parse();
+// Handle unknown commands
+program.on("command:*", () => {
+  console.error(`Error: Unknown command '${program.args.join(" ")}'\n`);
+  program.outputHelp();
+  process.exit(1);
+});
+
+// Parse arguments and handle errors
+try {
+  program.parse();
+} catch (error) {
+  console.error(error);
+  process.exit(1);
+}

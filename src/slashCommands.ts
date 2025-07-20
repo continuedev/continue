@@ -47,7 +47,7 @@ export async function handleSlashCommands(
       case "config":
         return { openConfigSelector: true };
       case "login":
-        login(false, onLoginPrompt)
+        login()
           .then(async (config) => {
             if (config && isAuthenticatedConfig(config)) {
               console.info(
