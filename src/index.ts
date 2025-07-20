@@ -4,8 +4,8 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
-import { getVersion } from "./version.js";
 import logger from "./util/logger.js";
+import { getVersion } from "./version.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
@@ -48,14 +48,16 @@ program
   )
   .action(async (prompt, options) => {
     if (options.verbose) {
-      logger.setLevel('debug');
+      logger.setLevel("debug");
       const logPath = logger.getLogPath();
       const sessionId = logger.getSessionId();
       console.log(`Verbose logging enabled (session: ${sessionId})`);
       console.log(`Logs: ${logPath}`);
       console.log(`Filter this session: grep '\\[${sessionId}\\]' ${logPath}`);
-      logger.debug('Verbose logging enabled');
+      logger.debug("Verbose logging enabled");
     }
+    options.headless = options.print;
+    options.print = undefined;
     await chat(prompt, options);
   });
 

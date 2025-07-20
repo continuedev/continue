@@ -29,7 +29,11 @@ async function initializeChat(options: ChatOptions) {
     console.log(chalk.white(CONTINUE_ASCII_ART));
     console.info(chalk.gray(`v${getVersion()}\n`));
   }
-  const result = await initializeWithOnboarding(authConfig, options.config, options.rule);
+  const result = await initializeWithOnboarding(
+    authConfig,
+    options.config,
+    options.rule
+  );
 
   // Ensure organization is selected if authenticated
   let finalAuthConfig = authConfig;
@@ -135,7 +139,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
         // In headless mode, only print the final response
         if (options.headless && finalResponse.trim()) {
-          logger.info(finalResponse);
+          console.log(finalResponse);
         }
 
         // Save session after each successful response
