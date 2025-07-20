@@ -10,6 +10,7 @@ import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { startTUIChat } from "../ui/index.js";
+import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
 import { getVersion } from "../version.js";
@@ -137,9 +138,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
           abortController
         );
 
-        // In headless mode, only print the final response
+        // In headless mode, only print the final response using safe stdout
         if (options.headless && finalResponse.trim()) {
-          console.log(finalResponse);
+          safeStdout(finalResponse + "\n");
         }
 
         // Save session after each successful response
