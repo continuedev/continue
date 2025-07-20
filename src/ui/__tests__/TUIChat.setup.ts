@@ -95,11 +95,35 @@ jest.mock("glob", () => ({
     ]),
 }));
 
+// Mock API Client
+export class MockApiClient {
+  async getFreeTrialStatus() {
+    return {
+      optedInToFreeTrial: true,
+      chatCount: 5,
+      chatLimit: 100,
+    };
+  }
+  async listAssistants() {
+    return [];
+  }
+  async getAssistant() {
+    return { configResult: { config: mockAssistant } };
+  }
+  async listOrganizations() {
+    return { organizations: [] };
+  }
+  async syncSecrets() {
+    return [];
+  }
+}
+
 export const createProps = (overrides: any = {}) => ({
   config: mockAssistant,
   model: "test-model",
   llmApi: new MockLlmApi(),
   mcpService: new MockMCPService(),
+  apiClient: new MockApiClient(),
   configPath: undefined,
   initialPrompt: undefined,
   resume: false,

@@ -1,13 +1,15 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { Box, Text } from "ink";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { loadAuthConfig } from "../auth/workos.js";
 import { initialize } from "../config.js";
 import { introMessage } from "../intro.js";
 import { MCPService } from "../mcp.js";
 import ConfigSelector from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
+import FreeTrialStatus from "./FreeTrialStatus.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
@@ -22,6 +24,7 @@ interface TUIChatProps {
   model: ModelConfig;
   llmApi: BaseLlmApi;
   mcpService: MCPService;
+  apiClient?: DefaultApiInterface;
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
@@ -33,6 +36,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   model: initialModel,
   llmApi: initialLlmApi,
   mcpService: initialMcpService,
+  apiClient,
   configPath,
   initialPrompt,
   resume,
@@ -239,8 +243,19 @@ const TUIChat: React.FC<TUIChatProps> = ({
           onFileAttached={handleFileAttached}
           disabled={showOrgSelector || showConfigSelector || !!loginPrompt}
         />
-        <Box marginRight={2} justifyContent="flex-end">
-          <Text color="gray">● Continue CLI</Text>
+
+        {/* Free trial status and Continue CLI info */}
+        <Box
+          flexDirection="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Box>
+            <FreeTrialStatus apiClient={apiClient} />
+          </Box>
+          <Box marginRight={2}>
+            <Text color="gray">● Continue CLI</Text>
+          </Box>
         </Box>
       </Box>
     </Box>

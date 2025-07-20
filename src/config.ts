@@ -113,16 +113,26 @@ async function loadConfigYaml(
   return unrollResult.config;
 }
 
+export function getApiClient(
+  accessToken: string | undefined | null
+): DefaultApi {
+  return new DefaultApi(
+    new Configuration({
+      basePath: env.apiBase.replace(/\/$/, ""),
+      accessToken: accessToken ?? undefined,
+    })
+  );
+}
+
 export async function loadConfig(
   authConfig: AuthConfig,
   config: string | undefined,
-  organizationId: string | null
+  organizationId: string | null,
+  apiClient?: DefaultApiInterface
 ): Promise<AssistantUnrolled> {
-  const apiClient = new DefaultApi(
-    new Configuration({
-      accessToken: authConfig?.accessToken ?? undefined,
-    })
-  );
+  if (!apiClient) {
+    apiClient = getApiClient(authConfig?.accessToken);
+  }
 
   if (!config) {
     // Check if there's a saved assistant slug in auth config
@@ -204,11 +214,18 @@ export async function initialize(
   llmApi: BaseLlmApi;
   model: ModelConfig;
   mcpService: MCPService;
+  apiClient: DefaultApiInterface;
 }> {
   const organizationId = getOrganizationId(authConfig);
-  const config = await loadConfig(authConfig, configPath, organizationId);
+  const apiClient = getApiClient(authConfig?.accessToken);
+  const config = await loadConfig(
+    authConfig,
+    configPath,
+    organizationId,
+    apiClient
+  );
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);
 
-  return { config, llmApi, model, mcpService };
+  return { config, llmApi, model, mcpService, apiClient };
 }

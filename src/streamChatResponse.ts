@@ -147,9 +147,21 @@ async function processStreamingResponse(
         break;
       }
 
+      // Safety check: ensure chunk has the expected structure
+      if (!chunk.choices || !chunk.choices[0]) {
+        logger.warn("Malformed chunk received - missing choices", { chunk });
+        continue;
+      }
+
+      const choice = chunk.choices[0];
+      if (!choice.delta) {
+        logger.warn("Malformed chunk received - missing delta", { chunk });
+        continue;
+      }
+
       // Handle regular content
-      if (chunk.choices[0].delta.content) {
-        const content = chunk.choices[0].delta.content;
+      if (choice.delta.content) {
+        const content = choice.delta.content;
         if (callbacks?.onContent) {
           callbacks.onContent(content);
         } else if (!isHeadless) {
@@ -159,8 +171,8 @@ async function processStreamingResponse(
       }
 
       // Handle tool calls
-      if (chunk.choices[0].delta.tool_calls) {
-        for (const toolCallDelta of chunk.choices[0].delta.tool_calls) {
+      if (choice.delta.tool_calls) {
+        for (const toolCallDelta of choice.delta.tool_calls) {
           // Get or create tool call
           if (toolCallDelta.id) {
             if (!toolCallsMap.has(toolCallDelta.id)) {

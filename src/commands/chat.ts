@@ -50,6 +50,7 @@ async function initializeChat(options: ChatOptions) {
     llmApi: result.llmApi,
     model: result.model,
     mcpService: result.mcpService,
+    apiClient: result.apiClient,
   };
 }
 
@@ -58,7 +59,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   configureLogger(options.headless ?? false);
 
   try {
-    let { config, llmApi, model, mcpService } = await initializeChat(options);
+    let { config, llmApi, model, mcpService, apiClient } = await initializeChat(
+      options
+    );
 
     // If not in headless mode, start the TUI chat (default)
     if (!options.headless) {
@@ -67,6 +70,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         llmApi,
         model,
         mcpService,
+        apiClient,
         prompt,
         options.resume,
         options.config,
