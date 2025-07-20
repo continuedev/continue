@@ -21,7 +21,7 @@ describe("E2E: Basic Commands", () => {
       const result = await runCLI(context, { args: ["--version"] });
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout.trim()).toBe(getVersion());
+      expect(result.stdout).toBe(getVersion());
       expect(result.stderr).toBe("");
     });
   });
