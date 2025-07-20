@@ -12,6 +12,7 @@ import { constructSystemMessage } from "../systemMessage.js";
 import { startTUIChat } from "../ui/index.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { getVersion } from "../version.js";
 
 export interface ChatOptions {
   headless?: boolean;
@@ -26,6 +27,7 @@ async function initializeChat(options: ChatOptions) {
   // Use onboarding flow for initialization
   if (!options.headless) {
     console.log(chalk.white(CONTINUE_ASCII_ART));
+    console.info(chalk.gray(`v${getVersion()}\n`));
   }
   const result = await initializeWithOnboarding(authConfig, options.config);
 
