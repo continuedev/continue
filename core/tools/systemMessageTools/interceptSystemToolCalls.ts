@@ -1,13 +1,15 @@
 import { ChatMessage, PromptLog, TextMessagePart } from "../..";
 import { normalizeToMessageParts } from "../../util/messageContent";
 import { detectToolCallStart } from "./detectToolCallStart";
-import { generateOpenAIToolCallId } from "./openAiToolCallId";
 import {
   getInitialTooLCallParseState,
   handleToolCallBuffer,
   ToolCallParseState,
 } from "./parseSystemToolCall";
-import { splitAtCodeblocksAndNewLines } from "./systemToolUtils";
+import {
+  generateOpenAIToolCallId,
+  splitAtCodeblocksAndNewLines,
+} from "./systemToolUtils";
 
 /*
     Function to intercept tool calls in markdown code blocks format from a chat message stream

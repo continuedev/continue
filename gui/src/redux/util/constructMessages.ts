@@ -14,7 +14,7 @@ import {
   CANCELLED_TOOL_CALL_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
 } from "core/tools/constants";
-import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/textifySystemTools";
+import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,

@@ -3,6 +3,7 @@ import {
   By,
   EditorView,
   Key,
+  VSBrowser,
   WebDriver,
   WebElement,
   WebView,
@@ -15,14 +16,14 @@ import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
 
-describe.only("GUI Test", () => {
+describe("GUI Test", () => {
   let view: WebView;
   let driver: WebDriver;
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
     // Uncomment this line for faster testing
-    // await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
+    await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
     await GlobalActions.clearAllNotifications();
   });

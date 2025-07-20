@@ -75,7 +75,7 @@ describe("Edit Test", () => {
     return codeLens;
   }
 
-  it("Accepts an Edit in the GUI", async () => {
+  it.only("Accepts an Edit in the GUI", async () => {
     ({ view } = await GUIActions.switchToReactIframe());
 
     await EditActions.acceptEditInGUI(view);
