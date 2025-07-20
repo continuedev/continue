@@ -56,7 +56,12 @@ program
       console.log(`Filter this session: grep '\\[${sessionId}\\]' ${logPath}`);
       logger.debug('Verbose logging enabled');
     }
-    await chat(prompt, options);
+    // Map CLI options to chat options
+    const chatOptions = {
+      ...options,
+      headless: options.print, // Map --print to headless mode
+    };
+    await chat(prompt, chatOptions);
   });
 
 // Login subcommand

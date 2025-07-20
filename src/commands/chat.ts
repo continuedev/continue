@@ -126,7 +126,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
         // In headless mode, only print the final response
         if (options.headless && finalResponse.trim()) {
-          logger.info(finalResponse);
+          console.log(finalResponse);
         }
 
         // Save session after each successful response
