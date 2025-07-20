@@ -66,6 +66,17 @@ export async function runCLI(
     expectError = false,
   } = options;
 
+  // Windows CI diagnostics
+  if (process.platform === "win32" && process.env.CI) {
+    console.log("Windows CI Diagnostics:");
+    console.log("- CLI Path:", context.cliPath);
+    console.log("- Absolute CLI Path:", path.resolve(context.cliPath));
+    console.log("- File exists:", await fs.access(context.cliPath).then(() => true).catch(() => false));
+    console.log("- Working dir:", context.testDir);
+    console.log("- Node version:", process.version);
+    console.log("- Process platform:", process.platform);
+  }
+
   const execOptions = {
     cwd: context.testDir,
     env: {
@@ -93,6 +104,15 @@ export async function runCLI(
   };
 
   try {
+    // On Windows CI, log the actual command being executed
+    if (process.platform === "win32" && process.env.CI) {
+      console.log("Executing command:", {
+        node: process.execPath,
+        script: context.cliPath,
+        args: args,
+      });
+    }
+
     const result = await execaNode(context.cliPath, args, execOptions);
 
     // Ensure stdout/stderr are always strings
