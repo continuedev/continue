@@ -1,4 +1,4 @@
-import { Meter, metrics } from "@opentelemetry/api";
+import { Meter, metrics, Counter, Histogram, ObservableGauge } from "@opentelemetry/api";
 import { OTLPMetricExporter as OTLPMetricExporterGRPC } from "@opentelemetry/exporter-metrics-otlp-grpc";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import {
@@ -27,6 +27,13 @@ export class ContinueCLITelemetry {
   private meterProvider: MeterProvider | null = null;
   private meter: Meter | null = null;
   private config: Required<TelemetryConfig>;
+  
+  // Pre-created instruments to avoid creating new ones on each call
+  private commandCounter: Counter | null = null;
+  private commandDurationHistogram: Histogram | null = null;
+  private chatInteractionCounter: Counter | null = null;
+  private chatResponseTimeHistogram: Histogram | null = null;
+  private chatMessageLengthHistogram: Histogram | null = null;
 
   constructor(config: TelemetryConfig = {}) {
     // Parse standard OpenTelemetry environment variables
@@ -147,6 +154,9 @@ export class ContinueCLITelemetry {
         this.config.serviceVersion
       );
 
+      // Initialize all instruments once during setup
+      this.initializeInstruments();
+
       logger.debug(
         `Telemetry initialized - Protocol: ${this.config.protocol}, Endpoint: ${endpointUrl}`
       );
@@ -160,6 +170,55 @@ export class ContinueCLITelemetry {
     } catch (error) {
       logger.error("Failed to initialize telemetry:", error);
     }
+  }
+
+  /**
+   * Initialize all instruments once during setup to avoid creating new ones on each call
+   */
+  private initializeInstruments(): void {
+    if (!this.meter) return;
+
+    // Command metrics
+    this.commandCounter = this.meter.createCounter(
+      "cli_commands_total",
+      {
+        description: "Total number of CLI commands executed",
+        unit: "1",
+      }
+    );
+
+    this.commandDurationHistogram = this.meter.createHistogram(
+      "cli_command_duration",
+      {
+        description: "Duration of CLI command execution",
+        unit: "ms",
+      }
+    );
+
+    // Chat interaction metrics
+    this.chatInteractionCounter = this.meter.createCounter(
+      "cli_chat_interactions_total",
+      {
+        description: "Total number of chat interactions",
+        unit: "1",
+      }
+    );
+
+    this.chatResponseTimeHistogram = this.meter.createHistogram(
+      "cli_chat_response_time",
+      {
+        description: "Time to receive chat response",
+        unit: "ms",
+      }
+    );
+
+    this.chatMessageLengthHistogram = this.meter.createHistogram(
+      "cli_chat_message_length",
+      {
+        description: "Length of chat messages",
+        unit: "characters",
+      }
+    );
   }
 
   /**
@@ -242,27 +301,14 @@ export class ContinueCLITelemetry {
   ): void {
     if (!this.config.enabled || !this.meter) return;
 
-    // Command counter
-    const commandCounter = this.createCounter(
-      "cli_commands_total",
-      "Total number of CLI commands executed",
-      "1"
-    );
-
-    // Command duration histogram
-    const durationHistogram = this.createHistogram(
-      "cli_command_duration",
-      "Duration of CLI command execution",
-      "ms"
-    );
-
     const attributes = {
       command,
       success: success.toString(),
     };
 
-    commandCounter?.add(1, attributes);
-    durationHistogram?.record(duration, attributes);
+    // Use pre-created instruments instead of creating new ones
+    this.commandCounter?.add(1, attributes);
+    this.commandDurationHistogram?.record(duration, attributes);
   }
 
   /**
@@ -274,27 +320,10 @@ export class ContinueCLITelemetry {
   ): void {
     if (!this.config.enabled || !this.meter) return;
 
-    const chatCounter = this.createCounter(
-      "cli_chat_interactions_total",
-      "Total number of chat interactions",
-      "1"
-    );
-
-    const responseTimeHistogram = this.createHistogram(
-      "cli_chat_response_time",
-      "Time to receive chat response",
-      "ms"
-    );
-
-    const messageLengthHistogram = this.createHistogram(
-      "cli_chat_message_length",
-      "Length of chat messages",
-      "characters"
-    );
-
-    chatCounter?.add(1);
-    responseTimeHistogram?.record(responseTime);
-    messageLengthHistogram?.record(messageLength);
+    // Use pre-created instruments instead of creating new ones
+    this.chatInteractionCounter?.add(1);
+    this.chatResponseTimeHistogram?.record(responseTime);
+    this.chatMessageLengthHistogram?.record(messageLength);
   }
 
   /**
