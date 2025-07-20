@@ -114,7 +114,10 @@ export async function runOnboardingFlow(
   console.log(chalk.white("1. ⏩ Log in with Continue"));
   console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
 
-  const choice = readlineSync.question(chalk.yellow("\nEnter choice (1): "));
+  const choice = readlineSync.question(chalk.yellow("\nEnter choice (1): "), {
+    limit: ["1", "2", ""],
+    limitMessage: chalk.dim("Please enter 1 or 2"),
+  });
 
   if (choice === "1" || choice === "") {
     const newAuthConfig = await login();
@@ -123,9 +126,12 @@ export async function runOnboardingFlow(
     return { ...result, wasOnboarded: true };
   } else if (choice === "2") {
     const apiKey = readlineSync.question(
-      chalk.green("Enter your Anthropic API key: "),
+      chalk.white("\nEnter your Anthropic API key: "),
       {
-        hideEchoBack: true,
+        limit: /^sk-ant-.+$/, // Must start with "sk-ant-" and have additional characters
+        limitMessage: chalk.dim(
+          "Please enter a valid Anthropic key that starts with 'sk-ant'"
+        ),
       }
     );
 
