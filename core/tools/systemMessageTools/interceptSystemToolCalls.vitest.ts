@@ -173,7 +173,7 @@ describe("interceptSystemToolCalls", () => {
     ).toBe("}");
   });
 
-  it.only("processes tool_name without codeblock format", async () => {
+  it("processes tool_name without codeblock format", async () => {
     const messages: ChatMessage[][] = [
       [{ role: "assistant", content: "I'll help you with that.\n" }],
       [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
