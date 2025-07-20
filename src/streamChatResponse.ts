@@ -10,6 +10,8 @@ import type {
 } from "openai/resources.mjs";
 import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
+import telemetryService from "./telemetry/telemetryService.js";
+import { calculateTokenCost } from "./telemetry/utils.js";
 import { executeToolCall } from "./tools.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
 import {
@@ -107,6 +109,8 @@ async function processStreamingResponse(
   toolCalls: ToolCall[];
   shouldContinue: boolean;
 }> {
+  const requestStartTime = Date.now();
+
   const streamFactory = async () => {
     logger.debug("Creating chat completion stream", {
       model,
@@ -128,6 +132,9 @@ async function processStreamingResponse(
 
   let aiResponse = "";
   const toolCallsMap = new Map<string, ToolCall>();
+  let firstTokenTime: number | null = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
 
   try {
     const streamWithBackoff = withExponentialBackoff(
@@ -140,6 +147,26 @@ async function processStreamingResponse(
       chunkCount++;
 
       logger.debug("Received chunk", { chunkCount, chunk });
+
+      // Track first token time
+      if (
+        firstTokenTime === null &&
+        (chunk.choices[0].delta.content || chunk.choices[0].delta.tool_calls)
+      ) {
+        firstTokenTime = Date.now();
+        telemetryService.recordResponseTime(
+          firstTokenTime - requestStartTime,
+          model.model,
+          "time_to_first_token",
+          (tools?.length || 0) > 0
+        );
+      }
+
+      // Track token usage if available
+      if (chunk.usage) {
+        inputTokens = chunk.usage.prompt_tokens || 0;
+        outputTokens = chunk.usage.completion_tokens || 0;
+      }
 
       // Check if we should abort
       if (abortController?.signal.aborted) {
@@ -211,12 +238,54 @@ async function processStreamingResponse(
       }
     }
 
+    const responseEndTime = Date.now();
+    const totalDuration = responseEndTime - requestStartTime;
+
+    // Record API request metrics
+    const cost = calculateTokenCost(inputTokens, outputTokens, model.model);
+
+    telemetryService.recordTokenUsage(inputTokens, "input", model.model);
+    telemetryService.recordTokenUsage(outputTokens, "output", model.model);
+    telemetryService.recordCost(cost, model.model);
+
+    telemetryService.recordResponseTime(
+      totalDuration,
+      model.model,
+      "total_response_time",
+      (tools?.length || 0) > 0
+    );
+
+    // Log API request event
+    telemetryService.logApiRequest(
+      model.model,
+      totalDuration,
+      true, // success
+      undefined, // no error
+      inputTokens,
+      outputTokens,
+      cost
+    );
+
     logger.debug("Stream complete", {
       chunkCount,
       responseLength: aiResponse.length,
       toolCallsCount: toolCallsMap.size,
+      inputTokens,
+      outputTokens,
+      cost,
+      duration: totalDuration,
     });
   } catch (error: any) {
+    const errorDuration = Date.now() - requestStartTime;
+
+    // Log failed API request
+    telemetryService.logApiRequest(
+      model.model,
+      errorDuration,
+      false, // failed
+      error.message || String(error)
+    );
+
     if (error.name === "AbortError" || abortController?.signal.aborted) {
       logger.debug("Stream aborted by user");
       return { content: aiResponse, toolCalls: [], shouldContinue: false };

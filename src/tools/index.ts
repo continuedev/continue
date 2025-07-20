@@ -1,5 +1,6 @@
 import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
+import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
@@ -113,6 +114,8 @@ export async function executeToolCall(toolCall: {
   name: string;
   arguments: Record<string, any>;
 }): Promise<string> {
+  const startTime = Date.now();
+
   const args = parseArgs();
 
   let mcpTools: Tool[] = [];
@@ -149,6 +152,13 @@ export async function executeToolCall(toolCall: {
   const tool = allTools.find((t) => t.name === toolCall.name);
 
   if (!tool) {
+    const duration = Date.now() - startTime;
+    telemetryService.logToolResult(
+      toolCall.name,
+      false,
+      duration,
+      `Tool "${toolCall.name}" not found`
+    );
     return `Error: Tool "${toolCall.name}" not found`;
   }
 
@@ -158,7 +168,10 @@ export async function executeToolCall(toolCall: {
       (toolCall.arguments[paramName] === undefined ||
         toolCall.arguments[paramName] === null)
     ) {
-      return `Error: Required parameter "${paramName}" missing for tool "${toolCall.name}"`;
+      const duration = Date.now() - startTime;
+      const error = `Required parameter "${paramName}" missing for tool "${toolCall.name}"`;
+      telemetryService.logToolResult(toolCall.name, false, duration, error);
+      return `Error: ${error}`;
     }
   }
 
@@ -167,15 +180,40 @@ export async function executeToolCall(toolCall: {
       toolName: toolCall.name,
       arguments: toolCall.arguments,
     });
+
     const result = await tool.run(toolCall.arguments);
+    const duration = Date.now() - startTime;
+
+    telemetryService.logToolResult(
+      toolCall.name,
+      true,
+      duration,
+      undefined, // no error
+      undefined, // no decision
+      undefined, // no source
+      JSON.stringify(toolCall.arguments)
+    );
+
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
       resultLength: result?.length || 0,
     });
+
     return result;
   } catch (error) {
-    return `Error executing tool "${toolCall.name}": ${
-      error instanceof Error ? error.message : String(error)
-    }`;
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    telemetryService.logToolResult(
+      toolCall.name,
+      false,
+      duration,
+      errorMessage,
+      undefined, // no decision
+      undefined, // no source
+      JSON.stringify(toolCall.arguments)
+    );
+
+    return `Error executing tool "${toolCall.name}": ${errorMessage}`;
   }
 }
