@@ -1,7 +1,7 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
 import React, { useEffect, useState } from "react";
-import { hasMultipleOrganizations } from "../auth/workos.js";
+import { getAllSlashCommands, type SlashCommand } from "../commands/commands.js";
 
 interface SlashCommandUIProps {
   assistant: AssistantConfig;
@@ -10,63 +10,17 @@ interface SlashCommandUIProps {
   onSelect: (command: string) => void;
 }
 
-interface SlashCommand {
-  name: string;
-  description: string;
-  category: "system" | "assistant";
-}
-
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
   onSelect,
 }) => {
-  const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
+  const [allCommands, setAllCommands] = useState<SlashCommand[]>([]);
 
   useEffect(() => {
-    hasMultipleOrganizations().then(setHasMultipleOrgs);
-  }, []);
-
-  // Get all available slash commands
-  const getSlashCommands = (): SlashCommand[] => {
-    const systemCommands: SlashCommand[] = [
-      { name: "help", description: "Show help message", category: "system" },
-      { name: "clear", description: "Clear the chat history", category: "system" },
-      { name: "exit", description: "Exit the chat", category: "system" },
-      {
-        name: "login",
-        description: "Authenticate with your account",
-        category: "system",
-      },
-      {
-        name: "logout",
-        description: "Sign out of your current session",
-        category: "system",
-      },
-      {
-        name: "whoami",
-        description: "Check who you're currently logged in as",
-        category: "system",
-      },
-      ...(hasMultipleOrgs ? [{
-        name: "org",
-        description: "Switch organization",
-        category: "system" as const,
-      }] : []),
-    ];
-
-    const assistantCommands: SlashCommand[] =
-      assistant.prompts?.map((prompt) => ({
-        name: prompt?.name || "",
-        description: prompt?.description || "",
-        category: "assistant" as const,
-      })) || [];
-
-    return [...systemCommands, ...assistantCommands];
-  };
-
-  const allCommands = getSlashCommands();
+    getAllSlashCommands(assistant).then(setAllCommands);
+  }, [assistant]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands

@@ -7,6 +7,7 @@ import {
   login,
   logout,
 } from "./auth/workos.js";
+import { getAllSlashCommands } from "./commands/commands.js";
 
 export async function handleSlashCommands(
   input: string,
@@ -25,19 +26,10 @@ export async function handleSlashCommands(
     const [command, ...args] = input.slice(1).split(" ");
     switch (command) {
       case "help":
+        const allCommands = await getAllSlashCommands(assistant);
         const helpMessage = [
           "Available commands:",
-          "/help - Show this help message",
-          "/clear - Clear the chat history",
-          "/exit - Exit the chat",
-          "/login - Authenticate with your account",
-          "/logout - Sign out of your current session",
-          "/whoami - Check who you're currently logged in as",
-          "/org - Switch organization",
-          "/config - Switch configuration",
-          ...(assistant.prompts?.map(
-            (prompt) => `/${prompt?.name} - ${prompt?.description}`
-          ) ?? []),
+          ...allCommands.map(cmd => `/${cmd.name} - ${cmd.description}`)
         ].join("\n");
         return { output: helpMessage };
       case "clear":

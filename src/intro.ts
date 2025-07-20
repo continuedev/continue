@@ -3,6 +3,7 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 import { MCPService } from "./mcp.js";
 import { BUILTIN_TOOLS } from "./tools/index.js";
+import { getAllSlashCommands } from "./commands/commands.js";
 
 export function loadSystemMessage(
   assistant: AssistantConfig
@@ -13,13 +14,16 @@ export function loadSystemMessage(
     .join("\n");
 }
 
-export function introMessage(
+export async function introMessage(
   config: AssistantUnrolled,
   modelName: string,
   mcpService: MCPService
 ) {
   const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
+  
+  // Get all slash commands from central definition
+  const allCommands = await getAllSlashCommands(config);
 
   console.info(`\n${chalk.bold.yellow(`Agent: ${config.name}\n`)}`);
   console.info(`${chalk.blue("Model:")} ${modelName.split("/").pop()}\n`);
@@ -33,33 +37,15 @@ export function introMessage(
   console.info("");
 
   console.info(chalk.blue("Slash commands:"));
-  console.info(`- ${chalk.white("/exit")}: ${chalk.dim("Exit the chat")}`);
-  console.info(
-    `- ${chalk.white("/clear")}: ${chalk.dim("Clear the chat history")}`
-  );
-  console.info(`- ${chalk.white("/help")}: ${chalk.dim("Show help message")}`);
-  console.info(
-    `- ${chalk.white("/login")}: ${chalk.dim("Authenticate with your account")}`
-  );
-  console.info(
-    `- ${chalk.white("/logout")}: ${chalk.dim(
-      "Sign out of your current session"
-    )}`
-  );
-  console.info(
-    `- ${chalk.white("/whoami")}: ${chalk.dim(
-      "Check who you're currently logged in as"
-    )}`
-  );
-  console.info(`- ${chalk.white("/org")}: ${chalk.dim("Switch organization")}`);
-  console.info(
-    `- ${chalk.white("/config")}: ${chalk.dim("Switch configuration")}`
-  );
-  for (const prompt of config.prompts ?? []) {
+  
+  // Display all commands from central definition
+  for (const command of allCommands) {
     console.info(
-      `- ${chalk.white("/" + prompt?.name)}: ${chalk.dim(prompt?.description)}`
+      `- ${chalk.white("/" + command.name)}: ${chalk.dim(command.description)}`
     );
   }
+  
+  // Display MCP prompts separately since they're not part of our central definition
   for (const prompt of mcpPrompts) {
     console.info(
       `- ${chalk.white("/" + prompt.name)}: ${chalk.dim(prompt.description)}`
