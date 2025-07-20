@@ -11,6 +11,7 @@ import {
   streamChatResponse,
 } from "../../streamChatResponse.js";
 import { constructSystemMessage } from "../../systemMessage.js";
+import { telemetryService } from "../../telemetry.js";
 import { getToolDisplayName } from "../../tools.js";
 import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
@@ -197,6 +198,9 @@ export function useChat({
         return;
       }
     }
+
+    // Track user prompt
+    telemetryService.logUserPrompt(message.length, message);
 
     // Add user message to history and display
     let messageContent = message;

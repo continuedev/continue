@@ -9,6 +9,7 @@ import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
+import { telemetryService } from "../telemetry.js";
 import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
@@ -43,6 +44,13 @@ async function initializeChat(options: ChatOptions) {
       authConfig,
       options.headless ?? false
     );
+
+    // Update telemetry with organization info
+    if (finalAuthConfig.selectedOrganization?.id) {
+      telemetryService.updateOrganization(
+        finalAuthConfig.selectedOrganization.id
+      );
+    }
   }
 
   return {
@@ -58,7 +66,13 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   configureLogger(options.headless ?? false);
 
   try {
+    // Record session start
+    telemetryService.recordSessionStart();
+
     let { config, llmApi, model, mcpService } = await initializeChat(options);
+
+    // Start active time tracking
+    telemetryService.startActiveTime();
 
     // If not in headless mode, start the TUI chat (default)
     if (!options.headless) {
@@ -121,6 +135,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
       isFirstMessage = false;
 
+      // Track user prompt
+      telemetryService.logUserPrompt(userInput.length, userInput);
+
       // Add user message to history
       chatHistory.push({ role: "user", content: userInput });
 
@@ -157,5 +174,8 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   } catch (error: any) {
     logger.error(chalk.red(`Fatal error: ${formatError(error)}`));
     process.exit(1);
+  } finally {
+    // Stop active time tracking
+    telemetryService.stopActiveTime();
   }
 }

@@ -51,7 +51,7 @@ All metrics and events share these standard attributes:
 
 ## Core Metrics
 
-### `continue.cli.session.count`
+### ✅ `continue.cli.session.count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -65,7 +65,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### `continue.cli.lines_of_code.count`
+### ✅ `continue.cli.lines_of_code.count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -80,7 +80,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### `continue.cli.pull_request.count`
+### ✅ `continue.cli.pull_request.count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -94,7 +94,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### `continue.cli.commit.count`
+### ✅ `continue.cli.commit.count`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -108,7 +108,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### `continue.cli.cost.usage`
+### ✅ `continue.cli.cost.usage`
 
 **Type:** Counter  
 **Unit:** `USD`  
@@ -123,7 +123,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### `continue.cli.token.usage`
+### ✅ `continue.cli.token.usage`
 
 **Type:** Counter  
 **Unit:** `tokens`  
@@ -139,7 +139,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### `continue.cli.code_edit_tool.decision`
+### ❌ `continue.cli.code_edit_tool.decision`
 
 **Type:** Counter  
 **Unit:** `count`  
@@ -156,7 +156,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### `continue.cli.active_time.total`
+### ✅ `continue.cli.active_time.total`
 
 **Type:** Counter  
 **Unit:** `s`  
@@ -170,7 +170,7 @@ All metrics and events share these standard attributes:
 
 ## Core Events
 
-### User Prompt Event
+### ✅ User Prompt Event
 
 **Event Name:** `continue.cli.user_prompt`
 
@@ -186,7 +186,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### Tool Result Event
+### ✅ Tool Result Event
 
 **Event Name:** `continue.cli.tool_result`
 
@@ -207,7 +207,7 @@ All metrics and events share these standard attributes:
 
 ---
 
-### API Request Event
+### ✅ API Request Event
 
 **Event Name:** `continue.cli.api_request`
 
@@ -232,7 +232,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### Authentication Metrics
 
-#### `continue.cli.auth.attempts`
+#### ✅ `continue.cli.auth.attempts`
 
 **Type:** Counter  
 **Unit:** `{attempt}`  
@@ -248,22 +248,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### Tool-Specific Metrics
 
-#### `continue.cli.tools.file_operations`
-
-**Type:** Counter  
-**Unit:** `{operation}`  
-**Description:** File operations performed (more granular than lines_of_code.count)
-
-**Labels:**
-
-- All [standard attributes](#standard-attributes)
-- `operation`: `read` | `write` | `list` | `search`
-- `file_type`: File extension or `directory`
-- `result`: `success` | `error`
-
-**Implementation:** Track in individual tool files (`src/tools/readFile.ts`, etc.)
-
-#### `continue.cli.tools.terminal_commands`
+#### ✅ `continue.cli.tools.terminal_commands`
 
 **Type:** Counter  
 **Unit:** `{command}`  
@@ -280,7 +265,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### MCP Integration Metrics
 
-#### `continue.cli.mcp.connections`
+#### ❌ `continue.cli.mcp.connections`
 
 **Type:** Gauge  
 **Unit:** `{connection}`  
@@ -296,7 +281,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ### Performance Metrics
 
-#### `continue.cli.startup.time`
+#### ❌ `continue.cli.startup.time`
 
 **Type:** Histogram  
 **Unit:** `ms`  
@@ -310,7 +295,7 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 **Implementation:** Track in `src/index.ts` and `src/commands/chat.ts`
 
-#### `continue.cli.response_time`
+#### ✅ `continue.cli.response_time`
 
 **Type:** Histogram  
 **Unit:** `ms`  
@@ -357,3 +342,18 @@ All metrics should include these resource attributes:
 5. **Command Detection**: Parse git/gh commands in `src/tools/runTerminalCommand.ts`
 6. **Authentication**: Track auth flows in `src/auth/workos.ts`
 7. **Performance**: Add timing measurements throughout the application lifecycle
+
+## Implementation Status
+
+✅ = Implemented  
+❌ = Not implemented yet
+
+**Core metrics:** 6/7 implemented (83%)
+**Core events:** 3/3 implemented (100%)  
+**Additional metrics:** 4/7 implemented (57%)
+
+**Missing implementations:**
+
+- `continue.cli.code_edit_tool.decision` - requires user confirmation UI
+- `continue.cli.mcp.connections` - needs MCP service monitoring
+- `continue.cli.startup.time` - needs startup time tracking
