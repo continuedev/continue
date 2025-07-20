@@ -250,10 +250,10 @@ describe("parseArgs", () => {
 describe("processRule (loadRuleFromHub integration)", () => {
   // Mock fetch for hub tests
   const originalFetch = global.fetch;
-  const mockFetch = jest.fn();
+  const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
   
   beforeAll(() => {
-    global.fetch = mockFetch as any;
+    global.fetch = mockFetch;
   });
 
   afterAll(() => {
@@ -275,10 +275,10 @@ describe("processRule (loadRuleFromHub integration)", () => {
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
       
       // Mock successful fetch response
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
-      });
+      } as Response);
 
       const result = await processRule("continuedev/sentry-nextjs");
       
@@ -289,11 +289,11 @@ describe("processRule (loadRuleFromHub integration)", () => {
     });
 
     it("should handle HTTP errors when loading from hub", async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
         statusText: "Not Found",
-      });
+      } as Response);
 
       await expect(processRule("continuedev/nonexistent-rule")).rejects.toThrow(
         'Failed to load rule from hub "continuedev/nonexistent-rule": HTTP 404: Not Found'
@@ -301,7 +301,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
     });
 
     it("should handle network errors when loading from hub", async () => {
-      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       await expect(processRule("continuedev/sentry-nextjs")).rejects.toThrow(
         'Failed to load rule from hub "continuedev/sentry-nextjs": Network error'
@@ -321,10 +321,10 @@ describe("processRule (loadRuleFromHub integration)", () => {
       const zip = new JSZip();
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
       
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
-      });
+      } as Response);
 
       await expect(processRule("continuedev/empty-rule")).rejects.toThrow(
         'Failed to load rule from hub "continuedev/empty-rule": No rule content found in downloaded zip file'
@@ -337,10 +337,10 @@ describe("processRule (loadRuleFromHub integration)", () => {
       zip.folder("docs"); // Create a directory but no files
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
       
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
-      });
+      } as Response);
 
       await expect(processRule("continuedev/directory-only")).rejects.toThrow(
         'Failed to load rule from hub "continuedev/directory-only": No rule content found in downloaded zip file'
@@ -359,10 +359,10 @@ describe("processRule (loadRuleFromHub integration)", () => {
       
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
       
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
-      });
+      } as Response);
 
       const result = await processRule("continuedev/mixed-files");
       
@@ -380,10 +380,10 @@ describe("processRule (loadRuleFromHub integration)", () => {
       
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
       
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
-      });
+      } as Response);
 
       const result = await processRule("continuedev/multiple-rules");
       
@@ -394,10 +394,10 @@ describe("processRule (loadRuleFromHub integration)", () => {
     it("should handle malformed zip files", async () => {
       const invalidZipBuffer = new ArrayBuffer(10);
       
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(invalidZipBuffer),
-      });
+      } as Response);
 
       await expect(processRule("continuedev/corrupted-zip")).rejects.toThrow(
         'Failed to load rule from hub "continuedev/corrupted-zip"'
@@ -412,10 +412,10 @@ describe("processRule (loadRuleFromHub integration)", () => {
       zip.file("rule.md", "# Hub Rule");
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
       
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
-      });
+      } as Response);
 
       const result = await processRule("owner/package");
       expect(result).toBe("# Hub Rule");
