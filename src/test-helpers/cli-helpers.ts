@@ -84,12 +84,12 @@ export async function runCLI(
     timeout,
     reject: false,
     input,
-    // Force Windows to use the correct stdout/stderr handling
-    windowsVerbatimArguments: true,
     // Ensure proper encoding
     encoding: 'utf8' as const,
     // Increase buffer size for Windows
     maxBuffer: 10 * 1024 * 1024, // 10MB
+    // Let execa handle Windows argument escaping automatically
+    windowsHide: true,
   };
 
   try {

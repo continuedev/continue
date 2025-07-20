@@ -27,7 +27,7 @@ describe("E2E: Headless Mode with Mock Server", () => {
 
   it('should output "Hello World!" when using cn -p "Hi"', async () => {
     const result = await runCLI(context, {
-      args: ["-p", "Hi", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "Hi"],
       timeout: 15000,
     });
 
@@ -38,7 +38,7 @@ describe("E2E: Headless Mode with Mock Server", () => {
 
   it("should handle streaming responses correctly", async () => {
     const result = await runCLI(context, {
-      args: ["-p", "Say hello", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "Say hello"],
       timeout: 15000,
     });
 
@@ -52,7 +52,7 @@ describe("E2E: Headless Mode with Mock Server", () => {
 
   it("should work with longer prompts", async () => {
     const result = await runCLI(context, {
-      args: ["-p", "Please respond with exactly 'Hello World!' and nothing else", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "Please respond with exactly 'Hello World!' and nothing else"],
       timeout: 15000,
     });
 

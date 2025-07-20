@@ -30,7 +30,7 @@ describe("E2E: Resume Flag", () => {
   it("should resume from previous session when using --resume flag", async () => {
     // First, run a chat session with a single message
     const firstResult = await runCLI(context, {
-      args: ["-p", "hello", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "hello"],
       env: {
         // Use a fixed session ID so both CLI calls use the same session
         CONTINUE_CLI_TEST_SESSION_ID: "test-session-123"
@@ -119,7 +119,7 @@ describe("E2E: Resume Flag", () => {
 
     // First session
     const firstResult = await runCLI(context, {
-      args: ["-p", "first message", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "first message"],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: sessionId
       },
@@ -141,7 +141,7 @@ describe("E2E: Resume Flag", () => {
 
     // Resume and add a new message with the SAME session ID
     const resumeResult = await runCLI(context, {
-      args: ["--resume", "-p", "second message", "--config", context.configPath],
+      args: ["--resume", "-p", "--config", context.configPath, "second message"],
       env: {
         CONTINUE_CLI_TEST_SESSION_ID: sessionId
       },

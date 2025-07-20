@@ -65,21 +65,21 @@ describe("E2E: Headless Mode with Dynamic Responses", () => {
 
     // Test weather query
     const weatherResult = await runCLI(context, {
-      args: ["-p", "What's the weather like?", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "What's the weather like?"],
       timeout: 15000,
     });
     expect(weatherResult.stdout).toContain("It's sunny and 72°F today!");
     
     // Test time query
     const timeResult = await runCLI(context, {
-      args: ["-p", "What time is it?", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "What time is it?"],
       timeout: 15000,
     });
     expect(timeResult.stdout).toContain("The current time is 3:30 PM.");
     
     // Test unknown query
     const unknownResult = await runCLI(context, {
-      args: ["-p", "Tell me about quantum physics", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "Tell me about quantum physics"],
       timeout: 15000,
     });
     expect(unknownResult.stdout).toContain("I don't understand your question.");
@@ -97,7 +97,7 @@ describe("E2E: Headless Mode with Dynamic Responses", () => {
     });
 
     const result = await runCLI(context, {
-      args: ["-p", "Test non-streaming", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "Test non-streaming"],
       timeout: 15000,
     });
 
@@ -149,7 +149,7 @@ models:
     
     // Test with the first model (GPT-4 should be default)
     const result = await runCLI(context, {
-      args: ["-p", "Hello", "--config", context.configPath],
+      args: ["-p", "--config", context.configPath, "Hello"],
       timeout: 15000,
     });
     
@@ -202,7 +202,7 @@ models:
     // Make multiple requests
     for (let i = 0; i < 3; i++) {
       const result = await runCLI(context, {
-        args: ["-p", `Request ${i + 1}`, "--config", context.configPath],
+        args: ["-p", "--config", context.configPath, `Request ${i + 1}`],
         timeout: 15000,
       });
       expect(result.stdout).toContain(responses[i]);
