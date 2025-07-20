@@ -69,13 +69,13 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
             });
 
             for (const assistant of assistants) {
-              // Use packageSlug as the slug and create a display name from ownerSlug/packageSlug
+              // Use full ownerSlug/packageSlug as the slug and create a display name from ownerSlug/packageSlug
               const displayName = `${assistant.ownerSlug}/${assistant.packageSlug}`;
               options.push({
                 id: assistant.packageSlug,
                 name: displayName,
                 type: "assistant",
-                slug: assistant.packageSlug,
+                slug: `${assistant.ownerSlug}/${assistant.packageSlug}`,
               });
             }
           } catch (err) {
