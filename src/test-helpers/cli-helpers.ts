@@ -139,7 +139,7 @@ export async function runCLI(
     const stderr = result.stderr ?? "";
     
     // Log for debugging Windows issues
-    if (process.env.DEBUG_CLI_TESTS) {
+    if (process.env.DEBUG_CLI_TESTS && process.platform === "win32") {
       console.log("CLI Result:", {
         stdout: stdout.substring(0, 200),
         stderr: stderr.substring(0, 200),

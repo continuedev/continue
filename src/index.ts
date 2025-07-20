@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 // Add immediate logging to debug Windows CI issues
-if (process.env.DEBUG_CLI_TESTS || (process.platform === "win32" && process.env.CI)) {
+// Only log on Windows when DEBUG_CLI_TESTS is set
+if (process.env.DEBUG_CLI_TESTS === "1" && process.platform === "win32") {
   console.error(`[CLI_START] Node ${process.version} on ${process.platform} ${process.arch}`);
   console.error(`[CLI_START] Args: ${JSON.stringify(process.argv)}`);
   console.error(`[CLI_START] CWD: ${process.cwd()}`);
