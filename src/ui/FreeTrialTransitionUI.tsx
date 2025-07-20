@@ -1,0 +1,304 @@
+import * as fs from "fs";
+import { Box, Text, useInput } from "ink";
+import open from "open";
+import * as os from "os";
+import * as path from "path";
+import React, { useState } from "react";
+import * as YAML from "yaml";
+import { env } from "../env.js";
+
+const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+
+interface FreeTrialTransitionUIProps {
+  onComplete: () => void;
+  onSwitchToLocalConfig?: () => void;
+  onFullReload?: () => void;
+}
+
+/**
+ * Creates or updates the local config with Anthropic API key
+ */
+async function createOrUpdateConfig(apiKey: string): Promise<void> {
+  const configDir = path.dirname(CONFIG_PATH);
+
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+
+  const newModel = {
+    uses: "anthropic/claude-4-sonnet",
+    with: {
+      ANTHROPIC_API_KEY: apiKey,
+    },
+  };
+
+  if (fs.existsSync(CONFIG_PATH)) {
+    const existingContent = fs.readFileSync(CONFIG_PATH, "utf8");
+    let config;
+
+    try {
+      config = YAML.parse(existingContent);
+
+      // Make sure models array exists
+      if (!config.models) {
+        config.models = [];
+      }
+
+      // Check if model already exists
+      const existingModelIndex = config.models.findIndex(
+        (model: any) => model.uses === "anthropic/claude-4-sonnet"
+      );
+
+      if (existingModelIndex >= 0) {
+        // Update existing model
+        config.models[existingModelIndex].with.ANTHROPIC_API_KEY = apiKey;
+      } else {
+        // Add new model
+        config.models.push(newModel);
+      }
+    } catch (error) {
+      // If parsing fails, create a new config
+      config = {
+        name: "Local Config",
+        version: "1.0.0",
+        schema: "v1",
+        models: [newModel],
+      };
+    }
+
+    // Write back to file
+    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
+  } else {
+    // Create new config file
+    const config = {
+      name: "Local Config",
+      version: "1.0.0",
+      schema: "v1",
+      models: [newModel],
+    };
+
+    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
+  }
+}
+
+const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
+  onComplete,
+  onSwitchToLocalConfig,
+  onFullReload,
+}) => {
+  const [currentStep, setCurrentStep] = useState<
+    "choice" | "enterApiKey" | "processing" | "success" | "error"
+  >("choice");
+  const [selectedOption, setSelectedOption] = useState(1);
+  const [apiKey, setApiKey] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [wasModelsSetup, setWasModelsSetup] = useState(false);
+
+  useInput((input, key) => {
+    if (currentStep === "choice") {
+      if (key.upArrow && selectedOption > 1) {
+        setSelectedOption(selectedOption - 1);
+      } else if (key.downArrow && selectedOption < 2) {
+        setSelectedOption(selectedOption + 1);
+      } else if (input === "1") {
+        setSelectedOption(1);
+      } else if (input === "2") {
+        setSelectedOption(2);
+      } else if (key.return) {
+        handleOptionSelect();
+      }
+    } else if (currentStep === "enterApiKey") {
+      if (key.return) {
+        if (apiKey && apiKey.startsWith("sk-ant-")) {
+          handleApiKeySubmit();
+        } else {
+          setErrorMessage(
+            "Please enter a valid Anthropic API key that starts with 'sk-ant-'"
+          );
+        }
+      } else if (key.backspace || key.delete) {
+        setApiKey(apiKey.slice(0, -1));
+        setErrorMessage("");
+      } else if (input && !key.ctrl && !key.meta) {
+        setApiKey(apiKey + input);
+        setErrorMessage("");
+      }
+    } else if (currentStep === "success" || currentStep === "error") {
+      if (key.return) {
+        // If user went through models setup, do a full reload to register their purchase
+        if (wasModelsSetup && onFullReload) {
+          onFullReload();
+        } else {
+          onComplete();
+        }
+      }
+    }
+  });
+
+  const handleOptionSelect = async () => {
+    if (selectedOption === 1) {
+      // Option 1: Open models setup page
+      setCurrentStep("processing");
+      const modelsUrl = new URL("setup-models", env.appUrl).toString();
+      setWasModelsSetup(true); // Track that user went through models setup
+
+      try {
+        await open(modelsUrl);
+        setSuccessMessage(
+          `Browser opened to ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
+        );
+        setCurrentStep("success");
+      } catch (error) {
+        setErrorMessage(
+          `Could not open browser automatically. Please visit: ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
+        );
+        setCurrentStep("error");
+      }
+    } else {
+      // Option 2: Enter API key
+      setCurrentStep("enterApiKey");
+      setWasModelsSetup(false); // This is not models setup
+    }
+  };
+
+  const handleApiKeySubmit = async () => {
+    setCurrentStep("processing");
+
+    try {
+      await createOrUpdateConfig(apiKey);
+      setSuccessMessage(
+        "✓ API key saved successfully! Switching to local configuration..."
+      );
+      setCurrentStep("success");
+
+      // After a brief delay, switch to local configuration
+      setTimeout(() => {
+        if (onSwitchToLocalConfig) {
+          onSwitchToLocalConfig();
+        } else {
+          onComplete();
+        }
+      }, 1000);
+    } catch (error) {
+      setErrorMessage(
+        `❌ Error saving API key: ${error}. Press Enter to try again.`
+      );
+      setCurrentStep("error");
+    }
+  };
+
+  if (currentStep === "choice") {
+    return (
+      <Box
+        flexDirection="column"
+        padding={1}
+        borderStyle="round"
+        borderColor="yellow"
+      >
+        <Text bold color="yellow">
+          🚀 Free trial limit reached!
+        </Text>
+        <Text>Choose how you'd like to continue:</Text>
+        <Text></Text>
+        <Text color={selectedOption === 1 ? "cyan" : "white"}>
+          {selectedOption === 1 ? "▶ " : "  "}1. 💳 Sign up for models add-on
+          (recommended)
+        </Text>
+        <Text color={selectedOption === 2 ? "cyan" : "white"}>
+          {selectedOption === 2 ? "▶ " : "  "}2. 🔑 Enter your Anthropic API key
+        </Text>
+        <Text></Text>
+        <Text color="gray">
+          Use ↑↓ arrows or 1/2 to select, Enter to confirm
+        </Text>
+      </Box>
+    );
+  }
+
+  if (currentStep === "enterApiKey") {
+    return (
+      <Box
+        flexDirection="column"
+        padding={1}
+        borderStyle="round"
+        borderColor="yellow"
+      >
+        <Text bold color="yellow">
+          Enter your Anthropic API key
+        </Text>
+        <Text></Text>
+        <Text>API Key: {"*".repeat(apiKey.length)}</Text>
+        <Text></Text>
+        {errorMessage && <Text color="red">{errorMessage}</Text>}
+        <Text color="gray">
+          Type your API key and press Enter (must start with 'sk-ant-')
+        </Text>
+      </Box>
+    );
+  }
+
+  if (currentStep === "processing") {
+    return (
+      <Box
+        flexDirection="column"
+        padding={1}
+        borderStyle="round"
+        borderColor="blue"
+      >
+        <Text bold color="blue">
+          Processing...
+        </Text>
+        <Text>Please wait...</Text>
+      </Box>
+    );
+  }
+
+  if (currentStep === "success") {
+    return (
+      <Box
+        flexDirection="column"
+        padding={1}
+        borderStyle="round"
+        borderColor="green"
+      >
+        <Text bold color="green">
+          Success!
+        </Text>
+        <Text>{successMessage}</Text>
+        <Text></Text>
+        <Text color="gray">
+          {wasModelsSetup
+            ? "Press Enter to reload and continue with your new subscription"
+            : "Press Enter to continue your conversation"}
+        </Text>
+      </Box>
+    );
+  }
+
+  if (currentStep === "error") {
+    return (
+      <Box
+        flexDirection="column"
+        padding={1}
+        borderStyle="round"
+        borderColor="red"
+      >
+        <Text bold color="red">
+          Error
+        </Text>
+        <Text>{errorMessage}</Text>
+        <Text></Text>
+        <Text color="gray">
+          {wasModelsSetup
+            ? "Press Enter to reload and try again"
+            : "Press Enter to continue"}
+        </Text>
+      </Box>
+    );
+  }
+
+  return null;
+};
+
+export default FreeTrialTransitionUI;
