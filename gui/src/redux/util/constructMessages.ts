@@ -1,9 +1,11 @@
 import {
+  AssistantChatMessage,
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
   RuleWithSource,
   TextMessagePart,
+  ToolCallState,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
@@ -29,6 +31,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
+  useSystemMessageTools: Boolean,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
@@ -92,6 +95,24 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
+      // When using system message tools, convert tool calls/states to text content
+      if (item.toolCallStates?.length && useSystemMessageTools) {
+        const { userMessage, assistantMessage } =
+          convertToolCallStatesToSystemCallsAndOutput(
+            item.message,
+            item.toolCallStates ?? [],
+          );
+        msgs.push({
+          message: assistantMessage,
+          ctxItems: [],
+        });
+        msgs.push({
+          message: userMessage,
+          ctxItems: [],
+        });
+        continue;
+      }
+
       msgs.push({
         ctxItems: item.contextItems,
         message: item.message,
@@ -192,4 +213,10 @@ export function constructMessages(
     appliedRules,
     appliedRuleIndex,
   };
+}
+function convertToolCallStatesToSystemCallsAndOutput(
+  message: AssistantChatMessage,
+  arg1: ToolCallState[],
+): { userMessage: any; assistantMessage: any } {
+  throw new Error("Function not implemented.");
 }
