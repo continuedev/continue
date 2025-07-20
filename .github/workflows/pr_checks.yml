@@ -32,23 +32,6 @@ jobs:
 
       - name: Run tests
         run: npm test
-        env:
-          DEBUG_CLI_TESTS: "1"
-
-      - name: Show test logs on failure (Windows)
-        if: failure() && runner.os == 'Windows'
-        run: |
-          echo "=== Node.js version ==="
-          node --version
-          echo "=== NPM version ==="
-          npm --version
-          echo "=== Working directory ==="
-          pwd
-          echo "=== dist/index.js exists? ==="
-          if (Test-Path dist/index.js) { echo "Yes" } else { echo "No" }
-          echo "=== First 10 lines of dist/index.js ==="
-          if (Test-Path dist/index.js) { Get-Content dist/index.js -First 10 }
-        shell: pwsh
 
       - name: Run linting
         run: npm run lint
