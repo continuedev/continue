@@ -70,7 +70,7 @@ function toolToSystemToolDefinition(tool: Tool): string {
       }
       let argDescription = "";
       if ("description" in value) {
-        argDescription = value.argDescription;
+        argDescription = value.description;
       }
 
       toolDefinition += `TOOL_ARG: ${key} (${argType}, ${requiredText})\n`;
@@ -85,9 +85,9 @@ function toolToSystemToolDefinition(tool: Tool): string {
   return toolDefinition.trim();
 }
 
-export const generateToolsSystemMessage = (tools: Tool[]) => {
+export const generateToolsSystemMessage = (tools: Tool[]): string => {
   if (tools.length === 0) {
-    return undefined;
+    return "";
   }
   const withPredefinedMessage = tools.filter(
     (tool) => !!tool.systemMessageDescription,
@@ -97,26 +97,31 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
     (tool) => !tool.systemMessageDescription,
   );
 
-  let prompt = `${TOOL_INSTRUCTIONS_TAG}\n`;
-  prompt += `You have access to several "tools" that you can use at any time to retrieve information and/or perform tasks for the User.`;
-  prompt += `\nTo use a tool, respond with a tool code block (\`\`\`tool) using the syntax shown in the examples below:`;
+  const instructions: string[] = [];
+  instructions.push(TOOL_INSTRUCTIONS_TAG);
+  instructions.push(
+    `You have access to several "tools" that you can use at any time to retrieve information and/or perform tasks for the User.`,
+  );
+  instructions.push(
+    `To use a tool, respond with a tool code block (\`\`\`tool) using the syntax shown in the examples below:`,
+  );
 
   if (withPredefinedMessage.length > 0) {
-    prompt += `\n\nThe following tools are available to you:`;
+    instructions.push(`\nThe following tools are available to you:`);
     for (const tool of withPredefinedMessage) {
-      prompt += "\n\n";
-      prompt += tool.systemMessageDescription;
+      instructions.push(`\n${tool.systemMessageDescription}`);
     }
   }
 
   if (withDynamicMessage.length > 0) {
-    prompt += `\n\nAlso, these additional tool definitions show other tools you can call with the same syntax:`;
+    instructions.push(
+      `\nAlso, these additional tool definitions show other tools you can call with the same syntax:`,
+    );
 
     for (const tool of tools) {
       try {
         const definition = toolToSystemToolDefinition(tool);
-        prompt += "\n\n";
-        prompt += definition;
+        instructions.push(`\n${definition}`);
       } catch (e) {
         console.error(
           "Failed to convert tool to system message tool:\n" +
@@ -125,22 +130,27 @@ export const generateToolsSystemMessage = (tools: Tool[]) => {
       }
     }
 
-    prompt += `\n\nFor example, this tool definition:\n\n`;
-
-    prompt += EXAMPLE_DYNAMIC_TOOL;
-
-    prompt += "\n\nCan be called like this:\n";
-
-    prompt += EXAMPLE_DYNAMIC_TOOL_CALL;
+    instructions.push(`\nFor example, this tool definition:\n`);
+    instructions.push(EXAMPLE_DYNAMIC_TOOL);
+    instructions.push("\nCan be called like this:\n");
+    instructions.push(EXAMPLE_DYNAMIC_TOOL_CALL);
   }
 
-  prompt += `\n\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool descriptions`;
-  prompt += `\nThen send the \`\`\`tool codeblock (YOU call the tool, not the user). Always start the codeblock on a new line.`;
-  prompt += `\nDo not perform actions with/for hypothetical files. Ask the user or use tools to deduce which files are relevant.`;
-  prompt += `\nYou can only call ONE tool at at time. The tool codeblock should be the last thing you say; stop your response after the tool codeblock.`;
+  instructions.push(
+    `\nIf it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool descriptions`,
+  );
+  instructions.push(
+    `Then send the \`\`\`tool codeblock (YOU call the tool, not the user). Always start the codeblock on a new line.`,
+  );
+  instructions.push(
+    `Do not perform actions with/for hypothetical files. Ask the user or use tools to deduce which files are relevant.`,
+  );
+  instructions.push(
+    `You can only call ONE tool at at time. The tool codeblock should be the last thing you say; stop your response after the tool codeblock.`,
+  );
 
-  prompt += `\n${closeTag(TOOL_INSTRUCTIONS_TAG)}`;
-  return prompt;
+  instructions.push(`${closeTag(TOOL_INSTRUCTIONS_TAG)}`);
+  return instructions.join("\n");
 };
 
 export function addSystemMessageToolsToSystemMessage(

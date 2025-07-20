@@ -1,27 +1,26 @@
 import {
-  AssistantChatMessage,
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
   RuleWithSource,
   TextMessagePart,
-  ToolCallState,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import {
+  CANCELLED_TOOL_CALL_MESSAGE,
+  NO_TOOL_CALL_OUTPUT_MESSAGE,
+} from "core/tools/constants";
+import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/textifySystemTools";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
-
-export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
-export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
-
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -213,10 +212,4 @@ export function constructMessages(
     appliedRules,
     appliedRuleIndex,
   };
-}
-function convertToolCallStatesToSystemCallsAndOutput(
-  message: AssistantChatMessage,
-  arg1: ToolCallState[],
-): { userMessage: any; assistantMessage: any } {
-  throw new Error("Function not implemented.");
 }

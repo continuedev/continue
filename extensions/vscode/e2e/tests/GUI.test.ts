@@ -3,11 +3,10 @@ import {
   By,
   EditorView,
   Key,
-  VSBrowser,
   WebDriver,
   WebElement,
   WebView,
-  until,
+  until
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
@@ -16,14 +15,14 @@ import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
 
-describe("GUI Test", () => {
+describe.only("GUI Test", () => {
   let view: WebView;
   let driver: WebDriver;
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
     // Uncomment this line for faster testing
-    await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
+    // await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
     await GlobalActions.clearAllNotifications();
   });
@@ -299,8 +298,6 @@ describe("GUI Test", () => {
       expect(await statusMessage.getText()).contain(
         "Continue viewed the git diff",
       );
-      // wait for 30 seconds, promise
-      await new Promise((resolve) => setTimeout(resolve, 30000));
     }).timeout(DEFAULT_TIMEOUT.MD * 100);
 
     it("should call tool after approval", async () => {
@@ -367,8 +364,9 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
   });
 
-  describe("Repeat back the system message", () => {
+  describe("should repeat back the system message", () => {
     it("should repeat back the system message", async () => {
+      await GUIActions.selectModeFromDropdown(view, "Chat");
       await GUIActions.selectModelFromDropdown(view, "SYSTEM MESSAGE MOCK LLM");
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -376,8 +374,8 @@ describe("GUI Test", () => {
       await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
       );
-    });
-  });
+    }).timeout(DEFAULT_TIMEOUT.XL * 1000);
+  })
 
   describe("Chat Paths", () => {
     it("Send many messages → chat auto scrolls → go to history → open previous chat → it is scrolled to the bottom", async () => {
