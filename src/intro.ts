@@ -2,7 +2,7 @@ import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 import { MCPService } from "./mcp.js";
-import { getAllTools } from "./streamChatResponse.js";
+import { BUILTIN_TOOLS } from "./tools/index.js";
 
 export function loadSystemMessage(
   assistant: AssistantConfig
@@ -25,9 +25,9 @@ export function introMessage(
   console.info(`${chalk.yellow("Model:")} ${modelName.split("/").pop()}\n`);
 
   console.info(chalk.yellow("Tools:"));
-  getAllTools().forEach((tool) => {
+  BUILTIN_TOOLS.forEach((tool) => {
     console.info(
-      `- ${chalk.green(tool.function.name)}: ${tool.function.description ?? ""}`
+      `- ${chalk.green(tool.displayName)}: ${tool.description ?? ""}`
     );
   });
   console.info("");
