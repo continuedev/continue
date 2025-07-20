@@ -231,6 +231,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
   try {
     const params = new URLSearchParams({
       client_id: env.workOsClientId,
+      screen_hint: "sign-up",
     });
 
     // Use WorkOS User Management device authorization endpoint
