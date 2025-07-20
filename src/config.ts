@@ -182,9 +182,7 @@ export async function initialize(
   model: string;
   mcpService: MCPService;
 }> {
-  const accessToken = getAccessToken(authConfig);
   const organizationId = getOrganizationId(authConfig);
-
   const config = await loadConfig(authConfig, configPath, organizationId);
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);

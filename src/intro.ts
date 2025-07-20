@@ -1,7 +1,6 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
-import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { MCPService } from "./mcp.js";
 import { getAllTools } from "./streamChatResponse.js";
 
@@ -21,8 +20,6 @@ export function introMessage(
 ) {
   const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
-
-  console.info(chalk.cyan(CONTINUE_ASCII_ART));
 
   console.info(`\n${chalk.bold.blue(`Agent: ${config.name}\n`)}`);
   console.info(`${chalk.yellow("Model:")} ${modelName.split("/").pop()}\n`);

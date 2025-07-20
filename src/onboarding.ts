@@ -103,45 +103,25 @@ export async function runOnboardingFlow(
   configPath: string | undefined,
   authConfig: AuthConfig
 ): Promise<OnboardingResult> {
-  console.log(chalk.cyan("\n🚀 Welcome to Continue CLI!"));
-
   // Step 1: Check if --config flag is provided
   if (configPath) {
     const result = await initialize(authConfig, configPath);
     return { ...result, wasOnboarded: false };
   }
 
-  // Step 2: Check if user has ~/.continue/config.yaml with acceptable model
-  if (await checkHasAcceptableModel(CONFIG_PATH)) {
-    console.log(chalk.blue(`✓ Using existing ${CONFIG_PATH}`));
-    const result = await initialize(authConfig, CONFIG_PATH);
+  // Step 2: Present user with two options
+  console.log(chalk.yellow("How do you want to get started?"));
+  console.log(chalk.white("1. ⏩ Log in with Continue"));
+  console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
+
+  const choice = readlineSync.question(chalk.yellow("\nEnter choice (1): "));
+
+  if (choice === "1" || choice === "") {
+    const newAuthConfig = await login();
+
+    const result = await initialize(newAuthConfig, undefined);
     return { ...result, wasOnboarded: true };
-  }
-
-  // Step 3: Present user with two options
-  console.log(chalk.yellow("Choose how you'd like to set up your agent:"));
-  console.log(chalk.white("1. Log in with Continue"));
-  console.log(chalk.white("2. Enter your Anthropic API key"));
-
-  const choice = readlineSync.question(
-    chalk.green("\nSelect option (1 or 2): ")
-  );
-
-  if (choice === "1") {
-    console.log(chalk.cyan("\n🔐 Logging in with Continue..."));
-    try {
-      const newAuthConfig = await login();
-
-      const result = await initialize(newAuthConfig, undefined);
-      return { ...result, wasOnboarded: true };
-    } catch (error) {
-      console.error(
-        chalk.red("❌ Login failed. Please try again or use option 2.")
-      );
-      throw error;
-    }
   } else if (choice === "2") {
-    console.log(chalk.cyan("\n🔑 Setting up with Anthropic API key..."));
     const apiKey = readlineSync.question(
       chalk.green("Enter your Anthropic API key: "),
       {
