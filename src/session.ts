@@ -9,6 +9,11 @@ import logger from "./util/logger.js";
  * Uses environment variables to ensure each terminal window has its own session
  */
 function getSessionId(): string {
+  // For tests, use a specific session ID if provided
+  if (process.env.CONTINUE_CLI_TEST_SESSION_ID) {
+    return `continue-cli-${process.env.CONTINUE_CLI_TEST_SESSION_ID}`;
+  }
+  
   // Use a combination of terminal session ID and process ID to ensure uniqueness
   // For tmux, use TMUX_PANE which is unique per pane
   const terminalSession = process.env.TMUX_PANE || 
@@ -28,6 +33,18 @@ function getSessionId(): string {
  * Get the session storage directory
  */
 function getSessionDir(): string {
+  // For tests, use the test directory if we're in test mode
+  if (process.env.CONTINUE_CLI_TEST && process.env.HOME) {
+    const sessionDir = path.join(process.env.HOME, '.continue-cli', 'sessions');
+    
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(sessionDir)) {
+      fs.mkdirSync(sessionDir, { recursive: true });
+    }
+    
+    return sessionDir;
+  }
+  
   const homeDir = os.homedir();
   const sessionDir = path.join(homeDir, '.continue-cli', 'sessions');
   

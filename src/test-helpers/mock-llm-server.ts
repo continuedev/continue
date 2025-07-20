@@ -1,12 +1,12 @@
-import * as http from "http";
-import { CLITestContext } from "./cli-helpers.js";
-import * as path from "path";
 import * as fs from "fs/promises";
+import * as http from "http";
+import * as path from "path";
+import { CLITestContext } from "./cli-helpers.js";
 
 export interface MockLLMServerOptions {
   /** The response to send for chat completions. Can be a string or a function that returns a response based on the request. */
   response?: string | ((prompt: string) => string);
-  /** Whether to stream the response word by word (true) or send it all at once (false). Default: true 
+  /** Whether to stream the response word by word (true) or send it all at once (false). Default: true
    * Note: The response format is always SSE since the CLI expects streaming responses. */
   streaming?: boolean;
   /** Custom handler for requests */
@@ -34,65 +34,94 @@ export interface MockLLMServer {
 export async function createMockLLMServer(
   options: MockLLMServerOptions = {}
 ): Promise<MockLLMServer> {
-  const { 
-    response = "Hello World!", 
+  const {
+    response = "Hello World!",
     streaming = true,
-    customHandler 
+    customHandler,
   } = options;
-  
+
   const requests: MockLLMServer["requests"] = [];
-  
+
   const server = http.createServer((req, res) => {
     // Allow custom handling
     if (customHandler) {
       customHandler(req, res);
       return;
     }
-    
+
+    // Set CORS headers to prevent any potential browser-related issues
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+
     // Collect request body
     let body = "";
     req.on("data", (chunk) => {
       body += chunk.toString();
     });
-    
+
     req.on("end", () => {
       // Track the request
       const requestData = {
         method: req.method || "",
         url: req.url || "",
-        body: body ? JSON.parse(body) : null,
+        body: body
+          ? (() => {
+              try {
+                return JSON.parse(body);
+              } catch (e) {
+                return body;
+              }
+            })()
+          : null,
         timestamp: new Date(),
       };
       requests.push(requestData);
-      
+
       // Handle chat completions endpoint
       if (req.method === "POST" && req.url === "/chat/completions") {
         const requestBody = requestData.body;
         // Find the last user message (there may be system messages before it)
-        const userMessages = requestBody?.messages?.filter((m: any) => m.role === "user") || [];
+        const userMessages =
+          requestBody?.messages?.filter((m: any) => m.role === "user") || [];
         const prompt = userMessages[userMessages.length - 1]?.content || "";
-        
-        const responseText = typeof response === "function" ? response(prompt) : response;
-        
+
+        const responseText =
+          typeof response === "function" ? response(prompt) : response;
+
         // Always send streaming response since the CLI expects it
         res.writeHead(200, {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
-          "Connection": "keep-alive",
+          Connection: "keep-alive",
+          "Access-Control-Allow-Origin": "*",
         });
-        
+
         if (streaming) {
           // Split response into chunks for more realistic streaming
           const words = responseText.split(" ");
           words.forEach((word, index) => {
             const content = index === 0 ? word : " " + word;
-            res.write(`data: {"choices":[{"delta":{"content":"${content}"},"index":0}]}\n\n`);
+            res.write(
+              `data: {"choices":[{"delta":{"content":"${content}"},"index":0}]}\n\n`
+            );
           });
         } else {
           // Send entire response in one chunk for non-streaming mode
-          res.write(`data: {"choices":[{"delta":{"content":"${responseText}"},"index":0}]}\n\n`);
+          res.write(
+            `data: {"choices":[{"delta":{"content":"${responseText}"},"index":0}]}\n\n`
+          );
         }
-        
+
         res.write(`data: [DONE]\n\n`);
         res.end();
       } else {
@@ -101,19 +130,44 @@ export async function createMockLLMServer(
         res.end(JSON.stringify({ error: "Not found" }));
       }
     });
+
+    // Handle connection errors gracefully
+    req.on("error", (err) => {
+      console.error("Request error:", err);
+      if (!res.headersSent) {
+        res.writeHead(500);
+        res.end("Internal Server Error");
+      }
+    });
   });
-  
+
+  // Handle server errors
+  server.on("error", (err) => {
+    console.error("Server error:", err);
+  });
+
+  // Set keep-alive timeout to help with cleanup
+  server.keepAliveTimeout = 1000;
+  server.headersTimeout = 2000;
+
   // Start the server on a random port
-  return new Promise((resolve) => {
-    server.listen(0, () => {
-      const port = (server.address() as any).port;
+  return new Promise((resolve, reject) => {
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        reject(new Error("Failed to get server address"));
+        return;
+      }
+
       resolve({
         server,
-        port,
-        url: `http://localhost:${port}`,
+        port: address.port,
+        url: `http://127.0.0.1:${address.port}`,
         requests,
       });
     });
+
+    server.on("error", reject);
   });
 }
 
@@ -154,18 +208,22 @@ export async function setupMockLLMTest(
 ): Promise<MockLLMServer> {
   // Create mock server
   const mockServer = await createMockLLMServer(options);
-  
+
   // Create config file
   const configContent = createMockLLMConfig(mockServer);
   const configPath = path.join(context.testDir, "test-config.yaml");
   await fs.writeFile(configPath, configContent);
   context.configPath = configPath;
-  
+
   // Create onboarding flag to skip onboarding
-  const onboardingFlagPath = path.join(context.testDir, ".continue", ".onboarding_complete");
+  const onboardingFlagPath = path.join(
+    context.testDir,
+    ".continue",
+    ".onboarding_complete"
+  );
   await fs.mkdir(path.dirname(onboardingFlagPath), { recursive: true });
   await fs.writeFile(onboardingFlagPath, new Date().toISOString());
-  
+
   return mockServer;
 }
 
@@ -173,8 +231,41 @@ export async function setupMockLLMTest(
  * Cleans up a mock LLM server
  * @param mockServer The mock server to clean up
  */
-export async function cleanupMockLLMServer(mockServer: MockLLMServer): Promise<void> {
+export async function cleanupMockLLMServer(
+  mockServer: MockLLMServer
+): Promise<void> {
   return new Promise((resolve) => {
-    mockServer.server.close(() => resolve());
+    if (!mockServer?.server) {
+      resolve();
+      return;
+    }
+
+    let resolved = false;
+    const resolveOnce = () => {
+      if (!resolved) {
+        resolved = true;
+        resolve();
+      }
+    };
+
+    // Force close all connections if method exists
+    if (typeof mockServer.server.closeAllConnections === "function") {
+      mockServer.server.closeAllConnections();
+    }
+
+    // Try to close the server gracefully
+    if (mockServer.server.listening) {
+      mockServer.server.close((err: any) => {
+        if (err && err.code !== "ERR_SERVER_NOT_RUNNING") {
+          console.error("Error closing mock server:", err);
+        }
+        resolveOnce();
+      });
+    } else {
+      resolveOnce();
+    }
+
+    // Fallback timeout to ensure cleanup doesn't hang
+    setTimeout(resolveOnce, 500);
   });
 }
