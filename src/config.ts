@@ -137,7 +137,22 @@ export async function loadConfig(
         organizationId: organizationId ?? undefined,
       });
 
+      if (assistants.length === 0) {
+        // In case the user doesn't have any assistants, we fall back to a default - TODO
+        const resp = await apiClient.getAssistant({
+          ownerSlug: "continuedev",
+          packageSlug: "default-agent",
+          organizationId: organizationId ?? undefined,
+        });
+
+        if (!resp.configResult.config) {
+          throw new Error("Failed to load default agent.");
+        }
+        return resp.configResult.config as AssistantUnrolled;
+      }
+
       const result = assistants[0].configResult;
+
       if (result.errors?.length || !result.config) {
         throw new Error(
           result.errors?.join("\n") ?? "Failed to load assistant."
