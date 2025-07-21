@@ -24,6 +24,7 @@ import {
   isProcessBackgrounded,
   removeBackgroundedProcess,
 } from "../../util/processTerminalBackgroundStates";
+import { getBooleanArg, getStringArg } from "../parseArgs";
 
 const asyncExec = util.promisify(childProcess.exec);
 
@@ -50,14 +51,11 @@ const ENABLED_FOR_REMOTES = [
 ];
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
-  if (!args?.command) {
-    throw new Error(
-      "`command` argument is required to run a terminal command, and cannot be empty",
-    );
-  }
-
+  const command = getStringArg(args, "command");
   // Default to waiting for completion if not specified
-  const waitForCompletion = args.waitForCompletion !== false;
+  const waitForCompletion =
+    getBooleanArg(args, "waitForCompletion", false) ?? true;
+
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
@@ -90,7 +88,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               }
 
               // Use spawn with color environment
-              const childProc = childProcess.spawn(args.command, {
+              const childProc = childProcess.spawn(command, {
                 cwd,
                 shell: true,
                 env: getColorEnv(), // Add enhanced environment for colors
@@ -235,7 +233,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // Standard execution, waiting for completion
         try {
           // Use color environment for exec as well
-          const output = await asyncExec(args.command, {
+          const output = await asyncExec(command, {
             cwd,
             env: getColorEnv(),
           });
@@ -264,7 +262,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // but don't attach any listeners other than error
         try {
           // Use spawn with color environment
-          const childProc = childProcess.spawn(args.command, {
+          const childProc = childProcess.spawn(command, {
             cwd,
             shell: true,
             env: getColorEnv(), // Add color environment
@@ -315,7 +313,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
   // For remote environments, just run the command
   // Note: waitForCompletion is not supported in remote environments yet
-  await extras.ide.runCommand(args.command);
+  await extras.ide.runCommand(command);
   return [
     {
       name: "Terminal",

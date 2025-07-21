@@ -1,6 +1,7 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
 import { formatGrepSearchResults } from "../../util/grepSearch";
+import { getStringArg } from "../parseArgs";
 
 const DEFAULT_GREP_SEARCH_RESULTS_LIMIT = 100;
 const DEFAULT_GREP_SEARCH_CHAR_LIMIT = 5000; // ~1000 tokens, will keep truncation simply for now
@@ -41,14 +42,10 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
 }
 
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
-  if (!args?.query) {
-    throw new Error(
-      "`query` argument is required for a grep search, and cannot be empty",
-    );
-  }
+  const query = getStringArg(args, "query");
 
   const results = await extras.ide.getSearchResults(
-    args.query,
+    query,
     DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
   );
   const { formatted, numResults, truncated } = formatGrepSearchResults(
@@ -69,7 +66,7 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
 
   let contextItems: ContextItem[] = [];
 
-  const splitByFile: boolean = args.splitByFile || false;
+  const splitByFile: boolean = args?.splitByFile || false;
   if (splitByFile) {
     contextItems = splitGrepResultsByFile(formatted);
   } else {

@@ -1,19 +1,14 @@
 import { ToolImpl } from ".";
+import { getStringArg } from "../parseArgs";
 
 export const requestRuleImpl: ToolImpl = async (args, extras) => {
-  if (!args?.name) {
-    throw new Error(
-      "`name` argument is required to request a rule, and cannot be empty",
-    );
-  }
+  const name = getStringArg(args, "name");
 
   // Find the rule by name in the config
-  const rule = extras.config.rules.find((r) => r.name === args.name);
+  const rule = extras.config.rules.find((r) => r.name === name);
 
   if (!rule || !rule.ruleFile) {
-    throw new Error(
-      `Rule with name "${args.name}" not found or has no file path`,
-    );
+    throw new Error(`Rule with name "${name}" not found or has no file path`);
   }
 
   return [

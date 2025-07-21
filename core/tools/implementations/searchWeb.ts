@@ -1,16 +1,13 @@
 import { ToolImpl } from ".";
 import { fetchSearchResults } from "../../context/providers/WebContextProvider";
+import { getStringArg } from "../parseArgs";
 
 const DEFAULT_WEB_SEARCH_CHAR_LIMIT = 8000;
 
 export const searchWebImpl: ToolImpl = async (args, extras) => {
-  if (!args?.query) {
-    throw new Error(
-      "`query` argument is required to search the web, and cannot be empty",
-    );
-  }
+  const query = getStringArg(args, "query");
 
-  const webResults = await fetchSearchResults(args.query, 5, extras.fetch);
+  const webResults = await fetchSearchResults(query, 5, extras.fetch);
 
   // Track truncated results
   const truncatedResults: string[] = [];

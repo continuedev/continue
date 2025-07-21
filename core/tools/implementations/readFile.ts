@@ -2,34 +2,28 @@ import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getUriPathBasename } from "../../util/uri";
 
 import { ToolImpl } from ".";
+import { getStringArg } from "../parseArgs";
 import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
-  if (!args?.filepath) {
-    throw new Error(
-      "`filepath` argument is required to read a file, and cannot be empty",
-    );
-  }
+  const filepath = getStringArg(args, "filepath");
 
-  const firstUriMatch = await resolveRelativePathInDir(
-    args.filepath,
-    extras.ide,
-  );
+  const firstUriMatch = await resolveRelativePathInDir(filepath, extras.ide);
   if (!firstUriMatch) {
-    throw new Error(`Could not find file ${args.filepath}`);
+    throw new Error(`Could not find file ${filepath}`);
   }
   const content = await extras.ide.readFile(firstUriMatch);
 
   await throwIfFileExceedsHalfOfContext(
-    args.filepath,
+    filepath,
     content,
     extras.config.selectedModelByRole.chat,
   );
 
   return [
     {
-      name: getUriPathBasename(args.filepath),
-      description: args.filepath,
+      name: getUriPathBasename(firstUriMatch),
+      description: filepath,
       content,
       uri: {
         type: "file",

@@ -1,16 +1,15 @@
 import { ToolImpl } from ".";
 import { RangeInFile } from "../..";
 import { retrieveContextItemsFromEmbeddings } from "../../context/retrieval/retrieval";
+import { getStringArg } from "../parseArgs";
 
 export const codebaseToolImpl: ToolImpl = async (args, extras) => {
-  if (!args?.query || args.query.trim() === "") {
-    throw new Error("`query` parameter is required and cannot be empty.");
-  }
+  const query = getStringArg(args, "query");
 
   try {
     const contextExtras = {
       config: extras.config,
-      fullInput: args.query,
+      fullInput: query,
       embeddingsProvider: extras.config.selectedModelByRole.embed,
       reranker: extras.config.selectedModelByRole.rerank,
       llm: extras.llm,
@@ -33,7 +32,7 @@ export const codebaseToolImpl: ToolImpl = async (args, extras) => {
         {
           name: "No Results",
           description: "Codebase search",
-          content: `No relevant code found for query: "${args.query}". This could mean:
+          content: `No relevant code found for query: "${query}". This could mean:
 - The codebase hasn't been indexed yet
 - No code matches the search criteria
 - Embeddings provider is not configured
