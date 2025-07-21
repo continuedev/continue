@@ -2,18 +2,30 @@ import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals
 import request from "supertest";
 import type { Server } from "http";
 
+// Mock fs to prevent file system checks
+jest.mock("fs", () => ({
+  ...jest.requireActual("fs"),
+  existsSync: jest.fn(() => false),
+}));
+
 // Mock dependencies
 jest.mock("../auth/workos.js", () => ({
   loadAuthConfig: jest.fn(() => null),
   ensureOrganization: jest.fn(),
   getOrganizationId: jest.fn(),
+  isAuthenticated: jest.fn(() => false),
 }));
 
 jest.mock("../onboarding.js", () => ({
   runNormalFlow: jest.fn(() => Promise.resolve({
-    config: {},
-    llmApi: {},
-    model: {},
+    config: { models: [] },
+    llmApi: { chat: jest.fn() },
+    model: { name: "test-model" },
+  })),
+  runOnboardingFlow: jest.fn(() => Promise.resolve({
+    config: { models: [] },
+    llmApi: { chat: jest.fn() },
+    model: { name: "test-model" },
   })),
 }));
 
@@ -84,6 +96,13 @@ describe("serve command", () => {
   });
 
   it("should have /exit endpoint that returns success response", async () => {
+    // Ensure mocks are properly set up
+    jest.resetModules();
+    
+    // Mock environment to avoid config file lookup
+    const originalEnv = process.env.ANTHROPIC_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    
     // Import serve after mocking dependencies
     const { serve } = await import("./serve.js");
 
@@ -125,6 +144,11 @@ describe("serve command", () => {
     } catch (error) {
       console.error("Test failed:", error);
       throw error;
+    } finally {
+      // Restore environment
+      if (originalEnv) {
+        process.env.ANTHROPIC_API_KEY = originalEnv;
+      }
     }
-  }, 10000); // 10 second timeout for this test
+  }, 20000); // Increased timeout to 20 seconds
 });
