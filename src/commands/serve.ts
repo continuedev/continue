@@ -169,6 +169,36 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
   });
 
+  // POST /exit - Gracefully shut down the server
+  app.post("/exit", async (_req: Request, res: Response) => {
+    console.log(chalk.yellow("\nReceived exit request, shutting down server..."));
+    
+    // Respond immediately before shutting down
+    res.json({ 
+      message: "Server shutting down",
+      success: true 
+    });
+
+    // Set server running flag to false to stop processing
+    state.serverRunning = false;
+
+    // Abort any current processing
+    if (state.currentAbortController) {
+      state.currentAbortController.abort();
+    }
+
+    // Clear the message queue
+    state.messageQueue = [];
+
+    // Give a moment for the response to be sent
+    setTimeout(() => {
+      server.close(() => {
+        telemetryService.stopActiveTime();
+        process.exit(0);
+      });
+    }, 100);
+  });
+
   const server = app.listen(port, () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
@@ -177,6 +207,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       chalk.dim("  POST /message - Send a message (body: { message: string })")
     );
     console.log(chalk.dim("  GET  /diff    - Get git diff against main branch"));
+    console.log(chalk.dim("  POST /exit    - Gracefully shut down the server"));
     console.log(
       chalk.dim(
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`
