@@ -940,7 +940,7 @@ export abstract class BaseLLM implements ILLM {
     let messages = _messages;
 
     // If not precompiled, compile the chat messages
-    if (!messageOptions || messageOptions.precompiled === false) {
+    if (!messageOptions?.precompiled) {
       const { compiledChatMessages } = compileChatMessages({
         modelName: completionOptions.model,
         msgs: _messages,
