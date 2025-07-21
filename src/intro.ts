@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { parseArgs } from "./args.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { MCPService } from "./mcp.js";
 
@@ -68,15 +69,28 @@ export async function introMessage(
   }
   console.info("");
 
-  // if (config.rules?.length) {
-  //   console.info(chalk.yellow("\nRules: " + config.rules.length));
-  // }
+  // Show all rules in a single section
+  const args = parseArgs();
+  const commandLineRules = args.rules || [];
+  const configRules = config.rules?.map((rule: any) => 
+    typeof rule === "string" ? rule : rule?.name || "Unknown"
+  ) || [];
+  
+  const allRules = [...commandLineRules, ...configRules];
+  
+  if (allRules.length > 0) {
+    console.info(chalk.blue("Rules:"));
+    allRules.forEach((rule) => {
+      console.info(`- ${chalk.white(rule)}`);
+    });
+    console.info("");
+  }
 
   if (config.mcpServers?.length) {
-    console.info(chalk.yellow("MCP Servers:"));
+    console.info(chalk.blue("MCP Servers:"));
     config.mcpServers.forEach((server: any) => {
-      console.info(`- ${chalk.cyan(server?.name)}`);
+      console.info(`- ${chalk.white(server?.name)}`);
     });
+    console.info("");
   }
-  console.info("");
 }
