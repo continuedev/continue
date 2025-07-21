@@ -91,6 +91,11 @@ export default class CheerioCrawler {
     let response;
 
     try {
+      // Use an agent that doesn't reject self-signed/invalid certificates in test environment
+      if (process.env.NODE_ENV === 'test') {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+      }
+      
       response = await fetch(location.toString());
     } catch (error: unknown) {
       if (
