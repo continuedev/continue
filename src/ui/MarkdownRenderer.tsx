@@ -3,7 +3,7 @@ import React from "react";
 import { highlightCode, detectLanguage, SyntaxHighlighterTheme, defaultTheme } from "./SyntaxHighlighter.js";
 
 interface MarkdownRendererProps {
-  content: string;
+  content: string | null | undefined;
   theme?: SyntaxHighlighterTheme;
 }
 
@@ -71,8 +71,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = de
     },
   ];
 
-  const renderMarkdown = (text: string) => {
+  const renderMarkdown = (text: string | null | undefined) => {
     const parts: React.ReactNode[] = [];
+    
+    // Handle null/undefined text
+    if (!text) {
+      return parts;
+    }
+    
     let currentIndex = 0;
 
     // First, handle code blocks separately
