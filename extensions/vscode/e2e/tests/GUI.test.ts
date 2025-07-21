@@ -156,20 +156,20 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
 
-      GUISelectors.getThreadMessageByText(view, llmResponse1);
+      // Delete the first assistant response (index 1) - this deletes both user msg 0 and assistant response 0
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
+      await TestUtils.expectNoElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse0),
+      );
+
+      // Delete the second assistant response (now at index 1) - this deletes both user msg 1 and assistant response 1
       await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
-      GUISelectors.getThreadMessageByText(view, llmResponse0);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
-      await TestUtils.expectNoElement(() =>
-        GUISelectors.getThreadMessageByText(view, llmResponse0),
-      );
-
-      GUISelectors.getThreadMessageByText(view, llmResponse2);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
+      // Delete the third assistant response (now at index 1) - this deletes both user msg 2 and assistant response 2
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );

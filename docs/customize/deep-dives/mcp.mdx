@@ -4,8 +4,6 @@ description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
 ---
 
-# MCP
-
 As AI systems get better, they're still held back by their training data and
 can't access real-time information or specialized tools. The [Model Context
 Protocol](https://modelcontextprotocol.io/introduction) (MCP) fixes this by
@@ -59,41 +57,7 @@ The result will be a generated file called `hn.txt` in the current working direc
 
 You can set up an MCP server to search the Continue documentation directly from your agent. This is particularly useful for getting help with Continue configuration and features.
 
-1. Create a folder called `.continue/mcpServers` at the top level of your workspace
-2. Add a file called `continue-docs-mcp.yaml` to this folder
-3. Write the following contents and save:
-
-```yaml title=".continue/mcpServers/continue-docs-mcp.yaml"
-name: Continue Documentation MCP
-version: 0.0.1
-schema: v1
-mcpServers:
-  - name: Continue Docs Search
-    type: stdio
-    command: npx
-    args:
-      - mint-mcp
-      - add
-      - continue-docs
-```
-
-Now you can search the Continue documentation by asking questions like:
-
-```
-Search for model setup instructions in the Continue docs
-```
-
-```
-Find documentation about context providers
-```
-
-```
-How do I configure autocomplete in Continue?
-```
-
-The MCP server will search the Continue documentation and provide relevant information to help with your questions.
-
-For detailed setup instructions and troubleshooting, see the [Continue MCP Reference](/reference/continue-mcp).
+For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
 
 ## Using MCP Servers
 

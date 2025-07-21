@@ -132,7 +132,10 @@ function readMdmKeysWindows(): MdmKeys | undefined {
     try {
       // Use REG QUERY command to read registry values
       const licenseKeyCmd = `reg query "${regPath}" /v licenseKey`;
-      const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
+      const licenseKeyOutput = execSync(licenseKeyCmd, {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
       // Extract values from command output
       const licenseKey = extractRegValue(licenseKeyOutput);
       if (licenseKey) {
@@ -145,7 +148,10 @@ function readMdmKeysWindows(): MdmKeys | undefined {
     // Try HKEY_CURRENT_USER if not found in HKEY_LOCAL_MACHINE
     try {
       const licenseKeyCmd = `reg query "${userRegPath}" /v licenseKey`;
-      const licenseKeyOutput = execSync(licenseKeyCmd, { encoding: "utf8" });
+      const licenseKeyOutput = execSync(licenseKeyCmd, {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
       // Extract values from command output
       const licenseKey = extractRegValue(licenseKeyOutput);
       if (licenseKey) {
