@@ -30,13 +30,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      # e2e tests are failing on Windows for a reason I haven't yet found time to debug
+      # e2e tests are failing on Windows Node 22 specifically - likely due to stdout flush issues
       - name: Run tests
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' || matrix.node-version != 22
         run: npm test
 
-      - name: Run tests (excluding e2e)
-        if: matrix.os == 'windows-latest'
+      - name: Run tests (excluding e2e on Windows Node 22)
+        if: matrix.os == 'windows-latest' && matrix.node-version == 22
         run: npm test -- --testPathIgnorePatterns=src/e2e
 
       - name: Run linting
