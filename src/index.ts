@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
+import { remote } from "./commands/remote.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import logger from "./util/logger.js";
 import { getVersion } from "./version.js";
@@ -85,6 +86,14 @@ program
   .description("Log out from Continue")
   .action(async () => {
     await logout();
+  });
+
+// Remote subcommand
+program
+  .command("remote <prompt>")
+  .description("Launch a remote instance of the cn agent")
+  .action(async (prompt: string) => {
+    await remote(prompt);
   });
 
 // Handle unknown commands
