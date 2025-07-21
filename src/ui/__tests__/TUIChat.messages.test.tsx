@@ -1,87 +1,158 @@
-import { render } from "ink-testing-library";
-import React from "react";
-import TUIChat from "../TUIChat.js";
-import { createProps } from "./TUIChat.setup.js";
+import {
+  runTest,
+  runTestSuite,
+  sendMessage,
+  waitForServerState,
+} from "./TUIChat.testHelper.js";
 
-describe("TUIChat - Message Handling", () => {
+runTestSuite("TUIChat - Message Handling", () => {
   describe("Message Display", () => {
-    it("renders user messages", async () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
+    runTest(
+      "renders user messages",
+      async (ctx) => {
+        const testMessage = "This is a test message";
 
-      // Send a message
-      stdin.write("This is a test message");
-      stdin.write("\r");
+        // Set up server to echo messages
+        if (ctx.mode === "remote" && ctx.server) {
+          ctx.server.onMessage((msg) => {
+            ctx.server!.simulateResponse(`Echo: ${msg}`, false); // instant response
+          });
+        }
 
-      // Wait for the UI to update
-      await new Promise((resolve) => setTimeout(resolve, 100));
+        // Send a message
+        await sendMessage(ctx, testMessage);
 
-      const frame = lastFrame();
+        const frame = ctx.renderResult.lastFrame();
 
-      // Should show the user message in the chat
-      expect(frame).toContain("This is a test message");
-    });
+        // Should show the user message in the chat
+        expect(frame).toContain(testMessage);
+
+        // In remote mode, also check server state
+        if (ctx.mode === "remote" && ctx.server) {
+          const state = ctx.server.getState();
+          expect(state.messages).toContainEqual(
+            expect.objectContaining({
+              role: "user",
+              content: testMessage,
+            })
+          );
+        }
+      }
+    );
   });
 
   describe("Chat History", () => {
-    it("preserves message history", async () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
+    runTest(
+      "preserves message history",
+      async (ctx) => {
+        // Set up server responses
+        if (ctx.mode === "remote" && ctx.server) {
+          let messageCount = 0;
+          ctx.server.onMessage((msg) => {
+            messageCount++;
+            // Add a small delay to ensure state is ready
+            setTimeout(() => {
+              ctx.server!.simulateResponse(`Response ${messageCount}: ${msg}`, false);
+            }, 50);
+          });
+        }
 
-      // Send multiple messages
-      stdin.write("First message");
-      stdin.write("\r");
+        // Send first message
+        await sendMessage(ctx, "First message", 100);
+        
+        // Wait for response to complete
+        if (ctx.mode === "remote" && ctx.server) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        // Send second message
+        await sendMessage(ctx, "Second message", 100);
+        
+        // Wait for response to complete
+        if (ctx.mode === "remote" && ctx.server) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
+        const frame = ctx.renderResult.lastFrame();
 
-      stdin.write("Second message");
-      stdin.write("\r");
+        // Both messages should be visible
+        expect(frame).toContain("First message");
+        expect(frame).toContain("Second message");
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const frame = lastFrame();
-
-      // Both messages should be visible
-      expect(frame).toContain("First message");
-      expect(frame).toContain("Second message");
-    });
-
-    it("handles long conversation history", async () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
-
-      // Send multiple messages quickly
-      for (let i = 0; i < 5; i++) {
-        stdin.write(`Message ${i}`);
-        stdin.write("\r");
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        // In remote mode, verify server state
+        if (ctx.mode === "remote" && ctx.server) {
+          const state = ctx.server.getState();
+          expect(state.messages.filter(m => m.role === "user")).toHaveLength(2);
+          expect(state.isResponding).toBe(false);
+        }
       }
+    );
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    runTest(
+      "handles long conversation history",
+      async (ctx) => {
+        // Set up server to respond quickly
+        if (ctx.mode === "remote" && ctx.server) {
+          ctx.server.onMessage((msg) => {
+            // Add a small delay to ensure state is ready
+            setTimeout(() => {
+              ctx.server!.simulateResponse(`Ack: ${msg}`, false);
+            }, 20);
+          });
+        }
 
-      const frame = lastFrame();
+        // Send multiple messages with delays
+        for (let i = 0; i < 3; i++) { // Reduced from 5 to 3 for faster test
+          await sendMessage(ctx, `Message ${i}`, 50);
+          
+          // Wait for response in remote mode
+          if (ctx.mode === "remote" && ctx.server) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
 
-      // Should contain some messages (exact count may vary due to scrolling)
-      expect(frame).toMatch(/Message \d/);
-    });
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        const frame = ctx.renderResult.lastFrame();
+
+        // Should contain some messages (exact count may vary due to scrolling)
+        expect(frame).toMatch(/Message \d/);
+
+        // In remote mode, verify all messages were received
+        if (ctx.mode === "remote" && ctx.server) {
+          const state = ctx.server.getState();
+          const userMessages = state.messages.filter(m => m.role === "user");
+          expect(userMessages).toHaveLength(3);
+          expect(state.isResponding).toBe(false);
+        }
+      }
+    );
   });
 
   describe("Error Handling", () => {
-    it("handles empty messages gracefully", async () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
+    runTest(
+      "handles empty messages gracefully",
+      async (ctx) => {
+        // Send empty message
+        ctx.renderResult.stdin.write("\r");
 
-      // Send empty message
-      stdin.write("\r");
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
+        const frame = ctx.renderResult.lastFrame();
 
-      const frame = lastFrame();
+        // Should still show the interface
+        expect(frame).toContain("Ask anything");
 
-      // Should still show the interface
-      expect(frame).toContain("Ask anything");
-    });
+        // In remote mode, verify no message was sent
+        if (ctx.mode === "remote" && ctx.server) {
+          const state = ctx.server.getState();
+          expect(state.messages).toHaveLength(0);
+        }
+      }
+    );
 
-    it("displays interface when no initial prompt", () => {
-      const { lastFrame } = render(<TUIChat {...createProps()} />);
-
-      const frame = lastFrame();
+    runTest("displays interface when no initial prompt", ({ renderResult }) => {
+      const frame = renderResult.lastFrame();
 
       // Should show the default interface
       expect(frame).toContain("Ask anything");

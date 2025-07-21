@@ -1,13 +1,15 @@
-import { render } from "ink-testing-library";
-import React from "react";
-import TUIChat from "../TUIChat.js";
-import { createProps } from "./TUIChat.setup.js";
+import {
+  runTest,
+  runTestSuite,
+  sendMessage,
+  expectRemoteMode,
+  expectNormalMode,
+} from "./TUIChat.testHelper.js";
 
-describe("TUIChat - Basic UI Tests", () => {
+runTestSuite("TUIChat - Basic UI Tests", () => {
   describe("Component Initialization", () => {
-    it("displays empty chat correctly", () => {
-      const { lastFrame } = render(<TUIChat {...createProps()} />);
-      const frame = lastFrame();
+    runTest("displays empty chat correctly", ({ renderResult, mode }) => {
+      const frame = renderResult.lastFrame();
 
       // Should show the interface
       expect(frame).toContain("Ask anything");
@@ -15,24 +17,25 @@ describe("TUIChat - Basic UI Tests", () => {
       // Should have box borders (using the actual characters)
       expect(frame).toContain("│");
 
-      // Should show Continue CLI branding
-      expect(frame).toContain("Continue CLI");
+      // Mode-specific checks
+      if (mode === "remote") {
+        expectRemoteMode(frame);
+      } else {
+        expectNormalMode(frame);
+      }
     });
 
-    it("renders box borders correctly", () => {
-      const { lastFrame } = render(<TUIChat {...createProps()} />);
-      const frame = lastFrame();
+    runTest("renders box borders correctly", ({ renderResult }) => {
+      const frame = renderResult.lastFrame();
 
       // Should have borders (using actual box drawing characters)
       expect(frame).toMatch(/[│─╭╮╰╯]/); // Various box drawing chars
     });
 
-    it("maintains layout with content", () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
+    runTest("maintains layout with content", ({ renderResult }) => {
+      renderResult.stdin.write("Test message that is quite long to see how it wraps");
 
-      stdin.write("Test message that is quite long to see how it wraps");
-
-      const frame = lastFrame();
+      const frame = renderResult.lastFrame();
 
       // Borders should still be present
       expect(frame).toMatch(/[│─╭╮╰╯]/);
@@ -44,44 +47,57 @@ describe("TUIChat - Basic UI Tests", () => {
   });
 
   describe("Loading States", () => {
-    it("shows UI correctly when loading", async () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
+    runTest(
+      "shows UI correctly when loading",
+      async (ctx) => {
+        // Set up server to simulate response
+        if (ctx.mode === "remote" && ctx.server) {
+          ctx.server.onMessage(() => {
+            // Simulate a delayed response
+            setTimeout(() => {
+              ctx.server!.simulateResponse("Test response", true);
+            }, 100);
+          });
+        }
 
-      // Trigger loading by sending a message
-      stdin.write("test message");
-      stdin.write("\r");
+        // Trigger loading by sending a message
+        await sendMessage(ctx, "test message");
 
-      // Give it a moment to process
-      await new Promise((resolve) => setTimeout(resolve, 50));
+        const frame = ctx.renderResult.lastFrame();
+        // The UI should still be properly rendered
+        expect(frame).toContain("Ask anything");
+        // Note: The actual loading spinner behavior might not be visible in this test environment
+      }
+    );
 
-      const frame = lastFrame();
-      // The UI should still be properly rendered
-      expect(frame).toContain("Ask anything");
-      // Note: The actual loading spinner behavior might not be visible in this test environment
-    });
-
-    it("hides loading spinner when not loading", () => {
-      const { lastFrame } = render(<TUIChat {...createProps()} />);
-
-      const frame = lastFrame();
+    runTest("hides loading spinner when not loading", ({ renderResult }) => {
+      const frame = renderResult.lastFrame();
       // Should not contain spinner characters initially
       expect(frame).not.toMatch(/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/);
     });
 
-    it("displays loading text correctly", async () => {
-      const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
+    runTest(
+      "displays loading text correctly",
+      async (ctx) => {
+        // Set up server to simulate response
+        if (ctx.mode === "remote" && ctx.server) {
+          ctx.server.onMessage(() => {
+            // Keep server in responding state
+            ctx.server!.simulateResponse("Processing...", true);
+          });
+        }
 
-      stdin.write("test");
-      stdin.write("\r");
+        await sendMessage(ctx, "test");
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const frame = lastFrame();
+        const frame = ctx.renderResult.lastFrame();
 
-      // Should show placeholder message rather than text in input box
-      expect(frame).toContain(
-        "Ask anything, @ for context, / for slash commands"
-      );
-    });
+        // Should show placeholder message rather than text in input box
+        expect(frame).toContain(
+          "Ask anything, @ for context, / for slash commands"
+        );
+      }
+    );
   });
 });

@@ -131,25 +131,23 @@ export function useChat({
         if (response.ok) {
           const state = await response.json();
           
-          // Update chat history from server
-          if (state.chatHistory) {
-            setChatHistory(state.chatHistory);
+          // Update messages from server
+          if (state.messages) {
+            setMessages(state.messages);
             
-            // Update display messages
-            const displayMessages = state.chatHistory
-              .filter((msg: ChatCompletionMessageParam) => msg.role !== "system")
-              .map((msg: ChatCompletionMessageParam) => ({
-                role: msg.role,
-                content: msg.content as string,
-              }));
-            setMessages(displayMessages);
+            // Also update chat history for consistency
+            const chatHistory = state.messages.map((msg: any) => ({
+              role: msg.role,
+              content: msg.content,
+            }));
+            setChatHistory(chatHistory);
           }
           
           // Update processing state
-          setIsWaitingForResponse(state.isProcessing);
-          if (state.isProcessing && !responseStartTime) {
+          setIsWaitingForResponse(state.isResponding || false);
+          if (state.isResponding && !responseStartTime) {
             setResponseStartTime(Date.now());
-          } else if (!state.isProcessing && responseStartTime) {
+          } else if (!state.isResponding && responseStartTime) {
             setResponseStartTime(null);
           }
         }
