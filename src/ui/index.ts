@@ -46,3 +46,24 @@ export async function startTUIChat(
 
   return { unmount };
 }
+
+export async function startRemoteTUIChat(
+  remoteUrl: string,
+  initialPrompt?: string
+) {
+  // Start the TUI in remote mode
+  const { unmount } = render(
+    React.createElement(TUIChat, {
+      remoteUrl,
+      initialPrompt,
+    })
+  );
+
+  // Handle cleanup
+  process.on("SIGINT", () => {
+    unmount();
+    process.exit(0);
+  });
+
+  return { unmount };
+}

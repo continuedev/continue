@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
+import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
@@ -127,6 +128,15 @@ program
       logger.debug("Verbose logging enabled");
     }
     await serve(prompt, options);
+  });
+
+// Remote test subcommand (for development)
+program
+  .command("remote-test [prompt]")
+  .description("Test remote TUI mode with a local server")
+  .option("--url <url>", "Server URL (default: http://localhost:8000)")
+  .action(async (prompt: string = "Hello from remote!", options) => {
+    await remoteTest(prompt, options.url);
   });
 
 // Handle unknown commands

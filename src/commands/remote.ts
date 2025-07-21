@@ -5,6 +5,9 @@ import {
   loadAuthConfig,
 } from "../auth/workos.js";
 import { env } from "../env.js";
+import { startRemoteTUIChat } from "../ui/index.js";
+import telemetryService from "../telemetry/telemetryService.js";
+import logger from "../util/logger.js";
 
 export async function remote(prompt: string) {
   console.info(chalk.white("Setting up remote development environment..."));
@@ -48,13 +51,27 @@ export async function remote(prompt: string) {
       chalk.green("✅ Remote development environment created successfully!")
     );
 
-    if (result.url) {
+    if (result.url && result.port) {
+      const remoteUrl = `${result.url}:${result.port}`;
       console.info(
-        chalk.white(`Access your environment at: ${result.url}:${result.port}`)
+        chalk.white(`Connecting to remote environment at: ${remoteUrl}`)
       );
+
+      // Record session start
+      telemetryService.recordSessionStart();
+      telemetryService.startActiveTime();
+
+      try {
+        // Start the TUI in remote mode
+        await startRemoteTUIChat(remoteUrl, prompt);
+      } finally {
+        telemetryService.stopActiveTime();
+      }
+    } else {
+      throw new Error("No URL or port returned from remote environment creation");
     }
   } catch (error: any) {
-    console.error(
+    logger.error(
       chalk.red(`Failed to create remote environment: ${error.message}`)
     );
     process.exit(1);
