@@ -15,8 +15,6 @@ on:
     secrets:
       CONTINUE_API_KEY:
         required: true
-      GITHUB_TOKEN:
-        required: false
   workflow_dispatch:
     inputs:
       assistant:
@@ -113,7 +111,7 @@ jobs:
           EOF
           fi
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Build custom prompt
         if: inputs.custom_prompt != ''
@@ -200,4 +198,4 @@ jobs:
               console.log('Failed to post comment:', error.message);
             }
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}

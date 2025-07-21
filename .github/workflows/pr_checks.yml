@@ -50,7 +50,6 @@ jobs:
       assistant: "nate/default-assistant"
     secrets:
       CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
