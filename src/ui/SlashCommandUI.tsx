@@ -1,8 +1,9 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
+import { hasMultipleOrganizations } from "../auth/workos.js";
 
 interface SlashCommandUIProps {
   assistant?: AssistantConfig;
@@ -17,16 +18,21 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   selectedIndex,
   isRemoteMode = false,
 }) => {
+  const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
+
+  useEffect(() => {
+    if (!isRemoteMode) {
+      hasMultipleOrganizations().then(setHasMultipleOrgs);
+    }
+  }, [isRemoteMode]);
+
   // Memoize the slash commands to prevent excessive re-renders
   const allCommands = useMemo(() => {
-    // In remote mode, only show the exit command
-    if (isRemoteMode) {
-      return [{ name: "exit", description: "Exit the remote environment" }];
-    }
-
-    // In local mode, use the assistant's commands
-    if (assistant) {
-      return getAllSlashCommands(assistant);
+    if (assistant || isRemoteMode) {
+      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
+        isRemoteMode,
+        hasMultipleOrgs,
+      });
     }
 
     // Fallback - basic commands without assistant
@@ -35,7 +41,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
       { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
     ];
-  }, [isRemoteMode, assistant?.prompts]);
+  }, [isRemoteMode, assistant?.prompts, hasMultipleOrgs]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands

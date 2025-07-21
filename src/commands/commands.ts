@@ -56,17 +56,40 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
 ];
 
+// Remote mode specific commands
+export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
+  {
+    name: "exit",
+    description: "Exit the remote environment",
+    category: "system",
+  },
+];
+
 /**
  * Get all available slash commands including system commands and assistant prompts
  */
 export function getAllSlashCommands(
-  assistant: AssistantConfig
+  assistant: AssistantConfig,
+  options: { isRemoteMode?: boolean; hasMultipleOrgs?: boolean } = {}
 ): SlashCommand[] {
+  const { isRemoteMode = false, hasMultipleOrgs = false } = options;
+
+  // In remote mode, only show the exit command
+  if (isRemoteMode) {
+    return REMOTE_MODE_SLASH_COMMANDS;
+  }
+
   // Filter system commands based on requirements
-  const systemCommands = SYSTEM_SLASH_COMMANDS;
+  const systemCommands = SYSTEM_SLASH_COMMANDS.filter((cmd) => {
+    if (cmd.requiresMultipleOrgs && !hasMultipleOrgs) {
+      return false;
+    }
+    return true;
+  });
+
   // Get assistant prompt commands
   const assistantCommands: SlashCommand[] =
-    assistant.prompts?.map((prompt) => ({
+    assistant?.prompts?.map((prompt) => ({
       name: prompt?.name || "",
       description: prompt?.description || "",
       category: "assistant" as const,
@@ -82,7 +105,7 @@ export function getAssistantSlashCommands(
   assistant: AssistantConfig
 ): SlashCommand[] {
   return (
-    assistant.prompts?.map((prompt) => ({
+    assistant?.prompts?.map((prompt) => ({
       name: prompt?.name || "",
       description: prompt?.description || "",
       category: "assistant" as const,

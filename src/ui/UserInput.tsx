@@ -2,6 +2,7 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useEffect, useState } from "react";
 import { hasMultipleOrganizations } from "../auth/workos.js";
+import { getAllSlashCommands } from "../commands/commands.js";
 import { InputHistory } from "../util/inputHistory.js";
 import FileSearchUI from "./FileSearchUI.js";
 import SlashCommandUI from "./SlashCommandUI.js";
@@ -57,42 +58,19 @@ const UserInput: React.FC<UserInputProps> = ({
   }, [isRemoteMode]);
 
   const getSlashCommands = () => {
-    // In remote mode, only show the exit command
-    if (isRemoteMode) {
-      return [{ name: "exit", description: "Exit the remote environment" }];
+    if (assistant || isRemoteMode) {
+      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
+        isRemoteMode,
+        hasMultipleOrgs,
+      });
     }
 
-    const systemCommands = [
+    // Fallback - basic commands without assistant
+    return [
       { name: "help", description: "Show help message" },
       { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
-      { name: "login", description: "Authenticate with your account" },
-      { name: "logout", description: "Sign out of your current session" },
-      {
-        name: "whoami",
-        description: "Check who you're currently logged in as",
-      },
-      {
-        name: "config",
-        description: "Switch configuration",
-      },
-      ...(hasMultipleOrgs
-        ? [
-            {
-              name: "org",
-              description: "Switch organization",
-            },
-          ]
-        : []),
     ];
-
-    const assistantCommands =
-      assistant?.prompts?.map((prompt) => ({
-        name: prompt?.name || "",
-        description: prompt?.description || "",
-      })) || [];
-
-    return [...systemCommands, ...assistantCommands];
   };
 
   // Update slash command UI state based on input
