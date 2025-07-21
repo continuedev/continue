@@ -5,21 +5,37 @@ import React, { useMemo } from "react";
 import { getAllSlashCommands } from "../commands/commands.js";
 
 interface SlashCommandUIProps {
-  assistant: AssistantConfig;
+  assistant?: AssistantConfig;
   filter: string;
   selectedIndex: number;
+  isRemoteMode?: boolean;
 }
 
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
+  isRemoteMode = false,
 }) => {
   // Memoize the slash commands to prevent excessive re-renders
-  // Only recalculate when assistant.prompts changes
   const allCommands = useMemo(() => {
-    return getAllSlashCommands(assistant);
-  }, [assistant.prompts]);
+    // In remote mode, only show the exit command
+    if (isRemoteMode) {
+      return [{ name: "exit", description: "Exit the remote environment" }];
+    }
+
+    // In local mode, use the assistant's commands
+    if (assistant) {
+      return getAllSlashCommands(assistant);
+    }
+
+    // Fallback - basic commands without assistant
+    return [
+      { name: "help", description: "Show help message" },
+      { name: "clear", description: "Clear the chat history" },
+      { name: "exit", description: "Exit the chat" },
+    ];
+  }, [isRemoteMode, assistant?.prompts]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands
