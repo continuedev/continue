@@ -37,7 +37,8 @@ jobs:
 
       - name: Run tests (excluding e2e on Windows)
         if: matrix.os == 'windows-latest'
-        run: npm test -- --testPathIgnorePatterns="<rootDir>/src/e2e"
+        shell: bash
+        run: npm test -- --testPathIgnorePatterns='.*e2e.*'
 
       - name: Run linting
         run: npm run lint
