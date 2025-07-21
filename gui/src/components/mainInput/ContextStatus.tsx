@@ -35,9 +35,9 @@ const ContextStatus = () => {
         }}
         clickable
       >
-        <div className="flex flex-col gap-0 text-xs">
+        <div className="flex flex-col gap-0 text-left text-xs">
           <span className="inline-block">
-            {`${percent}% of context filled`}
+            {`${percent}% of context filled.`}
           </span>
           {isPruned && (
             <span className="inline-block">
@@ -48,15 +48,14 @@ const ContextStatus = () => {
             <div className="flex flex-col gap-1 whitespace-pre">
               <div>
                 <span
-                  className="inline-block cursor-pointer underline"
+                  className="inline-block cursor-pointer underline hover:text-link"
                   onClick={() => compactConversation(history.length - 1)}
                 >
                   Compact conversation
                 </span>
                 {"\n"}
-                <span className="inline-block">or</span> {"\n"}
                 <span
-                  className="inline-block cursor-pointer underline"
+                  className="inline-block cursor-pointer underline hover:text-link"
                   onClick={() => {
                     dispatch(
                       saveCurrentSession({
