@@ -19,7 +19,14 @@ Before getting started, ensure your system meets these requirements:
 Choose the installation method for your operating system:
 
 ```
-# macOSbrew install ollama# Linuxcurl -fsSL https://ollama.ai/install.sh | sh# Windows# Download from ollama.ai
+# macOS
+brew install ollama
+
+# Linux
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Windows
+# Download from ollama.ai
 ```
 
 ### Step 2: Download Models
@@ -27,7 +34,10 @@ Choose the installation method for your operating system:
 After installing Ollama, download the models you want to use. Here are some popular options:
 
 ```
-# Popular models for developmentollama pull llama2ollama pull codellamaollama pull mistral
+# Popular models for development
+ollama pull llama2
+ollama pull codellama
+ollama pull mistral
 ```
 
 ## Configuration
