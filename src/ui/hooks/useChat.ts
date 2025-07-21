@@ -130,24 +130,24 @@ export function useChat({
         const response = await fetch(`${remoteUrl}/state`);
         if (response.ok) {
           const state = await response.json();
-          
+
           // Update messages from server
-          if (state.messages) {
-            setMessages(state.messages);
-            
+          if (state.chatHistory) {
+            setMessages(state.chatHistory);
+
             // Also update chat history for consistency
-            const chatHistory = state.messages.map((msg: any) => ({
+            const chatHistory = state.chatHistory.map((msg: any) => ({
               role: msg.role,
               content: msg.content,
             }));
             setChatHistory(chatHistory);
           }
-          
+
           // Update processing state
-          setIsWaitingForResponse(state.isResponding || false);
-          if (state.isResponding && !responseStartTime) {
+          setIsWaitingForResponse(state.isProcessing || false);
+          if (state.isProcessing && !responseStartTime) {
             setResponseStartTime(Date.now());
-          } else if (!state.isResponding && responseStartTime) {
+          } else if (!state.isProcessing && responseStartTime) {
             setResponseStartTime(null);
           }
         }
@@ -160,7 +160,7 @@ export function useChat({
 
     // Start polling immediately
     pollServerState();
-    
+
     // Set up interval for continuous polling
     pollInterval = setInterval(pollServerState, 500); // Poll every 500ms
 
@@ -172,17 +172,22 @@ export function useChat({
   useEffect(() => {
     // Skip system message initialization in remote mode
     if (isRemoteMode) return;
-    
+
     // Initialize system message asynchronously
     const initializeSystemMessage = async () => {
-      if (chatHistory.length === 0 || !chatHistory.some(msg => msg.role === "system")) {
+      if (
+        chatHistory.length === 0 ||
+        !chatHistory.some((msg) => msg.role === "system")
+      ) {
         const rulesSystemMessage = "";
         const systemMessage = await constructSystemMessage(
           rulesSystemMessage,
           additionalRules
         );
         if (systemMessage) {
-          const newHistory = [{ role: "system" as const, content: systemMessage }];
+          const newHistory = [
+            { role: "system" as const, content: systemMessage },
+          ];
           setChatHistory(newHistory);
         }
       }
@@ -230,7 +235,9 @@ export function useChat({
         }
 
         if (commandResult.clear) {
-          const systemMessage = chatHistory.find((msg) => msg.role === "system");
+          const systemMessage = chatHistory.find(
+            (msg) => msg.role === "system"
+          );
           const newHistory = systemMessage ? [systemMessage] : [];
           setChatHistory(newHistory);
           setMessages([]);
@@ -297,7 +304,7 @@ export function useChat({
           },
           body: JSON.stringify({ message: messageContent }),
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
           setMessages((prev) => [
@@ -491,7 +498,7 @@ export function useChat({
     } finally {
       // Stop active time tracking
       telemetryService.stopActiveTime();
-      
+
       setAbortController(null);
       setIsWaitingForResponse(false);
       setResponseStartTime(null);
@@ -514,7 +521,7 @@ export function useChat({
       });
       return;
     }
-    
+
     // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
