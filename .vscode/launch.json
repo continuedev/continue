@@ -44,6 +44,23 @@
       }
     },
     {
+      "type": "node",
+      "request": "launch",
+      "name": "Core Binary (Debug)",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/binary/out/index.js",
+      "outFiles": ["${workspaceFolder}/binary/out/**/*.js"],
+      "sourceMaps": true,
+      "smartStep": true,
+      "internalConsoleOptions": "openOnSessionStart",
+      "cwd": "${workspaceFolder}/binary",
+      "preLaunchTask": "binary:rebuild",
+      "env": {
+        "CONTINUE_DEVELOPMENT": "true",
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
+      }
+    },
+    {
       "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
@@ -55,7 +72,6 @@
         "--config",
         "${workspaceRoot}/core/jest.config.js"
       ],
-
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },

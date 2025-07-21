@@ -159,6 +159,16 @@
       }
     },
     {
+      "label": "binary:rebuild",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "rebuild"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "binary"
+      }
+    },
+    {
       "label": "docs:start",
       "type": "shell",
       "command": "npm",

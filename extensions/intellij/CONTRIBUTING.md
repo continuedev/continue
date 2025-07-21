@@ -85,7 +85,7 @@ Select the `Run Continue` task in the top right corner of the IDE and then selec
 > In community edition, use `Run Continue (CE)` instead, which uses shell scripts instead of Ultimate-only node configs.
 > If you want to debug the core in CE, you'll need to quit the `Start Core Dev Server (CE)` process and run the core in
 > a
-> different environment that supports debugging, such as VS Code (Launch "Core Binary").
+> different environment that supports debugging, such as VS Code (Launch "Core Binary (Debug)").
 
 ![run-extension-screenshot](../../media/run-continue-intellij.png)
 
@@ -107,9 +107,10 @@ When using the `Run Continue` task, we automatically tail both prompt logs and I
   _Run | Debugging Actions | Reload Changed Classes`_
   - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
-- `core`: Run `npm run build -- --os [darwin | linux | win32]` from the `binary` directory (requires
-  restarting the
-  `Start Core Dev Server` task)
+- `core`:
+  - In IntelliJ: run `npm run build -- --os [darwin | linux | win32]` from the `binary` directory and restart the `Start Core Dev Server` task.
+  - In VS Code: restart the `Core Binary (Debug)` launch configuration. Its preLaunch task `binary:rebuild` will automatically rebuild the binary before starting.
+  - After rebuilding the core binary, stop and restart the `Run Continue` (or `Run Continue (CE)` in Community Edition) task so that the IntelliJ extension picks up the updated binary.
 
 ### Setting breakpoints
 
@@ -117,7 +118,7 @@ When using the `Run Continue` task, we automatically tail both prompt logs and I
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
 - `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task)
   - If you have Community Edition installed, you won't be able to use breakpoints in IntelliJ. Instead, you can start
-    the `Core Binary` task in VS Code and set breakpoints in that IDE.
+    the `Core Binary (Debug)` launch configuration in VS Code and set breakpoints there.
 
 ### Available Gradle tasks
 
