@@ -9,7 +9,24 @@ import { startRemoteTUIChat } from "../ui/index.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
 
-export async function remote(prompt: string) {
+export async function remote(prompt: string | undefined, options: { url?: string } = {}) {
+  // If --url is provided, connect directly to that URL
+  if (options.url) {
+    console.info(chalk.white(`Connecting to remote environment at: ${options.url}`));
+    
+    // Record session start
+    telemetryService.recordSessionStart();
+    telemetryService.startActiveTime();
+
+    try {
+      // Start the TUI in remote mode
+      await startRemoteTUIChat(options.url, prompt);
+    } finally {
+      telemetryService.stopActiveTime();
+    }
+    return;
+  }
+
   console.info(chalk.white("Setting up remote development environment..."));
 
   try {
@@ -63,7 +80,7 @@ export async function remote(prompt: string) {
 
       try {
         // Start the TUI in remote mode (prompt is optional)
-        await startRemoteTUIChat(remoteUrl, undefined);
+        await startRemoteTUIChat(remoteUrl, prompt);
       } finally {
         telemetryService.stopActiveTime();
       }

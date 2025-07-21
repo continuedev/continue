@@ -103,10 +103,11 @@ program
 
 // Remote subcommand
 program
-  .command("remote <prompt>")
+  .command("remote [prompt]")
   .description("Launch a remote instance of the cn agent")
-  .action(async (prompt: string) => {
-    await remote(prompt);
+  .option("--url <url>", "Connect directly to the specified URL instead of creating a new remote environment")
+  .action(async (prompt: string | undefined, options) => {
+    await remote(prompt, options);
   });
 
 // Serve subcommand
