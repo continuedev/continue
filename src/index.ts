@@ -8,6 +8,7 @@ import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
+import { readStdinSync } from "./util/stdin.js";
 import logger from "./util/logger.js";
 import { getVersion } from "./version.js";
 
@@ -68,6 +69,14 @@ program
         );
       }
       logger.debug("Verbose logging enabled");
+    }
+
+    // Check for piped input when using -p flag
+    if (options.print && !prompt) {
+      const stdinInput = readStdinSync();
+      if (stdinInput) {
+        prompt = stdinInput;
+      }
     }
 
     // Map --print to headless mode

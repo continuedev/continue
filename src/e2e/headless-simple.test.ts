@@ -58,5 +58,56 @@ models:
       // Should error when no prompt provided in headless mode
       expect(result.exitCode).not.toBe(0);
     });
+
+    it("should accept piped input with -p flag", async () => {
+      await createTestConfig(context, `name: Test Assistant
+version: 1.0.0
+schema: v1
+models:
+  - model: gpt-4
+    provider: openai
+    apiKey: test-key
+    roles:
+      - chat`);
+      
+      const result = await runCLI(context, {
+        args: ["-p", "--config", context.configPath],
+        env: { OPENAI_API_KEY: "test-key" },
+        input: "Hello from piped input",
+        expectError: true,
+      });
+      
+      // Should not show "You: " prompt when input is piped
+      expect(result.stderr).not.toContain("You:");
+      expect(result.stdout).not.toContain("You:");
+      
+      // Will fail because of missing API key but should consume the piped input
+      expect(result.exitCode).not.toBe(0);
+    });
+
+    it("should not interfere with normal prompt argument", async () => {
+      await createTestConfig(context, `name: Test Assistant
+version: 1.0.0
+schema: v1
+models:
+  - model: gpt-4
+    provider: openai
+    apiKey: test-key
+    roles:
+      - chat`);
+      
+      const result = await runCLI(context, {
+        args: ["-p", "--config", context.configPath, "Command line argument"],
+        env: { OPENAI_API_KEY: "test-key" },
+        input: "Piped input that should be ignored",
+        expectError: true,
+      });
+      
+      // Should use command line argument over piped input
+      // Will fail because of missing API key but should not show "You:" prompt
+      expect(result.stderr).not.toContain("You:");
+      expect(result.stdout).not.toContain("You:");
+      expect(result.exitCode).not.toBe(0);
+    });
   });
 });
