@@ -61,7 +61,7 @@ describe("MarkdownRenderer", () => {
     expect(result.length).toBe(3);
     expect(result[0]).toBe("This is ");
     expect(React.isValidElement(result[1])).toBe(true);
-    expect((result[1] as any).props.color).toBe("cyan");
+    expect((result[1] as any).props.color).toBe("magentaBright");
     expect((result[1] as any).props.children).toBe("code");
     expect(result[2]).toBe(" text");
   });
