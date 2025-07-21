@@ -1,4 +1,3 @@
-
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.*
@@ -685,7 +684,7 @@ class IntelliJIDE(
     }
 
     private fun setFileOpen(filepath: String, open: Boolean = true) {
-        val file = LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path)
+        val file = LocalFileSystem.getInstance().findFileByPath(UriUtils.uriToFile(filepath).path)
 
         file?.let {
             if (open) {
