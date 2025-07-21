@@ -470,12 +470,19 @@ export class ContinueCompletionProvider
           return undefined;
         }
 
+        // Create a cursor position relative to the edit range slice.
+        const relativeCursorPos = {
+          line: currCursorPos.line - editableRegionStartLine,
+          character: currCursorPos.character,
+        };
+
         // If the diff is a FIM, render a ghost text.
         const { isFim, fimText } = checkFim(
           oldEditRangeSlice,
           newEditRangeSlice,
-          currCursorPos,
+          relativeCursorPos,
         );
+
         if (isFim) {
           if (!fimText) {
             console.log("deleteChain from completionProvider.ts: !fimText");
@@ -504,6 +511,7 @@ export class ContinueCompletionProvider
               arguments: [input.completionId, this.nextEditLoggingService], // TODO: this may have to be this.completionProvider.
             },
           );
+          console.log(nextEditCompletionItem);
           return [nextEditCompletionItem];
         }
 

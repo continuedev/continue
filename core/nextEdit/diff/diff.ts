@@ -172,12 +172,19 @@ export function checkFim(
   // Convert cursor position to an offset in the string.
   // For simplicity, we need to calculate the cursor's position in the string.
   // This requires knowledge of line endings in the oldEditRange.
-  const lines = oldEditRange.substring(0, prefixLength).split("\n");
+  // const lines = oldEditRange.substring(0, prefixLength).split("\n");
+  // const lines = oldEditRange.split("\n");
+  // const cursorOffset =
+  //   lines.length > 1
+  //     ? lines.slice(0, -1).reduce((sum, line) => sum + line.length + 1, 0) +
+  //       cursorPosition.character
+  //     : cursorPosition.character;
+  const oldEditLines = oldEditRange.split("\n");
   const cursorOffset =
-    lines.length > 1
-      ? lines.slice(0, -1).reduce((sum, line) => sum + line.length + 1, 0) +
-        cursorPosition.character
-      : cursorPosition.character;
+    oldEditLines
+      .slice(0, cursorPosition.line)
+      .reduce((sum, line) => sum + line.length + 1, 0) +
+    cursorPosition.character;
 
   // Check if the cursor is positioned between the prefix and suffix.
   const cursorBetweenPrefixAndSuffix =

@@ -820,7 +820,7 @@ const getCommandsMap: (
       // NOTE: This could use some cleanup or abstraction.
       // The logic is largely similar to that of completionProvider.ts
       // but we don't have access to the class.
-
+      console.log("continue.showNextEditAfterJump");
       const { completionId, outcome, currentPosition } = data;
 
       const editor = vscode.window.activeTextEditor;
@@ -863,11 +863,15 @@ const getCommandsMap: (
         return;
       }
 
-      // Check if this is a simple "fill in middle" (FIM) type edit.
+      // Create a cursor position relative to the edit range slice
+      const relativeCursorPos = {
+        line: currentPosition.line - editableRegionStartLine,
+        character: currentPosition.character,
+      };
       const { isFim, fimText } = checkFim(
         oldEditRangeSlice,
         newEditRangeSlice,
-        currentPosition,
+        relativeCursorPos,
       );
 
       if (isFim) {
@@ -898,7 +902,7 @@ const getCommandsMap: (
         // Show the ghost text using VS Code's inline completion API.
         // We need to trigger this manually since we're not in the completion provider.
         await vscode.commands.executeCommand(
-          "editor.action.inlineCompletions.showNext",
+          "editor.action.inlineSuggest.trigger",
           {
             completions: [nextEditCompletionItem],
             position: currentPosition,
