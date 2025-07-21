@@ -61,7 +61,7 @@ export const handleTextDocumentChange = async (
   const editor = vscode.window.activeTextEditor;
   const { config } = await configHandler.loadConfig();
 
-  if (!config?.experimental?.logEditingData) return;
+  // if (!config?.experimental?.logEditingData) return;
   if (!editor) return;
   if (event.contentChanges.length === 0) return;
 

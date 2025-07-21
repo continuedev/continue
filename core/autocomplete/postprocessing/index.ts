@@ -103,6 +103,16 @@ export function postprocessCompletion({
     }
   }
 
+  if (llm.model.includes("qwen3")) {
+    // Qwen3 always starts from special thinking markers, and we don't want them to output these contents
+    // Remove all content from "
+    completion = completion.replace(/<think>.*?<\/think>/s, "");
+    completion = completion.replace(/<\/think>/, "");
+
+    // Remove any number of newline characters at the beginning and end
+    completion = completion.replace(/^\n+|\n+$/g, "");
+  }
+
   if (llm.model.includes("mercury") || llm.model.includes("granite")) {
     // Granite tends to repeat the start of the line in the completion output
     let prefixEnd = prefix.split("\n").pop();
