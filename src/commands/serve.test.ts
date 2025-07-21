@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import request from "supertest";
-import express from "express";
+import type { Server } from "http";
 
 // Mock dependencies
 jest.mock("../auth/workos.js", () => ({
@@ -26,29 +26,60 @@ jest.mock("../systemMessage.js", () => ({
 }));
 
 jest.mock("../telemetry/telemetryService.js", () => ({
-  recordSessionStart: jest.fn(),
-  startActiveTime: jest.fn(),
-  stopActiveTime: jest.fn(),
-  updateOrganization: jest.fn(),
+  default: {
+    recordSessionStart: jest.fn(),
+    startActiveTime: jest.fn(),
+    stopActiveTime: jest.fn(),
+    updateOrganization: jest.fn(),
+  }
 }));
 
 jest.mock("../util/logger.js", () => ({
-  error: jest.fn(),
-  debug: jest.fn(),
+  default: {
+    error: jest.fn(),
+    debug: jest.fn(),
+  }
+}));
+
+// Mock chalk to prevent console output during tests
+jest.mock("chalk", () => ({
+  default: {
+    green: (str: string) => str,
+    dim: (str: string) => str,
+    yellow: (str: string) => str,
+    red: (str: string) => str,
+  }
 }));
 
 describe("serve command", () => {
   let originalProcessExit: typeof process.exit;
+  let serverPromise: Promise<void>;
+  let serverRef: Server | null = null;
 
   beforeEach(() => {
     // Mock process.exit to prevent actual exit during tests
     originalProcessExit = process.exit;
     process.exit = jest.fn() as any;
+    
+    // Mock console.log to prevent output during tests
+    jest.spyOn(console, 'log').mockImplementation(() => {});
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Restore original process.exit
     process.exit = originalProcessExit;
+    
+    // Restore console.log
+    jest.restoreAllMocks();
+    
+    // Clean up server if it's still running
+    if (serverRef) {
+      await new Promise<void>((resolve) => {
+        serverRef!.close(() => resolve());
+      });
+      serverRef = null;
+    }
+    
     jest.clearAllMocks();
   });
 
@@ -59,11 +90,21 @@ describe("serve command", () => {
     // Start server with a random port to avoid conflicts
     const port = Math.floor(Math.random() * 10000) + 30000;
     
+    // Create a promise to track when server is ready
+    const serverReady = new Promise<void>((resolve) => {
+      const originalListen = jest.spyOn(console, 'log');
+      originalListen.mockImplementation((message: any) => {
+        if (typeof message === 'string' && message.includes('Server started')) {
+          resolve();
+        }
+      });
+    });
+
     // Start the server in the background
-    const serverPromise = serve(undefined, { port: port.toString() });
+    serverPromise = serve(undefined, { port: port.toString() });
     
-    // Give the server a moment to start
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for server to be ready
+    await serverReady;
 
     try {
       // Test the /exit endpoint
@@ -76,13 +117,12 @@ describe("serve command", () => {
         success: true,
       });
 
-      // Give the server a moment to shut down
+      // Wait for process.exit to be called
       await new Promise(resolve => setTimeout(resolve, 200));
 
       // Verify process.exit was called
       expect(process.exit).toHaveBeenCalledWith(0);
     } catch (error) {
-      // If the test fails, we still want to try to clean up
       console.error("Test failed:", error);
       throw error;
     }

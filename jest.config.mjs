@@ -10,7 +10,7 @@ export default {
     "^highlight\\.js/lib/languages/(.+)$":
       "<rootDir>/src/ui/__mocks__/highlightLanguage.js",
     "^lowlight$": "<rootDir>/src/ui/__mocks__/lowlight.js",
-    "(.+)\\.js": "$1",
+    "^(\\.{1,2}/.+)\\.js$": "$1",
     "^ink-testing-library$":
       "<rootDir>/node_modules/ink-testing-library/build/index.js",
     "^./SyntaxHighlighter\\.js$":
