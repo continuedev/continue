@@ -1,0 +1,203 @@
+name: Continue CLI Code Review
+
+on:
+  workflow_call:
+    inputs:
+      assistant:
+        description: 'Assistant configuration to use'
+        required: false
+        default: 'nate/default-assistant'
+        type: string
+      custom_prompt:
+        description: 'Custom prompt to use instead of the default PR review'
+        required: false
+        type: string
+    secrets:
+      CONTINUE_API_KEY:
+        required: true
+      GITHUB_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      assistant:
+        description: 'Assistant configuration to use'
+        required: false
+        default: 'nate/default-assistant'
+        type: string
+      custom_prompt:
+        description: 'Custom prompt to use instead of the default PR review'
+        required: false
+        type: string
+
+jobs:
+  code-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for better context
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Continue CLI
+        run: npm install -g @continuedev/cli
+
+      - name: Build PR diff prompt
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request')
+        run: |
+          # Get PR number - different methods depending on trigger
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            # For workflow_call triggered by PR, we need to get it from context
+            PR_NUMBER=$(jq -r '.pull_request.number' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
+          fi
+          
+          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+            # Get PR diff using GitHub CLI
+            gh pr diff $PR_NUMBER > pr_diff.txt
+            
+            # Create comprehensive prompt
+            cat > review_prompt.txt << 'EOF'
+          You are conducting a code review for a pull request. Below is the git diff showing all the changes:
+
+          EOF
+            
+            echo "--- PR DIFF START ---" >> review_prompt.txt
+            cat pr_diff.txt >> review_prompt.txt
+            echo "--- PR DIFF END ---" >> review_prompt.txt
+            
+            cat >> review_prompt.txt << 'EOF'
+
+          Please analyze these changes and provide a comprehensive code review. Consider:
+
+          1. **Code Quality**: Are there any bugs, performance issues, or code smells?
+          2. **Best Practices**: Does the code follow established patterns and conventions?
+          3. **Security**: Are there any potential security vulnerabilities?
+          4. **Testing**: Are appropriate tests included or updated?
+          5. **Documentation**: Is documentation adequate for the changes?
+          6. **Architecture**: Do the changes fit well with the existing codebase structure?
+
+          You can use the available tools to explore the codebase and understand context better.
+
+          After your analysis, create a file called 'code_review.md' with your findings formatted as:
+
+          ## Code Review Summary
+
+          ### ✅ Strengths
+          - [List positive aspects]
+
+          ### ⚠️ Issues Found
+          - [List any problems with severity levels]
+
+          ### 💡 Suggestions
+          - [List improvement recommendations]
+
+          ### 🚀 Overall Assessment
+          [Provide overall recommendation: APPROVE, REQUEST_CHANGES, or COMMENT]
+
+          Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
+          EOF
+          else
+            echo "Could not determine PR number, using generic prompt"
+            cat > review_prompt.txt << 'EOF'
+          Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement.
+          
+          Create a file called 'code_review.md' with your analysis.
+          EOF
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build custom prompt
+        if: inputs.custom_prompt != ''
+        run: |
+          echo "${{ inputs.custom_prompt }}" > review_prompt.txt
+
+      - name: Build default prompt for non-PR triggers
+        if: inputs.custom_prompt == '' && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.event != 'pull_request')
+        run: |
+          cat > review_prompt.txt << 'EOF'
+          Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement. 
+          
+          Create a file called 'code_review.md' with your analysis.
+          
+          Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
+          EOF
+
+      - name: Run Continue CLI Review
+        run: |
+          echo "Running Continue CLI with prompt:"
+          echo "=================================="
+          cat review_prompt.txt
+          echo "=================================="
+          echo ""
+          
+          # Run the CLI with the generated prompt
+          cat review_prompt.txt | continue --config "${{ inputs.assistant }}"
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+
+      - name: Upload Review Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-review-results
+          path: |
+            code_review.md
+            review_prompt.txt
+            pr_diff.txt
+          retention-days: 30
+
+      - name: Comment PR with Review
+        if: always() && (github.event_name == 'pull_request' || (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request'))
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              let reviewContent = '';
+              
+              if (fs.existsSync('code_review.md')) {
+                reviewContent = fs.readFileSync('code_review.md', 'utf8');
+              } else {
+                reviewContent = '⚠️ AI review completed but no review file was generated. Check the action logs for details.';
+              }
+              
+              const comment = `## 🤖 AI Code Review
+              
+              ${reviewContent}
+              
+              ---
+              *This review was generated by Continue CLI. Please use it as a supplement to, not a replacement for, human code review.*`;
+              
+              // Get PR number
+              let prNumber;
+              if (context.payload.pull_request) {
+                prNumber = context.payload.pull_request.number;
+              } else if (context.payload.workflow_run && context.payload.workflow_run.pull_requests && context.payload.workflow_run.pull_requests.length > 0) {
+                prNumber = context.payload.workflow_run.pull_requests[0].number;
+              }
+              
+              if (prNumber) {
+                await github.rest.issues.createComment({
+                  issue_number: prNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: comment
+                });
+              } else {
+                console.log('Could not determine PR number for commenting');
+              }
+            } catch (error) {
+              console.log('Failed to post comment:', error.message);
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

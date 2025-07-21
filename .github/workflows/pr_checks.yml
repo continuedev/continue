@@ -43,6 +43,15 @@ jobs:
       - name: Run linting
         run: npm run lint
 
+  continue-review:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/continue-review.yaml
+    with:
+      assistant: "nate/default-assistant"
+    secrets:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
   # so that creators of new jobs can add them to this list
@@ -51,6 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test
+      - continue-review
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed
