@@ -93,10 +93,12 @@ runTestSuite("TUIChat - Basic UI Tests", () => {
 
         const frame = ctx.renderResult.lastFrame();
 
-        // Should show placeholder message rather than text in input box
-        expect(frame).toContain(
-          "Ask anything, @ for context, / for slash commands"
-        );
+        // Should show placeholder message - different text for remote vs normal mode
+        if (ctx.mode === "remote") {
+          expect(frame).toContain("Ask anything, / for slash commands");
+        } else {
+          expect(frame).toContain("Ask anything, @ for context, / for slash commands");
+        }
       }
     );
   });
