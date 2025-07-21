@@ -158,19 +158,28 @@ export async function runOnboardingFlow(
 }
 
 export async function runNormalFlow(
-  configPath: string | undefined,
-  authConfig: AuthConfig
+  authConfig: AuthConfig,
+  configPath?: string,
+  rules?: string[]
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
   if (configPath) {
-    const result = await initialize(authConfig, configPath);
+    let result = await initialize(authConfig, configPath);
+    // Inject rules into the config if provided
+    if (rules && rules.length > 0) {
+      result.config = await injectRulesIntoConfig(result.config, rules);
+    }
     return { ...result, wasOnboarded: false };
   }
 
   // Step 2: If user is logged in, look for first assistant in selected org
   if (isAuthenticated()) {
     try {
-      const result = await initialize(authConfig, undefined);
+      let result = await initialize(authConfig, undefined);
+      // Inject rules into the config if provided
+      if (rules && rules.length > 0) {
+        result.config = await injectRulesIntoConfig(result.config, rules);
+      }
       return { ...result, wasOnboarded: false };
     } catch (error) {}
   }
@@ -178,7 +187,11 @@ export async function runNormalFlow(
   // Step 3: Look for local ~/.continue/config.yaml
   if (fs.existsSync(CONFIG_PATH)) {
     try {
-      const result = await initialize(authConfig, CONFIG_PATH);
+      let result = await initialize(authConfig, CONFIG_PATH);
+      // Inject rules into the config if provided
+      if (rules && rules.length > 0) {
+        result.config = await injectRulesIntoConfig(result.config, rules);
+      }
       return { ...result, wasOnboarded: false };
     } catch (error) {
       console.log(chalk.yellow("⚠ Invalid config file found"));
@@ -190,7 +203,11 @@ export async function runNormalFlow(
     console.log(chalk.blue("✓ Using ANTHROPIC_API_KEY from environment"));
     await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
     console.log(chalk.gray(`  Config saved to: ${CONFIG_PATH}`));
-    const result = await initialize(authConfig, CONFIG_PATH);
+    let result = await initialize(authConfig, CONFIG_PATH);
+    // Inject rules into the config if provided
+    if (rules && rules.length > 0) {
+      result.config = await injectRulesIntoConfig(result.config, rules);
+    }
     return { ...result, wasOnboarded: false };
   }
 
@@ -280,11 +297,11 @@ export async function initializeWithOnboarding(
       await markOnboardingComplete();
     }
   } else {
-    result = await runNormalFlow(configPath, authConfig);
+    result = await runNormalFlow(authConfig, configPath, rules);
   }
 
-  // Inject rules into the config if provided
-  if (rules && rules.length > 0) {
+  // Inject rules into the config if provided (for onboarding flow which doesn't handle rules directly)
+  if (rules && rules.length > 0 && !result.wasOnboarded) {
     result.config = await injectRulesIntoConfig(result.config, rules);
   }
 

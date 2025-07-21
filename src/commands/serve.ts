@@ -6,7 +6,7 @@ import {
   getOrganizationId,
   loadAuthConfig,
 } from "../auth/workos.js";
-import { initializeWithOnboarding } from "../onboarding.js";
+import { runNormalFlow } from "../onboarding.js";
 import { saveSession } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
@@ -48,8 +48,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Initialize authentication
   const authConfig = loadAuthConfig();
 
-  // Initialize with onboarding
-  const { config, llmApi, model } = await initializeWithOnboarding(
+  // Initialize with normal flow (skip onboarding like headless mode)
+  const { config, llmApi, model } = await runNormalFlow(
     authConfig,
     options.config,
     options.rule

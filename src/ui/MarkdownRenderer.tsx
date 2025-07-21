@@ -64,7 +64,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({ content,
     {
       regex: /`([^`\n]+)`/g,
       render: (content, key) => (
-        <Text key={key} color="cyan">
+        <Text key={key} color="magentaBright">
           {content}
         </Text>
       ),
