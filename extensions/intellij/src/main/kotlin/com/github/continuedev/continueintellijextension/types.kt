@@ -30,7 +30,8 @@ data class IdeInfo(
     val name: String,
     val version: String,
     val remoteName: String,
-    val extensionVersion: String
+    val extensionVersion: String,
+    val isPrerelease: Boolean
 )
 
 data class Problem(
@@ -249,3 +250,8 @@ data class AcceptOrRejectDiffPayload(
 data class ShowFilePayload(
     val filepath: String
 )
+
+sealed class FimResult {
+    data class FimEdit(val fimText: String) : FimResult()
+    object NotFimEdit : FimResult()
+}

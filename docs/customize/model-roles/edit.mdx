@@ -1,0 +1,79 @@
+---
+title: Edit Role
+description: Edit model role
+keywords: [edit, editing, model, role]
+sidebar_position: 3
+---
+
+It's often useful to select a different model to respond to Edit prompts than for chat prompts, as Edits are often more code-specific and may require less conversational readability.
+
+In Continue, you can add `edit` to a model's roles to specify that it can be used for Edit requests. If no edit models are specified, the selected `chat` model is used.
+
+<Tabs>
+  <Tab title="YAML">
+  Use model roles.
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - edit
+  ```
+  </Tab>
+  <Tab title="JSON">
+  Set the `experimental.modelRoles.inlineEdit` property in `config.json`.
+  ```json title="config.json"
+  {
+    "models": {
+      "name": "Claude 3.5 Sonnet",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-latest",
+      "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+    },
+    "experimental": {
+        "modelRoles": {
+            "inlineEdit": "Claude 3.5 Sonnet",
+      }
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Explore edit models in [the hub](https://hub.continue.dev/explore/models?roles=edit). Generally, our recommendations for Edit overlap with recommendations for Chat.
+
+## Prompt templating
+
+You can customize the prompt template used for editing code by setting the `promptTemplates.edit` property in your model configuration. Continue uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
+
+Available variables for the edit template:
+
+- `{{{userInput}}}` - The user's edit request/instruction
+- `{{{language}}}` - The programming language of the code
+- `{{{codeToEdit}}}` - The code that's being edited
+- `{{{prefix}}}` - Content before the edit area
+- `{{{suffix}}}` - Content after the edit area
+- `{{{supportsCompletions}}}` - Whether the model supports completions API
+- `{{{supportsPrefill}}}` - Whether the model supports prefill capability
+
+Example:
+
+```yaml
+models:
+  - name: My Custom Edit Template
+    provider: openai
+    model: gpt-4o
+    promptTemplates:
+      edit: |
+        `Here is the code before editing:
+        \`\`\`{{{language}}}
+        {{{codeToEdit}}}
+        \`\`\`
+
+        Here is the edit requested:
+        "{{{userInput}}}"
+
+        Here is the code after editing:`
+```

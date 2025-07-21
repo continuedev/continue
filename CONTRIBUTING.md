@@ -192,6 +192,7 @@ To keep the Continue codebase clean and maintainable, we expect the following fr
 - Keep changes focused. Multiple unrelated fixes should be opened as separate PRs
 - Write or update tests for new functionality
 - Update relevant documentation in the `docs` folder
+- **For new features**: Include a short screen recording or screenshot demonstrating the new functionality. This makes it much easier for us as contributors to review and understand your changes. See [this PR](https://github.com/continuedev/continue/pull/6455) as a good example
 - Open a PR against the `main` branch. Make sure to fill in the PR template
 
 ### Formatting

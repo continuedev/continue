@@ -124,6 +124,7 @@ class FileSystemIde implements IDE {
       version: "0.1",
       remoteName: "na",
       extensionVersion: "na",
+      isPrerelease: false,
     });
   }
 

@@ -4,27 +4,6 @@ export function messageHasToolCalls(msg: ChatMessage): boolean {
   return msg.role === "assistant" && !!msg.toolCalls;
 }
 
-export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
-  const flattened: ChatMessage[] = [];
-
-  for (let i = 0; i < msgs.length; i++) {
-    const msg = msgs[i];
-
-    if (
-      flattened.length > 0 &&
-      flattened[flattened.length - 1].role === msg.role &&
-      !messageHasToolCalls(msg) &&
-      !messageHasToolCalls(flattened[flattened.length - 1])
-    ) {
-      flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
-    } else {
-      flattened.push(msg);
-    }
-  }
-
-  return flattened;
-}
-
 export function messageIsEmpty(message: ChatMessage): boolean {
   if (typeof message.content === "string") {
     return message.content.trim() === "";

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import Layout from "./components/console/Layout";
 import "./indexConsole.css";
 
-(async () => {
+void (async () => {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
       <Layout></Layout>

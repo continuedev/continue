@@ -1,0 +1,59 @@
+---
+title: xAI
+slug: ../xai
+---
+
+<Info>
+  You can get an API key from the [xAI console](https://console.x.ai/)
+</Info>
+
+## Chat model
+
+We recommend configuring **grok-4** as your chat model. For information on other available models, visit [xAI Documentation](https://docs.x.ai/docs/models).
+
+<Tabs>
+	<Tab title="Config">
+  Add the [xAI Grok 4 model block](https://hub.continue.dev/xai/grok-4) on the hub.
+  </Tab>
+	<Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Grok 4
+      provider: xAI
+      model: grok-4
+      apiKey: <YOUR_XAI_API_KEY>
+  ```
+  </Tab>
+	<Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Grok 4",
+        "provider": "xAI",
+        "model": "grok-4",
+        "apiKey": "<YOUR_XAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+xAI currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+xAI currently does not offer any embeddings models.
+
+[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
+
+## Reranking model
+
+xAI currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.

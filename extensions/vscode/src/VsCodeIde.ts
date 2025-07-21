@@ -27,6 +27,7 @@ import type {
   TerminalOptions,
   Thread,
 } from "core";
+import { getExtensionVersion, isExtensionPrerelease } from "./util/util";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -164,9 +165,8 @@ class VsCodeIde implements IDE {
       name: vscode.env.appName,
       version: vscode.version,
       remoteName: vscode.env.remoteName || "local",
-      extensionVersion:
-        vscode.extensions.getExtension("continue.continue")?.packageJSON
-          .version,
+      extensionVersion: getExtensionVersion(),
+      isPrerelease: isExtensionPrerelease(),
     });
   }
 
