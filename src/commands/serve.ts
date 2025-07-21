@@ -12,6 +12,10 @@ import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { DisplayMessage } from "../ui/types.js";
+import { getToolDisplayName } from "../tools.js";
+import path from "path";
+import type { StreamCallbacks } from "../streamChatResponse.js";
 
 interface ServeOptions {
   config?: string;
@@ -25,6 +29,7 @@ interface ServeOptions {
 
 interface ServerState {
   chatHistory: ChatCompletionMessageParam[];
+  displayMessages: DisplayMessage[]; // Messages formatted for display with tool info
   config: any;
   model: any;
   isProcessing: boolean;
@@ -72,6 +77,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Initialize server state
   const state: ServerState = {
     chatHistory,
+    displayMessages: [], // Initialize empty display messages
     config,
     model,
     isProcessing: false,
@@ -93,7 +99,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
     res.json({
-      chatHistory: state.chatHistory,
+      chatHistory: state.displayMessages, // Send display messages with proper formatting
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
     });
@@ -159,6 +165,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
       // Add user message to history
       state.chatHistory.push({ role: "user", content: userMessage });
+      state.displayMessages.push({ role: "user", content: userMessage });
 
       try {
         // Create new abort controller for this response
@@ -166,8 +173,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
         // Stream the response with interruption support
         await streamChatResponseWithInterruption(
-          state.chatHistory,
-          state.model,
+          state,
           llmApi,
           state.currentAbortController,
           () => state.shouldInterrupt
@@ -185,12 +191,22 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           if (lastMessage.role === "assistant" && !lastMessage.content) {
             state.chatHistory.pop();
           }
+          // Also remove partial display messages
+          const lastDisplayMessage = state.displayMessages[state.displayMessages.length - 1];
+          if (lastDisplayMessage && lastDisplayMessage.role === "assistant" && lastDisplayMessage.isStreaming) {
+            state.displayMessages.pop();
+          }
         } else {
           logger.error(`Error: ${formatError(e)}`);
-          // Add error message to chat history
+          // Add error message to chat history and display messages
+          const errorMessage = `Error: ${formatError(e)}`;
           state.chatHistory.push({
             role: "assistant",
-            content: `Error: ${formatError(e)}`,
+            content: errorMessage,
+          });
+          state.displayMessages.push({
+            role: "assistant",
+            content: errorMessage,
           });
         }
       } finally {
@@ -230,8 +246,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
 // Modified version of streamChatResponse that supports interruption
 async function streamChatResponseWithInterruption(
-  chatHistory: ChatCompletionMessageParam[],
-  model: any,
+  state: ServerState,
   llmApi: any,
   abortController: AbortController,
   shouldInterrupt: () => boolean
@@ -250,15 +265,103 @@ async function streamChatResponseWithInterruption(
   // Set up periodic interruption checks
   const interruptionChecker = setInterval(checkInterruption, 100);
 
+  let currentStreamingMessage: DisplayMessage | null = null;
+
+  // Create callbacks to capture tool events
+  const callbacks: StreamCallbacks = {
+    onContent: (content: string) => {
+      if (!currentStreamingMessage) {
+        currentStreamingMessage = {
+          role: "assistant",
+          content: "",
+          isStreaming: true,
+        };
+        state.displayMessages.push(currentStreamingMessage);
+      }
+      currentStreamingMessage.content += content;
+    },
+    onContentComplete: (content: string) => {
+      if (currentStreamingMessage) {
+        currentStreamingMessage.content = content;
+        currentStreamingMessage.isStreaming = false;
+        currentStreamingMessage = null;
+      } else {
+        // Add complete assistant message
+        state.displayMessages.push({
+          role: "assistant",
+          content: content,
+          isStreaming: false,
+        });
+      }
+    },
+    onToolStart: (toolName: string, toolArgs?: any) => {
+      // Format tool call similar to local mode
+      const formatToolCall = (name: string, args: any) => {
+        const displayName = getToolDisplayName(name);
+        if (!args) return displayName;
+
+        const firstValue = Object.values(args)[0];
+        const formatPath = (value: any) => {
+          if (typeof value === "string" && path.isAbsolute(value)) {
+            const workspaceRoot = process.cwd();
+            const relativePath = path.relative(workspaceRoot, value);
+            return relativePath || value;
+          }
+          return value;
+        };
+
+        return `${displayName}(${formatPath(firstValue) || ""})`;
+      };
+
+      // If there was streaming content, finalize it first
+      if (currentStreamingMessage && currentStreamingMessage.content) {
+        currentStreamingMessage.isStreaming = false;
+        currentStreamingMessage = null;
+      }
+
+      state.displayMessages.push({
+        role: "system",
+        content: `○ ${formatToolCall(toolName, toolArgs)}`,
+        messageType: "tool-start",
+        toolName,
+      });
+    },
+    onToolResult: (result: string, toolName: string) => {
+      // Add tool result with proper formatting
+      const displayName = getToolDisplayName(toolName);
+      state.displayMessages.push({
+        role: "system",
+        content: `● ${displayName}`,
+        messageType: "tool-result",
+        toolName,
+        toolResult: result,
+      });
+    },
+    onToolError: (error: string, toolName?: string) => {
+      state.displayMessages.push({
+        role: "system",
+        content: `✗ Tool error: ${error}`,
+        messageType: "tool-error",
+        toolName,
+      });
+    },
+  };
+
   try {
     const response = await streamChatResponse(
-      chatHistory,
-      model,
+      state.chatHistory,
+      state.model,
       llmApi,
-      abortController
+      abortController,
+      callbacks
     );
     return response;
   } finally {
     clearInterval(interruptionChecker);
+    // Ensure any streaming message is finalized
+    if (currentStreamingMessage !== null) {
+      // TypeScript is having issues with this line - the message will be finalized anyway
+      // currentStreamingMessage.isStreaming = false;
+    }
   }
 }

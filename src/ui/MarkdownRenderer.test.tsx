@@ -1,12 +1,12 @@
-import React from "react";
 import { Text } from "ink";
+import React from "react";
 import MarkdownRenderer from "./MarkdownRenderer.js";
 
 describe("MarkdownRenderer", () => {
   // Helper function to simulate calling the component function directly
   function renderMarkdown(content: string) {
-    // Handle React.memo wrapped component
-    const ComponentType = MarkdownRenderer.type || MarkdownRenderer;
+    // Handle React.memo wrapped component by casting to any to access .type
+    const ComponentType = (MarkdownRenderer as any).type || MarkdownRenderer;
     const component = ComponentType({ content });
     return (component as any).props.children;
   }

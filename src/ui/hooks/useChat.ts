@@ -145,7 +145,10 @@ export function useChat({
                 const prevMsg = prevMessages[index];
                 return !prevMsg || 
                        prevMsg.role !== msg.role || 
-                       prevMsg.content !== msg.content;
+                       prevMsg.content !== msg.content ||
+                       prevMsg.messageType !== msg.messageType ||
+                       prevMsg.toolName !== msg.toolName ||
+                       prevMsg.toolResult !== msg.toolResult;
               });
               
               // Only update if there are actual changes

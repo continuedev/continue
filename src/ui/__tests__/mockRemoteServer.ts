@@ -2,9 +2,12 @@ import { createServer, Server, IncomingMessage, ServerResponse } from "http";
 
 // Define Message type locally since it's not exported from elsewhere
 interface Message {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
-  messageType: "chat";
+  messageType?: "chat" | "tool-start" | "tool-result" | "tool-error" | "system";
+  toolName?: string;
+  toolResult?: string;
+  isStreaming?: boolean;
 }
 
 export interface MockServerState {
@@ -199,6 +202,28 @@ export class MockRemoteServer {
       this.state.isResponding = false;
       this.state.responseInProgress = false;
     }
+  }
+
+  // Simulate a tool call with proper message format
+  simulateToolCall(toolName: string, toolArgs?: string, toolResult?: string) {
+    if (!this.state.isResponding) return;
+
+    // Add tool start message
+    this.state.messages.push({
+      role: "system",
+      content: `○ ${toolName}${toolArgs ? `(${toolArgs})` : ''}`,
+      messageType: "tool-start",
+      toolName: toolName.toLowerCase().replace(/\s+/g, '_'),
+    });
+
+    // Add tool result message
+    this.state.messages.push({
+      role: "system",
+      content: `● ${toolName}${toolArgs ? `(${toolArgs})` : ''}`,
+      messageType: "tool-result",
+      toolName: toolName.toLowerCase().replace(/\s+/g, '_'),
+      toolResult: toolResult || "Tool executed successfully",
+    });
   }
 
   onMessage(callback: (message: string) => void) {
