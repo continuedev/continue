@@ -259,7 +259,7 @@ export function useChat({
     }
 
     // Handle /exit command in remote mode
-    if (isRemoteMode && message.trim() === "/exit") {
+    if (isRemoteMode && remoteUrl && message.trim() === "/exit") {
       try {
         // Send GET request to /exit endpoint
         const response = await fetch(`${remoteUrl}/exit`, {
