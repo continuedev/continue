@@ -5,6 +5,7 @@
 import { setupCa } from "core/util/ca";
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Telemetry } from "core/util/posthog";
+import { SentryLogger } from "core/util/sentry";
 import * as vscode from "vscode";
 
 import { getExtensionVersion } from "./util/util";
@@ -46,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  Telemetry.capture(
+  void Telemetry.capture(
     "deactivate",
     {
       extensionVersion: getExtensionVersion(),
@@ -55,4 +56,5 @@ export function deactivate() {
   );
 
   Telemetry.shutdownPosthogClient();
+  SentryLogger.shutdownSentryClient();
 }

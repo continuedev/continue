@@ -34,6 +34,7 @@ import { getMCPToolName } from "../../tools/mcpToolName";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
+import { SentryLogger } from "../../util/sentry";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
@@ -290,6 +291,13 @@ export default async function doLoadConfig(options: {
 
   // Setup telemetry only after (and if) we know it is enabled
   await Telemetry.setup(
+    newConfig.allowAnonymousTelemetry ?? true,
+    await ide.getUniqueId(),
+    ideInfo,
+  );
+
+  // Setup Sentry logger with same telemetry settings
+  await SentryLogger.setup(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
     ideInfo,
