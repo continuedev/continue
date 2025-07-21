@@ -1,5 +1,7 @@
 import chalk from "chalk";
 import express, { Request, Response } from "express";
+import { exec } from "child_process";
+import { promisify } from "util";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import {
   ensureOrganization,
@@ -16,6 +18,8 @@ import { DisplayMessage } from "../ui/types.js";
 import { getToolDisplayName } from "../tools.js";
 import path from "path";
 import type { StreamCallbacks } from "../streamChatResponse.js";
+
+const execAsync = promisify(exec);
 
 interface ServeOptions {
   config?: string;
@@ -134,6 +138,72 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
   });
 
+  // GET /diff - Return git diff against main branch
+  app.get("/diff", async (_req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    try {
+      // First check if we're in a git repository
+      await execAsync("git rev-parse --git-dir");
+
+      // Get the diff against main branch
+      const { stdout } = await execAsync("git diff main");
+      
+      res.json({
+        diff: stdout,
+      });
+    } catch (error: any) {
+      // Git diff returns exit code 1 when there are differences, which is normal
+      if (error.code === 1 && error.stdout) {
+        res.json({
+          diff: error.stdout,
+        });
+      } else if (error.code === 128) {
+        // Handle case where we're not in a git repo or main branch doesn't exist
+        res.status(404).json({ 
+          error: "Not in a git repository or main branch doesn't exist",
+          diff: ""
+        });
+      } else {
+        logger.error(`Git diff error: ${formatError(error)}`);
+        res.status(500).json({ 
+          error: `Failed to get git diff: ${formatError(error)}`,
+          diff: ""
+        });
+      }
+    }
+  });
+
+  // POST /exit - Gracefully shut down the server
+  app.post("/exit", async (_req: Request, res: Response) => {
+    console.log(chalk.yellow("\nReceived exit request, shutting down server..."));
+    
+    // Respond immediately before shutting down
+    res.json({ 
+      message: "Server shutting down",
+      success: true 
+    });
+
+    // Set server running flag to false to stop processing
+    state.serverRunning = false;
+
+    // Abort any current processing
+    if (state.currentAbortController) {
+      state.currentAbortController.abort();
+    }
+
+    // Clear the message queue
+    state.messageQueue = [];
+
+    // Give a moment for the response to be sent
+    setTimeout(() => {
+      server.close(() => {
+        telemetryService.stopActiveTime();
+        process.exit(0);
+      });
+    }, 100);
+  });
+
   const server = app.listen(port, () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
@@ -141,6 +211,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(
       chalk.dim("  POST /message - Send a message (body: { message: string })")
     );
+    console.log(chalk.dim("  GET  /diff    - Get git diff against main branch"));
+    console.log(chalk.dim("  POST /exit    - Gracefully shut down the server"));
     console.log(
       chalk.dim(
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`
