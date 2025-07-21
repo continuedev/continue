@@ -89,7 +89,7 @@ jobs:
 
           You can use the available tools to explore the codebase and understand context better.
 
-          After your analysis, create a file called 'code_review.md' with your findings formatted as:
+          Format your response as a markdown code review with the following structure:
 
           ## Code Review Summary
 
@@ -112,7 +112,7 @@ jobs:
             cat > review_prompt.txt << 'EOF'
           Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement.
 
-          Create a file called 'code_review.md' with your analysis.
+          Format your response as a markdown code review.
           EOF
           fi
         env:
@@ -129,7 +129,7 @@ jobs:
           cat > review_prompt.txt << 'EOF'
           Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement. 
 
-          Create a file called 'code_review.md' with your analysis.
+          Format your response as a markdown code review.
 
           Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
           EOF
@@ -142,8 +142,8 @@ jobs:
           echo "=================================="
           echo ""
 
-          # Run the CLI with the generated prompt
-          cat review_prompt.txt | cn --config "${{ inputs.assistant }}" -p
+          # Run the CLI with the generated prompt and pipe output to code_review.md
+          cat review_prompt.txt | cn --config "${{ inputs.assistant }}" -p > code_review.md
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
@@ -168,10 +168,10 @@ jobs:
             try {
               let reviewContent = '';
               
-              if (fs.existsSync('code_review.md')) {
+              if (fs.existsSync('code_review.md') && fs.statSync('code_review.md').size > 0) {
                 reviewContent = fs.readFileSync('code_review.md', 'utf8');
               } else {
-                reviewContent = '⚠️ AI review completed but no review file was generated. Check the action logs for details.';
+                reviewContent = '⚠️ AI review completed but no review output was generated. Check the action logs for details.';
               }
               
               const comment = reviewContent;
