@@ -153,8 +153,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         diff: stdout,
       });
     } catch (error: any) {
-      // Handle case where we're not in a git repo or main branch doesn't exist
-      if (error.code === 128) {
+      // Git diff returns exit code 1 when there are differences, which is normal
+      if (error.code === 1 && error.stdout) {
+        res.json({
+          diff: error.stdout,
+        });
+      } else if (error.code === 128) {
+        // Handle case where we're not in a git repo or main branch doesn't exist
         res.status(404).json({ 
           error: "Not in a git repository or main branch doesn't exist",
           diff: ""

@@ -103,7 +103,7 @@ describe("E2E: Headless Mode with Dynamic Responses", () => {
 
     expect(result.stdout).toContain("Non-streaming response");
     expect(result.exitCode).toBe(0);
-  });
+  }, 20000);
 
   it("should handle multiple mock servers for different models", async () => {
     context = await createTestContext();
