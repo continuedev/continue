@@ -174,7 +174,7 @@ jobs:
                 reviewContent = '⚠️ AI review completed but no review file was generated. Check the action logs for details.';
               }
               
-              const comment = "reviewContent";
+              const comment = reviewContent;
               
               // Get PR number
               let prNumber;
