@@ -820,7 +820,7 @@ const getCommandsMap: (
       // NOTE: This could use some cleanup or abstraction.
       // The logic is largely similar to that of completionProvider.ts
       // but we don't have access to the class.
-      console.log("continue.showNextEditAfterJump");
+
       const { completionId, outcome, currentPosition } = data;
 
       const editor = vscode.window.activeTextEditor;
