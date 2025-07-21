@@ -27,6 +27,11 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   code-review:
     name: AI Code Review
@@ -191,11 +196,13 @@ jobs:
                   repo: context.repo.repo,
                   body: comment
                 });
+                console.log(`Successfully posted comment on PR #${prNumber}`);
               } else {
                 console.log('Could not determine PR number for commenting');
               }
             } catch (error) {
               console.log('Failed to post comment:', error.message);
+              console.log('Error details:', error);
             }
         env:
           GITHUB_TOKEN: ${{ github.token }}
