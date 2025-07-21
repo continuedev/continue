@@ -2,7 +2,11 @@ import { Text } from "ink";
 import React, { useEffect, useState } from "react";
 import { compareVersions, getLatestVersion, getVersion } from "../version.js";
 
-const UpdateNotification: React.FC = () => {
+interface UpdateNotificationProps {
+  isRemoteMode?: boolean;
+}
+
+const UpdateNotification: React.FC<UpdateNotificationProps> = ({ isRemoteMode = false }) => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [latestVersion, setLatestVersion] = useState<string>("");
   const [currentVersion] = useState(getVersion());
@@ -27,6 +31,9 @@ const UpdateNotification: React.FC = () => {
   }, [currentVersion]);
 
   if (!updateAvailable) {
+    if (isRemoteMode) {
+      return <Text color="cyan">◉ Remote Mode</Text>;
+    }
     return <Text color="gray">● Continue CLI</Text>;
   }
 

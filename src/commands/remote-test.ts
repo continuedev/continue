@@ -4,7 +4,7 @@ import { startRemoteTUIChat } from "../ui/index.js";
 import logger from "../util/logger.js";
 
 export async function remoteTest(
-  prompt: string,
+  prompt?: string,
   url: string = "http://localhost:8000"
 ) {
   console.info(chalk.white(`Connecting to remote environment at ${url}...`));

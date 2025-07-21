@@ -393,10 +393,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 onTransitionStateChange={setIsShowingFreeTrialTransition}
               />
             )}
-            {isRemoteMode && <Text color="cyan">Remote Mode</Text>}
           </Box>
           <Box marginRight={2}>
-            <UpdateNotification />
+            <UpdateNotification isRemoteMode={isRemoteMode} />
           </Box>
         </Box>
       </Box>

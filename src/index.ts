@@ -135,7 +135,7 @@ program
   .command("remote-test [prompt]")
   .description("Test remote TUI mode with a local server")
   .option("--url <url>", "Server URL (default: http://localhost:8000)")
-  .action(async (prompt: string = "Hello from remote!", options) => {
+  .action(async (prompt: string | undefined, options) => {
     await remoteTest(prompt, options.url);
   });
 

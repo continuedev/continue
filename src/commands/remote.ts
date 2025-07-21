@@ -62,8 +62,8 @@ export async function remote(prompt: string) {
       telemetryService.startActiveTime();
 
       try {
-        // Start the TUI in remote mode
-        await startRemoteTUIChat(remoteUrl, prompt);
+        // Start the TUI in remote mode (prompt is optional)
+        await startRemoteTUIChat(remoteUrl, undefined);
       } finally {
         telemetryService.stopActiveTime();
       }
