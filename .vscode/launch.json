@@ -5,25 +5,6 @@
       "name": "Debug CLI",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/dist/index.js",
-      "preLaunchTask": "npm: build",
-      "args": [],
-      "env": {
-        "NODE_ENV": "development"
-      },
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "skipFiles": ["<node_internals>/**"],
-      "sourceMaps": true,
-      "resolveSourceMapLocations": [
-        "${workspaceFolder}/**",
-        "!**/node_modules/**"
-      ]
-    },
-    {
-      "name": "Debug CLI with TypeScript",
-      "type": "node",
-      "request": "launch",
       "program": "${workspaceFolder}/src/index.ts",
       "args": [],
       "env": {
@@ -39,50 +20,7 @@
         "!**/node_modules/**"
       ]
     },
-    {
-      "name": "Debug CLI with Arguments",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/dist/index.js",
-      "preLaunchTask": "npm: build",
-      "args": ["--config", "nate/default-assistant", "--prompt", "Hello world"],
-      "env": {
-        "NODE_ENV": "development"
-      },
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "skipFiles": ["<node_internals>/**"],
-      "sourceMaps": true,
-      "resolveSourceMapLocations": [
-        "${workspaceFolder}/**",
-        "!**/node_modules/**"
-      ]
-    },
-    {
-      "name": "Debug CLI Headless Mode",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/dist/index.js",
-      "preLaunchTask": "npm: build",
-      "args": [
-        "-p",
-        "--config",
-        "nate/default-assistant",
-        "--prompt",
-        "What is TypeScript?"
-      ],
-      "env": {
-        "NODE_ENV": "development"
-      },
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "skipFiles": ["<node_internals>/**"],
-      "sourceMaps": true,
-      "resolveSourceMapLocations": [
-        "${workspaceFolder}/**",
-        "!**/node_modules/**"
-      ]
-    },
+
     {
       "name": "Debug Tests",
       "type": "node",
