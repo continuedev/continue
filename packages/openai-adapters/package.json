@@ -18,6 +18,7 @@
     "@continuedev/config-yaml": "^1.0.51",
     "@continuedev/fetch": "^1.0.15",
     "dotenv": "^16.5.0",
+    "google-auth-library": "^10.1.0",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",
     "openai": "^4.104.0",

@@ -84,7 +84,7 @@ export class GeminiApi implements BaseLlmApi {
     }
   }
 
-  private _convertBody(oaiBody: ChatCompletionCreateParams, url: string) {
+  public _convertBody(oaiBody: ChatCompletionCreateParams, url: string) {
     const generationConfig: any = {};
 
     if (oaiBody.top_p) {
@@ -250,23 +250,9 @@ export class GeminiApi implements BaseLlmApi {
     };
   }
 
-  async *chatCompletionStream(
-    body: ChatCompletionCreateParamsStreaming,
-    signal: AbortSignal,
-  ): AsyncGenerator<ChatCompletionChunk> {
-    const apiURL = new URL(
-      `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
-      this.apiBase,
-    ).toString();
-    const convertedBody = this._convertBody(body, apiURL);
-    const resp = await customFetch(this.config.requestOptions)(apiURL, {
-      method: "POST",
-      body: JSON.stringify(convertedBody),
-      signal,
-    });
-
+  async *handleStreamResponse(response: any, model: string) {
     let buffer = "";
-    for await (const chunk of streamResponse(resp as any)) {
+    for await (const chunk of streamResponse(response as any)) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
         buffer = buffer.slice(1);
@@ -301,11 +287,11 @@ export class GeminiApi implements BaseLlmApi {
             if ("text" in part) {
               yield chatChunk({
                 content: part.text,
-                model: body.model,
+                model,
               });
             } else if ("functionCall" in part) {
               yield chatChunkFromDelta({
-                model: body.model,
+                model,
                 delta: {
                   tool_calls: [
                     {
@@ -332,6 +318,23 @@ export class GeminiApi implements BaseLlmApi {
         buffer = "";
       }
     }
+  }
+
+  async *chatCompletionStream(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    const apiURL = new URL(
+      `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
+      this.apiBase,
+    ).toString();
+    const convertedBody = this._convertBody(body, apiURL);
+    const resp = await customFetch(this.config.requestOptions)(apiURL, {
+      method: "POST",
+      body: JSON.stringify(convertedBody),
+      signal,
+    });
+    yield* this.handleStreamResponse(resp, body.model);
   }
   completionNonStream(
     body: CompletionCreateParamsNonStreaming,

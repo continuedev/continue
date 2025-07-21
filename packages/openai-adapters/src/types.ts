@@ -165,6 +165,17 @@ export const InceptionConfigSchema = OpenAIConfigSchema.extend({
 });
 export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
 
+export const VertexAIConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("vertexai"),
+  env: z.object({
+    region: z.string().optional(),
+    projectId: z.string().optional(),
+    keyFile: z.string().optional(),
+    keyJson: z.string().optional(),
+  }).optional(),
+});
+export type VertexAIConfig = z.infer<typeof VertexAIConfigSchema>;
+
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
@@ -179,6 +190,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,
+  VertexAIConfigSchema,
   LlamastackConfigSchema,
   ContinueProxyConfigSchema,
 ]);
