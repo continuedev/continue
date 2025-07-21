@@ -13,7 +13,7 @@ import { createDiff, DiffFormatType } from "../context/diffFormatting";
 import {
   EditableRegionStrategy,
   getNextEditableRegion,
-} from "../NextEditEditableRegionCarver";
+} from "../NextEditEditableRegionCalculator";
 import {
   NextEditOutcome,
   NextEditTemplate,

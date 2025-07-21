@@ -314,5 +314,9 @@ export class JumpManager {
 
   setCompletionAfterJump(completionData: CompletionDataForAfterJump): void {
     this._completionAfterJump = completionData;
+    console.log(
+      "setCompletionAfterJump: saved",
+      JSON.stringify(completionData, null, 2),
+    );
   }
 }

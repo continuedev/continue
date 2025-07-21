@@ -99,6 +99,9 @@ async function rerankJump(ctx: {
     // const mostRelevantChunk = chunks[0];
     // Get the third most relevant chunk if there are enough chunks,
     // otherwise fallback to second or first.
+    // The most relevant chunk seems to be the one that
+    // is similar enough lexically,
+    // but different enough to still justify making an edit.
     const chunkIndex = Math.min(2, chunks.length - 1);
     const mostRelevantChunk = chunks[chunkIndex];
 

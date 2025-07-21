@@ -33,7 +33,7 @@ import {
   calculateFinalCursorPosition,
   getOffsetPositionAtLastNewLine,
 } from "./diff/diff.js";
-import { EditableRegionStrategy } from "./NextEditEditableRegionCarver.js";
+import { EditableRegionStrategy } from "./NextEditEditableRegionCalculator.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import { NextEditPrefetchQueue } from "./NextEditPrefetchQueue.js";
 import {

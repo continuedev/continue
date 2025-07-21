@@ -3,7 +3,7 @@ import { HelperVars } from "../autocomplete/util/HelperVars";
 import { findChangedLineRanges, myersDiff } from "../diff/myers";
 import { PrefetchQueue } from "../util/PrefetchQueue";
 import { applyCompletionToFile } from "./diff/diff";
-import { EditableRegionStrategy } from "./NextEditEditableRegionCarver";
+import { EditableRegionStrategy } from "./NextEditEditableRegionCalculator";
 import { NextEditProvider } from "./NextEditProvider";
 import { NextEditOutcome } from "./types";
 
