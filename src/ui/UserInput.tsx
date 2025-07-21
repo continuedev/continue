@@ -2,6 +2,7 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useEffect, useState } from "react";
 import { hasMultipleOrganizations } from "../auth/workos.js";
+import { getAllSlashCommands } from "../commands/commands.js";
 import { InputHistory } from "../util/inputHistory.js";
 import FileSearchUI from "./FileSearchUI.js";
 import SlashCommandUI from "./SlashCommandUI.js";
@@ -51,41 +52,25 @@ const UserInput: React.FC<UserInputProps> = ({
   const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
 
   useEffect(() => {
-    hasMultipleOrganizations().then(setHasMultipleOrgs);
-  }, []);
+    if (!isRemoteMode) {
+      hasMultipleOrganizations().then(setHasMultipleOrgs);
+    }
+  }, [isRemoteMode]);
 
   const getSlashCommands = () => {
-    const systemCommands = [
+    if (assistant || isRemoteMode) {
+      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
+        isRemoteMode,
+        hasMultipleOrgs,
+      });
+    }
+
+    // Fallback - basic commands without assistant
+    return [
       { name: "help", description: "Show help message" },
       { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
-      { name: "login", description: "Authenticate with your account" },
-      { name: "logout", description: "Sign out of your current session" },
-      {
-        name: "whoami",
-        description: "Check who you're currently logged in as",
-      },
-      {
-        name: "config",
-        description: "Switch configuration",
-      },
-      ...(hasMultipleOrgs
-        ? [
-            {
-              name: "org",
-              description: "Switch organization",
-            },
-          ]
-        : []),
     ];
-
-    const assistantCommands =
-      assistant?.prompts?.map((prompt) => ({
-        name: prompt?.name || "",
-        description: prompt?.description || "",
-      })) || [];
-
-    return [...systemCommands, ...assistantCommands];
   };
 
   // Update slash command UI state based on input
@@ -105,18 +90,22 @@ const UserInput: React.FC<UserInputProps> = ({
         if (!afterSlash.includes(" ") && !afterSlash.includes("\n")) {
           // We're in a slash command context - check if it's a complete command
           const allCommands = getSlashCommands();
-          const exactMatch = allCommands.find(cmd => cmd.name === afterSlash);
-          
+          const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
+
           // Hide selector if we have an exact match and there's more content after the cursor
           if (exactMatch) {
             const restOfText = text.slice(cursor);
             // If there's a space immediately after cursor, or we're at end of line/text, hide selector
-            if (restOfText.startsWith(" ") || restOfText === "" || restOfText.startsWith("\n")) {
+            if (
+              restOfText.startsWith(" ") ||
+              restOfText === "" ||
+              restOfText.startsWith("\n")
+            ) {
               setShowSlashCommands(false);
               return;
             }
           }
-          
+
           // Show selector for partial matches
           setShowSlashCommands(true);
           setSlashCommandFilter(afterSlash);
@@ -135,6 +124,12 @@ const UserInput: React.FC<UserInputProps> = ({
 
   // Update file search UI state based on input
   const updateFileSearchState = (text: string, cursor: number) => {
+    // Don't show file search in remote mode
+    if (isRemoteMode) {
+      setShowFileSearch(false);
+      return;
+    }
+
     // Check if we're in a file search context
     const beforeCursor = text.slice(0, cursor);
     const lastAtIndex = beforeCursor.lastIndexOf("@");
@@ -413,8 +408,9 @@ const UserInput: React.FC<UserInputProps> = ({
   });
 
   const renderInputText = () => {
-    const placeholderText =
-      placeholder || "Ask anything, @ for context, / for slash commands";
+    const placeholderText = isRemoteMode
+      ? "Ask anything, / for slash commands"
+      : placeholder || "Ask anything, @ for context, / for slash commands";
     if (inputText.length === 0) {
       return (
         <>
@@ -494,24 +490,33 @@ const UserInput: React.FC<UserInputProps> = ({
   return (
     <Box flexDirection="column">
       {/* Input box */}
-      <Box borderStyle="round" borderTop={true} paddingX={1} borderColor={isRemoteMode ? "cyan" : "gray"}>
+      <Box
+        borderStyle="round"
+        borderTop={true}
+        paddingX={1}
+        borderColor={isRemoteMode ? "cyan" : "gray"}
+      >
         <Text color={isRemoteMode ? "cyan" : "green"} bold>
           {isRemoteMode ? "◉" : "●"}{" "}
         </Text>
         {renderInputText()}
       </Box>
 
-      {/* Slash command UI */}
-      {showSlashCommands && inputMode && !hideNormalUI && assistant && (
-        <SlashCommandUI
-          assistant={assistant}
-          filter={slashCommandFilter}
-          selectedIndex={selectedCommandIndex}
-        />
-      )}
+      {/* Slash command UI - show in remote mode OR when assistant is available */}
+      {showSlashCommands &&
+        inputMode &&
+        !hideNormalUI &&
+        (isRemoteMode || assistant) && (
+          <SlashCommandUI
+            assistant={assistant}
+            filter={slashCommandFilter}
+            selectedIndex={selectedCommandIndex}
+            isRemoteMode={isRemoteMode}
+          />
+        )}
 
-      {/* File search UI */}
-      {showFileSearch && inputMode && !hideNormalUI && (
+      {/* File search UI - only show in local mode */}
+      {showFileSearch && inputMode && !hideNormalUI && !isRemoteMode && (
         <FileSearchUI
           filter={fileSearchFilter}
           selectedIndex={selectedFileIndex}

@@ -139,18 +139,22 @@ export function useChat({
               if (prevMessages.length !== state.chatHistory.length) {
                 return state.chatHistory;
               }
-              
+
               // Deep comparison - check if content actually changed
-              const hasChanged = state.chatHistory.some((msg: any, index: number) => {
-                const prevMsg = prevMessages[index];
-                return !prevMsg || 
-                       prevMsg.role !== msg.role || 
-                       prevMsg.content !== msg.content ||
-                       prevMsg.messageType !== msg.messageType ||
-                       prevMsg.toolName !== msg.toolName ||
-                       prevMsg.toolResult !== msg.toolResult;
-              });
-              
+              const hasChanged = state.chatHistory.some(
+                (msg: any, index: number) => {
+                  const prevMsg = prevMessages[index];
+                  return (
+                    !prevMsg ||
+                    prevMsg.role !== msg.role ||
+                    prevMsg.content !== msg.content ||
+                    prevMsg.messageType !== msg.messageType ||
+                    prevMsg.toolName !== msg.toolName ||
+                    prevMsg.toolResult !== msg.toolResult
+                  );
+                }
+              );
+
               // Only update if there are actual changes
               return hasChanged ? state.chatHistory : prevMessages;
             });
@@ -161,19 +165,23 @@ export function useChat({
                 role: msg.role,
                 content: msg.content,
               }));
-              
+
               // Similar comparison for chat history
               if (prevChatHistory.length !== newChatHistory.length) {
                 return newChatHistory;
               }
-              
-              const hasChanged = newChatHistory.some((msg: any, index: number) => {
-                const prevMsg = prevChatHistory[index];
-                return !prevMsg || 
-                       prevMsg.role !== msg.role || 
-                       prevMsg.content !== msg.content;
-              });
-              
+
+              const hasChanged = newChatHistory.some(
+                (msg: any, index: number) => {
+                  const prevMsg = prevChatHistory[index];
+                  return (
+                    !prevMsg ||
+                    prevMsg.role !== msg.role ||
+                    prevMsg.content !== msg.content
+                  );
+                }
+              );
+
               return hasChanged ? newChatHistory : prevChatHistory;
             });
           }
@@ -250,7 +258,55 @@ export function useChat({
       return;
     }
 
-    // Handle slash commands (skip in remote mode for now)
+    // Handle /exit command in remote mode
+    if (isRemoteMode && remoteUrl && message.trim() === "/exit") {
+      try {
+        // Send POST request to /exit endpoint
+        const response = await fetch(`${remoteUrl}/exit`, {
+          method: "POST",
+        });
+
+        if (response.ok) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "system",
+              content: "Remote environment is shutting down...",
+              messageType: "system" as const,
+            },
+          ]);
+
+          // Exit the local client after a brief delay
+          setTimeout(() => {
+            exit();
+          }, 1000);
+        } else {
+          const text = await response.text();
+          logger.error("Remote shutdown failed:", text);
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "system",
+              content: "Failed to shut down remote environment",
+              messageType: "system" as const,
+            },
+          ]);
+        }
+      } catch (error) {
+        logger.error("Failed to send exit request to remote server:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "system",
+            content: "Error: Failed to connect to remote server for shutdown",
+            messageType: "system" as const,
+          },
+        ]);
+      }
+      return;
+    }
+
+    // Handle slash commands (skip in remote mode except for /exit which we handled above)
     if (!isRemoteMode && assistant) {
       const commandResult = await handleSlashCommands(
         message,
