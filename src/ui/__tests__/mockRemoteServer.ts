@@ -23,6 +23,7 @@ export class MockRemoteServer {
     responseInProgress: false,
   };
   private onMessageCallbacks: Array<(message: string) => void> = [];
+  private pendingTimeouts: Set<NodeJS.Timeout> = new Set();
 
   constructor() {}
 
@@ -84,9 +85,11 @@ export class MockRemoteServer {
           });
           
           // Notify callbacks after state is set up
-          setTimeout(() => {
+          const timeout = setTimeout(() => {
             this.onMessageCallbacks.forEach(cb => cb(message));
+            this.pendingTimeouts.delete(timeout);
           }, 10);
+          this.pendingTimeouts.add(timeout);
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true }));
@@ -122,6 +125,13 @@ export class MockRemoteServer {
       clearInterval(this.streamInterval);
       this.streamInterval = null;
     }
+    
+    // Clear any pending timeouts
+    this.pendingTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.pendingTimeouts.clear();
+    
+    // Clear callbacks to prevent memory leaks
+    this.onMessageCallbacks = [];
     
     return new Promise((resolve) => {
       if (this.server) {
@@ -195,6 +205,14 @@ export class MockRemoteServer {
   }
 
   reset() {
+    // Clear any intervals/timeouts before resetting
+    if (this.streamInterval) {
+      clearInterval(this.streamInterval);
+      this.streamInterval = null;
+    }
+    this.pendingTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.pendingTimeouts.clear();
+    
     this.state = {
       messages: [],
       isResponding: false,

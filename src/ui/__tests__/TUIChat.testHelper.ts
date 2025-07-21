@@ -57,8 +57,9 @@ export function runTest(
             serverSetup(server);
           }
 
+          let renderResult: RenderResult | null = null;
           try {
-            const renderResult = render(
+            renderResult = render(
               React.createElement(TUIChat, { ...createProps({ remoteUrl, ...props }) })
             ) as RenderResult;
 
@@ -69,18 +70,31 @@ export function runTest(
               remoteUrl,
             });
           } finally {
+            // Clean up render instance first
+            if (renderResult) {
+              renderResult.unmount();
+            }
+            // Then stop the server
             await server.stop();
           }
         } else {
           // Normal mode
-          const renderResult = render(
-            React.createElement(TUIChat, { ...createProps(props) })
-          ) as RenderResult;
+          let renderResult: RenderResult | null = null;
+          try {
+            renderResult = render(
+              React.createElement(TUIChat, { ...createProps(props) })
+            ) as RenderResult;
 
-          await testFn({
-            mode: "normal",
-            renderResult,
-          });
+            await testFn({
+              mode: "normal",
+              renderResult,
+            });
+          } finally {
+            // Clean up render instance
+            if (renderResult) {
+              renderResult.unmount();
+            }
+          }
         }
       });
     });
@@ -126,8 +140,9 @@ export function runTestSuite(
                   options.serverSetup(server);
                 }
 
+                let renderResult: RenderResult | null = null;
                 try {
-                  const renderResult = render(
+                  renderResult = render(
                     React.createElement(TUIChat, { ...createProps({ remoteUrl, ...options.props }) })
                   ) as RenderResult;
 
@@ -138,18 +153,31 @@ export function runTestSuite(
                     remoteUrl,
                   });
                 } finally {
+                  // Clean up render instance first
+                  if (renderResult) {
+                    renderResult.unmount();
+                  }
+                  // Then stop the server
                   await server.stop();
                 }
               } else {
                 // Normal mode
-                const renderResult = render(
-                  React.createElement(TUIChat, { ...createProps(options.props) })
-                ) as RenderResult;
+                let renderResult: RenderResult | null = null;
+                try {
+                  renderResult = render(
+                    React.createElement(TUIChat, { ...createProps(options.props) })
+                  ) as RenderResult;
 
-                await testFn({
-                  mode: "normal",
-                  renderResult,
-                });
+                  await testFn({
+                    mode: "normal",
+                    renderResult,
+                  });
+                } finally {
+                  // Clean up render instance
+                  if (renderResult) {
+                    renderResult.unmount();
+                  }
+                }
               }
             });
           }

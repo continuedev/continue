@@ -15,10 +15,11 @@ export function getVersion(): string {
   }
 }
 
-export async function getLatestVersion(): Promise<string | null> {
+export async function getLatestVersion(signal?: AbortSignal): Promise<string | null> {
   try {
     const response = await fetch(
-      "https://registry.npmjs.org/@continuedev/cli/latest"
+      "https://registry.npmjs.org/@continuedev/cli/latest",
+      { signal }
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -26,6 +27,10 @@ export async function getLatestVersion(): Promise<string | null> {
     const data = await response.json();
     return data.version;
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      // Request was aborted, don't log
+      return null;
+    }
     console.warn("Warning: Could not fetch latest version from npm registry");
     return null;
   }
