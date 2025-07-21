@@ -54,7 +54,7 @@ jobs:
     with:
       assistant: "nate/default-assistant"
       custom_prompt: |
-        Please review the above changes for any mistakes. You can look around the codebase to investigate if needed. Give your review in spanish.
+        Please review the below changes for any mistakes. You can look around the codebase to investigate if needed. Give your review in spanish.
     secrets:
       CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
