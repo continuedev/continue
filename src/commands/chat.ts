@@ -67,12 +67,122 @@ async function initializeChat(options: ChatOptions) {
   };
 }
 
+async function initializeChatHistory(
+  options: ChatOptions
+): Promise<ChatCompletionMessageParam[]> {
+  let chatHistory: ChatCompletionMessageParam[] = [];
+
+  // Load previous session if --resume flag is used
+  if (options.resume) {
+    const savedHistory = loadSession();
+    if (savedHistory) {
+      chatHistory = savedHistory;
+      logger.info(chalk.yellow("Resuming previous session..."));
+    } else {
+      logger.info(
+        chalk.yellow("No previous session found, starting fresh...")
+      );
+    }
+  }
+
+  // If no session loaded or not resuming, initialize with system message
+  if (chatHistory.length === 0) {
+    const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
+    const systemMessage = await constructSystemMessage(
+      rulesSystemMessage,
+      options.rule
+    );
+    if (systemMessage) {
+      chatHistory.push({ role: "system", content: systemMessage });
+    }
+  }
+
+  return chatHistory;
+}
+
+async function processMessage(
+  userInput: string,
+  chatHistory: ChatCompletionMessageParam[],
+  model: any,
+  llmApi: any,
+  isHeadless: boolean
+): Promise<void> {
+  // Track user prompt
+  telemetryService.logUserPrompt(userInput.length, userInput);
+
+  // Add user message to history
+  chatHistory.push({ role: "user", content: userInput });
+
+  // Get AI response with potential tool usage
+  if (!isHeadless) {
+    console.info(`\n${chalk.bold.blue("Assistant:")}`);
+  }
+
+  try {
+    const abortController = new AbortController();
+    const finalResponse = await streamChatResponse(
+      chatHistory,
+      model,
+      llmApi,
+      abortController
+    );
+
+    // In headless mode, only print the final response using safe stdout
+    if (isHeadless && finalResponse.trim()) {
+      safeStdout(finalResponse + "\n");
+    }
+
+    // Save session after each successful response
+    saveSession(chatHistory);
+  } catch (e: any) {
+    logger.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
+    if (!isHeadless) {
+      logger.info(
+        chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
+      );
+    }
+  }
+}
+
+async function runHeadlessMode(
+  config: any,
+  llmApi: any,
+  model: any,
+  mcpService: any,
+  prompt: string | undefined,
+  options: ChatOptions
+): Promise<void> {
+  // Show intro message for headless mode
+  introMessage(config, model, mcpService);
+
+  // Initialize chat history
+  const chatHistory = await initializeChatHistory(options);
+
+  let isFirstMessage = true;
+  while (true) {
+    // When in headless mode, don't ask for user input
+    if (!isFirstMessage && prompt && options.headless) {
+      break;
+    }
+
+    // Get user input
+    const userInput =
+      isFirstMessage && prompt
+        ? prompt
+        : readlineSync.question(`\n${chalk.bold.green("You:")} `);
+
+    isFirstMessage = false;
+
+    await processMessage(userInput, chatHistory, model, llmApi, true);
+  }
+}
+
 export async function chat(prompt?: string, options: ChatOptions = {}) {
   // Configure logger based on headless mode
   configureLogger(options.headless ?? false);
 
   try {
-    let { config, llmApi, model, mcpService, apiClient } = await initializeChat(
+    const { config, llmApi, model, mcpService, apiClient } = await initializeChat(
       options
     );
 
@@ -98,88 +208,8 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       return;
     }
 
-    // Show intro message for headless mode
-    introMessage(config, model, mcpService);
-
-    // Rules
-    let chatHistory: ChatCompletionMessageParam[] = [];
-
-    // Load previous session if --resume flag is used
-    if (options.resume) {
-      const savedHistory = loadSession();
-      if (savedHistory) {
-        chatHistory = savedHistory;
-        logger.info(chalk.yellow("Resuming previous session..."));
-      } else {
-        logger.info(
-          chalk.yellow("No previous session found, starting fresh...")
-        );
-      }
-    }
-
-    // If no session loaded or not resuming, initialize with system message
-    if (chatHistory.length === 0) {
-      const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
-      const systemMessage = await constructSystemMessage(
-        rulesSystemMessage,
-        options.rule
-      );
-      if (systemMessage) {
-        chatHistory.push({ role: "system", content: systemMessage });
-      }
-    }
-
-    let isFirstMessage = true;
-    while (true) {
-      // When in headless mode, don't ask for user input
-      if (!isFirstMessage && prompt && options.headless) {
-        break;
-      }
-
-      // Get user input
-      let userInput =
-        isFirstMessage && prompt
-          ? prompt
-          : readlineSync.question(`\n${chalk.bold.green("You:")} `);
-
-      isFirstMessage = false;
-
-      // Track user prompt
-      telemetryService.logUserPrompt(userInput.length, userInput);
-
-      // Add user message to history
-      chatHistory.push({ role: "user", content: userInput });
-
-      // Get AI response with potential tool usage
-      if (!options.headless) {
-        console.info(`\n${chalk.bold.blue("Assistant:")}`);
-      }
-
-      try {
-        const abortController = new AbortController();
-        const finalResponse = await streamChatResponse(
-          chatHistory,
-          model,
-          llmApi,
-          abortController
-        );
-
-        // In headless mode, only print the final response using safe stdout
-        if (options.headless && finalResponse.trim()) {
-          safeStdout(finalResponse + "\n");
-        }
-
-        // Save session after each successful response
-        saveSession(chatHistory);
-      } catch (e: any) {
-        logger.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
-        if (!options.headless) {
-          logger.info(
-            chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
-          );
-        }
-      }
-    }
+    // Run headless mode
+    await runHeadlessMode(config, llmApi, model, mcpService, prompt, options);
   } catch (error: any) {
     logger.error(chalk.red(`Fatal error: ${formatError(error)}`));
     process.exit(1);
