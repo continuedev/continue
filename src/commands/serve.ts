@@ -327,8 +327,26 @@ async function streamChatResponseWithInterruption(
       });
     },
     onToolResult: (result: string, toolName: string) => {
-      // Add tool result with proper formatting
+      // Replace the tool-start message with tool-result
       const displayName = getToolDisplayName(toolName);
+      
+      // Find and replace the corresponding tool-start message
+      for (let i = state.displayMessages.length - 1; i >= 0; i--) {
+        if (
+          state.displayMessages[i].messageType === "tool-start" &&
+          state.displayMessages[i].toolName === toolName
+        ) {
+          state.displayMessages[i] = {
+            ...state.displayMessages[i],
+            content: `● ${displayName}`,
+            messageType: "tool-result",
+            toolResult: result,
+          };
+          return;
+        }
+      }
+      
+      // If no tool-start found, add as new message (fallback)
       state.displayMessages.push({
         role: "system",
         content: `● ${displayName}`,
