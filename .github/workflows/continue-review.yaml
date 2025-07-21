@@ -120,6 +120,8 @@ jobs:
 
       - name: Build custom prompt
         if: inputs.custom_prompt != ''
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           # Get PR number for custom prompts too
           if [ "${{ github.event_name }}" = "pull_request" ]; then
