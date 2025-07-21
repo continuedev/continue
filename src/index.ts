@@ -5,6 +5,7 @@ import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { remote } from "./commands/remote.js";
+import { serve } from "./commands/serve.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import logger from "./util/logger.js";
 import { getVersion } from "./version.js";
@@ -94,6 +95,38 @@ program
   .description("Launch a remote instance of the cn agent")
   .action(async (prompt: string) => {
     await remote(prompt);
+  });
+
+// Serve subcommand
+program
+  .command("serve [prompt]")
+  .description("Start an HTTP server with /state and /message endpoints")
+  .option("--config <path>", "Path to configuration file")
+  .option("--readonly", "Only allow readonly tools")
+  .option("--no-tools", "Disable all tools")
+  .option("-v, --verbose", "Enable verbose logging")
+  .option(
+    "--rule <rule>",
+    "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
+  .option(
+    "--timeout <seconds>",
+    "Inactivity timeout in seconds (default: 300)",
+    "300"
+  )
+  .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
+  .action(async (prompt, options) => {
+    if (options.verbose) {
+      logger.setLevel("debug");
+      logger.debug("Verbose logging enabled");
+    }
+    await serve(prompt, options);
   });
 
 // Handle unknown commands
