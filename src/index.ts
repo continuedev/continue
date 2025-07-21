@@ -66,6 +66,8 @@ program
       }
       logger.debug("Verbose logging enabled");
     }
+
+    // Map --print to headless mode
     options.headless = options.print;
     options.print = undefined;
     await chat(prompt, options);

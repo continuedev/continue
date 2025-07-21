@@ -165,8 +165,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         );
 
         // In headless mode, only print the final response using safe stdout
-        if (options.headless && finalResponse.trim()) {
-          safeStdout(finalResponse + "\n");
+        if (options.headless) {
+          if (finalResponse.trim()) {
+            safeStdout(finalResponse + "\n");
+          }
         }
 
         // Save session after each successful response

@@ -5,6 +5,9 @@ import { Tool } from "./types.js";
 
 const execPromise = util.promisify(child_process.exec);
 
+// Default maximum number of results to display
+const DEFAULT_MAX_RESULTS = 100;
+
 export const searchCodeTool: Tool = {
   name: "search_code",
   displayName: "Search",
@@ -56,7 +59,17 @@ export const searchCodeTool: Tool = {
           return `No matches found for pattern "${args.pattern}"${args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""}.`;
         }
 
-        return `Search results for pattern "${args.pattern}"${args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""}:\n\n${stdout}`;
+        // Split the results into lines and limit the number of results
+        const lines = stdout.split("\n");
+        const truncated = lines.length > DEFAULT_MAX_RESULTS;
+        const limitedLines = lines.slice(0, DEFAULT_MAX_RESULTS);
+        const resultText = limitedLines.join("\n");
+
+        const truncationMessage = truncated 
+          ? `\n\n[Results truncated: showing ${DEFAULT_MAX_RESULTS} of ${lines.length} matches]` 
+          : "";
+
+        return `Search results for pattern "${args.pattern}"${args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""}:\n\n${resultText}${truncationMessage}`;
       } catch (error: any) {
         if (error.code === 1) {
           return `No matches found for pattern "${args.pattern}"${args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""}.`;

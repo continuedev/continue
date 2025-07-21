@@ -49,7 +49,7 @@ provider: openai`
     // For now, just test that it tries to load the config
     // Without proper mocking, it will fail to connect to OpenAI
     const result = await runCLI(context, {
-      args: ["-p", "Hello", "--config", configPath],
+      args: ["-p", "--config", configPath, "Hello"],
       env: { OPENAI_API_KEY: "test-key" },
       expectError: true,
     });

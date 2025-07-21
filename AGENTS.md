@@ -70,3 +70,7 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 - Outputs to `dist/` directory
 - Source maps and inline sources enabled
 - JSX support for React components
+
+### Important rules
+
+- Whenever you create / update a test, you should run the test to be certain that it passes

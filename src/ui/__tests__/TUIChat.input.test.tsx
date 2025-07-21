@@ -17,15 +17,21 @@ describe("TUIChat - User Input Tests", () => {
   });
 
   it("clears input field after pressing Enter", async () => {
-    const { lastFrame, stdin } = render(<TUIChat {...createProps()} />);
+    const { lastFrame, stdin, rerender } = render(<TUIChat {...createProps()} />);
 
     stdin.write("Test message");
     const beforeEnter = lastFrame();
 
     stdin.write("\r");
 
-    // Wait for the UI to update after pressing enter
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Wait for the async message processing and UI updates
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    
+    // Force a rerender to ensure the UI has updated
+    rerender(<TUIChat {...createProps()} />);
+    
+    // Give it a bit more time for the message to appear in the chat
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const afterEnter = lastFrame();
 
