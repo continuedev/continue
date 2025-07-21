@@ -50,12 +50,7 @@ describe("TUIChat - @ File Search Tests", () => {
 
     // Should show files containing "READ" - likely README.md if it exists in the actual filesystem
     // If not available, should at least show the @ character and navigation instructions
-    expect(frame).toContain("@");
-
-    // Should show navigation instructions
-    expect(frame).toContain(
-      "Use ↑/↓ to navigate, Enter to select, Tab to complete"
-    );
+    expect(frame).toContain("@README.md");
   });
 
   it("shows navigation instructions in file search", async () => {

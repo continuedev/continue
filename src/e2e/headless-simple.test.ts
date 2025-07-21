@@ -27,7 +27,7 @@ describe("E2E: Headless Mode (Simple)", () => {
 no models here`);
       
       const result = await runCLI(context, {
-        args: ["-p", "Test", "--config", context.configPath],
+        args: ["-p", "--config", context.configPath, "Test"],
         expectError: true,
       });
       

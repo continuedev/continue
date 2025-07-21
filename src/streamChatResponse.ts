@@ -1,6 +1,5 @@
 import { CompletionOptions, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import chalk from "chalk";
 import * as dotenv from "dotenv";
 import type {
   ChatCompletionCreateParamsStreaming,
@@ -106,6 +105,7 @@ async function processStreamingResponse(
   tools?: ChatCompletionTool[]
 ): Promise<{
   content: string;
+  finalContent: string; // Added field for final content only
   toolCalls: ToolCall[];
   shouldContinue: boolean;
 }> {
@@ -131,10 +131,12 @@ async function processStreamingResponse(
   };
 
   let aiResponse = "";
+  let finalContent = "";
   const toolCallsMap = new Map<string, ToolCall>();
   let firstTokenTime: number | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
+  let hasToolCalls = false;
 
   try {
     const streamWithBackoff = withExponentialBackoff(
@@ -186,19 +188,23 @@ async function processStreamingResponse(
         continue;
       }
 
-      // Handle regular content
+      // Handle content streaming
       if (choice.delta.content) {
         const content = choice.delta.content;
+        aiResponse += content;
+
+        // Call the onContent callback if provided
         if (callbacks?.onContent) {
           callbacks.onContent(content);
         } else if (!isHeadless) {
-          process.stdout.write(chalk.white(content));
+          // Print content directly if no callback
+          process.stdout.write(content);
         }
-        aiResponse += content;
       }
 
       // Handle tool calls
       if (choice.delta.tool_calls) {
+        hasToolCalls = true;
         for (const toolCallDelta of choice.delta.tool_calls) {
           // Get or create tool call
           if (toolCallDelta.id) {
@@ -234,12 +240,6 @@ async function processStreamingResponse(
                 toolCall.startNotified = true;
                 if (callbacks?.onToolStart) {
                   callbacks.onToolStart(toolCall.name, toolCall.arguments);
-                } else if (!isHeadless) {
-                  process.stdout.write(
-                    `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(
-                      toolCall.name
-                    )}${chalk.yellow("]")}`
-                  );
                 }
               }
             } catch (e) {
@@ -300,7 +300,12 @@ async function processStreamingResponse(
 
     if (error.name === "AbortError" || abortController?.signal.aborted) {
       logger.debug("Stream aborted by user");
-      return { content: aiResponse, toolCalls: [], shouldContinue: false };
+      return {
+        content: aiResponse,
+        finalContent: aiResponse,
+        toolCalls: [],
+        shouldContinue: false,
+      };
     }
     throw error;
   }
@@ -321,8 +326,14 @@ async function processStreamingResponse(
     return true;
   });
 
+  // Set finalContent based on whether this was a tool call or not
+  // For headless mode: if there's a tool call, we only want to show final text content
+  // If it's the first response (no tool calls), we save the final content
+  finalContent = hasToolCalls ? "" : aiResponse;
+
   return {
     content: aiResponse,
+    finalContent: finalContent,
     toolCalls: validToolCalls,
     shouldContinue: validToolCalls.length > 0,
   };
@@ -352,12 +363,13 @@ export async function streamChatResponse(
   });
 
   let fullResponse = "";
+  let finalResponse = "";
 
   while (true) {
     logger.debug("Starting conversation iteration");
 
     // Get response from LLM
-    const { content, toolCalls, shouldContinue } =
+    const { content, finalContent, toolCalls, shouldContinue } =
       await processStreamingResponse(
         chatHistory,
         model,
@@ -369,6 +381,16 @@ export async function streamChatResponse(
       );
 
     fullResponse += content;
+
+    // In headless mode, we only want to collect the final content after all tool calls
+    if (!shouldContinue) {
+      // This is the final message, so it's the content we want to show
+      finalResponse = content;
+    } else if (isHeadless && content) {
+      // In headless mode with tool calls, we still want to show any text content
+      // since we won't be making follow-up requests
+      finalResponse = content;
+    }
 
     // Add newline after content if needed
     if (!callbacks?.onContent && !isHeadless && content) {
@@ -419,8 +441,6 @@ export async function streamChatResponse(
 
           if (callbacks?.onToolResult) {
             callbacks.onToolResult(toolResult, toolCall.name);
-          } else if (!isHeadless) {
-            console.info(chalk.green(toolResult) + "\n");
           }
         } catch (error) {
           const errorMessage = `Error executing tool ${toolCall.name}: ${
@@ -440,12 +460,6 @@ export async function streamChatResponse(
 
           if (callbacks?.onToolError) {
             callbacks.onToolError(errorMessage, toolCall.name);
-          } else if (!isHeadless) {
-            console.info(
-              `${chalk.red("[Tool error:")} ${chalk.red(
-                errorMessage
-              )}${chalk.red("]")}`
-            );
           }
         }
       }
@@ -466,5 +480,7 @@ export async function streamChatResponse(
     totalMessages: chatHistory.length,
   });
 
-  return fullResponse;
+  // For headless mode, we return only the final response
+  // Otherwise, return the full response
+  return isHeadless ? finalResponse : fullResponse;
 }

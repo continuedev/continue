@@ -79,9 +79,7 @@ async function initializeChatHistory(
       chatHistory = savedHistory;
       logger.info(chalk.yellow("Resuming previous session..."));
     } else {
-      logger.info(
-        chalk.yellow("No previous session found, starting fresh...")
-      );
+      logger.info(chalk.yellow("No previous session found, starting fresh..."));
     }
   }
 
@@ -182,9 +180,8 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   configureLogger(options.headless ?? false);
 
   try {
-    const { config, llmApi, model, mcpService, apiClient } = await initializeChat(
-      options
-    );
+    const { config, llmApi, model, mcpService, apiClient } =
+      await initializeChat(options);
 
     // Record session start
     telemetryService.recordSessionStart();
