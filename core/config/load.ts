@@ -64,6 +64,7 @@ import { localPathToUri } from "../util/pathToUri";
 
 import { getToolsForIde } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
+import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
@@ -876,7 +877,6 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
 
 async function loadContinueConfigFromJson(
   ide: IDE,
-  workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
   ideInfo: IdeInfo,
   uniqueId: string,
@@ -884,6 +884,7 @@ async function loadContinueConfigFromJson(
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
+  const workspaceConfigs = await getWorkspaceRcConfigs(ide);
   // Serialized config
   let {
     config: serialized,

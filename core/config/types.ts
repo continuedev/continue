@@ -682,8 +682,6 @@ declare global {
   
     getWorkspaceDirs(): Promise<string[]>;
   
-    getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-  
     fileExists(filepath: string): Promise<boolean>;
   
     writeFile(path: string, contents: string): Promise<void>;

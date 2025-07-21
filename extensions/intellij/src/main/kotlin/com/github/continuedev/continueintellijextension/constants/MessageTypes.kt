@@ -6,7 +6,6 @@ class MessageTypes {
             "readRangeInFile",
             "isTelemetryEnabled",
             "getUniqueId",
-            "getWorkspaceConfigs",
             "getDiff",
             "getTerminalContents",
             "getWorkspaceDirs",
