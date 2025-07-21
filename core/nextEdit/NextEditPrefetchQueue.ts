@@ -4,7 +4,6 @@ import { findChangedLineRanges, myersDiff } from "../diff/myers";
 import { PrefetchQueue } from "../util/PrefetchQueue";
 import { applyCompletionToFile } from "./diff/diff";
 import { EditableRegionStrategy } from "./NextEditEditableRegionCalculator";
-import { NextEditProvider } from "./NextEditProvider";
 import { NextEditOutcome } from "./types";
 
 export class NextEditPrefetchQueue extends PrefetchQueue<
@@ -100,7 +99,7 @@ export class NextEditPrefetchQueue extends PrefetchQueue<
       const currentPromise = this.promiseQueue.shift()!;
 
       if (this.promiseQueue.length === 0) {
-        NextEditProvider.currentEditChainId = null;
+        // NextEditProvider.currentEditChainId = null;
       }
 
       return await currentPromise;
@@ -127,7 +126,7 @@ export class NextEditPrefetchQueue extends PrefetchQueue<
       this.promiseQueue.push(nextPromise);
     } else if (this.promiseQueue.length === 0) {
       // No more items in the queue and no more resources
-      NextEditProvider.currentEditChainId = null;
+      // NextEditProvider.currentEditChainId = null;
     }
 
     // console.log("currentData:", currentData);
