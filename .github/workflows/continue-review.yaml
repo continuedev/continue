@@ -8,7 +8,7 @@ on:
         required: false
         default: "nate/default-assistant"
         type: string
-      custom_prompt:
+      prompt:
         description: "Custom prompt to use instead of the default PR review"
         required: false
         type: string
@@ -22,7 +22,7 @@ on:
         required: false
         default: "nate/default-assistant"
         type: string
-      custom_prompt:
+      prompt:
         description: "Custom prompt to use instead of the default PR review"
         required: false
         type: string
@@ -119,7 +119,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Build custom prompt
-        if: inputs.custom_prompt != ''
+        if: inputs.prompt != ''
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -136,7 +136,7 @@ jobs:
             gh pr diff $PR_NUMBER > pr_diff.txt
             
             # Create custom prompt with diff included
-            echo "${{ inputs.custom_prompt }}" > review_prompt.txt
+            echo "${{ inputs.prompt }}" > review_prompt.txt
             echo "" >> review_prompt.txt
             echo "Below is the git diff showing all the changes:" >> review_prompt.txt
             echo "" >> review_prompt.txt
@@ -144,11 +144,11 @@ jobs:
             cat pr_diff.txt >> review_prompt.txt
             echo "--- PR DIFF END ---" >> review_prompt.txt
           else
-            echo "${{ inputs.custom_prompt }}" > review_prompt.txt
+            echo "${{ inputs.prompt }}" > review_prompt.txt
           fi
 
       - name: Build default prompt for non-PR triggers
-        if: inputs.custom_prompt == '' && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.event != 'pull_request')
+        if: inputs.prompt == '' && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.event != 'pull_request')
         run: |
           cat > review_prompt.txt << 'EOF'
           Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement. 

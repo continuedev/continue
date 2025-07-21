@@ -3,8 +3,6 @@ name: CI
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -48,19 +46,17 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-  continue-review:
-    if: github.event_name == 'pull_request'
+  review:
     uses: ./.github/workflows/continue-review.yaml
+    secrets:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
     with:
-      assistant: "nate/default-assistant"
-      custom_prompt: |
+      prompt: |
         Please review the below changes for any mistakes. You can look around the codebase to investigate if needed. Look for:
          - React changes causing too many re-renders
          - Functions that are too long
          - Other potentially subtle bugs
         Keep your response concise and give a bullet pointed list of the findings, including suggested fixes for any problems you find.
-    secrets:
-      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
