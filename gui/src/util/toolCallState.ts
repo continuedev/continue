@@ -8,16 +8,16 @@ export function addToolCallDeltaToState(
   toolCallDelta: ToolCallDelta,
   currentState: ToolCallState | undefined,
 ): ToolCallState {
-  // This prevents multiple tool calls for now, by ignoring new tool call ids
+  const currentCall = currentState?.toolCall;
+
+  // If we have a current state and the delta has a different ID, ignore the delta
   if (
+    currentState &&
     toolCallDelta.id &&
-    currentState?.toolCallId &&
-    toolCallDelta.id !== currentState?.toolCallId
+    currentCall?.id !== toolCallDelta.id
   ) {
     return currentState;
   }
-
-  const currentCall = currentState?.toolCall;
 
   // These will/should not be partially streamed
   const callType = toolCallDelta.type ?? "function";

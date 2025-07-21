@@ -17,7 +17,7 @@ import OpenAI from "./OpenAI.js";
 class Docker extends OpenAI implements ModelInstaller {
   static providerName = "docker";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:12434/engines/v1",
+    apiBase: "http://localhost:12434/engines/v1/",
     model: "gemma3-4B-F4", // Default model
   };
 
