@@ -282,7 +282,7 @@ export function useChat({
           }, 1000);
         } else {
           const text = await response.text();
-          console.log("FAILURE: ", text);
+          logger.error("Remote shutdown failed:", text);
           setMessages((prev) => [
             ...prev,
             {
