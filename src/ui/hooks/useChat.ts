@@ -259,9 +259,9 @@ export function useChat({
     }
 
     // Handle /exit command in remote mode
-    if (isRemoteMode && message.trim() === "/exit") {
+    if (isRemoteMode && remoteUrl && message.trim() === "/exit") {
       try {
-        // Send GET request to /exit endpoint
+        // Send POST request to /exit endpoint
         const response = await fetch(`${remoteUrl}/exit`, {
           method: "POST",
         });
@@ -282,7 +282,7 @@ export function useChat({
           }, 1000);
         } else {
           const text = await response.text();
-          console.log("FAILURE: ", text);
+          logger.error("Remote shutdown failed:", text);
           setMessages((prev) => [
             ...prev,
             {
