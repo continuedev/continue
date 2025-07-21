@@ -121,7 +121,29 @@ jobs:
       - name: Build custom prompt
         if: inputs.custom_prompt != ''
         run: |
-          echo "${{ inputs.custom_prompt }}" > review_prompt.txt
+          # Get PR number for custom prompts too
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            # For workflow_call triggered by PR, we need to get it from context
+            PR_NUMBER=$(jq -r '.pull_request.number' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
+          fi
+
+          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+            # Get PR diff using GitHub CLI
+            gh pr diff $PR_NUMBER > pr_diff.txt
+            
+            # Create custom prompt with diff included
+            echo "${{ inputs.custom_prompt }}" > review_prompt.txt
+            echo "" >> review_prompt.txt
+            echo "Below is the git diff showing all the changes:" >> review_prompt.txt
+            echo "" >> review_prompt.txt
+            echo "--- PR DIFF START ---" >> review_prompt.txt
+            cat pr_diff.txt >> review_prompt.txt
+            echo "--- PR DIFF END ---" >> review_prompt.txt
+          else
+            echo "${{ inputs.custom_prompt }}" > review_prompt.txt
+          fi
 
       - name: Build default prompt for non-PR triggers
         if: inputs.custom_prompt == '' && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.event != 'pull_request')
