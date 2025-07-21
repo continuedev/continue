@@ -1,4 +1,4 @@
-# `cn` demo
+# `cn` Demo
 
 ```bash
 cn
