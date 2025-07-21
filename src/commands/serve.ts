@@ -1,5 +1,7 @@
 import chalk from "chalk";
 import express, { Request, Response } from "express";
+import { exec } from "child_process";
+import { promisify } from "util";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import {
   ensureOrganization,
@@ -16,6 +18,8 @@ import { DisplayMessage } from "../ui/types.js";
 import { getToolDisplayName } from "../tools.js";
 import path from "path";
 import type { StreamCallbacks } from "../streamChatResponse.js";
+
+const execAsync = promisify(exec);
 
 interface ServeOptions {
   config?: string;
@@ -134,6 +138,37 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     }
   });
 
+  // GET /diff - Return git diff against main branch
+  app.get("/diff", async (_req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    try {
+      // First check if we're in a git repository
+      await execAsync("git rev-parse --git-dir");
+
+      // Get the diff against main branch
+      const { stdout } = await execAsync("git diff main");
+      
+      res.json({
+        diff: stdout,
+      });
+    } catch (error: any) {
+      // Handle case where we're not in a git repo or main branch doesn't exist
+      if (error.code === 128) {
+        res.status(404).json({ 
+          error: "Not in a git repository or main branch doesn't exist",
+          diff: ""
+        });
+      } else {
+        logger.error(`Git diff error: ${formatError(error)}`);
+        res.status(500).json({ 
+          error: `Failed to get git diff: ${formatError(error)}`,
+          diff: ""
+        });
+      }
+    }
+  });
+
   const server = app.listen(port, () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
@@ -141,6 +176,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(
       chalk.dim("  POST /message - Send a message (body: { message: string })")
     );
+    console.log(chalk.dim("  GET  /diff    - Get git diff against main branch"));
     console.log(
       chalk.dim(
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`
