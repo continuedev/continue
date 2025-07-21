@@ -45,7 +45,12 @@ export class MockRemoteServer {
       // GET /state - returns current chat state
       res.setHeader('Content-Type', 'application/json');
       res.writeHead(200);
-      res.end(JSON.stringify(this.state));
+      // Transform messages to chatHistory for client compatibility
+      res.end(JSON.stringify({
+        ...this.state,
+        chatHistory: this.state.messages,
+        isProcessing: this.state.isResponding
+      }));
     } else if (url === "/message" && req.method === "POST") {
       // POST /message - sends a message to the assistant
       let body = '';

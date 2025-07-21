@@ -12,7 +12,7 @@ interface MarkdownPattern {
   render: (content: string, key: string) => React.ReactNode;
 }
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = defaultTheme }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({ content, theme = defaultTheme }) => {
   const patterns: MarkdownPattern[] = [
     {
       regex: /```(?:(\w+)\n)?([\s\S]*?)```/g,
@@ -206,7 +206,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = de
   };
 
   return <Text>{renderMarkdown(content)}</Text>;
-};
+});
+
+MarkdownRenderer.displayName = "MarkdownRenderer";
 
 export default MarkdownRenderer;
 export type { SyntaxHighlighterTheme };

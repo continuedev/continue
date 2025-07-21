@@ -5,7 +5,9 @@ import MarkdownRenderer from "./MarkdownRenderer.js";
 describe("MarkdownRenderer", () => {
   // Helper function to simulate calling the component function directly
   function renderMarkdown(content: string) {
-    const component = MarkdownRenderer({ content });
+    // Handle React.memo wrapped component
+    const ComponentType = MarkdownRenderer.type || MarkdownRenderer;
+    const component = ComponentType({ content });
     return (component as any).props.children;
   }
 

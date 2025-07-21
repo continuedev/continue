@@ -133,14 +133,46 @@ export function useChat({
 
           // Update messages from server
           if (state.chatHistory) {
-            setMessages(state.chatHistory);
+            // Only update if the chat history has actually changed
+            setMessages((prevMessages) => {
+              // Quick length check first
+              if (prevMessages.length !== state.chatHistory.length) {
+                return state.chatHistory;
+              }
+              
+              // Deep comparison - check if content actually changed
+              const hasChanged = state.chatHistory.some((msg: any, index: number) => {
+                const prevMsg = prevMessages[index];
+                return !prevMsg || 
+                       prevMsg.role !== msg.role || 
+                       prevMsg.content !== msg.content;
+              });
+              
+              // Only update if there are actual changes
+              return hasChanged ? state.chatHistory : prevMessages;
+            });
 
             // Also update chat history for consistency
-            const chatHistory = state.chatHistory.map((msg: any) => ({
-              role: msg.role,
-              content: msg.content,
-            }));
-            setChatHistory(chatHistory);
+            setChatHistory((prevChatHistory) => {
+              const newChatHistory = state.chatHistory.map((msg: any) => ({
+                role: msg.role,
+                content: msg.content,
+              }));
+              
+              // Similar comparison for chat history
+              if (prevChatHistory.length !== newChatHistory.length) {
+                return newChatHistory;
+              }
+              
+              const hasChanged = newChatHistory.some((msg: any, index: number) => {
+                const prevMsg = prevChatHistory[index];
+                return !prevMsg || 
+                       prevMsg.role !== msg.role || 
+                       prevMsg.content !== msg.content;
+              });
+              
+              return hasChanged ? newChatHistory : prevChatHistory;
+            });
           }
 
           // Update processing state
