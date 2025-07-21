@@ -4,12 +4,12 @@ on:
   workflow_call:
     inputs:
       assistant:
-        description: 'Assistant configuration to use'
+        description: "Assistant configuration to use"
         required: false
-        default: 'nate/default-assistant'
+        default: "nate/default-assistant"
         type: string
       custom_prompt:
-        description: 'Custom prompt to use instead of the default PR review'
+        description: "Custom prompt to use instead of the default PR review"
         required: false
         type: string
     secrets:
@@ -18,12 +18,12 @@ on:
   workflow_dispatch:
     inputs:
       assistant:
-        description: 'Assistant configuration to use'
+        description: "Assistant configuration to use"
         required: false
-        default: 'nate/default-assistant'
+        default: "nate/default-assistant"
         type: string
       custom_prompt:
-        description: 'Custom prompt to use instead of the default PR review'
+        description: "Custom prompt to use instead of the default PR review"
         required: false
         type: string
 
@@ -36,12 +36,12 @@ jobs:
   code-review:
     name: AI Code Review
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history for better context
+          fetch-depth: 0 # Fetch full history for better context
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -61,7 +61,7 @@ jobs:
             # For workflow_call triggered by PR, we need to get it from context
             PR_NUMBER=$(jq -r '.pull_request.number' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
           fi
-          
+
           if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
             # Get PR diff using GitHub CLI
             gh pr diff $PR_NUMBER > pr_diff.txt
@@ -111,7 +111,7 @@ jobs:
             echo "Could not determine PR number, using generic prompt"
             cat > review_prompt.txt << 'EOF'
           Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement.
-          
+
           Create a file called 'code_review.md' with your analysis.
           EOF
           fi
@@ -128,9 +128,9 @@ jobs:
         run: |
           cat > review_prompt.txt << 'EOF'
           Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement. 
-          
+
           Create a file called 'code_review.md' with your analysis.
-          
+
           Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
           EOF
 
@@ -141,9 +141,9 @@ jobs:
           cat review_prompt.txt
           echo "=================================="
           echo ""
-          
+
           # Run the CLI with the generated prompt
-          cat review_prompt.txt | continue --config "${{ inputs.assistant }}"
+          cat review_prompt.txt | cn --config "${{ inputs.assistant }}" -p
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
@@ -164,7 +164,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
+
             try {
               let reviewContent = '';
               
