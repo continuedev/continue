@@ -24,7 +24,7 @@ import { checkFim } from "core/nextEdit/diff/diff";
 import {
   EditableRegionStrategy,
   getNextEditableRegion,
-} from "core/nextEdit/NextEditEditableRegionCarver";
+} from "core/nextEdit/NextEditEditableRegionCalculator";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditOutcome } from "core/nextEdit/types";
