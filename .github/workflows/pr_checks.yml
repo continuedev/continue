@@ -53,6 +53,7 @@ jobs:
     uses: ./.github/workflows/continue-review.yaml
     with:
       assistant: "nate/default-assistant"
+      custom_prompt: "Always respond in spanish"
     secrets:
       CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
