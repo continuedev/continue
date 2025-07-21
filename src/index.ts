@@ -4,7 +4,11 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
+import { remoteTest } from "./commands/remote-test.js";
+import { remote } from "./commands/remote.js";
+import { serve } from "./commands/serve.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
+import { readStdinSync } from "./util/stdin.js";
 import logger from "./util/logger.js";
 import { getVersion } from "./version.js";
 
@@ -67,6 +71,14 @@ program
       logger.debug("Verbose logging enabled");
     }
 
+    // Check for piped input when using -p flag
+    if (options.print && !prompt) {
+      const stdinInput = readStdinSync();
+      if (stdinInput) {
+        prompt = stdinInput;
+      }
+    }
+
     // Map --print to headless mode
     options.headless = options.print;
     options.print = undefined;
@@ -87,6 +99,55 @@ program
   .description("Log out from Continue")
   .action(async () => {
     await logout();
+  });
+
+// Remote subcommand
+program
+  .command("remote <prompt>")
+  .description("Launch a remote instance of the cn agent")
+  .action(async (prompt: string) => {
+    await remote(prompt);
+  });
+
+// Serve subcommand
+program
+  .command("serve [prompt]")
+  .description("Start an HTTP server with /state and /message endpoints")
+  .option("--config <path>", "Path to configuration file")
+  .option("--readonly", "Only allow readonly tools")
+  .option("--no-tools", "Disable all tools")
+  .option("-v, --verbose", "Enable verbose logging")
+  .option(
+    "--rule <rule>",
+    "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
+  .option(
+    "--timeout <seconds>",
+    "Inactivity timeout in seconds (default: 300)",
+    "300"
+  )
+  .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
+  .action(async (prompt, options) => {
+    if (options.verbose) {
+      logger.setLevel("debug");
+      logger.debug("Verbose logging enabled");
+    }
+    await serve(prompt, options);
+  });
+
+// Remote test subcommand (for development)
+program
+  .command("remote-test [prompt]")
+  .description("Test remote TUI mode with a local server")
+  .option("--url <url>", "Server URL (default: http://localhost:8000)")
+  .action(async (prompt: string | undefined, options) => {
+    await remoteTest(prompt, options.url);
   });
 
 // Handle unknown commands

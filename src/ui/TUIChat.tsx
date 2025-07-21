@@ -26,10 +26,14 @@ import UserInput from "./UserInput.js";
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
 interface TUIChatProps {
-  config: AssistantUnrolled;
-  model: ModelConfig;
-  llmApi: BaseLlmApi;
-  mcpService: MCPService;
+  // Remote mode props
+  remoteUrl?: string;
+  
+  // Local mode props
+  config?: AssistantUnrolled;
+  model?: ModelConfig;
+  llmApi?: BaseLlmApi;
+  mcpService?: MCPService;
   apiClient?: DefaultApiInterface;
   configPath?: string;
   initialPrompt?: string;
@@ -38,6 +42,7 @@ interface TUIChatProps {
 }
 
 const TUIChat: React.FC<TUIChatProps> = ({
+  remoteUrl,
   config: initialAssistant,
   model: initialModel,
   llmApi: initialLlmApi,
@@ -48,6 +53,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   resume,
   additionalRules,
 }) => {
+  // Check if we're in remote mode
+  const isRemoteMode = !!remoteUrl;
+  
   // Track current assistant configuration state
   const [assistant, setAssistant] = useState(initialAssistant);
   const [model, setModel] = useState(initialModel);
@@ -220,6 +228,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowConfigSelector: () => showConfigSelectorUI(),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
+    // Remote mode configuration
+    isRemoteMode,
+    remoteUrl,
   });
 
   const { renderMessage } = useMessageRenderer();
@@ -364,6 +375,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             assistant={assistant}
             onFileAttached={handleFileAttached}
             disabled={isInputDisabled}
+            isRemoteMode={isRemoteMode}
           />
         )}
 
@@ -374,14 +386,16 @@ const TUIChat: React.FC<TUIChatProps> = ({
           alignItems="center"
         >
           <Box>
-            <FreeTrialStatus
-              apiClient={apiClient}
-              model={model}
-              onTransitionStateChange={setIsShowingFreeTrialTransition}
-            />
+            {!isRemoteMode && model && (
+              <FreeTrialStatus
+                apiClient={apiClient}
+                model={model}
+                onTransitionStateChange={setIsShowingFreeTrialTransition}
+              />
+            )}
           </Box>
           <Box marginRight={2}>
-            <UpdateNotification />
+            <UpdateNotification isRemoteMode={isRemoteMode} />
           </Box>
         </Box>
       </Box>

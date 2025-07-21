@@ -19,9 +19,9 @@ import logger from "../../util/logger.js";
 import { DisplayMessage } from "../types.js";
 
 interface UseChatProps {
-  assistant: AssistantUnrolled;
-  model: ModelConfig;
-  llmApi: BaseLlmApi;
+  assistant?: AssistantUnrolled;
+  model?: ModelConfig;
+  llmApi?: BaseLlmApi;
   initialPrompt?: string;
   resume?: boolean;
   additionalRules?: string[];
@@ -29,6 +29,9 @@ interface UseChatProps {
   onShowConfigSelector: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
+  // Remote mode props
+  isRemoteMode?: boolean;
+  remoteUrl?: string;
 }
 
 export function useChat({
@@ -42,11 +45,18 @@ export function useChat({
   onShowConfigSelector,
   onLoginPrompt,
   onReload,
+  isRemoteMode = false,
+  remoteUrl,
 }: UseChatProps) {
   const { exit } = useApp();
 
   const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
     () => {
+      // In remote mode, start with empty history (will be populated by polling)
+      if (isRemoteMode) {
+        return [];
+      }
+
       let history: ChatCompletionMessageParam[] = [];
 
       if (resume) {
@@ -105,24 +115,121 @@ export function useChat({
     Array<{ path: string; content: string }>
   >([]);
 
+  // Remote mode polling
   useEffect(() => {
+    if (!isRemoteMode || !remoteUrl) return;
+
+    let pollInterval: NodeJS.Timeout;
+    let isPolling = false;
+
+    const pollServerState = async () => {
+      if (isPolling) return; // Prevent overlapping polls
+      isPolling = true;
+
+      try {
+        const response = await fetch(`${remoteUrl}/state`);
+        if (response.ok) {
+          const state = await response.json();
+
+          // Update messages from server
+          if (state.chatHistory) {
+            // Only update if the chat history has actually changed
+            setMessages((prevMessages) => {
+              // Quick length check first
+              if (prevMessages.length !== state.chatHistory.length) {
+                return state.chatHistory;
+              }
+              
+              // Deep comparison - check if content actually changed
+              const hasChanged = state.chatHistory.some((msg: any, index: number) => {
+                const prevMsg = prevMessages[index];
+                return !prevMsg || 
+                       prevMsg.role !== msg.role || 
+                       prevMsg.content !== msg.content ||
+                       prevMsg.messageType !== msg.messageType ||
+                       prevMsg.toolName !== msg.toolName ||
+                       prevMsg.toolResult !== msg.toolResult;
+              });
+              
+              // Only update if there are actual changes
+              return hasChanged ? state.chatHistory : prevMessages;
+            });
+
+            // Also update chat history for consistency
+            setChatHistory((prevChatHistory) => {
+              const newChatHistory = state.chatHistory.map((msg: any) => ({
+                role: msg.role,
+                content: msg.content,
+              }));
+              
+              // Similar comparison for chat history
+              if (prevChatHistory.length !== newChatHistory.length) {
+                return newChatHistory;
+              }
+              
+              const hasChanged = newChatHistory.some((msg: any, index: number) => {
+                const prevMsg = prevChatHistory[index];
+                return !prevMsg || 
+                       prevMsg.role !== msg.role || 
+                       prevMsg.content !== msg.content;
+              });
+              
+              return hasChanged ? newChatHistory : prevChatHistory;
+            });
+          }
+
+          // Update processing state
+          setIsWaitingForResponse(state.isProcessing || false);
+          if (state.isProcessing && !responseStartTime) {
+            setResponseStartTime(Date.now());
+          } else if (!state.isProcessing && responseStartTime) {
+            setResponseStartTime(null);
+          }
+        }
+      } catch (error) {
+        logger.error("Failed to poll server state:", error);
+      } finally {
+        isPolling = false;
+      }
+    };
+
+    // Start polling immediately
+    pollServerState();
+
+    // Set up interval for continuous polling
+    pollInterval = setInterval(pollServerState, 500); // Poll every 500ms
+
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [isRemoteMode, remoteUrl, responseStartTime]);
+
+  useEffect(() => {
+    // Skip system message initialization in remote mode
+    if (isRemoteMode) return;
+
     // Initialize system message asynchronously
     const initializeSystemMessage = async () => {
-      if (chatHistory.length === 0 || !chatHistory.some(msg => msg.role === "system")) {
+      if (
+        chatHistory.length === 0 ||
+        !chatHistory.some((msg) => msg.role === "system")
+      ) {
         const rulesSystemMessage = "";
         const systemMessage = await constructSystemMessage(
           rulesSystemMessage,
           additionalRules
         );
         if (systemMessage) {
-          const newHistory = [{ role: "system" as const, content: systemMessage }];
+          const newHistory = [
+            { role: "system" as const, content: systemMessage },
+          ];
           setChatHistory(newHistory);
         }
       }
     };
 
     initializeSystemMessage();
-  }, []);
+  }, [isRemoteMode]);
 
   useEffect(() => {
     if (initialPrompt) {
@@ -143,33 +250,50 @@ export function useChat({
       return;
     }
 
-    // Handle slash commands
-    const commandResult = await handleSlashCommands(
-      message,
-      assistant,
-      onLoginPrompt,
-      onReload
-    );
-    if (commandResult) {
-      if (commandResult.exit) {
-        exit();
-        return;
-      }
+    // Handle slash commands (skip in remote mode for now)
+    if (!isRemoteMode && assistant) {
+      const commandResult = await handleSlashCommands(
+        message,
+        assistant,
+        onLoginPrompt,
+        onReload
+      );
+      if (commandResult) {
+        if (commandResult.exit) {
+          exit();
+          return;
+        }
 
-      if (commandResult.openConfigSelector) {
-        onShowConfigSelector();
-        return;
-      }
+        if (commandResult.openConfigSelector) {
+          onShowConfigSelector();
+          return;
+        }
 
-      if (commandResult.clear) {
-        const systemMessage = chatHistory.find((msg) => msg.role === "system");
-        const newHistory = systemMessage ? [systemMessage] : [];
-        setChatHistory(newHistory);
-        setMessages([]);
+        if (commandResult.clear) {
+          const systemMessage = chatHistory.find(
+            (msg) => msg.role === "system"
+          );
+          const newHistory = systemMessage ? [systemMessage] : [];
+          setChatHistory(newHistory);
+          setMessages([]);
+
+          if (commandResult.output) {
+            const output = commandResult.output;
+            setMessages([
+              {
+                role: "system",
+                content: output,
+                messageType: "system" as const,
+              },
+            ]);
+          }
+          return;
+        }
 
         if (commandResult.output) {
           const output = commandResult.output;
-          setMessages([
+          setMessages((prev) => [
+            ...prev,
             {
               role: "system",
               content: output,
@@ -177,25 +301,12 @@ export function useChat({
             },
           ]);
         }
-        return;
-      }
 
-      if (commandResult.output) {
-        const output = commandResult.output;
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            content: output,
-            messageType: "system" as const,
-          },
-        ]);
-      }
-
-      if (commandResult.newInput) {
-        message = commandResult.newInput;
-      } else {
-        return;
+        if (commandResult.newInput) {
+          message = commandResult.newInput;
+        } else {
+          return;
+        }
       }
     }
 
@@ -218,6 +329,44 @@ export function useChat({
       setAttachedFiles([]);
     }
 
+    // In remote mode, send message to server instead of processing locally
+    if (isRemoteMode && remoteUrl) {
+      try {
+        const response = await fetch(`${remoteUrl}/message`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: messageContent }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "system",
+              content: `Error: ${error.error || "Failed to send message"}`,
+              messageType: "system" as const,
+            },
+          ]);
+        }
+        // State will be updated by polling
+      } catch (error) {
+        logger.error("Failed to send message to remote server:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "system",
+            content: `Error: Failed to connect to remote server`,
+            messageType: "system" as const,
+          },
+        ]);
+      }
+      return;
+    }
+
+    // Local mode: process message normally
     const newUserMessage: ChatCompletionMessageParam = {
       role: "user",
       content: messageContent,
@@ -339,13 +488,15 @@ export function useChat({
 
       // Call streamChatResponse with the new history that includes the user message
       const finalHistory = [...newHistory];
-      await streamChatResponse(
-        finalHistory,
-        model,
-        llmApi,
-        controller,
-        streamCallbacks
-      );
+      if (model && llmApi) {
+        await streamChatResponse(
+          finalHistory,
+          model,
+          llmApi,
+          controller,
+          streamCallbacks
+        );
+      }
 
       if (currentStreamingMessage && (currentStreamingMessage as any).content) {
         const messageContent = (currentStreamingMessage as any).content;
@@ -382,7 +533,7 @@ export function useChat({
     } finally {
       // Stop active time tracking
       telemetryService.stopActiveTime();
-      
+
       setAbortController(null);
       setIsWaitingForResponse(false);
       setResponseStartTime(null);
@@ -391,6 +542,22 @@ export function useChat({
   };
 
   const handleInterrupt = () => {
+    // In remote mode, send interrupt signal to server
+    if (isRemoteMode && remoteUrl) {
+      // Send a message to interrupt the remote server
+      fetch(`${remoteUrl}/message`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: "" }), // Empty message triggers interrupt
+      }).catch((error) => {
+        logger.error("Failed to send interrupt to remote server:", error);
+      });
+      return;
+    }
+
+    // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
       setMessages((prev) => [

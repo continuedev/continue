@@ -3,7 +3,7 @@ import React from "react";
 import { highlightCode, detectLanguage, SyntaxHighlighterTheme, defaultTheme } from "./SyntaxHighlighter.js";
 
 interface MarkdownRendererProps {
-  content: string;
+  content: string | null | undefined;
   theme?: SyntaxHighlighterTheme;
 }
 
@@ -12,7 +12,7 @@ interface MarkdownPattern {
   render: (content: string, key: string) => React.ReactNode;
 }
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = defaultTheme }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({ content, theme = defaultTheme }) => {
   const patterns: MarkdownPattern[] = [
     {
       regex: /```(?:(\w+)\n)?([\s\S]*?)```/g,
@@ -71,8 +71,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = de
     },
   ];
 
-  const renderMarkdown = (text: string) => {
+  const renderMarkdown = (text: string | null | undefined) => {
     const parts: React.ReactNode[] = [];
+    
+    // Handle null/undefined text
+    if (!text) {
+      return parts;
+    }
+    
     let currentIndex = 0;
 
     // First, handle code blocks separately
@@ -200,7 +206,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, theme = de
   };
 
   return <Text>{renderMarkdown(content)}</Text>;
-};
+});
+
+MarkdownRenderer.displayName = "MarkdownRenderer";
 
 export default MarkdownRenderer;
 export type { SyntaxHighlighterTheme };

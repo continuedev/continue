@@ -2,15 +2,26 @@ import { Text } from "ink";
 import React, { useEffect, useState } from "react";
 import { compareVersions, getLatestVersion, getVersion } from "../version.js";
 
-const UpdateNotification: React.FC = () => {
+interface UpdateNotificationProps {
+  isRemoteMode?: boolean;
+}
+
+const UpdateNotification: React.FC<UpdateNotificationProps> = ({ isRemoteMode = false }) => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [latestVersion, setLatestVersion] = useState<string>("");
   const [currentVersion] = useState(getVersion());
 
   useEffect(() => {
+    // Skip update check in test environment
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+    
+    const abortController = new AbortController();
+    
     const checkForUpdate = async () => {
       try {
-        const latest = await getLatestVersion();
+        const latest = await getLatestVersion(abortController.signal);
         if (latest) {
           setLatestVersion(latest);
           const comparison = compareVersions(currentVersion, latest);
@@ -18,15 +29,25 @@ const UpdateNotification: React.FC = () => {
         }
       } catch (error) {
         // Silently fail - we don't want to interrupt the user experience
-        console.debug("Failed to check for updates:", error);
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.debug("Failed to check for updates:", error);
+        }
       }
     };
 
     // Check for updates but don't block
     checkForUpdate();
+    
+    // Cleanup function to abort the request when component unmounts
+    return () => {
+      abortController.abort();
+    };
   }, [currentVersion]);
 
   if (!updateAvailable) {
+    if (isRemoteMode) {
+      return <Text color="cyan">◉ Remote Mode</Text>;
+    }
     return <Text color="gray">● Continue CLI</Text>;
   }
 

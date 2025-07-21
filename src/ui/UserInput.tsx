@@ -12,11 +12,12 @@ interface UserInputProps {
   isWaitingForResponse: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
-  assistant: AssistantConfig;
+  assistant?: AssistantConfig;
   onFileAttached?: (filePath: string, content: string) => void;
   disabled?: boolean;
   placeholder?: string;
   hideNormalUI?: boolean;
+  isRemoteMode?: boolean;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -29,6 +30,7 @@ const UserInput: React.FC<UserInputProps> = ({
   disabled = false,
   placeholder,
   hideNormalUI = false,
+  isRemoteMode = false,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -78,7 +80,7 @@ const UserInput: React.FC<UserInputProps> = ({
     ];
 
     const assistantCommands =
-      assistant.prompts?.map((prompt) => ({
+      assistant?.prompts?.map((prompt) => ({
         name: prompt?.name || "",
         description: prompt?.description || "",
       })) || [];
@@ -492,15 +494,15 @@ const UserInput: React.FC<UserInputProps> = ({
   return (
     <Box flexDirection="column">
       {/* Input box */}
-      <Box borderStyle="round" borderTop={true} paddingX={1} borderColor="gray">
-        <Text color="green" bold>
-          ●{" "}
+      <Box borderStyle="round" borderTop={true} paddingX={1} borderColor={isRemoteMode ? "cyan" : "gray"}>
+        <Text color={isRemoteMode ? "cyan" : "green"} bold>
+          {isRemoteMode ? "◉" : "●"}{" "}
         </Text>
         {renderInputText()}
       </Box>
 
       {/* Slash command UI */}
-      {showSlashCommands && inputMode && !hideNormalUI && (
+      {showSlashCommands && inputMode && !hideNormalUI && assistant && (
         <SlashCommandUI
           assistant={assistant}
           filter={slashCommandFilter}

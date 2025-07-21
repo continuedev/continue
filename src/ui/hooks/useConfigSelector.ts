@@ -47,7 +47,8 @@ export function useConfigSelector({
 
     if (config.type === "create") {
       // Open the web browser to create new assistant
-      const url = "https://hub.continue.dev/new?type=assistant";
+      const url = new URL("https://hub.continue.dev/new");
+      url.searchParams.set("type", "assistant");
 
       try {
         let command: string;
