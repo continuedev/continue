@@ -9,6 +9,9 @@
       "args": [],
       "env": {
         "NODE_ENV": "development"
+        // "CONTINUE_API_BASE": "http://localhost:3001/",
+        // "WORKOS_CLIENT_ID": "client_01J0FW6XCPMJMQ3CG51RB4HBZQ",
+        // "HUB_URL": "http://localhost:3000"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

@@ -5,15 +5,20 @@ import {
   loadAuthConfig,
 } from "../auth/workos.js";
 import { env } from "../env.js";
-import { startRemoteTUIChat } from "../ui/index.js";
 import telemetryService from "../telemetry/telemetryService.js";
+import { startRemoteTUIChat } from "../ui/index.js";
 import logger from "../util/logger.js";
 
-export async function remote(prompt: string | undefined, options: { url?: string } = {}) {
+export async function remote(
+  prompt: string | undefined,
+  options: { url?: string } = {}
+) {
   // If --url is provided, connect directly to that URL
   if (options.url) {
-    console.info(chalk.white(`Connecting to remote environment at: ${options.url}`));
-    
+    console.info(
+      chalk.white(`Connecting to remote environment at: ${options.url}`)
+    );
+
     // Record session start
     telemetryService.recordSessionStart();
     telemetryService.startActiveTime();
@@ -69,7 +74,7 @@ export async function remote(prompt: string | undefined, options: { url?: string
     );
 
     if (result.url && result.port) {
-      const remoteUrl = `${result.url}:${result.port}`;
+      const remoteUrl = result.url;
       console.info(
         chalk.white(`Connecting to remote environment at: ${remoteUrl}`)
       );
@@ -85,7 +90,9 @@ export async function remote(prompt: string | undefined, options: { url?: string
         telemetryService.stopActiveTime();
       }
     } else {
-      throw new Error("No URL or port returned from remote environment creation");
+      throw new Error(
+        "No URL or port returned from remote environment creation"
+      );
     }
   } catch (error: any) {
     logger.error(
