@@ -1,5 +1,3 @@
-import { NextEditProvider } from "../nextEdit/NextEditProvider";
-
 export class PrefetchQueue<T, R, O> {
   protected promiseQueue: Promise<T | undefined>[] = [];
   protected resourceQueue: R[];
@@ -86,4 +84,3 @@ export class PrefetchQueue<T, R, O> {
     return this.resourceQueue.length;
   }
 }
-
