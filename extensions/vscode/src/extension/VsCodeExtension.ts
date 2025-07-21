@@ -42,9 +42,12 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { JumpManager } from "../activation/JumpManager";
 import setupNextEditWindowManager, {
   NextEditWindowManager,
 } from "../activation/NextEditWindowManager";
+import { GhostTextAcceptanceTracker } from "../autocomplete/GhostTextAcceptanceTracker";
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
 import { handleTextDocumentChange } from "../util/editLoggingUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -171,10 +174,16 @@ export class VsCodeExtension {
 
           this.activateNextEdit();
           await NextEditWindowManager.freeTabAndEsc();
+
+          JumpManager.getInstance();
+          GhostTextAcceptanceTracker.getInstance();
         } else {
           NextEditWindowManager.clearInstance();
           this.deactivateNextEdit();
           await NextEditWindowManager.freeTabAndEsc();
+
+          JumpManager.clearInstance();
+          GhostTextAcceptanceTracker.clearInstance();
         }
 
         if (configLoadInterrupted) {
@@ -371,6 +380,54 @@ export class VsCodeExtension {
           this.configHandler.reloadConfig("Github sign-in status changed");
         }
       }
+    });
+
+    // TODO: check if next edit provider's chain id is cleared properly.
+    // Listen for editor changes to clean up decorations when editor closes.
+    vscode.window.onDidChangeVisibleTextEditors(async () => {
+      // If our active editor is no longer visible, clear decorations.
+      console.log(
+        "deleteChain from VsCodeExtension.ts: onDidChangeVisibleTextEditors",
+      );
+      NextEditProvider.getInstance().deleteChain();
+    });
+
+    // Listen for selection changes to hide tooltip when cursor moves.
+    vscode.window.onDidChangeTextEditorSelection(async (e) => {
+      console.log("move detected");
+      // Don't delete the chain if:
+
+      // 1. A next edit window was just accepted.
+      if (
+        NextEditWindowManager.isInstantiated() &&
+        NextEditWindowManager.getInstance().hasAccepted()
+      ) {
+        return;
+      }
+
+      // 2. A jump is in progress.
+      if (JumpManager.getInstance().isJumpInProgress()) {
+        return;
+      }
+
+      // 3. A ghost text was just accepted.
+      // Check if this selection change matches our expected ghost text acceptance.
+      const wasGhostTextAccepted =
+        GhostTextAcceptanceTracker.getInstance().checkGhostTextWasAccepted(
+          e.textEditor.document,
+          e.selections[0].active,
+        );
+
+      if (wasGhostTextAccepted) {
+        // Ghost text was accepted - don't delete the chain.
+        return;
+      }
+
+      // Otherwise, delete the chain (for rejection or unrelated movement).
+      console.log(
+        "deleteChain from VsCodeExtension.ts: onDidChangeTextEditorSelection",
+      );
+      NextEditProvider.getInstance().deleteChain();
     });
 
     // Refresh index when branch is changed

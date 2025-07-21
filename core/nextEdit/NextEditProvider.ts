@@ -1,6 +1,14 @@
 import * as path from "path";
+import { v4 as uuidv4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { ChatMessage, IDE, ILLM } from "../index.js";
+import {
+  BranchAndDir,
+  ChatMessage,
+  IDE,
+  ILLM,
+  Position,
+  RangeInFile,
+} from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
@@ -15,12 +23,19 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
+import { myersDiff } from "../diff/myers.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "./constants.js";
+import {
+  calculateFinalCursorPosition,
+  getOffsetPositionAtLastNewLine,
+} from "./diff/diff.js";
+import { EditableRegionStrategy } from "./NextEditEditableRegionCalculator.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
+import { NextEditPrefetchQueue } from "./NextEditPrefetchQueue.js";
 import {
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
@@ -52,6 +67,10 @@ export class NextEditProvider {
   private endpointType: "default" | "fineTuned";
   private diffContext: string = "";
   private promptMetadata: PromptMetadata | null = null;
+  private prefetchQueue: NextEditPrefetchQueue;
+  // private refQueue: RangeInFile[] = [];
+  private currentEditChainId: string | null = null;
+  private previousCompletions: string[] = [];
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -65,6 +84,120 @@ export class NextEditProvider {
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
     this.endpointType = endpointType;
     this.loggingService = NextEditLoggingService.getInstance();
+
+    const fetchFunction = async (
+      previousData: NextEditOutcome | undefined,
+      resource: RangeInFile | undefined,
+      other?: {
+        helper: HelperVars;
+        diffContext: string;
+        llm: ILLM;
+        token: AbortSignal;
+        startTime: number;
+        newCursorPos: Position;
+        editableRegionStrategy: EditableRegionStrategy;
+      },
+    ) => {
+      if (!other) return undefined;
+      // console.log("previousData:", previousData?.completion);
+      // render prompt
+      // TODO: this has to set the editable region properly.
+      // console.log("fetchfunction - previousData:", previousData?.completion);
+      const promptMetadata = await renderPrompt(
+        other.helper,
+        other.diffContext,
+        other.editableRegionStrategy,
+        previousData,
+        resource,
+      );
+      this.promptMetadata = promptMetadata;
+      // console.log("prompt:", promptMetadata.prompt);
+      // call llm.chat
+      const msg = await other.llm.chat([promptMetadata.prompt], other.token);
+      // built and return outcome
+      if (typeof msg.content === "string") {
+        if (msg.content === "") return undefined;
+        // NOTE: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
+        const nextCompletion = replaceEscapedCharacters(
+          msg.content.split("<|editable_region_start|>\n")[1],
+        ).replace(/\n$/, "");
+
+        const currCursorPos = other.helper.pos;
+        const editableRegionStartLine = Math.max(
+          currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+          0,
+        );
+        const editableRegionEndLine = Math.min(
+          currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+          other.helper.fileLines.length - 1,
+        );
+        const oldEditRangeSlice = other.helper.fileContents
+          .split("\n")
+          .slice(editableRegionStartLine, editableRegionEndLine + 1)
+          .join("\n");
+
+        // How far away is the current line from the start of the editable region?
+        const lineOffsetAtCursorPos =
+          currCursorPos.line - editableRegionStartLine;
+
+        // How long is the line at the current cursor position?
+        const newEditRangeSlice = nextCompletion;
+        const lineContentAtCursorPos =
+          newEditRangeSlice.split("\n")[lineOffsetAtCursorPos];
+
+        const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+
+        const offset = getOffsetPositionAtLastNewLine(
+          diffLines,
+          lineContentAtCursorPos,
+          lineOffsetAtCursorPos,
+        );
+
+        // Calculate the actual line number in the editor by adding the startPos offset
+        // to the line number from the diff calculation.
+        const finalCursorPos: Position = {
+          line: editableRegionStartLine + offset.line,
+          character: offset.character,
+        };
+
+        // TODO: if editable region strategy is naive, then we need to split the prediction up into regions. Also potentially filling up the prefetch queue.
+
+        const outcomeNext: NextEditOutcome = {
+          elapsed: Date.now() - other.startTime,
+          modelProvider: other.llm.underlyingProviderName,
+          modelName: other.llm.model + ":zetaDataset",
+          completionOptions: null,
+          // filepath: helper.filepath,
+          completionId: other.helper.input.completionId,
+          gitRepo: await this.ide.getRepoName(other.helper.filepath),
+          uniqueId: await this.ide.getUniqueId(),
+          timestamp: Date.now(),
+          fileUri: other.helper.filepath,
+          workspaceDirUri:
+            other.helper.workspaceUris[0] ??
+            path.dirname(other.helper.filepath),
+          prompt: this.promptMetadata!.prompt.content,
+          userEdits: this.promptMetadata!.userEdits,
+          userExcerpts: this.promptMetadata!.userExcerpts,
+          originalEditableRange: oldEditRangeSlice,
+          completion: nextCompletion,
+          cursorPosition: other.helper.pos,
+          finalCursorPosition: finalCursorPos,
+          editableRegionStartLine,
+          editableRegionEndLine,
+          ...other.helper.options,
+        };
+        return outcomeNext;
+      } else {
+        return undefined;
+      }
+    };
+
+    this.prefetchQueue = new NextEditPrefetchQueue(
+      fetchFunction,
+      [],
+      undefined,
+    );
   }
 
   public static initialize(
@@ -185,6 +318,31 @@ export class NextEditProvider {
     return options;
   }
 
+  public chainExists(): boolean {
+    return this.currentEditChainId !== null;
+  }
+
+  public getPreviousCompletion(): string | null {
+    return this.previousCompletions[0];
+  }
+
+  public deleteChain(): void {
+    this.currentEditChainId = null;
+    this.previousCompletions = [];
+  }
+
+  public startChain(id?: string) {
+    this.currentEditChainId = id ?? uuidv4();
+  }
+
+  public getChain() {
+    return this.previousCompletions;
+  }
+
+  public isStartOfChain() {
+    return this.previousCompletions.length === 1;
+  }
+
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
@@ -241,10 +399,34 @@ export class NextEditProvider {
         prompts.push(renderDefaultSystemPrompt());
         prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
       } else {
-        const promptMetadata = renderPrompt(helper, this.diffContext);
+        const promptMetadata = await renderPrompt(
+          helper,
+          this.diffContext,
+          EditableRegionStrategy.Naive,
+        );
         this.promptMetadata = promptMetadata;
         prompts.push(promptMetadata.prompt);
       }
+
+      const editableRegionStartLine = Math.max(
+        helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+        0,
+      );
+      const editableRegionEndLine = Math.min(
+        helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+        helper.fileLines.length - 1,
+      );
+      const oldEditRangeSlice = helper.fileContents
+        .split("\n")
+        .slice(editableRegionStartLine, editableRegionEndLine + 1)
+        .join("\n");
+
+      const finalCursorPos = calculateFinalCursorPosition(
+        helper.pos,
+        editableRegionStartLine,
+        oldEditRangeSlice,
+        "",
+      );
 
       if (this.endpointType === "default") {
         const msg: ChatMessage = await llm.chat(prompts, token);
@@ -269,6 +451,9 @@ export class NextEditProvider {
             originalEditableRange: "",
             completion: nextCompletion,
             cursorPosition: helper.pos,
+            finalCursorPosition: finalCursorPos,
+            editableRegionStartLine: 0,
+            editableRegionEndLine: 0,
             ...helper.options,
           };
 
@@ -296,6 +481,8 @@ export class NextEditProvider {
               ).replace(/\n$/, "")
             : "";
 
+          this.previousCompletions.push(nextCompletion);
+
           const currCursorPos = helper.pos;
           const editableRegionStartLine = Math.max(
             currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
@@ -309,6 +496,14 @@ export class NextEditProvider {
             .split("\n")
             .slice(editableRegionStartLine, editableRegionEndLine + 1)
             .join("\n");
+
+          const finalCursorPos = calculateFinalCursorPosition(
+            helper.pos,
+            editableRegionStartLine,
+            oldEditRangeSlice,
+            // "",
+            nextCompletion,
+          );
 
           const outcomeNext: NextEditOutcome = {
             elapsed: Date.now() - startTime,
@@ -329,6 +524,9 @@ export class NextEditProvider {
             originalEditableRange: oldEditRangeSlice,
             completion: nextCompletion,
             cursorPosition: helper.pos,
+            finalCursorPosition: finalCursorPos,
+            editableRegionStartLine,
+            editableRegionEndLine,
             ...helper.options,
           };
 
@@ -344,6 +542,111 @@ export class NextEditProvider {
           return undefined;
         }
       }
+    } catch (e: any) {
+      this.onError(e);
+    } finally {
+      this.loggingService.deleteAbortController(input.completionId);
+    }
+  }
+
+  public async provideNextEditPrediction(
+    input: AutocompleteInput,
+    token: AbortSignal | undefined,
+  ) {
+    try {
+      if (this.currentEditChainId) {
+        return await this.prefetchQueue.pop();
+      }
+
+      // Create abort signal if not given
+      if (!token) {
+        const controller = this.loggingService.createAbortController(
+          input.completionId,
+        );
+        token = controller.signal;
+      }
+      const startTime = Date.now();
+      const options = await this._getAutocompleteOptions();
+
+      // Debounce
+      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
+        return undefined;
+      }
+
+      const llm = await this._prepareLlm();
+      if (!llm) {
+        return undefined;
+      }
+
+      if (llm.promptTemplates?.autocomplete) {
+        options.template = llm.promptTemplates.autocomplete as string;
+      }
+
+      const helper = await HelperVars.create(
+        input,
+        options,
+        llm.model,
+        this.ide,
+      );
+
+      if (await shouldPrefilter(helper, this.ide)) {
+        return undefined;
+      }
+
+      // this.currentEditChainId = randomUUID();
+
+      this.prefetchQueue.loadOther({
+        helper,
+        diffContext: this.diffContext,
+        llm,
+        token,
+        startTime,
+        newCursorPos: helper.pos,
+        editableRegionStrategy: EditableRegionStrategy.Naive,
+      });
+
+      const [snippetPayload, workspaceDirs] = await Promise.all([
+        getAllSnippetsWithoutRace({
+          helper,
+          ide: this.ide,
+          getDefinitionsFromLsp: this.getDefinitionsFromLsp,
+          contextRetrievalService: this.contextRetrievalService,
+        }),
+        this.ide.getWorkspaceDirs(),
+      ]);
+
+      // TODO: Get the references.
+      const refQueue = await this.ide.getReferences({
+        filepath: helper.filepath,
+        position: helper.pos,
+      });
+
+      const { config } = await this.configHandler.loadConfig();
+      const branches = await Promise.all(
+        workspaceDirs.map((dir) => this.ide.getBranch(dir)),
+      );
+      const tags: BranchAndDir[] = workspaceDirs.map((directory, i) => ({
+        directory,
+        branch: branches[i],
+      }));
+      //     const chunks = await getTopRelevantCodeChunks(
+      //       `  add(number) {
+      //   this.result += number;
+      //   return this;
+      // }`,
+      //       {
+      //         ide: this.ide,
+      //         llm: llm,
+      //         config: config!,
+      //         tags: tags,
+      //         // filterDirectory: getUriPathBasename(helper.workspaceUris[0]),
+      //       },
+      //     );
+      //     console.log("chunks:", JSON.stringify(chunks, null, 2));
+
+      this.prefetchQueue.loadResource(refQueue);
+      await this.prefetchQueue.initialize();
+      return await this.prefetchQueue.pop();
     } catch (e: any) {
       this.onError(e);
     } finally {

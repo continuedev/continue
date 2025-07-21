@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { Position } from "../..";
+import { Position, RangeInFile } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
 import {
@@ -9,7 +9,13 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
   USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
+import { createDiff, DiffFormatType } from "../context/diffFormatting";
 import {
+  EditableRegionStrategy,
+  getNextEditableRegion,
+} from "../NextEditEditableRegionCalculator";
+import {
+  NextEditOutcome,
   NextEditTemplate,
   PromptMetadata,
   SystemPrompt,
@@ -46,10 +52,13 @@ function templateRendererOfModel(
   };
 }
 
-export function renderPrompt(
+export async function renderPrompt(
   helper: HelperVars,
   userEdits: string,
-): PromptMetadata {
+  editableRegionStrategy: EditableRegionStrategy,
+  prevOutcome?: NextEditOutcome,
+  toApply?: RangeInFile,
+): Promise<PromptMetadata> {
   let modelName = helper.modelName as NextEditModelName;
 
   if (modelName === "this field is not used") {
@@ -80,10 +89,65 @@ export function renderPrompt(
   }
 
   const renderer = templateRendererOfModel(modelName);
-  const editedCodeWithTokens = insertTokens(
-    helper.fileContents.split("\n"),
-    helper.pos,
-  );
+  let editedCodeWithTokens = "";
+
+  // TODO: apply prevOutcome to existing content. we will need the line range.
+  // Also display the diff between existing content and applied content.
+  if (prevOutcome) {
+    // console.log("renderPrompt prevOutcome:", prevOutcome.completion);
+    // console.log(
+    //   "beforeInsert:",
+    //   helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
+    // );
+    // console.log("toInsert: ", prevOutcome?.completion.split("\n"));
+    // console.log(
+    //   "afterInsert:",
+    //   helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
+    // );
+    let appliedContent = [
+      ...helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
+      ...(prevOutcome?.completion.split("\n") ?? []),
+      ...helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
+    ];
+    // console.log("helper.fileContents:", helper.fileContents);
+    // NOTE: I'm not sure, but <|user_cursor_is_here|> is somehow being added to appliedContent.
+    // The individual parts don't contain this.
+    // console.log("appliedContent:", appliedContent);
+    appliedContent = appliedContent.filter(
+      (line) => !line.includes(USER_CURSOR_IS_HERE_TOKEN),
+    );
+    // Given a previous response, we need to calculate where the cursor would be.
+    // I think it's a good idea to calculate this in the response.
+
+    const editableRegion = await getNextEditableRegion(editableRegionStrategy, {
+      fileLines: appliedContent,
+      filepath: helper.filepath,
+    });
+
+    // console.log("appliedContent:", appliedContent);
+    // console.log("startLine:", editableRegion?.range.start.line);
+    editedCodeWithTokens = insertTokens(
+      appliedContent,
+      prevOutcome.finalCursorPosition,
+      editableRegion?.range.start.line ?? undefined,
+      editableRegion?.range.end.line ?? undefined,
+    );
+    // console.log("new editedCodeWithTokens:", editedCodeWithTokens);
+    userEdits = createDiff({
+      beforeContent: helper.fileContents,
+      afterContent: appliedContent.join("\n"),
+      filePath: helper.filepath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 3,
+    });
+    userEdits = userEdits.replace(USER_CURSOR_IS_HERE_TOKEN, "");
+    // console.log("new userDiff:", userEdits);
+  } else {
+    editedCodeWithTokens = insertTokens(
+      helper.fileContents.split("\n"),
+      helper.pos,
+    );
+  }
 
   const tv: TemplateVars = {
     userEdits,
@@ -264,9 +328,19 @@ export function renderDefaultUserPrompt(
 //   }
 // }
 
-function insertTokens(lines: string[], cursorPos: Position) {
+function insertTokens(
+  lines: string[],
+  cursorPos: Position,
+  editableRegionStart?: number,
+  editableRegionEnd?: number,
+) {
   const a = insertCursorToken(lines, cursorPos);
-  const b = insertEditableRegionTokensWithStaticRange(a, cursorPos);
+  const b = insertEditableRegionTokensWithStaticRange(
+    a,
+    cursorPos,
+    editableRegionStart,
+    editableRegionEnd,
+  );
   return b.join("\n");
 }
 
@@ -290,20 +364,28 @@ function insertCursorToken(lines: string[], cursorPos: Position) {
 function insertEditableRegionTokensWithStaticRange(
   lines: string[],
   cursorPos: Position,
+  editableRegionStart?: number,
+  editableRegionEnd?: number,
 ) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
 
   // Ensure editable regions are within bounds.
-  const editableRegionStart = Math.max(
-    cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-    0,
-  );
-  const editableRegionEnd = Math.min(
-    cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-    lines.length - 1, // Line numbers should be zero-indexed.
-  );
+  if (editableRegionStart === undefined) {
+    editableRegionStart = Math.max(
+      cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+      0,
+    );
+  }
+  if (editableRegionEnd === undefined) {
+    editableRegionEnd = Math.min(
+      cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+      lines.length - 1, // Line numbers should be zero-indexed.
+    );
+  }
+
+  // console.log("editableRegionStart:", editableRegionStart);
 
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),

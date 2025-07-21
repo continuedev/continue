@@ -871,6 +871,7 @@ export interface IDE {
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
+  getReferences(location: Location): Promise<RangeInFile[]>;
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;

@@ -21,10 +21,17 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "core/nextEdit/constants";
 import { checkFim } from "core/nextEdit/diff/diff";
+import {
+  EditableRegionStrategy,
+  getNextEditableRegion,
+} from "core/nextEdit/NextEditEditableRegionCalculator";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditOutcome } from "core/nextEdit/types";
+import { localPathOrUriToPath } from "core/util/pathToUri";
+import { JumpManager } from "../activation/JumpManager";
 import { NextEditWindowManager } from "../activation/NextEditWindowManager";
+import { GhostTextAcceptanceTracker } from "./GhostTextAcceptanceTracker";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import { RecentlyVisitedRangesService } from "./RecentlyVisitedRangesService";
@@ -66,6 +73,7 @@ export class ContinueCompletionProvider
   private completionProvider: CompletionProvider;
   private nextEditProvider: NextEditProvider;
   private nextEditLoggingService: NextEditLoggingService;
+  private jumpManager: JumpManager;
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
 
@@ -93,6 +101,7 @@ export class ContinueCompletionProvider
       }
       return config.selectedModelByRole.autocomplete ?? undefined;
     }
+
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
@@ -112,10 +121,20 @@ export class ContinueCompletionProvider
       "fineTuned",
     );
 
+    this.jumpManager = JumpManager.getInstance();
+
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
   _lastShownCompletion: AutocompleteOutcome | NextEditOutcome | undefined;
+
+  private async getRerankModel() {
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      return;
+    }
+    return config.selectedModelByRole.rerank ?? undefined;
+  }
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -167,14 +186,36 @@ export class ContinueCompletionProvider
       token.onCancellationRequested(() => abortController.abort());
 
       // Handle notebook cells
-      const pos = {
+      let pos = {
         line: position.line,
         character: position.character,
       };
-      // const pos = {
-      //   line: 0,
-      //   character: 0,
-      // };
+
+      if (this.nextEditProvider.chainExists()) {
+        // If the user has accepted the previous completion, the chain of edits is alive.
+        // Get the next editable region and set the pos to be within that range.
+        const nextEditableRegion = await getNextEditableRegion(
+          EditableRegionStrategy.Rerank,
+          {
+            fileContent: document.getText(),
+            query: this.nextEditProvider.getPreviousCompletion(), // previous completion in the chain
+            filepath: localPathOrUriToPath(document.uri.toString()),
+            reranker: await this.getRerankModel(),
+            chunkSize: 5,
+          },
+        );
+
+        if (nextEditableRegion) {
+          pos = {
+            line: nextEditableRegion.range.start.line,
+            character: nextEditableRegion.range.start.character,
+          };
+        }
+      } else {
+        // If the user has rejected, then we start a new chain of edits.
+        this.nextEditProvider.startChain();
+      }
+
       let manuallyPassFileContents: string | undefined = undefined;
       if (document.uri.scheme === "vscode-notebook-cell") {
         const notebook = vscode.workspace.notebookDocuments.find((notebook) =>
@@ -236,18 +277,34 @@ export class ContinueCompletionProvider
 
       setupStatusBar(undefined, true);
 
+      let outcome: AutocompleteOutcome | NextEditOutcome | undefined;
+
+      // Check if editChainId exists or needs to be refreshed.
+      if (this.isNextEditActive) {
+        outcome = await this.nextEditProvider.provideInlineCompletionItems(
+          input,
+          signal,
+        );
+      } else {
+        outcome = await this.completionProvider.provideInlineCompletionItems(
+          input,
+          signal,
+          wasManuallyTriggered,
+        );
+      }
+
       // TODO: fix type of outcome to be a union between NextEditOutcome and AutocompleteOutcome.
-      const outcome: AutocompleteOutcome | NextEditOutcome | undefined = this
-        .isNextEditActive
-        ? await this.nextEditProvider.provideInlineCompletionItems(
-            input,
-            signal,
-          )
-        : await this.completionProvider.provideInlineCompletionItems(
-            input,
-            signal,
-            wasManuallyTriggered,
-          );
+      // const outcome: AutocompleteOutcome | NextEditOutcome | undefined = this
+      //   .isNextEditActive
+      //   ? await this.nextEditProvider.provideInlineCompletionItems(
+      //       input,
+      //       signal,
+      //     )
+      //   : await this.completionProvider.provideInlineCompletionItems(
+      //       input,
+      //       signal,
+      //       wasManuallyTriggered,
+      //     );
 
       if (!outcome || !outcome.completion) {
         return null;
@@ -296,10 +353,7 @@ export class ContinueCompletionProvider
 
       // Construct the range/text to show
       const startPos = selectedCompletionInfo?.range.start ?? position;
-      // const startPos = new vscode.Position(0, 0);
-      // const endPos = new vscode.Position(0, 5);
       let range = new vscode.Range(startPos, startPos);
-      // let range = new vscode.Range(startPos, endPos);
       let completionText = outcome.completion;
 
       // NOTE: This seems like an autocomplete logic.
@@ -345,9 +399,40 @@ export class ContinueCompletionProvider
 
       (autocompleteCompletionItem as any).completeBracketPairs = true;
 
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return undefined;
+      }
+
+      const currCursorPos = editor.selection.active;
+
       if (this.isNextEditActive) {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
+        console.log(this.nextEditProvider.getChain().length);
+
+        if (!this.nextEditProvider.isStartOfChain()) {
+          const jumpPosition = new vscode.Position(
+            (outcome as NextEditOutcome).editableRegionStartLine,
+            0,
+          );
+
+          await this.jumpManager.suggestJump(
+            currCursorPos,
+            jumpPosition,
+            outcome.completion,
+          );
+
+          // If a jump was just suggested, don't show ghost text yet.
+          if (this.jumpManager.isJumpInProgress()) {
+            // Store this completion for later use when jump is complete.
+            this.jumpManager.setCompletionAfterJump({
+              completionId: input.completionId,
+              outcome: outcome as NextEditOutcome,
+              currentPosition: jumpPosition,
+            });
+
+            return undefined; // Don't show anything yet!
+          }
+
           return undefined;
         }
 
@@ -363,7 +448,6 @@ export class ContinueCompletionProvider
         }
 
         // Get the contents of the old (current) editable region.
-        const currCursorPos = editor.selection.active;
         const editableRegionStartLine = Math.max(
           currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
           0,
@@ -386,13 +470,35 @@ export class ContinueCompletionProvider
           return undefined;
         }
 
+        // Create a cursor position relative to the edit range slice.
+        const relativeCursorPos = {
+          line: currCursorPos.line - editableRegionStartLine,
+          character: currCursorPos.character,
+        };
+
         // If the diff is a FIM, render a ghost text.
         const { isFim, fimText } = checkFim(
           oldEditRangeSlice,
           newEditRangeSlice,
-          currCursorPos,
+          relativeCursorPos,
         );
+
         if (isFim) {
+          if (!fimText) {
+            console.log("deleteChain from completionProvider.ts: !fimText");
+            this.nextEditProvider.deleteChain();
+            return undefined;
+          }
+
+          // const completionId = input.completionId;
+
+          // Track this ghost text for acceptance detection.
+          GhostTextAcceptanceTracker.getInstance().setExpectedGhostTextAcceptance(
+            document,
+            fimText,
+            new vscode.Position(currCursorPos.line, currCursorPos.character),
+          );
+
           const nextEditCompletionItem = new vscode.InlineCompletionItem(
             fimText,
             new vscode.Range(
@@ -405,11 +511,18 @@ export class ContinueCompletionProvider
               arguments: [input.completionId, this.nextEditLoggingService], // TODO: this may have to be this.completionProvider.
             },
           );
+          console.log(nextEditCompletionItem);
           return [nextEditCompletionItem];
         }
 
         // Else, render a next edit window.
         const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+        if (diffLines.length === 0) {
+          console.log(
+            "deleteChain from completionProvider.ts: diffLines.length === 0",
+          );
+          NextEditProvider.getInstance().deleteChain();
+        }
 
         if (NextEditWindowManager.isInstantiated()) {
           NextEditWindowManager.getInstance().updateCurrentCompletionId(

@@ -209,3 +209,138 @@ export function myersCharDiff(
 
   return result;
 }
+
+export interface ChangeRange {
+  startLine: number;
+  endLine: number;
+  changeType: "deletion" | "addition" | "modification";
+}
+
+export function findChangedLineRanges(
+  diffLines: DiffLine[],
+  // oldCodeBlock: string,
+  // newCodeBlock: string,
+): ChangeRange[] {
+  const changes: ChangeRange[] = [];
+  let oldLineNumber = 0;
+  let newLineNumber = 0;
+  let currentChangeStart: number | null = null;
+  let currentChangeType: "deletion" | "addition" | "modification" | null = null;
+
+  for (let i = 0; i < diffLines.length; i++) {
+    const line = diffLines[i];
+
+    if (line.type === "same") {
+      // If we were tracking a change, close it
+      if (currentChangeStart !== null) {
+        changes.push({
+          startLine: currentChangeStart,
+          endLine: oldLineNumber - 1,
+          changeType: currentChangeType!,
+        });
+        currentChangeStart = null;
+        currentChangeType = null;
+      }
+
+      // Both old and new advance for 'same' lines
+      oldLineNumber++;
+      newLineNumber++;
+    } else if (line.type === "old") {
+      // Start tracking change if not already
+      if (currentChangeStart === null) {
+        currentChangeStart = oldLineNumber;
+        currentChangeType = "deletion";
+      }
+
+      // Check if this is part of a modification (old followed by new)
+      if (currentChangeType === "deletion") {
+        // Look ahead to see if there are 'new' lines following
+        let hasNewLines = false;
+        for (let j = i + 1; j < diffLines.length; j++) {
+          if (diffLines[j].type === "new") {
+            hasNewLines = true;
+            break;
+          } else if (diffLines[j].type === "same") {
+            break;
+          }
+        }
+        if (hasNewLines) {
+          currentChangeType = "modification";
+        }
+      }
+
+      oldLineNumber++;
+    } else if (line.type === "new") {
+      // Start tracking change if not already
+      if (currentChangeStart === null) {
+        currentChangeStart = oldLineNumber;
+        currentChangeType = "addition";
+      }
+
+      // If we were tracking deletions, this becomes a modification
+      if (currentChangeType === "deletion") {
+        currentChangeType = "modification";
+      }
+
+      newLineNumber++;
+    }
+  }
+
+  // Close any remaining change
+  if (currentChangeStart !== null) {
+    changes.push({
+      startLine: currentChangeStart,
+      endLine: oldLineNumber - 1,
+      changeType: currentChangeType!,
+    });
+  }
+
+  return changes;
+}
+
+// Alternative simpler approach if you just want deletion/modification ranges
+export function findChangedLineRangesSimple(
+  diffLines: DiffLine[],
+): ChangeRange[] {
+  const changes: ChangeRange[] = [];
+  let oldLineNumber = 0;
+  let currentChangeStart: number | null = null;
+
+  for (const line of diffLines) {
+    if (line.type === "same") {
+      // Close any current change
+      if (currentChangeStart !== null) {
+        changes.push({
+          startLine: currentChangeStart,
+          endLine: oldLineNumber - 1,
+          changeType: "modification",
+        });
+        currentChangeStart = null;
+      }
+      oldLineNumber++;
+    } else if (line.type === "old") {
+      // Start change if not already started
+      if (currentChangeStart === null) {
+        currentChangeStart = oldLineNumber;
+      }
+      oldLineNumber++;
+    } else if (line.type === "new") {
+      // Start change if not already started (for pure additions)
+      if (currentChangeStart === null) {
+        currentChangeStart = oldLineNumber;
+      }
+      // Don't increment oldLineNumber for 'new' lines
+    }
+  }
+
+  // Close any remaining change
+  if (currentChangeStart !== null) {
+    changes.push({
+      startLine: currentChangeStart,
+      endLine: oldLineNumber - 1,
+      changeType: "modification",
+    });
+  }
+
+  return changes;
+}

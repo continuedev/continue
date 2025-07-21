@@ -189,6 +189,12 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       );
       return [];
     }
+    // if (!this.lanceDbIndex) {
+    //   console.warn(
+    //     "LanceDB index not available, skipping embeddings retrieval",
+    //   );
+    //   return [];
+    // }
 
     return this.lanceDbIndex.retrieve(
       input,
