@@ -39,14 +39,15 @@ export class VertexAIApi implements BaseLlmApi {
     // So do not need apiKey, etc
     this.anthropicInstance = new AnthropicApi({
       provider: "anthropic",
-      apiKey: "",
+      apiKey: "dud",
     });
     this.geminiInstance = new GeminiApi({
       provider: "gemini",
-      apiKey: "",
+      apiKey: "dud",
     });
     this.mistralInstance = new OpenAIApi({
       provider: "mistral",
+      apiKey: "dud",
     });
   }
 

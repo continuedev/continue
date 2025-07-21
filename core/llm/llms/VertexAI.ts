@@ -5,13 +5,14 @@ import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
 
 class VertexAI extends BaseLLM {
   static providerName = "vertexai";
   declare apiBase: string;
-  // protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
   declare vertexProvider: "mistral" | "anthropic" | "gemini" | "unknown";
   declare anthropicInstance: Anthropic;
   declare geminiInstance: Gemini;
