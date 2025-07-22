@@ -1,8 +1,11 @@
-import { Chunk, ILLM, RangeInFile } from "..";
+import Parser from "web-tree-sitter";
+import { Chunk, IDE, ILLM, Position, Range, RangeInFile } from "..";
+import { getAst } from "../autocomplete/util/ast";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
   Rerank = "rerank",
+  Static = "static",
 }
 
 export async function getNextEditableRegion(
@@ -14,6 +17,8 @@ export async function getNextEditableRegion(
       return naiveJump(ctx);
     case EditableRegionStrategy.Rerank:
       return await rerankJump(ctx);
+    case EditableRegionStrategy.Static:
+      return await staticJump(ctx);
     default:
       return null;
   }
@@ -116,4 +121,425 @@ async function rerankJump(ctx: {
     console.error("Error in rerank jump:", error);
     return null;
   }
+}
+
+// A static jump runs a lightweight static analysis on the file
+// to jump to relevant locations.
+async function staticJump(ctx: {
+  oldFileContent: string;
+  newFileContent: string;
+  completionRange: Range;
+  filepath: string;
+  ide: IDE;
+  reranker?: ILLM;
+  chunkSize?: number;
+}): Promise<RangeInFile | null> {
+  try {
+    const { oldFileContent, newFileContent, completionRange, filepath, ide } =
+      ctx;
+
+    if (
+      !oldFileContent ||
+      !newFileContent ||
+      !completionRange ||
+      !filepath ||
+      !ide
+    ) {
+      console.warn(
+        "Missing required context for static jump:",
+        !oldFileContent,
+        !newFileContent,
+        !completionRange,
+        !filepath,
+        !ide,
+      );
+      return null;
+    }
+
+    // TODO:
+    // Parse the old file contents into an AST.
+    // Parse the new file contents into an AST.
+    // Compare the two trees and find which nodes have changed.
+    // Save the queue of changed nodes. The queue should contain the old node and the new node. Each of them can be null if the change is a deletion or insertion.
+    // Rank the queue by node depth (decreasing order because we want granular edits).
+    // Pop front until we find a queue item with an old node != null.
+    // Search the codebase for the old node's expression. For this, either use ide.getReferences(some_location), or other methods you see fit. If you can utilize the strategy pattern, even better.
+    // For now, filter out results from outside files. We only want to keep the results in the current file.
+    // Return the first result from this filtered list of results.
+
+    // Parse the old file contents into an AST.
+    const oldAst = await getAst(filepath, oldFileContent);
+    if (!oldAst) return null;
+
+    // Parse the new file contents into an AST.
+    const newAst = await getAst(filepath, newFileContent);
+    if (!newAst) return null;
+
+    // Compare the two trees and find which nodes have changed.
+    const changedNodes = compareAsts(oldAst, newAst);
+    if (!changedNodes || changedNodes.length === 0) return null;
+
+    // Save the queue of changed nodes.
+    // The queue should contain the old node and the new node.
+    // Each can be null if the change is a deletion or insertion.
+    // const nodeQueue = changedNodes.map((change) => ({
+    //   oldNode: change.oldNode,
+    //   newNode: change.newNode,
+    //   depth: change.depth,
+    // }));
+
+    // Rank the queue by node depth.
+    // Decreasing order for granular edits.
+    // Increasing order for larger definition-based searches.
+    // Making it decreasing has issues when the deepest node is a string_fragment.
+    const nodeQueue = changedNodes.sort((a, b) => a.depth - b.depth);
+    console.log(
+      "nodeQueue:",
+      nodeQueue.map((node) => ({
+        oldText: node.oldNode?.text || "",
+        newText: node.newNode?.text || "",
+        oldType: node.oldNode?.type || "",
+        newType: node.newNode?.type || "",
+        depth: node.depth,
+      })),
+    );
+
+    // Find the first item with a non-null old node.
+    let targetNode = null;
+    while (nodeQueue.length > 0 && !targetNode) {
+      const candidate = nodeQueue.shift();
+      if (
+        candidate &&
+        candidate.oldNode &&
+        candidate.oldNode.type !== "program"
+      ) {
+        targetNode = candidate.oldNode;
+      }
+    }
+
+    if (!targetNode) return null;
+
+    // Get the text representation of the old node's expression.
+    const nodeText = getNodeText(targetNode);
+    if (!nodeText || nodeText.trim() === "") return null;
+
+    // Search for similar code in the file.
+    let references: RangeInFile[] = [];
+
+    // Try to use IDE's reference finding capabilities if available.
+    try {
+      // Get the position of the target node in the old file.
+      const nodePosition = getNodePosition(targetNode);
+      if (nodePosition) {
+        // Use IDE to find references.
+
+        // TODO:
+        // Get the list of document symbols using await ide.getDocumentSymbols.
+        // Each document symbol will be our query.
+        // Use the rerank model to rank the nodeText against the query.
+        // Get the highest scoring query and its location.
+
+        // Get the list of document symbols using await ide.getDocumentSymbols.
+        // Filter out symbols that are directly inside the completion range.
+        const symbols = await ide.getDocumentSymbols(filepath);
+
+        // Filter out symbols that are directly inside the completion range
+        const filteredSymbols = symbols.filter((symbol) => {
+          // Check if the symbol's range is outside of the completion range
+          return !doRangesOverlap(symbol.range, completionRange);
+        });
+
+        // Use the reranker to rank the filtered symbols against the node text.
+        if (!ctx.reranker) {
+          console.warn("No reranker available for static jump symbol ranking");
+          return null;
+        }
+
+        const symbolChunks: Chunk[] = filteredSymbols.map((symbol) => ({
+          content: symbol.name,
+          startLine: symbol.range.start.line,
+          endLine: symbol.range.end.line,
+          digest: `symbol-${symbol.name}-${symbol.range.start.line}`,
+          filepath: filepath,
+          index: symbol.range.start.line,
+        }));
+
+        if (symbolChunks.length === 0) {
+          console.warn("No symbols found for ranking");
+          return null;
+        }
+
+        const scores = await ctx.reranker.rerank(nodeText, symbolChunks);
+        symbolChunks.sort(
+          (a, b) =>
+            scores[symbolChunks.indexOf(b)] - scores[symbolChunks.indexOf(a)],
+        );
+
+        const mostRelevantSymbol = symbolChunks[0];
+        const originalSymbol = filteredSymbols.find(
+          (symbol) =>
+            symbol.range.start.line === mostRelevantSymbol.startLine &&
+            symbol.range.end.line === mostRelevantSymbol.endLine,
+        );
+
+        if (originalSymbol) {
+          references = [
+            {
+              filepath,
+              range: originalSymbol.range,
+            },
+          ];
+        }
+
+        // const foundReferences = await ide.getReferences({
+        //   filepath,
+        //   position: nodePosition,
+        // });
+
+        // if (foundReferences && foundReferences.length > 0) {
+        //   references = foundReferences;
+        // }
+      }
+    } catch (e) {
+      console.warn(
+        "Failed to use IDE references, falling back to text search:",
+        e,
+      );
+    }
+
+    // If IDE reference finding failed or returned no results, fall back to text search.
+    if (references.length === 0) {
+      references = findTextOccurrences(oldFileContent, nodeText).map(
+        (range) => ({ filepath, range }),
+      );
+    }
+
+    // Filter out results from outside the current file.
+    const currentFileReferences = references.filter(
+      (ref) => ref.filepath === filepath,
+    );
+
+    // Return the first reference if any found.
+    if (currentFileReferences.length > 0) {
+      return currentFileReferences[0];
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error in static jump:", error);
+    return null;
+  }
+}
+
+// Helper function to compare ASTs and find changed nodes.
+function compareAsts(oldAst: Parser.Tree, newAst: Parser.Tree) {
+  const changedNodes: {
+    oldNode: Parser.SyntaxNode | null;
+    newNode: Parser.SyntaxNode | null;
+    depth: number;
+  }[] = [];
+
+  // This is a simplified implementation.
+  // In practice, you would traverse both ASTs in parallel
+  // and identify nodes that differ.
+
+  function traverse(
+    oldNode: Parser.SyntaxNode | null,
+    newNode: Parser.SyntaxNode | null,
+    depth: number = 0,
+  ) {
+    if (!oldNode && !newNode) return;
+
+    // If one node exists and the other doesn't, or they're different types.
+    if (
+      (!oldNode && newNode) ||
+      (oldNode && !newNode) ||
+      oldNode?.type !== newNode?.type
+    ) {
+      changedNodes.push({ oldNode, newNode, depth });
+      return;
+    }
+
+    // Compare properties.
+    if (oldNode?.text !== newNode?.text) {
+      changedNodes.push({ oldNode, newNode, depth });
+    }
+
+    // Recursively compare children.
+    const oldChildCount = oldNode?.childCount || 0;
+    const newChildCount = newNode?.childCount || 0;
+
+    const maxLength = Math.max(oldChildCount, newChildCount);
+    for (let i = 0; i < maxLength; i++) {
+      const oldChild = i < oldChildCount ? oldNode?.child(i) || null : null;
+      const newChild = i < newChildCount ? newNode?.child(i) || null : null;
+      traverse(oldChild, newChild, depth + 1);
+    }
+  }
+
+  traverse(oldAst.rootNode, newAst.rootNode);
+  return changedNodes;
+}
+
+// Helper function to get a node's text.
+function getNodeText(node: Parser.SyntaxNode): string {
+  if (!node) return "";
+
+  return node.text;
+}
+
+// Helper function to get a node's position.
+function getNodePosition(node: Parser.SyntaxNode): Position | null {
+  if (!node) return null;
+
+  // Tree-sitter nodes have startPosition property that contains row and column.
+  return {
+    line: node.startPosition.row,
+    character: node.startPosition.column,
+  };
+}
+
+// Helper function to find all occurrences of text in a string.
+function findTextOccurrences(text: string, searchText: string): Range[] {
+  const results: Range[] = [];
+  const lines = text.split("\n");
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex];
+    let charIndex = 0;
+
+    while (charIndex < line.length) {
+      const foundIndex = line.indexOf(searchText, charIndex);
+      if (foundIndex === -1) break;
+
+      results.push({
+        start: { line: lineIndex, character: foundIndex },
+        end: { line: lineIndex, character: foundIndex + searchText.length },
+      });
+
+      charIndex = foundIndex + 1;
+    }
+  }
+
+  return results;
+}
+
+// Helper function to check if a range is within another range.
+function isRangeWithin(innerRange: Range, outerRange: Range): boolean {
+  // Check if the inner range's start position is after or equal to the outer range's start.
+  const startWithin =
+    innerRange.start.line > outerRange.start.line ||
+    (innerRange.start.line === outerRange.start.line &&
+      innerRange.start.character >= outerRange.start.character);
+
+  // Check if the inner range's end position is before or equal to the outer range's end.
+  const endWithin =
+    innerRange.end.line < outerRange.end.line ||
+    (innerRange.end.line === outerRange.end.line &&
+      innerRange.end.character <= outerRange.end.character);
+
+  return startWithin && endWithin;
+}
+
+// Helper function to check if two ranges overlap.
+function doRangesOverlap(range1: Range, range2: Range): boolean {
+  // Check if one range starts after the other ends
+  const range1StartsAfterRange2Ends =
+    range1.start.line > range2.end.line ||
+    (range1.start.line === range2.end.line &&
+      range1.start.character > range2.end.character);
+
+  const range2StartsAfterRange1Ends =
+    range2.start.line > range1.end.line ||
+    (range2.start.line === range1.end.line &&
+      range2.start.character > range1.end.character);
+
+  // If either condition is true, the ranges don't overlap
+  return !(range1StartsAfterRange2Ends || range2StartsAfterRange1Ends);
+}
+
+// Helper function to check if the upper part of range1 overlaps with range2.
+function doesUpperPartOverlap(range1: Range, range2: Range): boolean {
+  // Check if range1 starts before range2 ends
+  const range1StartsBeforeRange2Ends =
+    range1.start.line < range2.end.line ||
+    (range1.start.line === range2.end.line &&
+      range1.start.character <= range2.end.character);
+
+  // Check if range1 starts before range2 starts (meaning it's "upper" than range2)
+  const range1StartsBeforeRange2Starts =
+    range1.start.line < range2.start.line ||
+    (range1.start.line === range2.start.line &&
+      range1.start.character < range2.start.character);
+
+  // The upper part overlaps if range1 starts before range2 ends
+  // AND range1 starts before range2 starts
+  return range1StartsBeforeRange2Ends && range1StartsBeforeRange2Starts;
+}
+
+// Helper function to check if the lower part of range1 overlaps with range2.
+function doesLowerPartOverlap(range1: Range, range2: Range): boolean {
+  // Check if range1 starts inside range2
+  const range1StartsInsideRange2 =
+    (range1.start.line > range2.start.line ||
+      (range1.start.line === range2.start.line &&
+        range1.start.character >= range2.start.character)) &&
+    (range1.start.line < range2.end.line ||
+      (range1.start.line === range2.end.line &&
+        range1.start.character < range2.end.character));
+
+  // Check if range1 ends after range2 ends
+  const range1EndsAfterRange2 =
+    range1.end.line > range2.end.line ||
+    (range1.end.line === range2.end.line &&
+      range1.end.character > range2.end.character);
+
+  // The lower part overlaps if range1 starts inside range2
+  // AND range1 ends after range2 ends
+  return range1StartsInsideRange2 && range1EndsAfterRange2;
+}
+
+// Helper function to check if a range overlaps with another range from either end
+function doesRangePartiallyOverlap(range1: Range, range2: Range): boolean {
+  // Upper part overlap: range1 starts before range2 starts but ends inside range2
+  const upperPartOverlap =
+    (range1.start.line < range2.start.line ||
+      (range1.start.line === range2.start.line &&
+        range1.start.character < range2.start.character)) &&
+    (range1.end.line > range2.start.line ||
+      (range1.end.line === range2.start.line &&
+        range1.end.character > range2.start.character)) &&
+    (range1.end.line < range2.end.line ||
+      (range1.end.line === range2.end.line &&
+        range1.end.character <= range2.end.character));
+
+  // Lower part overlap: range1 starts inside range2 but ends after range2 ends
+  const lowerPartOverlap =
+    (range1.start.line > range2.start.line ||
+      (range1.start.line === range2.start.line &&
+        range1.start.character >= range2.start.character)) &&
+    (range1.start.line < range2.end.line ||
+      (range1.start.line === range2.end.line &&
+        range1.start.character < range2.end.character)) &&
+    (range1.end.line > range2.end.line ||
+      (range1.end.line === range2.end.line &&
+        range1.end.character > range2.end.character));
+
+  return upperPartOverlap || lowerPartOverlap;
+}
+
+// Utility function to print chunks.
+function printChunks(chunks: Chunk[]) {
+  console.log(
+    "chunks:",
+    JSON.stringify(
+      chunks.map((chunk) => ({
+        content: chunk.content,
+        startLine: chunk.startLine,
+        endLine: chunk.endLine,
+      })),
+      null,
+      2,
+    ),
+  );
 }

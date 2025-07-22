@@ -77,6 +77,8 @@ export class ContinueCompletionProvider
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
 
+  private oldFileContent: string = "";
+
   private isNextEditActive: boolean = false;
 
   public activateNextEdit() {
@@ -194,15 +196,45 @@ export class ContinueCompletionProvider
       if (this.nextEditProvider.chainExists()) {
         // If the user has accepted the previous completion, the chain of edits is alive.
         // Get the next editable region and set the pos to be within that range.
+        // const nextEditableRegion = await getNextEditableRegion(
+        //   EditableRegionStrategy.Rerank,
+        //   {
+        //     fileContent: document.getText(),
+        //     query: this.nextEditProvider.getPreviousCompletion(), // previous completion in the chain
+        //     filepath: localPathOrUriToPath(document.uri.toString()),
+        //     reranker: await this.getRerankModel(),
+        //     chunkSize: 5,
+        //   },
+        // );
+        const newFileContent = document.getText();
         const nextEditableRegion = await getNextEditableRegion(
-          EditableRegionStrategy.Rerank,
+          EditableRegionStrategy.Static,
           {
-            fileContent: document.getText(),
-            query: this.nextEditProvider.getPreviousCompletion(), // previous completion in the chain
+            oldFileContent: this.oldFileContent,
+            newFileContent,
+            completionRange: {
+              start: {
+                line:
+                  this.nextEditProvider.getPreviousCompletion()
+                    ?.editableRegionStartLine ?? 0,
+                character: 0,
+              },
+              end: {
+                line:
+                  this.nextEditProvider.getPreviousCompletion()
+                    ?.editableRegionEndLine ?? document.lineCount - 1,
+                character: 0,
+              },
+            },
             filepath: localPathOrUriToPath(document.uri.toString()),
+            ide: this.ide,
             reranker: await this.getRerankModel(),
-            chunkSize: 5,
           },
+        );
+
+        console.log(
+          "nextEditableRegion:",
+          JSON.stringify(nextEditableRegion, null, 2),
         );
 
         if (nextEditableRegion) {
@@ -276,6 +308,8 @@ export class ContinueCompletionProvider
       };
 
       setupStatusBar(undefined, true);
+
+      this.oldFileContent = document.getText();
 
       let outcome: AutocompleteOutcome | NextEditOutcome | undefined;
 
