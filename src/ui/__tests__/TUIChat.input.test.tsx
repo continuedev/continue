@@ -1,14 +1,33 @@
+import { render } from "ink-testing-library";
 import React from "react";
+import { createUITestContext } from "../../test-helpers/ui-test-context.js";
+import TUIChat from "../TUIChat.js";
 
-describe("TUIChat - User Input Tests", () => {
-  test("should load TUIChat component", async () => {
-    // This is a basic test just to ensure the test file runs
-    expect(React).toBeDefined();
+describe("TUIChat - Input Tests", () => {
+  let context: any;
+
+  beforeEach(() => {
+    context = createUITestContext({
+      allServicesReady: true,
+      serviceState: "ready",
+      inputMode: true,
+    });
   });
 
-  // The rest of the tests are skipped for now to avoid complex mocking issues
-  test.skip("Mock complex tests - skipped until proper mocking is configured", () => {
-    // These tests require complex mocking of React hooks and services
-    // which is causing issues with Jest ESM module handling
+  afterEach(() => {
+    context.cleanup();
+  });
+
+  test("should render TUIChat component", async () => {
+    const { lastFrame } = render(React.createElement(TUIChat));
+    const frame = lastFrame();
+    
+    expect(frame).toBeDefined();
+    expect(frame.length).toBeGreaterThan(0);
+  });
+
+  test.skip("should handle user input - complex interaction test skipped", () => {
+    // Input handling requires complex keyboard simulation
+    // Skip for now to focus on basic rendering tests
   });
 });

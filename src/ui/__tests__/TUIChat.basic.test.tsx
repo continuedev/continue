@@ -1,26 +1,45 @@
 import { render } from "ink-testing-library";
 import React from "react";
+import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import TUIChat from "../TUIChat.js";
 
-// Test TUIChat rendering without mocking services - just test it falls gracefully
 describe("TUIChat - Basic UI Tests", () => {
+  let context: any;
+
+  beforeEach(() => {
+    context = createUITestContext({
+      allServicesReady: true,
+      serviceState: "ready",
+      serviceValue: { some: "data" },
+    });
+  });
+
+  afterEach(() => {
+    context.cleanup();
+  });
+
   it("renders without crashing", () => {
-    // This test just ensures the component can render without throwing
     const { lastFrame } = render(React.createElement(TUIChat));
     const frame = lastFrame();
 
-    // Should render something even with error states
     expect(frame).toBeDefined();
     expect(frame.length).toBeGreaterThan(0);
   });
 
-  it("shows error state when services are not available", () => {
+  it("shows loading state when services are loading", () => {
+    // Override for this test
+    context.mockUseServices.mockReturnValue({
+      services: {},
+      loading: true,
+      error: null,
+      allReady: false,
+    });
+
     const { lastFrame } = render(React.createElement(TUIChat));
     const frame = lastFrame();
 
-    // Should show error or loading when services aren't mocked properly
     expect(frame).toBeDefined();
-    expect(frame).toMatch(/error|loading|service|not|ctrl/i);
+    expect(frame).toMatch(/loading|service/i);
   });
 
   it("handles remote URL prop", () => {
@@ -29,7 +48,6 @@ describe("TUIChat - Basic UI Tests", () => {
     );
     const frame = lastFrame();
 
-    // Should render something even with a remote URL
     expect(frame).toBeDefined();
     expect(frame.length).toBeGreaterThan(0);
   });
