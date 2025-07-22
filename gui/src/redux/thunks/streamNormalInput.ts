@@ -140,9 +140,10 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools and filter them based on the selected model
     const allActiveTools = selectActiveTools(state);
     const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
-    const useNativeTools =
-      !state.config.config.experimental?.onlyUseSystemMessageTools &&
-      modelSupportsNativeTools(selectedChatModel);
+    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
+    const useSystemTools =
+      !!state.config.config.experimental?.onlyUseSystemMessageTools;
+    const useNativeTools = !useSystemTools && supportsNativeTools;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
@@ -166,14 +167,15 @@ export const streamNormalInput = createAsyncThunk<
       selectedChatModel,
     );
 
-    const systemMessage = useNativeTools
-      ? baseSystemMessage
-      : addSystemMessageToolsToSystemMessage(baseSystemMessage, activeTools);
+    const systemMessage = useSystemTools
+      ? addSystemMessageToolsToSystemMessage(baseSystemMessage, activeTools)
+      : baseSystemMessage;
 
     const withoutMessageIds = state.session.history.map((item) => {
       const { id, ...messageWithoutId } = item.message;
       return { ...item, message: messageWithoutId };
     });
+
     const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
       systemMessage,
