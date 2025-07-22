@@ -26,7 +26,7 @@ and [hub of models, rules, prompts, docs, and other building blocks](https://hub
 <a target="_blank" href="https://changelog.continue.dev" style="background:none">
     <img src="https://img.shields.io/badge/changelog-%96EFF3" style="height: 22px;" />
 </a>
-<a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
+<a target="_blank" href="https://discord.gg/43rns5YBj3" style="background:none">
     <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 22px;" />
 </a>
 
