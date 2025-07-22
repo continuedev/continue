@@ -220,6 +220,7 @@ export class AnthropicApi implements BaseLlmApi {
     };
   }
 
+  // This is split off so e.g. VertexAI can use it
   async *handleStreamResponse(response: any, model: string) {
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;

@@ -160,7 +160,10 @@ export class VertexAIApi implements BaseLlmApi {
   private async getAuthHeaders(): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      // Accept: "application/json"
     };
+
+    // TODO - support anthropic prompt caching with "anthropic-beta" header
 
     if (this.config.apiKey) {
       // Express mode - no Authorization header needed, API key is in URL
@@ -354,8 +357,9 @@ export class VertexAIApi implements BaseLlmApi {
         );
 
         if (!response.ok) {
+          const data = await response.json();
           throw new Error(
-            `VertexAI API error: ${response.status} ${response.statusText}`,
+            `VertexAI API error: ${response.status} ${response.statusText}\n${JSON.stringify(data)}`,
           );
         }
 
