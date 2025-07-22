@@ -153,6 +153,11 @@ data class ContinueRcJson(
     val mergeBehavior: ConfigMergeType
 )
 
+data class TerminalOptions(
+    val reuseTerminal: Boolean?,
+    val terminalName: String?,
+    val waitForCompletion: Boolean?
+)
 
 interface IDE {
     suspend fun getIdeInfo(): IdeInfo
@@ -196,7 +201,7 @@ interface IDE {
 
     suspend fun openUrl(url: String)
 
-    suspend fun runCommand(command: String)
+    suspend fun runCommand(command: String, options: TerminalOptions?)
 
     suspend fun saveFile(filepath: String)
 
