@@ -13,7 +13,7 @@ import setupInlineTips from "./InlineTipManager";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   const platformCheck = isUnsupportedPlatform();
-  if (!platformCheck.isUnsupported) {
+  if (platformCheck.isUnsupported) {
     // const platformTarget = `${getPlatform()}-${getArchitecture()}`;
     const platformTarget = "windows-arm64";
 
