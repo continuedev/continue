@@ -15,6 +15,7 @@ import {
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
 import { stripImages } from "core/util/messageContent";
+import * as path from "path";
 import * as vscode from "vscode";
 
 import { ApplyManager } from "../apply";
@@ -132,6 +133,46 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("applyToFile", async ({ data }) => {
+      // Check if we should show save dialog for new file creation
+      if (data.showSaveDialog) {
+        // Extract filename from the suggested filepath if available
+        let defaultUri: vscode.Uri | undefined;
+        if (data.filepath) {
+          const filename = path.basename(data.filepath);
+          const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+          if (workspaceFolder) {
+            // Try to use the suggested directory structure if it exists
+            const suggestedDir = path.dirname(data.filepath);
+            if (suggestedDir && suggestedDir !== '.') {
+              defaultUri = vscode.Uri.joinPath(workspaceFolder.uri, suggestedDir, filename);
+            } else {
+              defaultUri = vscode.Uri.joinPath(workspaceFolder.uri, filename);
+            }
+          }
+        } else {
+          defaultUri = vscode.workspace.workspaceFolders?.[0]?.uri;
+        }
+
+        const uri = await vscode.window.showSaveDialog({
+          defaultUri,
+          saveLabel: "Create File",
+          title: "Choose location for new file",
+        });
+
+        if (!uri) {
+          // User cancelled
+          await webviewProtocol.request("updateApplyState", {
+            streamId: data.streamId,
+            status: "closed",
+            toolCallId: data.toolCallId,
+          });
+          return;
+        }
+
+        // Update the filepath with the user's choice
+        data.filepath = uri.fsPath;
+      }
+
       const [verticalDiffManager, configHandler] = await Promise.all([
         verticalDiffManagerPromise,
         configHandlerPromise,
