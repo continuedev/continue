@@ -1,5 +1,6 @@
 import type {
   ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -83,6 +84,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
   getReferences: [{ location: Location }, RangeInFile[]];
+  getDocumentSymbols: [{ textDocumentIdentifier: string }, DocumentSymbol[]];
 
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },

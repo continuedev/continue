@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -45,6 +46,10 @@ class FileSystemIde implements IDE {
   }
 
   getReferences(location: Location): Promise<RangeInFile[]> {
+    return Promise.resolve([]);
+  }
+
+  getDocumentSymbols(fileUri: string): Promise<DocumentSymbol[]> {
     return Promise.resolve([]);
   }
 

@@ -746,6 +746,7 @@ declare global {
     // LSP
     gotoDefinition(location: Location): Promise<RangeInFile[]>;
     getReferences(location: Location): Promise<RangeInFile[]>;
+    getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
   
     // Callbacks
     onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;

@@ -6,7 +6,7 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import { executeGotoProvider } from "./autocomplete/lsp";
+import { executeGotoProvider, executeSymbolProvider } from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
@@ -15,6 +15,7 @@ import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 import type {
   ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -93,6 +94,17 @@ class VsCodeIde implements IDE {
       line: location.position.line,
       character: location.position.character,
       name: "vscode.executeReferenceProvider",
+    });
+
+    return result;
+  }
+
+  async getDocumentSymbols(
+    textDocumentIdentifier: string, // uri
+  ): Promise<DocumentSymbol[]> {
+    const result = await executeSymbolProvider({
+      uri: vscode.Uri.parse(textDocumentIdentifier),
+      name: "vscode.executeDocumentSymbolProvider"
     });
 
     return result;

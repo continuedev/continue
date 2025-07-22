@@ -64,6 +64,13 @@ data class RangeInFileWithContents(
     val contents: String
 )
 
+data class DocumentSymbol(
+    val name: String,
+    val kind: String,
+    val range: Range,
+    val selectionRange: Range
+)
+
 data class ControlPlaneSessionInfo(
     val accessToken: String,
     val account: Account
@@ -193,6 +200,7 @@ interface IDE {
     // LSP
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
     suspend fun getReferences(location: Location): List<RangeInFile>
+    suspend fun getDocumentSymbols(textDocumentIdentifier: String): List<DocumentSymbol>
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
