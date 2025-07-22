@@ -112,5 +112,6 @@ export function markdownToRule(
     regex: frontmatter.regex,
     description: frontmatter.description,
     alwaysApply: frontmatter.alwaysApply,
+    sourceFile: id.uriType === "file" ? id.filePath : undefined,
   };
 }
