@@ -67,12 +67,12 @@ export function UserSettingsForm() {
     });
   };
 
-  const handleLogEditingDataToggle = (value: boolean) => {
-    handleUpdate({ logEditingData: value });
-  };
-
   const handleOptInNextEditToggle = (value: boolean) => {
     handleUpdate({ optInNextEditFeature: value });
+  };
+
+  const handleEnableStaticContextualizationToggle = (value: boolean) => {
+    handleUpdate({ enableStaticContextualization: value });
   };
 
   useEffect(() => {
@@ -86,7 +86,6 @@ export function UserSettingsForm() {
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const autoAcceptEditToolDiffs = config.ui?.autoAcceptEditToolDiffs ?? false;
-  const logEditingData = config.experimental?.logEditingData ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
@@ -97,6 +96,8 @@ export function UserSettingsForm() {
     config.experimental?.optInNextEditFeature ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
+  const enableStaticContextualization =
+    config.experimental?.enableStaticContextualization ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -436,10 +437,14 @@ export function UserSettingsForm() {
 
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
-                    logEditingData={logEditingData}
-                    handleLogEditingDataToggle={handleLogEditingDataToggle}
                     optInNextEditFeature={optInNextEditFeature}
                     handleOptInNextEditToggle={handleOptInNextEditToggle}
+                    enableStaticContextualization={
+                      enableStaticContextualization
+                    }
+                    handleEnableStaticContextualizationToggle={
+                      handleEnableStaticContextualizationToggle
+                    }
                   />
                 )}
               </div>

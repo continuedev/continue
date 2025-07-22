@@ -7,6 +7,15 @@ export interface SiteIndexingResults {
   title: string;
 }
 
+/**
+ * Strip off the trailing forward slash from the given URL
+ * @param url The URL of the document
+ * @returns A sanitized URL without trailing forward slash
+ */
+const stripTrailingSlash = (url: string): string => {
+  return url.replace(/\/+$/, "");
+};
+
 export class DocsCache {
   static readonly AWS_REGION: string = "us-west-1";
   static readonly BUCKET_NAME: string = "continue-preindexed-docs";
@@ -33,7 +42,8 @@ export class DocsCache {
     url: string,
   ): string {
     const normalizedEmbeddingId = DocsCache.normalizeEmbeddingId(embeddingId);
-    const normalizedUrl = encodeURIComponent(url.replace(/\//g, "_"));
+    const sanitizedUrl = stripTrailingSlash(url);
+    const normalizedUrl = encodeURIComponent(sanitizedUrl.replace(/\//g, "_"));
     return normalizedEmbeddingId + "/" + normalizedUrl;
   }
 

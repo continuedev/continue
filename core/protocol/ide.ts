@@ -10,6 +10,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "../";
@@ -82,6 +83,8 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getFileStats: [{ files: string[] }, FileStatsMap];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
+  gotoTypeDefinition: [{ location: Location }, RangeInFile[]];
+  getSignatureHelp: [{ location: Location }, SignatureHelp | null];
 
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },

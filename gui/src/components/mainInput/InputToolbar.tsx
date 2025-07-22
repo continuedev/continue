@@ -17,8 +17,9 @@ import { cn } from "../../util/cn";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
+import { Button } from "../ui";
 import { useFontSize } from "../ui/font";
-import { EnterButton } from "./InputToolbar/EnterButton";
+import ContextStatus from "./ContextStatus";
 import HoverItem from "./InputToolbar/HoverItem";
 
 export interface ToolbarOptions {
@@ -170,6 +171,7 @@ function InputToolbar(props: InputToolbarProps) {
             fontSize: tinyFont,
           }}
         >
+          {!isInEdit && <ContextStatus />}
           {!props.toolbarOptions?.hideUseCodebase && !isInEdit && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
@@ -209,10 +211,10 @@ function InputToolbar(props: InputToolbarProps) {
               </span>
             </HoverItem>
           )}
-
-          <EnterButton
+          <Button
             data-tooltip-id="enter-tooltip"
-            isPrimary={props.isMainInput}
+            variant={props.isMainInput ? "primary" : "secondary"}
+            size="sm"
             data-testid="submit-input-button"
             onClick={async (e) => {
               if (props.onEnter) {
@@ -231,7 +233,7 @@ function InputToolbar(props: InputToolbarProps) {
             <ToolTip id="enter-tooltip" place="top">
               Send (⏎)
             </ToolTip>
-          </EnterButton>
+          </Button>
         </div>
       </div>
     </>

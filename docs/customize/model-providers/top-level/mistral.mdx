@@ -1,0 +1,112 @@
+---
+title: Mistral
+slug: ../mistral
+---
+
+<Info>
+  You can get an API key from the [Mistral
+  Dashboard](https://console.mistral.ai). Note that the API key for Codestral
+  (codestral.mistral.ai) is different from for all other models
+  (api.mistral.ai). If you are using a Codestral API key, you should set the
+  `apiBase` to `https://codestral.mistral.ai/v1`. Otherwise, we will default to
+  using `https://api.mistral.ai/v1`.
+</Info>
+
+## Chat model
+
+We recommend configuring **Mistral Large** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Mistral Large
+      provider: mistral
+      model: mistral-large-latest 
+      apiKey: <YOUR_MISTRAL_API_KEY>
+      roles:
+        - chat
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Mistral Large", 
+        "provider": "mistral",
+        "model": "mistral-large-latest",
+        "apiKey": "<YOUR_MISTRAL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **Codestral** as your autocomplete model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Codestral
+      provider: mistral
+      model: codestral-latest
+      # apiBase: https://codestral.mistral.ai/v1  # Do this if you are using a Codestral API key
+      roles:
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Codestral",
+      "provider": "mistral",
+      "model": "codestral-latest"
+      // "apiBase": "https://codestral.mistral.ai/v1"  // Do this if you are using a Codestral API key
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Embeddings model
+
+We recommend configuring **Mistral Embed** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Mistral Embed
+      provider: mistral
+      model: mistral-embed
+      apiKey: <YOUR_MISTRAL_API_KEY> 
+      apiBase: https://api.mistral.ai/v1
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "mistral",
+      "model": "mistral-embed", 
+      "apiKey": "<YOUR_MISTRAL_API_KEY>",
+      "apiBase": "https://api.mistral.ai/v1"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Reranking model
+
+Mistral currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.

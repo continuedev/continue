@@ -31,6 +31,8 @@ jobs:
         uses: wagoid/commitlint-github-action@v6
         with:
           configFile: .commitlintrc.warning.json
+          # Only check the last commit instead of all commits in the PR
+          commitDepth: 1
         continue-on-error: true
 
       - name: Add commit message guidance comment
@@ -57,7 +59,7 @@ jobs:
                 body: [
                   "## ⚠️ Conventional Commit Format",
                   "",
-                  "Your commit messages don't follow the conventional commit format, but **this won't block your PR from being merged**. We recommend downloading [this extension](https://marketplace.visualstudio.com/items?itemName=vivaxy.vscode-conventional-commits) if you are using VS Code.",
+                  "Your latest commit message doesn't follow the conventional commit format, but **this won't block your PR from being merged**. We recommend downloading [this extension](https://marketplace.visualstudio.com/items?itemName=vivaxy.vscode-conventional-commits) if you are using VS Code.",
                   "",
                   "### Expected Format:",
                   "```",

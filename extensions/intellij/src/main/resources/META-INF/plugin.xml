@@ -7,6 +7,7 @@
         <![CDATA[View the latest release notes on <a href="https://github.com/continuedev/continue/releases">GitHub</a>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
 
     <!-- See here for why this is optional:  https://github.com/continuedev/continue/issues/2775#issuecomment-2535620877-->
     <depends optional="true" config-file="continueintellijextension-withJSON.xml">
@@ -172,6 +173,13 @@
         <action id="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
                 class="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
                 text="Accept Autocomplete Suggestion" description="Accept Autocomplete Suggestion">
+            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
+        </action>
+
+        <action id="com.github.continuedev.continueintellijextension.nextEdit.AcceptNextEditAction"
+                class="com.github.continuedev.continueintellijextension.nextEdit.AcceptNextEditAction"
+                text="Accept Autocomplete Suggestion" description="Accept Next Edit Prediction">
             <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
         </action>

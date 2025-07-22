@@ -185,18 +185,17 @@ class AutocompleteService(private val project: Project) {
             return
         }
 
-        ApplicationManager.getApplication().invokeLater {
-            WriteAction.run<Throwable> {
-                // Clear existing completions
-                hideCompletions(editor)
+        invokeLater {
+            // Clear existing completions
+            hideCompletions(editor)
 
-                val properties = InlayProperties()
-                properties.relatesToPrecedingText(true)
-                properties.disableSoftWrapping(true)
+            val properties = InlayProperties()
+            properties.relatesToPrecedingText(true)
+            properties.disableSoftWrapping(true)
 
-                val lines = completion.lines()
-                pendingCompletion = pendingCompletion?.copy(text = lines.joinToString("\n"))
-                editor.addInlayElement(lines, offset, properties)
+            val lines = completion.lines()
+            pendingCompletion = pendingCompletion?.copy(text = lines.joinToString("\n"))
+            editor.addInlayElement(lines, offset, properties)
 
 //                val attributes = TextAttributes().apply {
 //                    backgroundColor = JBColor.GREEN
@@ -204,7 +203,6 @@ class AutocompleteService(private val project: Project) {
 //                val key = TextAttributesKey.createTextAttributesKey("CONTINUE_AUTOCOMPLETE")
 //                key.let { editor.colorsScheme.setAttributes(it, attributes) }
 //                editor.markupModel.addLineHighlighter(key, editor.caretModel.logicalPosition.line, HighlighterLayer.LAST)
-            }
         }
     }
 
