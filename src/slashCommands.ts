@@ -40,11 +40,9 @@ export async function handleSlashCommands(
         try {
           const newAuthState = await services.auth.login();
 
-          // Reload dependent services
-          await Promise.all([
-            reloadService(SERVICE_NAMES.API_CLIENT),
-            reloadService(SERVICE_NAMES.CONFIG),
-          ]);
+          // Automatically cascade reload from auth service - this will reload
+          // API_CLIENT -> CONFIG -> MODEL/MCP in the correct dependency order
+          await reloadService(SERVICE_NAMES.AUTH);
 
           const userInfo =
             newAuthState.authConfig &&
@@ -57,7 +55,7 @@ export async function handleSlashCommands(
 
           return {
             exit: false,
-            output: "Login successful! Services are updating...",
+            output: "Login successful! All services updated automatically.",
           };
         } catch (error: any) {
           console.error(chalk.red(`\nLogin failed: ${error.message}`));
@@ -143,16 +141,13 @@ export async function handleSlashCommands(
           try {
             await services.auth.switchOrganization(orgId);
 
-            // Reload dependent services
-            await Promise.all([
-              reloadService(SERVICE_NAMES.CONFIG),
-              reloadService(SERVICE_NAMES.MODEL),
-              reloadService(SERVICE_NAMES.MCP),
-            ]);
+            // Automatically cascade reload from auth service - this will reload
+            // API_CLIENT -> CONFIG -> MODEL/MCP in the correct dependency order
+            await reloadService(SERVICE_NAMES.AUTH);
 
             return {
               exit: false,
-              output: `Switched to organization: ${orgId}`,
+              output: `Switched to organization: ${orgId}. All services updated automatically.`,
             };
           } catch (error: any) {
             return {
