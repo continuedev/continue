@@ -67,10 +67,6 @@ export function UserSettingsForm() {
     });
   };
 
-  const handleOptInNextEditToggle = (value: boolean) => {
-    handleUpdate({ optInNextEditFeature: value });
-  };
-
   const handleEnableStaticContextualizationToggle = (value: boolean) => {
     handleUpdate({ enableStaticContextualization: value });
   };
@@ -92,8 +88,6 @@ export function UserSettingsForm() {
     config.experimental?.useCurrentFileAsContext ?? false;
   const enableExperimentalTools =
     config.experimental?.enableExperimentalTools ?? false;
-  const optInNextEditFeature =
-    config.experimental?.optInNextEditFeature ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
   const enableStaticContextualization =
@@ -437,8 +431,6 @@ export function UserSettingsForm() {
 
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
-                    optInNextEditFeature={optInNextEditFeature}
-                    handleOptInNextEditToggle={handleOptInNextEditToggle}
                     enableStaticContextualization={
                       enableStaticContextualization
                     }
