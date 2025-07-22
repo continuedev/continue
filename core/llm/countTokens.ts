@@ -536,7 +536,14 @@ function compileChatMessages({
   };
 }
 
+async function cleanupAsyncEncoders(): Promise<void> {
+  try {
+    await llamaAsyncEncoder.close();
+  } catch (e) {}
+}
+
 export {
+  cleanupAsyncEncoders,
   compileChatMessages,
   countTokens,
   countTokensAsync,
