@@ -70,7 +70,7 @@ export class NextEditProvider {
   private prefetchQueue: NextEditPrefetchQueue;
   // private refQueue: RangeInFile[] = [];
   private currentEditChainId: string | null = null;
-  private previousCompletions: string[] = [];
+  private previousCompletions: NextEditOutcome[] = [];
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -322,7 +322,7 @@ export class NextEditProvider {
     return this.currentEditChainId !== null;
   }
 
-  public getPreviousCompletion(): string | null {
+  public getPreviousCompletion(): NextEditOutcome | null {
     return this.previousCompletions[0];
   }
 
@@ -481,7 +481,7 @@ export class NextEditProvider {
               ).replace(/\n$/, "")
             : "";
 
-          this.previousCompletions.push(nextCompletion);
+          // this.previousCompletions.push(nextCompletion);
 
           const currCursorPos = helper.pos;
           const editableRegionStartLine = Math.max(
@@ -529,6 +529,8 @@ export class NextEditProvider {
             editableRegionEndLine,
             ...helper.options,
           };
+
+          this.previousCompletions.push(outcomeNext);
 
           // When using the JetBrains extension, mark as displayed.
           // This helps us not need to make additional network calls just to mark as displayed.
