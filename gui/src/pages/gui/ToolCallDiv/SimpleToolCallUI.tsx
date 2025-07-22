@@ -1,4 +1,3 @@
-import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Tool, ToolCallState } from "core";
 import { ComponentType, useContext, useMemo, useState } from "react";
 import {
@@ -6,10 +5,11 @@ import {
   openContextItem,
 } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { ToggleWithIcon } from "./ToggleWithIcon";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
-import { toolCallStateToContextItems } from "./toolCallStateToContextItem";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
+import { toolCallStateToContextItems } from "./utils";
 
 interface SimpleToolCallUIProps {
   toolCallState: ToolCallState;
@@ -31,7 +31,6 @@ export function SimpleToolCallUI({
   }, [toolCallState]);
 
   const [open, setOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [showingArgs, setShowingArgs] = useState(false);
 
   const args: [string, any][] = useMemo(() => {
@@ -51,42 +50,35 @@ export function SimpleToolCallUI({
     }
   }
 
-  function renderIcon() {
-    if (!Icon && !isToggleable) {
-      return null;
-    }
-
+  function handleToggleClick() {
     if (isToggleable) {
-      const showChevron = isHovered || shouldShowContent;
-      return showChevron ? (
-        <ChevronRightIcon
-          className={`text-description h-4 w-4 transition-transform duration-200 ease-in-out ${
-            shouldShowContent ? "rotate-90" : "rotate-0"
-          }`}
-        />
-      ) : (
-        Icon && <Icon className="text-description h-4 w-4" />
-      );
+      setOpen((prev) => !prev);
     }
+  }
 
-    return Icon ? <Icon className="text-description h-4 w-4" /> : null;
+  function handleIconClick() {
+    if (isSingleItem) {
+      openContextItem(shownContextItems[0], ideMessenger);
+    }
   }
 
   return (
-    <div className="flex flex-col py-4 pl-5 pr-2">
+    <div className="flex flex-col">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2">
         <div
           className={`text-description flex min-w-0 flex-row items-center justify-between gap-1.5 text-xs transition-colors duration-200 ease-in-out ${
             isClickable ? "cursor-pointer hover:brightness-125" : ""
           }`}
           onClick={isClickable ? handleClick : undefined}
-          onMouseEnter={isToggleable ? () => setIsHovered(true) : undefined}
-          onMouseLeave={isToggleable ? () => setIsHovered(false) : undefined}
           data-testid="context-items-peek"
         >
-          <div className="flex h-4 w-4 flex-shrink-0 flex-col items-center justify-center">
-            {renderIcon()}
-          </div>
+          <ToggleWithIcon
+            icon={Icon}
+            isToggleable={isToggleable}
+            open={shouldShowContent}
+            onClick={isToggleable ? handleToggleClick : handleIconClick}
+            isClickable={isSingleItem}
+          />
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
         <div className="flex flex-row items-center gap-1.5">
@@ -97,7 +89,6 @@ export function SimpleToolCallUI({
             <ArgsToggleIcon
               isShowing={showingArgs}
               setIsShowing={setShowingArgs}
-              toolCallId={toolCallState.toolCallId}
             />
           ) : null}
         </div>

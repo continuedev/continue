@@ -286,9 +286,7 @@ export async function unrollAssistantFromContent(
     options.platformClient,
     options.alwaysUseProxy,
   );
-  const renderedYaml = renderTemplateData(templatedYaml, {
-    secrets,
-  });
+  const renderedYaml = renderTemplateData(templatedYaml, { secrets });
 
   // Parse again and replace models with proxy versions where secrets weren't rendered
   const finalConfig = useProxyForUnrenderedSecrets(
@@ -298,11 +296,7 @@ export async function unrollAssistantFromContent(
     options.onPremProxyUrl,
   );
 
-  return {
-    config: finalConfig,
-    errors,
-    configLoadInterrupted,
-  };
+  return { config: finalConfig, errors, configLoadInterrupted };
 }
 
 export async function unrollBlocks(
@@ -366,10 +360,7 @@ export async function unrollBlocks(
             return {
               index,
               block: null,
-              error: {
-                fatal: false,
-                message: msg,
-              },
+              error: { fatal: false, message: msg },
             };
           }
         } else {
@@ -464,6 +455,10 @@ export async function unrollBlocks(
             return {
               blockType,
               resolvedBlock,
+              source:
+                injectBlock.uriType === "file"
+                  ? injectBlock.filePath
+                  : undefined,
               error: null,
             };
           } catch (err) {
@@ -481,17 +476,18 @@ export async function unrollBlocks(
             return {
               blockType: null,
               resolvedBlock: null,
-              error: {
-                fatal: false,
-                message: msg,
-              },
+              error: { fatal: false, message: msg },
             };
           }
         });
 
         const injectedResults = await Promise.all(injectedBlockPromises);
         const injectedErrors: ConfigValidationError[] = [];
-        const injectedBlocks: { blockType: string; resolvedBlock: any }[] = [];
+        const injectedBlocks: {
+          blockType: string;
+          resolvedBlock: any;
+          source?: string;
+        }[] = [];
 
         for (const result of injectedResults) {
           if (result.error) {
@@ -500,6 +496,7 @@ export async function unrollBlocks(
             injectedBlocks.push({
               blockType: result.blockType,
               resolvedBlock: result.resolvedBlock,
+              source: result.source,
             });
           }
         }
@@ -537,12 +534,21 @@ export async function unrollBlocks(
   }
 
   // Add injected blocks
-  for (const { blockType, resolvedBlock } of injectedResult.injectedBlocks) {
+  for (const {
+    blockType,
+    resolvedBlock,
+    source,
+  } of injectedResult.injectedBlocks) {
     const key = blockType as BlockType;
     if (!unrolledAssistant[key]) {
       unrolledAssistant[key] = [];
     }
-    unrolledAssistant[key]?.push(...((resolvedBlock[blockType] ?? []) as any));
+    const blocksWithSourceFiles = injectLocalSourceFile(
+      key,
+      resolvedBlock,
+      source,
+    );
+    unrolledAssistant[key]?.push(...blocksWithSourceFiles);
   }
 
   const configResult: ConfigResult<AssistantUnrolled> = {
@@ -555,6 +561,39 @@ export async function unrollBlocks(
     configResult.errors = errors;
   }
   return configResult;
+}
+
+function injectLocalSourceFile(
+  blockType: BlockType,
+  resolvedBlock: any,
+  source?: string,
+): (any & { source?: string })[] {
+  const blocks: any[] = resolvedBlock[blockType] ?? [];
+  if (source === undefined) {
+    // If no source is provided, return blocks as is
+    return blocks;
+  }
+  if (blockType === "rules") {
+    // For rules, we need to ensure they are wrapped in an object with a `source
+    return blocks.map((block) => {
+      if (typeof block === "string") {
+        const rule = {
+          sourceFile: source,
+          name: block,
+          rule: block,
+        } as Rule;
+        return rule;
+      } else if (typeof block === "object") {
+        block.sourceFile = source;
+      }
+      return block;
+    });
+  }
+  // For other block types, we can directly inject the source file
+  return blocks.map((block) => ({
+    ...block,
+    sourceFile: source,
+  }));
 }
 
 export async function resolveBlock(
@@ -581,57 +620,46 @@ export async function resolveBlock(
   return parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
 }
 
-function parseMarkdownRuleOrAssistantUnrolled(
+export function parseMarkdownRuleOrAssistantUnrolled(
   content: string,
   id: PackageIdentifier,
 ): AssistantUnrolled {
-  // Try to parse as YAML first, then as markdown rule if that fails
-  let parsedYaml: AssistantUnrolled;
-  try {
-    parsedYaml = parseBlock(content);
-  } catch (yamlError) {
-    // If YAML parsing fails, try parsing as markdown rule
-    try {
-      const rule = markdownToRule(content, id);
-      // Convert the rule object to the expected format
-      parsedYaml = {
-        name: rule.name,
-        version: "1.0.0",
-        rules: [rule],
-      };
-    } catch (markdownError) {
-      // If both fail, throw the original YAML error
-      throw yamlError;
-    }
-  }
-
-  return parsedYaml;
+  return parseYamlOrMarkdownRule<AssistantUnrolled>(content, id, parseBlock);
 }
 
 function parseMarkdownRuleOrConfigYaml(
   content: string,
   id: PackageIdentifier,
 ): ConfigYaml {
-  // Try to parse as YAML first, then as markdown rule if that fails
-  let parsedYaml: ConfigYaml;
+  return parseYamlOrMarkdownRule<ConfigYaml>(content, id, parseConfigYaml);
+}
+
+function parseYamlOrMarkdownRule<T>(
+  content: string,
+  id: PackageIdentifier,
+  parseYamlFn: (content: string) => T,
+): T {
+  let parsedYaml: T;
   try {
-    parsedYaml = parseConfigYaml(content);
+    // Try to parse as YAML first, then as markdown rule if that fails
+    parsedYaml = parseYamlFn(content);
   } catch (yamlError) {
+    if (
+      id.uriType === "file" &&
+      [".yaml", ".yml"].some((ext) => id.filePath.endsWith(ext))
+    ) {
+      throw yamlError;
+    }
     // If YAML parsing fails, try parsing as markdown rule
     try {
       const rule = markdownToRule(content, id);
       // Convert the rule object to the expected format
-      parsedYaml = {
-        name: rule.name,
-        version: "1.0.0",
-        rules: [rule],
-      };
+      parsedYaml = { name: rule.name, version: "1.0.0", rules: [rule] } as T;
     } catch (markdownError) {
       // If both fail, throw the original YAML error
       throw yamlError;
     }
   }
-
   return parsedYaml;
 }
 

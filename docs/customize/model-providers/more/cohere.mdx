@@ -1,0 +1,101 @@
+---
+title: "Cohere"
+---
+
+Before using Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.
+
+## Chat model
+
+We recommend configuring **Command A** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Command A 03-2025
+      provider: cohere
+      model: command-a-03-2025
+      apiKey: <YOUR_COHERE_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Command A 03-2025",
+        "provider": "cohere",
+        "model": "command-a-03-2025",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+Cohere currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+We recommend configuring **embed-v4.0** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere Embed v4.0
+      provider: cohere
+      model: embed-v4.0
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "cohere",
+      "model": "embed-v4.0",
+      "apiKey": "<YOUR_COHERE_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Reranking model
+
+We recommend configuring **rerank-v3.5** as your reranking model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere Rerank v3.5
+      provider: cohere
+      model: rerank-v3.5
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - rerank
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "cohere",
+      "params": {
+        "model": "rerank-v3.5",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
+    }
+  }
+  ```
+  </Tab>
+</Tabs>

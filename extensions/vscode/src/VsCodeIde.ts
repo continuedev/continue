@@ -6,7 +6,10 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import { executeGotoProvider } from "./autocomplete/lsp";
+import {
+  executeGotoProvider,
+  executeSignatureHelpProvider,
+} from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
@@ -24,9 +27,11 @@ import type {
   Location,
   Problem,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "core";
+import { getExtensionVersion, isExtensionPrerelease } from "./util/util";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -81,6 +86,28 @@ class VsCodeIde implements IDE {
       line: location.position.line,
       character: location.position.character,
       name: "vscode.executeDefinitionProvider",
+    });
+
+    return result;
+  }
+
+  async gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    const result = await executeGotoProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeTypeDefinitionProvider",
+    });
+
+    return result;
+  }
+
+  async getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    const result = await executeSignatureHelpProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeSignatureHelpProvider",
     });
 
     return result;
@@ -153,9 +180,8 @@ class VsCodeIde implements IDE {
       name: vscode.env.appName,
       version: vscode.version,
       remoteName: vscode.env.remoteName || "local",
-      extensionVersion:
-        vscode.extensions.getExtension("continue.continue")?.packageJSON
-          .version,
+      extensionVersion: getExtensionVersion(),
+      isPrerelease: isExtensionPrerelease(),
     });
   }
 

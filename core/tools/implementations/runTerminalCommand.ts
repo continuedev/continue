@@ -1,5 +1,22 @@
+import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import util from "node:util";
+// Automatically decode the buffer according to the platform to avoid garbled Chinese
+function getDecodedOutput(data: Buffer): string {
+  if (process.platform === "win32") {
+    try {
+      let out = iconv.decode(data, "utf-8");
+      if (/�/.test(out)) {
+        out = iconv.decode(data, "gbk");
+      }
+      return out;
+    } catch {
+      return iconv.decode(data, "gbk");
+    }
+  } else {
+    return data.toString();
+  }
+}
 
 import { fileURLToPath } from "node:url";
 import { ToolImpl } from ".";
@@ -7,6 +24,7 @@ import {
   isProcessBackgrounded,
   removeBackgroundedProcess,
 } from "../../util/processTerminalBackgroundStates";
+import { getBooleanArg, getStringArg } from "../parseArgs";
 
 const asyncExec = util.promisify(childProcess.exec);
 
@@ -33,8 +51,11 @@ const ENABLED_FOR_REMOTES = [
 ];
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
+  const command = getStringArg(args, "command");
   // Default to waiting for completion if not specified
-  const waitForCompletion = args.waitForCompletion !== false;
+  const waitForCompletion =
+    getBooleanArg(args, "waitForCompletion", false) ?? true;
+
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
@@ -67,7 +88,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               }
 
               // Use spawn with color environment
-              const childProc = childProcess.spawn(args.command, {
+              const childProc = childProcess.spawn(command, {
                 cwd,
                 shell: true,
                 env: getColorEnv(), // Add enhanced environment for colors
@@ -77,7 +98,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
 
-                const newOutput = data.toString();
+                const newOutput = getDecodedOutput(data);
                 terminalOutput += newOutput;
 
                 // Send partial output to UI
@@ -103,7 +124,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
 
-                const newOutput = data.toString();
+                const newOutput = getDecodedOutput(data);
                 terminalOutput += newOutput;
 
                 // Send partial output to UI, status is not required
@@ -212,7 +233,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // Standard execution, waiting for completion
         try {
           // Use color environment for exec as well
-          const output = await asyncExec(args.command, {
+          const output = await asyncExec(command, {
             cwd,
             env: getColorEnv(),
           });
@@ -241,7 +262,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // but don't attach any listeners other than error
         try {
           // Use spawn with color environment
-          const childProc = childProcess.spawn(args.command, {
+          const childProc = childProcess.spawn(command, {
             cwd,
             shell: true,
             env: getColorEnv(), // Add color environment
@@ -292,7 +313,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
   // For remote environments, just run the command
   // Note: waitForCompletion is not supported in remote environments yet
-  await extras.ide.runCommand(args.command);
+  await extras.ide.runCommand(command);
   return [
     {
       name: "Terminal",

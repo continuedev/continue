@@ -1,5 +1,6 @@
 import { ConfigDependentToolParams, IDE, Tool } from "..";
 import * as toolDefinitions from "./definitions";
+
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 
 // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
