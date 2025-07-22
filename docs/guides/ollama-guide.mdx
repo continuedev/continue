@@ -1,0 +1,140 @@
+---
+title: "Using Ollama with Continue: A Developer's Guide"
+description: "This comprehensive guide will walk you through setting up Ollama with Continue for powerful local AI development. Ollama allows you to run large language models locally on your machine, providing privacy, control, and offline capabilities for AI-assisted coding."
+---
+
+## Prerequisites
+
+Before getting started, ensure your system meets these requirements:
+
+- Operating System: macOS, Linux, or Windows
+- RAM: Minimum 8GB (16GB+ recommended)
+- Storage: At least 10GB free space
+- Continue extension installed
+
+## Installation Steps
+
+### Step 1: Install Ollama
+
+Choose the installation method for your operating system:
+
+```
+# macOS
+brew install ollama
+
+# Linux
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Windows
+# Download from ollama.ai
+```
+
+### Step 2: Download Models
+
+After installing Ollama, download the models you want to use. Here are some popular options:
+
+```
+# Popular models for development
+ollama pull llama2
+ollama pull codellama
+ollama pull mistral
+```
+
+## Configuration
+
+Configure Continue to work with your local Ollama instance:
+
+### Continue Configuration
+
+```json
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "llama2",
+      "apiBase": "http://localhost:11434"
+    }
+  ]
+}
+```
+
+### Advanced Settings
+
+For optimal performance, consider these advanced configuration options:
+
+- Memory optimization
+- GPU acceleration
+- Custom model parameters
+- Performance tuning
+
+## Best Practices
+
+### Model Selection
+
+Choose models based on your specific needs:
+
+1. **Code Generation**: Use CodeLlama or Mistral
+2. **Chat**: Llama2 or Mistral
+3. **Specialized Tasks**: Domain-specific models
+
+### Performance Optimization
+
+To get the best performance from Ollama:
+
+- Monitor system resources
+- Adjust context window size
+- Use appropriate model sizes
+- Enable GPU acceleration when available
+
+## Troubleshooting
+
+### Common Issues
+
+Here are solutions to common problems you might encounter:
+
+#### Connection Problems
+
+- Check Ollama service status
+- Verify port availability
+- Review firewall settings
+
+#### Performance Issues
+
+- Insufficient RAM
+- Model too large for system
+- GPU compatibility
+
+### Solutions
+
+Try these solutions in order:
+
+1. Restart Ollama service
+2. Clear model cache
+3. Update to latest version
+4. Check system requirements
+
+## Example Workflows
+
+### Code Generation
+
+```
+# Example: Generate a FastAPI endpointdef create_user_endpoint():    # Continue will help generate the implementation    pass
+```
+
+### Code Review
+
+Use Continue with Ollama to:
+
+- Analyze code quality
+- Suggest improvements
+- Identify potential bugs
+- Generate documentation
+
+## Conclusion
+
+Ollama with Continue provides a powerful local development environment for AI-assisted coding. You now have complete control over your AI models, ensuring privacy and enabling offline development workflows.
+
+---
+
+_This guide is based on Ollama v0.1.x and Continue v0.8.x. Please check for updates regularly._

@@ -2,7 +2,7 @@ package com.github.continuedev.continueintellijextension.constants
 
 class MessageTypes {
     companion object {
-        val ideMessageTypes = listOf(
+        val IDE_MESSAGE_TYPES = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",
             "getUniqueId",
@@ -103,12 +103,17 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
+            "nextEdit/predict",
+            "nextEdit/reject",
+            "nextEdit/accept",
             "tts/kill",
             "llm/complete",
             "llm/streamChat",
             "llm/listModels",
+            "llm/compileChat",
             "streamDiffLines",
             "chatDescriber/describe",
+            "conversation/compact",
             "stats/getTokensPerDay",
             "stats/getTokensPerModel",
             // Codebase

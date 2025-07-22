@@ -13,6 +13,7 @@ export interface IndexingProgressIndicatorProps {
 const STATUS_TO_ICON: Record<IndexingProgressUpdate["status"], any> = {
   disabled: null,
   loading: null,
+  waiting: null,
   indexing: ArrowPathIcon,
   paused: PauseCircleIcon,
   done: CheckCircleIcon,

@@ -85,7 +85,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   return (
     <div
       className={`${props.hidden ? "hidden" : ""}`}
-      data-testid="continue-input-box"
+      data-testid={`continue-input-box-${props.inputId}`}
     >
       <div className={`relative flex flex-col px-2`}>
         {props.isMainInput && <Lump />}

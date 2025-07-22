@@ -643,6 +643,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     template: llm.template,
     completionOptions: llm.completionOptions,
     baseAgentSystemMessage: llm.baseAgentSystemMessage,
+    basePlanSystemMessage: llm.basePlanSystemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),
@@ -650,6 +651,8 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     roles: llm.roles,
     configurationStatus: llm.getConfigurationStatus(),
     apiKeyLocation: llm.apiKeyLocation,
+    envSecretLocations: llm.envSecretLocations,
+    sourceFile: llm.sourceFile,
   };
 }
 

@@ -127,12 +127,13 @@ export const processNextEditData = async ({
 
   // add current edit to history
   const thisEdit: prevEdit = {
-    unidiff: createDiff(
-      beforeContent,
-      afterContent,
-      filePath,
-      DiffFormatType.Unified,
-    ),
+    unidiff: createDiff({
+      beforeContent: beforeContent,
+      afterContent: afterContent,
+      filePath: filePath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 25, // storing many context lines for downstream trimming
+    }),
     fileUri: filePath,
     workspaceUri: workspaceDir,
     timestamp: timestamp,

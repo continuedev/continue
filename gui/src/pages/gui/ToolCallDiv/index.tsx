@@ -1,102 +1,110 @@
-import {
-  ArrowRightIcon,
-  CheckIcon,
-  CodeBracketIcon,
-  DocumentIcon,
-  DocumentTextIcon,
-  FolderIcon,
-  FolderOpenIcon,
-  GlobeAltIcon,
-  MagnifyingGlassIcon,
-  MapIcon,
-  PencilIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
-import { ToolCallDelta, ToolCallState, ToolStatus } from "core";
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
+import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import { ComponentType, useMemo } from "react";
-import { vscButtonBackground } from "../../../components";
-import Spinner from "../../../components/gui/Spinner";
+import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
+import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
-import { ToolCallDisplay } from "./ToolCall";
+import { ToolCallDisplay } from "./ToolCallDisplay";
+import { getStatusIcon, toolCallIcons } from "./utils";
 
 interface ToolCallDivProps {
-  toolCall: ToolCallDelta;
-  toolCallState: ToolCallState;
+  toolCallStates: ToolCallState[];
   historyIndex: number;
 }
 
-const toolCallIcons: Record<string, ComponentType> = {
-  [BuiltInToolNames.FileGlobSearch]: MagnifyingGlassIcon,
-  [BuiltInToolNames.GrepSearch]: MagnifyingGlassIcon,
-  [BuiltInToolNames.LSTool]: FolderIcon,
-  [BuiltInToolNames.ReadCurrentlyOpenFile]: DocumentTextIcon,
-  [BuiltInToolNames.ReadFile]: DocumentIcon,
-  [BuiltInToolNames.FetchUrlContent]: GlobeAltIcon,
-  [BuiltInToolNames.SearchWeb]: GlobeAltIcon,
-  [BuiltInToolNames.ViewDiff]: CodeBracketIcon,
-  [BuiltInToolNames.ViewRepoMap]: MapIcon,
-  [BuiltInToolNames.ViewSubdirectory]: FolderOpenIcon,
-  [BuiltInToolNames.CreateRuleBlock]: PencilIcon,
-  // EditExistingFile
-  // CreateNewFile
-  // RunTerminalCommand
-};
-
-function getStatusIcon(state: ToolStatus) {
-  switch (state) {
-    case "generating":
-    case "calling":
-      return <Spinner />;
-    case "generated":
-      return <ArrowRightIcon color={vscButtonBackground} />;
-    case "done":
-      return <CheckIcon className="text-green-500" />;
-    case "canceled":
-    case "errored":
-      return <XMarkIcon className="text-red-500" />;
-  }
-}
-
-export function ToolCallDiv(props: ToolCallDivProps) {
+export function ToolCallDiv({
+  toolCallStates,
+  historyIndex,
+}: ToolCallDivProps) {
+  const [open, setOpen] = useState(true);
   const availableTools = useAppSelector((state) => state.config.config.tools);
-  const tool = useMemo(() => {
-    return availableTools.find(
-      (tool) => props.toolCall.function?.name === tool.function.name,
+
+  if (!toolCallStates?.length) return null;
+
+  const isStreamingComplete = toolCallStates.every(
+    (toolCall) => toolCall.status !== "generating",
+  );
+
+  const shouldShowGroupedUI = toolCallStates.length > 1 && isStreamingComplete;
+  const activeCalls = toolCallStates.filter(
+    (call) => call.status !== "canceled",
+  );
+
+  const renderToolCall = (toolCallState: ToolCallState) => {
+    const tool = availableTools.find(
+      (tool) => toolCallState.toolCall.function?.name === tool.function.name,
     );
-  }, [availableTools, props.toolCall]);
+    const functionName = toolCallState.toolCall.function?.name;
+    const icon = functionName && toolCallIcons[functionName];
 
-  const icon =
-    props.toolCall.function?.name &&
-    toolCallIcons[props.toolCall.function.name];
+    if (icon) {
+      return (
+        <SimpleToolCallUI
+          tool={tool}
+          toolCallState={toolCallState}
+          icon={toolCallState.status === "generated" ? ArrowRightIcon : icon}
+          historyIndex={historyIndex}
+        />
+      );
+    }
 
-  if (icon) {
+    // Trying this out while it's an experimental feature
+    // Obviously missing the truncate and args buttons
+    // All the info from args is displayed here
+    // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
+    if (functionName === BuiltInToolNames.SearchAndReplaceInFile) {
+      return (
+        <FunctionSpecificToolCallDiv
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        />
+      );
+    }
+
     return (
-      <SimpleToolCallUI
+      <ToolCallDisplay
+        icon={getStatusIcon(toolCallState.status)}
         tool={tool}
-        toolCallState={props.toolCallState}
-        icon={
-          props.toolCallState.status === "generated" ? ArrowRightIcon : icon
-        }
-        historyIndex={props.historyIndex}
-      />
+        toolCallState={toolCallState}
+        historyIndex={historyIndex}
+      >
+        <FunctionSpecificToolCallDiv
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        />
+      </ToolCallDisplay>
+    );
+  };
+
+  if (shouldShowGroupedUI) {
+    return (
+      <div className="border-border rounded-lg border p-3">
+        <GroupedToolCallHeader
+          toolCallStates={toolCallStates}
+          activeCalls={activeCalls}
+          open={open}
+          onToggle={() => setOpen(!open)}
+        />
+        <div
+          className={`overflow-y-auto transition-all duration-300 ease-in-out ${
+            open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          {toolCallStates.map((toolCallState) => (
+            <div className="py-1 pl-6" key={toolCallState.toolCallId}>
+              {renderToolCall(toolCallState)}
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
-  return (
-    <ToolCallDisplay
-      icon={getStatusIcon(props.toolCallState.status)}
-      tool={tool}
-      toolCallState={props.toolCallState}
-      historyIndex={props.historyIndex}
-    >
-      <FunctionSpecificToolCallDiv
-        toolCall={props.toolCall}
-        toolCallState={props.toolCallState}
-        historyIndex={props.historyIndex}
-      />
-    </ToolCallDisplay>
-  );
+  return toolCallStates.map((toolCallState) => (
+    <div className="p-4 pb-1" key={toolCallState.toolCallId}>
+      {renderToolCall(toolCallState)}
+    </div>
+  ));
 }

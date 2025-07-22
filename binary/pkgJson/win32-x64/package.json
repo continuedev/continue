@@ -11,6 +11,7 @@
       "../../../core/node_modules/sqlite3/**/*",
       "../../out/tree-sitter.wasm",
       "../../out/tree-sitter-wasms/*",
+      "../../tree-sitter/**/*",
       "../../node_modules/win-ca/lib/crypt32-ia32.node",
       "../../node_modules/win-ca/lib/crypt32-x64.node",
       "../../node_modules/win-ca/lib/roots.exe",

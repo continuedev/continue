@@ -1,6 +1,7 @@
 import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
 import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
+import posthog from "posthog-js";
 import { v4 as uuid } from "uuid";
 import { ClientToolImpl } from "./callClientTool";
 
@@ -9,7 +10,10 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath, diff } = args;
+  const { filepath, diffs } = args;
+
+  const state = extras.getState();
+  const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
 
   const streamId = uuid();
 
@@ -22,11 +26,20 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     throw new Error(`File ${filepath} does not exist`);
   }
 
-  // Parse all search/replace blocks from the diff content
-  const blocks = parseAllSearchReplaceBlocks(diff);
+  // Parse all search/replace blocks from all diff strings
+  const allBlocks = [];
+  for (let diffIndex = 0; diffIndex < diffs.length; diffIndex++) {
+    const blocks = parseAllSearchReplaceBlocks(diffs[diffIndex]);
+    if (blocks.length === 0) {
+      throw new Error(
+        `No complete search/replace blocks found in diff ${diffIndex + 1}`,
+      );
+    }
+    allBlocks.push(...blocks);
+  }
 
-  if (blocks.length === 0) {
-    throw new Error("No complete search/replace blocks found");
+  if (allBlocks.length === 0) {
+    throw new Error("No complete search/replace blocks found in any diffs");
   }
 
   try {
@@ -36,12 +49,22 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     let currentContent = originalContent;
 
     // Apply all replacements sequentially to build the final content
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
+    for (let i = 0; i < allBlocks.length; i++) {
+      const block = allBlocks[i];
       const { searchContent, replaceContent } = block;
 
       // Find the search content in the current state of the file
       const match = findSearchMatch(currentContent, searchContent || "");
+
+      // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
+      // directly rather than using `CustomPostHogProvider`
+      if (allowAnonymousTelemetry) {
+        // Capture telemetry for tool calls
+        posthog.capture("find_replace_match_result", {
+          matchStrategy: match?.strategyName ?? "noMatch",
+        });
+      }
+
       if (!match) {
         throw new Error(
           `Search content not found in block ${i + 1}:\n${searchContent}`,

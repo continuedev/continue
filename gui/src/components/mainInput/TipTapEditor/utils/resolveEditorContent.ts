@@ -12,6 +12,7 @@ import {
 import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
+import { RootState } from "../../../../redux/store";
 import { processEditorContent } from "./processEditorContent";
 import { renderSlashCommandPrompt } from "./renderSlashCommand";
 import { GetContextRequest } from "./types";
@@ -23,6 +24,7 @@ interface ResolveEditorContentInput {
   defaultContextProviders: DefaultContextProvider[];
   availableSlashCommands: SlashCommandDescWithSource[];
   dispatch: Dispatch;
+  getState: () => RootState;
 }
 
 interface ResolveEditorContentOutput {
@@ -48,6 +50,7 @@ export async function resolveEditorContent({
   defaultContextProviders,
   availableSlashCommands,
   dispatch,
+  getState,
 }: ResolveEditorContentInput): Promise<ResolveEditorContentOutput> {
   const {
     parts,
@@ -87,6 +90,7 @@ export async function resolveEditorContent({
     defaultContextProviders,
     parts: slashedParts,
     selectedCode,
+    getState,
   });
 
   if (shouldGatherContext) {
@@ -111,6 +115,7 @@ async function gatherContextItems({
   defaultContextProviders,
   parts,
   selectedCode,
+  getState,
 }: {
   contextRequests: GetContextRequest[];
   modifiers: InputModifiers;
@@ -118,6 +123,7 @@ async function gatherContextItems({
   defaultContextProviders: DefaultContextProvider[];
   parts: MessagePart[];
   selectedCode: RangeInFile[];
+  getState: () => RootState;
 }): Promise<ContextItemWithId[]> {
   const defaultRequests: GetContextRequest[] = defaultContextProviders.map(
     (def) => ({
@@ -139,6 +145,8 @@ async function gatherContextItems({
   );
   let contextItems: ContextItemWithId[] = [];
 
+  const isInAgentMode = getState().session.mode === "agent";
+
   // Process context item attributes
   for (const item of deduplicatedInputs) {
     const result = await ideMessenger.request("context/getContextItems", {
@@ -146,6 +154,7 @@ async function gatherContextItems({
       query: item.query ?? "",
       fullInput: stripImages(parts),
       selectedCode,
+      isInAgentMode,
     });
     if (result.status === "success") {
       contextItems.push(...result.content);
@@ -162,6 +171,7 @@ async function gatherContextItems({
       query: "",
       fullInput: stripImages(parts),
       selectedCode,
+      isInAgentMode,
     });
 
     if (result.status === "success") {
@@ -181,6 +191,7 @@ async function gatherContextItems({
         query: "non-mention-usage",
         fullInput: "",
         selectedCode: [],
+        isInAgentMode,
       },
     );
     if (currentFileResponse.status === "success") {

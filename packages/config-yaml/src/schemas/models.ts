@@ -85,6 +85,7 @@ export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 export const chatOptionsSchema = z.object({
   baseSystemMessage: z.string().optional(),
   baseAgentSystemMessage: z.string().optional(),
+  basePlanSystemMessage: z.string().optional(),
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 
@@ -154,13 +155,15 @@ export const modelSchema = z.union([
   z.object({
     ...baseModelFields,
     provider: z.literal("continue-proxy"),
-    apiKeyLocation: z.string(),
+    apiKeyLocation: z.string().optional(),
+    envSecretLocations: z.record(z.string(), z.string()).optional(),
     orgScopeId: z.string().nullable(),
     onPremProxyUrl: z.string().nullable(),
   }),
   z.object({
     ...baseModelFields,
     provider: z.string().refine((val) => val !== "continue-proxy"),
+    sourceFile: z.string().optional(),
   }),
 ]);
 
@@ -169,7 +172,8 @@ export const partialModelSchema = z.union([
     .object({
       ...baseModelFields,
       provider: z.literal("continue-proxy"),
-      apiKeyLocation: z.string(),
+      apiKeyLocation: z.string().optional(),
+      envSecretLocations: z.record(z.string(), z.string()).optional(),
     })
     .partial(),
   z

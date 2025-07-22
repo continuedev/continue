@@ -19,7 +19,7 @@ import { BuiltInToolNames } from "../../../tools/builtIn";
 import { callBuiltInTool } from "../../../tools/callTool";
 import { globSearchTool } from "../../../tools/definitions/globSearch";
 import { grepSearchTool } from "../../../tools/definitions/grepSearch";
-import { lsTool } from "../../../tools/definitions/lsTool";
+import { lsTool } from "../../../tools/definitions/ls";
 import { readFileTool } from "../../../tools/definitions/readFile";
 import { viewRepoMapTool } from "../../../tools/definitions/viewRepoMap";
 import { viewSubdirectoryTool } from "../../../tools/definitions/viewSubdirectory";
@@ -60,12 +60,13 @@ export interface IRetrievalPipeline {
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   private ftsIndex = new FullTextSearchCodebaseIndex();
   private lanceDbIndex: LanceDbIndex | null = null;
+  private lanceDbInitPromise: Promise<void> | null = null;
 
   constructor(protected readonly options: RetrievalPipelineOptions) {
     void this.initLanceDb();
   }
 
-  private async initLanceDb() {
+  protected async initLanceDb() {
     const embedModel = this.options.config.selectedModelByRole.embed;
 
     if (!embedModel) {
@@ -75,6 +76,23 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     this.lanceDbIndex = await LanceDbIndex.create(embedModel, (uri) =>
       this.options.ide.readFile(uri),
     );
+  }
+
+  protected async ensureLanceDbInitialized(): Promise<boolean> {
+    if (this.lanceDbIndex) {
+      return true;
+    }
+
+    if (this.lanceDbInitPromise) {
+      await this.lanceDbInitPromise;
+      return this.lanceDbIndex !== null;
+    }
+
+    this.lanceDbInitPromise = this.initLanceDb();
+    await this.lanceDbInitPromise;
+    this.lanceDbInitPromise = null; // clear after init
+
+    return this.lanceDbIndex !== null;
   }
 
   private getCleanedTrigrams(
@@ -163,7 +181,9 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     input: string,
     n: number,
   ): Promise<Chunk[]> {
-    if (!this.lanceDbIndex) {
+    const initialized = await this.ensureLanceDbInitialized();
+
+    if (!initialized || !this.lanceDbIndex) {
       console.warn(
         "LanceDB index not available, skipping embeddings retrieval",
       );
@@ -225,9 +245,11 @@ Determine which tools should be used to answer this query. You should feel free 
               .join("");
       const parsed = JSON.parse(responseContent);
       toolCalls = parsed.tools || [];
-      console.log("retrieveWithTools", toolCalls);
     } catch (e) {
-      console.log("Failed to parse tool selection response", e);
+      console.log(
+        `Failed to parse tool selection response: ${toolSelectionResponse.content}\n\n`,
+        e,
+      );
       return [];
     }
 

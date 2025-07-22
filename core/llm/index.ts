@@ -20,6 +20,7 @@ import {
   ILLMLogger,
   LLMFullCompletionOptions,
   LLMOptions,
+  MessageOption,
   ModelCapability,
   ModelInstaller,
   PromptLog,
@@ -27,6 +28,7 @@ import {
   RequestOptions,
   TabAutocompleteOptions,
   TemplateType,
+  Usage,
 } from "../index.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
@@ -141,6 +143,7 @@ export abstract class BaseLLM implements ILLM {
 
   title?: string;
   baseChatSystemMessage?: string;
+  basePlanSystemMessage?: string;
   baseAgentSystemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
@@ -155,6 +158,7 @@ export abstract class BaseLLM implements ILLM {
 
   // continueProperties
   apiKeyLocation?: string;
+  envSecretLocations?: Record<string, string>;
   apiBase?: string;
   orgScopeId?: string | null;
 
@@ -172,6 +176,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
   profile?: string | undefined;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -180,6 +186,9 @@ export abstract class BaseLLM implements ILLM {
   embeddingId: string;
   maxEmbeddingChunkSize: number;
   maxEmbeddingBatchSize: number;
+
+  //URI to local block defining this LLM
+  sourceFile?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -209,6 +218,7 @@ export abstract class BaseLLM implements ILLM {
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.baseAgentSystemMessage = options.baseAgentSystemMessage;
+    this.basePlanSystemMessage = options.basePlanSystemMessage;
     this.baseChatSystemMessage = options.baseChatSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
@@ -246,6 +256,7 @@ export abstract class BaseLLM implements ILLM {
 
     // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
+    this.envSecretLocations = options.envSecretLocations;
     this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
 
@@ -270,6 +281,8 @@ export abstract class BaseLLM implements ILLM {
     this.region = options.region;
     this.projectId = options.projectId;
     this.profile = options.profile;
+    this.accessKeyId = options.accessKeyId;
+    this.secretAccessKey = options.secretAccessKey;
 
     this.openaiAdapter = this.createOpenAiAdapter();
 
@@ -280,6 +293,7 @@ export abstract class BaseLLM implements ILLM {
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
 
     this.autocompleteOptions = options.autocompleteOptions;
+    this.sourceFile = options.sourceFile;
   }
 
   getConfigurationStatus() {
@@ -318,6 +332,7 @@ export abstract class BaseLLM implements ILLM {
     completion: string,
     thinking: string | undefined,
     interaction: ILLMInteractionLog | undefined,
+    usage: Usage | undefined,
     error?: any,
   ): InteractionStatus {
     let promptTokens = this.countTokens(prompt);
@@ -359,6 +374,7 @@ export abstract class BaseLLM implements ILLM {
           promptTokens,
           generatedTokens,
           thinkingTokens,
+          usage,
         });
         return "cancelled";
       } else {
@@ -370,6 +386,7 @@ export abstract class BaseLLM implements ILLM {
           promptTokens,
           generatedTokens,
           thinkingTokens,
+          usage,
         });
         return "error";
       }
@@ -379,6 +396,7 @@ export abstract class BaseLLM implements ILLM {
         promptTokens,
         generatedTokens,
         thinkingTokens,
+        usage,
       });
       return "success";
     }
@@ -565,6 +583,7 @@ export abstract class BaseLLM implements ILLM {
         prefix,
         suffix,
         options: completionOptions,
+        provider: this.providerName,
       });
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, fimLog);
@@ -613,6 +632,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         undefined,
         interaction,
+        undefined,
       );
     } catch (e) {
       status = this._logEnd(
@@ -621,6 +641,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         undefined,
         interaction,
+        undefined,
         e,
       );
       throw e;
@@ -632,6 +653,7 @@ export abstract class BaseLLM implements ILLM {
           completion,
           undefined,
           interaction,
+          undefined,
           "cancel",
         );
       }
@@ -672,6 +694,7 @@ export abstract class BaseLLM implements ILLM {
         kind: "startComplete",
         prompt,
         options: completionOptions,
+        provider: this.providerName,
       });
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -727,6 +750,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         undefined,
         interaction,
+        undefined,
       );
     } catch (e) {
       status = this._logEnd(
@@ -735,6 +759,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         undefined,
         interaction,
+        undefined,
         e,
       );
       throw e;
@@ -746,6 +771,7 @@ export abstract class BaseLLM implements ILLM {
           completion,
           undefined,
           interaction,
+          undefined,
           "cancel",
         );
       }
@@ -787,6 +813,7 @@ export abstract class BaseLLM implements ILLM {
         kind: "startComplete",
         prompt: prompt,
         options: completionOptions,
+        provider: this.providerName,
       });
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -820,6 +847,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         undefined,
         interaction,
+        undefined,
       );
     } catch (e) {
       status = this._logEnd(
@@ -828,6 +856,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         undefined,
         interaction,
+        undefined,
         e,
       );
       throw e;
@@ -839,6 +868,7 @@ export abstract class BaseLLM implements ILLM {
           completion,
           undefined,
           interaction,
+          undefined,
           "cancel",
         );
       }
@@ -857,6 +887,23 @@ export abstract class BaseLLM implements ILLM {
       completion += renderChatMessage(message);
     }
     return { role: "assistant" as const, content: completion };
+  }
+
+  compileChatMessages(
+    message: ChatMessage[],
+    options: LLMFullCompletionOptions,
+  ) {
+    let { completionOptions } = this._parseCompletionOptions(options);
+    completionOptions = this._modifyCompletionOptions(completionOptions);
+
+    return compileChatMessages({
+      modelName: completionOptions.model,
+      msgs: message,
+      contextLength: this.contextLength,
+      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+      supportsImages: this.supportsImages(),
+      tools: options.tools,
+    });
   }
 
   protected modifyChatBody(
@@ -883,6 +930,7 @@ export abstract class BaseLLM implements ILLM {
     _messages: ChatMessage[],
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
+    messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
@@ -893,14 +941,21 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = compileChatMessages({
-      modelName: completionOptions.model,
-      msgs: _messages,
-      contextLength: this.contextLength,
-      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
-      supportsImages: this.supportsImages(),
-      tools: options.tools,
-    });
+    let messages = _messages;
+
+    // If not precompiled, compile the chat messages
+    if (!messageOptions?.precompiled) {
+      const { compiledChatMessages } = compileChatMessages({
+        modelName: completionOptions.model,
+        msgs: _messages,
+        contextLength: this.contextLength,
+        maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
+        supportsImages: this.supportsImages(),
+        tools: options.tools,
+      });
+
+      messages = compiledChatMessages;
+    }
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)
@@ -910,6 +965,7 @@ export abstract class BaseLLM implements ILLM {
         kind: "startChat",
         messages,
         options: completionOptions,
+        provider: this.providerName,
       });
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -918,6 +974,7 @@ export abstract class BaseLLM implements ILLM {
 
     let thinking = "";
     let completion = "";
+    let usage: Usage | undefined = undefined;
 
     try {
       if (this.templateMessages) {
@@ -984,6 +1041,11 @@ export abstract class BaseLLM implements ILLM {
               kind: "message",
               message: chunk,
             });
+
+            if (chunk.role === "assistant" && chunk.usage) {
+              usage = chunk.usage;
+            }
+
             yield chunk;
           }
         }
@@ -994,6 +1056,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         thinking,
         interaction,
+        usage,
       );
     } catch (e) {
       status = this._logEnd(
@@ -1002,6 +1065,7 @@ export abstract class BaseLLM implements ILLM {
         completion,
         thinking,
         interaction,
+        usage,
         e,
       );
       throw e;
@@ -1013,6 +1077,7 @@ export abstract class BaseLLM implements ILLM {
           completion,
           undefined,
           interaction,
+          usage,
           "cancel",
         );
       }

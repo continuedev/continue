@@ -8,6 +8,7 @@ import {
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
+import { EventEmitter as NodeEventEmitter } from "node:events";
 import { v4 as uuidv4 } from "uuid";
 import {
   authentication,
@@ -77,6 +78,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
   private _refreshInterval: NodeJS.Timeout | null = null;
+  private _isRefreshing = false;
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
   private static REFRESH_INTERVAL_MS = 1000 * 60 * 10; // 10 minutes
@@ -100,11 +102,15 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     this.secretStorage = new SecretStorage(context);
 
     // Immediately refresh any existing sessions
-    this.refreshSessions();
+    this.attemptEmitter = new NodeEventEmitter();
+    WorkOsAuthProvider.hasAttemptedRefresh = new Promise((resolve) => {
+      this.attemptEmitter.on("attempted", resolve);
+    });
+    void this.refreshSessions();
 
     // Set up a regular interval to refresh tokens
     this._refreshInterval = setInterval(() => {
-      this.refreshSessions();
+      void this.refreshSessions();
     }, WorkOsAuthProvider.REFRESH_INTERVAL_MS);
   }
 
@@ -146,6 +152,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   public async getSessions(
     scopes?: string[],
   ): Promise<ContinueAuthenticationSession[]> {
+    // await this.hasAttemptedRefresh;
     const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
     if (!data) {
       return [];
@@ -181,29 +188,39 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return this.ideRedirectUri;
   }
 
+  public static hasAttemptedRefresh: Promise<void>;
+  private attemptEmitter: NodeEventEmitter;
   async refreshSessions() {
+    // Prevent concurrent refresh operations
+    if (this._isRefreshing) {
+      return;
+    }
+
     try {
+      this._isRefreshing = true;
       await this._refreshSessions();
     } catch (e) {
       console.error(`Error refreshing sessions: ${e}`);
+    } finally {
+      this._isRefreshing = false;
     }
   }
 
+  // It is important that every path in this function emits the attempted event
+  // As config loading in core will be locked until refresh is attempted
   private async _refreshSessions(): Promise<void> {
     const sessions = await this.getSessions();
     if (!sessions.length) {
+      this.attemptEmitter.emit("attempted");
       return;
     }
 
     const finalSessions = [];
     for (const session of sessions) {
       try {
-        // For expired tokens, don't use retries - if refresh fails, we drop the session
-        const refreshMethod = this.jwtIsExpiredOrInvalid(session.accessToken)
-          ? this._refreshSession.bind(this) // Direct refresh for expired tokens
-          : this._refreshSessionWithRetry.bind(this); // Retry for valid tokens
-
-        const newSession = await refreshMethod(session.refreshToken);
+        const newSession = await this._refreshSessionWithRetry(
+          session.refreshToken,
+        );
         finalSessions.push({
           ...session,
           accessToken: newSession.accessToken,
@@ -232,7 +249,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   private async _refreshSessionWithRetry(
     refreshToken: string,
     attempt = 1,
-    maxAttempts = 3,
     baseDelay = 1000,
   ): Promise<{
     accessToken: string;
@@ -242,34 +258,32 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
-      // Don't retry for auth errors (401 Unauthorized) or if we've reached max attempts
+      this.attemptEmitter.emit("attempted");
+      // Don't retry for auth errors
       if (
         error.message?.includes("401") ||
         error.message?.includes("Invalid refresh token") ||
-        error.message?.includes("Unauthorized") ||
-        attempt >= maxAttempts
+        error.message?.includes("Unauthorized")
       ) {
         throw error;
       }
 
       // For network errors or transient server issues, retry with backoff
       // Calculate exponential backoff delay with jitter
-      const delay =
-        baseDelay * Math.pow(2, attempt - 1) * (0.5 + Math.random() * 0.5);
+      const delay = Math.min(
+        baseDelay * Math.pow(2, attempt - 1) * (0.5 + Math.random() * 0.5),
+        2 * 60 * 1000, // 2 minutes
+      );
 
-      // Schedule retry after delay
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          this._refreshSessionWithRetry(
-            refreshToken,
-            attempt + 1,
-            maxAttempts,
-            baseDelay,
-          )
+          this._refreshSessionWithRetry(refreshToken, attempt + 1, baseDelay)
             .then(resolve)
             .catch(reject);
         }, delay);
       });
+    } finally {
+      this.attemptEmitter.emit("attempted");
     }
   }
 
@@ -360,7 +374,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
       return session;
     } catch (e) {
-      window.showErrorMessage(`Sign in failed: ${e}`);
+      void window.showErrorMessage(`Sign in failed: ${e}`);
       throw e;
     }
   }
@@ -553,7 +567,7 @@ export async function getControlPlaneSessionInfo(
     if (useOnboarding) {
       WorkOsAuthProvider.useOnboardingUri = true;
     }
-
+    await WorkOsAuthProvider.hasAttemptedRefresh;
     const session = await authentication.getSession(
       controlPlaneEnv.AUTH_TYPE,
       [],

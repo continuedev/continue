@@ -46,6 +46,7 @@ import { PROVIDER_TOOL_SUPPORT } from "./toolSupport.js";
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
   "openai",
+  "nvidia",
   "ollama",
   "together",
   "novita",
@@ -234,6 +235,11 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
   // Claude requests always sent through Messages API, so formatting not necessary
   if (lower.includes("claude")) {
+    return "none";
+  }
+
+  // Nova Pro requests always sent through Converse API, so formatting not necessary
+  if (lower.includes("nova")) {
     return "none";
   }
 

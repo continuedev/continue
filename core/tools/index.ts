@@ -6,7 +6,7 @@ import { editFileTool } from "./definitions/editFile";
 import { fetchUrlContentTool } from "./definitions/fetchUrlContent";
 import { globSearchTool } from "./definitions/globSearch";
 import { grepSearchTool } from "./definitions/grepSearch";
-import { lsTool } from "./definitions/lsTool";
+import { lsTool } from "./definitions/ls";
 import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
 import { readFileTool } from "./definitions/readFile";
 import { requestRuleTool } from "./definitions/requestRule";
@@ -39,14 +39,13 @@ export const getConfigDependentToolDefinitions = (
   params: ConfigDependentToolParams,
 ): Tool[] => [
   requestRuleTool(params),
+  // Search and replace is now generally available
+  searchAndReplaceInFileTool,
+  // Keep edit file tool available for models that need it
+  editFileTool,
   ...(params.enableExperimentalTools
-    ? [
-        searchAndReplaceInFileTool,
-        viewRepoMapTool,
-        viewSubdirectoryTool,
-        codebaseTool,
-      ]
-    : [editFileTool]),
+    ? [viewRepoMapTool, viewSubdirectoryTool, codebaseTool]
+    : []),
 ];
 
 export const getToolsForIde = async (ide: IDE): Promise<Tool[]> =>

@@ -3,7 +3,7 @@ import {
   ChatBubbleOvalLeftIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
-import { InputModifiers } from "core";
+import { ChatHistoryItem, InputModifiers } from "core";
 import { renderChatMessage } from "core/util/messageContent";
 import {
   useCallback,
@@ -16,7 +16,6 @@ import {
 import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
-import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
@@ -29,29 +28,36 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
-  selectCurrentToolCall,
-  selectCurrentToolCallApplyState,
-} from "../../redux/selectors/selectCurrentToolCall";
+  selectDoneApplyStates,
+  selectPendingToolCalls,
+} from "../../redux/selectors/selectToolCalls";
 import {
+  cancelToolCall,
+  ChatHistoryItemWithMessageId,
   newSession,
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
-import {
-  setDialogEntryOn,
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiSlice";
 import { streamEditThunk } from "../../redux/thunks/edit";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
+import { ToolCallDiv } from "./ToolCallDiv";
 
+import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
-import { ToolCallDiv } from "./ToolCallDiv";
 import { useAutoScroll } from "./useAutoScroll";
+
+// Helper function to find the index of the latest conversation summary
+function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].conversationSummary) {
+      return i;
+    }
+  }
+  return -1; // No summary found
+}
 
 const StepsDiv = styled.div`
   position: relative;
@@ -108,7 +114,6 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
-  const toolCallState = useAppSelector(selectCurrentToolCall);
   const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
@@ -131,7 +136,6 @@ export function Chat() {
         !e.shiftKey
       ) {
         void dispatch(cancelStream());
-        if (isInEdit) ideMessenger.post("rejectDiff", {});
       }
     };
     window.addEventListener("keydown", listener);
@@ -147,9 +151,8 @@ export function Chat() {
     isStreaming,
   );
 
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
-  );
+  const pendingToolCalls = useAppSelector(selectPendingToolCalls);
+  const pendingApplyStates = useAppSelector(selectDoneApplyStates);
 
   const sendInput = useCallback(
     (
@@ -158,20 +161,21 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (toolCallState?.status === "generated") {
-        return console.error(
-          "Cannot submit message while awaiting tool confirmation",
+      // Cancel all pending tool calls
+      pendingToolCalls.forEach((toolCallState) => {
+        dispatch(
+          cancelToolCall({
+            toolCallId: toolCallState.toolCallId,
+          }),
         );
-      }
-      if (
-        currentToolCallApplyState &&
-        currentToolCallApplyState.status !== "closed"
-      ) {
-        return console.error(
-          "Cannot submit message while awaiting tool call apply",
-        );
-      }
+      });
 
+      // Reject all pending apply states
+      pendingApplyStates.forEach((applyState) => {
+        if (applyState.status !== "closed") {
+          ideMessenger.post("rejectDiff", applyState);
+        }
+      });
       const model = isInEdit
         ? (selectedModels?.edit ?? selectedModels?.chat)
         : selectedModels?.chat;
@@ -221,19 +225,6 @@ export function Chat() {
           editorToClearOnSend.commands.clearContent();
         }
       }
-
-      // Increment localstorage counter for popup
-      const currentCount = getLocalStorage("mainTextEntryCounter");
-      if (currentCount) {
-        setLocalStorage("mainTextEntryCounter", currentCount + 1);
-        if (currentCount === 300) {
-          dispatch(setDialogMessage(<FeedbackDialog />));
-          dispatch(setDialogEntryOn(false));
-          dispatch(setShowDialog(true));
-        }
-      } else {
-        setLocalStorage("mainTextEntryCounter", 1);
-      }
     },
     [
       history,
@@ -241,8 +232,8 @@ export function Chat() {
       mode,
       isInEdit,
       codeToEdit,
-      toolCallState,
-      currentToolCallApplyState,
+      pendingToolCalls,
+      pendingApplyStates,
     ],
   );
 
@@ -279,6 +270,118 @@ export function Chat() {
     [history],
   );
 
+  const renderChatHistoryItem = useCallback(
+    (item: ChatHistoryItemWithMessageId, index: number) => {
+      const {
+        message,
+        editorState,
+        contextItems,
+        appliedRules,
+        toolCallStates,
+      } = item;
+
+      // Calculate once for the entire function
+      const latestSummaryIndex = findLatestSummaryIndex(history);
+      const isBeforeLatestSummary =
+        latestSummaryIndex !== -1 && index < latestSummaryIndex;
+
+      if (message.role === "user") {
+        return (
+          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
+            <ContinueInputBox
+              onEnter={(editorState, modifiers) =>
+                sendInput(editorState, modifiers, index)
+              }
+              isLastUserInput={isLastUserInput(index)}
+              isMainInput={false}
+              editorState={editorState}
+              contextItems={contextItems}
+              appliedRules={appliedRules}
+              inputId={message.id}
+            />
+          </div>
+        );
+      }
+
+      if (message.role === "tool") {
+        return null;
+      }
+
+      if (message.role === "assistant") {
+        return (
+          <>
+            {/* Always render assistant content through normal path */}
+            <div className="thread-message">
+              <TimelineItem
+                item={item}
+                iconElement={
+                  <ChatBubbleOvalLeftIcon width="16px" height="16px" />
+                }
+                open={
+                  typeof stepsOpen[index] === "undefined"
+                    ? true
+                    : stepsOpen[index]!
+                }
+                onToggle={() => {}}
+              >
+                <StepContainer
+                  index={index}
+                  isLast={index === history.length - 1}
+                  item={item}
+                  latestSummaryIndex={latestSummaryIndex}
+                />
+              </TimelineItem>
+            </div>
+
+            {toolCallStates && (
+              <ToolCallDiv
+                toolCallStates={toolCallStates}
+                historyIndex={index}
+              />
+            )}
+          </>
+        );
+      }
+
+      if (message.role === "thinking") {
+        return (
+          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
+            <ThinkingBlockPeek
+              content={renderChatMessage(message)}
+              redactedThinking={message.redactedThinking}
+              index={index}
+              prevItem={index > 0 ? history[index - 1] : null}
+              inProgress={index === history.length - 1}
+              signature={message.signature}
+            />
+          </div>
+        );
+      }
+
+      // Default case - regular assistant message
+      return (
+        <div className="thread-message">
+          <TimelineItem
+            item={item}
+            iconElement={<ChatBubbleOvalLeftIcon width="16px" height="16px" />}
+            open={
+              typeof stepsOpen[index] === "undefined" ? true : stepsOpen[index]!
+            }
+            onToggle={() => {}}
+          >
+            <StepContainer
+              index={index}
+              isLast={index === history.length - 1}
+              item={item}
+              latestSummaryIndex={latestSummaryIndex}
+            />
+          </TimelineItem>
+        </div>
+      );
+    },
+    [sendInput, isLastUserInput, history, stepsOpen],
+  );
+
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
   return (
@@ -304,68 +407,9 @@ export function Chat() {
                 dispatch(newSession());
               }}
             >
-              {item.message.role === "user" ? (
-                <>
-                  <ContinueInputBox
-                    onEnter={(editorState, modifiers) =>
-                      sendInput(editorState, modifiers, index)
-                    }
-                    isLastUserInput={isLastUserInput(index)}
-                    isMainInput={false}
-                    editorState={item.editorState}
-                    contextItems={item.contextItems}
-                    appliedRules={item.appliedRules}
-                    inputId={item.message.id}
-                  />
-                </>
-              ) : item.message.role === "tool" ? null : item.message.role ===
-                  "assistant" &&
-                item.message.toolCalls &&
-                item.toolCallState ? (
-                <div className="">
-                  {item.message.toolCalls?.map((toolCall, i) => {
-                    return (
-                      <ToolCallDiv
-                        key={i}
-                        toolCallState={item.toolCallState!}
-                        toolCall={toolCall}
-                        historyIndex={index}
-                      />
-                    );
-                  })}
-                </div>
-              ) : item.message.role === "thinking" ? (
-                <ThinkingBlockPeek
-                  content={renderChatMessage(item.message)}
-                  redactedThinking={item.message.redactedThinking}
-                  index={index}
-                  prevItem={index > 0 ? history[index - 1] : null}
-                  inProgress={index === history.length - 1}
-                  signature={item.message.signature}
-                />
-              ) : (
-                <div className="thread-message">
-                  <TimelineItem
-                    item={item}
-                    iconElement={
-                      <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                    }
-                    open={
-                      typeof stepsOpen[index] === "undefined"
-                        ? true
-                        : stepsOpen[index]!
-                    }
-                    onToggle={() => {}}
-                  >
-                    <StepContainer
-                      index={index}
-                      isLast={index === history.length - 1}
-                      item={item}
-                    />
-                  </TimelineItem>
-                </div>
-              )}
+              {renderChatHistoryItem(item, index)}
             </ErrorBoundary>
+            {index === history.length - 1 && <InlineErrorMessage />}
           </div>
         ))}
       </StepsDiv>
@@ -387,21 +431,19 @@ export function Chat() {
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
               {history.length === 0 && lastSessionId && !isInEdit && (
-                <div className="xs:inline hidden">
-                  <NewSessionButton
-                    onClick={async () => {
-                      await dispatch(
-                        loadLastSession({
-                          saveCurrentSession: true,
-                        }),
-                      );
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeftIcon className="h-3 w-3" />
-                    <span className="text-xs">Last Session</span>
-                  </NewSessionButton>
-                </div>
+                <NewSessionButton
+                  onClick={async () => {
+                    await dispatch(
+                      loadLastSession({
+                        saveCurrentSession: true,
+                      }),
+                    );
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeftIcon className="h-3 w-3" />
+                  <span className="text-xs">Last Session</span>
+                </NewSessionButton>
               )}
             </div>
           </div>

@@ -12,6 +12,7 @@ import {
 import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
+  DEFAULT_PLAN_SYSTEM_MESSAGE,
 } from "core/llm/defaultSystemMessages";
 import { renderChatMessage } from "core/util/messageContent";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -90,13 +91,19 @@ vi.mock("core/llm/rules/getSystemMessageWithRules", async (importOriginal) => {
 
 test("getBaseSystemMessage should return the correct system message based on mode", () => {
   const mockModel = {
-    baseAgentSystemMessage: "Custom Agent System Message",
     baseChatSystemMessage: "Custom Chat System Message",
+    basePlanSystemMessage: "Custom Plan System Message",
+    baseAgentSystemMessage: "Custom Agent System Message",
   } as ModelDescription;
 
   // Test agent mode with custom message
   expect(getBaseSystemMessage("agent", mockModel)).toBe(
     "Custom Agent System Message",
+  );
+
+  // Test plan mode with custom message
+  expect(getBaseSystemMessage("plan", mockModel)).toBe(
+    "Custom Plan System Message",
   );
 
   // Test chat mode with custom message
@@ -107,6 +114,11 @@ test("getBaseSystemMessage should return the correct system message based on mod
   // Test agent mode with default message
   expect(getBaseSystemMessage("agent", {} as ModelDescription)).toBe(
     DEFAULT_AGENT_SYSTEM_MESSAGE,
+  );
+
+  // Test agent mode with default message
+  expect(getBaseSystemMessage("plan", {} as ModelDescription)).toBe(
+    DEFAULT_PLAN_SYSTEM_MESSAGE,
   );
 
   // Test chat mode with default message
@@ -304,20 +316,24 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
-          toolCallId: "tool-call-1",
-          toolCall: {
-            id: "tool-call-1",
-            type: "function",
-            function: {
-              name: "search",
-              arguments: '{"query": "test"}',
+        toolCallStates: [
+          {
+            toolCallId: "tool-call-1",
+            toolCall: {
+              id: "tool-call-1",
+              type: "function",
+              function: {
+                name: "search",
+                arguments: '{"query": "test"}',
+              },
             },
+            status: "done",
+            parsedArgs: { query: "test" },
+            output: [
+              createContextItem("search-result", "Search result content"),
+            ],
           },
-          status: "done",
-          parsedArgs: { query: "test" },
-          output: [createContextItem("search-result", "Search result content")],
-        },
+        ],
       },
     ];
 
@@ -358,19 +374,21 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
-          toolCallId: "tool-call-1",
-          toolCall: {
-            id: "tool-call-1",
-            type: "function",
-            function: {
-              name: "search",
-              arguments: '{"query": "test"}',
+        toolCallStates: [
+          {
+            toolCallId: "tool-call-1",
+            toolCall: {
+              id: "tool-call-1",
+              type: "function",
+              function: {
+                name: "search",
+                arguments: '{"query": "test"}',
+              },
             },
+            status: "canceled",
+            parsedArgs: { query: "test" },
           },
-          status: "canceled",
-          parsedArgs: { query: "test" },
-        },
+        ],
       },
     ];
 
@@ -410,19 +428,21 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
-          toolCallId: "tool-call-1",
-          toolCall: {
-            id: "tool-call-1",
-            type: "function",
-            function: {
-              name: "search",
-              arguments: '{"query": "test"}',
+        toolCallStates: [
+          {
+            toolCallId: "tool-call-1",
+            toolCall: {
+              id: "tool-call-1",
+              type: "function",
+              function: {
+                name: "search",
+                arguments: '{"query": "test"}',
+              },
             },
+            status: "generating", // Not done yet
+            parsedArgs: { query: "test" },
           },
-          status: "generating", // Not done yet
-          parsedArgs: { query: "test" },
-        },
+        ],
       },
     ];
 
@@ -487,20 +507,24 @@ describe("constructMessages", () => {
       {
         message: assistantWithMultipleToolCalls,
         contextItems: [],
-        toolCallState: {
-          toolCallId: "tool-call-1",
-          toolCall: {
-            id: "tool-call-1",
-            type: "function",
-            function: {
-              name: "search",
-              arguments: '{"query": "test"}',
+        toolCallStates: [
+          {
+            toolCallId: "tool-call-1",
+            toolCall: {
+              id: "tool-call-1",
+              type: "function",
+              function: {
+                name: "search",
+                arguments: '{"query": "test"}',
+              },
             },
+            status: "done",
+            parsedArgs: { query: "test" },
+            output: [
+              createContextItem("search-result", "Search result content"),
+            ],
           },
-          status: "done",
-          parsedArgs: { query: "test" },
-          output: [createContextItem("search-result", "Search result content")],
-        },
+        ],
       },
     ];
 
@@ -653,20 +677,22 @@ describe("constructMessages", () => {
       {
         message: assistantWithToolCall,
         contextItems: [],
-        toolCallState: {
-          toolCallId: "tool-call-1",
-          toolCall: {
-            id: "tool-call-1",
-            type: "function",
-            function: {
-              name: "search",
-              arguments: '{"query": "test"}',
+        toolCallStates: [
+          {
+            toolCallId: "tool-call-1",
+            toolCall: {
+              id: "tool-call-1",
+              type: "function",
+              function: {
+                name: "search",
+                arguments: '{"query": "test"}',
+              },
             },
+            status: "done",
+            parsedArgs: { query: "test" },
+            output: [triggeringToolOutput],
           },
-          status: "done",
-          parsedArgs: { query: "test" },
-          output: [triggeringToolOutput],
-        },
+        ],
       },
     ];
 

@@ -11,6 +11,7 @@ import {
 import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
+  DEFAULT_PLAN_SYSTEM_MESSAGE,
 } from "core/llm/defaultSystemMessages";
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
@@ -20,7 +21,7 @@ import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
-import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/toolCallStateToContextItem";
+import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
 
 export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
 export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
@@ -39,7 +40,21 @@ export function constructMessages(
   appliedRules: RuleWithSource[];
   appliedRuleIndex: number;
 } {
-  const historyCopy = [...history];
+  // Find the most recent conversation summary and filter history accordingly
+  let summaryContent = "";
+  let filteredHistory = history;
+
+  for (let i = history.length - 1; i >= 0; i--) {
+    const summary = history[i].conversationSummary;
+    if (summary) {
+      summaryContent = summary;
+      // Only include messages that come AFTER the message with the summary
+      filteredHistory = history.slice(i + 1);
+      break;
+    }
+  }
+
+  const historyCopy = [...filteredHistory];
 
   const msgs: MessageWithContextItems[] = [];
   let appliedRuleIndex = -1;
@@ -93,17 +108,20 @@ export function constructMessages(
         // If the assistant message has tool calls, we need to insert tool messages
         for (const toolCall of item.message.toolCalls) {
           let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
-          // TODO parallel tool calls: toolCallState only supports one tool call per message for now
-          if (item.toolCallState?.status === "canceled") {
+
+          // Find the corresponding tool call state for this specific tool call
+          const toolCallState = item.toolCallStates?.find(
+            (state) => state.toolCallId === toolCall.id,
+          );
+
+          if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (
-            item.toolCallState?.toolCallId === toolCall.id &&
-            item.toolCallState?.output
-          ) {
-            content = renderContextItems(item.toolCallState.output);
+          } else if (toolCallState?.output) {
+            content = renderContextItems(toolCallState.output);
           }
+
           msgs.push({
-            ctxItems: toolCallStateToContextItems(item.toolCallState),
+            ctxItems: toolCallStateToContextItems(toolCallState),
             message: {
               role: "tool",
               content,
@@ -111,6 +129,19 @@ export function constructMessages(
             },
           });
         }
+      } else if (item.toolCallStates && item.toolCallStates.length > 0) {
+        // This case indicates a potential mismatch - we have tool call states but no message.toolCalls
+        console.error(
+          "ERROR constructMessages: Assistant message has toolCallStates but no message.toolCalls:",
+          {
+            toolCallStates: item.toolCallStates.length,
+            toolCallIds: item.toolCallStates.map((s) => s.toolCallId),
+            messageContent:
+              typeof item.message.content === "string"
+                ? item.message.content?.substring(0, 50) + "..."
+                : "Non-string content",
+          },
+        );
       }
     }
   }
@@ -143,12 +174,20 @@ export function constructMessages(
     rulePolicies,
   });
 
-  if (systemMessage.trim()) {
+  // Append conversation summary to system message if it exists
+  let finalSystemMessage = systemMessage;
+  if (summaryContent) {
+    finalSystemMessage = systemMessage
+      ? `${systemMessage}\n\nPrevious conversation summary:\n\n ${summaryContent}`
+      : `Previous conversation summary:\n\n ${summaryContent}`;
+  }
+
+  if (finalSystemMessage.trim()) {
     msgs.unshift({
       ctxItems: [],
       message: {
         role: "system",
-        content: systemMessage,
+        content: finalSystemMessage,
       },
     });
   }
@@ -167,6 +206,8 @@ export function getBaseSystemMessage(
 ): string {
   if (messageMode === "agent") {
     return model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
+  } else if (messageMode === "plan") {
+    return model.basePlanSystemMessage ?? DEFAULT_PLAN_SYSTEM_MESSAGE;
   } else {
     return model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
   }

@@ -6,11 +6,11 @@ import { v4 as uuidv4 } from "uuid";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
+  resetNextCodeBlockToApplyIndex,
   submitEditorAndInitAtIndex,
   updateHistoryItemAtIndex,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
 import { updateFileSymbolsFromFiles } from "./updateFileSymbols";
@@ -39,7 +39,8 @@ export const streamResponseThunk = createAsyncThunk<
         dispatch(
           submitEditorAndInitAtIndex({ index: inputIndex, editorState }),
         );
-        resetStateForNewMessage();
+
+        dispatch(resetNextCodeBlockToApplyIndex());
 
         const defaultContextProviders =
           state.config.config.experimental?.defaultContext ?? [];
@@ -64,6 +65,7 @@ export const streamResponseThunk = createAsyncThunk<
           defaultContextProviders,
           availableSlashCommands: state.config.config.slashCommands,
           dispatch,
+          getState,
         });
 
         // symbols for both context items AND selected codeblocks

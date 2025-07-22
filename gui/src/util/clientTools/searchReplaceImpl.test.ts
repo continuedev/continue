@@ -36,7 +36,13 @@ describe("searchReplaceToolImpl", () => {
     // Create mock extras
     mockExtras = {
       ideMessenger: mockIdeMessenger,
-      getState: vi.fn(),
+      getState: vi.fn<any>(() => ({
+        config: {
+          config: {
+            allowAnonymousTelemetry: false,
+          },
+        },
+      })),
       dispatch: vi.fn(),
     };
   });
@@ -47,24 +53,61 @@ describe("searchReplaceToolImpl", () => {
 
       await expect(
         searchReplaceToolImpl(
-          { filepath: "nonexistent.txt", diff: "some diff" },
+          { filepath: "nonexistent.txt", diffs: ["some diff"] },
           "tool-call-id",
           mockExtras,
         ),
       ).rejects.toThrow("File nonexistent.txt does not exist");
     });
 
-    it("should throw error when no search/replace blocks found", async () => {
+    it("should throw error when no search/replace blocks found in first diff", async () => {
       mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
       mockParseAllSearchReplaceBlocks.mockReturnValue([]);
 
       await expect(
         searchReplaceToolImpl(
-          { filepath: "test.txt", diff: "invalid diff content" },
+          { filepath: "test.txt", diffs: ["invalid diff content"] },
           "tool-call-id",
           mockExtras,
         ),
-      ).rejects.toThrow("No complete search/replace blocks found");
+      ).rejects.toThrow("No complete search/replace blocks found in diff 1");
+    });
+
+    it("should throw error when no search/replace blocks found in second diff", async () => {
+      mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
+      mockParseAllSearchReplaceBlocks
+        .mockReturnValueOnce([
+          {
+            isComplete: true,
+            searchContent: "valid content",
+            replaceContent: "replacement",
+          },
+        ])
+        .mockReturnValueOnce([]);
+
+      await expect(
+        searchReplaceToolImpl(
+          {
+            filepath: "test.txt",
+            diffs: ["valid diff", "invalid diff content"],
+          },
+          "tool-call-id",
+          mockExtras,
+        ),
+      ).rejects.toThrow("No complete search/replace blocks found in diff 2");
+    });
+
+    it("should throw error when all diffs are empty", async () => {
+      mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
+      mockParseAllSearchReplaceBlocks.mockReturnValue([]);
+
+      await expect(
+        searchReplaceToolImpl(
+          { filepath: "test.txt", diffs: [] },
+          "tool-call-id",
+          mockExtras,
+        ),
+      ).rejects.toThrow("No complete search/replace blocks found in any diffs");
     });
   });
 
@@ -99,11 +142,70 @@ describe("searchReplaceToolImpl", () => {
       mockFindSearchMatch.mockReturnValue({
         startIndex,
         endIndex,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       const result = await searchReplaceToolImpl(
-        { filepath: "test.js", diff: "mock diff content" },
+        { filepath: "test.js", diffs: ["mock diff content"] },
+        "tool-call-id",
+        mockExtras,
+      );
+
+      // Verify the result
+      expect(result).toEqual({
+        respondImmediately: false,
+        output: undefined,
+      });
+
+      // Verify applyToFile was called with correct parameters
+      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+        text: expectedFinalContent,
+        streamId: "test-stream-id",
+        filepath: "/resolved/path/test.js",
+        toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
+      });
+    });
+  });
+
+  describe("single diff scenarios", () => {
+    it("should successfully apply single diff with single search/replace block", async () => {
+      const originalContent = `function hello() {
+  console.log("Hello");
+  return "world";
+}`;
+
+      const expectedFinalContent = `function hello() {
+  console.log("Hi there!");
+  return "world";
+}`;
+
+      // Setup mocks
+      mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.js");
+      mockParseAllSearchReplaceBlocks.mockReturnValue([
+        {
+          isComplete: true,
+          searchContent: 'console.log("Hello");',
+          replaceContent: 'console.log("Hi there!");',
+        },
+      ]);
+      mockIdeMessenger.ide.readFile.mockResolvedValue(originalContent);
+
+      // Calculate correct positions for 'console.log("Hello");' in the original content
+      const searchText = 'console.log("Hello");';
+      const startIndex = originalContent.indexOf(searchText);
+      const endIndex = startIndex + searchText.length;
+
+      mockFindSearchMatch.mockReturnValue({
+        startIndex,
+        endIndex,
+        strategyName: "exactMatch",
+      });
+      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
+
+      const result = await searchReplaceToolImpl(
+        { filepath: "test.js", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
@@ -173,16 +275,18 @@ const c = 3;`;
         .mockReturnValueOnce({
           startIndex: firstStartIndex,
           endIndex: firstEndIndex,
+          strategyName: "exactMatch",
         })
         .mockReturnValueOnce({
           startIndex: secondStartIndex,
           endIndex: secondEndIndex,
+          strategyName: "exactMatch",
         });
 
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       const result = await searchReplaceToolImpl(
-        { filepath: "test.js", diff: "mock diff content" },
+        { filepath: "test.js", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
@@ -205,6 +309,101 @@ const c = 3;`;
         contentAfterFirstReplacement,
         "const b = 2;",
       );
+      // Verify final applyToFile call
+      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+        text: expectedFinalContent,
+        streamId: "test-stream-id",
+        filepath: "/resolved/path/test.js",
+        toolCallId: "tool-call-id",
+        isSearchAndReplace: true,
+      });
+    });
+  });
+
+  describe("multiple diff scenarios", () => {
+    it("should successfully apply multiple diffs each with single search/replace block", async () => {
+      const originalContent = `const a = 1;
+const b = 2;
+const c = 3;`;
+
+      const expectedFinalContent = `const a = 100;
+const b = 200;
+const c = 3;`;
+
+      // Setup mocks - each diff returns one block
+      mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.js");
+      mockParseAllSearchReplaceBlocks
+        .mockReturnValueOnce([
+          {
+            isComplete: true,
+            searchContent: "const a = 1;",
+            replaceContent: "const a = 100;",
+          },
+        ])
+        .mockReturnValueOnce([
+          {
+            isComplete: true,
+            searchContent: "const b = 2;",
+            replaceContent: "const b = 200;",
+          },
+        ]);
+      mockIdeMessenger.ide.readFile.mockResolvedValue(originalContent);
+
+      // Calculate positions for sequential replacements
+      const firstSearchText = "const a = 1;";
+      const secondSearchText = "const b = 2;";
+
+      const firstStartIndex = originalContent.indexOf(firstSearchText);
+      const firstEndIndex = firstStartIndex + firstSearchText.length;
+
+      // After first replacement: "const a = 100;\nconst b = 2;\nconst c = 3;"
+      const contentAfterFirstReplacement =
+        originalContent.substring(0, firstStartIndex) +
+        "const a = 100;" +
+        originalContent.substring(firstEndIndex);
+
+      const secondStartIndex =
+        contentAfterFirstReplacement.indexOf(secondSearchText);
+      const secondEndIndex = secondStartIndex + secondSearchText.length;
+
+      // Mock sequential search matches
+      mockFindSearchMatch
+        .mockReturnValueOnce({
+          startIndex: firstStartIndex,
+          endIndex: firstEndIndex,
+          strategyName: "exactMatch",
+        })
+        .mockReturnValueOnce({
+          startIndex: secondStartIndex,
+          endIndex: secondEndIndex,
+          strategyName: "exactMatch",
+        });
+
+      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
+
+      const result = await searchReplaceToolImpl(
+        { filepath: "test.js", diffs: ["first diff", "second diff"] },
+        "tool-call-id",
+        mockExtras,
+      );
+
+      // Verify the result
+      expect(result).toEqual({
+        respondImmediately: false,
+        output: undefined,
+      });
+
+      // Verify parseAllSearchReplaceBlocks was called for each diff
+      expect(mockParseAllSearchReplaceBlocks).toHaveBeenCalledTimes(2);
+      expect(mockParseAllSearchReplaceBlocks).toHaveBeenNthCalledWith(
+        1,
+        "first diff",
+      );
+      expect(mockParseAllSearchReplaceBlocks).toHaveBeenNthCalledWith(
+        2,
+        "second diff",
+      );
+
       // Verify final applyToFile call
       expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
         text: expectedFinalContent,
@@ -239,11 +438,12 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 10, // Position of "remove this line"
         endIndex: 26, // End of "remove this line"
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       const result = await searchReplaceToolImpl(
-        { filepath: "test.txt", diff: "mock diff content" },
+        { filepath: "test.txt", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
@@ -278,11 +478,12 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 6,
         endIndex: 11,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       await searchReplaceToolImpl(
-        { filepath: "test.txt", diff: "mock diff content" },
+        { filepath: "test.txt", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
@@ -312,7 +513,7 @@ keep this too`;
 
       await expect(
         searchReplaceToolImpl(
-          { filepath: "test.txt", diff: "mock diff content" },
+          { filepath: "test.txt", diffs: ["mock diff content"] },
           "tool-call-id",
           mockExtras,
         ),
@@ -344,12 +545,13 @@ keep this too`;
         .mockReturnValueOnce({
           startIndex: 0,
           endIndex: 13,
+          strategyName: "exactMatch",
         })
         .mockReturnValueOnce(null); // Second search fails
 
       await expect(
         searchReplaceToolImpl(
-          { filepath: "test.txt", diff: "mock diff content" },
+          { filepath: "test.txt", diffs: ["mock diff content"] },
           "tool-call-id",
           mockExtras,
         ),
@@ -373,7 +575,7 @@ keep this too`;
 
       await expect(
         searchReplaceToolImpl(
-          { filepath: "test.txt", diff: "mock diff content" },
+          { filepath: "test.txt", diffs: ["mock diff content"] },
           "tool-call-id",
           mockExtras,
         ),
@@ -393,12 +595,13 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0,
         endIndex: 7,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockRejectedValue(new Error("Apply failed"));
 
       await expect(
         searchReplaceToolImpl(
-          { filepath: "test.txt", diff: "mock diff content" },
+          { filepath: "test.txt", diffs: ["mock diff content"] },
           "tool-call-id",
           mockExtras,
         ),
@@ -423,11 +626,12 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0, // Empty search matches at beginning
         endIndex: 0,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       await searchReplaceToolImpl(
-        { filepath: "test.txt", diff: "mock diff content" },
+        { filepath: "test.txt", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
@@ -457,11 +661,12 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0,
         endIndex: originalContent.length,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       await searchReplaceToolImpl(
-        { filepath: "test.txt", diff: "mock diff content" },
+        { filepath: "test.txt", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
@@ -492,11 +697,12 @@ keep this too`;
       mockFindSearchMatch.mockReturnValue({
         startIndex: 0,
         endIndex: 4,
+        strategyName: "exactMatch",
       });
       mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       await searchReplaceToolImpl(
-        { filepath: "relative/test.txt", diff: "mock diff content" },
+        { filepath: "relative/test.txt", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );

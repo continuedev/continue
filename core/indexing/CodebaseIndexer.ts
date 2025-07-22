@@ -1,7 +1,12 @@
 import * as fs from "fs/promises";
 
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
+import {
+  ContinueConfig,
+  IDE,
+  IndexingProgressUpdate,
+  IndexTag,
+} from "../index.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
@@ -9,14 +14,17 @@ import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { Telemetry } from "../util/posthog.js";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
+import { ConfigResult } from "@continuedev/config-yaml";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import { ContinueServerClient } from "../continueServer/stubs/client";
 import { LLMError } from "../llm/index.js";
 import { getRootCause } from "../util/errors.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
+import { embedModelsAreEqual } from "./docs/DocsService.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
-import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { getComputeDeleteAddRemove, IndexLock } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -44,6 +52,10 @@ export class CodebaseIndexer {
    * - To make as few requests as possible to the embeddings providers
    */
   filesPerBatch = 200;
+  // We normally allow this to run in the background,
+  // and only need to `await` it for tests.
+  public initPromise: Promise<void>;
+  private config!: ContinueConfig;
   private indexingCancellationController: AbortController | undefined;
   private codebaseIndexingState: IndexingProgressUpdate;
   private readonly pauseToken: PauseToken;
@@ -83,6 +95,17 @@ export class CodebaseIndexer {
 
     // Initialize pause token
     this.pauseToken = new PauseToken(initialPaused);
+
+    this.initPromise = this.init(configHandler);
+  }
+
+  // Initialization - load config and attach config listener
+  private async init(configHandler: ConfigHandler) {
+    const result = await configHandler.loadConfig();
+    await this.handleConfigUpdate(result);
+    configHandler.onConfigUpdate(
+      this.handleConfigUpdate.bind(this) as (arg: any) => void,
+    );
   }
 
   set paused(value: boolean) {
@@ -192,7 +215,7 @@ export class CodebaseIndexer {
     workspaceDirs: string[],
   ): Promise<void> {
     if (this.pauseToken.paused) {
-      // NOTE: by returning here, there is a chance that while paused a file is modified and
+      // FIXME: by returning here, there is a chance that while paused a file is modified and
       // then after unpausing the file is not reindexed
       return;
     }
@@ -643,11 +666,47 @@ export class CodebaseIndexer {
     );
   }
 
+  /**
+   * We want to prevent sqlite concurrent write errors
+   * when there are 2 indexing happening from different windows.
+   * We want the other window to wait until the first window's indexing finishes.
+   * Incase the first window closes before indexing is finished,
+   * we want to unlock the IndexLock by checking the last timestamp.
+   */
+  private async *waitForDBIndex(): AsyncGenerator<IndexingProgressUpdate> {
+    let foundLock = await IndexLock.isLocked();
+    while (foundLock?.locked) {
+      if ((Date.now() - foundLock.timestamp) / 1000 > 10) {
+        console.log(`${foundLock.dirs} is not being indexed... unlocking`);
+        await IndexLock.unlock();
+        break;
+      }
+      console.log(`indexing ${foundLock.dirs}`);
+      yield {
+        progress: 0,
+        desc: "",
+        status: "waiting",
+      };
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      foundLock = await IndexLock.isLocked();
+    }
+  }
+
   public async refreshCodebaseIndex(paths: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+    for await (const update of this.waitForDBIndex()) {
+      this.updateProgress(update);
+    }
+
+    await IndexLock.lock(paths.join(", ")); // acquire the index lock to prevent multiple windows to begin indexing
+    const indexLockTimestampUpdateInterval = setInterval(
+      () => void IndexLock.updateTimestamp(),
+      5_000,
+    );
+
     try {
       for await (const update of this.refreshDirs(
         paths,
@@ -663,6 +722,9 @@ export class CodebaseIndexer {
       console.log(`Failed refreshing codebase index directories: ${e}`);
       await this.handleIndexingError(e);
     }
+
+    clearInterval(indexLockTimestampUpdateInterval); // interval will also be cleared when window closes before indexing is finished
+    await IndexLock.unlock();
 
     // Directly refresh submenu items
     if (this.messenger) {
@@ -723,5 +785,50 @@ export class CodebaseIndexer {
 
   public get currentIndexingState(): IndexingProgressUpdate {
     return this.codebaseIndexingState;
+  }
+
+  private hasCodebaseContextProvider() {
+    return !!this.config.contextProviders?.some(
+      (provider) =>
+        provider.description.title ===
+        CodebaseContextProvider.description.title,
+    );
+  }
+
+  private isIndexingConfigSame(
+    config1: ContinueConfig | undefined,
+    config2: ContinueConfig,
+  ) {
+    return embedModelsAreEqual(
+      config1?.selectedModelByRole.embed,
+      config2.selectedModelByRole.embed,
+    );
+  }
+
+  private async handleConfigUpdate({
+    config: newConfig,
+  }: ConfigResult<ContinueConfig>) {
+    if (newConfig) {
+      const needsReindex = !this.isIndexingConfigSame(this.config, newConfig);
+
+      this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
+
+      // No point in indexing if no codebase context provider
+      const hasCodebaseContextProvider = this.hasCodebaseContextProvider();
+      if (!hasCodebaseContextProvider) {
+        return;
+      }
+
+      // Skip codebase indexing if not supported
+      // No warning message here because would show on ANY config update
+      if (!this.config.selectedModelByRole.embed) {
+        return;
+      }
+
+      if (needsReindex) {
+        const dirs = await this.ide.getWorkspaceDirs();
+        await this.refreshCodebaseIndex(dirs);
+      }
+    }
   }
 }
