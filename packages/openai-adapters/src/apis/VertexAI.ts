@@ -201,7 +201,12 @@ export class VertexAIApi implements BaseLlmApi {
     oaiBody: ChatCompletionCreateParams,
     url: URL,
   ): object {
-    return this.geminiInstance._convertBody(oaiBody, url.toString());
+    return this.geminiInstance._convertBody(
+      oaiBody,
+      url.toString(),
+      false,
+      false,
+    );
   }
 
   async chatCompletionNonStream(
@@ -253,13 +258,13 @@ export class VertexAIApi implements BaseLlmApi {
       },
     );
 
+    const data = await response.json();
+
     if (!response.ok) {
       throw new Error(
-        `VertexAI API error: ${response.status} ${response.statusText}`,
+        `VertexAI API error: ${response.status} ${response.statusText}\n${JSON.stringify(data)}`,
       );
     }
-
-    const data = await response.json();
 
     // Convert response to OpenAI format
     switch (vertexProvider) {

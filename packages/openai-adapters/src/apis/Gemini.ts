@@ -84,7 +84,12 @@ export class GeminiApi implements BaseLlmApi {
     }
   }
 
-  public _convertBody(oaiBody: ChatCompletionCreateParams, url: string) {
+  public _convertBody(
+    oaiBody: ChatCompletionCreateParams,
+    url: string,
+    includeToolCallIds: boolean,
+    overrideIsV1?: boolean,
+  ) {
     const generationConfig: any = {};
 
     if (oaiBody.top_p) {
@@ -101,7 +106,7 @@ export class GeminiApi implements BaseLlmApi {
       generationConfig.stopSequences = stop.filter((x) => x.trim() !== "");
     }
 
-    const isV1API = url.includes("/v1/");
+    const isV1API = overrideIsV1 ?? url.includes("/v1/");
 
     const toolCallIdToNameMap = new Map<string, string>();
     oaiBody.messages.forEach((msg) => {
@@ -127,7 +132,7 @@ export class GeminiApi implements BaseLlmApi {
             role: "model" as const,
             parts: msg.tool_calls.map((toolCall) => ({
               functionCall: {
-                id: toolCall.id,
+                id: includeToolCallIds ? toolCall.id : undefined,
                 name: toolCall.function.name,
                 args: safeParseArgs(
                   toolCall.function.arguments,
@@ -145,7 +150,7 @@ export class GeminiApi implements BaseLlmApi {
             parts: [
               {
                 functionResponse: {
-                  id: msg.tool_call_id,
+                  id: includeToolCallIds ? msg.tool_call_id : undefined,
                   name: functionName ?? "unknown",
                   response: {
                     content:
@@ -328,7 +333,7 @@ export class GeminiApi implements BaseLlmApi {
       `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
       this.apiBase,
     ).toString();
-    const convertedBody = this._convertBody(body, apiURL);
+    const convertedBody = this._convertBody(body, apiURL, true);
     const resp = await customFetch(this.config.requestOptions)(apiURL, {
       method: "POST",
       body: JSON.stringify(convertedBody),
