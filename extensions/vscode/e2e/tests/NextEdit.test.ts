@@ -111,7 +111,7 @@ describe("Next Edit", () => {
   //   expect(false).to.be.true;
   // }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it.only("Should force a Next Edit", async () => {
+  it("Should force a Next Edit", async () => {
     const hasDecoration = await NextEditActions.forceNextEdit(editor);
     expect(hasDecoration).to.be.true;
   }).timeout(DEFAULT_TIMEOUT.XL);
