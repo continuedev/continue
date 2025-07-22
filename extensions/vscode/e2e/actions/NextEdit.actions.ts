@@ -52,7 +52,7 @@ export class NextEditActions {
     console.log("Executed 'Force Next Edit' command");
     
     console.log("Waiting for SVG decoration to appear...");
-    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.MD); // Add a reasonable wait
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XL);
     console.log("Wait completed, looking for decoration...");
 
     const svgDecoration = await TestUtils.waitForSuccess(
