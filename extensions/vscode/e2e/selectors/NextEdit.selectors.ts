@@ -9,6 +9,7 @@ export class NextEditSelectors {
       const decorations = await driver.findElement(
         // By.xpath("//*[contains(@class, 'ced-') and matches(@class, 'ced-2-TextEditorDecorationType[0-9]+-4')]")
         By.css("[class*='TextEditorDecorationType']"),
+        // By.css("div[class*='TextEditorDecorationType'][style*='filter']")
       );
       return decorations ?? null;
     } catch (error) {
