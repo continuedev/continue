@@ -50,6 +50,7 @@ export interface IndexingProgressUpdate {
   shouldClearIndexes?: boolean;
   status:
     | "loading"
+    | "waiting"
     | "indexing"
     | "done"
     | "failed"
@@ -121,6 +122,7 @@ export interface ILLM
     messages: ChatMessage[],
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
@@ -128,6 +130,11 @@ export interface ILLM
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
+
+  compileChatMessages(
+    messages: ChatMessage[],
+    options: LLMFullCompletionOpeions,
+  ): CompiledChatMessagesReport;
 
   embed(chunks: string[]): Promise<number[][]>;
 
@@ -362,10 +369,32 @@ export interface ThinkingChatMessage {
   toolCalls?: ToolCallDelta[];
 }
 
+/**
+ * This is meant to be equivalent to the OpenAI [usage object](https://platform.openai.com/docs/api-reference/chat/object#chat/object-usage)
+ * but potentially with additional information that is needed for other providers.
+ */
+export interface Usage {
+  completionTokens: number;
+  promptTokens: number;
+  promptTokensDetails?: {
+    cachedTokens?: number;
+    /** This an Anthropic-specific property */
+    cacheWriteTokens?: number;
+    audioTokens?: number;
+  };
+  completionTokensDetails?: {
+    acceptedPredictionTokens?: number;
+    reasoningTokens?: number;
+    rejectedPredictionTokens?: number;
+    audioTokens?: number;
+  };
+}
+
 export interface AssistantChatMessage {
   role: "assistant";
   content: MessageContent;
   toolCalls?: ToolCallDelta[];
+  usage?: Usage;
 }
 
 export interface SystemChatMessage {
@@ -431,12 +460,12 @@ export interface PromptLog {
 export type MessageModes = "chat" | "agent" | "plan";
 
 export type ToolStatus =
-  | "generating"
-  | "generated"
-  | "calling"
-  | "errored"
-  | "done"
-  | "canceled";
+  | "generating" // Tool call arguments are being streamed from the LLM
+  | "generated" // Tool call is complete and ready for execution (awaiting approval)
+  | "calling" // Tool is actively being executed
+  | "errored" // Tool execution failed with an error
+  | "done" // Tool execution completed successfully
+  | "canceled"; // Tool call was canceled by user or system
 
 // Will exist only on "assistant" messages with tool calls
 interface ToolCallState {
@@ -461,10 +490,11 @@ export interface ChatHistoryItem {
   editorState?: any;
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
-  toolCallState?: ToolCallState;
+  toolCallStates?: ToolCallState[];
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
   appliedRules?: RuleWithSource[];
+  conversationSummary?: string;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -483,12 +513,14 @@ export interface LLMInteractionStartChat extends LLMInteractionBase {
   kind: "startChat";
   messages: ChatMessage[];
   options: CompletionOptions;
+  provider: string;
 }
 
 export interface LLMInteractionStartComplete extends LLMInteractionBase {
   kind: "startComplete";
   prompt: string;
   options: CompletionOptions;
+  provider: string;
 }
 
 export interface LLMInteractionStartFim extends LLMInteractionBase {
@@ -496,6 +528,7 @@ export interface LLMInteractionStartFim extends LLMInteractionBase {
   prefix: string;
   suffix: string;
   options: CompletionOptions;
+  provider: string;
 }
 
 export interface LLMInteractionChunk extends LLMInteractionBase {
@@ -512,6 +545,7 @@ export interface LLMInteractionEnd extends LLMInteractionBase {
   promptTokens: number;
   generatedTokens: number;
   thinkingTokens: number;
+  usage: Usage | undefined;
 }
 
 export interface LLMInteractionSuccess extends LLMInteractionEnd {
@@ -665,11 +699,24 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
-export type DiffLineType = "new" | "old" | "same";
+export type DiffType = "new" | "old" | "same";
 
-export interface DiffLine {
-  type: DiffLineType;
+export interface DiffObject {
+  type: DiffType;
+}
+
+export interface DiffLine extends DiffObject {
   line: string;
+}
+
+interface DiffChar extends DiffObject {
+  char: string;
+  oldIndex?: number; // Character index assuming a flattened line string.
+  newIndex?: number;
+  oldCharIndexInLine?: number; // Character index assuming new lines reset the character index to 0.
+  newCharIndexInLine?: number;
+  oldLineIndex?: number;
+  newLineIndex?: number;
 }
 
 export interface Problem {
@@ -691,6 +738,7 @@ export interface IdeInfo {
   version: string;
   remoteName: string;
   extensionVersion: string;
+  isPrerelease: boolean;
 }
 
 export interface BranchAndDir {
@@ -1268,7 +1316,6 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
   showSessionTabs?: boolean;
   autoAcceptEditToolDiffs?: boolean;
-  logEditingData?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1420,11 +1467,6 @@ export interface ExperimentalConfig {
    * If enabled, will add the current file as context.
    */
   useCurrentFileAsContext?: boolean;
-
-  /**
-   * If enabled, will save data on the user's editing processes
-   */
-  logEditingData?: boolean;
 
   /**
    * If enabled, will enable next edit in place of autocomplete
@@ -1649,6 +1691,7 @@ export type RuleSource =
   | "model-options-plan"
   | "model-options-agent"
   | "rules-block"
+  | "colocated-markdown"
   | "json-systemMessage"
   | ".continuerules";
 
@@ -1667,4 +1710,14 @@ export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;
   apiKey?: string;
+}
+
+export interface CompiledMessagesResult {
+  compiledChatMessages: ChatMessage[];
+  didPrune: boolean;
+  contextPercentage: number;
+}
+
+export interface MessageOption {
+  precompiled: boolean;
 }

@@ -7,7 +7,7 @@ If you haven't already installed Continue, you can do that [here for VS Code](ht
 
 Below we share some of the easiest ways to get up and running, depending on your use-case.
 
-## Ollama[​](#ollama "Direct link to Ollama")
+## Ollama
 
 Ollama is the fastest way to get up and running with local language models. We recommend trying Llama 3.1 8b, which is impressive for its size and will perform well on most hardware.
 
@@ -21,7 +21,10 @@ Ollama is the fastest way to get up and running with local language models. We r
 config.yaml
 
 ```
-models:  - name: Llama 3.1 8b    provider: ollama    model: llama3.1-8b
+models:
+  - name: Llama 3.1 8b
+    provider: ollama
+    model: llama3.1-8b
 ```
 
 config.json
@@ -34,7 +37,7 @@ config.json
 }
 ```
 
-## Groq[​](#groq "Direct link to Groq")
+## Groq
 
 <Info>
   Check if your chosen model is still supported by referring to the [model
@@ -53,7 +56,11 @@ Groq provides the fastest available inference for open-source language models, i
 config.yaml
 
 ```
-models:  - name: Llama 3.3 70b Versatile    provider: groq    model: llama-3.3-70b-versatile    apiKey: <YOUR_GROQ_API_KEY>
+models:
+  - name: Llama 3.3 70b Versatile
+    provider: groq
+    model: llama-3.3-70b-versatile
+    apiKey: <YOUR_GROQ_API_KEY>
 ```
 
 config.json
@@ -71,7 +78,7 @@ config.json
 }
 ```
 
-## Together AI[​](#together-ai "Direct link to Together AI")
+## Together AI
 
 Together AI provides fast and reliable inference of open-source models. You'll be able to run the 405b model with good speed.
 
@@ -85,7 +92,11 @@ Together AI provides fast and reliable inference of open-source models. You'll b
 config.yaml
 
 ```
-models:  - name: Llama 3.1 405b    provider: together    model: llama3.1-405b    apiKey: <YOUR_TOGETHER_API_KEY>
+models:
+  - name: Llama 3.1 405b
+    provider: together
+    model: llama3.1-405b
+    apiKey: <YOUR_TOGETHER_API_KEY>
 ```
 
 config.json
@@ -103,7 +114,7 @@ config.json
 }
 ```
 
-## Replicate[​](#replicate "Direct link to Replicate")
+## Replicate
 
 Replicate makes it easy to host and run open-source AI with an API.
 
@@ -116,7 +127,11 @@ Replicate makes it easy to host and run open-source AI with an API.
 config.yaml
 
 ```
-models:  - name: Llama 3.1 405b    provider: replicate    model: llama3.1-405b    apiKey: <YOUR_REPLICATE_API_KEY>
+models:
+  - name: Llama 3.1 405b
+    provider: replicate
+    model: llama3.1-405b
+    apiKey: <YOUR_REPLICATE_API_KEY>
 ```
 
 config.json
@@ -134,7 +149,7 @@ config.json
 }
 ```
 
-## SambaNova[​](#sambanova "Direct link to SambaNova")
+## SambaNova
 
 SambaNova Cloud provides world record Llama3.1 70B/405B serving.
 
@@ -148,7 +163,11 @@ SambaNova Cloud provides world record Llama3.1 70B/405B serving.
 config.yaml
 
 ```
-models:  - name: SambaNova Llama 3.1 405B    provider: sambanova    model: llama3.1-405b    apiKey: <YOUR_SAMBA_API_KEY>
+models:
+  - name: SambaNova Llama 3.1 405B
+    provider: sambanova
+    model: llama3.1-405b
+    apiKey: <YOUR_SAMBA_API_KEY>
 ```
 
 config.json
@@ -166,7 +185,7 @@ config.json
 }
 ```
 
-## Cerebras Inference[​](#cerebras-inference "Direct link to Cerebras Inference")
+## Cerebras Inference
 
 Cerebras Inference uses specialized silicon to provides fast inference for the Llama3.1 8B/70B.
 
@@ -180,7 +199,11 @@ Cerebras Inference uses specialized silicon to provides fast inference for the L
 config.yaml
 
 ```
-models:  - name: Cerebras Llama 3.1 70B    provider: cerebras    model: llama3.1-70b    apiKey: <YOUR_CEREBRAS_API_KEY>
+models:
+  - name: Cerebras Llama 3.1 70B
+    provider: cerebras
+    model: llama3.1-70b
+    apiKey: <YOUR_CEREBRAS_API_KEY>
 ```
 
 config.json

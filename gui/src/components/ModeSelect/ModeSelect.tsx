@@ -97,6 +97,18 @@ export function ModeSelect() {
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="chat" />
               <span className="">Chat</span>
+              <InformationCircleIcon
+                data-tooltip-id="chat-tip"
+                className="h-2.5 w-2.5 flex-shrink-0"
+              />
+              <ToolTip
+                id="chat-tip"
+                style={{
+                  zIndex: 200001,
+                }}
+              >
+                All tools disabled
+              </ToolTip>
               <span
                 className={`text-description-muted text-[${getFontSize() - 3}px] mr-auto`}
               >
@@ -123,7 +135,7 @@ export function ModeSelect() {
                   zIndex: 200001,
                 }}
               >
-                In Plan mode, only read-only and MCP tools are enabled
+                Read-only/MCP tools available
               </ToolTip>
             </div>
             {agentModeSupported ? (
@@ -152,7 +164,7 @@ export function ModeSelect() {
                   zIndex: 200001,
                 }}
               >
-                All tools are enabled based on policies
+                All tools available
               </ToolTip>
             </div>
             {agentModeSupported ? (

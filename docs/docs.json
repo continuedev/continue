@@ -65,6 +65,7 @@
                 "pages": [
                   "features/agent/quick-start",
                   "features/agent/how-it-works",
+                  "features/agent/plan-mode",
                   "features/agent/model-setup",
                   "features/agent/how-to-customize",
                   "features/agent/context-selection"
@@ -258,7 +259,8 @@
             "pages": [
               "reference",
               "reference/json-reference",
-              "reference/yaml-migration"
+              "reference/yaml-migration",
+              "reference/continue-mcp"
             ]
           }
         ]
