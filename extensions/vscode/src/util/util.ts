@@ -111,12 +111,12 @@ export function isUnsupportedPlatform(): {
     };
   }
 
-  if (platform === "unknown" || arch === "unknown") {
-    return {
-      isUnsupported: true,
-      reason: `Unsupported platform combination: ${os.platform()}-${os.arch()}. Continue extension supports Windows x64, macOS (Intel/Apple Silicon), and Linux (x64/ARM64).`,
-    };
-  }
+  // if (platform === "unknown" || arch === "unknown") {
+  //   return {
+  //     isUnsupported: true,
+  //     reason: `Unsupported platform combination: ${os.platform()}-${os.arch()}. Continue extension supports Windows x64, macOS (Intel/Apple Silicon), and Linux (x64/ARM64).`,
+  //   };
+  // }
 
   return { isUnsupported: false };
 }
