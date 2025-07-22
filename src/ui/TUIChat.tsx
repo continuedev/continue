@@ -1,14 +1,13 @@
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { Box, Text } from "ink";
-import * as os from "node:os";
-import * as path from "node:path";
 import React, { useEffect, useState } from "react";
-import { loadAuthConfig } from "../auth/workos.js";
-import { initialize } from "../config.js";
-import { introMessage } from "../intro.js";
-import { MCPService } from "../mcp.js";
+import { useServices } from "../hooks/useService.js";
+import {
+  ApiClientServiceState,
+  AuthServiceState,
+  ConfigServiceState,
+  MCPServiceState,
+  ModelServiceState,
+} from "../services/types.js";
 import ConfigSelector from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
 import FreeTrialStatus from "./FreeTrialStatus.js";
@@ -23,18 +22,11 @@ import Timer from "./Timer.js";
 import UpdateNotification from "./UpdateNotification.js";
 import UserInput from "./UserInput.js";
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
-
 interface TUIChatProps {
   // Remote mode props
   remoteUrl?: string;
-  
-  // Local mode props
-  config?: AssistantUnrolled;
-  model?: ModelConfig;
-  llmApi?: BaseLlmApi;
-  mcpService?: MCPService;
-  apiClient?: DefaultApiInterface;
+
+  // Local mode props - now optional since we'll get them from services
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
@@ -43,11 +35,6 @@ interface TUIChatProps {
 
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
-  config: initialAssistant,
-  model: initialModel,
-  llmApi: initialLlmApi,
-  mcpService: initialMcpService,
-  apiClient,
   configPath,
   initialPrompt,
   resume,
@@ -55,12 +42,20 @@ const TUIChat: React.FC<TUIChatProps> = ({
 }) => {
   // Check if we're in remote mode
   const isRemoteMode = !!remoteUrl;
-  
-  // Track current assistant configuration state
-  const [assistant, setAssistant] = useState(initialAssistant);
-  const [model, setModel] = useState(initialModel);
-  const [llmApi, setLlmApi] = useState(initialLlmApi);
-  const [mcpService, setMcpService] = useState(initialMcpService);
+
+  // Get all services reactively - only in normal mode
+  const {
+    services,
+    loading: servicesLoading,
+    error: servicesError,
+    allReady: allServicesReady,
+  } = useServices<{
+    auth: AuthServiceState;
+    config: ConfigServiceState;
+    model: ModelServiceState;
+    mcp: MCPServiceState;
+    apiClient: ApiClientServiceState;
+  }>(["auth", "config", "model", "mcp", "apiClient"]);
 
   // State for login prompt handling
   const [loginPrompt, setLoginPrompt] = useState<{
@@ -97,114 +92,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
     }
   };
 
-  // Full reload function - clears history and reinitializes (for models subscription)
-  const handleFullReload = async () => {
-    try {
-      // Reload auth config and reinitialize
-      const authConfig = loadAuthConfig();
-      const {
-        config: newAssistant,
-        llmApi: newLlmApi,
-        model: newModel,
-        mcpService: newMcpService,
-      } = await initialize(authConfig, configPath);
-
-      // Update all the state
-      setAssistant(newAssistant);
-      setModel(newModel);
-      setLlmApi(newLlmApi);
-      setMcpService(newMcpService);
-
-      // Clear the screen completely
-      process.stdout.write("\x1b[2J\x1b[H");
-
-      // Show the new intro message
-      introMessage(newAssistant, newModel, newMcpService);
-    } catch (error: any) {
-      console.error(
-        `Failed to reload after models subscription: ${error.message}`
-      );
-    }
-  };
-
-  // Partial reload function - preserves history (for login or other config changes)
+  // Service reload handlers - these will trigger reactive updates
   const handleReload = async () => {
-    try {
-      // Reload auth config and reinitialize
-      const authConfig = loadAuthConfig();
-      const {
-        config: newAssistant,
-        llmApi: newLlmApi,
-        model: newModel,
-        mcpService: newMcpService,
-      } = await initialize(authConfig, configPath);
-
-      // Update all the state
-      setAssistant(newAssistant);
-      setModel(newModel);
-      setLlmApi(newLlmApi);
-      setMcpService(newMcpService);
-
-      // Reset chat history
-      resetChatHistory();
-
-      // Clear the screen completely
-      process.stdout.write("\x1b[2J\x1b[H");
-
-      // Show the new intro message
-      introMessage(newAssistant, newModel, newMcpService);
-    } catch (error: any) {
-      console.error(
-        `Failed to reload after configuration change: ${error.message}`
-      );
-    }
-  };
-
-  // Switch to local config - preserves chat history unlike handleReload
-  const handleSwitchToLocalConfig = async () => {
-    try {
-      // Reload auth config and reinitialize with local config path
-      const authConfig = loadAuthConfig();
-      const {
-        config: newAssistant,
-        llmApi: newLlmApi,
-        model: newModel,
-        mcpService: newMcpService,
-      } = await initialize(authConfig, CONFIG_PATH);
-
-      // Update configuration state but preserve chat history
-      setAssistant(newAssistant);
-      setModel(newModel);
-      setLlmApi(newLlmApi);
-      setMcpService(newMcpService);
-
-      // Add a system message to indicate the configuration switch
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content:
-            "✓ Switched to local configuration with your Anthropic API key",
-          messageType: "system" as const,
-        },
-      ]);
-
-      // Don't clear screen or reset chat history - just continue the conversation!
-    } catch (error: any) {
-      console.error(
-        `Failed to switch to local configuration: ${error.message}`
-      );
-
-      // Show error message in chat but don't break the flow
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: `❌ Error switching to local configuration: ${error.message}`,
-          messageType: "system" as const,
-        },
-      ]);
-    }
+    // Services will automatically update the UI when they reload
+    // We just need to reset chat history and clear the screen
+    resetChatHistory();
+    process.stdout.write("\x1b[2J\x1b[H");
   };
 
   const {
@@ -218,9 +111,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
     handleFileAttached,
     resetChatHistory,
   } = useChat({
-    assistant,
-    model,
-    llmApi,
+    assistant: services.config?.config || undefined,
+    model: services.model?.model || undefined,
+    llmApi: services.model?.llmApi || undefined,
     initialPrompt,
     resume,
     additionalRules,
@@ -243,10 +136,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
   } = useOrganizationSelector({
     configPath,
     onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {
-      setAssistant(newAssistant);
-      setModel(newModel);
-      setLlmApi(newLlmApi);
-      setMcpService(newMcpService);
+      // These will be updated automatically by the service system
+      // We just need to trigger a reload which will cause services to update
     },
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
@@ -262,10 +153,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
   } = useConfigSelector({
     configPath,
     onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {
-      setAssistant(newAssistant);
-      setModel(newModel);
-      setLlmApi(newLlmApi);
-      setMcpService(newMcpService);
+      // These will be updated automatically by the service system
+      // We just need to trigger a reload which will cause services to update
     },
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
@@ -281,12 +170,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const handleFreeTrialSwitchToLocal = () => {
     setIsShowingFreeTrialTransition(false);
-    handleSwitchToLocalConfig();
+    handleReload();
   };
 
   const handleFreeTrialFullReload = () => {
     setIsShowingFreeTrialTransition(false);
-    handleFullReload();
+    handleReload();
   };
 
   // Determine if input should be disabled
@@ -295,6 +184,76 @@ const TUIChat: React.FC<TUIChatProps> = ({
     showConfigSelector ||
     !!loginPrompt ||
     isShowingFreeTrialTransition;
+
+  // Show loading state while services are initializing - ONLY in normal mode
+  if (!isRemoteMode && servicesLoading && !allServicesReady) {
+    return (
+      <Box
+        flexDirection="column"
+        height="100%"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Box flexDirection="row" gap={1}>
+          <LoadingAnimation visible={true} />
+          <Text color="gray">Loading services...</Text>
+        </Box>
+        {servicesError && (
+          <Box marginTop={1}>
+            <Text color="red">Error: {servicesError.message}</Text>
+          </Box>
+        )}
+        {/* Show progressive loading info */}
+        <Box flexDirection="column" alignItems="center">
+          {services.auth && (
+            <Text color="green" dimColor>
+              ✓ Authentication ready
+            </Text>
+          )}
+          {services.apiClient && (
+            <Text color="green" dimColor>
+              ✓ API client ready
+            </Text>
+          )}
+          {services.config && (
+            <Text color="green" dimColor>
+              ✓ Configuration loaded
+            </Text>
+          )}
+          {services.model && (
+            <Text color="green" dimColor>
+              ✓ Model initialized
+            </Text>
+          )}
+          {services.mcp && (
+            <Text color="green" dimColor>
+              ✓ MCP services ready
+            </Text>
+          )}
+        </Box>
+      </Box>
+    );
+  }
+
+  // Show error state if services failed to load - ONLY in normal mode
+  if (!isRemoteMode && servicesError && !servicesLoading) {
+    return (
+      <Box
+        flexDirection="column"
+        height="100%"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Text color="red" bold>
+          Service Error
+        </Text>
+        <Text color="red">{servicesError.message}</Text>
+        <Box marginTop={1}>
+          <Text color="gray">Press Ctrl+C to exit</Text>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box flexDirection="column" height="100%">
@@ -332,7 +291,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
               onSubmit={handleLoginTokenSubmit}
               isWaitingForResponse={false}
               inputMode={true}
-              assistant={assistant}
+              assistant={services.config?.config || undefined}
               disabled={false}
               placeholder="Enter your token..."
               hideNormalUI={true}
@@ -372,7 +331,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             isWaitingForResponse={isWaitingForResponse}
             inputMode={inputMode}
             onInterrupt={handleInterrupt}
-            assistant={assistant}
+            assistant={services.config?.config || undefined}
             onFileAttached={handleFileAttached}
             disabled={isInputDisabled}
             isRemoteMode={isRemoteMode}
@@ -386,10 +345,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
           alignItems="center"
         >
           <Box>
-            {!isRemoteMode && model && (
+            {!isRemoteMode && services.model?.model && (
               <FreeTrialStatus
-                apiClient={apiClient}
-                model={model}
+                apiClient={services.apiClient?.apiClient || undefined}
+                model={services.model.model}
                 onTransitionStateChange={setIsShowingFreeTrialTransition}
               />
             )}

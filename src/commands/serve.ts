@@ -1,8 +1,9 @@
 import chalk from "chalk";
-import express, { Request, Response } from "express";
 import { exec } from "child_process";
-import { promisify } from "util";
+import express, { Request, Response } from "express";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
+import path from "path";
+import { promisify } from "util";
 import {
   ensureOrganization,
   getOrganizationId,
@@ -10,14 +11,13 @@ import {
 } from "../auth/workos.js";
 import { runNormalFlow } from "../onboarding.js";
 import { saveSession } from "../session.js";
+import type { StreamCallbacks } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
+import { getToolDisplayName } from "../tools.js";
+import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
-import { DisplayMessage } from "../ui/types.js";
-import { getToolDisplayName } from "../tools.js";
-import path from "path";
-import type { StreamCallbacks } from "../streamChatResponse.js";
 
 const execAsync = promisify(exec);
 
@@ -148,7 +148,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
       // Get the diff against main branch
       const { stdout } = await execAsync("git diff main");
-      
+
       res.json({
         diff: stdout,
       });
@@ -160,28 +160,33 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         });
       } else if (error.code === 128) {
         // Handle case where we're not in a git repo or main branch doesn't exist
-        res.status(404).json({ 
+        res.status(404).json({
           error: "Not in a git repository or main branch doesn't exist",
-          diff: ""
+          diff: "",
         });
       } else {
         logger.error(`Git diff error: ${formatError(error)}`);
-        res.status(500).json({ 
+        res.status(500).json({
           error: `Failed to get git diff: ${formatError(error)}`,
-          diff: ""
+          diff: "",
         });
       }
     }
   });
 
+  // Track intervals for cleanup
+  let inactivityChecker: NodeJS.Timeout | null = null;
+
   // POST /exit - Gracefully shut down the server
   app.post("/exit", async (_req: Request, res: Response) => {
-    console.log(chalk.yellow("\nReceived exit request, shutting down server..."));
-    
+    console.log(
+      chalk.yellow("\nReceived exit request, shutting down server...")
+    );
+
     // Respond immediately before shutting down
-    res.json({ 
+    res.json({
       message: "Server shutting down",
-      success: true 
+      success: true,
     });
 
     // Set server running flag to false to stop processing
@@ -194,6 +199,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
     // Clear the message queue
     state.messageQueue = [];
+
+    // Clean up intervals
+    if (inactivityChecker) {
+      clearInterval(inactivityChecker);
+      inactivityChecker = null;
+    }
 
     // Give a moment for the response to be sent
     setTimeout(() => {
@@ -211,7 +222,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(
       chalk.dim("  POST /message - Send a message (body: { message: string })")
     );
-    console.log(chalk.dim("  GET  /diff    - Get git diff against main branch"));
+    console.log(
+      chalk.dim("  GET  /diff    - Get git diff against main branch")
+    );
     console.log(chalk.dim("  POST /exit    - Gracefully shut down the server"));
     console.log(
       chalk.dim(
@@ -264,8 +277,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
             state.chatHistory.pop();
           }
           // Also remove partial display messages
-          const lastDisplayMessage = state.displayMessages[state.displayMessages.length - 1];
-          if (lastDisplayMessage && lastDisplayMessage.role === "assistant" && lastDisplayMessage.isStreaming) {
+          const lastDisplayMessage =
+            state.displayMessages[state.displayMessages.length - 1];
+          if (
+            lastDisplayMessage &&
+            lastDisplayMessage.role === "assistant" &&
+            lastDisplayMessage.isStreaming
+          ) {
             state.displayMessages.pop();
           }
         } else {
@@ -289,7 +307,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   }
 
   // Check for inactivity and shutdown
-  const inactivityChecker = setInterval(() => {
+  inactivityChecker = setInterval(() => {
     if (!state.isProcessing && Date.now() - state.lastActivity > timeoutMs) {
       console.log(
         chalk.yellow(
@@ -301,7 +319,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         telemetryService.stopActiveTime();
         process.exit(0);
       });
-      clearInterval(inactivityChecker);
+      if (inactivityChecker) {
+        clearInterval(inactivityChecker);
+        inactivityChecker = null;
+      }
     }
   }, 1000);
 
@@ -309,6 +330,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   process.on("SIGINT", () => {
     console.log(chalk.yellow("\nShutting down server..."));
     state.serverRunning = false;
+    if (inactivityChecker) {
+      clearInterval(inactivityChecker);
+      inactivityChecker = null;
+    }
     server.close(() => {
       telemetryService.stopActiveTime();
       process.exit(0);
@@ -401,7 +426,7 @@ async function streamChatResponseWithInterruption(
     onToolResult: (result: string, toolName: string) => {
       // Replace the tool-start message with tool-result
       const displayName = getToolDisplayName(toolName);
-      
+
       // Find and replace the corresponding tool-start message
       for (let i = state.displayMessages.length - 1; i >= 0; i--) {
         if (
@@ -417,7 +442,7 @@ async function streamChatResponseWithInterruption(
           return;
         }
       }
-      
+
       // If no tool-start found, add as new message (fallback)
       state.displayMessages.push({
         role: "system",

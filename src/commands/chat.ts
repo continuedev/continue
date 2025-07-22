@@ -2,12 +2,7 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
-import {
-  ensureOrganization,
-  getOrganizationId,
-  loadAuthConfig,
-} from "../auth/workos.js";
-import { introMessage } from "../intro.js";
+import { loadAuthConfig } from "../auth/workos.js";
 import { configureLogger } from "../logger.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
@@ -25,46 +20,6 @@ export interface ChatOptions {
   config?: string;
   resume?: boolean;
   rule?: string[]; // Array of rule specifications
-}
-
-async function initializeChat(options: ChatOptions) {
-  const authConfig = loadAuthConfig();
-
-  // Use onboarding flow for initialization
-  if (!options.headless) {
-    console.log(chalk.white(CONTINUE_ASCII_ART));
-    console.info(chalk.gray(`v${getVersion()}\n`));
-  }
-  const result = await initializeWithOnboarding(
-    authConfig,
-    options.config,
-    options.rule
-  );
-
-  // Ensure organization is selected if authenticated
-  let finalAuthConfig = authConfig;
-  if (result.config && authConfig) {
-    finalAuthConfig = await ensureOrganization(
-      authConfig,
-      options.headless ?? false
-    );
-
-    // Update telemetry with organization info
-    if (finalAuthConfig) {
-      const organizationId = getOrganizationId(finalAuthConfig);
-      if (organizationId) {
-        telemetryService.updateOrganization(organizationId);
-      }
-    }
-  }
-
-  return {
-    config: result.config,
-    llmApi: result.llmApi,
-    model: result.model,
-    mcpService: result.mcpService,
-    apiClient: result.apiClient,
-  };
 }
 
 async function initializeChatHistory(
@@ -143,14 +98,26 @@ async function processMessage(
 }
 
 async function runHeadlessMode(
-  config: any,
-  llmApi: any,
-  model: any,
-  mcpService: any,
   prompt: string | undefined,
   options: ChatOptions
 ): Promise<void> {
+  // Initialize services for headless mode
+  console.log(chalk.white(CONTINUE_ASCII_ART));
+  console.info(chalk.gray(`v${getVersion()}\n`));
+
+  // For headless mode, we still need to use the old initialization
+  // pattern until we refactor headless mode to use services
+  const authConfig = loadAuthConfig();
+  const result = await initializeWithOnboarding(
+    authConfig,
+    options.config,
+    options.rule
+  );
+
+  const { config, llmApi, model, mcpService } = result;
+
   // Show intro message for headless mode
+  const { introMessage } = await import("../intro.js");
   introMessage(config, model, mcpService);
 
   // Initialize chat history
@@ -180,9 +147,6 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   configureLogger(options.headless ?? false);
 
   try {
-    const { config, llmApi, model, mcpService, apiClient } =
-      await initializeChat(options);
-
     // Record session start
     telemetryService.recordSessionStart();
 
@@ -191,22 +155,17 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
     // If not in headless mode, start the TUI chat (default)
     if (!options.headless) {
-      await startTUIChat(
-        config,
-        llmApi,
-        model,
-        mcpService,
-        apiClient,
-        prompt,
-        options.resume,
-        options.config,
-        options.rule
-      );
+      // Show ASCII art and version for TUI mode
+      console.log(chalk.white(CONTINUE_ASCII_ART));
+      console.info(chalk.gray(`v${getVersion()}\n`));
+
+      // Start TUI immediately - it will handle service loading
+      await startTUIChat(prompt, options.resume, options.config, options.rule);
       return;
     }
 
-    // Run headless mode
-    await runHeadlessMode(config, llmApi, model, mcpService, prompt, options);
+    // Run headless mode with old initialization pattern
+    await runHeadlessMode(prompt, options);
   } catch (error: any) {
     logger.error(chalk.red(`Fatal error: ${formatError(error)}`));
     process.exit(1);

@@ -1,4 +1,14 @@
+import { jest } from "@jest/globals";
 import { render } from "ink-testing-library";
+import React from "react";
+import TUIChat from "../TUIChat.js";
+import {
+  MockApiClient,
+  mockAssistant,
+  MockLlmApi,
+  MockMCPService,
+} from "./TUIChat.setup.js";
+import { MockRemoteServer } from "./mockRemoteServer.js";
 
 // Define RenderResult type to match ink-testing-library's Instance
 interface RenderResult {
@@ -9,10 +19,6 @@ interface RenderResult {
   rerender: (element: React.ReactElement) => void;
   unmount: () => void;
 }
-import React from "react";
-import TUIChat from "../TUIChat.js";
-import { createProps } from "./TUIChat.setup.js";
-import { MockRemoteServer } from "./mockRemoteServer.js";
 
 export type TestMode = "normal" | "remote" | "both";
 
@@ -46,8 +52,33 @@ export function runTest(
   modes.forEach((testMode) => {
     describe(`[${testMode.toUpperCase()} MODE]`, () => {
       it(name, async () => {
+        // Import mocks from Jest setup
+        const { useServices, useService } = await import(
+          "../../hooks/useService.js"
+        );
+        const mockUseServices = useServices as jest.MockedFunction<
+          typeof useServices
+        >;
+        const mockUseService = useService as jest.MockedFunction<
+          typeof useService
+        >;
+
         if (testMode === "remote") {
-          // Set up remote mode
+          // Set up remote mode - use different mocks
+          mockUseServices.mockReturnValue({
+            services: {},
+            loading: false,
+            error: null,
+            allReady: true,
+          });
+
+          mockUseService.mockReturnValue({
+            value: null,
+            state: "idle",
+            error: null,
+            reload: jest.fn(),
+          });
+
           const server = new MockRemoteServer();
           const port = await server.start();
           const remoteUrl = server.getUrl(port);
@@ -60,7 +91,7 @@ export function runTest(
           let renderResult: RenderResult | null = null;
           try {
             renderResult = render(
-              React.createElement(TUIChat, { ...createProps({ remoteUrl, ...props }) })
+              React.createElement(TUIChat, { remoteUrl, ...props })
             ) as RenderResult;
 
             await testFn({
@@ -78,11 +109,52 @@ export function runTest(
             await server.stop();
           }
         } else {
-          // Normal mode
+          // Normal mode - set up service mocks with ready services
+          mockUseServices.mockReturnValue({
+            services: {
+              auth: { authConfig: null, isAuthenticated: false },
+              config: { config: mockAssistant },
+              model: {
+                llmApi: new MockLlmApi(),
+                model: { provider: "test", name: "test" },
+              },
+              mcp: { mcpService: new MockMCPService() },
+              apiClient: { apiClient: new MockApiClient() },
+            },
+            loading: false,
+            error: null,
+            allReady: true,
+          });
+
+          mockUseService.mockImplementation((serviceName: string) => ({
+            value: (() => {
+              switch (serviceName) {
+                case "auth":
+                  return { authConfig: null, isAuthenticated: false };
+                case "config":
+                  return { config: mockAssistant };
+                case "model":
+                  return {
+                    llmApi: new MockLlmApi(),
+                    model: { provider: "test", name: "test" },
+                  };
+                case "mcp":
+                  return { mcpService: new MockMCPService() };
+                case "apiClient":
+                  return { apiClient: new MockApiClient() };
+                default:
+                  return null;
+              }
+            })(),
+            state: "ready",
+            error: null,
+            reload: jest.fn(),
+          }));
+
           let renderResult: RenderResult | null = null;
           try {
             renderResult = render(
-              React.createElement(TUIChat, { ...createProps(props) })
+              React.createElement(TUIChat, { ...props })
             ) as RenderResult;
 
             await testFn({
@@ -112,25 +184,54 @@ export function runTestSuite(
   suiteFn: () => void,
   defaultOptions: TestOptions = {}
 ) {
-  const modes = defaultOptions.mode === "both" || !defaultOptions.mode 
-    ? ["normal", "remote"] 
-    : [defaultOptions.mode];
+  const modes =
+    defaultOptions.mode === "both" || !defaultOptions.mode
+      ? ["normal", "remote"]
+      : [defaultOptions.mode];
 
   modes.forEach((mode) => {
     describe(`${suiteName} [${mode.toUpperCase()} MODE]`, () => {
       // Store original functions to restore later
       const originalRunTest = global.runTest;
       const originalDescribe = global.describe;
-      
-      beforeAll(() => {
+
+      beforeAll(async () => {
+        const { useServices, useService } = await import(
+          "../../hooks/useService.js"
+        );
+        const mockUseServices = useServices as jest.MockedFunction<
+          typeof useServices
+        >;
+        const mockUseService = useService as jest.MockedFunction<
+          typeof useService
+        >;
+
         // Override runTest to only run in the current mode
-        global.runTest = (name: string, testFn: any, options: TestOptions = {}) => {
+        global.runTest = (
+          name: string,
+          testFn: any,
+          options: TestOptions = {}
+        ) => {
           // If test specifies a mode, only run if it matches current mode
           const testMode = options.mode || "both";
           if (testMode === "both" || testMode === mode) {
             it(name, async () => {
               if (mode === "remote") {
                 // Set up remote mode
+                mockUseServices.mockReturnValue({
+                  services: {},
+                  loading: false,
+                  error: null,
+                  allReady: true,
+                });
+
+                mockUseService.mockReturnValue({
+                  value: null,
+                  state: "idle",
+                  error: null,
+                  reload: jest.fn(),
+                });
+
                 const server = new MockRemoteServer();
                 const port = await server.start();
                 const remoteUrl = server.getUrl(port);
@@ -143,7 +244,10 @@ export function runTestSuite(
                 let renderResult: RenderResult | null = null;
                 try {
                   renderResult = render(
-                    React.createElement(TUIChat, { ...createProps({ remoteUrl, ...options.props }) })
+                    React.createElement(TUIChat, {
+                      remoteUrl,
+                      ...options.props,
+                    })
                   ) as RenderResult;
 
                   await testFn({
@@ -162,10 +266,51 @@ export function runTestSuite(
                 }
               } else {
                 // Normal mode
+                mockUseServices.mockReturnValue({
+                  services: {
+                    auth: { authConfig: null, isAuthenticated: false },
+                    config: { config: mockAssistant },
+                    model: {
+                      llmApi: new MockLlmApi(),
+                      model: { provider: "test", name: "test" },
+                    },
+                    mcp: { mcpService: new MockMCPService() },
+                    apiClient: { apiClient: new MockApiClient() },
+                  },
+                  loading: false,
+                  error: null,
+                  allReady: true,
+                });
+
+                mockUseService.mockImplementation((serviceName: string) => ({
+                  value: (() => {
+                    switch (serviceName) {
+                      case "auth":
+                        return { authConfig: null, isAuthenticated: false };
+                      case "config":
+                        return { config: mockAssistant };
+                      case "model":
+                        return {
+                          llmApi: new MockLlmApi(),
+                          model: { provider: "test", name: "test" },
+                        };
+                      case "mcp":
+                        return { mcpService: new MockMCPService() };
+                      case "apiClient":
+                        return { apiClient: new MockApiClient() };
+                      default:
+                        return null;
+                    }
+                  })(),
+                  state: "ready",
+                  error: null,
+                  reload: jest.fn(),
+                }));
+
                 let renderResult: RenderResult | null = null;
                 try {
                   renderResult = render(
-                    React.createElement(TUIChat, { ...createProps(options.props) })
+                    React.createElement(TUIChat, { ...options.props })
                   ) as RenderResult;
 
                   await testFn({
@@ -182,7 +327,7 @@ export function runTestSuite(
             });
           }
         };
-        
+
         // Override describe to prevent nested mode descriptions
         global.describe = ((name: string, fn: () => void) => {
           // Just run the function directly, don't create another describe block
@@ -209,17 +354,19 @@ export async function waitForServerState(
   timeout: number = 5000
 ): Promise<void> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     const state = server.getState();
     if (predicate(state)) {
       return;
     }
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
-  
+
   const finalState = server.getState();
-  throw new Error(`Timeout waiting for server state: ${JSON.stringify(finalState)}`);
+  throw new Error(
+    `Timeout waiting for server state: ${JSON.stringify(finalState)}`
+  );
 }
 
 /**
@@ -231,27 +378,33 @@ export async function sendMessage(
   waitTime: number = 100
 ): Promise<void> {
   const { renderResult } = ctx;
-  
+
   renderResult.stdin.write(message);
   renderResult.stdin.write("\r");
-  
+
   // In remote mode, wait for the message to be processed
   if (ctx.mode === "remote" && ctx.server) {
     try {
       await waitForServerState(
         ctx.server,
-        state => state.messages.some((m: any) => m.content === message && m.role === "user"),
+        (state) =>
+          state.messages.some(
+            (m: any) => m.content === message && m.role === "user"
+          ),
         2000
       );
     } catch (error) {
       // If waiting fails, continue anyway - the server might be slow
-      console.warn("Warning: Message might not have been processed by server:", error);
+      console.warn(
+        "Warning: Message might not have been processed by server:",
+        error
+      );
     }
     // Extra wait for UI to poll and update
-    await new Promise(resolve => setTimeout(resolve, 600)); // Slightly more than polling interval
+    await new Promise((resolve) => setTimeout(resolve, 600)); // Slightly more than polling interval
   }
-  
-  await new Promise(resolve => setTimeout(resolve, waitTime));
+
+  await new Promise((resolve) => setTimeout(resolve, waitTime));
 }
 
 /**
@@ -259,7 +412,7 @@ export async function sendMessage(
  */
 export function expectRemoteMode(frame: string | undefined) {
   if (!frame) throw new Error("Frame is undefined");
-  
+
   // Should show cyan color and remote indicator
   expect(frame).toContain("◉");
   expect(frame).toContain("Remote Mode");
@@ -270,7 +423,7 @@ export function expectRemoteMode(frame: string | undefined) {
  */
 export function expectNormalMode(frame: string | undefined) {
   if (!frame) throw new Error("Frame is undefined");
-  
+
   // Should show normal indicator
   expect(frame).toContain("●");
   expect(frame).toContain("Continue CLI");
@@ -278,7 +431,11 @@ export function expectNormalMode(frame: string | undefined) {
 
 // Make runTest available globally for test files
 declare global {
-  var runTest: (name: string, testFn: (ctx: TestContext) => void | Promise<void>, options?: TestOptions) => void;
+  var runTest: (
+    name: string,
+    testFn: (ctx: TestContext) => void | Promise<void>,
+    options?: TestOptions
+  ) => void;
 }
 
 global.runTest = runTest;

@@ -15,15 +15,15 @@ jest.mock("fs", () => ({
   existsSync: jest.fn(() => false),
 }));
 
-// Mock dependencies
-jest.mock("../auth/workos.js", () => ({
+// Mock dependencies - use exact file paths that exist
+jest.mock("./src/auth/workos", () => ({
   loadAuthConfig: jest.fn(() => null),
   ensureOrganization: jest.fn(),
   getOrganizationId: jest.fn(),
   isAuthenticated: jest.fn(() => false),
 }));
 
-jest.mock("../onboarding.js", () => ({
+jest.mock("./src/onboarding", () => ({
   runNormalFlow: jest.fn(() =>
     Promise.resolve({
       config: { models: [] },
@@ -40,15 +40,15 @@ jest.mock("../onboarding.js", () => ({
   ),
 }));
 
-jest.mock("../session.js", () => ({
+jest.mock("./src/session", () => ({
   saveSession: jest.fn(),
 }));
 
-jest.mock("../systemMessage.js", () => ({
+jest.mock("./src/systemMessage", () => ({
   constructSystemMessage: jest.fn(() => Promise.resolve("System message")),
 }));
 
-jest.mock("../telemetry/telemetryService.js", () => ({
+jest.mock("./src/telemetry/telemetryService", () => ({
   default: {
     recordSessionStart: jest.fn(),
     startActiveTime: jest.fn(),
@@ -57,7 +57,7 @@ jest.mock("../telemetry/telemetryService.js", () => ({
   },
 }));
 
-jest.mock("../util/logger.js", () => ({
+jest.mock("./src/util/logger", () => ({
   default: {
     error: jest.fn(),
     debug: jest.fn(),

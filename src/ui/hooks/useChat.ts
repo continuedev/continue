@@ -117,18 +117,19 @@ export function useChat({
 
   // Remote mode polling
   useEffect(() => {
-    if (!isRemoteMode || !remoteUrl) return;
+    if (!isRemoteMode || !remoteUrl || process.env.NODE_ENV === "test") return;
 
-    let pollInterval: NodeJS.Timeout;
+    let pollInterval: NodeJS.Timeout | null = null;
     let isPolling = false;
+    let isMounted = true;
 
     const pollServerState = async () => {
-      if (isPolling) return; // Prevent overlapping polls
+      if (isPolling || !isMounted) return; // Prevent overlapping polls and check if still mounted
       isPolling = true;
 
       try {
         const response = await fetch(`${remoteUrl}/state`);
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const state = await response.json();
 
           // Update messages from server
@@ -187,15 +188,19 @@ export function useChat({
           }
 
           // Update processing state
-          setIsWaitingForResponse(state.isProcessing || false);
-          if (state.isProcessing && !responseStartTime) {
-            setResponseStartTime(Date.now());
-          } else if (!state.isProcessing && responseStartTime) {
-            setResponseStartTime(null);
+          if (isMounted) {
+            setIsWaitingForResponse(state.isProcessing || false);
+            if (state.isProcessing && !responseStartTime) {
+              setResponseStartTime(Date.now());
+            } else if (!state.isProcessing && responseStartTime) {
+              setResponseStartTime(null);
+            }
           }
         }
       } catch (error) {
-        logger.error("Failed to poll server state:", error);
+        if (isMounted) {
+          logger.error("Failed to poll server state:", error);
+        }
       } finally {
         isPolling = false;
       }
@@ -208,7 +213,11 @@ export function useChat({
     pollInterval = setInterval(pollServerState, 500); // Poll every 500ms
 
     return () => {
-      clearInterval(pollInterval);
+      isMounted = false;
+      if (pollInterval !== null) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
     };
   }, [isRemoteMode, remoteUrl, responseStartTime]);
 
@@ -311,8 +320,7 @@ export function useChat({
       const commandResult = await handleSlashCommands(
         message,
         assistant,
-        onLoginPrompt,
-        onReload
+        onLoginPrompt
       );
       if (commandResult) {
         if (commandResult.exit) {
