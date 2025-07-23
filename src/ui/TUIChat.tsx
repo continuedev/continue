@@ -1,6 +1,5 @@
 import { Box, Text } from "ink";
 import React, { useEffect, useState } from "react";
-import { introMessage } from "../intro.js";
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -13,6 +12,8 @@ import ConfigSelector from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
 import FreeTrialStatus from "./FreeTrialStatus.js";
 import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
+import IntroMessage from "./IntroMessage.js";
+import ServiceDebugger from "./ServiceDebugger.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
@@ -69,6 +70,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [isShowingFreeTrialTransition, setIsShowingFreeTrialTransition] =
     useState(false);
 
+  // State for intro message display
+  const [showIntroMessage, setShowIntroMessage] = useState(false);
+
   // Start file indexing as soon as the component mounts
   useEffect(() => {
     // Start indexing files in the background immediately
@@ -77,7 +81,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     });
   }, []);
 
-  // Display intro message when services are ready (only in non-remote mode)
+  // Show intro message when services are ready (only in non-remote mode)
   useEffect(() => {
     if (
       !isRemoteMode &&
@@ -86,13 +90,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
       services.model?.model &&
       services.mcp?.mcpService
     ) {
-      introMessage(
-        services.config.config,
-        services.model.model,
-        services.mcp.mcpService
-      ).catch((error) => {
-        console.error("Failed to display intro message:", error);
-      });
+      setShowIntroMessage(true);
     }
   }, [isRemoteMode, allServicesReady, services.config?.config, services.model?.model, services.mcp?.mcpService]);
 
@@ -115,8 +113,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Service reload handlers - these will trigger reactive updates
   const handleReload = async () => {
     // Services will automatically update the UI when they reload
-    // We just need to reset chat history and clear the screen
+    // We just need to reset chat history, intro message, and clear the screen
     resetChatHistory();
+    setShowIntroMessage(false);
     process.stdout.write("\x1b[2J\x1b[H");
   };
 
@@ -204,6 +203,26 @@ const TUIChat: React.FC<TUIChatProps> = ({
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
       <Box flexDirection="column" flexGrow={1} paddingX={1} overflow="hidden">
+        {/* Debug component - comment out when not needed */}
+        {!isRemoteMode && (
+          <ServiceDebugger
+            services={services}
+            loading={servicesLoading}
+            error={servicesError}
+            allReady={allServicesReady}
+            servicesLoading={servicesLoading}
+            servicesError={servicesError}
+          />
+        )}
+        
+        {/* Show intro message when ready */}
+        {showIntroMessage && !isRemoteMode && services.config?.config && services.model?.model && services.mcp?.mcpService && (
+          <IntroMessage 
+            config={services.config.config}
+            model={services.model.model}
+            mcpService={services.mcp.mcpService}
+          />
+        )}
         {messages.map(renderMessage)}
       </Box>
 

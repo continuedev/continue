@@ -6,7 +6,6 @@ import * as path from "path";
 import { useState } from "react";
 import { loadAuthConfig, updateAssistantSlug } from "../../auth/workos.js";
 import { initialize } from "../../config.js";
-import { introMessage } from "../../intro.js";
 import { MCPService } from "../../mcp.js";
 
 interface ConfigOption {
@@ -119,9 +118,6 @@ export function useConfigSelector({
 
       // Clear the screen completely
       process.stdout.write("\x1b[2J\x1b[H");
-
-      // Show the new intro message
-      introMessage(newConfig, newModel, newMcpService);
 
       // Show success message
       onMessage({

@@ -7,7 +7,6 @@ import {
   saveAuthConfig,
 } from "../../auth/workos.js";
 import { initialize } from "../../config.js";
-import { introMessage } from "../../intro.js";
 import { MCPService } from "../../mcp.js";
 
 interface UseOrganizationSelectorProps {
@@ -84,9 +83,6 @@ export function useOrganizationSelector({
 
       // Clear the screen completely
       process.stdout.write("\x1b[2J\x1b[H");
-
-      // Show the new intro message
-      introMessage(config, newModel, newMcpService);
 
       // Show success message
       onMessage({
