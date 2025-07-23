@@ -63,7 +63,6 @@ jobs:
 
       - name: Bump version in gradle.properties
         run: |
-          cd extensions/intellij
           awk '/pluginVersion=/{split($0,a,"="); split(a[2],b,"."); b[3]+=1; printf "%s=%s.%s.%s\n",a[1],b[1],b[2],b[3];next}1' gradle.properties > tmp && mv tmp gradle.properties
           rm -rf tmp
           NEW_VERSION=$(grep 'pluginVersion=' gradle.properties | cut -d'=' -f2)
@@ -223,10 +222,6 @@ jobs:
       #     apple-team-id: 43XFLY66ZD
       #     apple-product-id: dev.continue.continue-binary
       #     options: --options runtime --entitlements entitlements.xml
-
-      # Build plugin
-      - name: Build plugin
-        run: ./gradlew buildPlugin
 
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin

@@ -60,6 +60,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     } else {
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
+        element: { sourceFile: (rule as any).sourceFile },
       });
     }
   };
