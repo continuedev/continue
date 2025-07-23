@@ -13,5 +13,9 @@ export function mergePackages(
     rules: [...(current.rules ?? []), ...(incoming.rules ?? [])],
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     docs: [...(current.docs ?? []), ...(incoming.docs ?? [])],
+    env:
+      current.env || incoming.env
+        ? { ...current.env, ...incoming.env }
+        : undefined,
   };
 }
