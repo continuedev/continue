@@ -224,10 +224,6 @@ jobs:
       #     apple-product-id: dev.continue.continue-binary
       #     options: --options runtime --entitlements entitlements.xml
 
-      # Build plugin
-      - name: Build plugin
-        run: ./gradlew buildPlugin
-
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin
         if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
