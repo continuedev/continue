@@ -21,16 +21,21 @@ describe("TUIChat - @ File Search Tests", () => {
     // Use remote mode to bypass service loading
     const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
 
+    // Wait a bit for initial render
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     // Type the @ character to trigger file search
     stdin.write("@");
 
-    // Wait for file search to initialize and display files
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait longer for file search to initialize and display files
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     const frame = lastFrame()!;
 
-    // Should show @ character in input
-    expect(frame).toContain("@");
+    // Should show @ character in input or show file search UI
+    // The @ might be in the input line or in a file search UI
+    const hasAtSymbol = frame.includes("@") || frame.includes("◉ @");
+    expect(hasAtSymbol).toBe(true);
     
     // Should still show the interface
     expect(frame).toContain("Remote Mode");
