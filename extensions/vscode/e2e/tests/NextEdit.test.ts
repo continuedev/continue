@@ -8,60 +8,9 @@ import { DEFAULT_TIMEOUT } from "../constants";
 describe("Next Edit", () => {
   let editor: TextEditor;
 
-  // before(async function () {
-  //   // this.timeout(DEFAULT_TIMEOUT.XL);
-
-  //   // const globalContextPath = TestUtils.getGlobalContextFilePath();
-
-  //   // // Update config.json to add optInNextEditFeature.
-  //   // // globalContext.json does not exist in CI before this test runs.
-  //   // if (await TestUtils.fileExists(globalContextPath)) {
-  //   //   const globalContext = await fs.readFile(globalContextPath, "utf8");
-  //   //   const sharedConfig = JSON.parse(globalContext).sharedConfig;
-
-  //   //   const sharedConfigWithNextEditEnabled = {
-  //   //     ...sharedConfig,
-  //   //     optInNextEditFeature: true,
-  //   //   };
-
-  //   //   const globalContextWithNextEditEnabled = {
-  //   //     ...JSON.parse(globalContext),
-  //   //     sharedConfig: sharedConfigWithNextEditEnabled,
-  //   //   };
-
-  //   //   await fs.writeFile(
-  //   //     globalContextPath,
-  //   //     JSON.stringify(globalContextWithNextEditEnabled, null, 2),
-  //   //     "utf8",
-  //   //   );
-  //   // } else {
-  //   //   await fs.writeFile(
-  //   //     globalContextPath,
-  //   //     JSON.stringify(
-  //   //       {
-  //   //         sharedConfig: {
-  //   //           optInNextEditFeature: true,
-  //   //         },
-  //   //         selectedModelsByProfileId: {
-  //   //           local: {
-  //   //             chat: "TEST LLM",
-  //   //             edit: "TEST LLM",
-  //   //             apply: "TEST LLM",
-  //   //             embed: "Transformers.js (Built-In)",
-  //   //             autocomplete: "TEST LLM",
-  //   //             rerank: null,
-  //   //             summarize: null,
-  //   //           },
-  //   //         },
-  //   //       },
-  //   //       null,
-  //   //       2,
-  //   //     ),
-  //   //   );
-  //   // }
-
-  //   await NextEditActions.reload();
-  // }).timeout(DEFAULT_TIMEOUT.XL);
+  before(async function () {
+    process.env.NEXT_EDIT_TEST_ENABLED = "true";
+  })
 
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
@@ -77,39 +26,9 @@ describe("Next Edit", () => {
     await new EditorView().closeAllEditors();
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  // after(async function () {
-  //   // this.timeout(DEFAULT_TIMEOUT.XL);
-
-  //   // Update config.json to delete optInNextEditFeature.
-  //   // const globalContext = await fs.readFile(
-  //   //   TestUtils.getGlobalContextFilePath(),
-  //   //   "utf8",
-  //   // );
-  //   // const sharedConfig = JSON.parse(globalContext).sharedConfig;
-
-  //   // const sharedConfigWithoutNextEdit = { ...sharedConfig };
-  //   // delete sharedConfigWithoutNextEdit.optInNextEditFeature;
-
-  //   // const globalContextWithNextEditEnabled = {
-  //   //   ...JSON.parse(globalContext),
-  //   //   sharedConfig: sharedConfigWithoutNextEdit,
-  //   // };
-
-  //   // await fs.writeFile(
-  //   //   TestUtils.getGlobalContextFilePath(),
-  //   //   JSON.stringify(globalContextWithNextEditEnabled, null, 2),
-  //   //   "utf8",
-  //   // );
-  //   await NextEditActions.reload();
-  // }).timeout(DEFAULT_TIMEOUT.XL);
-
-  // it("Should enable Next Edit feature in settings", async () => {
-  //   expect(false).to.be.true;
-  // }).timeout(DEFAULT_TIMEOUT.XL);
-
-  // it("Should check that autocomplete is disabled when next edit is enabled", async () => {
-  //   expect(false).to.be.true;
-  // }).timeout(DEFAULT_TIMEOUT.XL);
+  after(async function () {
+    process.env.NEXT_EDIT_TEST_ENABLED = "false";
+  })
 
   it("Should force a Next Edit", async () => {
     const hasDecoration = await NextEditActions.forceNextEdit(editor);
