@@ -4,7 +4,6 @@ import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
 import { loadAuthConfig } from "../auth/workos.js";
 import { configureLogger } from "../logger.js";
-import { introMessage } from "../intro.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
@@ -102,10 +101,6 @@ async function runHeadlessMode(
   prompt: string | undefined,
   options: ChatOptions
 ): Promise<void> {
-  // Initialize services for headless mode
-  console.log(chalk.white(CONTINUE_ASCII_ART));
-  console.info(chalk.gray(`v${getVersion()}\n`));
-
   // For headless mode, we still need to use the old initialization
   // pattern until we refactor headless mode to use services
   const authConfig = loadAuthConfig();
@@ -116,9 +111,6 @@ async function runHeadlessMode(
   );
 
   const { config, llmApi, model, mcpService } = result;
-
-  // Show intro message for headless mode
-  await introMessage(config, model, mcpService);
 
   // Initialize chat history
   const chatHistory = await initializeChatHistory(options);
