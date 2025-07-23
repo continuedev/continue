@@ -127,7 +127,7 @@ export function Chat() {
   }, []);
 
   const availableTools = useAppSelector((state) => state.config.config.tools);
-  // 标记是否已初始化
+  // Mark if initialized
   const [toolSettingsInitialized, setToolSettingsInitialized] = useState(false);
 
   useEffect(() => {
