@@ -2,10 +2,11 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
-import { loadAuthConfig } from "../auth/workos.js";
 import { configureLogger } from "../logger.js";
-import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
+import { initializeServices } from "../services/index.js";
+import { serviceContainer } from "../services/ServiceContainer.js";
+import { SERVICE_NAMES, ModelServiceState } from "../services/types.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
@@ -101,16 +102,16 @@ async function runHeadlessMode(
   prompt: string | undefined,
   options: ChatOptions
 ): Promise<void> {
-  // For headless mode, we still need to use the old initialization
-  // pattern until we refactor headless mode to use services
-  const authConfig = loadAuthConfig();
-  const result = await initializeWithOnboarding(
-    authConfig,
-    options.config,
-    options.rule
-  );
+  // Initialize services for headless mode
+  await initializeServices({
+    configPath: options.config,
+    rules: options.rule,
+    headless: true
+  });
 
-  const { config, llmApi, model, mcpService } = result;
+  // Get required services from the service container
+  const modelState = await serviceContainer.get<ModelServiceState>(SERVICE_NAMES.MODEL);
+  const { llmApi, model } = modelState;
 
   // Initialize chat history
   const chatHistory = await initializeChatHistory(options);
