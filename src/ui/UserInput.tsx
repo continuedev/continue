@@ -1,7 +1,6 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useEffect, useState } from "react";
-import { hasMultipleOrganizations } from "../auth/workos.js";
+import React, { useState } from "react";
 import { getAllSlashCommands } from "../commands/commands.js";
 import { InputHistory } from "../util/inputHistory.js";
 import FileSearchUI from "./FileSearchUI.js";
@@ -48,20 +47,10 @@ const UserInput: React.FC<UserInputProps> = ({
   >([]);
   const { exit } = useApp();
 
-  // Get all available slash commands
-  const [hasMultipleOrgs, setHasMultipleOrgs] = useState(false);
-
-  useEffect(() => {
-    if (!isRemoteMode) {
-      hasMultipleOrganizations().then(setHasMultipleOrgs);
-    }
-  }, [isRemoteMode]);
-
   const getSlashCommands = () => {
     if (assistant || isRemoteMode) {
       return getAllSlashCommands(assistant || ({} as AssistantConfig), {
         isRemoteMode,
-        hasMultipleOrgs,
       });
     }
 
