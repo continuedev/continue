@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { defaultBorderRadius } from "../../../components";
 import { IndicatorBar } from "./IndicatorBar";
 
 interface TerminalCollapsibleContainerProps {
@@ -48,19 +47,12 @@ export function TerminalCollapsibleContainer({
 
       {/* Content container with proper constraint for gradient */}
       <div
-        className={`relative overflow-hidden ${collapsible ? "cursor-pointer" : ""}`}
-        style={{ borderRadius: defaultBorderRadius }}
+        className={`relative overflow-hidden rounded-lg ${collapsible ? "cursor-pointer" : ""}`}
       >
         {/* Gradient overlay on top of content - only when collapsed */}
         {!isExpanded && hiddenLinesCount > 0 && (
           <div
-            className="pointer-events-none absolute left-[9px] right-[9px] top-4 z-[5] h-[100px]"
-            style={{
-              background:
-                "linear-gradient(to bottom, var(--vscode-editor-background, #1e1e1e), transparent)",
-              borderTopLeftRadius: `calc(${defaultBorderRadius} - 1px)`,
-              borderTopRightRadius: `calc(${defaultBorderRadius} - 1px)`,
-            }}
+            className="pointer-events-none absolute left-[9px] right-[9px] top-4 z-[5] h-[100px] rounded-t-md bg-gradient-to-b from-editor to-transparent"
           />
         )}
 
