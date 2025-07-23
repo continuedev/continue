@@ -237,7 +237,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
           RELEASE_CHANNEL: eap
-        run: ./gradlew publishPlugin
+        run: ./gradlew publishPlugin --info --stacktrace
 
       - name: Publish Stable Plugin
         if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
@@ -247,7 +247,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
           RELEASE_CHANNEL: default
-        run: ./gradlew publishPlugin
+        run: ./gradlew publishPlugin --info --stacktrace
 
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
