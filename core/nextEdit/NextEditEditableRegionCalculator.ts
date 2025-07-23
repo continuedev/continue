@@ -5,18 +5,21 @@ import { getAst } from "../autocomplete/util/ast";
 export enum EditableRegionStrategy {
   Naive = "naive",
   Rerank = "rerank",
+  StaticRerank = "staticRerank",
   Static = "static",
 }
 
 export async function getNextEditableRegion(
   strategy: EditableRegionStrategy,
   ctx: any,
-): Promise<RangeInFile | null> {
+): Promise<RangeInFile[] | null> {
   switch (strategy) {
     case EditableRegionStrategy.Naive:
       return naiveJump(ctx);
     case EditableRegionStrategy.Rerank:
       return await rerankJump(ctx);
+    case EditableRegionStrategy.StaticRerank:
+      return await staticRerankJump(ctx);
     case EditableRegionStrategy.Static:
       return await staticJump(ctx);
     default:
@@ -26,23 +29,25 @@ export async function getNextEditableRegion(
 
 // Naive assumes that the entire file is editable.
 // This relies on the next edit model to figure out where to jump next.
-function naiveJump(ctx: any): RangeInFile | null {
+function naiveJump(ctx: any): RangeInFile[] | null {
   const { fileLines, filepath } = ctx;
   if (!fileLines || !filepath) {
     console.warn("Missing required context for naive jump");
     return null;
   }
 
-  return {
-    filepath,
-    range: {
-      start: { line: 0, character: 0 },
-      end: {
-        line: fileLines.length - 1,
-        character: fileLines.at(-1).length,
+  return [
+    {
+      filepath,
+      range: {
+        start: { line: 0, character: 0 },
+        end: {
+          line: fileLines.length - 1,
+          character: fileLines.at(-1).length,
+        },
       },
     },
-  };
+  ];
 }
 
 // A rerank jump splits the current file into chunks.
@@ -53,7 +58,7 @@ async function rerankJump(ctx: {
   filepath: string;
   reranker: ILLM;
   chunkSize: number;
-}): Promise<RangeInFile | null> {
+}): Promise<RangeInFile[] | null> {
   try {
     const { fileContent, query, filepath, reranker, chunkSize = 5 } = ctx;
 
@@ -107,25 +112,27 @@ async function rerankJump(ctx: {
     // NOTE: It might be better to return a list of chunks,
     // because it's very difficult to gauge when to stop the model.
     // We could argue that we should always try to jump until the user says no.
-    return {
-      filepath,
-      range: {
-        start: { line: mostRelevantChunk.startLine, character: 0 },
-        end: {
-          line: mostRelevantChunk.endLine,
-          character: lines[mostRelevantChunk.endLine].length,
+    return [
+      {
+        filepath,
+        range: {
+          start: { line: mostRelevantChunk.startLine, character: 0 },
+          end: {
+            line: mostRelevantChunk.endLine,
+            character: lines[mostRelevantChunk.endLine].length,
+          },
         },
       },
-    };
+    ];
   } catch (error) {
     console.error("Error in rerank jump:", error);
     return null;
   }
 }
 
-// A static jump runs a lightweight static analysis on the file
-// to jump to relevant locations.
-async function staticJump(ctx: {
+// A static rerank jump runs a lightweight static analysis on the file
+// and uses the reranker to jump to relevant locations.
+async function staticRerankJump(ctx: {
   oldFileContent: string;
   newFileContent: string;
   completionRange: Range;
@@ -133,7 +140,7 @@ async function staticJump(ctx: {
   ide: IDE;
   reranker?: ILLM;
   chunkSize?: number;
-}): Promise<RangeInFile | null> {
+}): Promise<RangeInFile[] | null> {
   try {
     const { oldFileContent, newFileContent, completionRange, filepath, ide } =
       ctx;
@@ -146,7 +153,7 @@ async function staticJump(ctx: {
       !ide
     ) {
       console.warn(
-        "Missing required context for static jump:",
+        "Missing required context for static rerank jump:",
         !oldFileContent,
         !newFileContent,
         !completionRange,
@@ -321,7 +328,8 @@ async function staticJump(ctx: {
 
     // Return the first reference if any found.
     if (currentFileReferences.length > 0) {
-      return currentFileReferences[0];
+      return [currentFileReferences[0]];
+      // return currentFileReferences;
     }
 
     return null;
@@ -330,6 +338,180 @@ async function staticJump(ctx: {
     return null;
   }
 }
+
+// Static jump relies purely on static analysis
+// to determine where to edit next.
+async function staticJump(ctx: {
+  fileContent: string;
+  cursorPosition: { line: number; character: number };
+  filepath: string;
+  ide: IDE;
+}): Promise<RangeInFile[] | null> {
+  try {
+    const { fileContent, cursorPosition, filepath, ide } = ctx;
+    if (!fileContent || !cursorPosition || !filepath || !ide) {
+      console.warn(
+        "Missing required context for static jump:",
+        !fileContent,
+        !cursorPosition,
+        !filepath,
+        !ide,
+      );
+      return null;
+    }
+
+    // Get the file's AST.
+    // Getting this once helps us live-track the current node.
+    const tree = await getAst(filepath, fileContent);
+    if (!tree) return null;
+
+    // Convert cursor position to tree-sitter point format (0-based).
+    const point = {
+      row: cursorPosition.line,
+      column: cursorPosition.character,
+    };
+
+    // Find the node at the cursor position.
+    const nodeAtCursor = tree.rootNode.descendantForPosition(point);
+    if (!nodeAtCursor) {
+      console.log("No node found at cursor position");
+      return null;
+    }
+
+    // Find the closest identifier node.
+    const identifierNode = findClosestIdentifierNode(nodeAtCursor);
+    if (!identifierNode) {
+      console.log("No identifier node found near cursor position");
+      return null;
+    }
+
+    // Get all references to this identifier using the IDE's API
+    const references = await ide.getReferences({
+      filepath,
+      position: {
+        line: identifierNode.startPosition.row,
+        character: identifierNode.startPosition.column,
+      },
+    });
+
+    if (!references || references.length === 0) {
+      console.log(`No references found for identifier: ${identifierNode.text}`);
+      return null;
+    }
+
+    return references;
+  } catch (error) {
+    console.error("Error in staticJump:", error);
+    return null;
+  }
+}
+
+/* AST HELPER FUNCTIONS */
+
+// Helper function to find the closest identifier node.
+function findClosestIdentifierNode(
+  node: Parser.SyntaxNode | null,
+): Parser.SyntaxNode | null {
+  if (!node) return null;
+
+  if (isIdentifierNode(node)) return node;
+
+  // Check if the parent is an identifier.
+  // NOTE: This will probably never get triggered.
+  // Most identifiers are leaf nodes.
+  const parent = node.parent;
+  if (parent && isIdentifierNode(parent)) {
+    return parent;
+  }
+
+  if (parent) {
+    // Check if one of the siblings is an identifier.
+    for (let i = 0; i < parent.childCount; ++i) {
+      const sibling = node.child(i);
+      if (sibling && isIdentifierNode(sibling)) {
+        // Get the leftmost identifier sibling.
+        return sibling;
+      }
+    }
+  }
+
+  return findClosestIdentifierNode(parent);
+}
+
+// Helper function to check if a node is an identifier.
+function isIdentifierNode(node: Parser.SyntaxNode) {
+  const nodeType = node.type;
+
+  if (nodeType === "identifier") return true;
+  if (nodeType.includes("identifier")) return true;
+
+  // Most language grammars will use the term "identifier".
+  // However some might not.
+  // Update this as they come.
+  const specialIdentifiers = ["name", "constant"];
+  return specialIdentifiers.includes(nodeType);
+}
+
+// // Helper function to find the closest identifier node.
+// function findClosestIdentifierNode(
+//   node: Parser.SyntaxNode | undefined,
+// ): Parser.SyntaxNode | undefined {
+//   if (!node) return undefined;
+
+//   // Check if the current node is an identifier
+//   if (isIdentifierLike(node)) {
+//     return node;
+//   }
+
+//   // Check if the parent is an identifier
+//   const parent = node.parent;
+//   if (parent && isIdentifierLike(parent)) {
+//     return parent;
+//   }
+
+//   // Check if any of the node's children are identifiers
+//   // Return the leftmost identifier child if found
+//   for (let i = 0; i < node.childCount; i++) {
+//     const child = node.child(i);
+//     if (child && isIdentifierLike(child)) {
+//       return child;
+//     }
+//   }
+
+//   // Check if any of the parent's children are identifiers
+//   if (parent) {
+//     for (let i = 0; i < parent.childCount; i++) {
+//       const sibling = parent.child(i);
+//       if (sibling && isIdentifierLike(sibling)) {
+//         return sibling;
+//       }
+//     }
+//   }
+
+//   // Recurse on the parent if we haven't found anything yet
+//   return findClosestIdentifierNode(parent);
+// }
+
+// // Helper function to determine if a node is identifier-like
+// function isIdentifierLike(node: Parser.SyntaxNode): boolean {
+//   // Common identifier node types across languages
+//   const commonIdentifierTypes = [
+//     "identifier",
+//     "property_identifier",
+//     "type_identifier",
+//     "field_identifier",
+//     "variable_identifier",
+//     "constant",
+//     "symbol",
+//   ];
+
+//   if (commonIdentifierTypes.includes(node.type)) {
+//     return true;
+//   }
+
+//   // Check for common identifier patterns in node types
+//   return /identifier$|^identifier|_identifier/.test(node.type);
+// }
 
 // Helper function to compare ASTs and find changed nodes.
 function compareAsts(oldAst: Parser.Tree, newAst: Parser.Tree) {
@@ -398,6 +580,8 @@ function getNodePosition(node: Parser.SyntaxNode): Position | null {
     character: node.startPosition.column,
   };
 }
+
+/* OTHER HELPER FUNCTIONS */
 
 // Helper function to find all occurrences of text in a string.
 function findTextOccurrences(text: string, searchText: string): Range[] {
